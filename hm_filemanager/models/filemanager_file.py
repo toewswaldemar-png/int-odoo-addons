@@ -20,7 +20,7 @@ class HmFilemanagerFile(models.Model):
         index=True,
         help="Pfad relativ zum Filemanager-Stammverzeichnis.",
     )
-    parent_path = fields.Char(index=True, help="Pfad des übergeordneten Ordners (leer = Wurzel).")
+    folder_path = fields.Char(index=True, help="Pfad des übergeordneten Ordners (leer = Wurzel).")
     is_dir = fields.Boolean(string="Ist Ordner", index=True)
     size = fields.Float(string="Größe (Bytes)")
     mtime = fields.Datetime(string="Geändert")
@@ -74,7 +74,7 @@ class HmFilemanagerFile(models.Model):
                 batch.append({
                     "name": name,
                     "path": rel,
-                    "parent_path": rel_dir or False,
+                    "folder_path": rel_dir or False,
                     "is_dir": is_dir,
                     "size": 0 if is_dir else st.st_size,
                     "mtime": datetime.fromtimestamp(st.st_mtime),

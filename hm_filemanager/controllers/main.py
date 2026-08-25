@@ -62,7 +62,7 @@ class HmFilemanagerController(http.Controller):
         if recursive:
             scope_domain = [("path", "like", f"{rel}/%")] if rel else []
         else:
-            scope_domain = [("parent_path", "=", rel or False)]
+            scope_domain = [("folder_path", "=", rel or False)]
 
         Model = request.env["hm_filemanager.file"]
         full_domain = scope_domain + (domain or [])

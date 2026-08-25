@@ -13,7 +13,7 @@ def _entry_vals(env, abs_path):
     return {
         "name": os.path.basename(abs_path),
         "path": rel,
-        "parent_path": parent_rel or False,
+        "folder_path": parent_rel or False,
         "is_dir": os.path.isdir(abs_path),
         "size": 0 if os.path.isdir(abs_path) else st.st_size,
         "mtime": datetime.fromtimestamp(st.st_mtime),
@@ -40,7 +40,7 @@ def index_remove_tree(env, rel_path):
 
 
 def index_move_tree(env, old_rel, new_rel):
-    """Rewrite path/parent_path for a renamed or moved file/folder and all its descendants."""
+    """Rewrite path/folder_path for a renamed or moved file/folder and all its descendants."""
     Model = env["hm_filemanager.file"].sudo()
     new_parent = os.path.dirname(new_rel) if new_rel else ""
 
@@ -49,7 +49,7 @@ def index_move_tree(env, old_rel, new_rel):
         root.write({
             "path": new_rel,
             "name": os.path.basename(new_rel),
-            "parent_path": new_parent or False,
+            "folder_path": new_parent or False,
         })
 
     prefix = old_rel + "/"
@@ -57,4 +57,4 @@ def index_move_tree(env, old_rel, new_rel):
         suffix = rec.path[len(old_rel):]
         new_child_path = new_rel + suffix
         new_child_parent = os.path.dirname(new_child_path)
-        rec.write({"path": new_child_path, "parent_path": new_child_parent or False})
+        rec.write({"path": new_child_path, "folder_path": new_child_parent or False})
