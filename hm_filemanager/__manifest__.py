@@ -15,7 +15,9 @@
     "data": [
         "security/security.xml",
         "security/ir.model.access.csv",
+        "views/filemanager_file_search.xml",
         "views/menu.xml",
+        "data/ir_cron.xml",
     ],
     "assets": {
         "web.assets_backend": [

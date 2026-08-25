@@ -1,11 +1,16 @@
 /** @odoo-module **/
 
-import { Component, useState, useRef, onWillStart } from "@odoo/owl";
+import { Component, useState, useRef, useEffect, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
-import { useService } from "@web/core/utils/hooks";
+import { useBus, useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
+import { WithSearch } from "@web/search/with_search/with_search";
+import { SearchBar } from "@web/search/search_bar/search_bar";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { HmFilePreviewDialog } from "./preview_action";
 import { HmInlineTags } from "./inline_tags";
+import { HmFolderTree } from "./folder_tree";
+import { HmTextInputDialog } from "./text_input_dialog";
 
 const EDITABLE_EXTENSIONS = new Set([
     "doc", "docx", "odt", "rtf", "txt",
@@ -17,9 +22,28 @@ const PREVIEWABLE_EXTENSIONS = new Set([
     "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "txt",
 ]);
 
+// Uses the FontAwesome icon set already bundled with Odoo's web client.
+const EXTENSION_ICONS = {
+    pdf: "fa-file-pdf-o",
+    doc: "fa-file-word-o", docx: "fa-file-word-o", odt: "fa-file-word-o", rtf: "fa-file-word-o",
+    xls: "fa-file-excel-o", xlsx: "fa-file-excel-o", ods: "fa-file-excel-o", csv: "fa-file-excel-o",
+    ppt: "fa-file-powerpoint-o", pptx: "fa-file-powerpoint-o", odp: "fa-file-powerpoint-o",
+    png: "fa-file-image-o", jpg: "fa-file-image-o", jpeg: "fa-file-image-o",
+    gif: "fa-file-image-o", webp: "fa-file-image-o", bmp: "fa-file-image-o", svg: "fa-file-image-o",
+    zip: "fa-file-archive-o", rar: "fa-file-archive-o", "7z": "fa-file-archive-o", tar: "fa-file-archive-o", gz: "fa-file-archive-o",
+    mp3: "fa-file-audio-o", wav: "fa-file-audio-o", flac: "fa-file-audio-o", ogg: "fa-file-audio-o",
+    mp4: "fa-file-video-o", mkv: "fa-file-video-o", avi: "fa-file-video-o", mov: "fa-file-video-o", webm: "fa-file-video-o",
+    txt: "fa-file-text-o", md: "fa-file-text-o", log: "fa-file-text-o",
+    json: "fa-file-code-o", xml: "fa-file-code-o", html: "fa-file-code-o", js: "fa-file-code-o", py: "fa-file-code-o", css: "fa-file-code-o",
+};
+
 function extOf(name) {
     const i = name.lastIndexOf(".");
     return i === -1 ? "" : name.slice(i + 1).toLowerCase();
+}
+
+function fileIconClass(name) {
+    return EXTENSION_ICONS[extOf(name)] || "fa-file-o";
 }
 
 function formatSize(bytes) {
@@ -38,27 +62,70 @@ function formatSize(bytes) {
 
 export class HmFileManager extends Component {
     static template = "hm_filemanager.FileManager";
-    static components = { HmInlineTags };
-    static props = ["*"];
+    static components = { HmInlineTags, HmFolderTree, SearchBar };
+    static props = {
+        domain: { type: Array, optional: true },
+    };
 
     setup() {
         this.actionService = useService("action");
         this.notification = useService("notification");
         this.dialog = useService("dialog");
+        this.fileUpload = useService("file_upload");
         this.fileInput = useRef("fileInput");
+        useBus(this.fileUpload.bus, "FILE_UPLOAD_LOADED", (ev) => {
+            if (ev.detail.upload.id === this.pendingUploadId) {
+                this.load(this.state.path);
+            }
+        });
+        // Reload when the native search bar's domain (name/tag facets) changes.
+        this._searchInitialized = false;
+        useEffect(
+            () => {
+                if (this._searchInitialized) {
+                    this.load(this.state.path);
+                } else {
+                    this._searchInitialized = true;
+                }
+            },
+            () => [JSON.stringify(this.props.domain)]
+        );
         this.state = useState({
             path: "",
             breadcrumbs: [],
             entries: [],
             loading: true,
+            treeVersion: 0,
+            recursive: false,
         });
         onWillStart(() => this.load(""));
+    }
+
+    fileIconClass(name) {
+        return fileIconClass(name);
+    }
+
+    onNavigate(path) {
+        this.load(path);
+    }
+
+    refreshTree() {
+        this.state.treeVersion++;
+    }
+
+    toggleRecursive() {
+        this.state.recursive = !this.state.recursive;
+        this.load(this.state.path);
     }
 
     async load(path) {
         this.state.loading = true;
         try {
-            const res = await rpc("/hm_filemanager/list", { path });
+            const res = await rpc("/hm_filemanager/list", {
+                path,
+                recursive: this.state.recursive,
+                domain: this.props.domain || [],
+            });
             this.state.path = res.path;
             this.state.breadcrumbs = res.breadcrumbs;
             this.state.entries = res.entries;
@@ -121,46 +188,68 @@ export class HmFileManager extends Component {
         }
     }
 
-    async onNewFolder() {
-        const name = window.prompt("Name des neuen Ordners:");
-        if (!name) {
-            return;
-        }
-        try {
-            await rpc("/hm_filemanager/mkdir", { path: this.state.path, name });
-            this.load(this.state.path);
-        } catch (e) {
-            this.notification.add(e.data?.message || e.message, { type: "danger" });
-        }
+    onNewFolder() {
+        this.dialog.add(HmTextInputDialog, {
+            title: "Neuer Ordner",
+            label: "Name des neuen Ordners",
+            confirmLabel: "Anlegen",
+            confirm: async (name) => {
+                try {
+                    await rpc("/hm_filemanager/mkdir", { path: this.state.path, name });
+                    this.load(this.state.path);
+                    this.refreshTree();
+                } catch (e) {
+                    this.notification.add(e.data?.message || e.message, { type: "danger" });
+                }
+            },
+        });
     }
 
-    async onRename(entry) {
-        const name = window.prompt("Neuer Name:", entry.name);
-        if (!name || name === entry.name) {
-            return;
-        }
-        try {
-            await rpc("/hm_filemanager/rename", { path: this.entryPath(entry), new_name: name });
-            this.load(this.state.path);
-        } catch (e) {
-            this.notification.add(e.data?.message || e.message, { type: "danger" });
-        }
+    onRename(entry) {
+        this.dialog.add(HmTextInputDialog, {
+            title: "Umbenennen",
+            label: "Neuer Name",
+            value: entry.name,
+            confirmLabel: "Umbenennen",
+            confirm: async (name) => {
+                if (name === entry.name) {
+                    return;
+                }
+                try {
+                    await rpc("/hm_filemanager/rename", { path: this.entryPath(entry), new_name: name });
+                    this.load(this.state.path);
+                    if (entry.is_dir) {
+                        this.refreshTree();
+                    }
+                } catch (e) {
+                    this.notification.add(e.data?.message || e.message, { type: "danger" });
+                }
+            },
+        });
     }
 
     onTagsSaved(entry, metaId) {
         entry.meta_id = metaId;
     }
 
-    async onDelete(entry) {
-        if (!window.confirm(`"${entry.name}" wirklich löschen?`)) {
-            return;
-        }
-        try {
-            await rpc("/hm_filemanager/delete", { path: this.entryPath(entry) });
-            this.load(this.state.path);
-        } catch (e) {
-            this.notification.add(e.data?.message || e.message, { type: "danger" });
-        }
+    onDelete(entry) {
+        this.dialog.add(ConfirmationDialog, {
+            title: "Löschen bestätigen",
+            body: `"${entry.name}" wirklich löschen?`,
+            confirmLabel: "Löschen",
+            confirmClass: "btn-danger",
+            confirm: async () => {
+                try {
+                    await rpc("/hm_filemanager/delete", { path: this.entryPath(entry) });
+                    this.load(this.state.path);
+                    if (entry.is_dir) {
+                        this.refreshTree();
+                    }
+                } catch (e) {
+                    this.notification.add(e.data?.message || e.message, { type: "danger" });
+                }
+            },
+        });
     }
 
     triggerUpload() {
@@ -168,28 +257,25 @@ export class HmFileManager extends Component {
     }
 
     async onFileInputChange(ev) {
-        const files = ev.target.files;
+        const files = [...ev.target.files];
+        ev.target.value = "";
         if (!files.length) {
             return;
         }
-        const formData = new FormData();
-        formData.append("path", this.state.path);
-        for (const f of files) {
-            formData.append("ufile", f);
-        }
-        try {
-            const resp = await fetch("/hm_filemanager/upload", { method: "POST", body: formData });
-            const data = await resp.json();
-            if (!data.ok) {
-                throw new Error("Upload fehlgeschlagen");
-            }
-            this.load(this.state.path);
-        } catch (e) {
-            this.notification.add("Upload fehlgeschlagen", { type: "danger" });
-        } finally {
-            ev.target.value = "";
-        }
+        // The upload itself is fire-and-forget (xhr sent, promise resolves right after);
+        // completion/errors surface via the file_upload service's bus events
+        // (FILE_UPLOAD_LOADED below, FILE_UPLOAD_ERROR shows its own toast automatically).
+        const upload = await this.fileUpload.upload("/hm_filemanager/upload", files, {
+            buildFormData: (formData) => formData.append("path", this.state.path),
+        });
+        this.pendingUploadId = upload.id;
     }
 }
 
-registry.category("actions").add("hm_filemanager_browser", HmFileManager);
+export class HmFileManagerAction extends Component {
+    static template = "hm_filemanager.FileManagerAction";
+    static components = { WithSearch, HmFileManager };
+    static props = ["*"];
+}
+
+registry.category("actions").add("hm_filemanager_browser", HmFileManagerAction);

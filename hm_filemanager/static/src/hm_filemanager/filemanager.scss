@@ -1,0 +1,30 @@
+.hm-filemanager-tree-panel {
+    width: 240px;
+    flex: 0 0 240px;
+}
+
+.hm-tree-row {
+    padding: 3px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+        background-color: var(--o-view-background-color, rgba(0, 0, 0, 0.04));
+    }
+}
+
+.hm-tree-active {
+    background-color: var(--o-brand-primary, #714b67);
+    color: #fff;
+}
+
+.hm-tree-caret {
+    width: 14px;
+    text-align: center;
+    margin-right: 4px;
+}
+
+.hm-filemanager-tree-children {
+    display: block;
+}

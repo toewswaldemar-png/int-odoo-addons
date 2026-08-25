@@ -3,12 +3,12 @@ import logging
 import mimetypes
 import os
 import shutil
-from datetime import datetime
 
-from odoo import _, http
+from odoo import _, fields, http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 
+from ..index_utils import index_move_tree, index_remove_tree, index_upsert
 from ..path_utils import get_root, resolve_path, safe_name, to_relative
 
 _logger = logging.getLogger(__name__)
@@ -40,63 +40,73 @@ class HmFilemanagerController(http.Controller):
             status=status,
         )
 
-    def _meta_ids_by_path(self, rel_paths):
-        Meta = request.env["hm_filemanager.file"].sudo()
-        metas = Meta.search([("path", "in", rel_paths)])
-        return {m.path: m.id for m in metas}
-
-    def _rename_metadata(self, old_rel, new_rel):
-        Meta = request.env["hm_filemanager.file"].sudo()
-        Meta.search([("path", "=", old_rel)]).write({"path": new_rel})
-        prefix = old_rel + "/"
-        for rec in Meta.search([("path", "=like", prefix + "%")]):
-            rec.path = new_rel + rec.path[len(old_rel):]
-
-    def _delete_metadata(self, rel_path):
-        Meta = request.env["hm_filemanager.file"].sudo()
-        Meta.search(["|", ("path", "=", rel_path), ("path", "=like", rel_path + "/%")]).unlink()
-
     # ---------------------------------------------------------------------
     # browsing
     # ---------------------------------------------------------------------
 
     @http.route("/hm_filemanager/list", type="jsonrpc", auth="user", methods=["POST"])
-    def list_dir(self, path=""):
+    def list_dir(self, path="", recursive=False, domain=None):
+        """Lists entries from the search index (hm_filemanager.file), not directly
+        from disk - this is what makes the native Odoo search bar/facets possible.
+        The index is kept in sync by every mutation below plus a periodic ir.cron scan."""
         self._check_access()
         abs_path = resolve_path(request.env, path)
         if not os.path.isdir(abs_path):
             raise UserError(_("Ordner nicht gefunden."))
-
-        entries = []
-        with os.scandir(abs_path) as it:
-            for entry in it:
-                if entry.name.startswith("."):
-                    continue
-                try:
-                    stat = entry.stat()
-                    is_dir = entry.is_dir()
-                except OSError:
-                    continue
-                entries.append(
-                    {
-                        "name": entry.name,
-                        "is_dir": is_dir,
-                        "size": stat.st_size if not is_dir else 0,
-                        "mtime": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M"),
-                    }
-                )
-        entries.sort(key=lambda e: (not e["is_dir"], e["name"].lower()))
-
         rel = to_relative(request.env, abs_path)
-        rel_paths = [f"{rel}/{e['name']}" if rel else e["name"] for e in entries]
-        meta_ids_by_path = self._meta_ids_by_path(rel_paths)
-        for entry, rp in zip(entries, rel_paths):
-            entry["meta_id"] = meta_ids_by_path.get(rp, False)
+
+        if recursive:
+            scope_domain = [("path", "like", f"{rel}/%")] if rel else []
+        else:
+            scope_domain = [("parent_path", "=", rel or False)]
+
+        Model = request.env["hm_filemanager.file"]
+        records = Model.search(scope_domain + (domain or []))
+
+        entries = [
+            {
+                "name": r.name,
+                "is_dir": r.is_dir,
+                "size": r.size,
+                "mtime": fields.Datetime.to_string(r.mtime)[:16] if r.mtime else "",
+                "meta_id": r.id,
+                "path": r.path,
+            }
+            for r in records
+        ]
 
         return {
             "path": rel,
             "breadcrumbs": self._breadcrumbs(rel),
             "entries": entries,
+        }
+
+    @http.route("/hm_filemanager/tree", type="jsonrpc", auth="user", methods=["POST"])
+    def tree_dir(self, path=""):
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        if not os.path.isdir(abs_path):
+            raise UserError(_("Ordner nicht gefunden."))
+
+        names = []
+        with os.scandir(abs_path) as it:
+            for entry in it:
+                if entry.name.startswith("."):
+                    continue
+                try:
+                    if not entry.is_dir():
+                        continue
+                except OSError:
+                    continue
+                names.append(entry.name)
+        names.sort(key=str.lower)
+
+        rel = to_relative(request.env, abs_path)
+        return {
+            "children": [
+                {"name": name, "path": f"{rel}/{name}" if rel else name}
+                for name in names
+            ],
         }
 
     @http.route("/hm_filemanager/download", type="http", auth="user")
@@ -130,6 +140,7 @@ class HmFilemanagerController(http.Controller):
         if os.path.exists(new_path):
             raise UserError(_("Es existiert bereits ein Eintrag mit diesem Namen."))
         os.makedirs(new_path)
+        index_upsert(request.env, new_path)
         return {"ok": True}
 
     @http.route("/hm_filemanager/rename", type="jsonrpc", auth="user", methods=["POST"])
@@ -145,7 +156,7 @@ class HmFilemanagerController(http.Controller):
         if os.path.exists(new_abs):
             raise UserError(_("Es existiert bereits ein Eintrag mit diesem Namen."))
         os.rename(abs_path, new_abs)
-        self._rename_metadata(old_rel, new_rel)
+        index_move_tree(request.env, old_rel, new_rel)
         return {"ok": True}
 
     @http.route("/hm_filemanager/move", type="jsonrpc", auth="user", methods=["POST"])
@@ -161,7 +172,7 @@ class HmFilemanagerController(http.Controller):
         if os.path.exists(new_abs):
             raise UserError(_("Es existiert bereits ein Eintrag mit diesem Namen im Zielordner."))
         shutil.move(abs_src, new_abs)
-        self._rename_metadata(old_rel, new_rel)
+        index_move_tree(request.env, old_rel, new_rel)
         return {"ok": True}
 
     @http.route("/hm_filemanager/delete", type="jsonrpc", auth="user", methods=["POST"])
@@ -177,7 +188,7 @@ class HmFilemanagerController(http.Controller):
             shutil.rmtree(abs_path)
         else:
             os.remove(abs_path)
-        self._delete_metadata(rel)
+        index_remove_tree(request.env, rel)
         return {"ok": True}
 
     @http.route("/hm_filemanager/upload", type="http", auth="user", methods=["POST"], csrf=False)
@@ -193,6 +204,7 @@ class HmFilemanagerController(http.Controller):
             target = os.path.join(abs_dir, name)
             to_relative(request.env, target)
             f.save(target)
+            index_upsert(request.env, target)
             saved.append(name)
         return self._json_response({"ok": True, "saved": saved})
 

@@ -1,4 +1,12 @@
 <templates xml:space="preserve">
+    <t t-name="hm_filemanager.FileManagerAction" owl="1">
+        <WithSearch resModel="'hm_filemanager.file'" searchMenuTypes="[]">
+            <t t-set-slot="default" t-slot-scope="search">
+                <HmFileManager domain="search.domain"/>
+            </t>
+        </WithSearch>
+    </t>
+
     <t t-name="hm_filemanager.FileManager" owl="1">
         <div class="hm-filemanager d-flex flex-column h-100">
             <div class="hm-filemanager-toolbar d-flex align-items-center gap-2 p-2 border-bottom">
@@ -6,56 +14,71 @@
                 <button class="btn btn-secondary btn-sm" t-on-click="onNewFolder">Neuer Ordner</button>
                 <input type="file" multiple="multiple" class="d-none"
                        t-ref="fileInput" t-on-change="onFileInputChange"/>
+                <div class="flex-grow-1">
+                    <SearchBar/>
+                </div>
+                <div class="form-check form-switch mb-0 me-2">
+                    <input class="form-check-input" type="checkbox" id="hm-recursive-toggle"
+                           t-att-checked="state.recursive" t-on-change="toggleRecursive"/>
+                    <label class="form-check-label" for="hm-recursive-toggle">Alle Unterordner</label>
+                </div>
             </div>
-            <nav class="hm-filemanager-breadcrumbs p-2 border-bottom">
-                <t t-foreach="state.breadcrumbs" t-as="crumb" t-key="crumb.path">
-                    <a href="#" t-on-click.prevent="() => this.onBreadcrumb(crumb)" t-esc="crumb.name"/>
-                    <span t-if="!crumb_last"> / </span>
-                </t>
-            </nav>
-            <div class="hm-filemanager-list flex-grow-1 overflow-auto">
-                <table class="table table-hover table-sm mb-0">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Größe</th>
-                            <th>Geändert</th>
-                            <th>Tags</th>
-                            <th/>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr t-foreach="state.entries" t-as="entry" t-key="entry.name">
-                            <td>
-                                <a href="#" t-on-click.prevent="() => this.onOpenEntry(entry)">
-                                    <i t-attf-class="fa {{ entry.is_dir ? 'fa-folder' : 'fa-file-o' }} me-2"/>
-                                    <t t-esc="entry.name"/>
-                                </a>
-                            </td>
-                            <td><t t-esc="formatSize(entry.size)"/></td>
-                            <td><t t-esc="entry.mtime"/></td>
-                            <td style="min-width: 220px;">
-                                <HmInlineTags
-                                    path="entryPath(entry)"
-                                    metaId="entry.meta_id"
-                                    onSaved="(metaId) => this.onTagsSaved(entry, metaId)"/>
-                            </td>
-                            <td class="text-end">
-                                <button t-if="!entry.is_dir and isEditable(entry.name)"
-                                        class="btn btn-link btn-sm"
-                                        t-on-click="() => this.onEdit(entry)">Bearbeiten</button>
-                                <button t-if="!entry.is_dir" class="btn btn-link btn-sm"
-                                        t-on-click="() => this.onDownload(entry)">Download</button>
-                                <button class="btn btn-link btn-sm"
-                                        t-on-click="() => this.onRename(entry)">Umbenennen</button>
-                                <button class="btn btn-link btn-sm text-danger"
-                                        t-on-click="() => this.onDelete(entry)">Löschen</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div t-if="!state.entries.length and !state.loading" class="p-4 text-muted text-center">
-                    Dieser Ordner ist leer.
+            <div class="d-flex flex-grow-1 overflow-hidden">
+                <nav class="hm-filemanager-tree-panel border-end overflow-auto p-2">
+                    <HmFolderTree t-key="state.treeVersion" activePath="state.path" onNavigate="(path) => this.onNavigate(path)"/>
+                </nav>
+                <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+                    <nav class="hm-filemanager-breadcrumbs p-2 border-bottom">
+                        <t t-foreach="state.breadcrumbs" t-as="crumb" t-key="crumb.path">
+                            <a href="#" t-on-click.prevent="() => this.onBreadcrumb(crumb)" t-esc="crumb.name"/>
+                            <span t-if="!crumb_last"> / </span>
+                        </t>
+                    </nav>
+                    <div class="hm-filemanager-list flex-grow-1 overflow-auto">
+                        <table class="table table-hover table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Größe</th>
+                                    <th>Geändert</th>
+                                    <th>Tags</th>
+                                    <th/>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="state.entries" t-as="entry" t-key="entry.name">
+                                    <td>
+                                        <a href="#" t-on-click.prevent="() => this.onOpenEntry(entry)">
+                                            <i t-attf-class="fa {{ entry.is_dir ? 'fa-folder' : fileIconClass(entry.name) }} me-2"/>
+                                            <t t-esc="entry.name"/>
+                                        </a>
+                                    </td>
+                                    <td><t t-esc="formatSize(entry.size)"/></td>
+                                    <td><t t-esc="entry.mtime"/></td>
+                                    <td style="min-width: 220px;">
+                                        <HmInlineTags
+                                            path="entryPath(entry)"
+                                            metaId="entry.meta_id"
+                                            onSaved="(metaId) => this.onTagsSaved(entry, metaId)"/>
+                                    </td>
+                                    <td class="text-end">
+                                        <button t-if="!entry.is_dir and isEditable(entry.name)"
+                                                class="btn btn-link btn-sm"
+                                                t-on-click="() => this.onEdit(entry)">Bearbeiten</button>
+                                        <button t-if="!entry.is_dir" class="btn btn-link btn-sm"
+                                                t-on-click="() => this.onDownload(entry)">Download</button>
+                                        <button class="btn btn-link btn-sm"
+                                                t-on-click="() => this.onRename(entry)">Umbenennen</button>
+                                        <button class="btn btn-link btn-sm text-danger"
+                                                t-on-click="() => this.onDelete(entry)">Löschen</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-if="!state.entries.length and !state.loading" class="p-4 text-muted text-center">
+                            Dieser Ordner ist leer.
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
