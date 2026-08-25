@@ -44,11 +44,15 @@ class HmFilemanagerController(http.Controller):
     # browsing
     # ---------------------------------------------------------------------
 
+    LIST_PAGE_SIZE = 200
+
     @http.route("/hm_filemanager/list", type="jsonrpc", auth="user", methods=["POST"])
-    def list_dir(self, path="", recursive=False, domain=None):
+    def list_dir(self, path="", recursive=False, domain=None, offset=0):
         """Lists entries from the search index (hm_filemanager.file), not directly
         from disk - this is what makes the native Odoo search bar/facets possible.
-        The index is kept in sync by every mutation below plus a periodic ir.cron scan."""
+        The index is kept in sync by every mutation below plus a periodic ir.cron scan.
+        Paginated: rendering (and each row's own tags read) doesn't scale to the
+        thousands of rows a large folder or a recursive/unfiltered search can return."""
         self._check_access()
         abs_path = resolve_path(request.env, path)
         if not os.path.isdir(abs_path):
@@ -61,7 +65,9 @@ class HmFilemanagerController(http.Controller):
             scope_domain = [("parent_path", "=", rel or False)]
 
         Model = request.env["hm_filemanager.file"]
-        records = Model.search(scope_domain + (domain or []))
+        full_domain = scope_domain + (domain or [])
+        total = Model.search_count(full_domain)
+        records = Model.search(full_domain, order="is_dir desc, name", limit=self.LIST_PAGE_SIZE, offset=offset)
 
         entries = [
             {
@@ -79,6 +85,9 @@ class HmFilemanagerController(http.Controller):
             "path": rel,
             "breadcrumbs": self._breadcrumbs(rel),
             "entries": entries,
+            "total": total,
+            "offset": offset,
+            "limit": self.LIST_PAGE_SIZE,
         }
 
     @http.route("/hm_filemanager/tree", type="jsonrpc", auth="user", methods=["POST"])

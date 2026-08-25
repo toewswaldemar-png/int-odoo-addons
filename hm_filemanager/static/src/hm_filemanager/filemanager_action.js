@@ -97,6 +97,9 @@ export class HmFileManager extends Component {
             loading: true,
             treeVersion: 0,
             recursive: false,
+            offset: 0,
+            total: 0,
+            limit: 200,
         });
         onWillStart(() => this.load(""));
     }
@@ -118,19 +121,35 @@ export class HmFileManager extends Component {
         this.load(this.state.path);
     }
 
-    async load(path) {
+    async load(path, offset = 0) {
         this.state.loading = true;
         try {
             const res = await rpc("/hm_filemanager/list", {
                 path,
                 recursive: this.state.recursive,
                 domain: this.props.domain || [],
+                offset,
             });
             this.state.path = res.path;
             this.state.breadcrumbs = res.breadcrumbs;
             this.state.entries = res.entries;
+            this.state.total = res.total;
+            this.state.offset = res.offset;
+            this.state.limit = res.limit;
         } finally {
             this.state.loading = false;
+        }
+    }
+
+    nextPage() {
+        if (this.state.offset + this.state.limit < this.state.total) {
+            this.load(this.state.path, this.state.offset + this.state.limit);
+        }
+    }
+
+    prevPage() {
+        if (this.state.offset > 0) {
+            this.load(this.state.path, Math.max(0, this.state.offset - this.state.limit));
         }
     }
 

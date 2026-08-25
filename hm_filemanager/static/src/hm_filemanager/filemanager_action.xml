@@ -79,6 +79,13 @@
                             Dieser Ordner ist leer.
                         </div>
                     </div>
+                    <div t-if="state.total > state.limit" class="d-flex align-items-center gap-2 p-2 border-top">
+                        <button class="btn btn-secondary btn-sm" t-att-disabled="state.offset === 0" t-on-click="prevPage">Zurück</button>
+                        <button class="btn btn-secondary btn-sm" t-att-disabled="state.offset + state.limit >= state.total" t-on-click="nextPage">Weiter</button>
+                        <span class="text-muted">
+                            <t t-esc="state.offset + 1"/>–<t t-esc="Math.min(state.offset + state.limit, state.total)"/> von <t t-esc="state.total"/>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
