@@ -147,7 +147,10 @@ export class HmFileManager extends Component {
     }
 
     entryPath(entry) {
-        return this.state.path ? `${this.state.path}/${entry.name}` : entry.name;
+        // entry.path already is the real relative path from the backend - this
+        // matters in particular for recursive search results, where the entry's
+        // parent folder can differ from the currently browsed state.path.
+        return entry.path;
     }
 
     onOpenEntry(entry) {

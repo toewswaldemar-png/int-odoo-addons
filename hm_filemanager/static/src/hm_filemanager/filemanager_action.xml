@@ -46,7 +46,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr t-foreach="state.entries" t-as="entry" t-key="entry.name">
+                                <tr t-foreach="state.entries" t-as="entry" t-key="entry.path">
                                     <td>
                                         <a href="#" t-on-click.prevent="() => this.onOpenEntry(entry)">
                                             <i t-attf-class="fa {{ entry.is_dir ? 'fa-folder' : fileIconClass(entry.name) }} me-2"/>
