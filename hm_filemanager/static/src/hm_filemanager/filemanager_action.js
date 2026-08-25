@@ -294,10 +294,32 @@ export class HmFileManager extends Component {
     }
 }
 
+// Passed explicitly to WithSearch instead of letting it resolve the search view
+// server-side: an empty/late-loaded searchViewFields makes Odoo's built-in "Add a
+// custom filter" dropdown item crash with "No field found" (getDefaultPath in
+// @web/core/tree_editor/utils needs at least one key). Providing both this and
+// SEARCH_VIEW_ARCH below also skips that extra RPC round-trip.
+const SEARCH_VIEW_FIELDS = {
+    name: { name: "name", type: "char", string: "Name", searchable: true },
+    tag_ids: {
+        name: "tag_ids",
+        type: "many2many",
+        relation: "hm_filemanager.tag",
+        string: "Tags",
+        searchable: true,
+    },
+};
+const SEARCH_VIEW_ARCH = '<search><field name="name" string="Name"/><field name="tag_ids" string="Tags"/></search>';
+
 export class HmFileManagerAction extends Component {
     static template = "hm_filemanager.FileManagerAction";
     static components = { WithSearch, HmFileManager };
     static props = ["*"];
+
+    setup() {
+        this.searchViewFields = SEARCH_VIEW_FIELDS;
+        this.searchViewArch = SEARCH_VIEW_ARCH;
+    }
 }
 
 registry.category("actions").add("hm_filemanager_browser", HmFileManagerAction);
