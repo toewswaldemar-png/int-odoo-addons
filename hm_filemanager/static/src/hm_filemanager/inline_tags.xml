@@ -2,6 +2,7 @@
     <t t-name="hm_filemanager.InlineTags" owl="1">
         <Record resModel="'hm_filemanager.file'"
                 resId="props.metaId || false"
+                fields="fields"
                 activeFields="activeFields"
                 values="initialValues"
                 mode="'edit'"
@@ -10,7 +11,7 @@
         </Record>
     </t>
     <t t-name="hm_filemanager.TagsCell" owl="1">
-        <div class="hm-filemanager-inline-tags">
+        <div class="hm-filemanager-inline-tags o_list_view">
             <Field name="'tag_ids'" record="props.record" type="'many2many_tags'" colorField="'color'"/>
         </div>
     </t>

@@ -38,6 +38,17 @@ export class HmInlineTags extends Component {
         onSaved: Function,
     };
 
+    get fields() {
+        return {
+            path: { type: "char", string: "Path" },
+            tag_ids: {
+                type: "many2many",
+                relation: "hm_filemanager.tag",
+                string: "Tags",
+            },
+        };
+    }
+
     get activeFields() {
         return {
             path: {},
