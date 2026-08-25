@@ -309,7 +309,15 @@ const SEARCH_VIEW_FIELDS = {
         searchable: true,
     },
 };
-const SEARCH_VIEW_ARCH = '<search><field name="name" string="Name"/><field name="tag_ids" string="Tags"/></search>';
+const SEARCH_VIEW_ARCH = `<search>
+    <field name="name" string="Name"/>
+    <field name="tag_ids" string="Tags"/>
+    <filter name="filter_folders" string="Nur Ordner" domain="[('is_dir','=',True)]"/>
+    <filter name="filter_files" string="Nur Dateien" domain="[('is_dir','=',False)]"/>
+    <separator/>
+    <filter name="filter_tagged" string="Mit Tags" domain="[('tag_ids','!=',False)]"/>
+    <filter name="filter_untagged" string="Ohne Tags" domain="[('tag_ids','=',False)]"/>
+</search>`;
 
 export class HmFileManagerAction extends Component {
     static template = "hm_filemanager.FileManagerAction";

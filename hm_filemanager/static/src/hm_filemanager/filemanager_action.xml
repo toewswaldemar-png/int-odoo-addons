@@ -1,7 +1,7 @@
 <templates xml:space="preserve">
     <t t-name="hm_filemanager.FileManagerAction" owl="1">
-        <WithSearch resModel="'hm_filemanager.file'" searchMenuTypes="[]"
-                    searchViewFields="searchViewFields" searchViewArch="searchViewArch">
+        <WithSearch resModel="'hm_filemanager.file'" searchMenuTypes="['filter', 'favorite']"
+                    searchViewFields="searchViewFields" searchViewArch="searchViewArch" loadIrFilters="true">
             <t t-set-slot="default" t-slot-scope="search">
                 <HmFileManager domain="search.domain"/>
             </t>
