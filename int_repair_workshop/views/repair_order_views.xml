@@ -17,18 +17,38 @@
                 <page string="Werkstattstufen" name="workshop_stages">
                     <group>
                         <group>
-                            <field name="x_stage_reinigung_aussen"/>
-                            <field name="x_stage_eingangspruefung"/>
-                            <field name="x_stage_reinigung_gesamt"/>
-                            <field name="x_stage_reparatur_befund" invisible="x_auftragsart != 'reparatur'"/>
-                            <field name="x_stage_revision_anweisung" invisible="x_auftragsart != 'revision'"/>
+                            <field name="x_stage_reinigung_aussen" widget="many2one_avatar_employee"/>
+                            <field name="x_stage_eingangspruefung" widget="many2one_avatar_employee"/>
+                            <field name="x_stage_reinigung_gesamt" widget="many2one_avatar_employee"/>
+                            <field name="x_stage_reparatur_befund" widget="many2one_avatar_employee" invisible="x_auftragsart != 'reparatur'"/>
+                            <field name="x_stage_revision_anweisung" widget="many2one_avatar_employee" invisible="x_auftragsart != 'revision'"/>
                         </group>
                         <group>
-                            <field name="x_stage_endpruefung"/>
-                            <field name="x_stage_reinigen_verpacken"/>
+                            <field name="x_stage_endpruefung" widget="many2one_avatar_employee"/>
+                            <field name="x_stage_reinigen_verpacken" widget="many2one_avatar_employee"/>
                         </group>
                     </group>
                 </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_repair_order_tree_workshop" model="ir.ui.view">
+        <field name="name">repair.order.tree.workshop</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='activity_exception_decoration']" position="before">
+                <field name="x_auftragsart" optional="hide"/>
+                <field name="x_eingangsdatum" optional="hide"/>
+                <field name="x_verfuegbare_arbeitstage" optional="hide"/>
+                <field name="x_stage_reinigung_aussen" optional="hide" widget="many2one_avatar_employee"/>
+                <field name="x_stage_eingangspruefung" optional="hide" widget="many2one_avatar_employee"/>
+                <field name="x_stage_reinigung_gesamt" optional="hide" widget="many2one_avatar_employee"/>
+                <field name="x_stage_reparatur_befund" optional="hide" widget="many2one_avatar_employee"/>
+                <field name="x_stage_revision_anweisung" optional="hide" widget="many2one_avatar_employee"/>
+                <field name="x_stage_endpruefung" optional="hide" widget="many2one_avatar_employee"/>
+                <field name="x_stage_reinigen_verpacken" optional="hide" widget="many2one_avatar_employee"/>
             </xpath>
         </field>
     </record>
