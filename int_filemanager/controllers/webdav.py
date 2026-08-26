@@ -47,6 +47,38 @@ class IntFilemanagerWebdavController(http.Controller):
         return {"token": token, "url": url}
 
     @http.route(
+        ["/int_filemanager/webdav/<string:token>", "/int_filemanager/webdav/<string:token>/"],
+        type="http", auth="public", methods=_DAV_METHODS, csrf=False,
+    )
+    def webdav_collection(self, token):
+        """Excel's WebDAV client probes the "directory" level (this URL,
+        without a filename) before it trusts the file resource is genuinely
+        writable - observed empirically: a 404 here made it fall back to
+        read-only ("Speichern unter" instead of writing back), even though
+        the file-level GET/PUT routes worked fine on their own. Just needs
+        to look like a valid, DAV-capable collection; nothing here needs to
+        resolve the token."""
+        method = request.httprequest.method
+        _drain_body()
+        if method == "OPTIONS":
+            return self._dav_response(200, headers=[
+                ("Allow", "OPTIONS, GET, HEAD, PROPFIND"),
+            ])
+        if method in ("HEAD", "GET"):
+            return self._dav_response(200)
+        if method == "PROPFIND":
+            body = (
+                '<?xml version="1.0" encoding="utf-8"?>'
+                '<D:multistatus xmlns:D="DAV:"><D:response>'
+                "<D:href>%s</D:href><D:propstat><D:prop>"
+                "<D:resourcetype><D:collection/></D:resourcetype>"
+                "</D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat>"
+                "</D:response></D:multistatus>" % request.httprequest.path
+            ).encode("utf-8")
+            return self._dav_response(207, headers=[("Content-Type", "application/xml; charset=utf-8")], body=body)
+        return self._dav_response(404)
+
+    @http.route(
         "/int_filemanager/webdav/<string:token>/<string:filename>",
         type="http", auth="public", methods=_DAV_METHODS, csrf=False,
     )
