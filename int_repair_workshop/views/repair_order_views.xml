@@ -38,6 +38,9 @@
         <field name="model">repair.order</field>
         <field name="inherit_id" ref="repair.view_repair_order_tree"/>
         <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="editable">bottom</attribute>
+            </xpath>
             <xpath expr="//field[@name='activity_exception_decoration']" position="before">
                 <field name="x_auftragsart" optional="hide"/>
                 <field name="x_eingangsdatum" optional="hide"/>
