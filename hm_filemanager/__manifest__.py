@@ -12,6 +12,8 @@
     "author": "HM",
     "license": "LGPL-3",
     "depends": ["base", "onlyoffice_odoo"],
+    "external_dependencies": {"python": ["watchdog"]},
+    "post_load": "post_load",
     "data": [
         "security/security.xml",
         "security/ir.model.access.csv",
