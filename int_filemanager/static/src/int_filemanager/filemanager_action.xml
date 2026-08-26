@@ -66,6 +66,9 @@
                                         <button t-if="!entry.is_dir and isEditable(entry.name)"
                                                 class="btn btn-link btn-sm"
                                                 t-on-click="() => this.onEdit(entry)">Bearbeiten</button>
+                                        <button t-if="!entry.is_dir and isLocalOfficeCapable(entry.name)"
+                                                class="btn btn-link btn-sm"
+                                                t-on-click="() => this.onOpenLocal(entry)">Lokal öffnen</button>
                                         <button t-if="!entry.is_dir" class="btn btn-link btn-sm"
                                                 t-on-click="() => this.onDownload(entry)">Download</button>
                                         <button class="btn btn-link btn-sm"

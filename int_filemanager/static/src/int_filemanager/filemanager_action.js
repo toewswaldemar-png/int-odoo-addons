@@ -22,6 +22,15 @@ const PREVIEWABLE_EXTENSIONS = new Set([
     "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "txt",
 ]);
 
+// Only Word/Excel/PowerPoint have an "ofe" protocol handler on Windows for
+// launching the desktop app straight from a URL - odt/rtf/csv/ods/odp have
+// no equivalent, they stay editable via ONLYOFFICE only.
+const OFFICE_PROTOCOL = {
+    doc: "ms-word", docx: "ms-word",
+    xls: "ms-excel", xlsx: "ms-excel",
+    ppt: "ms-powerpoint", pptx: "ms-powerpoint",
+};
+
 // Uses the FontAwesome icon set already bundled with Odoo's web client.
 const EXTENSION_ICONS = {
     pdf: "fa-file-pdf-o",
@@ -183,6 +192,10 @@ export class IntFileManager extends Component {
         return PREVIEWABLE_EXTENSIONS.has(extOf(name));
     }
 
+    isLocalOfficeCapable(name) {
+        return extOf(name) in OFFICE_PROTOCOL;
+    }
+
     entryPath(entry) {
         // entry.path already is the real relative path from the backend - this
         // matters in particular for recursive search results, where the entry's
@@ -223,6 +236,21 @@ export class IntFileManager extends Component {
                 tag: "onlyoffice_editor",
                 params: { attachment_id: res.attachment_id },
             });
+        } catch (e) {
+            this.notification.add(e.data?.message || e.message, { type: "danger" });
+        }
+    }
+
+    async onOpenLocal(entry) {
+        const protocol = OFFICE_PROTOCOL[extOf(entry.name)];
+        if (!protocol) {
+            return;
+        }
+        try {
+            const res = await rpc("/int_filemanager/webdav_token", { path: this.entryPath(entry) });
+            // Not further percent-encoded - the "ofe" handler expects the
+            // raw URL appended as-is, verified against real Excel 365.
+            window.location.href = `${protocol}:ofe|u|${res.url}`;
         } catch (e) {
             this.notification.add(e.data?.message || e.message, { type: "danger" });
         }
