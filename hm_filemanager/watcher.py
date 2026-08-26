@@ -3,8 +3,8 @@ import os
 import threading
 import time
 
-from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
+import gevent
+import inotify_simple
 
 import odoo
 from odoo.api import Environment, SUPERUSER_ID
@@ -19,15 +19,24 @@ _logger = logging.getLogger(__name__)
 _started = False
 _lock = threading.Lock()
 
+_WATCH_FLAGS = (
+    inotify_simple.flags.CREATE
+    | inotify_simple.flags.DELETE
+    | inotify_simple.flags.MODIFY
+    | inotify_simple.flags.MOVED_FROM
+    | inotify_simple.flags.MOVED_TO
+    | inotify_simple.flags.DELETE_SELF
+)
 
-def _is_hidden(abs_path):
-    return any(part.startswith(".") for part in abs_path.split(os.sep) if part)
+
+def _is_hidden(name):
+    return name.startswith(".")
 
 
 def _run(fn):
     """Open a fresh cursor/env for one event, run fn(env), commit, close.
     There's no request.env outside an HTTP request, and event handling must
-    not share a single long-lived cursor across the watcher thread's life."""
+    not share a single long-lived cursor across the watcher's lifetime."""
     dbname = config["db_name"][0]
     reg = Registry(dbname)
     with reg.cursor() as cr:
@@ -43,38 +52,117 @@ def _run(fn):
             _logger.exception("hm_filemanager watcher: failed to process filesystem event")
 
 
-class _Handler(FileSystemEventHandler):
-
-    def on_created(self, event):
-        self._upsert(event.src_path)
-
-    def on_modified(self, event):
-        if not event.is_directory:
-            self._upsert(event.src_path)
-
-    def on_moved(self, event):
-        if _is_hidden(event.src_path) and _is_hidden(event.dest_path):
-            return
-        _run(lambda env: index_move_tree(
-            env, to_relative(env, event.src_path), to_relative(env, event.dest_path)
-        ))
-
-    def on_deleted(self, event):
-        if _is_hidden(event.src_path):
-            return
-        _run(lambda env: index_remove_tree(env, to_relative(env, event.src_path)))
-
-    def _upsert(self, abs_path):
-        if _is_hidden(abs_path):
-            return
-        _run(lambda env: index_upsert(env, abs_path))
+def _upsert(abs_path):
+    _run(lambda env: index_upsert(env, abs_path))
 
 
-def _delayed_start():
+def _move(old_abs, new_abs):
+    _run(lambda env: index_move_tree(env, to_relative(env, old_abs), to_relative(env, new_abs)))
+
+
+def _remove(abs_path):
+    _run(lambda env: index_remove_tree(env, to_relative(env, abs_path)))
+
+
+def _add_watches(inotify, wd_to_path, root_abs):
+    """Register watches for root_abs and every subdirectory, without
+    touching the index - used once at startup, where the existing full
+    scan (manual or the daily cron) is already the source of truth."""
+    for dirpath, dirnames, _filenames in os.walk(root_abs):
+        dirnames[:] = [d for d in dirnames if not _is_hidden(d)]
+        wd = inotify.add_watch(dirpath, _WATCH_FLAGS)
+        wd_to_path[wd] = dirpath
+
+
+def _bootstrap_subtree(inotify, wd_to_path, root_abs):
+    """Like _add_watches, but also indexes everything found - used when a
+    subtree appears live (a directory CREATE/MOVED_TO event) and may already
+    contain content nothing else has indexed yet."""
+    _upsert(root_abs)
+    for dirpath, dirnames, filenames in os.walk(root_abs):
+        dirnames[:] = [d for d in dirnames if not _is_hidden(d)]
+        wd = inotify.add_watch(dirpath, _WATCH_FLAGS)
+        wd_to_path[wd] = dirpath
+        for name in dirnames + [f for f in filenames if not _is_hidden(f)]:
+            _upsert(os.path.join(dirpath, name))
+
+
+def _process_batch(events, inotify, wd_to_path):
+    flags = inotify_simple.flags
+    moved_from = {}
+
+    for event in events:
+        if event.mask & flags.IGNORED:
+            wd_to_path.pop(event.wd, None)
+            continue
+
+        dir_path = wd_to_path.get(event.wd)
+        if dir_path is None or _is_hidden(event.name):
+            continue
+        abs_path = os.path.join(dir_path, event.name)
+        is_dir = bool(event.mask & flags.ISDIR)
+
+        if event.mask & flags.MOVED_FROM:
+            moved_from[event.cookie] = abs_path
+        elif event.mask & flags.MOVED_TO:
+            old_abs = moved_from.pop(event.cookie, None)
+            if old_abs is not None:
+                _move(old_abs, abs_path)
+                if is_dir:
+                    # Rewrite the still-open watches for this subtree's own
+                    # descendants to their new absolute paths.
+                    prefix = old_abs + os.sep
+                    for wd, path in list(wd_to_path.items()):
+                        if path == old_abs or path.startswith(prefix):
+                            wd_to_path[wd] = abs_path + path[len(old_abs):]
+            else:
+                # Moved in from outside the watched tree - treat like new.
+                if is_dir:
+                    _bootstrap_subtree(inotify, wd_to_path, abs_path)
+                else:
+                    _upsert(abs_path)
+        elif event.mask & flags.CREATE:
+            if is_dir:
+                _bootstrap_subtree(inotify, wd_to_path, abs_path)
+            else:
+                _upsert(abs_path)
+        elif event.mask & flags.MODIFY:
+            if not is_dir:
+                _upsert(abs_path)
+        elif event.mask & flags.DELETE:
+            _remove(abs_path)
+        elif event.mask & flags.DELETE_SELF:
+            wd_to_path.pop(event.wd, None)
+
+    # Anything left here was moved outside the watched tree entirely - the
+    # matching MOVED_TO, if any, would already have arrived in this same batch.
+    for old_abs in moved_from.values():
+        _remove(old_abs)
+
+
+def _watch_loop(root_abs):
+    inotify = inotify_simple.INotify()
+    wd_to_path = {}
+    _add_watches(inotify, wd_to_path, root_abs)
+    _logger.info("hm_filemanager: watcher active for %s (%d directories)", root_abs, len(wd_to_path))
+
+    while True:
+        # A blocking read here is fine - gevent's monkey patching makes it
+        # cooperative *because* this whole loop runs inside a real greenlet
+        # (gevent.spawn), unlike a plain threading.Thread, which is exactly
+        # what silently never received events in this same process.
+        events = inotify.read()
+        try:
+            _process_batch(events, inotify, wd_to_path)
+        except Exception:
+            _logger.exception("hm_filemanager watcher: error processing event batch")
+
+
+def _run_watcher():
     # post_load fires while Registry.new(dbname) for this very database is
     # still on the call stack - reentering Registry(dbname) here immediately
-    # returns a not-yet-finished registry. Retry from a separate thread until
-    # module loading has actually finished and cached the ready registry.
+    # returns a not-yet-finished registry. Retry until module loading has
+    # actually finished and cached the ready registry.
     dbname = config["db_name"][0]
     root = None
     for _attempt in range(30):
@@ -90,19 +178,19 @@ def _delayed_start():
         _logger.error("hm_filemanager: watcher could not resolve root path, giving up")
         return
 
-    observer = Observer()
-    observer.schedule(_Handler(), root, recursive=True)
-    observer.daemon = True
-    observer.start()
-    _logger.info("hm_filemanager: watcher started for %s", root)
+    _watch_loop(root)
 
 
 def start_watcher():
     """Started via post_load - runs once per process. Only actually starts
-    the observer in the gevent/longpolling process (odoo.evented), which is
-    the one process Odoo's prefork arbiter never recycles; a thread hanging
-    off one of the regular HTTP workers would die whenever that worker gets
-    recycled (request-count/memory limits)."""
+    in the gevent/longpolling process (odoo.evented), the one process
+    Odoo's prefork arbiter never recycles.
+
+    Must run as a gevent greenlet (gevent.spawn), not a plain
+    threading.Thread: this process has gevent.monkey.patch_all() applied,
+    and a plain OS thread doing blocking reads never gets woken up by
+    gevent's event loop - verified empirically, the observer starts but
+    silently never receives a single event."""
     global _started
     if not getattr(odoo, "evented", False):
         return
@@ -110,4 +198,4 @@ def start_watcher():
         if _started:
             return
         _started = True
-    threading.Thread(target=_delayed_start, daemon=True).start()
+    gevent.spawn(_run_watcher)
