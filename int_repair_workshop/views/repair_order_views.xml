@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_repair_order_form_workshop" model="ir.ui.view">
+        <field name="name">repair.order.form.workshop</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='under_warranty']" position="after">
+                <field name="x_auftragsart" readonly="state in ['cancel', 'done']"/>
+            </xpath>
+            <xpath expr="//field[@name='schedule_date']" position="after">
+                <field name="x_eingangsdatum"/>
+                <field name="x_verfuegbare_arbeitstage" readonly="1"/>
+            </xpath>
+            <xpath expr="//page[@name='parts']" position="before">
+                <page string="Werkstattstufen" name="workshop_stages">
+                    <group>
+                        <group>
+                            <field name="x_stage_reinigung_aussen"/>
+                            <field name="x_stage_eingangspruefung"/>
+                            <field name="x_stage_reinigung_gesamt"/>
+                            <field name="x_stage_reparatur_befund" invisible="x_auftragsart != 'reparatur'"/>
+                            <field name="x_stage_revision_anweisung" invisible="x_auftragsart != 'revision'"/>
+                        </group>
+                        <group>
+                            <field name="x_stage_endpruefung"/>
+                            <field name="x_stage_reinigen_verpacken"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
