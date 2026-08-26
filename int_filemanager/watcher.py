@@ -147,10 +147,10 @@ def _watch_loop(root_abs):
     _logger.info("int_filemanager: watcher active for %s (%d directories)", root_abs, len(wd_to_path))
 
     while True:
-        # A blocking read here is fine - gevent's monkey patching makes it
-        # cooperative *because* this whole loop runs inside a real greenlet
-        # (gevent.spawn), unlike a plain threading.Thread, which is exactly
-        # what silently never received events in this same process.
+        # A blocking read here is fine in both startup modes: in a plain
+        # thread (workers=0) it just blocks that thread, and in the gevent
+        # process (workers>0) it's cooperative because this loop runs
+        # inside a real greenlet (gevent.spawn) - see start_watcher().
         events = inotify.read()
         try:
             _process_batch(events, inotify, wd_to_path)
@@ -182,20 +182,33 @@ def _run_watcher():
 
 
 def start_watcher():
-    """Started via post_load - runs once per process. Only actually starts
-    in the gevent/longpolling process (odoo.evented), the one process
-    Odoo's prefork arbiter never recycles.
+    """Started via post_load - runs once per process. Picks its startup
+    strategy from the actual `workers` setting so the same code works
+    unchanged on any deployment, not just this one:
 
-    Must run as a gevent greenlet (gevent.spawn), not a plain
-    threading.Thread: this process has gevent.monkey.patch_all() applied,
-    and a plain OS thread doing blocking reads never gets woken up by
-    gevent's event loop - verified empirically, the observer starts but
-    silently never receives a single event."""
+    - workers=0 (single threaded process, no recycling, no gevent
+      monkey-patching anywhere): a plain daemon thread is simplest and
+      just works.
+    - workers>0 (prefork mode): only the gevent/longpolling process
+      (odoo.evented) is stable enough to anchor a persistent loop to -
+      Odoo's arbiter periodically recycles the regular HTTP/cron workers
+      (request-count/memory limits), which would kill a thread hanging
+      off one of them. But that same gevent process has
+      gevent.monkey.patch_all() applied, under which a plain
+      threading.Thread doing blocking reads never gets woken up by
+      gevent's event loop - verified empirically, the observer starts but
+      silently never receives a single event. Needs a real greenlet
+      (gevent.spawn) instead. The other, non-evented workers under
+      workers>0 skip starting anything at all."""
     global _started
-    if not getattr(odoo, "evented", False):
+    workers = config["workers"] or 0
+    if workers > 0 and not getattr(odoo, "evented", False):
         return
     with _lock:
         if _started:
             return
         _started = True
-    gevent.spawn(_run_watcher)
+    if workers == 0:
+        threading.Thread(target=_run_watcher, daemon=True).start()
+    else:
+        gevent.spawn(_run_watcher)
