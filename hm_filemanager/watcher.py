@@ -6,7 +6,8 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 import odoo
-from odoo import api, SUPERUSER_ID
+from odoo.api import Environment, SUPERUSER_ID
+from odoo.modules.registry import Registry
 from odoo.tools import config
 
 from .index_utils import index_move_tree, index_remove_tree, index_upsert
@@ -27,9 +28,9 @@ def _run(fn):
     There's no request.env outside an HTTP request, and event handling must
     not share a single long-lived cursor across the watcher thread's life."""
     dbname = config["db_name"]
-    reg = odoo.registry(dbname)
+    reg = Registry(dbname)
     with reg.cursor() as cr:
-        env = api.Environment(cr, SUPERUSER_ID, {})
+        env = Environment(cr, SUPERUSER_ID, {})
         try:
             fn(env)
             cr.commit()
@@ -83,9 +84,9 @@ def start_watcher():
         _started = True
 
     dbname = config["db_name"]
-    reg = odoo.registry(dbname)
+    reg = Registry(dbname)
     with reg.cursor() as cr:
-        env = api.Environment(cr, SUPERUSER_ID, {})
+        env = Environment(cr, SUPERUSER_ID, {})
         root = get_root(env)
 
     observer = Observer()
