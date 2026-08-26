@@ -39,3 +39,11 @@ def safe_name(name):
     if not name or name in (".", "..") or "/" in name or "\\" in name:
         raise ValidationError("Ungültiger Name.")
     return name
+
+
+def make_shareable(abs_path, is_dir):
+    """The share's existing files/folders (created via Samba) are all 777/666
+    so any Windows user can write to them regardless of SMB user mapping.
+    os.makedirs/f.save() create with the container's own uid:gid (100:101)
+    and default umask instead, which locks other users out - override it."""
+    os.chmod(abs_path, 0o777 if is_dir else 0o666)

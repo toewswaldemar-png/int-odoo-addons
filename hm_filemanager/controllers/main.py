@@ -9,7 +9,7 @@ from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 
 from ..index_utils import index_move_tree, index_remove_tree, index_upsert
-from ..path_utils import get_root, resolve_path, safe_name, to_relative
+from ..path_utils import get_root, make_shareable, resolve_path, safe_name, to_relative
 
 _logger = logging.getLogger(__name__)
 
@@ -149,6 +149,7 @@ class HmFilemanagerController(http.Controller):
         if os.path.exists(new_path):
             raise UserError(_("Es existiert bereits ein Eintrag mit diesem Namen."))
         os.makedirs(new_path)
+        make_shareable(new_path, is_dir=True)
         index_upsert(request.env, new_path)
         return {"ok": True}
 
@@ -213,6 +214,7 @@ class HmFilemanagerController(http.Controller):
             target = os.path.join(abs_dir, name)
             to_relative(request.env, target)
             f.save(target)
+            make_shareable(target, is_dir=False)
             index_upsert(request.env, target)
             saved.append(name)
         return self._json_response({"ok": True, "saved": saved})
