@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+import time
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -69,6 +70,33 @@ class _Handler(FileSystemEventHandler):
         _run(lambda env: index_upsert(env, abs_path))
 
 
+def _delayed_start():
+    # post_load fires while Registry.new(dbname) for this very database is
+    # still on the call stack - reentering Registry(dbname) here immediately
+    # returns a not-yet-finished registry. Retry from a separate thread until
+    # module loading has actually finished and cached the ready registry.
+    dbname = config["db_name"][0]
+    root = None
+    for _attempt in range(30):
+        try:
+            reg = Registry(dbname)
+            with reg.cursor() as cr:
+                env = Environment(cr, SUPERUSER_ID, {})
+                root = get_root(env)
+            break
+        except Exception:
+            time.sleep(1)
+    else:
+        _logger.error("hm_filemanager: watcher could not resolve root path, giving up")
+        return
+
+    observer = Observer()
+    observer.schedule(_Handler(), root, recursive=True)
+    observer.daemon = True
+    observer.start()
+    _logger.info("hm_filemanager: watcher started for %s", root)
+
+
 def start_watcher():
     """Started via post_load - runs once per process. Only actually starts
     the observer in the gevent/longpolling process (odoo.evented), which is
@@ -82,15 +110,4 @@ def start_watcher():
         if _started:
             return
         _started = True
-
-    dbname = config["db_name"][0]
-    reg = Registry(dbname)
-    with reg.cursor() as cr:
-        env = Environment(cr, SUPERUSER_ID, {})
-        root = get_root(env)
-
-    observer = Observer()
-    observer.schedule(_Handler(), root, recursive=True)
-    observer.daemon = True
-    observer.start()
-    _logger.info("hm_filemanager: watcher started for %s", root)
+    threading.Thread(target=_delayed_start, daemon=True).start()
