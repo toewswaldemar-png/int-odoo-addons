@@ -10,7 +10,7 @@
     "version": "19.0.1.0.0",
     "category": "Productivity",
     "license": "LGPL-3",
-    "depends": ["base", "onlyoffice_odoo"],
+    "depends": ["base", "bus", "onlyoffice_odoo"],
     "post_load": "post_load",
     "data": [
         "security/security.xml",

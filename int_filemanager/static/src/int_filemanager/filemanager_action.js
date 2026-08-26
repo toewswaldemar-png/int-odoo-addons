@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, useRef, useEffect, onWillStart } from "@odoo/owl";
+import { Component, useState, useRef, useEffect, onWillStart, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
@@ -72,11 +72,29 @@ export class IntFileManager extends Component {
         this.notification = useService("notification");
         this.dialog = useService("dialog");
         this.fileUpload = useService("file_upload");
+        this.busService = useService("bus_service");
         this.fileInput = useRef("fileInput");
         useBus(this.fileUpload.bus, "FILE_UPLOAD_LOADED", (ev) => {
             if (ev.detail.upload.id === this.pendingUploadId) {
                 this.load(this.state.path);
             }
+        });
+        // Reload when anything changes the index server-side, whether from
+        // this tab (mutations below) or elsewhere (another tab, the
+        // filesystem watcher). Debounced since a bulk change (e.g. a large
+        // folder copied in) fires one notification per touched entry.
+        this._onFilemanagerChange = () => {
+            clearTimeout(this._reloadTimeout);
+            this._reloadTimeout = setTimeout(() => {
+                this.load(this.state.path, this.state.offset);
+                this.refreshTree();
+            }, 800);
+        };
+        this.busService.addChannel("int_filemanager");
+        this.busService.subscribe("int_filemanager.change", this._onFilemanagerChange);
+        onWillUnmount(() => {
+            clearTimeout(this._reloadTimeout);
+            this.busService.unsubscribe("int_filemanager.change", this._onFilemanagerChange);
         });
         // Reload when the native search bar's domain (name/tag facets) changes.
         this._searchInitialized = false;

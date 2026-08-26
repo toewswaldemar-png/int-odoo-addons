@@ -5,6 +5,16 @@ from odoo import fields
 
 from .path_utils import to_relative
 
+BUS_CHANNEL = "int_filemanager"
+BUS_NOTIFICATION_TYPE = "int_filemanager.change"
+
+
+def _notify_change(env):
+    """Tell any open Filemanager view to refresh - queued for delivery on
+    commit (bus.bus._sendone writes via env.cr.precommit), so it only
+    actually reaches clients once the caller's transaction lands."""
+    env["bus.bus"]._sendone(BUS_CHANNEL, BUS_NOTIFICATION_TYPE, {})
+
 
 def _entry_vals(env, abs_path):
     st = os.stat(abs_path)
@@ -30,6 +40,7 @@ def index_upsert(env, abs_path):
         rec.write(vals)
     else:
         rec = Model.create(vals)
+    _notify_change(env)
     return rec
 
 
@@ -37,6 +48,7 @@ def index_remove_tree(env, rel_path):
     """Remove the index record for rel_path and, if it was a folder, all descendants."""
     Model = env["int_filemanager.file"].sudo()
     Model.search(["|", ("path", "=", rel_path), ("path", "=like", rel_path + "/%")]).unlink()
+    _notify_change(env)
 
 
 def index_move_tree(env, old_rel, new_rel):
@@ -58,3 +70,4 @@ def index_move_tree(env, old_rel, new_rel):
         new_child_path = new_rel + suffix
         new_child_parent = os.path.dirname(new_child_path)
         rec.write({"path": new_child_path, "folder_path": new_child_parent or False})
+    _notify_change(env)
