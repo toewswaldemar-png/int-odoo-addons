@@ -4,7 +4,6 @@ import threading
 import time
 
 import gevent
-import inotify_simple
 
 import odoo
 from odoo.api import Environment, SUPERUSER_ID
@@ -13,6 +12,7 @@ from odoo.tools import config
 
 from .index_utils import index_move_tree, index_remove_tree, index_upsert
 from .path_utils import get_root, to_relative
+from .vendor import inotify_simple
 
 _logger = logging.getLogger(__name__)
 

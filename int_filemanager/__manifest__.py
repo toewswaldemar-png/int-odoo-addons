@@ -11,7 +11,6 @@
     "category": "Productivity",
     "license": "LGPL-3",
     "depends": ["base", "onlyoffice_odoo"],
-    "external_dependencies": {"python": ["inotify_simple"]},
     "post_load": "post_load",
     "data": [
         "security/security.xml",
