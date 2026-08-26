@@ -1,0 +1,15 @@
+<odoo>
+    <record id="module_category_int_filemanager" model="ir.module.category">
+        <field name="name">Dateimanager</field>
+    </record>
+
+    <record id="privilege_int_filemanager" model="res.groups.privilege">
+        <field name="name">Dateimanager</field>
+        <field name="category_id" ref="module_category_int_filemanager"/>
+    </record>
+
+    <record id="group_filemanager_user" model="res.groups">
+        <field name="name">Dateimanager Nutzer</field>
+        <field name="privilege_id" ref="privilege_int_filemanager"/>
+    </record>
+</odoo>

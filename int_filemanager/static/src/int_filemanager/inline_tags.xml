@@ -1,0 +1,18 @@
+<templates xml:space="preserve">
+    <t t-name="int_filemanager.InlineTags" owl="1">
+        <Record resModel="'int_filemanager.file'"
+                resId="props.metaId || false"
+                fields="fields"
+                activeFields="activeFields"
+                values="initialValues"
+                mode="'edit'"
+                t-slot-scope="data">
+            <IntTagsCell record="data.record" onSaved="props.onSaved"/>
+        </Record>
+    </t>
+    <t t-name="int_filemanager.TagsCell" owl="1">
+        <div class="hm-filemanager-inline-tags o_list_view">
+            <Field name="'tag_ids'" record="props.record" type="'many2many_tags'" colorField="'color'"/>
+        </div>
+    </t>
+</templates>

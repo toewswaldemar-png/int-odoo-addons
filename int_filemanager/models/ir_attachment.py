@@ -1,0 +1,66 @@
+import logging
+
+from odoo import fields, models
+from odoo.exceptions import AccessError
+
+from ..index_utils import index_upsert
+from ..path_utils import to_relative
+
+_logger = logging.getLogger(__name__)
+
+
+class IrAttachment(models.Model):
+    _inherit = "ir.attachment"
+
+    int_filemanager_path = fields.Char(
+        string="Filemanager-Pfad",
+        index=True,
+        copy=False,
+        help="Absoluter Pfad auf der Festplatte, den dieses Attachment spiegelt. "
+        "Nur intern von int_filemanager gesetzt, niemals über normale Requests.",
+    )
+
+    def _check_filemanager_path_write_allowed(self, vals):
+        # int_filemanager_path darf ausschließlich von unserem eigenen (sudo-)
+        # Controller-Code gesetzt werden - nie durch einen regulären Nutzer-Request,
+        # sonst ließe sich darüber beliebiger Dateiinhalt auf der Platte überschreiben.
+        if "int_filemanager_path" in vals and not self.env.su:
+            raise AccessError("int_filemanager_path darf nicht direkt gesetzt werden.")
+        if vals.get("int_filemanager_path"):
+            # Defense in depth: auch im sudo-Fall muss der Pfad innerhalb des
+            # konfigurierten Filemanager-Stammverzeichnisses liegen.
+            to_relative(self.env, vals["int_filemanager_path"])
+
+    def create(self, vals_list):
+        for vals in vals_list if isinstance(vals_list, list) else [vals_list]:
+            self._check_filemanager_path_write_allowed(vals)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        self._check_filemanager_path_write_allowed(vals)
+        res = super().write(vals)
+        if "raw" in vals or "datas" in vals:
+            for attachment in self:
+                if attachment.int_filemanager_path:
+                    self._int_filemanager_sync_to_disk(attachment)
+        return res
+
+    def _int_filemanager_sync_to_disk(self, attachment):
+        path = attachment.int_filemanager_path
+        try:
+            to_relative(self.env, path)
+        except Exception:
+            _logger.exception(
+                "int_filemanager: attachment %s hat einen ungültigen int_filemanager_path, "
+                "überspringe Sync auf Platte: %s",
+                attachment.id,
+                path,
+            )
+            return
+        try:
+            with open(path, "wb") as f:
+                f.write(attachment.raw or b"")
+            index_upsert(self.env, path)
+            _logger.info("int_filemanager: Attachment %s zurück nach %s geschrieben", attachment.id, path)
+        except OSError:
+            _logger.exception("int_filemanager: Sync von Attachment %s nach %s fehlgeschlagen", attachment.id, path)

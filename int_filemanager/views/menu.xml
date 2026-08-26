@@ -1,0 +1,12 @@
+<odoo>
+    <record id="action_int_filemanager" model="ir.actions.client">
+        <field name="name">Dateimanager</field>
+        <field name="tag">int_filemanager_browser</field>
+    </record>
+
+    <menuitem id="menu_int_filemanager_root"
+              name="Dateimanager"
+              action="action_int_filemanager"
+              groups="int_filemanager.group_filemanager_user"
+              sequence="20"/>
+</odoo>

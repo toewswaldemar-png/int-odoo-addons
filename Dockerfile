@@ -1,6 +1,6 @@
 FROM odoo:latest
 
-# hm_filemanager's watcher.py needs inotify_simple - not bundled in the base
+# int_filemanager's watcher.py needs inotify_simple - not bundled in the base
 # image, unlike watchdog. Must land in the system dist-packages, not the
 # default user-site under /var/lib/odoo/.local - that path is one of the
 # container's own runtime bind mounts (odoo18/data) and would be shadowed

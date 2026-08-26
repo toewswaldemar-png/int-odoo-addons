@@ -1,0 +1,17 @@
+<odoo>
+    <record id="int_filemanager_file_search" model="ir.ui.view">
+        <field name="name">int_filemanager.file.search</field>
+        <field name="model">int_filemanager.file</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Name"/>
+                <field name="tag_ids" string="Tags"/>
+                <filter name="filter_folders" string="Nur Ordner" domain="[('is_dir','=',True)]"/>
+                <filter name="filter_files" string="Nur Dateien" domain="[('is_dir','=',False)]"/>
+                <separator/>
+                <filter name="filter_tagged" string="Mit Tags" domain="[('tag_ids','!=',False)]"/>
+                <filter name="filter_untagged" string="Ohne Tags" domain="[('tag_ids','=',False)]"/>
+            </search>
+        </field>
+    </record>
+</odoo>

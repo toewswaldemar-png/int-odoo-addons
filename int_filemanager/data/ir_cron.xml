@@ -1,0 +1,12 @@
+<odoo>
+    <record id="ir_cron_scan_filemanager" model="ir.cron">
+        <field name="name">Filemanager: Index mit Dateisystem abgleichen (Sicherheitsnetz)</field>
+        <field name="model_id" ref="model_int_filemanager_file"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_scan_filemanager()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d 03:00:00')"/>
+        <field name="active">True</field>
+    </record>
+</odoo>

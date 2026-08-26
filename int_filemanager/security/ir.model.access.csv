@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_int_filemanager_tag,int_filemanager.tag,model_int_filemanager_tag,int_filemanager.group_filemanager_user,1,1,1,1
+access_int_filemanager_file,int_filemanager.file,model_int_filemanager_file,int_filemanager.group_filemanager_user,1,1,1,1

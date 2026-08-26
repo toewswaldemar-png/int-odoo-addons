@@ -1,7 +1,0 @@
-<templates xml:space="preserve">
-    <t t-name="hm_filemanager.FilePreviewDialog" owl="1">
-        <Dialog title="fileName" size="'xl'" contentClass="'hm-filemanager-preview-dialog'">
-            <iframe t-att-src="previewUrl" style="width: 100%; height: 75vh; border: 0;"/>
-        </Dialog>
-    </t>
-</templates>
