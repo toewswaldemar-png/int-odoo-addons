@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="web.ListRenderer" t-inherit="web.ListRenderer" t-inherit-mode="extension">
+        <xpath expr="//th[@t-if=&quot;column.type === 'field'&quot;]" position="attributes">
+            <attribute name="draggable">true</attribute>
+            <attribute name="t-on-dragstart">(ev) => this.onColumnDragStart(ev, column)</attribute>
+            <attribute name="t-on-dragover.prevent">() => {}</attribute>
+            <attribute name="t-on-dragend">(ev) => this.onColumnDragEnd(ev)</attribute>
+            <attribute name="t-on-drop">(ev) => this.onColumnDrop(ev, column)</attribute>
+        </xpath>
+    </t>
+
+</templates>
