@@ -3,7 +3,6 @@ import logging
 from odoo import fields, models
 from odoo.exceptions import AccessError
 
-from ..index_utils import index_upsert
 from ..path_utils import to_relative
 
 _logger = logging.getLogger(__name__)
@@ -60,7 +59,13 @@ class IrAttachment(models.Model):
         try:
             with open(path, "wb") as f:
                 f.write(attachment.raw or b"")
-            index_upsert(self.env, path)
+            # No index_upsert here on purpose: the filesystem watcher picks up
+            # this exact write via inotify moments later and updates the index
+            # itself. Calling index_upsert from here too raced it - both ended
+            # up writing the same int_filemanager.file row in overlapping
+            # transactions, which Postgres rejected with "could not serialize
+            # access due to concurrent update" (surfaced as a slow, failing
+            # ONLYOFFICE open/save).
             _logger.info("int_filemanager: Attachment %s zurück nach %s geschrieben", attachment.id, path)
         except OSError:
             _logger.exception("int_filemanager: Sync von Attachment %s nach %s fehlgeschlagen", attachment.id, path)
