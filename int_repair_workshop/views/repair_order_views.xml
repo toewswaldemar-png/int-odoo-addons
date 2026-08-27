@@ -9,26 +9,28 @@
             <xpath expr="//field[@name='under_warranty']" position="after">
                 <field name="x_auftragsart" readonly="state in ['cancel', 'done']"/>
             </xpath>
-            <xpath expr="//field[@name='schedule_date']" position="after">
+            <xpath expr="//field[@name='schedule_date']" position="replace">
+                <field name="x_lieferdatum" readonly="state in ['done', 'cancel']"/>
+            </xpath>
+            <xpath expr="//field[@name='x_lieferdatum']" position="after">
                 <field name="x_eingangsdatum"/>
                 <field name="x_verfuegbare_arbeitstage" readonly="1"/>
+                <field name="x_stufe_mitarbeiter" widget="many2one_avatar_employee"/>
             </xpath>
-            <xpath expr="//page[@name='parts']" position="before">
-                <page string="Werkstattstufen" name="workshop_stages">
-                    <group>
-                        <group>
-                            <field name="x_stage_reinigung_aussen" widget="many2one_avatar_employee"/>
-                            <field name="x_stage_eingangspruefung" widget="many2one_avatar_employee"/>
-                            <field name="x_stage_reinigung_gesamt" widget="many2one_avatar_employee"/>
-                            <field name="x_stage_reparatur_befund" widget="many2one_avatar_employee" invisible="x_auftragsart != 'reparatur'"/>
-                            <field name="x_stage_revision_anweisung" widget="many2one_avatar_employee" invisible="x_auftragsart != 'revision'"/>
-                        </group>
-                        <group>
-                            <field name="x_stage_endpruefung" widget="many2one_avatar_employee"/>
-                            <field name="x_stage_reinigen_verpacken" widget="many2one_avatar_employee"/>
-                        </group>
-                    </group>
-                </page>
+            <xpath expr="//field[@name='state'][@widget='statusbar']" position="attributes">
+                <attribute name="string">Auftragsstatus</attribute>
+            </xpath>
+            <xpath expr="//field[@name='state'][@widget='statusbar']" position="after">
+                <field name="x_werkstattstufe" widget="statusbar"/>
+            </xpath>
+            <xpath expr="//field[@name='product_id'][1]" position="attributes">
+                <attribute name="string">Gerätetyp</attribute>
+            </xpath>
+            <xpath expr="//field[@name='product_id'][1]" position="after">
+                <field name="x_geraete_snr"/>
+            </xpath>
+            <xpath expr="//field[@name='name'][1]" position="attributes">
+                <attribute name="readonly">0</attribute>
             </xpath>
         </field>
     </record>
@@ -41,17 +43,52 @@
             <xpath expr="//list" position="attributes">
                 <attribute name="editable">bottom</attribute>
             </xpath>
+            <xpath expr="//field[@name='priority']" position="after">
+                <button name="action_open_form" type="object" icon="fa-external-link" title="Formular öffnen"/>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="attributes">
+                <attribute name="string">Auftragsstatus</attribute>
+            </xpath>
+            <xpath expr="//field[@name='schedule_date']" position="replace">
+                <field name="x_lieferdatum" optional="show" class="text-start"/>
+            </xpath>
+            <xpath expr="//field[@name='product_id'][1]" position="attributes">
+                <attribute name="string">Gerätetyp</attribute>
+            </xpath>
+            <xpath expr="//field[@name='product_id'][1]" position="after">
+                <field name="x_geraete_snr" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='name'][1]" position="attributes">
+                <attribute name="readonly">0</attribute>
+            </xpath>
             <xpath expr="//field[@name='activity_exception_decoration']" position="before">
                 <field name="x_auftragsart" optional="hide"/>
                 <field name="x_eingangsdatum" optional="hide"/>
-                <field name="x_verfuegbare_arbeitstage" optional="hide"/>
-                <field name="x_stage_reinigung_aussen" optional="hide" widget="many2one_avatar_employee"/>
-                <field name="x_stage_eingangspruefung" optional="hide" widget="many2one_avatar_employee"/>
-                <field name="x_stage_reinigung_gesamt" optional="hide" widget="many2one_avatar_employee"/>
-                <field name="x_stage_reparatur_befund" optional="hide" widget="many2one_avatar_employee"/>
-                <field name="x_stage_revision_anweisung" optional="hide" widget="many2one_avatar_employee"/>
-                <field name="x_stage_endpruefung" optional="hide" widget="many2one_avatar_employee"/>
-                <field name="x_stage_reinigen_verpacken" optional="hide" widget="many2one_avatar_employee"/>
+                <field name="x_verfuegbare_arbeitstage" optional="hide" class="text-start" widget="badge"
+                    decoration-danger="x_verfuegbare_arbeitstage &lt; 0"
+                    decoration-warning="x_verfuegbare_arbeitstage &gt;= 0 and x_verfuegbare_arbeitstage &lt;= 3"
+                    decoration-success="x_verfuegbare_arbeitstage &gt; 3"/>
+                <field name="x_werkstattstufe" optional="show"/>
+                <field name="x_stufe_mitarbeiter" optional="hide" widget="many2one_avatar_employee"/>
+                <field name="tag_ids" optional="show" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}"/>
+                <field name="internal_notes" optional="show" string="Notizen"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_repair_order_search_workshop" model="ir.ui.view">
+        <field name="name">repair.order.search.workshop</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_form_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="x_geraete_snr" string="Geräte-SNr."/>
+                <field name="x_stufe_mitarbeiter" string="Ausgeführt von"/>
+                <field name="tag_ids" string="Stichwörter"/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter string="Werkstattstufe" name="group_by_x_werkstattstufe" domain="[]" context="{'group_by': 'x_werkstattstufe'}"/>
+                <filter string="Ausgeführt von" name="group_by_x_stufe_mitarbeiter" domain="[]" context="{'group_by': 'x_stufe_mitarbeiter'}"/>
             </xpath>
         </field>
     </record>

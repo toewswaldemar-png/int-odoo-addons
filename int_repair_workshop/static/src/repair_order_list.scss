@@ -1,0 +1,7 @@
+// x_verfuegbare_arbeitstage is an Integer field, so Odoo's list renderer
+// right-aligns its header label purely based on field type (isNumericColumn
+// in list_renderer.js has no XML-level override) - force it back in line
+// with the other, non-numeric column headers.
+th[data-name="x_verfuegbare_arbeitstage"] .o_list_number_th {
+    text-align: left !important;
+}

@@ -14,6 +14,11 @@
     "data": [
         "views/repair_order_views.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "int_repair_workshop/static/src/repair_order_list.scss",
+        ],
+    },
     "installable": True,
     "application": False,
 }
