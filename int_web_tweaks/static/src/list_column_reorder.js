@@ -33,7 +33,12 @@ patch(ListRenderer.prototype, {
         if (!saved || !saved.length) {
             return columns;
         }
-        const remaining = new Map(columns.map((c) => [c.name, c]));
+        // Only field columns are reorderable - buttons, handles and other
+        // structural columns always stay pinned at their view-defined slot,
+        // so a saved order captured before one existed can never bump it
+        // out of place.
+        const fieldColumns = columns.filter((c) => c.type === "field");
+        const remaining = new Map(fieldColumns.map((c) => [c.name, c]));
         const ordered = [];
         for (const name of saved) {
             const col = remaining.get(name);
@@ -46,16 +51,17 @@ patch(ListRenderer.prototype, {
         // field, different view) keep their original relative order,
         // appended after the remembered ones - never dropped, never crashes
         // on a column set that no longer matches exactly.
-        for (const col of columns) {
+        for (const col of fieldColumns) {
             if (remaining.has(col.name)) {
                 ordered.push(col);
             }
         }
-        return ordered;
+        let i = 0;
+        return columns.map((c) => (c.type === "field" ? ordered[i++] : c));
     },
 
     onColumnDragStart(ev, column) {
-        if (!column.name) {
+        if (!column.name || column.type !== "field") {
             return;
         }
         this._draggedColumnName = column.name;
@@ -73,10 +79,10 @@ patch(ListRenderer.prototype, {
         ev.currentTarget.classList.remove("o_column_dragging");
         const draggedName = this._draggedColumnName;
         this._draggedColumnName = null;
-        if (!draggedName || !column.name || draggedName === column.name) {
+        if (!draggedName || column.type !== "field" || draggedName === column.name) {
             return;
         }
-        const names = this.columns.filter((c) => c.name).map((c) => c.name);
+        const names = this.columns.filter((c) => c.type === "field").map((c) => c.name);
         const fromIndex = names.indexOf(draggedName);
         const toIndex = names.indexOf(column.name);
         if (fromIndex === -1 || toIndex === -1) {
