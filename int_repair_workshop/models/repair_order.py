@@ -2,6 +2,9 @@ from datetime import datetime, time
 
 from odoo import api, fields, models
 
+BUS_CHANNEL = "int_repair_workshop"
+BUS_NOTIFICATION_TYPE = "int_repair_workshop.change"
+
 
 class RepairOrder(models.Model):
     _inherit = "repair.order"
@@ -23,7 +26,7 @@ class RepairOrder(models.Model):
         "Dispo) verlassen sich auf sie.",
     )
     x_verfuegbare_arbeitstage = fields.Integer(
-        string="Verfügbare Arbeitstage",
+        string="Arbeitstage",
         compute="_compute_x_verfuegbare_arbeitstage",
         help="Geplantes Datum minus heute, in Kalendertagen. Negativ = Termin überschritten.",
     )
@@ -77,3 +80,24 @@ class RepairOrder(models.Model):
             "view_mode": "form",
             "target": "current",
         }
+
+    def _notify_workshop_change(self):
+        """Tell any open Werkstatt list to refresh - queued for delivery on
+        commit, so it only reaches clients once the caller's transaction lands."""
+        self.env["bus.bus"]._sendone(BUS_CHANNEL, BUS_NOTIFICATION_TYPE, {})
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._notify_workshop_change()
+        return records
+
+    def write(self, vals):
+        res = super().write(vals)
+        self._notify_workshop_change()
+        return res
+
+    def unlink(self):
+        res = super().unlink()
+        self.env["bus.bus"]._sendone(BUS_CHANNEL, BUS_NOTIFICATION_TYPE, {})
+        return res

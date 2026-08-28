@@ -10,13 +10,14 @@
     "version": "19.0.1.0.0",
     "category": "Manufacturing/Repair",
     "license": "LGPL-3",
-    "depends": ["repair", "hr"],
+    "depends": ["repair", "hr", "bus"],
     "data": [
         "views/repair_order_views.xml",
     ],
     "assets": {
         "web.assets_backend": [
             "int_repair_workshop/static/src/repair_order_list.scss",
+            "int_repair_workshop/static/src/repair_order_list.js",
         ],
     },
     "installable": True,

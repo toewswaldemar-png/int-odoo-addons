@@ -42,6 +42,7 @@
         <field name="arch" type="xml">
             <xpath expr="//list" position="attributes">
                 <attribute name="editable">bottom</attribute>
+                <attribute name="js_class">int_repair_workshop_list</attribute>
             </xpath>
             <xpath expr="//field[@name='priority']" position="after">
                 <button name="action_open_form" type="object" icon="fa-external-link" title="Formular öffnen"/>
