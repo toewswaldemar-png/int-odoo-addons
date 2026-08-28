@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_product_template_form_alt_erp" model="ir.ui.view">
+        <field name="name">product.template.form.alt.erp</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='group_standard_price']" position="after">
+                <group string="Identifikation">
+                    <field name="x_alt_artnr"/>
+                    <field name="x_alt_kurzbezeichnung" invisible="not x_alt_kurzbezeichnung"/>
+                </group>
+                <group string="Beschaffung">
+                    <field name="x_alt_bestellnr" invisible="not x_alt_bestellnr"/>
+                    <field name="x_alt_hauptlieferant" invisible="not x_alt_hauptlieferant"/>
+                    <field name="x_alt_gruppe" invisible="not x_alt_gruppe"/>
+                    <field name="x_alt_einheit" invisible="not x_alt_einheit"/>
+                </group>
+                <separator string="Hersteller-/Ident-Referenzen"/>
+                <field name="x_alt_hersteller_ref_ids" nolabel="1">
+                    <list editable="bottom">
+                        <field name="code"/>
+                        <field name="value"/>
+                    </list>
+                </field>
+            </xpath>
+            <xpath expr="//field[@name='product_properties']" position="replace"/>
+        </field>
+    </record>
+
+</odoo>
