@@ -80,6 +80,8 @@
                                                 t-on-click="() => this.onOpenLocal(entry)">Lokal öffnen</button>
                                         <button t-if="!entry.is_dir" class="btn btn-link btn-sm"
                                                 t-on-click="() => this.onDownload(entry)">Download</button>
+                                        <button t-if="!entry.is_dir" class="btn btn-link btn-sm"
+                                                t-on-click="() => this.onShare(entry)">Freigeben</button>
                                         <button class="btn btn-link btn-sm"
                                                 t-on-click="() => this.onRename(entry)">Umbenennen</button>
                                         <button class="btn btn-link btn-sm text-danger"

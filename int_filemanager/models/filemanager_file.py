@@ -1,10 +1,12 @@
 import logging
 import os
+import secrets
 import unicodedata
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from odoo import fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 from ..hash_utils import compute_stable_hash
 from ..mediameta import MetaTooLarge, extract_metadata, media_type_of
@@ -118,7 +120,77 @@ class IntFilemanagerFile(models.Model):
     audio_artist = fields.Char(copy=False)
     audio_album = fields.Char(copy=False)
 
+    # --- Phase 5: Freigaben (intern & extern) -----------------------------
+    # "Intern": shared_partner_ids - persistente Freigabe an konkrete Portal-
+    # Kontakte, durchgesetzt ueber den Portal-Zweig in acl_rules.py (siehe
+    # dort). "Extern": share_token/share_expires_at - ein anonymer Link ohne
+    # jedes Login, durchgesetzt ausschliesslich explizit im Controller (siehe
+    # /int_filemanager/share/<token>), NICHT ueber ir.rule - beide
+    # Mechanismen sind unabhaengig voneinander nutzbar.
+    shared_partner_ids = fields.Many2many(
+        "res.partner",
+        "int_filemanager_shared_partner_rel",
+        "file_id",
+        "partner_id",
+        string="Freigegeben für (Portal-Kontakte)",
+        help="Portal-Kontakte mit persistentem Lesezugriff auf diese Datei, unabhängig von "
+        "einem Freigabe-Link. Setzt einen Odoo-Portal-Zugang beim Kontakt voraus.",
+    )
+    share_token = fields.Char(
+        copy=False,
+        index=True,
+        help="Zufälliges Token für den anonymen Freigabe-Link - nur gesetzt, solange die Freigabe "
+        "aktiv ist (Widerrufen löscht es wieder).",
+    )
+    share_expires_at = fields.Datetime(
+        copy=False,
+        readonly=True,
+        help="Wird ausschließlich von 'Link erzeugen' gesetzt (rotiert Token+Ablauf gemeinsam) - "
+        "kein frei editierbares Feld, damit nie ein verlängerter Ablauf an einem alten Token hängt.",
+    )
+    share_url = fields.Char(compute="_compute_share_url", string="Freigabe-Link")
+
+    @api.depends("share_token")
+    def _compute_share_url(self):
+        base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+        for rec in self:
+            rec.share_url = "%s/int_filemanager/share/%s" % (base_url, rec.share_token) if rec.share_token else False
+
     _path_uniq = models.Constraint("UNIQUE(path)", "Für diesen Pfad existiert bereits ein Metadaten-Eintrag.")
+    _share_token_uniq = models.Constraint(
+        "UNIQUE(share_token)", "Dieses Freigabe-Token ist bereits vergeben."
+    )
+
+    def action_generate_share_token(self):
+        """Erzeugt (oder rotiert) den anonymen Freigabe-Link - Token und
+        Ablauf werden immer gemeinsam neu gesetzt, nie das eine ohne das
+        andere veraendert (siehe share_expires_at-Feldkommentar). Die
+        eigentliche Berechtigungspruefung uebernimmt der normale write()-Weg
+        (ORM -> ir.rule-Schreibregel), kein zusaetzlicher Check hier noetig -
+        wer diese Methode ueber die Formularansicht erreichen kann, hat
+        bereits Schreibrecht auf den Datensatz."""
+        self.ensure_one()
+        if self.is_dir:
+            raise UserError(_("Nur einzelne Dateien können freigegeben werden, keine Ordner."))
+        days = int(self.env["ir.config_parameter"].sudo().get_param("int_filemanager.share_default_days", "30"))
+        self.write(
+            {
+                "share_token": secrets.token_urlsafe(32),
+                "share_expires_at": fields.Datetime.now() + timedelta(days=days),
+            }
+        )
+        self.env["int_filemanager.share_log"].sudo().create(
+            {"file_id": self.id, "path": self.path, "filename": self.name, "event_type": "created"}
+        )
+
+    def action_revoke_share_token(self):
+        self.ensure_one()
+        had_token = bool(self.share_token)
+        self.write({"share_token": False, "share_expires_at": False})
+        if had_token:
+            self.env["int_filemanager.share_log"].sudo().create(
+                {"file_id": self.id, "path": self.path, "filename": self.name, "event_type": "revoked"}
+            )
 
     def _cron_scan_filemanager(self):
         self._scan_and_reconcile()

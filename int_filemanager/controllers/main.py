@@ -337,6 +337,45 @@ class IntFilemanagerController(http.Controller):
         return {"ok": True}
 
     # ---------------------------------------------------------------------
+    # externe Freigabe (anonymer Link, kein Login)
+    # ---------------------------------------------------------------------
+
+    @http.route("/int_filemanager/share/<string:token>", type="http", auth="public")
+    def share_download(self, token):
+        """Bewusst OHNE ir.rule/authz.require - dieselbe Entscheidung wie in
+        Runde 2/3 (siehe Ausbauplan): ein anonymer Aufrufer hat keinen
+        sinnvollen ir.rule-Kontext, hier wird alles explizit selbst geprüft.
+        Unbekannt/abgelaufen/widerrufen liefern bewusst dieselbe Fehlerseite -
+        ein Unterschied würde verraten, ob ein Token je existiert hat."""
+        record = request.env["int_filemanager.file"].sudo().search([("share_token", "=", token)], limit=1)
+        if (
+            not token
+            or not record
+            or not record.share_expires_at
+            or record.share_expires_at < fields.Datetime.now()
+        ):
+            return request.not_found()
+
+        root = get_root(request.env)
+        abs_path = os.path.join(root, record.path)
+        if not os.path.isfile(abs_path):
+            return request.not_found()
+
+        with open(abs_path, "rb") as f:
+            data = f.read()
+        request.env["int_filemanager.share_log"].sudo().create(
+            {"file_id": record.id, "path": record.path, "filename": record.name, "event_type": "downloaded"}
+        )
+        mimetype = mimetypes.guess_type(record.name)[0] or "application/octet-stream"
+        headers = [
+            ("Content-Type", mimetype),
+            ("Content-Length", str(len(data))),
+            ("Content-Disposition", http.content_disposition(record.name, "attachment")),
+            ("Cache-Control", "private, no-store"),
+        ]
+        return request.make_response(data, headers=headers)
+
+    # ---------------------------------------------------------------------
     # onlyoffice bridge
     # ---------------------------------------------------------------------
 

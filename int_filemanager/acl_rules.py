@@ -48,6 +48,12 @@ MODELS = {
             "write": "int_filemanager.rule_file_protected_write",
             "unlink": "int_filemanager.rule_file_protected_unlink",
         },
+        # Phase 5, nur beim "read"-Zweig verwendet: Portal-Nutzer sehen NICHT
+        # den internen (schutzordner-basierten) Zweig, sondern ausschliesslich
+        # Datensaetze, in denen sie in diesem Many2many stehen. Bewusst nicht
+        # auf int_filemanager.version uebertragen - Portal-Kontakte bekommen
+        # den aktuellen Dateiinhalt, keine Versionshistorie.
+        "portal_share_field": "shared_partner_ids",
     },
     "int_filemanager.version": {
         "path_field": "file_id.path",
@@ -56,8 +62,11 @@ MODELS = {
             "write": "int_filemanager.rule_version_protected_write",
             "unlink": "int_filemanager.rule_version_protected_unlink",
         },
+        "portal_share_field": None,
     },
 }
+
+PORTAL_GROUP_XML_ID = "base.group_portal"
 
 _GROUP_FIELD_BY_PERM = {
     "read": "read_group_ids",
@@ -76,19 +85,29 @@ class _FakeGroups:
         self.ids = list(ids)
 
 
-class _FakeUser:
-    """Minimaler Ersatz fuer res.users im Selbsttest: deckt genau die zwei
-    Aufrufe ab, die die generierte Domain zur Laufzeit tatsaechlich macht
-    (has_group, all_group_ids.ids) - keine echten res.users-Datensaetze
-    noetig, um die STRUKTUR jeder Ternary-Verzweigung zu pruefen."""
+class _FakePartner:
+    def __init__(self, id_):
+        self.id = id_
 
-    def __init__(self, admin=False, group_ids=()):
+
+class _FakeUser:
+    """Minimaler Ersatz fuer res.users im Selbsttest: deckt genau die
+    Aufrufe ab, die die generierte Domain zur Laufzeit tatsaechlich macht
+    (has_group, all_group_ids.ids, seit Phase 5 auch partner_id.id) - keine
+    echten res.users-Datensaetze noetig, um die STRUKTUR jeder
+    Ternary-Verzweigung zu pruefen."""
+
+    def __init__(self, admin=False, group_ids=(), portal=False, partner_id=0):
         self._admin = admin
+        self._portal = portal
         self.all_group_ids = _FakeGroups(group_ids)
+        self.partner_id = _FakePartner(partner_id)
 
     def has_group(self, xml_id):
         if xml_id == ADMIN_GROUP_XML_ID:
             return self._admin
+        if xml_id == PORTAL_GROUP_XML_ID:
+            return self._portal
         return False
 
 
@@ -129,17 +148,25 @@ def _internal_branch_text(folders, perm, path_field):
     return text
 
 
-def _domain_force_text(folders, perm, path_field):
+def _domain_force_text(folders, perm, path_field, portal_share_field):
     internal = _internal_branch_text(folders, perm, path_field)
-    return "[(1,'=',1)] if user.has_group(%r) else %s" % (ADMIN_GROUP_XML_ID, internal)
+    non_admin = internal
+    if perm == "read" and portal_share_field:
+        # Eigener, vollstaendig getrennter Zweig statt einer Ergaenzung des
+        # internen Zweigs: ein Portal-Nutzer soll AUSSCHLIESSLICH ueber
+        # shared_partner_ids sehen, nie zusaetzlich ueber Schutzordner-Gruppen
+        # (die fuer Portal-Kontakte gar nicht vergeben werden).
+        portal_branch = "[('%s','in',[user.partner_id.id])]" % portal_share_field
+        non_admin = "(%s if user.has_group(%r) else %s)" % (portal_branch, PORTAL_GROUP_XML_ID, internal)
+    return "[(1,'=',1)] if user.has_group(%r) else %s" % (ADMIN_GROUP_XML_ID, non_admin)
 
 
-def _self_test_contexts(folders, perm):
+def _self_test_contexts(folders, perm, portal_share_field):
     """Repraesentative Nutzerkontexte fuer den Struktur-Selbsttest: Admin,
-    interner Nutzer ohne jede Schutzgruppe, sowie je Schutzordner ein Nutzer
-    mit genau dessen fuer diese Operation hinterlegter Gruppe. Der
-    Portal-Kontext kommt erst in Phase 5 dazu, wenn shared_partner_ids
-    existiert."""
+    interner Nutzer ohne jede Schutzgruppe, je Schutzordner ein Nutzer mit
+    genau dessen fuer diese Operation hinterlegter Gruppe, und (seit Phase 5,
+    nur beim read-Zweig mit Portal-Feld) ein Portal-Nutzer - der in Phase 2
+    mangels shared_partner_ids-Feld noch nicht sinnvoll testbar war."""
     field_name = _GROUP_FIELD_BY_PERM[perm]
     contexts = [
         ("admin", _FakeUser(admin=True)),
@@ -149,6 +176,8 @@ def _self_test_contexts(folders, perm):
         gids = folder[field_name].ids
         if gids:
             contexts.append(("schutzordner_%s_%s" % (folder.path, perm), _FakeUser(group_ids=gids)))
+    if perm == "read" and portal_share_field:
+        contexts.append(("portal_nutzer", _FakeUser(portal=True, partner_id=999999)))
     return contexts
 
 
@@ -184,9 +213,10 @@ def rebuild_rules(env):
     for model_name, config in MODELS.items():
         Model = env[model_name].sudo()
         path_field = config["path_field"]
+        portal_share_field = config.get("portal_share_field")
         for perm, xml_id in config["rule_xml_ids"].items():
-            text = _domain_force_text(folders, perm, path_field)
-            contexts = _self_test_contexts(folders, perm)
+            text = _domain_force_text(folders, perm, path_field, portal_share_field)
+            contexts = _self_test_contexts(folders, perm, portal_share_field)
             try:
                 _validate_domain_text(env, Model, text, contexts)
             except ValidationError:

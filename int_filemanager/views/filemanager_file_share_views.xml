@@ -1,0 +1,48 @@
+<odoo>
+    <!-- Öffnet ausschließlich als Dialog (target="new") aus dem "Freigeben"-
+         Button in filemanager_action.js/xml heraus - kein eigener
+         Listen/Menüeintrag, da normale Dateien nicht regulär als
+         Odoo-Datensätze durchgeblättert werden sollen. Nutzt die
+         Standard-ir.model.access/ir.rule-Prüfung auf int_filemanager.file -
+         wer den Datensatz per write() nicht ändern dürfte (Schutzordner),
+         kann die Buttons unten also auch hier nicht wirksam nutzen. -->
+    <record id="view_filemanager_file_share_form" model="ir.ui.view">
+        <field name="name">int_filemanager.file.share.form</field>
+        <field name="model">int_filemanager.file</field>
+        <field name="arch" type="xml">
+            <form string="Freigeben">
+                <sheet>
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="path" readonly="1"/>
+                    </group>
+                    <group string="Freigegeben für Portal-Kontakte">
+                        <field name="shared_partner_ids" widget="many2many_tags" nolabel="1" colspan="2"/>
+                    </group>
+                    <group string="Anonymer Freigabe-Link">
+                        <field name="share_url" widget="CopyClipboardURL" readonly="1" invisible="not share_token"/>
+                        <field name="share_expires_at" readonly="1" invisible="not share_token"/>
+                        <field name="share_token" invisible="1"/>
+                        <button name="action_generate_share_token" type="object"
+                                string="Link erzeugen" class="btn-primary" invisible="share_token"/>
+                        <button name="action_generate_share_token" type="object"
+                                string="Link erneuern" class="btn-secondary" invisible="not share_token"/>
+                        <button name="action_revoke_share_token" type="object"
+                                string="Link widerrufen" class="btn-secondary" invisible="not share_token"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Schließen" special="cancel" class="btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_filemanager_file_share" model="ir.actions.act_window">
+        <field name="name">Freigeben</field>
+        <field name="res_model">int_filemanager.file</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_filemanager_file_share_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

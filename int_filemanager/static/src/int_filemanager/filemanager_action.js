@@ -269,6 +269,13 @@ export class IntFileManager extends Component {
         this.dialog.add(IntFilePreviewDialog, { path: this.entryPath(entry) });
     }
 
+    onShare(entry) {
+        this.actionService.doAction("int_filemanager.action_filemanager_file_share", {
+            props: { resId: entry.meta_id },
+            onClose: () => this.load(this.state.path),
+        });
+    }
+
     onDownload(entry) {
         const url = `/int_filemanager/download?path=${encodeURIComponent(this.entryPath(entry))}`;
         window.open(url, "_blank");
