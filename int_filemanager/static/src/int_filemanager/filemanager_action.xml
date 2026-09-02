@@ -50,9 +50,18 @@
                                 <tr t-foreach="state.entries" t-as="entry" t-key="entry.path">
                                     <td>
                                         <a href="#" t-on-click.prevent="() => this.onOpenEntry(entry)">
-                                            <i t-attf-class="fa {{ entry.is_dir ? 'fa-folder' : fileIconClass(entry.name) }} me-2"/>
+                                            <img t-if="!entry.is_dir and hasThumbnail(entry)"
+                                                 t-att-src="thumbnailUrl(entry)"
+                                                 class="hm-filemanager-thumb me-2"/>
+                                            <i t-else="" t-attf-class="fa {{ entry.is_dir ? 'fa-folder' : fileIconClass(entry.name) }} me-2"/>
                                             <t t-esc="entry.name"/>
                                         </a>
+                                        <i t-if="!entry.is_dir and (entry.media_state === 'pending' or entry.media_state === 'running')"
+                                           class="fa fa-refresh text-muted ms-1" t-att-title="mediaBadgeTitle(entry)"/>
+                                        <i t-if="!entry.is_dir and entry.media_state === 'error'"
+                                           class="fa fa-exclamation-triangle text-warning ms-1" t-att-title="mediaBadgeTitle(entry)"/>
+                                        <i t-if="!entry.is_dir and entry.media_state === 'done' and (entry.page_count or entry.audio_duration)"
+                                           class="fa fa-info-circle text-muted ms-1" t-att-title="mediaBadgeTitle(entry)"/>
                                     </td>
                                     <td><t t-esc="formatSize(entry.size)"/></td>
                                     <td><t t-esc="entry.mtime"/></td>

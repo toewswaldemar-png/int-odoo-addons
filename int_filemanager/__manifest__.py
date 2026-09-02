@@ -7,7 +7,7 @@
         "über die bestehende ONLYOFFICE-Integration direkt im Browser bearbeiten; Änderungen "
         "werden zurück auf die Originaldatei geschrieben."
     ),
-    "version": "19.0.1.3.0",
+    "version": "19.0.1.4.0",
     "category": "Productivity",
     "license": "LGPL-3",
     "depends": ["base", "bus", "onlyoffice_odoo"],

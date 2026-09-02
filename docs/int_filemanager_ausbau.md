@@ -1,25 +1,24 @@
 # int_filemanager-Ausbau: Status & Plan
 
-## Status (Stand 2026-09-02)
+## Status (Stand 2026-09-02, aktualisiert nach Phase 4)
 
-**Umgesetzt und committet** (`74bd050`, `master`): Phase 1–3 des unten stehenden Plans.
+**Umgesetzt** (`master`): Phase 1–4 des unten stehenden Plans. Phase 1–3 committet in `74bd050`, Phase 4 folgt in einem eigenen Commit (siehe Ist-Stand-Abschnitt bei Phase 4 unten für Abweichungen vom ursprünglichen Plan).
 
 | Phase | Inhalt | Code | Tests |
 |---|---|---|---|
 | 1 | Scan-Identität (Hash-basierte Rename-Erkennung) | ✅ | ✅ 16 Tests |
 | 2 | Feingranulare Rechte (ACL) + Authorization-Service | ✅ | ✅ 11 Tests |
 | 3 | Versionierung (Snapshot, atomarer Schreibvorgang, Journal) | ✅ | ✅ 10 Tests |
-| 4 | Vorschau & Metadaten | ⬜ offen | — |
+| 4 | Vorschau & Metadaten | ✅ | ✅ 11 Tests |
 | 5 | Freigaben (intern/extern) | ⬜ offen | — |
 
-**Getestet wie:** alle 37 Tests (`TransactionCase` + `HttpCase`) liefen echt gegen eine Wegwerf-Odoo-19-Instanz auf HM-SRV (eigene Test-DB `int_filemanager_test`, eigenes Docker-Image mit `pyjwt` nachinstalliert für die `onlyoffice_odoo`-Abhängigkeit, danach vollständig entfernt). Nicht nur syntaktisch geprüft — dabei sind mehrere reale Bugs aufgetaucht (Datetime-Sekundenpräzision bei der Stale-Erkennung, ein order-abhängiger Fehl-Merge, `.exists()` ohne `ir.rule`-Prüfung, Odoos `HttpCase`-Request-Serialisierung), die reine Code-Review nicht gefunden hätte. Details siehe Commit-Message.
+**Getestet wie:** alle 48 Tests (`TransactionCase` + `HttpCase`) liefen echt gegen eine Wegwerf-Odoo-19-Instanz auf HM-SRV (eigene Test-DB `int_filemanager_test`, eigenes Docker-Image `int_fm_test:phase4` mit `pyjwt` + `mutagen==1.47.0` nachinstalliert, danach vollständig entfernt — DB gedroppt, Image entfernt, Temp-Verzeichnisse gelöscht, Produktiv-Container `odoo`/`odoo_db` zu keinem Zeitpunkt berührt). 0 failed, 0 error(s) of 48 tests.
 
 **Noch NICHT passiert:**
-- Kein Rollout auf die Produktivinstanz (HM-SRV `Odoo19`-Container/`odoodb`) — das Modul-Update wurde bewusst nicht angewendet, bleibt ein separater, zu bestätigender Schritt.
-- `mutagen` ist nicht im Produktiv-Image installiert (erst für Phase 4 relevant, siehe Dockerfile unten).
-- Phase 4 (Vorschau & Metadaten) und Phase 5 (Freigaben) sind unten vollständig durchgeplant, aber nicht implementiert.
+- Kein Rollout auf die Produktivinstanz — auf HM-SRV läuft weiterhin die alte, vom Repo entkoppelte Version unter dem historischen Modulnamen `hm_filemanager` (19.0.1.0.0, ohne Phase 1–4). Das produktive Dockerfile (`/mnt/user/appdata/odoo/Dockerfile`) hat `mutagen` noch nicht installiert.
+- Phase 5 (Freigaben) ist unten vollständig durchgeplant, aber nicht implementiert.
 
-**Wie weiterarbeiten:** Phase 4 als nächstes (siehe Reihenfolge unten — baut auf Phase 1–3 auf, keine Abhängigkeit von Phase 5). Der Plan wurde über vier Review-Runden gehärtet, jede Zeile mit "Runde X" bezieht sich auf einen konkreten, empirisch gegen den echten Odoo-19-Code auf HM-SRV geprüften Fund. Beim Fortsetzen: dieselbe Wegwerf-Instanz-Methode verwenden (siehe oben), nicht nur `py_compile`.
+**Wie weiterarbeiten:** Phase 5 als nächstes. Beim Fortsetzen: dieselbe Wegwerf-Instanz-Methode verwenden (siehe oben), nicht nur `py_compile`.
 
 ---
 
@@ -148,7 +147,7 @@ Damit ist der gesamte Ablauf für dieselbe Datei serialisiert — eine zweite gl
 
 ---
 
-## Phase 4 — Vorschau & Metadaten ⬜ offen
+## Phase 4 — Vorschau & Metadaten ✅ umgesetzt
 
 Grundverfahren aus Runde 3 bestätigt tragfähig (Zustand statt Flag, asynchrone Extraktion, `_commit_progress()`, Pillow/PyPDF2/mutagen, `fields.Image`). Runde 4 präzisiert nur die UI-Behandlung veralteter Werte.
 
@@ -172,6 +171,18 @@ Wird im Pre-Flight (siehe Verifikation) gebaut und getestet, bevor er auf HM-SRV
 **Dateien:** neu `mediameta.py`, [models/filemanager_file.py](../int_filemanager/models/filemanager_file.py), [watcher.py](../int_filemanager/watcher.py), [index_utils.py](../int_filemanager/index_utils.py), `data/ir_cron.xml`, `static/src/int_filemanager/preview_action.js`/`.xml` (Veraltet-Kennzeichnung), neu `Dockerfile`.
 
 **Tests:** `pending`-Zustand zeigt in der UI sichtbar "wird aktualisiert" statt kommentarlos alte Werte; Dockerfile-Build + `mutagen`-Import-Test im Pre-Flight.
+
+**Umsetzung (Ist-Stand):** Kernverfahren wie geplant (Zustand statt Flag, asynchrone Extraktion im Batch-Cron, `_commit_progress()`, Stat-vor/nach-Schutz analog Phase 1s Hash-Race-Fix), mit folgenden beim Bauen getroffenen/präzisierten Entscheidungen:
+
+- **PDF ohne gerenderte Vorschau, nur Seitenzahl:** am echten Image bestätigt fehlen sowohl `poppler-utils` (`pdftoppm`/`pdftocairo`) als auch `PyMuPDF` (`fitz`) — beides wäre für ein gerendertes Thumbnail nötig. Statt das unentschieden zu lassen: PDF liefert in v1 nur `page_count` über `odoo.tools.pdf.PdfReader` (mit `strict=False`, da reale/gescannte PDFs oft eine leicht defekte xref-Tabelle haben und die Seitenzahl trotzdem zuverlässig ausgelesen werden soll). Ein gerendertes PDF-Thumbnail bliebe eine spätere, separate Entscheidung (zusätzliches Paket im Dockerfile).
+- **Audio generisch über `mutagen.File(path, easy=True)`** statt einer Klasse pro Format — deckt mp3/wav/flac/ogg/m4a/aac/wma über dieselbe Extraktionsfunktion ab, liefert `audio_duration`/`audio_title`/`audio_artist`/`audio_album`.
+- **`meta_state` ohne Feld-Default** (anders als `hash_state`): nur Dateien mit unterstützter Endung (`mediameta.media_type_of()`) durchlaufen überhaupt `pending`; Ordner und nicht unterstützte Typen bleiben `False` und werden vom Cron-Domain-Filter automatisch übersprungen — vermeidet ein sinnloses "pending" auf z.B. einer `.docx`.
+- **Kein automatischer Retry nach Fehler:** anders als beim Hash-Cron (der bei `None` einfach `pending` belässt) setzt ein Extraktions-Fehler (defekte Datei, Format-Fehler) `meta_state='error'` mit `meta_error`-Text und zählt `meta_attempts` hoch — kein Endlos-Retry-Loop auf einer dauerhaft kaputten Datei. Erst eine erneute Watcher-`MODIFY` (echte Dateiänderung) setzt wieder auf `pending`. Nur eine transiente Bedingung (Datei ändert sich gerade während der Extraktion) bleibt `pending` für den nächsten Lauf.
+- **Großdatei-Ablehnung analog Phase 3:** `int_filemanager.meta_max_bytes_<image|pdf|audio>` (Config-Parameter, Defaults 50/100/100 MB) — Überschreitung wird als `error` abgelehnt, nicht stillschweigend übersprungen.
+- **Thumbnail-Auslieferung über eigene Route** (`/int_filemanager/thumbnail?path=...`), nicht als Base64 in der `/list`-JSON-Antwort eingebettet — bei 200 Zeilen pro Seite wäre das ein unnötig großer Payload; die Route liest den ACL-gefilterten Datensatz nicht-sudo (wie `/download`) und liefert nur bei `meta_state='done'` ein Bild.
+- **UI:** Thumbnail-Spalte (24×24px, ersetzt das FontAwesome-Icon bei Bildern mit `meta_state='done'`), Refresh-Icon mit Tooltip bei `pending`/`running`, Warndreieck mit `meta_error` als Tooltip bei `error`, Info-Icon mit PDF-Seitenzahl bzw. Audio-Dauer/Titel/Interpret bei `done`. Keine eigene Detailansicht für Audio-Tags/Seitenzahl über das Tooltip hinaus — bewusst zurückgestellt, analog zur zurückgestellten Versionen-UI in Phase 3.
+- **Dockerfile spiegelt das tatsächlich auf HM-SRV deployte** (`/mnt/user/appdata/odoo/Dockerfile`: `FROM odoo:19.0`, `USER root`, `pip3 install --break-system-packages`, `USER odoo`) statt der im ursprünglichen Plan skizzierten digest-gepinnten Variante — liegt jetzt im Repo (`Dockerfile`, Root-Ebene) mit `mutagen==1.47.0` ergänzt. Noch nicht auf das Produktiv-Dockerfile auf HM-SRV übertragen (Rollout weiterhin zurückgestellt).
+- **Dateien:** neu [mediameta.py](../int_filemanager/mediameta.py), [models/filemanager_file.py](../int_filemanager/models/filemanager_file.py) (Felder + `_cron_extract_media_meta`), [index_utils.py](../int_filemanager/index_utils.py) (`meta_state` pending bei Watcher-Upsert), [controllers/main.py](../int_filemanager/controllers/main.py) (`/thumbnail`-Route, erweiterte `/list`-Antwort), `static/src/int_filemanager/filemanager_action.js`/`.xml`/`filemanager.scss`, `data/ir_cron.xml`, neu `Dockerfile` (Root-Ebene), neu [tests/test_media_meta.py](../int_filemanager/tests/test_media_meta.py) (11 Tests).
 
 ---
 

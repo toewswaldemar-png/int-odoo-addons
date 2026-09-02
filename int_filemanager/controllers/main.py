@@ -78,17 +78,30 @@ class IntFilemanagerController(http.Controller):
         total = Model.search_count(full_domain)
         records = Model.search(full_domain, order="is_dir desc, name", limit=self.LIST_PAGE_SIZE, offset=offset)
 
-        entries = [
-            {
+        entries = []
+        for r in records:
+            entry = {
                 "name": r.name,
                 "is_dir": r.is_dir,
                 "size": r.size,
                 "mtime": fields.Datetime.to_string(r.mtime)[:16] if r.mtime else "",
                 "meta_id": r.id,
                 "path": r.path,
+                "media_state": r.meta_state or False,
             }
-            for r in records
-        ]
+            if r.meta_state == "error":
+                entry["media_error"] = r.meta_error
+            elif r.meta_state == "done":
+                if r.media_width:
+                    entry["media_width"] = r.media_width
+                    entry["media_height"] = r.media_height
+                if r.page_count:
+                    entry["page_count"] = r.page_count
+                if r.audio_duration:
+                    entry["audio_duration"] = r.audio_duration
+                    entry["audio_title"] = r.audio_title
+                    entry["audio_artist"] = r.audio_artist
+            entries.append(entry)
 
         return {
             "path": rel,
@@ -141,6 +154,26 @@ class IntFilemanagerController(http.Controller):
             ("Content-Type", mimetype),
             ("Content-Length", str(len(data))),
             ("Content-Disposition", http.content_disposition(filename, disposition)),
+        ]
+        return request.make_response(data, headers=headers)
+
+    @http.route("/int_filemanager/thumbnail", type="http", auth="user")
+    def thumbnail(self, path=""):
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        rel = to_relative(request.env, abs_path)
+        authz.require(request.env, rel, "read")
+        # Nicht-sudo: dieselbe generierte Leserechte-Regel wie auf
+        # int_filemanager.file filtert eine geschuetzte Datei automatisch
+        # heraus, statt nur ueber authz.require() hier gesondert zu pruefen.
+        record = request.env["int_filemanager.file"].search([("path", "=", rel)], limit=1)
+        if not record or record.meta_state != "done" or not record.sudo().thumbnail:
+            raise UserError(_("Keine Vorschau verfügbar."))
+        data = base64.b64decode(record.sudo().thumbnail)
+        headers = [
+            ("Content-Type", "image/jpeg"),
+            ("Content-Length", str(len(data))),
+            ("Cache-Control", "private, max-age=3600"),
         ]
         return request.make_response(data, headers=headers)
 

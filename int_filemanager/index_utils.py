@@ -4,6 +4,7 @@ from datetime import datetime
 
 from odoo import fields
 
+from .mediameta import media_type_of
 from .path_utils import to_relative
 
 BUS_CHANNEL = "int_filemanager"
@@ -38,6 +39,12 @@ def _entry_vals(env, abs_path):
         # Watcher-getriebenes CREATE/MODIFY markiert den Inhalt immer als neu
         # zu hashen - der asynchrone Hash-Cron berechnet content_sha256 danach.
         vals["hash_state"] = "pending"
+        if media_type_of(vals["name"]):
+            # Dasselbe unbedingt-pending-Verhalten fuer unterstuetzte
+            # Medientypen - der Metadaten-Cron extrahiert danach neu. Alte
+            # Werte (Thumbnail etc.) bleiben bis dahin unveraendert stehen,
+            # write() unten aendert nur die hier gesetzten Felder.
+            vals["meta_state"] = "pending"
     return vals
 
 

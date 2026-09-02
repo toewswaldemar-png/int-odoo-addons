@@ -3,3 +3,4 @@ from . import test_acl
 from . import test_acl_http
 from . import test_versioning
 from . import test_versioning_http
+from . import test_media_meta
