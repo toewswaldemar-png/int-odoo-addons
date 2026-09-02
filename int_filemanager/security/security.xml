@@ -12,4 +12,83 @@
         <field name="name">Dateimanager Nutzer</field>
         <field name="privilege_id" ref="privilege_int_filemanager"/>
     </record>
+
+    <record id="group_filemanager_admin" model="res.groups">
+        <field name="name">Dateimanager Administrator</field>
+        <field name="privilege_id" ref="privilege_int_filemanager"/>
+        <field name="implied_ids" eval="[(4, ref('group_filemanager_user'))]"/>
+        <field name="comment">Voller Zugriff unabhängig von Schutzordner-Einträgen; darf Schutzordner
+            verwalten und über Schutzgrenzen hinweg umbenennen/verschieben.</field>
+    </record>
+
+    <!-- Drei strukturelle, globale Record Rules (kein groups-Feld -> gelten
+         für alle) auf int_filemanager.file, je eine pro Operation. Der
+         domain_force-INHALT ist hier nur ein sicherer Platzhalter
+         ("alles offen", entspricht dem heutigen Verhalten ohne
+         Schutzordner) - acl_rules.py überschreibt ihn bei jeder Änderung an
+         int_filemanager.protected_folder mit der tatsächlichen,
+         admin-/schutzordner-abhängigen Domain. -->
+    <record id="rule_file_protected_read" model="ir.rule">
+        <field name="name">Filemanager: geschützte Ordner (Lesen)</field>
+        <field name="model_id" ref="model_int_filemanager_file"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="perm_read">True</field>
+        <field name="perm_write">False</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">False</field>
+    </record>
+
+    <record id="rule_file_protected_write" model="ir.rule">
+        <field name="name">Filemanager: geschützte Ordner (Schreiben)</field>
+        <field name="model_id" ref="model_int_filemanager_file"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="perm_read">False</field>
+        <field name="perm_write">True</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">False</field>
+    </record>
+
+    <record id="rule_file_protected_unlink" model="ir.rule">
+        <field name="name">Filemanager: geschützte Ordner (Löschen)</field>
+        <field name="model_id" ref="model_int_filemanager_file"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="perm_read">False</field>
+        <field name="perm_write">False</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">True</field>
+    </record>
+
+    <!-- Dieselbe Bauart auf int_filemanager.version - eine Version erbt den
+         Schutz ihrer zugehörigen Datei (file_id.path), damit niemand ohne
+         Leserecht auf die Datei trotzdem alte Versionsinhalte über das
+         Versions-Modell/die Versions-Route lesen kann. -->
+    <record id="rule_version_protected_read" model="ir.rule">
+        <field name="name">Filemanager: geschützte Ordner (Versionen lesen)</field>
+        <field name="model_id" ref="model_int_filemanager_version"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="perm_read">True</field>
+        <field name="perm_write">False</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">False</field>
+    </record>
+
+    <record id="rule_version_protected_write" model="ir.rule">
+        <field name="name">Filemanager: geschützte Ordner (Versionen schreiben)</field>
+        <field name="model_id" ref="model_int_filemanager_version"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="perm_read">False</field>
+        <field name="perm_write">True</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">False</field>
+    </record>
+
+    <record id="rule_version_protected_unlink" model="ir.rule">
+        <field name="name">Filemanager: geschützte Ordner (Versionen löschen)</field>
+        <field name="model_id" ref="model_int_filemanager_version"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="perm_read">False</field>
+        <field name="perm_write">False</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">True</field>
+    </record>
 </odoo>

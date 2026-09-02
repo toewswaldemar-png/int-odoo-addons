@@ -7,7 +7,7 @@
         "über die bestehende ONLYOFFICE-Integration direkt im Browser bearbeiten; Änderungen "
         "werden zurück auf die Originaldatei geschrieben."
     ),
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.3.0",
     "category": "Productivity",
     "license": "LGPL-3",
     "depends": ["base", "bus", "onlyoffice_odoo"],
@@ -17,6 +17,7 @@
         "security/ir.model.access.csv",
         "views/filemanager_file_search.xml",
         "views/menu.xml",
+        "views/filemanager_protected_folder_views.xml",
         "data/ir_cron.xml",
     ],
     "assets": {

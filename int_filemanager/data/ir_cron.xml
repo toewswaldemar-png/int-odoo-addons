@@ -9,4 +9,48 @@
         <field name="nextcall" eval="(datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d 03:00:00')"/>
         <field name="active">True</field>
     </record>
+
+    <record id="ir_cron_compute_hashes" model="ir.cron">
+        <field name="name">Filemanager: Datei-Hashes berechnen (Identitäts-Grundlage)</field>
+        <field name="model_id" ref="model_int_filemanager_file"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_compute_hashes()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="nextcall" eval="(datetime.now() + relativedelta(minutes=15)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_prune_scan_log" model="ir.cron">
+        <field name="name">Filemanager: Alte Scan-Log-Einträge aufräumen</field>
+        <field name="model_id" ref="model_int_filemanager_scan_log"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_prune_old_entries()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d 04:00:00')"/>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_prune_versions" model="ir.cron">
+        <field name="name">Filemanager: Alte Versionen aufräumen (Default: unbegrenzt)</field>
+        <field name="model_id" ref="model_int_filemanager_version"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_prune_old_versions()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d 04:30:00')"/>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_recover_stuck_journal" model="ir.cron">
+        <field name="name">Filemanager: Hängengebliebene Schreibvorgänge erkennen</field>
+        <field name="model_id" ref="model_int_filemanager_write_journal"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_recover_stuck_entries()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="nextcall" eval="(datetime.now() + relativedelta(minutes=15)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="active">True</field>
+    </record>
 </odoo>

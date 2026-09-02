@@ -1,4 +1,5 @@
 import os
+import unicodedata
 
 from odoo.exceptions import ValidationError
 
@@ -34,8 +35,12 @@ def to_relative(env, abs_path):
 
 
 def safe_name(name):
-    """Validate a plain file/folder name (no path separators, no . / ..)."""
-    name = (name or "").strip()
+    """Validate a plain file/folder name (no path separators, no . / ..).
+    Normalisiert auf NFC, damit Unicode-aequivalente, aber unterschiedlich
+    kodierte Namen (z.B. von macOS-SMB-Clients, die NFD liefern) nicht als
+    unterschiedliche Pfade behandelt werden - relevant fuer die
+    Schutzordner-Pfadpraefix-Erkennung in acl_rules.py."""
+    name = unicodedata.normalize("NFC", (name or "").strip())
     if not name or name in (".", "..") or "/" in name or "\\" in name:
         raise ValidationError("Ungültiger Name.")
     return name

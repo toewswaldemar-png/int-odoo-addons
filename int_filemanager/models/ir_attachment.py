@@ -47,7 +47,7 @@ class IrAttachment(models.Model):
     def _int_filemanager_sync_to_disk(self, attachment):
         path = attachment.int_filemanager_path
         try:
-            to_relative(self.env, path)
+            rel = to_relative(self.env, path)
         except Exception:
             _logger.exception(
                 "int_filemanager: attachment %s hat einen ungültigen int_filemanager_path, "
@@ -56,16 +56,31 @@ class IrAttachment(models.Model):
                 path,
             )
             return
-        try:
-            with open(path, "wb") as f:
-                f.write(attachment.raw or b"")
-            # No index_upsert here on purpose: the filesystem watcher picks up
-            # this exact write via inotify moments later and updates the index
-            # itself. Calling index_upsert from here too raced it - both ended
-            # up writing the same int_filemanager.file row in overlapping
-            # transactions, which Postgres rejected with "could not serialize
-            # access due to concurrent update" (surfaced as a slow, failing
-            # ONLYOFFICE open/save).
-            _logger.info("int_filemanager: Attachment %s zurück nach %s geschrieben", attachment.id, path)
-        except OSError:
-            _logger.exception("int_filemanager: Sync von Attachment %s nach %s fehlgeschlagen", attachment.id, path)
+
+        file_record = self.env["int_filemanager.file"].sudo().search([("path", "=", rel)], limit=1)
+        if not file_record:
+            # Datei noch nicht indexiert (z.B. gerade erst angelegt, Watcher
+            # noch nicht durchgelaufen) - kein Versionierungsziel vorhanden,
+            # einfacher Direktschreibvorgang wie bisher.
+            try:
+                with open(path, "wb") as f:
+                    f.write(attachment.raw or b"")
+                _logger.info("int_filemanager: Attachment %s zurück nach %s geschrieben (unindexiert)", attachment.id, path)
+            except OSError:
+                _logger.exception(
+                    "int_filemanager: Sync von Attachment %s nach %s fehlgeschlagen", attachment.id, path
+                )
+            return
+
+        # Über den zentralen Snapshot-/Schreibdienst: sichert den vorherigen
+        # Inhalt als Version, schreibt atomar (Temp-Datei + os.replace). Ruft
+        # bewusst KEIN index_upsert() auf - der Watcher beobachtet diesen
+        # Schreibvorgang selbst per inotify und aktualisiert den Index; ein
+        # zusätzlicher direkter Aufruf hier würde dasselbe Race auslösen, das
+        # das ursprüngliche Direktschreiben hier vermeiden sollte (überlappende
+        # Transaktionen auf dieselbe int_filemanager.file-Zeile, von Postgres
+        # mit "could not serialize access due to concurrent update" abgelehnt).
+        from .. import write_service
+
+        write_service.snapshot_and_write(self.env, file_record, attachment.raw or b"", operation="sync_write")
+        _logger.info("int_filemanager: Attachment %s zurück nach %s geschrieben (versioniert)", attachment.id, path)

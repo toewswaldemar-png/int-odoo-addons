@@ -1,4 +1,5 @@
 import os
+import unicodedata
 from datetime import datetime
 
 from odoo import fields
@@ -18,17 +19,26 @@ def _notify_change(env):
 
 def _entry_vals(env, abs_path):
     st = os.stat(abs_path)
-    rel = to_relative(env, abs_path)
+    # NFC-Normalisierung: Unicode-aequivalente, aber unterschiedlich kodierte
+    # Pfade (z.B. von macOS-SMB-Clients, NFD) sonst als unterschiedliche Pfade
+    # behandelt - relevant fuer die Schutzordner-Pfadpraefix-Erkennung.
+    rel = unicodedata.normalize("NFC", to_relative(env, abs_path))
     parent_rel = os.path.dirname(rel) if rel else ""
-    return {
-        "name": os.path.basename(abs_path),
+    is_dir = os.path.isdir(abs_path)
+    vals = {
+        "name": unicodedata.normalize("NFC", os.path.basename(abs_path)),
         "path": rel,
         "folder_path": parent_rel or False,
-        "is_dir": os.path.isdir(abs_path),
-        "size": 0 if os.path.isdir(abs_path) else st.st_size,
+        "is_dir": is_dir,
+        "size": 0 if is_dir else st.st_size,
         "mtime": datetime.fromtimestamp(st.st_mtime),
         "last_seen": fields.Datetime.now(),
     }
+    if not is_dir:
+        # Watcher-getriebenes CREATE/MODIFY markiert den Inhalt immer als neu
+        # zu hashen - der asynchrone Hash-Cron berechnet content_sha256 danach.
+        vals["hash_state"] = "pending"
+    return vals
 
 
 def index_upsert(env, abs_path):
