@@ -78,10 +78,48 @@ int_filemanager/static/src/int_filemanager/native_list_view.js
 **Aktueller Arbeitsstand auf dem Branch:** unversioniert im Working Tree, wird mit diesem Commit
 gesichert (Breadcrumb-Rework, gelöschte Zwischenfassung `native_list_view.xml`, Manifest-Eintrag).
 
-**Offene Entscheidung (noch nicht getroffen):** wie weit weiterportieren — Upload, Mkdir, Umbenennen,
-Löschen, ONLYOFFICE-Bearbeiten, "Lokal öffnen"/WebDAV, Verknüpfungs-Dialog, Vorschau — oder reicht der
-jetzige Beweis, dass es grundsätzlich trägt? Performance-Frage ("wird Navigation träger durch
-Odoos ListView?") wurde vorab eingeschätzt, aber nicht mit echten Messwerten unter Last verifiziert.
+**Entscheidung (2026-09-03, nach Architektur-Review): vollständig weiterportieren, alten Pfad danach
+löschen.** Begründung: die produktive `IntFileManagerAction` baut Selection/`Dropdown`-Aktionsmenü/
+`Pager`/Breadcrumbs von Hand nach, mit der (zum damaligen Zeitpunkt richtigen) Begründung, `ActionMenus`/
+`SelectionBox` seien "fest an `RelationalModel`-Record-Objekte gekoppelt und für eine dateisystembasierte
+Liste nicht sinnvoll nachbaubar" (siehe Memory `project_hm_odoo_filemanager.md`, Eintrag 2026-09-03).
+Das stimmt nur, **weil** `/int_filemanager/list` rohe Dicts statt echter ORM-Records liefert. Dieser
+Branch widerlegt genau diese Prämisse: bindet man direkt an `int_filemanager.file`, bekommt man echte
+`RelationalModel`-Records — `ActionMenus`, `Pager`, Mehrfachauswahl, Sortierung, optionale Spalten sind
+dann **kostenlos nativ**, ohne Nachbau. Der einzige nötige Eingriff bleibt `openRecord()`. Die aktuelle
+Handarbeit an CheckBox/Dropdown/Pager/Breadcrumb-Markup ist also kein Zufall, sondern eine Folge des
+Custom-Endpoints — und genau die Pflege, die mit echtem `ListView` entfällt. Zwei UI-Pfade dauerhaft
+parallel zu pflegen wäre die doppelte Pflege, die vermieden werden soll — Ziel ist **Ablösung**, nicht
+Koexistenz.
+
+**Sicherheitsrelevanter Stolperstein beim Weiterportieren von Mutationen** (Upload/Mkdir/Umbenennen/
+Löschen): `authz.py` (Kopfkommentar) hält fest, dass diese Routen die eigentlichen Dateisystem-Operationen
+direkt über `os`/`shutil` ausführen, nicht über die ORM — `ir.rule` sichert das **nicht** automatisch ab.
+`authz.require()`/`require_subtree_deletable()`/`require_rename_or_move_allowed()` werden bisher explizit
+im Controller (`controllers/main.py`) aufgerufen. Lesen/Browsen ist unkritisch (beide Pfade laufen
+nicht-sudo über dieselben generierten `ir.rule`-Regeln aus `acl_rules.py`, kein Unterschied zwischen
+Custom-Endpoint und nativem `ListView`). Werden Mutationen aber naiv als objektgebundene Buttons
+(`type="object"` auf `int_filemanager.file`-Methoden) nachgebaut, **muss jede dieser Methoden dieselben
+`authz.*`-Aufrufe explizit wiederholen** — das passiert nicht automatisch nur weil es "nativ" aussieht.
+Sonst umgeht ein scheinbar natives Button vor allem den Schutzordner-Mechanismus (Zugriffsschranken pro
+geschütztem Ordner). Pflichtpunkt für jede Portierungs-PR, kein Nebensatz.
+
+**Performance-Frage vermutlich unkritisch:** der aktuelle Controller macht pro Listing bereits
+`search_count` + `search` (`main.py`) — praktisch dieselbe Arbeit, die `web_search_read` hinter
+`model.load({domain})` macht. `folder_path` ist bereits indiziert. Kein struktureller Grund, warum
+natives `ListView` langsamer sein sollte; eher im Gegenteil (eine Query-Runde statt Controller-Roundtrip +
+manuelles Dict-Bauen). Kurze Bestätigung mit echten Ordnergrößen vor dem finalen Cutover trotzdem sinnvoll
+(Ziel ist explizit Explorer-Tempo), aber kein Blocker mit unklarem Ausgang.
+
+**Empfohlene Reihenfolge:**
+1. SearchPanel-`domain`→`comodel_domain`-Mapping live verifizieren (siehe unten — kleinster Aufwand,
+   entscheidet ob das Ordnerbaum-Konzept überhaupt trägt).
+2. `native_list_view.js` schrittweise ausbauen: Preview (`FileViewer`-Hook im Controller, gleiches Muster
+   wie `openRecord`), Upload/Mkdir/Umbenennen/Löschen/Verknüpfungs-Dialog als Buttons/Widgets — bei jeder
+   Mutation den passenden `authz.*`-Aufruf aus `main.py` mit übernehmen.
+3. Erst bei erreichter Funktionsparität: `filemanager_action.js`/`.xml`, `folder_tree.js`/`.xml` und den
+   `/int_filemanager/list`-Endpoint löschen.
+4. `parent_id`/`_parent_store` + Scan-BFS-Umbau danach, als eigener Schritt.
 
 ## Ordnerbaum als natives `SearchPanel` — Architektur-Entscheidung (Recherche abgeschlossen, Umsetzung offen)
 
