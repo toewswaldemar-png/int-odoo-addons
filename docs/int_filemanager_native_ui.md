@@ -199,6 +199,36 @@ nicht am erwarteten Pfad gefunden) — vor der Umsetzung als Erstes live prüfen
 - **Migration Bestandsdaten**: einmaliger Backfill (`post_init_hook`), der `parent_id` aus
   `folder_path` top-down auflöst.
 
+### Geprüfte Alternative: natives `hierarchy`-View (`web_hierarchy`) — verworfen
+
+Odoo bringt seit einigen Versionen einen echten eigenen View-Typ für selbstreferenzierende
+Baumstrukturen mit: `web_hierarchy` (`type="hierarchy"`, Arch-Tag `<hierarchy parent_field="..."
+child_field="..." draggable="1">`). Live am Odoo-19-Quellcode auf der Unraid-Instanz verifiziert
+(nicht nur angenommen):
+
+- Modul liegt unter `odoo/addons/web_hierarchy`, `category: "Hidden"`, hängt nur von `web` ab —
+  **Community-verfügbar**, kein Enterprise-Gate.
+- `hierarchy_arch_parser.js`: verlangt zwingend ein Many2one-`parent_field` (Default exakt
+  `parent_id`) auf **demselben** Modell — passt eins-zu-eins zum oben festgelegten
+  `parent_id`/`_parent_store`-Design (kein zweites Modell). Optional ein `child_field`
+  (One2many-Gegenstück) und `draggable="1"` für Reparenting per Drag&Drop.
+- `hierarchy_renderer.xml`: rendert **keinen** eingerückten Listenbaum, sondern Kartenreihen pro
+  Generation (`o_hierarchy_row`, `row-cols-2`…`row-cols-lg-5`), horizontal zentriert und mit
+  Verbindungslinien zwischen den Ebenen verbunden — klassische Org-Chart-/Stücklisten-Optik
+  (gebaut u.a. für `hr.employee`-Organigramme, BOM-Strukturen).
+
+**Bewertung:** Für das eigentliche Ziel hier — eine kompakte Ordner-Sidebar im
+Explorer/Directory-Opus-Stil (siehe Grundidee-Notiz) — ist das die falsche Visualisierung. Ein
+Ordner mit 30+ Unterordnern würde als umbrechendes Karten-Grid dargestellt statt als eingerückte
+Liste; der View ist zudem als vollflächige Content-Ansicht konzipiert, nicht als schmales
+Sidebar-Widget neben einer Liste. Bestätigt aber indirekt die Modellentscheidung: sowohl
+`SearchPanel`-Kategorie als auch `hierarchy`-View erwarten dasselbe native Muster
+(selbstreferenzierendes Many2one mit `_parent_store`) — das oben geplante `parent_id`-Feld ist
+also nicht nur für die SearchPanel-Lösung die native Wahl, sondern universell wiederverwendbar,
+falls später doch mal eine Org-Chart-artige Strukturansicht (z.B. "diesen Ast als Baum
+anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPanel` +
+überschriebenem `search_panel_select_range` (siehe oben).
+
 ## Offene Punkte / nächste Schritte
 
 1. Ordnerbaum-Design oben umsetzen (auf `experiment/native-listview` oder eigenem Sub-Branch) —
