@@ -1,0 +1,32 @@
+<odoo>
+    <record id="view_filemanager_file_list_native" model="ir.ui.view">
+        <field name="name">int_filemanager.file.list.native</field>
+        <field name="model">int_filemanager.file</field>
+        <field name="arch" type="xml">
+            <list js_class="int_filemanager_list" default_order="is_dir desc, name" create="false" delete="false">
+                <field name="is_dir" column_invisible="1"/>
+                <field name="path" column_invisible="1"/>
+                <field name="folder_path" column_invisible="1"/>
+                <field name="name"/>
+                <field name="size"/>
+                <field name="mtime"/>
+                <field name="tag_ids" widget="many2many_tags"/>
+                <field name="res_reference" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_filemanager_file_list_native" model="ir.actions.act_window">
+        <field name="name">Dateimanager (nativ, Test)</field>
+        <field name="res_model">int_filemanager.file</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_filemanager_file_list_native"/>
+        <field name="domain">[('folder_path', '=', False)]</field>
+    </record>
+
+    <menuitem id="menu_filemanager_native_test"
+              name="Dateimanager (nativ, Test)"
+              action="action_filemanager_file_list_native"
+              groups="int_filemanager.group_filemanager_user"
+              sequence="95"/>
+</odoo>
