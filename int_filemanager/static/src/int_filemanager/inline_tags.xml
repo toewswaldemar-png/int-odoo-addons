@@ -5,13 +5,14 @@
                 fields="fields"
                 activeFields="activeFields"
                 values="initialValues"
-                mode="'edit'"
+                mode="'readonly'"
                 t-slot-scope="data">
             <IntTagsCell record="data.record" onSaved="props.onSaved"/>
         </Record>
     </t>
     <t t-name="int_filemanager.TagsCell" owl="1">
-        <div class="hm-filemanager-inline-tags o_list_view">
+        <div class="hm-filemanager-inline-tags o_list_view" t-ref="cell"
+             t-on-click="onClickCell" t-on-focusout="onFocusOut">
             <Field name="'tag_ids'" record="props.record" type="'many2many_tags'" colorField="'color'"/>
         </div>
     </t>

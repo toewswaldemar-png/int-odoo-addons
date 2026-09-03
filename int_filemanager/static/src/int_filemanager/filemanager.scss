@@ -3,7 +3,12 @@
     flex: 0 0 240px;
 }
 
+.hm-filemanager-breadcrumbs {
+    background-color: var(--o-view-background-color, #fff);
+}
+
 .hm-tree-row {
+    width: 100%;
     padding: 3px 6px;
     border-radius: 4px;
     white-space: nowrap;
@@ -27,4 +32,28 @@
 
 .hm-filemanager-tree-children {
     display: block;
+}
+
+// Dialog's own header-drag isn't aware of size="fullscreen" - dragging an already
+// 100vw/100vh element makes no sense (and the post-drop top/left override alone
+// doesn't stop the live drag preview, which uses its own transform while held).
+// Block drag-initiation at the source: mousedown never reaches .modal-header, only
+// its buttons (close/expand) stay interactive. Not an issue in the non-fullscreen
+// (xl) toggle state, where dragging stays native/expected.
+.modal-fullscreen .hm-filemanager-preview-dialog {
+    // Bootstrap's .modal-dialog-centered flex-centering leaves an unexplained ~28px
+    // gap top/bottom even with .modal-fullscreen's height:100%/margin:0 - pin the
+    // content directly to the viewport instead of fighting that cascade.
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+
+    .modal-header {
+        pointer-events: none;
+
+        button {
+            pointer-events: auto;
+        }
+    }
 }

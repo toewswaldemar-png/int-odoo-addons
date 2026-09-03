@@ -51,9 +51,10 @@ class IntFilemanagerController(http.Controller):
     # ---------------------------------------------------------------------
 
     LIST_PAGE_SIZE = 200
+    SORTABLE_FIELDS = {"name", "size", "mtime"}
 
     @http.route("/int_filemanager/list", type="jsonrpc", auth="user", methods=["POST"])
-    def list_dir(self, path="", recursive=False, domain=None, offset=0):
+    def list_dir(self, path="", recursive=False, domain=None, offset=0, order_by="name", order_dir="asc"):
         """Lists entries from the search index (int_filemanager.file), not directly
         from disk - this is what makes the native Odoo search bar/facets possible.
         The index is kept in sync by every mutation below plus a periodic ir.cron scan.
@@ -75,8 +76,13 @@ class IntFilemanagerController(http.Controller):
         # geschützten Inhalt automatisch mit heraus.
         Model = request.env["int_filemanager.file"]
         full_domain = scope_domain + (domain or [])
+        if order_by not in self.SORTABLE_FIELDS:
+            order_by = "name"
+        order_dir = "desc" if order_dir == "desc" else "asc"
         total = Model.search_count(full_domain)
-        records = Model.search(full_domain, order="is_dir desc, name", limit=self.LIST_PAGE_SIZE, offset=offset)
+        records = Model.search(
+            full_domain, order=f"is_dir desc, {order_by} {order_dir}", limit=self.LIST_PAGE_SIZE, offset=offset
+        )
 
         entries = [
             {
@@ -86,6 +92,13 @@ class IntFilemanagerController(http.Controller):
                 "mtime": fields.Datetime.to_string(r.mtime)[:16] if r.mtime else "",
                 "meta_id": r.id,
                 "path": r.path,
+                "linked_record": {
+                    "model": r.res_reference._name,
+                    "id": r.res_reference.id,
+                    "display_name": r.res_reference.display_name,
+                }
+                if r.res_reference
+                else None,
             }
             for r in records
         ]

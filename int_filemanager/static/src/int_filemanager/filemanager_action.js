@@ -2,15 +2,22 @@
 
 import { Component, useState, useRef, useEffect, onWillStart, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
+import { browser } from "@web/core/browser/browser";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
 import { WithSearch } from "@web/search/with_search/with_search";
 import { SearchBar } from "@web/search/search_bar/search_bar";
+import { Layout } from "@web/search/layout";
+import { Dropdown } from "@web/core/dropdown/dropdown";
+import { DropdownItem } from "@web/core/dropdown/dropdown_item";
+import { CheckBox } from "@web/core/checkbox/checkbox";
+import { Pager } from "@web/core/pager/pager";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
-import { IntFilePreviewDialog } from "./preview_action";
+import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
 import { IntInlineTags } from "./inline_tags";
 import { IntFolderTree } from "./folder_tree";
 import { IntTextInputDialog } from "./text_input_dialog";
+import { IntLinkRecordDialog } from "./link_record_dialog";
 
 const EDITABLE_EXTENSIONS = new Set([
     "doc", "docx", "odt", "rtf", "txt",
@@ -71,10 +78,15 @@ function formatSize(bytes) {
 
 export class IntFileManager extends Component {
     static template = "int_filemanager.FileManager";
-    static components = { IntInlineTags, IntFolderTree, SearchBar };
+    static components = { IntInlineTags, IntFolderTree, SearchBar, Dropdown, DropdownItem, CheckBox, Pager, Layout };
     static props = {
         domain: { type: Array, optional: true },
+        context: { type: Object, optional: true },
     };
+
+    get display() {
+        return { controlPanel: { layoutActions: true } };
+    }
 
     setup() {
         this.actionService = useService("action");
@@ -82,6 +94,7 @@ export class IntFileManager extends Component {
         this.dialog = useService("dialog");
         this.fileUpload = useService("file_upload");
         this.busService = useService("bus_service");
+        this.fileViewer = useFileViewer();
         this.fileInput = useRef("fileInput");
         useBus(this.fileUpload.bus, "FILE_UPLOAD_LOADED", (ev) => {
             if (ev.detail.upload.id === this.pendingUploadId) {
@@ -115,7 +128,7 @@ export class IntFileManager extends Component {
                     this._searchInitialized = true;
                 }
             },
-            () => [JSON.stringify(this.props.domain)]
+            () => [JSON.stringify(this.props.domain), Boolean(this.props.context?.int_filemanager_recursive)]
         );
         this.state = useState({
             path: "",
@@ -123,12 +136,23 @@ export class IntFileManager extends Component {
             entries: [],
             loading: true,
             treeVersion: 0,
-            recursive: false,
             offset: 0,
             total: 0,
             limit: 200,
+            selected: new Set(),
+            orderBy: "name",
+            orderAsc: true,
+            // Optional column, off by default (most entries have no link) - toggled via
+            // the gear icon in the header, same idea as native ListRenderer's optional
+            // fields picker (list_renderer.js toggleOptionalField), persisted the same way.
+            showLinkColumn: browser.localStorage.getItem("int_filemanager.showLinkColumn") === "1",
         });
         onWillStart(() => this.load(""));
+    }
+
+    toggleLinkColumn() {
+        this.state.showLinkColumn = !this.state.showLinkColumn;
+        browser.localStorage.setItem("int_filemanager.showLinkColumn", this.state.showLinkColumn ? "1" : "0");
     }
 
     fileIconClass(name) {
@@ -143,19 +167,46 @@ export class IntFileManager extends Component {
         this.state.treeVersion++;
     }
 
-    toggleRecursive() {
-        this.state.recursive = !this.state.recursive;
+    get recursive() {
+        return Boolean(this.props.context?.int_filemanager_recursive);
+    }
+
+    sortBy(fieldName) {
+        if (this.state.orderBy === fieldName) {
+            this.state.orderAsc = !this.state.orderAsc;
+        } else {
+            this.state.orderBy = fieldName;
+            this.state.orderAsc = true;
+        }
         this.load(this.state.path);
+    }
+
+    columnHeaderClass(fieldName) {
+        const classNames = ["align-middle", "o_column_sortable", "position-relative", "cursor-pointer", "opacity-trigger-hover"];
+        if (this.state.orderBy === fieldName) {
+            classNames.push("table-active");
+        }
+        return classNames.join(" ");
+    }
+
+    sortIconClass(fieldName) {
+        if (this.state.orderBy === fieldName) {
+            return this.state.orderAsc ? "fa-sort-asc" : "fa-sort-desc";
+        }
+        return "fa-sort opacity-0 opacity-100-hover";
     }
 
     async load(path, offset = 0) {
         this.state.loading = true;
+        this.state.selected.clear();
         try {
             const res = await rpc("/int_filemanager/list", {
                 path,
-                recursive: this.state.recursive,
+                recursive: this.recursive,
                 domain: this.props.domain || [],
                 offset,
+                order_by: this.state.orderBy,
+                order_dir: this.state.orderAsc ? "asc" : "desc",
             });
             this.state.path = res.path;
             this.state.breadcrumbs = res.breadcrumbs;
@@ -168,16 +219,8 @@ export class IntFileManager extends Component {
         }
     }
 
-    nextPage() {
-        if (this.state.offset + this.state.limit < this.state.total) {
-            this.load(this.state.path, this.state.offset + this.state.limit);
-        }
-    }
-
-    prevPage() {
-        if (this.state.offset > 0) {
-            this.load(this.state.path, Math.max(0, this.state.offset - this.state.limit));
-        }
+    onPagerUpdate({ offset }) {
+        this.load(this.state.path, offset);
     }
 
     formatSize(bytes) {
@@ -219,8 +262,39 @@ export class IntFileManager extends Component {
         this.load(crumb.path);
     }
 
+    toViewerFile(entry) {
+        const path = this.entryPath(entry);
+        const downloadUrl = `/int_filemanager/download?path=${encodeURIComponent(path)}&disposition=inline`;
+        const ext = extOf(entry.name);
+        const isPdf = ext === "pdf";
+        return {
+            path,
+            name: entry.name,
+            downloadUrl,
+            isImage: PREVIEWABLE_EXTENSIONS.has(ext) && ext !== "pdf" && ext !== "txt",
+            isPdf,
+            isText: ext === "txt",
+            isViewable: this.isPreviewable(entry.name),
+            defaultSource: isPdf
+                ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(downloadUrl)}#pagemode=none`
+                : downloadUrl,
+        };
+    }
+
     onPreview(entry) {
-        this.dialog.add(IntFilePreviewDialog, { path: this.entryPath(entry) });
+        const files = this.state.entries
+            .filter((e) => !e.is_dir && this.isPreviewable(e.name))
+            .map((e) => this.toViewerFile(e));
+        const file = files.find((f) => f.path === this.entryPath(entry));
+        this.fileViewer.open(file, files);
+    }
+
+    onLinkRecord(entry) {
+        this.dialog.add(IntLinkRecordDialog, {
+            path: this.entryPath(entry),
+            metaId: entry.meta_id,
+            onSaved: () => this.load(this.state.path),
+        });
     }
 
     onDownload(entry) {
@@ -273,6 +347,21 @@ export class IntFileManager extends Component {
         });
     }
 
+    get singleSelectedEntry() {
+        if (this.state.selected.size !== 1) {
+            return null;
+        }
+        const [path] = this.state.selected;
+        return this.state.entries.find((entry) => this.entryPath(entry) === path) || null;
+    }
+
+    onRenameSelected() {
+        const entry = this.singleSelectedEntry;
+        if (entry) {
+            this.onRename(entry);
+        }
+    }
+
     onRename(entry) {
         this.dialog.add(IntTextInputDialog, {
             title: "Umbenennen",
@@ -300,25 +389,67 @@ export class IntFileManager extends Component {
         entry.meta_id = metaId;
     }
 
-    onDelete(entry) {
+    get allSelected() {
+        return this.state.entries.length > 0 &&
+            this.state.entries.every((entry) => this.state.selected.has(this.entryPath(entry)));
+    }
+
+    isSelected(entry) {
+        return this.state.selected.has(this.entryPath(entry));
+    }
+
+    toggleSelect(entry) {
+        const path = this.entryPath(entry);
+        if (this.state.selected.has(path)) {
+            this.state.selected.delete(path);
+        } else {
+            this.state.selected.add(path);
+        }
+    }
+
+    toggleSelectAll() {
+        if (this.allSelected) {
+            this.state.entries.forEach((entry) => this.state.selected.delete(this.entryPath(entry)));
+        } else {
+            this.state.entries.forEach((entry) => this.state.selected.add(this.entryPath(entry)));
+        }
+    }
+
+    clearSelection() {
+        this.state.selected.clear();
+    }
+
+    onBulkDelete() {
+        const count = this.state.selected.size;
         this.dialog.add(ConfirmationDialog, {
             title: "Löschen bestätigen",
-            body: `"${entry.name}" wirklich löschen?`,
+            body: `${count} ${count === 1 ? "Eintrag" : "Einträge"} wirklich löschen?`,
             confirmLabel: "Löschen",
             confirmClass: "btn-danger",
             confirm: async () => {
-                try {
-                    await rpc("/int_filemanager/delete", { path: this.entryPath(entry) });
-                    this.load(this.state.path);
-                    if (entry.is_dir) {
-                        this.refreshTree();
+                const paths = [...this.state.selected];
+                const hadDir = this.state.entries.some(
+                    (entry) => this.state.selected.has(this.entryPath(entry)) && entry.is_dir
+                );
+                const errors = [];
+                for (const path of paths) {
+                    try {
+                        await rpc("/int_filemanager/delete", { path });
+                    } catch (e) {
+                        errors.push(e.data?.message || e.message);
                     }
-                } catch (e) {
-                    this.notification.add(e.data?.message || e.message, { type: "danger" });
+                }
+                this.load(this.state.path);
+                if (hadDir) {
+                    this.refreshTree();
+                }
+                if (errors.length) {
+                    this.notification.add(errors.join("\n"), { type: "danger" });
                 }
             },
         });
     }
+
 
     triggerUpload() {
         this.fileInput.el.click();
@@ -363,6 +494,8 @@ const SEARCH_VIEW_ARCH = `<search>
     <separator/>
     <filter name="filter_tagged" string="Mit Tags" domain="[('tag_ids','!=',False)]"/>
     <filter name="filter_untagged" string="Ohne Tags" domain="[('tag_ids','=',False)]"/>
+    <separator/>
+    <filter name="filter_recursive" string="Alle Unterordner" context="{'int_filemanager_recursive': 1}"/>
 </search>`;
 
 export class IntFileManagerAction extends Component {
@@ -373,6 +506,14 @@ export class IntFileManagerAction extends Component {
     setup() {
         this.searchViewFields = SEARCH_VIEW_FIELDS;
         this.searchViewArch = SEARCH_VIEW_ARCH;
+        // Set when opened from a "Verknüpfte Dateien" smart button on another record
+        // (int_filemanager.linkable.mixin's action_view_int_filemanager_files) - combined
+        // by WithSearch with whatever the user then adds via search facets, same as any
+        // regular act_window action.domain.
+        this.initialDomain = this.props.action?.params?.domain || [];
+        // Linked files can be anywhere in the tree, not necessarily at the root - without
+        // this the folder-scoped browsing (current path only) would hide most of them.
+        this.initialContext = this.initialDomain.length ? { int_filemanager_recursive: 1 } : {};
     }
 }
 

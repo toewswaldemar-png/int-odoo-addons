@@ -48,6 +48,15 @@ class IntFilemanagerFile(models.Model):
         help="Eindeutige ID des Scan-Laufs, der diesen Datensatz zuletzt auf der Platte bestätigt hat.",
     )
     tag_ids = fields.Many2many("int_filemanager.tag", string="Tags")
+    res_reference = fields.Reference(
+        string="Verknüpfter Datensatz",
+        selection="_selection_target_model",
+        help="Beliebiger Odoo-Datensatz (z.B. Reparaturauftrag, Kontakt), mit dem diese "
+        "Datei/dieser Ordner inhaltlich verknüpft ist.",
+    )
+
+    def _selection_target_model(self):
+        return [(model.model, model.name) for model in self.env["ir.model"].sudo().search([])]
 
     content_sha256 = fields.Char(
         index=True,

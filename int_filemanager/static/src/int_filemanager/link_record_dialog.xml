@@ -1,0 +1,23 @@
+<templates xml:space="preserve">
+    <t t-name="int_filemanager.LinkRecordDialog" owl="1">
+        <Record resModel="'int_filemanager.file'"
+                resId="props.metaId || false"
+                fields="fields"
+                activeFields="activeFields"
+                values="initialValues"
+                mode="'edit'"
+                t-slot-scope="data">
+            <Dialog title="'Mit Datensatz verknüpfen'" size="'md'">
+                <div class="p-2">
+                    <Field name="'res_reference'" record="data.record" type="'reference'"/>
+                </div>
+                <t t-set-slot="footer">
+                    <button class="btn btn-primary" t-on-click="() => this.onSave(data.record)">Speichern</button>
+                    <button t-if="data.record.data.res_reference" class="btn btn-link text-danger"
+                            t-on-click="() => this.onClear(data.record)">Verknüpfung entfernen</button>
+                    <button class="btn btn-secondary" t-on-click="() => this.props.close()">Abbrechen</button>
+                </t>
+            </Dialog>
+        </Record>
+    </t>
+</templates>
