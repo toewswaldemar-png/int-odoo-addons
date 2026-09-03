@@ -29,6 +29,19 @@ const PREVIEWABLE_EXTENSIONS = new Set([
     "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "txt",
 ]);
 
+// Muss mit mediameta.py's IMAGE_EXTENSIONS übereinstimmen - nur für diese
+// Endungen liefert der Metadaten-Cron ein Thumbnail über /thumbnail.
+const THUMBNAIL_EXTENSIONS = new Set([
+    "jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif",
+]);
+
+function formatDuration(seconds) {
+    const total = Math.round(seconds || 0);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 // Only Word/Excel/PowerPoint have an "ofe" protocol handler on Windows for
 // launching the desktop app straight from a URL - odt/rtf/csv/ods/odp have
 // no equivalent, they stay editable via ONLYOFFICE only.
@@ -157,6 +170,39 @@ export class IntFileManager extends Component {
 
     fileIconClass(name) {
         return fileIconClass(name);
+    }
+
+    hasThumbnail(entry) {
+        return entry.media_state === "done" && THUMBNAIL_EXTENSIONS.has(extOf(entry.name));
+    }
+
+    thumbnailUrl(entry) {
+        return `/int_filemanager/thumbnail?path=${encodeURIComponent(this.entryPath(entry))}`;
+    }
+
+    mediaBadgeTitle(entry) {
+        if (entry.media_state === "pending" || entry.media_state === "running") {
+            return "Vorschau/Metadaten werden aktualisiert.";
+        }
+        if (entry.media_state === "error") {
+            return entry.media_error || "Metadatenextraktion fehlgeschlagen.";
+        }
+        if (entry.media_state === "done") {
+            if (entry.page_count) {
+                return `PDF, ${entry.page_count} Seite(n)`;
+            }
+            if (entry.audio_duration) {
+                const parts = [formatDuration(entry.audio_duration)];
+                if (entry.audio_title) {
+                    parts.push(entry.audio_title);
+                }
+                if (entry.audio_artist) {
+                    parts.push(entry.audio_artist);
+                }
+                return parts.join(" – ");
+            }
+        }
+        return "";
     }
 
     onNavigate(path) {
@@ -294,6 +340,13 @@ export class IntFileManager extends Component {
             path: this.entryPath(entry),
             metaId: entry.meta_id,
             onSaved: () => this.load(this.state.path),
+        });
+    }
+
+    onShare(entry) {
+        this.actionService.doAction("int_filemanager.action_filemanager_file_share", {
+            props: { resId: entry.meta_id },
+            onClose: () => this.load(this.state.path),
         });
     }
 

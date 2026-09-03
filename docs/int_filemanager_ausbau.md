@@ -1,25 +1,25 @@
 # int_filemanager-Ausbau: Status & Plan
 
-## Status (Stand 2026-09-02)
+## Status (Stand 2026-09-02, aktualisiert nach Phase 5 - Plan vollständig umgesetzt)
 
-**Umgesetzt und committet** (`74bd050`, `master`): Phase 1–3 des unten stehenden Plans.
+**Umgesetzt** (`master`): Phase 1–5, der gesamte unten stehende Plan. Phase 1–3 committet in `74bd050`, Phase 4 in `78d23cc`, Phase 5 folgt in einem eigenen Commit (siehe Ist-Stand-Abschnitt bei Phase 5 unten für Abweichungen vom ursprünglichen Plan).
 
 | Phase | Inhalt | Code | Tests |
 |---|---|---|---|
 | 1 | Scan-Identität (Hash-basierte Rename-Erkennung) | ✅ | ✅ 16 Tests |
 | 2 | Feingranulare Rechte (ACL) + Authorization-Service | ✅ | ✅ 11 Tests |
 | 3 | Versionierung (Snapshot, atomarer Schreibvorgang, Journal) | ✅ | ✅ 10 Tests |
-| 4 | Vorschau & Metadaten | ⬜ offen | — |
-| 5 | Freigaben (intern/extern) | ⬜ offen | — |
+| 4 | Vorschau & Metadaten | ✅ | ✅ 11 Tests |
+| 5 | Freigaben (intern/extern) | ✅ | ✅ 18 Tests |
 
-**Getestet wie:** alle 37 Tests (`TransactionCase` + `HttpCase`) liefen echt gegen eine Wegwerf-Odoo-19-Instanz auf HM-SRV (eigene Test-DB `int_filemanager_test`, eigenes Docker-Image mit `pyjwt` nachinstalliert für die `onlyoffice_odoo`-Abhängigkeit, danach vollständig entfernt). Nicht nur syntaktisch geprüft — dabei sind mehrere reale Bugs aufgetaucht (Datetime-Sekundenpräzision bei der Stale-Erkennung, ein order-abhängiger Fehl-Merge, `.exists()` ohne `ir.rule`-Prüfung, Odoos `HttpCase`-Request-Serialisierung), die reine Code-Review nicht gefunden hätte. Details siehe Commit-Message.
+**Getestet wie:** alle 66 Tests (`TransactionCase` + `HttpCase`) liefen echt gegen eine Wegwerf-Odoo-19-Instanz auf HM-SRV (eigene Test-DB `int_filemanager_test`, eigenes Docker-Image mit `pyjwt` + `mutagen==1.47.0` nachinstalliert, danach vollständig entfernt — DB gedroppt, Image entfernt, Temp-Verzeichnisse gelöscht, Produktiv-Container `odoo`/`odoo_db` zu keinem Zeitpunkt berührt). 0 failed, 0 error(s) of 66 tests. Der erste Testlauf von Phase 5 fand dabei zwei echte Bugs (fehlendes `@api.depends` auf `share_url`, fehlender `id`-Tiebreaker in `share_log`s Sortierung bei gleichem `create_date`) - beide durch die Tests aufgedeckt, nicht durch Code-Review.
 
 **Noch NICHT passiert:**
-- Kein Rollout auf die Produktivinstanz (HM-SRV `Odoo19`-Container/`odoodb`) — das Modul-Update wurde bewusst nicht angewendet, bleibt ein separater, zu bestätigender Schritt.
-- `mutagen` ist nicht im Produktiv-Image installiert (erst für Phase 4 relevant, siehe Dockerfile unten).
-- Phase 4 (Vorschau & Metadaten) und Phase 5 (Freigaben) sind unten vollständig durchgeplant, aber nicht implementiert.
+- Kein Rollout auf die Produktivinstanz — auf HM-SRV läuft weiterhin die alte, vom Repo entkoppelte Version unter dem historischen Modulnamen `hm_filemanager` (19.0.1.0.0, ohne Phase 1–5). Das produktive Dockerfile (`/mnt/user/appdata/odoo/Dockerfile`) hat `mutagen` noch nicht installiert.
+- `int_filemanager.watcher_enabled`-Kill-Switch fehlt weiterhin (siehe Rollout-Abschnitt unten).
+- Bei einem künftigen Upgrade einer bereits laufenden Installation (nicht bei einer Erstinstallation) muss `rebuild_rules` einmalig manuell angestoßen werden - `post_init_hook` feuert laut Odoo-Quellcode nur bei `update_operation == 'install'`, nicht bei `'upgrade'` (siehe Phase-5-Ist-Stand unten).
 
-**Wie weiterarbeiten:** Phase 4 als nächstes (siehe Reihenfolge unten — baut auf Phase 1–3 auf, keine Abhängigkeit von Phase 5). Der Plan wurde über vier Review-Runden gehärtet, jede Zeile mit "Runde X" bezieht sich auf einen konkreten, empirisch gegen den echten Odoo-19-Code auf HM-SRV geprüften Fund. Beim Fortsetzen: dieselbe Wegwerf-Instanz-Methode verwenden (siehe oben), nicht nur `py_compile`.
+**Wie weiterarbeiten:** Der Plan ist inhaltlich vollständig umgesetzt. Offen bleibt ausschließlich der eigentliche Produktiv-Rollout (siehe Verifikation & Rollout unten) - dafür vorher den Kill-Switch nachziehen und die dort dokumentierte Checkliste durchgehen.
 
 ---
 
@@ -148,7 +148,7 @@ Damit ist der gesamte Ablauf für dieselbe Datei serialisiert — eine zweite gl
 
 ---
 
-## Phase 4 — Vorschau & Metadaten ⬜ offen
+## Phase 4 — Vorschau & Metadaten ✅ umgesetzt
 
 Grundverfahren aus Runde 3 bestätigt tragfähig (Zustand statt Flag, asynchrone Extraktion, `_commit_progress()`, Pillow/PyPDF2/mutagen, `fields.Image`). Runde 4 präzisiert nur die UI-Behandlung veralteter Werte.
 
@@ -173,9 +173,21 @@ Wird im Pre-Flight (siehe Verifikation) gebaut und getestet, bevor er auf HM-SRV
 
 **Tests:** `pending`-Zustand zeigt in der UI sichtbar "wird aktualisiert" statt kommentarlos alte Werte; Dockerfile-Build + `mutagen`-Import-Test im Pre-Flight.
 
+**Umsetzung (Ist-Stand):** Kernverfahren wie geplant (Zustand statt Flag, asynchrone Extraktion im Batch-Cron, `_commit_progress()`, Stat-vor/nach-Schutz analog Phase 1s Hash-Race-Fix), mit folgenden beim Bauen getroffenen/präzisierten Entscheidungen:
+
+- **PDF ohne gerenderte Vorschau, nur Seitenzahl:** am echten Image bestätigt fehlen sowohl `poppler-utils` (`pdftoppm`/`pdftocairo`) als auch `PyMuPDF` (`fitz`) — beides wäre für ein gerendertes Thumbnail nötig. Statt das unentschieden zu lassen: PDF liefert in v1 nur `page_count` über `odoo.tools.pdf.PdfReader` (mit `strict=False`, da reale/gescannte PDFs oft eine leicht defekte xref-Tabelle haben und die Seitenzahl trotzdem zuverlässig ausgelesen werden soll). Ein gerendertes PDF-Thumbnail bliebe eine spätere, separate Entscheidung (zusätzliches Paket im Dockerfile).
+- **Audio generisch über `mutagen.File(path, easy=True)`** statt einer Klasse pro Format — deckt mp3/wav/flac/ogg/m4a/aac/wma über dieselbe Extraktionsfunktion ab, liefert `audio_duration`/`audio_title`/`audio_artist`/`audio_album`.
+- **`meta_state` ohne Feld-Default** (anders als `hash_state`): nur Dateien mit unterstützter Endung (`mediameta.media_type_of()`) durchlaufen überhaupt `pending`; Ordner und nicht unterstützte Typen bleiben `False` und werden vom Cron-Domain-Filter automatisch übersprungen — vermeidet ein sinnloses "pending" auf z.B. einer `.docx`.
+- **Kein automatischer Retry nach Fehler:** anders als beim Hash-Cron (der bei `None` einfach `pending` belässt) setzt ein Extraktions-Fehler (defekte Datei, Format-Fehler) `meta_state='error'` mit `meta_error`-Text und zählt `meta_attempts` hoch — kein Endlos-Retry-Loop auf einer dauerhaft kaputten Datei. Erst eine erneute Watcher-`MODIFY` (echte Dateiänderung) setzt wieder auf `pending`. Nur eine transiente Bedingung (Datei ändert sich gerade während der Extraktion) bleibt `pending` für den nächsten Lauf.
+- **Großdatei-Ablehnung analog Phase 3:** `int_filemanager.meta_max_bytes_<image|pdf|audio>` (Config-Parameter, Defaults 50/100/100 MB) — Überschreitung wird als `error` abgelehnt, nicht stillschweigend übersprungen.
+- **Thumbnail-Auslieferung über eigene Route** (`/int_filemanager/thumbnail?path=...`), nicht als Base64 in der `/list`-JSON-Antwort eingebettet — bei 200 Zeilen pro Seite wäre das ein unnötig großer Payload; die Route liest den ACL-gefilterten Datensatz nicht-sudo (wie `/download`) und liefert nur bei `meta_state='done'` ein Bild.
+- **UI:** Thumbnail-Spalte (24×24px, ersetzt das FontAwesome-Icon bei Bildern mit `meta_state='done'`), Refresh-Icon mit Tooltip bei `pending`/`running`, Warndreieck mit `meta_error` als Tooltip bei `error`, Info-Icon mit PDF-Seitenzahl bzw. Audio-Dauer/Titel/Interpret bei `done`. Keine eigene Detailansicht für Audio-Tags/Seitenzahl über das Tooltip hinaus — bewusst zurückgestellt, analog zur zurückgestellten Versionen-UI in Phase 3.
+- **Dockerfile spiegelt das tatsächlich auf HM-SRV deployte** (`/mnt/user/appdata/odoo/Dockerfile`: `FROM odoo:19.0`, `USER root`, `pip3 install --break-system-packages`, `USER odoo`) statt der im ursprünglichen Plan skizzierten digest-gepinnten Variante — liegt jetzt im Repo (`Dockerfile`, Root-Ebene) mit `mutagen==1.47.0` ergänzt. Noch nicht auf das Produktiv-Dockerfile auf HM-SRV übertragen (Rollout weiterhin zurückgestellt).
+- **Dateien:** neu [mediameta.py](../int_filemanager/mediameta.py), [models/filemanager_file.py](../int_filemanager/models/filemanager_file.py) (Felder + `_cron_extract_media_meta`), [index_utils.py](../int_filemanager/index_utils.py) (`meta_state` pending bei Watcher-Upsert), [controllers/main.py](../int_filemanager/controllers/main.py) (`/thumbnail`-Route, erweiterte `/list`-Antwort), `static/src/int_filemanager/filemanager_action.js`/`.xml`/`filemanager.scss`, `data/ir_cron.xml`, neu `Dockerfile` (Root-Ebene), neu [tests/test_media_meta.py](../int_filemanager/tests/test_media_meta.py) (11 Tests).
+
 ---
 
-## Phase 5 — Freigaben (intern & extern) ⬜ offen
+## Phase 5 — Freigaben (intern & extern) ✅ umgesetzt
 
 **Portal-Zweig jetzt zeitlich korrekt eingeführt (Runde 4):** `shared_partner_ids` (Many2many `res.partner`) wird hier auf `int_filemanager.file` angelegt — **danach erst** erweitert `acl_rules.py` (derselbe Generator-Mechanismus wie in Phase 2, inkl. Multi-Kontext-Selbsttest) die bestehende Read-Regel um den Portal-Zweig:
 ```python
@@ -199,6 +211,16 @@ access_int_filemanager_file_portal,int_filemanager.file.portal,model_int_fileman
 
 **Tests:** Portal-Nutzer ohne den neuen `ir.model.access`-Eintrag → kein Zugriff, unabhängig von `shared_partner_ids` (bestätigt die Notwendigkeit der CSV-Zeile); gelöschte freigegebene Datei → Log-Eintrag bleibt mit Pfad-Snapshot lesbar, `file_id` ist `NULL`.
 
+**Umsetzung (Ist-Stand):** Kernmechanismus wie geplant (zwei unabhängige Freigabewege: "intern" = `shared_partner_ids` über den Portal-Zweig der Read-Regel, "extern" = anonymer `share_token`-Link ganz ohne ir.rule), mit folgenden beim Bauen getroffenen Entscheidungen und einer beim ersten echten Testlauf gefundenen, zuvor nicht erkannten Sicherheitslücke:
+
+- **Neu gefundene Lücke, behoben: `rebuild_rules()` lief bisher nur reaktiv.** Die ACL-Regelgenerierung aus Phase 2 wurde bislang ausschließlich bei einer Änderung an `protected_folder` angestoßen - beim Modul-Install/-Update selbst nie. Für Phase 2/3/4 war der in `security.xml` hinterlegte statische Platzhalter (`[(1,'=',1)]`, "alles offen") dabei unproblematisch, weil er exakt dem Verhalten vor Einführung der ACL entsprach (nur `group_filemanager_user`-Mitglieder hatten überhaupt Modellzugriff). Mit Phase 5s neuer `ir.model.access`-Zeile für `base.group_portal` wäre das nicht mehr harmlos: ein Portal-Nutzer hätte bis zur ersten `protected_folder`-Änderung nach dem Upgrade Lesezugriff auf **alle** Dateien statt nur die über `shared_partner_ids` freigegebenen - der neu gewährte Modellzugriff plus der noch nicht regenerierte, weiterhin "immer wahr" lautende Platzhalter hätten sich addiert. Behoben über einen neuen `post_init_hook` (`__init__.py`), der `rebuild_rules()` einmalig bei der Installation ausführt. **Bekannte Grenze:** Odoo ruft `post_init_hook` laut eigenem Quellcode (`odoo/modules/loading.py`) nur bei `update_operation == 'install'`, nicht bei `'upgrade'` - ein Upgrade einer bereits laufenden Installation braucht denselben Lauf einmal manuell (z.B. per Odoo-Shell: `env["int_filemanager.protected_folder"]._rebuild_acl_rules()`, oder eine beliebige `protected_folder`-Änderung/Resave). Für den Zeitpunkt des tatsächlichen Produktiv-Rollouts (ohnehin ein Neu-Install unter dem neuen Namen `int_filemanager`, kein Upgrade der alten `hm_filemanager`) ist das der ohnehin durchlaufene Pfad.
+- **Portal-Zweig als eigener, vollständig getrennter Zweig** (nicht als Ergänzung des internen Zweigs): ein Portal-Nutzer sieht ausschließlich über `shared_partner_ids` freigegebene Dateien, nie zusätzlich etwas über Schutzordner-Gruppen (die für Portal-Kontakte ohnehin nie vergeben werden) - getestet in beide Richtungen (Portal-Nutzer ignoriert interne Gruppen, interner Nutzer ignoriert `shared_partner_ids`).
+- **`share_expires_at` bewusst nicht frei editierbar** (readonly in der Formularansicht): nur "Link erzeugen/erneuern" setzt Token+Ablauf gemeinsam neu (Default-Gültigkeit `int_filemanager.share_default_days`, 30 Tage), damit nie ein verlängerter Ablauf an einem alten Token hängenbleibt.
+- **"Freigeben"-UI als native Odoo-Formularansicht** (`views/filemanager_file_share_views.xml`, per `target="new"`-Dialog aus dem neuen "Freigeben"-Button in der Dateiliste geöffnet) statt eigenem OWL-Dialog - nutzt Odoos `many2many_tags`-Widget für `shared_partner_ids` und die bestehende Schreibregel (write-Capability) automatisch mit, kein zusätzlicher Berechtigungscode nötig. `share_url` ist ein reines Anzeige-Komfortfeld (`compute`, mit `CopyClipboardURL`-Widget), das den vollständigen Link aus `web.base.url` zusammensetzt.
+- **Portal-Browsing-Seite bewusst minimal:** `/my/shared_files` (Liste) + `/my/shared_files/<id>/download`, ohne Paginierung/Breadcrumb-Integration (`no_breadcrumbs`) - Scope v1 sind Einzeldateien, meist wenige pro Kontakt freigegeben. Der Download-Endpoint holt den Datensatz bewusst über `browse().exists()` **plus explizites** `check_access("read")` (nicht `search()`) - liefert einen klaren 404 bei nicht existentem `file_id` und einen separaten `AccessError` bei fehlender Freigabe, beides für einen eingeloggten Portal-Nutzer unproblematisch offenzulegen (anders als beim anonymen Link, wo Runde 2/3 bewusst eine einheitliche Fehlerantwort verlangt, um nicht zu verraten, ob ein Token je existierte).
+- **Zwei beim ersten echten Testlauf gefundene, sofort behobene Bugs** (Details siehe oben im Status-Abschnitt): fehlendes `@api.depends("share_token")` auf `_compute_share_url` (Link blieb nach Widerruf fälschlich sichtbar), fehlender `id`-Tiebreaker in `int_filemanager.share_log`s `_order` (Sortierung bei identischem `create_date` innerhalb derselben Transaktion nicht deterministisch).
+- **Dateien:** [models/filemanager_file.py](../int_filemanager/models/filemanager_file.py) (`shared_partner_ids`, `share_token`, `share_expires_at`, `share_url`, `action_generate_share_token`, `action_revoke_share_token`), neu [models/filemanager_share_log.py](../int_filemanager/models/filemanager_share_log.py), [acl_rules.py](../int_filemanager/acl_rules.py) (Portal-Zweig, `PORTAL_GROUP_XML_ID`), [__init__.py](../int_filemanager/__init__.py) (`post_init_hook`), [controllers/main.py](../int_filemanager/controllers/main.py) (`/int_filemanager/share/<token>`), neu [controllers/portal.py](../int_filemanager/controllers/portal.py) (`/my/shared_files`, `/my/shared_files/<id>/download`), neu `views/filemanager_file_share_views.xml`, neu `views/portal_templates.xml`, `security/ir.model.access.csv` (Portal-Read-Zeile, `share_log`-Zeile), `static/src/int_filemanager/filemanager_action.js`/`.xml` ("Freigeben"-Button), neu [tests/test_sharing.py](../int_filemanager/tests/test_sharing.py) (18 Tests).
+
 ---
 
 ## Verifikation & Rollout
@@ -208,6 +230,7 @@ access_int_filemanager_file_portal,int_filemanager.file.portal,model_int_fileman
 - Vor jedem Modul-Update auf Produktiv: DB-Backup, Teilbaum-Backup, Watcher-Kill-Switch (noch nicht implementiert — `int_filemanager.watcher_enabled`-Config-Flag fehlt noch), dokumentiertes Rollback (Backup zurückspielen + Code-Revert), Integritätsvergleich vor/nach Scan.
 - Kein automatisiertes Browser-Verifizieren ohne expliziten Wunsch.
 
-### Bekannte Lücke aus dem Rollout-Abschnitt, noch nicht umgesetzt
-`int_filemanager.watcher_enabled`-Kill-Switch (`start_watcher()` soll ihn vor dem Start prüfen) ist im Plan vorgesehen, aber im Code noch nicht vorhanden — vor dem ersten Produktiv-Rollout nachziehen, damit der Watcher während eines Modul-Updates kontrolliert gestoppt werden kann.
+### Bekannte Lücken aus dem Rollout-Abschnitt, noch nicht umgesetzt
+- `int_filemanager.watcher_enabled`-Kill-Switch (`start_watcher()` soll ihn vor dem Start prüfen) ist im Plan vorgesehen, aber im Code noch nicht vorhanden — vor dem ersten Produktiv-Rollout nachziehen, damit der Watcher während eines Modul-Updates kontrolliert gestoppt werden kann.
+- Der neue `post_init_hook` (Phase 5, regeneriert die ACL-`domain_force` bei Installation) feuert nur bei einer Erstinstallation, nicht bei einem Upgrade einer bereits laufenden Installation (Odoo-Verhalten, siehe Phase-5-Ist-Stand). Da der eigentliche Produktiv-Rollout ohnehin ein Neu-Install unter dem Namen `int_filemanager` wäre (nicht ein Upgrade der alten `hm_filemanager`), ist das für den aktuell absehbaren Rollout-Weg unkritisch — falls stattdessen doch upgegradet wird: einmalig `env["int_filemanager.protected_folder"]._rebuild_acl_rules()` manuell ausführen.
 

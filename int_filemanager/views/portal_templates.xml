@@ -1,0 +1,33 @@
+<odoo>
+    <!-- Bewusst minimal: keine Paginierung/Breadcrumb-Integration (Scope v1
+         nur Einzeldateien, meist wenige pro Kontakt geteilt) - no_breadcrumbs
+         vermeidet die zusätzlichen Kontext-Variablen, die portal.portal_breadcrumbs
+         sonst erwartet. -->
+    <template id="portal_shared_files" name="Freigegebene Dateien">
+        <t t-call="portal.portal_layout">
+            <t t-set="no_breadcrumbs" t-value="True"/>
+            <div class="container">
+                <h3>Für Sie freigegebene Dateien</h3>
+                <table t-if="files" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Größe</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="files" t-as="f">
+                            <td>
+                                <a t-attf-href="/my/shared_files/#{f.id}/download">
+                                    <t t-esc="f.name"/>
+                                </a>
+                            </td>
+                            <td><t t-esc="f.size"/> Bytes</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-else="" class="text-muted">Aktuell sind keine Dateien für Sie freigegeben.</p>
+            </div>
+        </t>
+    </template>
+</odoo>

@@ -84,8 +84,9 @@ class IntFilemanagerController(http.Controller):
             full_domain, order=f"is_dir desc, {order_by} {order_dir}", limit=self.LIST_PAGE_SIZE, offset=offset
         )
 
-        entries = [
-            {
+        entries = []
+        for r in records:
+            entry = {
                 "name": r.name,
                 "is_dir": r.is_dir,
                 "size": r.size,
@@ -99,9 +100,21 @@ class IntFilemanagerController(http.Controller):
                 }
                 if r.res_reference
                 else None,
+                "media_state": r.meta_state or False,
             }
-            for r in records
-        ]
+            if r.meta_state == "error":
+                entry["media_error"] = r.meta_error
+            elif r.meta_state == "done":
+                if r.media_width:
+                    entry["media_width"] = r.media_width
+                    entry["media_height"] = r.media_height
+                if r.page_count:
+                    entry["page_count"] = r.page_count
+                if r.audio_duration:
+                    entry["audio_duration"] = r.audio_duration
+                    entry["audio_title"] = r.audio_title
+                    entry["audio_artist"] = r.audio_artist
+            entries.append(entry)
 
         return {
             "path": rel,
@@ -154,6 +167,26 @@ class IntFilemanagerController(http.Controller):
             ("Content-Type", mimetype),
             ("Content-Length", str(len(data))),
             ("Content-Disposition", http.content_disposition(filename, disposition)),
+        ]
+        return request.make_response(data, headers=headers)
+
+    @http.route("/int_filemanager/thumbnail", type="http", auth="user")
+    def thumbnail(self, path=""):
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        rel = to_relative(request.env, abs_path)
+        authz.require(request.env, rel, "read")
+        # Nicht-sudo: dieselbe generierte Leserechte-Regel wie auf
+        # int_filemanager.file filtert eine geschuetzte Datei automatisch
+        # heraus, statt nur ueber authz.require() hier gesondert zu pruefen.
+        record = request.env["int_filemanager.file"].search([("path", "=", rel)], limit=1)
+        if not record or record.meta_state != "done" or not record.sudo().thumbnail:
+            raise UserError(_("Keine Vorschau verfügbar."))
+        data = base64.b64decode(record.sudo().thumbnail)
+        headers = [
+            ("Content-Type", "image/jpeg"),
+            ("Content-Length", str(len(data))),
+            ("Cache-Control", "private, max-age=3600"),
         ]
         return request.make_response(data, headers=headers)
 
@@ -315,6 +348,45 @@ class IntFilemanagerController(http.Controller):
         raw = base64.b64decode(version.sudo().content or b"")
         write_service.snapshot_and_write(request.env, file_record, raw, operation="restore")
         return {"ok": True}
+
+    # ---------------------------------------------------------------------
+    # externe Freigabe (anonymer Link, kein Login)
+    # ---------------------------------------------------------------------
+
+    @http.route("/int_filemanager/share/<string:token>", type="http", auth="public")
+    def share_download(self, token):
+        """Bewusst OHNE ir.rule/authz.require - dieselbe Entscheidung wie in
+        Runde 2/3 (siehe Ausbauplan): ein anonymer Aufrufer hat keinen
+        sinnvollen ir.rule-Kontext, hier wird alles explizit selbst geprüft.
+        Unbekannt/abgelaufen/widerrufen liefern bewusst dieselbe Fehlerseite -
+        ein Unterschied würde verraten, ob ein Token je existiert hat."""
+        record = request.env["int_filemanager.file"].sudo().search([("share_token", "=", token)], limit=1)
+        if (
+            not token
+            or not record
+            or not record.share_expires_at
+            or record.share_expires_at < fields.Datetime.now()
+        ):
+            return request.not_found()
+
+        root = get_root(request.env)
+        abs_path = os.path.join(root, record.path)
+        if not os.path.isfile(abs_path):
+            return request.not_found()
+
+        with open(abs_path, "rb") as f:
+            data = f.read()
+        request.env["int_filemanager.share_log"].sudo().create(
+            {"file_id": record.id, "path": record.path, "filename": record.name, "event_type": "downloaded"}
+        )
+        mimetype = mimetypes.guess_type(record.name)[0] or "application/octet-stream"
+        headers = [
+            ("Content-Type", mimetype),
+            ("Content-Length", str(len(data))),
+            ("Content-Disposition", http.content_disposition(record.name, "attachment")),
+            ("Cache-Control", "private, no-store"),
+        ]
+        return request.make_response(data, headers=headers)
 
     # ---------------------------------------------------------------------
     # onlyoffice bridge

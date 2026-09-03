@@ -1,12 +1,15 @@
 import logging
 import os
+import secrets
 import unicodedata
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from odoo import fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 from ..hash_utils import compute_stable_hash
+from ..mediameta import MetaTooLarge, extract_metadata, media_type_of
 from ..path_utils import get_root, to_relative
 
 _logger = logging.getLogger(__name__)
@@ -20,6 +23,16 @@ _logger = logging.getLogger(__name__)
 SCAN_HASH_BUDGET_BYTES = 500 * 1024 * 1024
 
 HASH_CRON_BATCH_SIZE = 200
+
+MEDIA_META_CRON_BATCH_SIZE = 100
+
+# Default-Groessenlimits je Medientyp fuer die Metadatenextraktion, ueberschreibbar
+# per ir.config_parameter (int_filemanager.meta_max_bytes_<typ>) ohne Code-Aenderung.
+DEFAULT_META_MAX_BYTES = {
+    "image": 50 * 1024 * 1024,
+    "pdf": 100 * 1024 * 1024,
+    "audio": 100 * 1024 * 1024,
+}
 
 
 class IntFilemanagerFile(models.Model):
@@ -81,7 +94,112 @@ class IntFilemanagerFile(models.Model):
         copy=False,
     )
 
+    # --- Phase 4: Vorschau & Metadaten -----------------------------------
+    # meta_state bleibt False/leer fuer Ordner und fuer Dateitypen ohne
+    # Extraktor (media_type_of() == None) - nur unterstuetzte Medientypen
+    # durchlaufen ueberhaupt "pending", damit der Cron sie nicht faelschlich
+    # als unbearbeitet betrachtet. Anders als hash_state also KEIN
+    # Feld-Default, sondern explizit von Watcher/Scan gesetzt.
+    meta_state = fields.Selection(
+        [
+            ("pending", "Ausstehend"),
+            ("running", "Läuft"),
+            ("done", "Fertig"),
+            ("error", "Fehler"),
+        ],
+        index=True,
+        copy=False,
+    )
+    meta_error = fields.Char(copy=False)
+    meta_attempts = fields.Integer(copy=False, default=0)
+    meta_source_size = fields.Integer(copy=False, help="Groesse zum Zeitpunkt der Extraktion.")
+    meta_source_mtime_ns = fields.Char(
+        copy=False, help="mtime_ns zum Zeitpunkt der Extraktion, verlustfrei als Text."
+    )
+
+    thumbnail = fields.Image(max_width=320, max_height=320, attachment=True, copy=False)
+    media_width = fields.Integer(copy=False)
+    media_height = fields.Integer(copy=False)
+    taken_at = fields.Datetime(
+        copy=False, help="Aufnahmezeitpunkt aus EXIF, naiv uebernommen (Kamera-Lokalzeit, keine Zeitzonenumrechnung)."
+    )
+    page_count = fields.Integer(copy=False, string="Seitenzahl")
+    audio_duration = fields.Float(copy=False, string="Dauer (Sekunden)")
+    audio_title = fields.Char(copy=False)
+    audio_artist = fields.Char(copy=False)
+    audio_album = fields.Char(copy=False)
+
+    # --- Phase 5: Freigaben (intern & extern) -----------------------------
+    # "Intern": shared_partner_ids - persistente Freigabe an konkrete Portal-
+    # Kontakte, durchgesetzt ueber den Portal-Zweig in acl_rules.py (siehe
+    # dort). "Extern": share_token/share_expires_at - ein anonymer Link ohne
+    # jedes Login, durchgesetzt ausschliesslich explizit im Controller (siehe
+    # /int_filemanager/share/<token>), NICHT ueber ir.rule - beide
+    # Mechanismen sind unabhaengig voneinander nutzbar.
+    shared_partner_ids = fields.Many2many(
+        "res.partner",
+        "int_filemanager_shared_partner_rel",
+        "file_id",
+        "partner_id",
+        string="Freigegeben für (Portal-Kontakte)",
+        help="Portal-Kontakte mit persistentem Lesezugriff auf diese Datei, unabhängig von "
+        "einem Freigabe-Link. Setzt einen Odoo-Portal-Zugang beim Kontakt voraus.",
+    )
+    share_token = fields.Char(
+        copy=False,
+        index=True,
+        help="Zufälliges Token für den anonymen Freigabe-Link - nur gesetzt, solange die Freigabe "
+        "aktiv ist (Widerrufen löscht es wieder).",
+    )
+    share_expires_at = fields.Datetime(
+        copy=False,
+        readonly=True,
+        help="Wird ausschließlich von 'Link erzeugen' gesetzt (rotiert Token+Ablauf gemeinsam) - "
+        "kein frei editierbares Feld, damit nie ein verlängerter Ablauf an einem alten Token hängt.",
+    )
+    share_url = fields.Char(compute="_compute_share_url", string="Freigabe-Link")
+
+    @api.depends("share_token")
+    def _compute_share_url(self):
+        base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+        for rec in self:
+            rec.share_url = "%s/int_filemanager/share/%s" % (base_url, rec.share_token) if rec.share_token else False
+
     _path_uniq = models.Constraint("UNIQUE(path)", "Für diesen Pfad existiert bereits ein Metadaten-Eintrag.")
+    _share_token_uniq = models.Constraint(
+        "UNIQUE(share_token)", "Dieses Freigabe-Token ist bereits vergeben."
+    )
+
+    def action_generate_share_token(self):
+        """Erzeugt (oder rotiert) den anonymen Freigabe-Link - Token und
+        Ablauf werden immer gemeinsam neu gesetzt, nie das eine ohne das
+        andere veraendert (siehe share_expires_at-Feldkommentar). Die
+        eigentliche Berechtigungspruefung uebernimmt der normale write()-Weg
+        (ORM -> ir.rule-Schreibregel), kein zusaetzlicher Check hier noetig -
+        wer diese Methode ueber die Formularansicht erreichen kann, hat
+        bereits Schreibrecht auf den Datensatz."""
+        self.ensure_one()
+        if self.is_dir:
+            raise UserError(_("Nur einzelne Dateien können freigegeben werden, keine Ordner."))
+        days = int(self.env["ir.config_parameter"].sudo().get_param("int_filemanager.share_default_days", "30"))
+        self.write(
+            {
+                "share_token": secrets.token_urlsafe(32),
+                "share_expires_at": fields.Datetime.now() + timedelta(days=days),
+            }
+        )
+        self.env["int_filemanager.share_log"].sudo().create(
+            {"file_id": self.id, "path": self.path, "filename": self.name, "event_type": "created"}
+        )
+
+    def action_revoke_share_token(self):
+        self.ensure_one()
+        had_token = bool(self.share_token)
+        self.write({"share_token": False, "share_expires_at": False})
+        if had_token:
+            self.env["int_filemanager.share_log"].sudo().create(
+                {"file_id": self.id, "path": self.path, "filename": self.name, "event_type": "revoked"}
+            )
 
     def _cron_scan_filemanager(self):
         self._scan_and_reconcile()
@@ -115,6 +233,66 @@ class IntFilemanagerFile(models.Model):
                         "hash_state": "done",
                     }
                 )
+            self.env["ir.cron"]._commit_progress(processed=1)
+
+    def _meta_max_bytes(self, media_type):
+        ICP = self.env["ir.config_parameter"].sudo()
+        param = ICP.get_param("int_filemanager.meta_max_bytes_%s" % media_type)
+        if param:
+            try:
+                return int(param)
+            except ValueError:
+                pass
+        return DEFAULT_META_MAX_BYTES[media_type]
+
+    def _cron_extract_media_meta(self):
+        """Asynchroner Batch-Job, analog zu _cron_compute_hashes: extrahiert
+        Vorschau-/Metadaten (Bild-Thumbnail+EXIF, PDF-Seitenzahl, Audio-Tags)
+        fuer alle Dateien mit meta_state='pending'. Bewusst NICHT synchron im
+        Watcher-Thread - eine grosse/kaputte Mediendatei soll die inotify-
+        Verarbeitung nicht blockieren."""
+        root = get_root(self.env)
+        Model = self.env["int_filemanager.file"].sudo()
+        records = Model.search(
+            [("meta_state", "=", "pending"), ("is_dir", "=", False)],
+            limit=MEDIA_META_CRON_BATCH_SIZE,
+        )
+        for rec in records:
+            media_type = media_type_of(rec.name)
+            if media_type is None:
+                # Kann durch eine Umbenennung auf eine nicht unterstuetzte
+                # Endung entstehen (Watcher setzt pending vor der Pruefung
+                # hier) - sicherer Endzustand statt eines Fehlers.
+                rec.write({"meta_state": False})
+                self.env["ir.cron"]._commit_progress(processed=1)
+                continue
+
+            abs_path = os.path.join(root, rec.path)
+            max_bytes = self._meta_max_bytes(media_type)
+            try:
+                result = extract_metadata(abs_path, media_type, max_bytes)
+            except MetaTooLarge as exc:
+                rec.write(
+                    {"meta_state": "error", "meta_error": str(exc), "meta_attempts": rec.meta_attempts + 1}
+                )
+                self.env["ir.cron"]._commit_progress(processed=1)
+                continue
+            except Exception as exc:  # noqa: BLE001 - defekte/fremde Mediendatei darf den Batch nicht abbrechen
+                _logger.warning("int_filemanager: Metadatenextraktion für %s fehlgeschlagen: %s", rec.path, exc)
+                rec.write(
+                    {"meta_state": "error", "meta_error": str(exc)[:500], "meta_attempts": rec.meta_attempts + 1}
+                )
+                self.env["ir.cron"]._commit_progress(processed=1)
+                continue
+
+            if result is None:
+                # Datei aendert sich gerade oder ist kurz verschwunden -
+                # bleibt pending, naechster Lauf versucht es erneut.
+                pass
+            else:
+                result["meta_state"] = "done"
+                result["meta_error"] = False
+                rec.write(result)
             self.env["ir.cron"]._commit_progress(processed=1)
 
     def _scan_and_reconcile(self, batch_size=2000):
@@ -172,6 +350,8 @@ class IntFilemanagerFile(models.Model):
                         # geaendert (z.B. Aenderung waehrend der Watcher nicht
                         # lief) - Hash ist nicht mehr aktuell, neu berechnen.
                         write_vals["hash_state"] = "pending"
+                        if media_type_of(vals["name"]):
+                            write_vals["meta_state"] = "pending"
                     rec.write(write_vals)
                 else:
                     new_candidates.append(vals)
@@ -357,6 +537,8 @@ class IntFilemanagerFile(models.Model):
             vals = {k: v for k, v in vals.items() if k != "_abs_path"}
             if not vals["is_dir"]:
                 vals["hash_state"] = "pending"
+                if media_type_of(vals["name"]):
+                    vals["meta_state"] = "pending"
             to_create.append(vals)
         if to_create:
             Model.create(to_create)
