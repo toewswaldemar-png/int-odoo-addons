@@ -167,24 +167,51 @@ Dopplung im schlechten Sinne.
 ```xml
 <searchpanel>
     <field name="parent_id" string="Ordner" icon="fa-folder"
-           enable_counters="1" expand="1"
-           domain="[('is_dir', '=', True)]"/>
+           enable_counters="1" expand="1"/>
 </searchpanel>
 ```
 
-Alle drei Attribute sind **Pflicht**, nicht optional — belegt am Python-Quellcode:
+Kein `domain`-Attribut mehr am `<field>` — siehe Smoke-Test unten, das Attribut wird für
+Category-Felder von Odoo schlicht ignoriert. Stattdessen filtert
+`search_panel_select_range` serverseitig (Override, siehe unten). Die verbleibenden zwei
+Attribute sind **Pflicht**:
 
-- **`domain="[('is_dir','=',True)]"` zwingend**, sonst listet der Baum jedes
-  `int_filemanager.file`-Record als Knoten, auch einzelne Dateien.
 - **`expand="1"` zwingend**, sonst zeigt der Baum nur Ordner, die aktuell mindestens einen
   bestätigten Nachfahren mit Daten haben (`domain_image`-Logik in `search_panel_select_range`).
   Ein frisch angelegter, leerer Ordner würde sonst im Baum **gar nicht erscheinen**.
 - **`enable_counters="1"`** — Bonus passend zum DMS-Ziel: zeigt pro Ordner die Trefferzahl der
   aktuell gefilterten/gesuchten Datensätze.
 
-Offen/noch nicht smoke-getestet: dass das `domain`-Attribut am `<field>` tatsächlich auf
-`comodel_domain` gemappt wird (Standardmuster, aber die JS-Quelldatei dafür wurde in diesem Build
-nicht am erwarteten Pfad gefunden) — vor der Umsetzung als Erstes live prüfen.
+#### Smoke-Test durchgeführt (2026-09-03) — Ergebnis: `domain`-Attribut bestätigt tot, Server-Override bestätigt nötig UND ausreichend
+
+Reiner Server-Test über `docker exec odoo odoo shell` gegen die echte Unraid-DB, ohne Browser
+(kein UI-Rendering geprüft, nur der ORM-Aufruf selbst) — `parent_id`/`parent_path` testweise als
+reine Feld-Definition angelegt (keine Scan-Logik), zwei echte Datensätze per Hand verknüpft,
+danach Feld + DB-Spalten wieder vollständig entfernt (kein Rückstand, siehe Commit):
+
+- **Ohne `comodel_domain`** (= exakt das, was `search_model.js` für ein Category-Feld tatsächlich
+  schickt — nur `category_domain`, kein `comodel_domain`, siehe oben): `search_panel_select_range`
+  liefert bei realer Datenmenge **keinen falschen Baum, sondern einen harten Fehler**
+  (`{'error_msg': 'Too many items to display.'}`), weil ausnahmslos alle ~hunderttausend Dateien
+  *und* Ordner ungefiltert in die Zählung eingehen. Kein kosmetisches Problem, sondern ein Blocker.
+- **Mit `comodel_domain=[('is_dir','=',True)]`** manuell übergeben (simuliert den geplanten
+  `search_panel_select_range`-Override): liefert sauber alle **29.120** Ordner, kein Fehler,
+  0,4s Serverzeit.
+- Damit ist der Server-seitige Override (siehe "Sicherheitsrelevanter Stolperstein"-Abschnitt-Nachbar
+  oben, jetzt als Pflichtteil des Plans) nicht nur die sauberere, sondern die **einzige
+  funktionierende** Lösung — nicht nur "schöner als die Arch-Variante".
+
+**Neuer Fund, der über die ursprüngliche Frage hinausgeht — Skalierung:** `expand=True` +
+`hierarchize=True` ignoriert `search_domain`/den aktuell gebrowsten Pfad komplett für die
+Knotenauswahl (das steckt im Odoo-Kern-Code selbst: der `if not expand:`-Zweig, der
+`comodel_domain` auf die per `category_domain`/Vorfahren eingegrenzten IDs beschränkt, wird bei
+`expand=True` schlicht übersprungen). Der Baum holt in **einem** Aufruf **alle** Datensätze, die
+`comodel_domain` erfüllen — bei 29.120 Ordnern in dieser Instanz sind das mit dem Odoo-Standard
+`limit="200"` sofort wieder "Too many items". Für den produktiven Einsatz ist ein deutlich
+höheres `limit`-Attribut am `<field>` nötig (bei 29k Ordnern getestet: `limit="50000"` liefert in
+~0,4s ein ca. 2,3 MB großes JSON — unkritisch für den Server, aber ein Punkt, den es vor dem
+eigentlichen Umbau bewusst zu entscheiden gilt, nicht implizit über den 200er-Default
+mitzuschleppen). Gehört mit in Schritt 1 der Ordnerbaum-Umsetzung unten.
 
 ### Eigentlicher Aufwand: Pflege von `parent_id`, nicht das Feld selbst
 
@@ -231,9 +258,11 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
 
 ## Offene Punkte / nächste Schritte
 
-1. Ordnerbaum-Design oben umsetzen (auf `experiment/native-listview` oder eigenem Sub-Branch) —
-   zuerst SearchPanel-`domain`-Attribut live smoke-testen, dann `parent_id`/`_parent_store` +
-   Scan-Anpassung.
+1. ~~SearchPanel-`domain`-Attribut live smoke-testen~~ — erledigt (2026-09-03, siehe oben):
+   Attribut greift nicht, Server-Override ist Pflicht und funktioniert; zusätzlicher Fund:
+   `limit`-Attribut muss bei 29k+ Ordnern bewusst hochgesetzt werden. Jetzt: `parent_id`/
+   `_parent_store` + Scan-Anpassung (BFS) tatsächlich umsetzen, inkl. `search_panel_select_range`-
+   Override und passendem `limit` in der Arch.
 2. Entscheiden, ob/wie weit der native-ListView-Spike weiter ausgebaut wird (siehe oben) oder ob
    der jetzige Stand als Erkenntnis reicht und verworfen wird.
 3. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
