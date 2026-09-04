@@ -395,6 +395,25 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
    einzeilig (`getBoundingClientRect()` wieder 32,6px hoch, 113px breit).
 4. ~~Entscheiden, ob/wie weit der native-ListView-Spike weiter ausgebaut wird~~ — entschieden
    (2026-09-04): weiter ausbauen, SearchPanel-Ordnerbaum ist jetzt verdrahtet (siehe Punkt 3).
-5. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
+5. **Skalierung des `<searchpanel>`-Ordnerbaums — geprüft, bewusst vorerst nativ belassen
+   (2026-09-04):** `search_panel_select_range` hat kein Lazy-Loading pro Ebene, ist architektonisch
+   nicht dafür vorgesehen (kein "nur Kinder von Knoten X"-Parameter, live am Quellcode geprüft,
+   `web/models/models.py:1643-1780`) - jeder Seitenaufruf lädt immer den kompletten `is_dir=True`-
+   Baum in einem Rutsch. Mit synthetischen 31.069 Testordnern gemessen (direkt per SQL angelegt,
+   danach rückstandsfrei wieder gelöscht): Serverzeit unkritisch (0,76s kalt/0,37s warm, 2,08MB
+   JSON), aber der Browser brauchte danach spürbar lange (grob niedriger zweistelliger
+   Sekundenbereich) bis zur Interaktionsfähigkeit - vermutlich Owl-Reaktivität über die große
+   `Map`, nicht DOM-Rendering (Baum blieb kollabiert, nur 55 sichtbare Knoten). Eine "native-Optik,
+   nur Logik lazy nachladen"-Variante wurde geprüft und verworfen: `SearchPanel.toggleCategory()`
+   (`search_panel.js:296`) ist reiner lokaler UI-State-Toggle ohne jeden Nachlade-Hook - ein
+   Lazy-Patch müsste sowohl `SearchModel`-Fetch-Logik als auch private State-Interna der
+   `SearchPanel`-Komponente anfassen (`this.state.expanded`, direktes Mutieren von
+   `category.values`), deutlich invasiver und versionsabhängiger als der heutige
+   `_getCategoryDomain`-Patch. Aktuelle reale Datenmenge (601 Zeilen/18 Ordner) macht das
+   akademisch - Entscheidung: nativ belassen, erst bei echtem Wachstum Richtung mehrerer tausend
+   Ordner neu bewerten (Alternative dann: `<searchpanel>` entfernen, Baum als kleine eigene
+   Komponente mit gezielten `parent_id`-Queries pro Klick, analog der alten `/int_filemanager/tree`-
+   Route aber ohne deren String-Pfad-Vergleich).
+6. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
    temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
    zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).
