@@ -33,8 +33,8 @@ import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { listView } from "@web/views/list/list_view";
 import { ListController } from "@web/views/list/list_controller";
-import { IntTextInputDialog } from "./text_input_dialog";
-import { IntLinkRecordDialog } from "./link_record_dialog";
+import { IntTextInputDialog } from "../shared/text_input_dialog";
+import { IntLinkRecordDialog } from "../shared/link_record_dialog";
 
 // Video ist nativ im FileViewer verdrahtet (file_viewer.js/.xml: state.file.isVideo -> echtes
 // <video controls>) - hier nur an dessen bereits vorhandene Faehigkeit angeschlossen, nichts

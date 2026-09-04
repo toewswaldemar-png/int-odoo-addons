@@ -28,7 +28,7 @@
     ],
     "assets": {
         "web.assets_backend": [
-            "int_filemanager/static/src/int_filemanager/*",
+            "int_filemanager/static/src/int_filemanager/**/*",
         ],
     },
     "installable": True,

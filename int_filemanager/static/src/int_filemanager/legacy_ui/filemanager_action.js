@@ -16,8 +16,8 @@ import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_d
 import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
 import { IntInlineTags } from "./inline_tags";
 import { IntFolderTree } from "./folder_tree";
-import { IntTextInputDialog } from "./text_input_dialog";
-import { IntLinkRecordDialog } from "./link_record_dialog";
+import { IntTextInputDialog } from "../shared/text_input_dialog";
+import { IntLinkRecordDialog } from "../shared/link_record_dialog";
 
 const EDITABLE_EXTENSIONS = new Set([
     "doc", "docx", "odt", "rtf", "txt",
