@@ -158,17 +158,28 @@ class IntFilemanagerController(http.Controller):
         authz.require(request.env, rel, "read")
         if not os.path.isfile(abs_path):
             raise UserError(_("Datei nicht gefunden."))
-        disposition = "inline" if disposition == "inline" else "attachment"
-        filename = os.path.basename(abs_path)
-        mimetype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
-        with open(abs_path, "rb") as f:
-            data = f.read()
-        headers = [
-            ("Content-Type", mimetype),
-            ("Content-Length", str(len(data))),
-            ("Content-Disposition", http.content_disposition(filename, disposition)),
-        ]
-        return request.make_response(data, headers=headers)
+        # http.Stream statt manuellem open()+read()+make_response(): letzteres las die
+        # komplette Datei in den Speicher und lieferte sie als einen Block ohne
+        # HTTP-Range-Unterstuetzung - Spulen/Suchen im <video>-Player (native_ui/
+        # native_list_view.js) funktionierte dadurch nicht. Stream.get_response() ruft intern
+        # Werkzeugs send_file(conditional=True) auf, das 206 Partial Content/Range-Requests
+        # automatisch beherrscht - dieselbe Mechanik, die Odoo fuer Attachment-Downloads nutzt.
+        # Stream.from_path() scheidet aus (file_path() darin verlangt einen Pfad unterhalb eines
+        # bekannten addons_path - unser konfigurierbares Filemanager-Stammverzeichnis liegt
+        # ausserhalb davon), deshalb Stream direkt konstruiert - die eigene authz.require()-Pruefung
+        # oben ersetzt die generische Pfadvalidierung, die from_path() sonst uebernehmen wuerde.
+        stat = os.stat(abs_path)
+        stream = http.Stream(
+            type="path",
+            path=abs_path,
+            mimetype=mimetypes.guess_type(abs_path)[0] or "application/octet-stream",
+            size=stat.st_size,
+            download_name=os.path.basename(abs_path),
+            last_modified=stat.st_mtime,
+            etag=f"{int(stat.st_mtime)}-{stat.st_size}",
+            public=False,
+        )
+        return stream.get_response(as_attachment=disposition != "inline")
 
     @http.route("/int_filemanager/thumbnail", type="http", auth="user")
     def thumbnail(self, path=""):

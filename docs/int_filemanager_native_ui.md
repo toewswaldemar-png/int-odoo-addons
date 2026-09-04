@@ -450,10 +450,9 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
    ein Audio-Icon/Vorschau-Versuch würde nur einen leeren Player zeigen, bräuchte einen eigenen
    kleinen Zusatzbaustein (separates Thema, nicht Teil dieser Änderung).
 
-   **Bekannte Einschränkung, nicht behoben:** `/int_filemanager/download` (`controllers/main.py`)
-   liest die Datei komplett in den Speicher und liefert sie als einen Block ohne HTTP-Range-
-   Unterstützung (kein `Accept-Ranges`/206 Partial Content). Vorspulen/Suchen in größeren Videos
-   im Player wird dadurch nicht richtig funktionieren, nur sequentielles Abspielen ab dem Anfang.
+   **Bekannte Einschränkung - inzwischen behoben, siehe Punkt 11:** `/int_filemanager/download`
+   (`controllers/main.py`) las die Datei komplett in den Speicher und lieferte sie als einen Block
+   ohne HTTP-Range-Unterstützung. Vorspulen/Suchen in Videos funktionierte dadurch nicht.
 
    **Nachtrag, doch noch verifiziert (2026-09-04):** beim Testen der Text-Editor-Funktion (Punkt 9)
    tauchte zufällig eine echte `.mp4` im Testbestand auf (`odoo/VID_20260904_130327.mp4`) - Klick
@@ -503,6 +502,30 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     statt "68,00", Tausendertrennzeichen bei großen Werten weiterhin korrekt. Formular-Dialog
     (`filemanager_file_form_view.xml`) bewusst nicht mit angefasst - dort wurde nur nach der
     Listenspalte gefragt.
-11. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
+11. **Video-Spulen behoben (2026-09-04) - `http.Stream` statt manuellem `open()+read()`:** Nutzer
+    meldete, dass Vorspringen in der Timeline im Player nicht geht - genau die in Punkt 7
+    dokumentierte, damals bewusst offen gelassene Einschränkung. `/int_filemanager/download`
+    (`controllers/main.py`) las die Datei bisher komplett in den Speicher und lieferte sie als
+    einen Block, keine `Accept-Ranges`/206-Unterstützung, ohne die der Browser im `<video>`-Element
+    nicht gezielt springen kann.
+
+    Odoo hat dafür bereits eine fertige Klasse: `odoo.http.Stream` (`http.py:514`). Deren
+    `get_response()` ruft intern Werkzeugs eigenes `send_file(conditional=True)` auf, das
+    206 Partial Content/Range-Requests automatisch beherrscht - dieselbe Mechanik, die Odoo selbst
+    für Attachment-Downloads/Video-Streaming nutzt, hier also wiederverwendet statt selbst
+    Range-Header-Parsing zu bauen. `Stream.from_path()` (der übliche Konstruktor) scheidet aus:
+    intern ruft er `file_path()` auf, das einen Pfad unterhalb eines bekannten `addons_path`
+    verlangt - unser konfigurierbares, beliebiges Filemanager-Stammverzeichnis liegt außerhalb
+    davon. Stattdessen `Stream(type="path", path=..., ...)` direkt konstruiert - die eigene
+    `authz.require(..., "read")`-Prüfung, die vorher schon lief, übernimmt die
+    Zugriffskontrolle, die `from_path()` sonst generisch mitgebracht hätte.
+
+    **Live verifiziert, nicht nur angenommen:** `fetch()` mit `Range: bytes=1000-2000` gegen die
+    Route direkt getestet - Antwort `status: 206`, `Content-Range: bytes 1000-2000/5204338`,
+    `Accept-Ranges: bytes`, `Content-Length: 1001` (exakt die angeforderten Bytes, nicht die ganze
+    5,2-MB-Datei). Danach im echten Player auf `odoo/VID_20260904_130327.mp4` in die Timeline
+    geklickt: Sprung direkt zu `0:02 / 0:03` mit sichtbar anderem Frame, kein sequentielles
+    Abspielen bis dorthin. Keine Konsolenfehler.
+12. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
     temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
     zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).
