@@ -15,7 +15,7 @@
                 <button name="action_open_form" type="object" icon="fa-arrow-right"
                         title="Details öffnen" string=""/>
                 <field name="name"/>
-                <field name="size"/>
+                <field name="size" invisible="is_dir"/>
                 <field name="mtime"/>
                 <field name="tag_ids" widget="many2many_tags"/>
                 <field name="res_reference" optional="hide"/>

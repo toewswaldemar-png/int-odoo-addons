@@ -481,6 +481,28 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
    Zeilennummern, Zeile ergänzt, gespeichert - Listengröße sofort von 45 auf 68 Bytes aktualisiert,
    `cat` auf der echten Datei via SSH bestätigt den neuen Inhalt tatsächlich auf der Platte. Keine
    Konsolenfehler.
-10. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
+10. **`size` Float → Integer, plus `invisible="is_dir"` (2026-09-04):** Nutzer bemerkte, dass die
+    Größe-Spalte (im Gegensatz zu allen anderen) rechtsbündig ist - Odoo-nativ bestätigt
+    (`list_renderer.js:75-77`: `float`/`integer`/`monetary` bekommen automatisch die Klasse
+    `o_list_number`, kein eigenes Zutun). Daraus zwei echte Mängel abgeleitet: Bytes sind nie
+    fraktional (Feld war trotzdem `Float`, zeigte "0,00"/"68,00" - `hash_size`/`meta_source_size`
+    auf demselben Modell waren schon immer `Integer`, `size` war die Ausnahme), und für Ordner ist
+    "Größe" konzeptionell gar keine sinnvolle Eigenschaft, nicht nur zufällig 0.
+
+    `size` auf `Integer` umgestellt, `invisible="is_dir"` auf dem Feld in
+    `filemanager_file_list_view.xml` ergänzt (blendet die Zelle für Ordner-Zeilen komplett aus,
+    Odoos übliche bedingte Sichtbarkeits-Syntax, funktioniert pro Zeile auch innerhalb einer
+    Liste). Alle Python-Schreibstellen (`index_utils.py`, Scan/Merge in `filemanager_file.py`,
+    `write_service.py`) liefern ohnehin schon `os.path.getsize`/`st.st_size`/`len(...)` - echte
+    Integers, keine Anpassung nötig.
+
+    **Migration lief automatisch:** Modul-Upgrade hat die Spalte selbst von `double precision` auf
+    `integer` migriert (`information_schema.columns` vorher/nachher geprüft), keine manuelle
+    SQL-Migration wie beim `parent_id`-Backfill nötig - Werte blieben korrekt (68, 5204338, ...).
+    Live verifiziert: Wurzelordner zeigen jetzt eine leere Zelle statt "0,00", Dateien zeigen "68"
+    statt "68,00", Tausendertrennzeichen bei großen Werten weiterhin korrekt. Formular-Dialog
+    (`filemanager_file_form_view.xml`) bewusst nicht mit angefasst - dort wurde nur nach der
+    Listenspalte gefragt.
+11. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
     temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
     zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).

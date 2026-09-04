@@ -62,7 +62,7 @@ class IntFilemanagerFile(models.Model):
     _parent_name = "parent_id"
     _parent_store = True
     is_dir = fields.Boolean(string="Ist Ordner", index=True)
-    size = fields.Float(string="Größe (Bytes)")
+    size = fields.Integer(string="Größe (Bytes)")
     mtime = fields.Datetime(string="Geändert")
     last_seen = fields.Datetime(
         help="Zeitpunkt des letzten Scans, bei dem dieser Eintrag noch auf der Platte existierte "
