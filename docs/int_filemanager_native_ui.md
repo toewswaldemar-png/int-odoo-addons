@@ -213,18 +213,54 @@ höheres `limit`-Attribut am `<field>` nötig (bei 29k Ordnern getestet: `limit=
 eigentlichen Umbau bewusst zu entscheiden gilt, nicht implizit über den 200er-Default
 mitzuschleppen). Gehört mit in Schritt 1 der Ordnerbaum-Umsetzung unten.
 
-### Eigentlicher Aufwand: Pflege von `parent_id`, nicht das Feld selbst
+**Umgesetzt (2026-09-03/04):** Arch nutzt `limit="0"` (kein Cap) statt einer konkreten Zahl —
+seit `comodel_domain` per Override immer korrekt auf `is_dir=True` eingeschränkt ist, gibt es
+keinen Grund mehr für eine künstliche Obergrenze; ein evaluiert falsy `limit` überspringt die
+Limit-Prüfung im Odoo-Kern-Code komplett (siehe `search_panel_select_range`).
 
-- **`_scan_and_reconcile`** (`models/filemanager_file.py:120`): baut aktuell `to_create` als eine
-  einzige `Model.create(...)`-Liste am Ende. Für `parent_id` braucht ein Kind die bereits vergebene
-  DB-ID seines Elternordners — bei einem kompletten Erst-Scan existiert die noch nicht. Lösung:
-  Erstellung in Ebenen (BFS nach Tiefe, `os.walk` liefert Eltern ohnehin vor Kindern), mit
-  `path → id`-Cache pro Ebene.
-- **Merge-Pfad bei Rename/Move während Odoo nicht lief** (Zeile 301–346): muss zusätzlich
-  `parent_id` auf den neuen Elternordner umschreiben (`_parent_store` kaskadiert dann automatisch).
-- **Watcher/`mkdir`-Controller**: unkritisch, unmittelbarer Elternordner ist immer bekannt.
-- **Migration Bestandsdaten**: einmaliger Backfill (`post_init_hook`), der `parent_id` aus
-  `folder_path` top-down auflöst.
+### Eigentlicher Aufwand: Pflege von `parent_id`, nicht das Feld selbst — umgesetzt (2026-09-03/04)
+
+- **`_scan_and_reconcile`**: `to_create` wird jetzt nach Pfadtiefe gruppiert und pro Ebene erstellt
+  (BFS, `os.walk` liefert Eltern zwar meist vor Kindern, aber Batch-/Merge-Reihenfolge garantieren
+  das nicht zuverlässig genug für eine einzige `create()`-Liste), mit `path_to_id_cache` als
+  wachsendem Zwischenspeicher über den ganzen Lauf.
+- **Merge-Pfad bei Rename/Move während Odoo nicht lief**: beide Merge-Zweige (Datei- und
+  Ordner-Identität) setzen `parent_id` jetzt über denselben Cache mit Lazy-Fallback (`Model.search`
+  bei Cache-Miss) — funktioniert dank desselben Cursors auch für bereits in diesem Lauf
+  umbenannte/neu angelegte Elternordner. Bekannter, dokumentierter Grenzfall (ein Datensatz wird
+  in genau diesem Lauf in einen brandneuen, noch nicht erstellten Ordner verschoben): heilt sich
+  beim nächsten Scan von selbst, kein Blocker.
+- **Watcher/`mkdir`-Controller**: `index_upsert`/`index_move_tree` (`index_utils.py`) lösen
+  `parent_id` jetzt über eine einzelne Query auf den unmittelbaren Elternordner auf — der
+  Controller/Watcher selbst musste nicht angefasst werden, beide rufen nur diese Helper auf.
+- **Migration Bestandsdaten — anders gelöst als ursprünglich geplant:** kein `post_init_hook`
+  (der läuft laut Odoo-Kern-Code ohnehin nur bei Erstinstallation, nicht bei einem Upgrade einer
+  laufenden Instanz). Stattdessen zunächst versucht, den periodischen `_cron_scan_filemanager`
+  (ohnehin einmal täglich, re-visitiert jeden Bestandsdatensatz über `flush()`) den Backfill
+  naturlich erledigen zu lassen — **das ist beim Live-Test krachend gescheitert:**
+
+  **Wichtige operative Lehre:** `parent_id` record-für-record per `write()` auf den kompletten
+  Bestand (427.767 Zeilen) zu setzen, hat Odoos `_parent_store`-Mechanismus in eine massiv
+  redundante Kaskade laufen lassen — jeder einzelne Ordner-Write löst eine rekursive
+  `UPDATE ... SET parent_path = concat(...)`-Query über alle **eigenen** Nachfahren aus (live an
+  `pg_stat_activity` beobachtet), obwohl die meisten dieser Nachfahren Sekunden später ohnehin
+  ihren eigenen direkten Write bekommen hätten. Nach 20+ Minuten ohne einen einzigen fertig
+  befüllten Nicht-Wurzel-Ordner abgebrochen (keine Datenkorruption - bereits gelaufene 2000er-
+  Batches waren sauber committed, der Rest einfach nicht erledigt).
+
+  **Tatsächliche Lösung:** ein einmaliges rohes SQL-`UPDATE` direkt auf `int_filemanager_file`
+  (Self-Join `child.folder_path = parent.path`, komplett am ORM vorbei, keine Kaskade) —
+  427.767 Zeilen in **einem Statement**, danach `env["int_filemanager.file"]._parent_store_compute()`
+  (Odoos eigene rekursive Bulk-CTE-Methode, dieselbe die auch beim Schema-Deploy für `parent_path`
+  lief) zur `parent_path`-Neuberechnung für die komplette Tabelle in ~2 Minuten. Ergebnis
+  verifiziert: 29.063 von 29.120 Ordnern (alle außer den 57 Wurzelordnern) korrekt mit `parent_id`,
+  `search_panel_select_range("parent_id", ...)` liefert alle 29.120 Knoten fehlerfrei in ~3,5s.
+  **Für zukünftige Bestandsdaten-Migrationen dieser Art (Self-Referencing-Feld auf großem Bestand
+  nachträglich befüllen) merken: nie über ORM-`write()` pro Datensatz, sondern SQL-Backfill +
+  `_parent_store_compute()`.** Der reguläre Scan-Pfad selbst (`flush()`/Merges/`to_create`) bleibt
+  wie oben beschrieben - im Normalbetrieb ändert sich `parent_id` für die allermeisten Datensätze
+  ohnehin nicht mehr (Odoo überspringt unveränderte Feldwerte beim `write()`), das Kaskadenproblem
+  betraf ausschließlich den einmaligen Bestands-Backfill.
 
 ### Geprüfte Alternative: natives `hierarchy`-View (`web_hierarchy`) — verworfen
 
@@ -258,13 +294,23 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
 
 ## Offene Punkte / nächste Schritte
 
-1. ~~SearchPanel-`domain`-Attribut live smoke-testen~~ — erledigt (2026-09-03, siehe oben):
-   Attribut greift nicht, Server-Override ist Pflicht und funktioniert; zusätzlicher Fund:
-   `limit`-Attribut muss bei 29k+ Ordnern bewusst hochgesetzt werden. Jetzt: `parent_id`/
-   `_parent_store` + Scan-Anpassung (BFS) tatsächlich umsetzen, inkl. `search_panel_select_range`-
-   Override und passendem `limit` in der Arch.
-2. Entscheiden, ob/wie weit der native-ListView-Spike weiter ausgebaut wird (siehe oben) oder ob
+1. ~~SearchPanel-`domain`-Attribut live smoke-testen~~ — erledigt (2026-09-03).
+2. ~~`parent_id`/`_parent_store` + Scan-Anpassung (BFS) + `search_panel_select_range`-Override +
+   SearchPanel-Arch + Bestands-Backfill~~ — erledigt (2026-09-03/04), auf `experiment/native-listview`
+   deployed und live verifiziert (siehe oben). `int_filemanager_file_search` (Such-View, vorher
+   ungenutzt) trägt jetzt das `<searchpanel>` und ist über `search_view_id` an die Test-Action
+   `action_filemanager_file_list_native` gehängt.
+3. **Offen, noch nicht live getestet — SearchPanel- und Zeilenklick-Navigation sind zwei
+   unabhängige Wege, die noch nicht gegenseitig synchronisiert sind:**
+   `IntFilemanagerListController.reload()` kombiniert `this.props.domain` (was SearchPanel/
+   Suchleiste beisteuern) jetzt zwar per AND mit dem eigenen `folder_path`-Filter, statt ihn zu
+   verwerfen - aber ein Klick auf einen SearchPanel-Ordnerknoten aktualisiert weder `currentPath`
+   noch die Breadcrumbs, und umgekehrt zieht ein Zeilenklick/eine Mutation nicht nach, falls die
+   SearchPanel-Auswahl dadurch inhaltlich unpassend wird. Muss vor einem produktiven Rollout im
+   Browser geprüft und ggf. durch einen Listener auf die SearchPanel-Auswahl ergänzt werden, der
+   `goToFolder()` mit dem aufgelösten Pfad des gewählten Knotens aufruft.
+4. Entscheiden, ob/wie weit der native-ListView-Spike weiter ausgebaut wird (siehe oben) oder ob
    der jetzige Stand als Erkenntnis reicht und verworfen wird.
-3. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
+5. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
    temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — zurücksetzen,
    sobald nicht mehr gebraucht.

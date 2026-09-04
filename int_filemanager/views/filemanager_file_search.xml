@@ -11,6 +11,19 @@
                 <separator/>
                 <filter name="filter_tagged" string="Mit Tags" domain="[('tag_ids','!=',False)]"/>
                 <filter name="filter_untagged" string="Ohne Tags" domain="[('tag_ids','=',False)]"/>
+                <searchpanel>
+                    <!-- domain-Attribut bewusst weggelassen: wird fuer Category-Felder
+                         (kein select="multi") clientseitig ignoriert, live verifiziert -
+                         search_panel_select_range-Override auf dem Modell erzwingt
+                         is_dir=True stattdessen. limit="0" (kein Cap): expand+hierarchize
+                         ignoriert den aktuell gebrowsten Pfad fuer die Knotenauswahl und
+                         holt ohnehin immer den gesamten is_dir=True-Baum in einem Aufruf -
+                         der Odoo-Standard limit="200" wuerde bei den 29k+ Ordnern dieser
+                         Instanz sofort "Zu viele Elemente" ausloesen (siehe
+                         docs/int_filemanager_native_ui.md, Smoke-Test-Abschnitt). -->
+                    <field name="parent_id" string="Ordner" icon="fa-folder"
+                           enable_counters="1" expand="1" limit="0"/>
+                </searchpanel>
             </search>
         </field>
     </record>

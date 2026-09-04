@@ -52,6 +52,11 @@ def index_upsert(env, abs_path):
     """Create or refresh the index record for a single filesystem path."""
     Model = env["int_filemanager.file"].sudo()
     vals = _entry_vals(env, abs_path)
+    parent_rel = vals["folder_path"]
+    # Unmittelbarer Elternordner ist bei Watcher-/Mkdir-getriebenen Einzelaenderungen immer
+    # schon selbst indexiert (er muss existieren, damit dieser Pfad ueberhaupt entstehen
+    # konnte) - anders als beim BFS-Ersteinlese-Scan reicht hier eine einzelne Query.
+    vals["parent_id"] = Model.search([("path", "=", parent_rel)], limit=1).id if parent_rel else False
     rec = Model.search([("path", "=", vals["path"])], limit=1)
     if rec:
         rec.write(vals)
@@ -75,10 +80,15 @@ def index_move_tree(env, old_rel, new_rel):
 
     root = Model.search([("path", "=", old_rel)], limit=1)
     if root:
+        # Nur die verschobene Wurzel braucht ein neues parent_id - Nachfahren behalten
+        # denselben unmittelbaren Elternordner (dieselbe ID) innerhalb des mitverschobenen
+        # Teilbaums, _parent_store kaskadiert deren parent_path automatisch mit.
+        new_parent_rec = Model.search([("path", "=", new_parent)], limit=1) if new_parent else Model.browse()
         root.write({
             "path": new_rel,
             "name": os.path.basename(new_rel),
             "folder_path": new_parent or False,
+            "parent_id": new_parent_rec.id,
         })
 
     prefix = old_rel + "/"

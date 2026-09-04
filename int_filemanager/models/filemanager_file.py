@@ -47,6 +47,20 @@ class IntFilemanagerFile(models.Model):
         help="Pfad relativ zum Filemanager-Stammverzeichnis.",
     )
     folder_path = fields.Char(index=True, help="Pfad des übergeordneten Ordners (leer = Wurzel).")
+    # Relationale Repraesentation derselben Hierarchie wie folder_path (das bleibt der
+    # literale Dateisystempfad fuer die Syscalls) - fuer den nativen SearchPanel-Ordnerbaum
+    # (siehe docs/int_filemanager_native_ui.md). Selbstreferenzierend statt zweites
+    # Kategorie-Modell, bewusste Entscheidung dort dokumentiert. ondelete=cascade heisst:
+    # ir.attachment-Aufraeumung (thumbnail) fuer per DB-Kaskade mitgeloeschte Nachfahren
+    # laeuft NICHT ueber Odoos unlink()-Hook - unkritisch hier, weil index_remove_tree
+    # ohnehin den kompletten Teilbaum explizit per unlink() erfasst und die Kaskade damit
+    # nie der einzige Loeschweg ist.
+    parent_id = fields.Many2one(
+        "int_filemanager.file", string="Übergeordneter Ordner", index=True, ondelete="cascade"
+    )
+    parent_path = fields.Char(index=True)
+    _parent_name = "parent_id"
+    _parent_store = True
     is_dir = fields.Boolean(string="Ist Ordner", index=True)
     size = fields.Float(string="Größe (Bytes)")
     mtime = fields.Datetime(string="Geändert")
@@ -70,6 +84,15 @@ class IntFilemanagerFile(models.Model):
 
     def _selection_target_model(self):
         return [(model.model, model.name) for model in self.env["ir.model"].sudo().search([])]
+
+    def search_panel_select_range(self, field_name, **kwargs):
+        """Erzwingt is_dir=True fuer den parent_id-Ordnerbaum server-seitig. Noetig, weil das
+        native SearchPanel fuer ein Category-Feld (kein select="multi") das eigene domain-
+        Attribut der Arch clientseitig gar nicht erst an comodel_domain weiterreicht -
+        live verifiziert, siehe docs/int_filemanager_native_ui.md, Smoke-Test-Abschnitt."""
+        if field_name == "parent_id":
+            kwargs["comodel_domain"] = (kwargs.get("comodel_domain") or []) + [("is_dir", "=", True)]
+        return super().search_panel_select_range(field_name, **kwargs)
 
     content_sha256 = fields.Char(
         index=True,
@@ -336,15 +359,43 @@ class IntFilemanagerFile(models.Model):
         batch = []
         new_candidates = []
 
+        # parent_id-Pflege (SearchPanel-Ordnerbaum, siehe docs/int_filemanager_native_ui.md):
+        # ein Pfad -> ID-Cache, geteilt ueber den ganzen Scan-Lauf (spart wiederholte Lookups
+        # fuer haeufig referenzierte Elternordner ueber Batches/Merges/Neuanlagen hinweg).
+        # resolve_parent_id() faellt bei Cache-Miss auf eine einzelne Query zurueck - dank
+        # desselben Cursors sieht sie auch bereits in diesem Lauf geschriebene (noch nicht
+        # committete) Umbenennungen/Neuanlagen.
+        path_to_id_cache = {}
+
+        def resolve_parent_id(folder_path):
+            if not folder_path:
+                return False
+            if folder_path not in path_to_id_cache:
+                rec = Model.search([("path", "=", folder_path)], limit=1)
+                path_to_id_cache[folder_path] = rec.id if rec else False
+            return path_to_id_cache[folder_path]
+
         def flush():
             if not batch:
                 return
             paths = [v["path"] for v in batch]
             existing_by_path = {r.path: r for r in Model.search([("path", "in", paths)])}
+            # Batch-Resolve statt Query pro Datensatz: alle in diesem Batch noch nicht
+            # gecachten Elternordner-Pfade in einer Abfrage nachladen.
+            missing_parents = {
+                v["folder_path"] for v in batch if v["folder_path"] and v["folder_path"] not in path_to_id_cache
+            }
+            if missing_parents:
+                for r in Model.search([("path", "in", list(missing_parents))]):
+                    path_to_id_cache[r.path] = r.id
+                for p in missing_parents:
+                    path_to_id_cache.setdefault(p, False)
             for vals in batch:
                 rec = existing_by_path.get(vals["path"])
+                parent_id = path_to_id_cache.get(vals["folder_path"], False) if vals["folder_path"] else False
                 if rec:
                     write_vals = {k: v for k, v in vals.items() if k != "_abs_path"}
+                    write_vals["parent_id"] = parent_id
                     if not vals["is_dir"] and (rec.size != vals["size"] or rec.mtime != vals["mtime"]):
                         # Inhalt hat sich seit dem letzten bekannten Stand
                         # geaendert (z.B. Aenderung waehrend der Watcher nicht
@@ -353,6 +404,8 @@ class IntFilemanagerFile(models.Model):
                         if media_type_of(vals["name"]):
                             write_vals["meta_state"] = "pending"
                     rec.write(write_vals)
+                    if vals["is_dir"]:
+                        path_to_id_cache[vals["path"]] = rec.id
                 else:
                     new_candidates.append(vals)
             batch.clear()
@@ -449,6 +502,7 @@ class IntFilemanagerFile(models.Model):
                         "name": vals["name"],
                         "path": vals["path"],
                         "folder_path": vals["folder_path"],
+                        "parent_id": resolve_parent_id(vals["folder_path"] or False),
                         "mtime": vals["mtime"],
                         "last_seen": scan_started,
                         "scan_run_id": scan_run_id,
@@ -507,11 +561,17 @@ class IntFilemanagerFile(models.Model):
                     "name": vals["name"],
                     "path": vals["path"],
                     "folder_path": vals["folder_path"],
+                    "parent_id": resolve_parent_id(vals["folder_path"] or False),
                     "mtime": vals["mtime"],
                     "last_seen": scan_started,
                     "scan_run_id": scan_run_id,
                 }
             )
+            # Dieser Ordner behaelt seine ID (Merge, kein Neuanlegen) - Kinder,
+            # die spaeter in diesem Lauf ueber ihn aufgeloest werden (auch als
+            # Elternordner-Kandidat fuer noch zu erstellende Eintraege unten),
+            # muessen ihn unter seinem NEUEN Pfad finden.
+            path_to_id_cache[vals["path"]] = stale_dir.id
             merged_stale_ids.add(stale_dir.id)
             merged_new_indices.add(new_idx)
             used_new_dir_indices.add(new_idx)
@@ -541,7 +601,25 @@ class IntFilemanagerFile(models.Model):
                     vals["meta_state"] = "pending"
             to_create.append(vals)
         if to_create:
-            Model.create(to_create)
+            # In Ebenen anlegen statt einer einzigen create()-Liste: ein Kind braucht die
+            # bereits vergebene DB-ID seines Elternordners fuer parent_id, die bei einem
+            # kompletten Ersteinlese-Scan (frisch entdeckter ganzer Teilbaum) noch nicht
+            # existiert. os.walk liefert Eltern zwar bereits vor Kindern, aber batch_size-
+            # Aufteilung/Merge-Reihenfolge garantieren das nicht zuverlaessig genug fuer
+            # eine einzige Erstellung - daher explizit nach Pfadtiefe sortiert und pro
+            # Ebene erstellt, mit path_to_id_cache als wachsendem Zwischenspeicher.
+            by_depth = {}
+            for vals in to_create:
+                depth = vals["folder_path"].count("/") + 1 if vals["folder_path"] else 0
+                by_depth.setdefault(depth, []).append(vals)
+            for depth in sorted(by_depth):
+                level_vals = by_depth[depth]
+                for vals in level_vals:
+                    vals["parent_id"] = resolve_parent_id(vals["folder_path"] or False)
+                created = Model.create(level_vals)
+                for rec, vals in zip(created, level_vals):
+                    if vals["is_dir"]:
+                        path_to_id_cache[vals["path"]] = rec.id
 
         self.env.cr.commit()
 

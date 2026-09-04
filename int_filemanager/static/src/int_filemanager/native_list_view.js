@@ -105,7 +105,15 @@ export class IntFilemanagerListController extends ListController {
     }
 
     async reload() {
-        await this.model.load({ domain: [["folder_path", "=", this.currentPath || false]] });
+        // this.props.domain trägt bei, was Suchleiste/SearchPanel gerade beisteuern (z.B.
+        // eine parent_id-Ordnerbaum-Auswahl) - ANDen statt ersetzen, sonst würde jeder
+        // Zeilenklick/jede Mutation eine aktive SearchPanel-Auswahl wieder verwerfen.
+        // UNGETESTET: ob Klick auf einen SearchPanel-Ordnerknoten currentPath/Breadcrumbs
+        // seinerseits nachzieht, ist noch offen - die beiden Navigationswege (Zeilenklick
+        // über folder_path, SearchPanel über parent_id) sind bislang nicht gegenseitig
+        // synchronisiert.
+        const domain = [...(this.props.domain || []), ["folder_path", "=", this.currentPath || false]];
+        await this.model.load({ domain });
     }
 
     updateBreadcrumbs(path) {
