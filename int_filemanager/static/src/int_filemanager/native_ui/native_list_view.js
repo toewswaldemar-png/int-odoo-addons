@@ -54,6 +54,26 @@ const PREVIEWABLE_EXTENSIONS = new Set([
     "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", ...VIDEO_EXTENSIONS,
 ]);
 
+// Ported from legacy_ui/filemanager_action.js's EDITABLE_EXTENSIONS - narrowed to actual
+// Office formats only. txt/csv are deliberately left out here (unlike the legacy set):
+// TEXT_EDIT_EXTENSIONS above already opens them in the native CodeEditor, a better fit than
+// round-tripping through ONLYOFFICE for plain text - no regression, an improvement already
+// present in this UI that the port keeps instead of reintroducing the old behaviour.
+const OFFICE_EDIT_EXTENSIONS = new Set([
+    "doc", "docx", "odt", "rtf",
+    "xls", "xlsx", "ods",
+    "ppt", "pptx", "odp",
+]);
+
+// Only Word/Excel/PowerPoint have an "ofe" protocol handler on Windows for launching the
+// desktop app straight from a URL - odt/rtf/ods/odp have no equivalent, they stay editable
+// via ONLYOFFICE only. Ported verbatim from legacy_ui/filemanager_action.js.
+const OFFICE_PROTOCOL = {
+    doc: "ms-word", docx: "ms-word",
+    xls: "ms-excel", xlsx: "ms-excel",
+    ppt: "ms-powerpoint", pptx: "ms-powerpoint",
+};
+
 function extOf(name) {
     const i = name.lastIndexOf(".");
     return i === -1 ? "" : name.slice(i + 1).toLowerCase();
@@ -61,6 +81,10 @@ function extOf(name) {
 
 function isPreviewable(name) {
     return PREVIEWABLE_EXTENSIONS.has(extOf(name));
+}
+
+function isOfficeEditable(name) {
+    return OFFICE_EDIT_EXTENSIONS.has(extOf(name));
 }
 
 export class IntFilemanagerListController extends ListController {
@@ -71,6 +95,7 @@ export class IntFilemanagerListController extends ListController {
         this.dialog = useService("dialog");
         this.notification = useService("notification");
         this.fileUpload = useService("file_upload");
+        this.actionService = useService("action");
         this.busService = useService("bus_service");
         this.fileViewer = useFileViewer();
         this.fileInput = useRef("fileInput");
@@ -165,11 +190,51 @@ export class IntFilemanagerListController extends ListController {
             this.onEditText(record);
             return;
         }
+        if (isOfficeEditable(record.data.name)) {
+            this.onEdit(record);
+            return;
+        }
         if (isPreviewable(record.data.name)) {
             this.onPreview(record);
             return;
         }
         window.open(`/int_filemanager/download?path=${encodeURIComponent(record.data.path)}`, "_blank");
+    }
+
+    // ONLYOFFICE-Bearbeitung, 1:1 aus legacy_ui/filemanager_action.js uebernommen - schon dort
+    // vollstaendig nativ (this.actionService.doAction() mit einer ir.actions.client, demselben
+    // Mechanismus, unter dem der onlyoffice_odoo-Editor seine Komponente registriert). Die
+    // eine RPC vorweg ist unvermeidbares Bindeglied, kein Custom-Umweg: ONLYOFFICE editiert
+    // ir.attachment-Datensaetze, unsere Dateien liegen aber roh auf der Platte - /open_editor
+    // legt/findet dafuer den passenden Attachment serverseitig, bevor der native Editor startet.
+    async onEdit(record) {
+        try {
+            const res = await rpc("/int_filemanager/open_editor", { path: record.data.path });
+            this.actionService.doAction({
+                type: "ir.actions.client",
+                tag: "onlyoffice_editor",
+                params: { attachment_id: res.attachment_id },
+            });
+        } catch (e) {
+            this.notification.add(e.data?.message || e.message, { type: "danger" });
+        }
+    }
+
+    // "Lokal oeffnen" (WebDAV-Handoff an die Desktop-App per ms-word:/ms-excel:/ms-powerpoint:-
+    // Protokoll) - 1:1 aus legacy_ui uebernommen. Kein natives Odoo-Aequivalent moeglich: das ist
+    // ein Windows/Office-eigener URL-Protocol-Handler, keine Odoo-UI-Mechanik - der Bruch mit
+    // "moeglichst nativ" liegt am Feature selbst, nicht an der Umsetzung hier.
+    async onOpenLocal(record) {
+        const protocol = OFFICE_PROTOCOL[extOf(record.data.name)];
+        if (!protocol) {
+            return;
+        }
+        try {
+            const res = await rpc("/int_filemanager/webdav_token", { path: record.data.path });
+            window.location.href = `${protocol}:ofe|u|${res.url}`;
+        } catch (e) {
+            this.notification.add(e.data?.message || e.message, { type: "danger" });
+        }
     }
 
     async onEditText(record) {
@@ -329,6 +394,19 @@ export class IntFilemanagerListController extends ListController {
         });
     }
 
+    // Freigeben - oeffnet dieselbe action_filemanager_file_share (ir.actions.act_window,
+    // target="new") wie legacy_ui/filemanager_action.js, nur ueber this.actionService statt
+    // einer eigenen Dialog-Komponente: mit echten ORM-Records braucht es keinen eigenen
+    // Custom-Dialog mehr, die bestehende Action reicht unveraendert. Kein neuer Backend-Code -
+    // action_generate_share_token()/action_revoke_share_token() (filemanager_file.py) und die
+    // Portal-Freigabe-Logik sind bereits vollstaendig fertig und getestet.
+    onShare(record) {
+        this.actionService.doAction("int_filemanager.action_filemanager_file_share", {
+            props: { resId: record.resId },
+            onClose: () => this.reload(),
+        });
+    }
+
     onDeleteSelected() {
         const records = this.model.root.selection;
         const count = records.length;
@@ -372,12 +450,30 @@ export class IntFilemanagerListController extends ListController {
                 description: _t("Verknüpfen"),
                 callback: () => this.onLinkRecord(selection[0]),
             },
+            int_share: {
+                // action_generate_share_token() (filemanager_file.py) already rejects
+                // folders server-side (siehe TestShareToken.test_generate_rejects_folders) -
+                // is_dir hier zusaetzlich ausgeblendet, damit der Eintrag gar nicht erst zum
+                // Fehlschlagen einlaedt, statt nur auf die Server-Validierung zu vertrauen.
+                isAvailable: () => selection.length === 1 && !selection[0].data.is_dir,
+                sequence: 15,
+                icon: "fa fa-share-alt",
+                description: _t("Freigeben"),
+                callback: () => this.onShare(selection[0]),
+            },
             int_rename: {
                 isAvailable: () => selection.length === 1,
                 sequence: 20,
                 icon: "fa fa-pencil",
                 description: _t("Umbenennen"),
                 callback: () => this.onRename(selection[0]),
+            },
+            int_open_local: {
+                isAvailable: () => selection.length === 1 && extOf(selection[0].data.name) in OFFICE_PROTOCOL,
+                sequence: 30,
+                icon: "fa fa-external-link",
+                description: _t("Lokal öffnen"),
+                callback: () => this.onOpenLocal(selection[0]),
             },
             int_delete: {
                 isAvailable: () => selection.length > 0,

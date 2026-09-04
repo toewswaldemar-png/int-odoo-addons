@@ -764,3 +764,52 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Verifikation wieder entfernt): Suche von "Alle" aus findet weiterhin beide Treffer
     (`ColorThemes` + die Datei), Klick auf `ColorThemes` zeigt jetzt korrekt nur noch die Datei
     darin, nicht mehr `ColorThemes` selbst.
+
+19. **Funktionsparität zur alten UI hergestellt (2026-09-04): Freigeben, ONLYOFFICE-Bearbeitung,
+    "Lokal öffnen" nach `native_list_view.js` portiert.** Abgleich der `on*`-Methoden zwischen
+    `legacy_ui/filemanager_action.js` und `native_ui/native_list_view.js` (per `grep`, nicht nur
+    Erinnerung) hatte drei fehlende Features aufgedeckt - alle drei riefen im Original bereits
+    fertigen, getesteten Backend-Code auf, es fehlte nur die Verdrahtung in der neuen UI:
+
+    - **Freigeben** (`onShare`): nicht als eigener Dialog nachgebaut, sondern als neuer Eintrag
+      `int_share` im bestehenden `getStaticActionMenuItems()` (demselben nativen `ActionMenus`-
+      Erweiterungspunkt, den `Verknüpfen`/`Umbenennen`/`Löschen` schon nutzen) - ruft exakt
+      dieselbe `action_filemanager_file_share` (`ir.actions.act_window`, `target="new"`) über
+      `this.actionService.doAction()` auf wie die alte UI. Kein neuer Python-Code:
+      `action_generate_share_token()`/`action_revoke_share_token()` (`filemanager_file.py`)
+      existierten bereits vollständig inkl. Tests. `is_dir` blendet den Menüpunkt zusätzlich aus
+      (Server lehnt Ordner ohnehin ab, `test_generate_rejects_folders`), damit er gar nicht erst
+      zum Fehlschlagen einlädt.
+    - **ONLYOFFICE-Bearbeitung** (`onEdit`): 1:1 aus `legacy_ui` übernommen - war dort bereits
+      vollständig nativ (`this.actionService.doAction()` mit `type: "ir.actions.client"`, derselbe
+      Mechanismus, unter dem `onlyoffice_odoo` seine Editor-Komponente registriert). Die einzige
+      RPC vorweg (`/int_filemanager/open_editor`) ist unvermeidbares Bindeglied: ONLYOFFICE
+      editiert `ir.attachment`-Datensätze, unsere Dateien liegen roh auf der Platte. In die
+      bestehende `openRecord()`-Dispatch-Kette eingehängt (`OFFICE_EDIT_EXTENSIONS`, bewusst ohne
+      `txt`/`csv` - die öffnen hier bereits im nativen `CodeEditor`, eine Verbesserung ggü. der
+      alten UI, die beim Portieren erhalten bleibt statt zurückgebaut zu werden).
+    - **"Lokal öffnen"** (`onOpenLocal`, WebDAV-Protokoll-Handoff an Word/Excel/PowerPoint
+      Desktop): 1:1 übernommen, **kein natives Odoo-Äquivalent möglich** - das ist ein
+      Windows/Office-eigener URL-Protocol-Handler (`ms-word:ofe|u|...`), keine Odoo-UI-Mechanik.
+      Ebenfalls als `int_open_local`-Eintrag im `ActionMenus`, gated auf Dateitypen mit
+      Protokoll-Handler (`doc(x)`/`xls(x)`/`ppt(x)`).
+
+    **Live gegen die Testinstanz verifiziert, nicht nur angenommen:**
+    - Freigeben: Dialog öffnet, "Link erzeugen" liefert echten Freigabe-Link + Ablaufdatum
+      (`action_generate_share_token()` bestätigt durchgelaufen), "Link widerrufen" danach
+      erfolgreich getestet.
+    - Lokal öffnen: `/int_filemanager/webdav_token` liefert `200 OK` mit echtem Token/URL - der
+      `ms-excel:`-Protokoll-Handoff selbst lässt sich im Testkontext nicht prüfen (kein Excel auf
+      dem Testrechner installiert), das ist unabhängig vom Code.
+    - Bearbeiten: `/int_filemanager/open_editor` liefert `200 OK`, `ir.actions.client` wird
+      korrekt ausgelöst und zeigt ONLYOFFICEs **eigene** native Fehlermeldung ("ONLYOFFICE cannot
+      be reached") - bestätigt, dass die Weiterleitung bis zum Editor korrekt ankommt; es fehlt
+      nur die Document-Server-Anbindung auf der Testinstanz (Infrastruktur, nicht Teil dieser
+      Änderung).
+
+    **Damit ist die in Punkt "aktueller Stand" (siehe Konversation) festgestellte Funktionslücke
+    zur alten UI geschlossen** - offen bleibt weiterhin ein realer End-to-End-Test gegen HM-SRV
+    selbst (bisher ausschließlich gegen die isolierte Tower-Testinstanz verifiziert) und ein
+    Abgleich des Deploy-Stands dort, bevor `legacy_ui`/`folder_tree.js`/`.xml` und der
+    `/int_filemanager/list`-Endpunkt tatsächlich gelöscht werden (siehe "Empfohlene Reihenfolge",
+    Schritt 3).
