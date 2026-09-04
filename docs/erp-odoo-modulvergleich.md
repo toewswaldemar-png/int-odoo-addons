@@ -59,7 +59,7 @@ Feldebene der "Adressen - Suchen"-Maske gegen `res.partner`:
 | Plz / Ort | `zip` / `city` | |
 | Debit.-Nummer | kein 1:1-Feld | Odoo nutzt Partner-ID/`ref`; eine eigenständige, ggf. anders formatierte Debitorennummer braucht Custom-Feld + eigene Sequenz |
 | Kredit.-Nummer | kein 1:1-Feld | analog zur Debitorennummer, i. d. R. Custom-Feld |
-| Ansprechpartner | Kontaktpersonen (`res.partner` mit `parent_id`) | Odoo-Modell: eigene Partner-Datensätze statt Freitextfeld |
+| Ansprechpartner | Kontaktpersonen (`res.partner` mit `parent_id`) | bestätigt: eigene Tabelle je Adresse mit Anrede, Name, Vorname, Fon, Fax, Mobil, E-Mail, Funktion je Kontakt – bildet sich sehr gut auf Odoos Kontaktpersonen-Modell ab (Titel/Vorname-Nachname/`phone`/`mobile`/`email`/`function` sind alles native Felder auf `res.partner`); einer der saubersten 1:1-Fälle in diesem Vergleich |
 | Gruppe / Nr. | `category_id` (Partner-Tags) | "Nr." als zusätzliche Nummerierung innerhalb der Gruppe hat kein Pendant, ggf. Custom |
 | "Adressen Filtern" (Checkbox) | Odoo-Suchfilter/-Views | kein Datenfeld, sondern Sucheinstellung – in Odoo über Standard-Filter/Gruppierung gelöst |
 
@@ -100,6 +100,46 @@ exklusiv, in Odoo nicht: (2) mehrere zweckgebundene E-Mail-Felder mit eigenem
 CC/BCC pro Adresse gibt es in Odoo nicht in dieser Form. Der XRechnung-Block ist
 inhaltlich der einzige Bereich mit einer nativen Odoo-Entsprechung (Peppol/E-Invoicing),
 aber ohne 1:1-Feldabgleich.
+
+## Detailvergleich: Reparatur (Belegmaske)
+
+Screenshot der Reparaturauftrags-Belegmaske (Kunde, Beleg/Kostenvoranschlag,
+Gerät-Block, Dokumentenbuttons). Abgleich gegen `repair.order` inkl. der bereits
+vorhandenen `int_repair_workshop`-Felder (`x_auftragsart`, `x_eingangsdatum`,
+`x_lieferdatum`, `x_verfuegbare_arbeitstage`, `x_werkstattstufe`,
+`x_stufe_mitarbeiter`, `x_geraete_snr`):
+
+| Feld/Bereich (aktuelles ERP) | Odoo-Äquivalent | Anmerkung |
+|---|---|---|
+| Kunde + Ansprechpartner | `partner_id` | nativ |
+| Beleg-Nr. + Typ (Kostenvoranschlag/Auftrag/…) | `name` + `state` | Odoo kennt den Lebenszyklus als Status (quotation → confirmed → under_repair → done), nicht als eigenständige, separat nummerierte Belegtypen |
+| Datum/Sparte | `date_order` | "Sparte" (Geschäftsbereich) hat kein natives Feld |
+| Bearbeiter | `user_id` | nativ |
+| Rahmen (Rahmenauftrag, mit Detail-Link) | kein Standardfeld | passt zu "Rahmenbestellung"/"Rahmen Reparatur" aus dem Einkaufsmenü – Odoo hat kein Konzept für Rahmen-/Blanket-Reparaturaufträge |
+| Abgeschlossen / Gedruckt (Checkboxen) | `state == 'done'` deckt "Abgeschlossen" | "Gedruckt" (Beleg wurde gedruckt) hat kein natives Flag |
+| Bewerten (Checkbox) | kein Feld | siehe bereits notiertes "nicht bewerten" bei Adressen – Anknüpfungspunkt Lieferanten-/Auftragsbewertung |
+| Bestell-/Liefertermin | `schedule_date` bzw. bereits eigenes `x_lieferdatum` | Liefertermin schon durch `int_repair_workshop` abgedeckt |
+| Bestellnummer (Kunden-PO) | kein Feld auf `repair.order` | `sale.order` hat `client_order_ref`, `repair.order` nicht – Lücke |
+| Lieferschein-Ausg | `stock.picking`-Verknüpfung | Reparatur erzeugt in Odoo Lieferungen, aber keine eigene "Lieferschein-Ausgang"-Referenz auf dem Formular |
+| Gerät: GID, Gruppe, IdentNr, Seriennr, Bezeichnung | `product_id` + `lot_id` (Serien-/Losnummer) | Produkt/Serie nativ vorhanden; GID/Gruppe/IdentNr sind eigene Geräte-Stammdaten (siehe bereits notierte Lücke bei "Geräte" in den Stammdaten) |
+| Kopftext / Fusstext | kein 1:1-Feld | am ehesten `quotation_notes`/interne Notizen, aber kein separates Kopf-/Fußtext-Konzept |
+| Material | Reparaturzeilen (`repair.order.line`) | nativ abgedeckt |
+| Versand Eingang / Versand Ausgang | kein Feld | Wareneingang/-ausgang des Reparaturgeräts explizit als eigener Vorgang – in Odoo nur implizit über Lagerbewegungen, nicht als Belegfeld |
+| Reparatur-Beschr. | Beschreibungs-/Diagnosefeld | größtenteils nativ abbildbar |
+| Anlagen | `ir.attachment` | nativ |
+| Bemerkungen | interne Notizen | nativ |
+| Stl. Material | `mrp.bom`-Materialliste | nativ über Stückliste abbildbar |
+| Geräte Info | kein Standardmodell | wie oben, eigene Geräte-Stammdaten |
+| Fehlerzuordnung | kein Standardfeld | Fehler-/Defektklassifizierung – Anknüpfungspunkt an `quality`-Modul, thematisch verwandt mit den bereits notierten 8D-Lücken |
+
+**Beobachtung:** `int_repair_workshop` ist bewusst auf die Werkstattstufen-Logik
+begrenzt – es dient als Listenansicht/Übersicht für die Mitarbeiter in der
+Produktion, nicht als Ersatz für die kommerzielle Belegmaske. Die oben
+aufgeführten Felder (Bestellnummer, Rahmenauftrag, Versand Ein-/Ausgang,
+Fehlerzuordnung) sind entsprechend keine Lücken *dieses Moduls*, sondern liegen
+außerhalb seines Scopes; sie wären, falls überhaupt, Sache eines eigenen
+Beleg-/Auftragsmoduls. Geräte-Stammdaten (GID/Gruppe/IdentNr) bleiben davon
+unabhängig eine durchgängige Lücke über alle bisher verglichenen Masken hinweg.
 
 ## Kernbeobachtung
 
