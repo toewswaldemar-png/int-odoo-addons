@@ -35,6 +35,7 @@ import { listView } from "@web/views/list/list_view";
 import { ListController } from "@web/views/list/list_controller";
 import { IntTextInputDialog } from "../shared/text_input_dialog";
 import { IntLinkRecordDialog } from "../shared/link_record_dialog";
+import { IntTextEditorDialog } from "./text_editor_dialog";
 
 // Video ist nativ im FileViewer verdrahtet (file_viewer.js/.xml: state.file.isVideo -> echtes
 // <video controls>) - hier nur an dessen bereits vorhandene Faehigkeit angeschlossen, nichts
@@ -44,8 +45,13 @@ import { IntLinkRecordDialog } from "../shared/link_record_dialog";
 const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "ogv"]);
 const VIDEO_MIME_TYPES = { mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg" };
 
+// Reine Textformate oeffnen direkt den Editor (IntTextEditorDialog) statt der readonly
+// FileViewer-Vorschau - deshalb bewusst NICHT Teil von PREVIEWABLE_EXTENSIONS (das wuerde ueber
+// onPreview() die alte iframe-Vorschau ausloesen, die der Editor ersetzt).
+const TEXT_EDIT_EXTENSIONS = new Set(["txt", "csv", "log", "md", "json"]);
+
 const PREVIEWABLE_EXTENSIONS = new Set([
-    "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "txt", ...VIDEO_EXTENSIONS,
+    "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", ...VIDEO_EXTENSIONS,
 ]);
 
 function extOf(name) {
@@ -147,11 +153,26 @@ export class IntFilemanagerListController extends ListController {
             this.env.searchModel.toggleCategoryValue(section.id, record.resId);
             return;
         }
+        if (TEXT_EDIT_EXTENSIONS.has(extOf(record.data.name))) {
+            this.onEditText(record);
+            return;
+        }
         if (isPreviewable(record.data.name)) {
             this.onPreview(record);
             return;
         }
         window.open(`/int_filemanager/download?path=${encodeURIComponent(record.data.path)}`, "_blank");
+    }
+
+    async onEditText(record) {
+        const downloadUrl = `/int_filemanager/download?path=${encodeURIComponent(record.data.path)}&disposition=inline`;
+        const content = await fetch(downloadUrl).then((r) => r.text());
+        this.dialog.add(IntTextEditorDialog, {
+            title: record.data.name,
+            path: record.data.path,
+            content,
+            onSaved: () => this.reload(),
+        });
     }
 
     async reload() {
@@ -214,9 +235,8 @@ export class IntFilemanagerListController extends ListController {
             path,
             name: record.data.name,
             downloadUrl,
-            isImage: PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && ext !== "txt" && !isVideo,
+            isImage: PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && !isVideo,
             isPdf,
-            isText: ext === "txt",
             isVideo,
             mimetype: isVideo ? VIDEO_MIME_TYPES[ext] : undefined,
             isViewable: isPreviewable(record.data.name),

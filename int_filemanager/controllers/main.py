@@ -266,6 +266,19 @@ class IntFilemanagerController(http.Controller):
         index_remove_tree(request.env, rel)
         return {"ok": True}
 
+    @http.route("/int_filemanager/write_text", type="jsonrpc", auth="user", methods=["POST"])
+    def write_text(self, path="", content=""):
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        rel = to_relative(request.env, abs_path)
+        authz.require(request.env, rel, "write")
+        if not os.path.isfile(abs_path):
+            raise UserError(_("Datei nicht gefunden."))
+        with open(abs_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        index_upsert(request.env, abs_path)
+        return {"ok": True}
+
     @http.route("/int_filemanager/upload", type="http", auth="user", methods=["POST"], csrf=False)
     def upload(self, path="", **kwargs):
         self._check_access()

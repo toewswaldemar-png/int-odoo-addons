@@ -455,10 +455,32 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
    Unterstützung (kein `Accept-Ranges`/206 Partial Content). Vorspulen/Suchen in größeren Videos
    im Player wird dadurch nicht richtig funktionieren, nur sequentielles Abspielen ab dem Anfang.
 
-   **Nicht end-to-end verifiziert:** keine Videodatei im aktuellen Testbestand vorhanden, kein
-   `ffmpeg` auf Host/Container zum Erzeugen einer Testdatei - nur Regressionstest gemacht (PDF-
-   Vorschau weiterhin unverändert funktionsfähig, keine Konsolenfehler). Echte Wiedergabe eines
-   Videos steht noch aus.
-8. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
-   temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
-   zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).
+   **Nachtrag, doch noch verifiziert (2026-09-04):** beim Testen der Text-Editor-Funktion (Punkt 9)
+   tauchte zufällig eine echte `.mp4` im Testbestand auf (`odoo/VID_20260904_130327.mp4`) - Klick
+   öffnet den `FileViewer` mit echtem `<video controls>`, Play abgespielt bis `0:03 / 0:03`
+   (komplette Laufzeit), keine Konsolenfehler. Video-Vorschau damit vollständig bestätigt, nicht
+   nur per Regressionstest angenommen.
+9. **Text-Editor umgesetzt (2026-09-04) - CodeEditor ersetzt die readonly-Vorschau für Textformate:**
+   `txt`/`csv`/`log`/`md`/`json` lösen jetzt `onEditText()` statt `onPreview()`/Download aus (bewusst
+   aus `PREVIEWABLE_EXTENSIONS` entfernt, sonst würde `onPreview()` weiterhin zuerst greifen).
+
+   - **Neue Route** `/int_filemanager/write_text` (`controllers/main.py`), bewusst 1:1 nach dem
+     Muster von `mkdir`/`rename`/`delete` gebaut: `type="jsonrpc"`, `_check_access()` →
+     `resolve_path` → `to_relative` → `authz.require(..., "write")` (nicht `"unlink"`, nicht
+     `require_rename_or_move_allowed" - Pfad ändert sich nicht, nur Inhalt), Datei schreiben,
+     `index_upsert()` (Größe/`mtime`/`hash_state` sofort nachziehen, wie bei `mkdir`), `{"ok": True}`.
+     Lesen des Inhalts braucht keine neue Route - `fetch(downloadUrl).then(r => r.text())` gegen
+     die bestehende `/int_filemanager/download?disposition=inline` reicht.
+   - **Neuer Dialog** `IntTextEditorDialog` (`native_ui/text_editor_dialog.js/.xml`, nicht `shared/`
+     - nur die aktiv weiterentwickelte native UI bekommt das, die alte UI wird nicht mehr angefasst):
+     nativer `CodeEditor` (`@web/core/code_editor/code_editor`, derselbe ACE-Wrapper, den Odoo für
+     die View-XML-Bearbeitung im Entwicklermodus nutzt) in einem `Dialog`, Speichern ruft die neue
+     Route, `onSaved` löst `reload()` der Liste aus.
+
+   **Live komplett Ende-zu-Ende verifiziert** (`odoo/Notizen.txt`): Dialog zeigt echten Inhalt mit
+   Zeilennummern, Zeile ergänzt, gespeichert - Listengröße sofort von 45 auf 68 Bytes aktualisiert,
+   `cat` auf der echten Datei via SSH bestätigt den neuen Inhalt tatsächlich auf der Platte. Keine
+   Konsolenfehler.
+10. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
+    temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
+    zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).
