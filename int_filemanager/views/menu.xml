@@ -1,12 +1,12 @@
 <odoo>
-    <record id="action_int_filemanager" model="ir.actions.client">
-        <field name="name">Dateimanager</field>
-        <field name="tag">int_filemanager_browser</field>
-    </record>
-
+    <!-- Zeigt seit der native-ListView-Migration auf action_filemanager_file_list_native
+         (filemanager_file_list_view.xml) statt auf den frueheren int_filemanager_browser-
+         Client-Action-Tag - legacy_ui wurde geloescht, das ist jetzt die einzige UI.
+         Erfordert filemanager_file_list_view.xml vor dieser Datei im Manifest (__manifest__.py),
+         sonst existiert die referenzierte Action beim Parsen dieses Menueintrags noch nicht. -->
     <menuitem id="menu_int_filemanager_root"
               name="Dateimanager"
-              action="action_int_filemanager"
+              action="action_filemanager_file_list_native"
               groups="int_filemanager.group_filemanager_user"
               sequence="20"/>
 </odoo>

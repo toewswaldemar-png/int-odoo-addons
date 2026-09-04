@@ -1,6 +1,6 @@
 <odoo>
-    <!-- Öffnet ausschließlich als Dialog (target="new") aus dem "Freigeben"-
-         Button in filemanager_action.js/xml heraus - kein eigener
+    <!-- Öffnet ausschließlich als Dialog (target="new") aus dem "Freigeben"-Eintrag im
+         ActionMenus-Dropdown (native_ui/native_list_view.js) heraus - kein eigener
          Listen/Menüeintrag, da normale Dateien nicht regulär als
          Odoo-Datensätze durchgeblättert werden sollen. Nutzt die
          Standard-ir.model.access/ir.rule-Prüfung auf int_filemanager.file -

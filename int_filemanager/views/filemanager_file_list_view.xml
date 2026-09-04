@@ -24,7 +24,7 @@
     </record>
 
     <record id="action_filemanager_file_list_native" model="ir.actions.act_window">
-        <field name="name">Dateimanager (nativ, Test)</field>
+        <field name="name">Dateimanager</field>
         <field name="res_model">int_filemanager.file</field>
         <field name="view_mode">list</field>
         <field name="view_id" ref="view_filemanager_file_list_native"/>
@@ -38,10 +38,4 @@
              ge-ANDet, was Navigation in Unterordner unmoeglich machen wuerde. -->
         <field name="domain">[]</field>
     </record>
-
-    <menuitem id="menu_filemanager_native_test"
-              name="Dateimanager (nativ, Test)"
-              action="action_filemanager_file_list_native"
-              groups="int_filemanager.group_filemanager_user"
-              sequence="95"/>
 </odoo>

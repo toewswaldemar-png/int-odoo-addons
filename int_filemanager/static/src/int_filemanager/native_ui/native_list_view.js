@@ -1,8 +1,10 @@
 /** @odoo-module **/
 
-// EXPERIMENT (branch experiment/native-listview): does a real Odoo list view,
-// bound directly to int_filemanager.file, work well as a file browser? Only
-// override needed for navigation: clicking a folder row selects it in the
+// A real Odoo list view, bound directly to int_filemanager.file, as the file browser -
+// started as an experiment on this branch (see docs/int_filemanager_native_ui.md), now the
+// only UI: legacy_ui (the hand-rolled OWL component predating this) was deleted 2026-09-04
+// once this reached feature parity with it. Only override needed for navigation: clicking a
+// folder row selects it in the
 // native parent_id SearchPanel category (env.searchModel.toggleCategoryValue)
 // instead of opening a (non-existent) form view - see ListRenderer's
 // onCellClicked -> this.props.openRecord(record) in list_renderer.js, which
@@ -14,8 +16,8 @@
 // the SearchPanel category's own value chain (see updateBreadcrumbs()).
 //
 // Mutations (mkdir/rename/delete/upload/link) deliberately keep calling the
-// same /int_filemanager/* JSON-RPC routes the old custom UI
-// (filemanager_action.js) uses, instead of native type="object" buttons
+// same /int_filemanager/* JSON-RPC routes the deleted legacy_ui used,
+// instead of native type="object" buttons
 // bound to model methods. Those routes already run authz.require() /
 // authz.require_subtree_deletable() / authz.require_rename_or_move_allowed()
 // server-side (controllers/main.py) - a model method reached via a native
@@ -101,7 +103,8 @@ export class IntFilemanagerListController extends ListController {
         this.fileInput = useRef("fileInput");
 
         // Everything already on the stack when this controller was created (normally
-        // just the "Dateimanager (nativ, Test)" action entry itself) stays as-is; folder
+        // just the "Dateimanager" action entry itself, or "Verknüpfte Dateien" when opened
+        // via the linkable-mixin smart button) stays as-is; folder
         // levels get appended after it. Breadcrumbs.xml always renders the LAST array
         // entry as the current (bold, non-clickable) one and everything before it as a
         // real link - so no special-casing needed for "which crumb is active".

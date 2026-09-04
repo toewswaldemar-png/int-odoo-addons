@@ -40,6 +40,16 @@
 // id alongside child_of, so navigating in always shows descendants only, never the folder
 // currently being browsed.
 //
+// A fifth case, added when the "Verknuepfte Dateien"-smart-button (filemanager_linkable_mixin.py)
+// was ported off the now-deleted legacy_ui client action tag (2026-09-04): that action opens this
+// same native list permanently domain-restricted (res_reference = the linking record), not via a
+// user-typed search facet - this.query stays empty there, so the third case above never fires and
+// browsing would default to root only (parent_id = False), almost always empty since a linked
+// file/folder is essentially never a filesystem root item itself. Reusing the exact context key
+// legacy_ui used for its own equivalent "always recursive" mode (int_filemanager_recursive) keeps
+// this scoped to actions that explicitly opt in, rather than recursing for every domain-restricted
+// use of this view.
+//
 // Scoped to int_filemanager.file via this.resModel so every other SearchPanel category in
 // the instance (product categories, stock reports, ...) keeps Odoo's default behaviour
 // untouched - same scoping pattern int_web_tweaks already uses in list_column_reorder.js
@@ -52,6 +62,7 @@ patch(SearchModel.prototype, {
         if (this.resModel !== "int_filemanager.file") {
             return super._getCategoryDomain(excludedCategoryId);
         }
+        const recursive = this.query.length > 0 || Boolean(this.globalContext.int_filemanager_recursive);
         const domain = [];
         for (const category of this.categories) {
             if (category.id === excludedCategoryId) {
@@ -59,7 +70,7 @@ patch(SearchModel.prototype, {
             }
             if (category.fieldName === "parent_id") {
                 const value = category.activeValueId || false;
-                if (this.query.length) {
+                if (recursive) {
                     if (value) {
                         domain.push(["parent_id", "child_of", value]);
                         domain.push(["id", "!=", value]);

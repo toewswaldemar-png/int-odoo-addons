@@ -813,3 +813,63 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Abgleich des Deploy-Stands dort, bevor `legacy_ui`/`folder_tree.js`/`.xml` und der
     `/int_filemanager/list`-Endpunkt tatsächlich gelöscht werden (siehe "Empfohlene Reihenfolge",
     Schritt 3).
+
+20. **`legacy_ui` gelöscht (2026-09-04) - native ListView/SearchPanel ist jetzt die einzige UI.**
+    Nutzerentscheidung nach Abwägen der verbliebenen Restrisiken (Datenbestand auf Tower als
+    strukturell vergleichbar mit HM-SRV eingeordnet, Versions-Sync-Check bewusst verworfen; ACL-
+    Interaktion und ONLYOFFICE-Document-Server-Anbindung bleiben als reine
+    Infrastruktur/Konfigurations-Restrisiken, kein Code mehr).
+
+    **Gelöscht:** `static/src/int_filemanager/legacy_ui/` komplett (`filemanager_action.js/.xml`,
+    `folder_tree.js/.xml`, `inline_tags.js/.xml`, `filemanager.scss`) sowie die dadurch verwaiste
+    `/int_filemanager/list`-Route + `_breadcrumbs()`-Helper (`controllers/main.py`) - keine Tests
+    hingen daran (per `grep` bestätigt, nicht angenommen). `/int_filemanager/tree` bleibt dagegen
+    bewusst stehen: eigene ACL-Sicherheitstests (`test_acl_http.py`,
+    `test_tree_hides_protected_folder_name`/`test_tree_shows_protected_folder_name_with_group`)
+    belegen die Record-Rule-Durchsetzung auf diesem Pfad, unabhängig davon, ob ihn noch eine UI
+    aufruft - Sicherheitstestabdeckung wird hier nicht kommentarlos geopfert, nur weil der
+    UI-Konsument weg ist.
+
+    **Zwei echte Abhängigkeiten mussten mitwandern, nicht nur Dateien gelöscht werden:**
+    - **Hauptmenü "Dateimanager"** zeigte über den `ir.actions.client`-Tag `int_filemanager_browser`
+      (registriert in `filemanager_action.js`) auf die alte UI. `menu.xml` zeigt jetzt direkt auf
+      `action_filemanager_file_list_native` (umbenannt von "Dateimanager (nativ, Test)" zu
+      schlicht "Dateimanager") - Manifest-`data`-Reihenfolge musste dafür angepasst werden
+      (`filemanager_file_list_view.xml` vor `menu.xml`, sonst existiert die referenzierte Action
+      beim Parsen des Menüeintrags noch nicht).
+    - **"Verknüpfte Dateien"-Smart-Button** auf `res.partner` (`IntFilemanagerLinkableMixin`,
+      `filemanager_linkable_mixin.py`) nutzte denselben Tag mit einem `params.domain`, das die
+      alte UI automatisch in einen "immer rekursiv"-Modus schaltete
+      (`int_filemanager_recursive`-Context-Flag, `filemanager_action.js`). `action_view_int_filemanager_files()`
+      öffnet jetzt dieselbe native Action per `ir.actions.act_window._for_xml_id()`
+      (live gegen den echten Odoo-19-Quellcode verifiziert, nicht angenommen) mit eigener
+      `domain`/`context`. **Ohne Anpassung an `search_model_patch.js` wäre das leer erschienen:**
+      die dritte Fallunterscheidung dort (Punkt 3 oben, "rekursiv sobald `this.query.length > 0`")
+      greift nur bei einer getippten Suchleisten-Facette, nicht bei einer permanenten
+      Action-Domain - `this.query` bliebe hier leer, die Liste würde beim Öffnen nur
+      Wurzel-Datensätze zeigen (`parent_id = False`), was bei einem domain-gefilterten
+      Smart-Button praktisch immer leer wäre (ein verknüpftes Element liegt so gut wie nie im
+      Wurzelverzeichnis). Fix: `_getCategoryDomain()` prüft jetzt zusätzlich
+      `this.globalContext.int_filemanager_recursive` - derselbe Context-Key, den die alte UI
+      schon für exakt denselben Zweck nutzte, bewusst wiederverwendet statt neu erfunden.
+
+    **Live gegen die Testinstanz verifiziert (nicht nur angenommen):**
+    - Modul-Upgrade lief fehlerfrei durch, alte `ir.ui.menu`/`ir.actions.client`-Datensätze
+      (`menu_filemanager_native_test`, `action_int_filemanager`) wurden beim Upgrade automatisch
+      als verwaist erkannt und entfernt.
+    - Hauptmenü "Dateimanager" öffnet direkt die native Liste, kein separater "(nativ, Test)"-
+      Eintrag mehr.
+    - Smart-Button-Test: Datei testweise mit "My Company" (`res.partner`, id 1) verknüpft (über
+      den native `Verknüpfen`-Aktionsmenüpunkt), auf der Kontaktkarte den Button "Verknüpfte
+      Dateien" (Zähler korrekt "1") angeklickt - Breadcrumb "My Company / Dateimanager", Liste
+      zeigt sofort exakt die eine verknüpfte Datei trotz tiefer Verschachtelung
+      (`Programme/SQ-MIDI-Generator.xlsx`), ohne manuell dorthin navigieren zu müssen - bestätigt
+      den `int_filemanager_recursive`-Fix. Test-Verknüpfung danach wieder entfernt.
+    - Komplette Testsuite erneut in einer frischen, isolierten Datenbank: **0 failed, 0 error(s)
+      of 66 tests** - keine Regression durch Routen-Entfernung oder Mixin-Änderung.
+
+    **Damit ist Schritt 3 der "Empfohlenen Reihenfolge" (weiter oben in diesem Dokument)
+    abgeschlossen.** Verbleibend laut Nutzerentscheidung: ein realer Durchlauf gegen HM-SRV selbst
+    vor dem tatsächlichen Produktiv-Rollout, insbesondere die ACL-/ONLYOFFICE-Interaktion dort -
+    das ist aber bewusst außerhalb des Codes/dieses Branches angesiedelt, kein offener
+    Implementierungspunkt mehr.

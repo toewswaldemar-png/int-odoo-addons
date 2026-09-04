@@ -8,7 +8,6 @@ import shutil
 from odoo import _, fields, http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import request
-from odoo.tools.sql import escape_psql
 
 from .. import authz, write_service
 from ..index_utils import index_move_tree, index_remove_tree, index_upsert
@@ -30,15 +29,6 @@ class IntFilemanagerController(http.Controller):
         if not request.env.user.has_group("int_filemanager.group_filemanager_user"):
             raise AccessError(_("Kein Zugriff auf den Dateimanager."))
 
-    def _breadcrumbs(self, rel_path):
-        parts = [p for p in rel_path.split("/") if p]
-        crumbs = [{"name": "Start", "path": ""}]
-        acc = []
-        for part in parts:
-            acc.append(part)
-            crumbs.append({"name": part, "path": "/".join(acc)})
-        return crumbs
-
     def _json_response(self, data, status=200):
         return request.make_response(
             json.dumps(data),
@@ -50,81 +40,11 @@ class IntFilemanagerController(http.Controller):
     # browsing
     # ---------------------------------------------------------------------
 
-    LIST_PAGE_SIZE = 200
-    SORTABLE_FIELDS = {"name", "size", "mtime"}
-
-    @http.route("/int_filemanager/list", type="jsonrpc", auth="user", methods=["POST"])
-    def list_dir(self, path="", recursive=False, domain=None, offset=0, order_by="name", order_dir="asc"):
-        """Lists entries from the search index (int_filemanager.file), not directly
-        from disk - this is what makes the native Odoo search bar/facets possible.
-        The index is kept in sync by every mutation below plus a periodic ir.cron scan.
-        Paginated: rendering (and each row's own tags read) doesn't scale to the
-        thousands of rows a large folder or a recursive/unfiltered search can return."""
-        self._check_access()
-        abs_path = resolve_path(request.env, path)
-        if not os.path.isdir(abs_path):
-            raise UserError(_("Ordner nicht gefunden."))
-        rel = to_relative(request.env, abs_path)
-        authz.require(request.env, rel, "read")
-
-        if recursive:
-            scope_domain = [("path", "=like", escape_psql(rel) + "/%")] if rel else []
-        else:
-            scope_domain = [("folder_path", "=", rel or False)]
-
-        # Nicht-sudo: die generierten Record Rules aus acl_rules.py filtern
-        # geschützten Inhalt automatisch mit heraus.
-        Model = request.env["int_filemanager.file"]
-        full_domain = scope_domain + (domain or [])
-        if order_by not in self.SORTABLE_FIELDS:
-            order_by = "name"
-        order_dir = "desc" if order_dir == "desc" else "asc"
-        total = Model.search_count(full_domain)
-        records = Model.search(
-            full_domain, order=f"is_dir desc, {order_by} {order_dir}", limit=self.LIST_PAGE_SIZE, offset=offset
-        )
-
-        entries = []
-        for r in records:
-            entry = {
-                "name": r.name,
-                "is_dir": r.is_dir,
-                "size": r.size,
-                "mtime": fields.Datetime.to_string(r.mtime)[:16] if r.mtime else "",
-                "meta_id": r.id,
-                "path": r.path,
-                "linked_record": {
-                    "model": r.res_reference._name,
-                    "id": r.res_reference.id,
-                    "display_name": r.res_reference.display_name,
-                }
-                if r.res_reference
-                else None,
-                "media_state": r.meta_state or False,
-            }
-            if r.meta_state == "error":
-                entry["media_error"] = r.meta_error
-            elif r.meta_state == "done":
-                if r.media_width:
-                    entry["media_width"] = r.media_width
-                    entry["media_height"] = r.media_height
-                if r.page_count:
-                    entry["page_count"] = r.page_count
-                if r.audio_duration:
-                    entry["audio_duration"] = r.audio_duration
-                    entry["audio_title"] = r.audio_title
-                    entry["audio_artist"] = r.audio_artist
-            entries.append(entry)
-
-        return {
-            "path": rel,
-            "breadcrumbs": self._breadcrumbs(rel),
-            "entries": entries,
-            "total": total,
-            "offset": offset,
-            "limit": self.LIST_PAGE_SIZE,
-        }
-
+    # /int_filemanager/list (das eigene Pendant zu web_search_read, mit Pagination/Sortierung/
+    # Breadcrumbs) wurde mit legacy_ui geloescht (2026-09-04) - die native ListView/SearchPanel
+    # deckt Listing/Navigation vollstaendig ab, kein zweiter Endpunkt mehr dafuer noetig. tree_dir
+    # unten bleibt bewusst stehen: eigene ACL-Tests (test_acl_http.py) belegen die
+    # Record-Rule-Durchsetzung auf diesem Pfad, unabhaengig davon, ob ihn noch eine UI aufruft.
     @http.route("/int_filemanager/tree", type="jsonrpc", auth="user", methods=["POST"])
     def tree_dir(self, path=""):
         """Baut den Ordnerbaum für die Sidebar über die ORM statt über
