@@ -441,6 +441,24 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
    (`int_filemanager_file_int_filemanager_tag_rel`) - Tag landet korrekt in der DB und erscheint
    danach in der Listenspalte. Namensklick auf beide Zeilen weiterhin unverändert (Ordner
    navigiert, Datei würde downloaden/previewen) - keine Überschneidung der beiden Klickziele.
-7. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
+7. **Video-Vorschau angeschlossen (2026-09-04):** `FileViewer` (`file_viewer.js`/`.xml`) unterstützt
+   `isVideo` bereits nativ (echtes `<video controls>`) - bislang nur nicht angeschlossen. `mp4`/
+   `webm`/`ogv` zu `PREVIEWABLE_EXTENSIONS` ergänzt (bewusst nur diese drei - von Browsern ohne
+   Zusatz-Codec nativ abgespielt, anders als z.B. `.mov`), `toViewerFile()` setzt jetzt `isVideo`
+   und `mimetype` statt Videos fälschlich als `isImage` zu behandeln. **Audio bewusst nicht
+   mitgemacht:** im `FileViewer` gibt es kein `<audio>`-Element und keine `isAudio`-Eigenschaft -
+   ein Audio-Icon/Vorschau-Versuch würde nur einen leeren Player zeigen, bräuchte einen eigenen
+   kleinen Zusatzbaustein (separates Thema, nicht Teil dieser Änderung).
+
+   **Bekannte Einschränkung, nicht behoben:** `/int_filemanager/download` (`controllers/main.py`)
+   liest die Datei komplett in den Speicher und liefert sie als einen Block ohne HTTP-Range-
+   Unterstützung (kein `Accept-Ranges`/206 Partial Content). Vorspulen/Suchen in größeren Videos
+   im Player wird dadurch nicht richtig funktionieren, nur sequentielles Abspielen ab dem Anfang.
+
+   **Nicht end-to-end verifiziert:** keine Videodatei im aktuellen Testbestand vorhanden, kein
+   `ffmpeg` auf Host/Container zum Erzeugen einer Testdatei - nur Regressionstest gemacht (PDF-
+   Vorschau weiterhin unverändert funktionsfähig, keine Konsolenfehler). Echte Wiedergabe eines
+   Videos steht noch aus.
+8. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
    temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
    zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).

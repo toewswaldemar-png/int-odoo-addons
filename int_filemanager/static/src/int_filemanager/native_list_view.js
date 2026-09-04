@@ -36,8 +36,16 @@ import { ListController } from "@web/views/list/list_controller";
 import { IntTextInputDialog } from "./text_input_dialog";
 import { IntLinkRecordDialog } from "./link_record_dialog";
 
+// Video ist nativ im FileViewer verdrahtet (file_viewer.js/.xml: state.file.isVideo -> echtes
+// <video controls>) - hier nur an dessen bereits vorhandene Faehigkeit angeschlossen, nichts
+// Neues gebaut. Auf die vier Formate beschraenkt, die Browser ohne Zusatz-Codec nativ abspielen
+// (mov u.ae. bewusst weggelassen - haeufig kein nativer Chrome/Firefox-Support, wuerde nur einen
+// leeren Player zeigen).
+const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "ogv"]);
+const VIDEO_MIME_TYPES = { mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg" };
+
 const PREVIEWABLE_EXTENSIONS = new Set([
-    "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "txt",
+    "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "txt", ...VIDEO_EXTENSIONS,
 ]);
 
 function extOf(name) {
@@ -201,13 +209,16 @@ export class IntFilemanagerListController extends ListController {
         const downloadUrl = `/int_filemanager/download?path=${encodeURIComponent(path)}&disposition=inline`;
         const ext = extOf(record.data.name);
         const isPdf = ext === "pdf";
+        const isVideo = VIDEO_EXTENSIONS.has(ext);
         return {
             path,
             name: record.data.name,
             downloadUrl,
-            isImage: PREVIEWABLE_EXTENSIONS.has(ext) && ext !== "pdf" && ext !== "txt",
+            isImage: PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && ext !== "txt" && !isVideo,
             isPdf,
             isText: ext === "txt",
+            isVideo,
+            mimetype: isVideo ? VIDEO_MIME_TYPES[ext] : undefined,
             isViewable: isPreviewable(record.data.name),
             defaultSource: isPdf
                 ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(downloadUrl)}#pagemode=none`
