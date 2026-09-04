@@ -5,7 +5,9 @@ Phasen 1-5, alle umgesetzt) und [int_filemanager_native_ui.md](int_filemanager_n
 (UI-Migration). Hier: Recherche zu [PaperOffice](https://start.paperoffice.com/de/dms-dokumentenmanagement-system/)
 (kommerzielles, KI-gestütztes DMS, on-premise/NAS/Windows-Linux-Server) und wie sich dessen
 Kernfunktionen **elegant** — d.h. durch Erweiterung bestehender Muster statt neuer Baustellen —
-auf `int_filemanager` übertragen ließen. Reine Recherche/Konzept, keine Umsetzung in dieser Session.
+auf `int_filemanager` übertragen ließen. Ursprünglich reine Recherche, mittlerweile teilweise
+umgesetzt (Bausteine 0 und 1, siehe unten) - für den aktuellen Stand und wie es weitergeht direkt
+zum Abschnitt "Für eine neue Session: hier weitermachen" springen.
 
 ## Was ist PaperOffice, konkret
 
@@ -142,19 +144,25 @@ neues Modell, kein neuer Controller, keine neue UI-Komponente — vier PaperOffi
 "kostenlos nativ", derselbe Grundsatz, der die gesamte UI-Migration in
 [int_filemanager_native_ui.md](int_filemanager_native_ui.md) geleitet hat.
 
-## Baustein 3: KI-Verschlagwortung + automatische Dokumentenwert-Erkennung
+## Baustein 3 ⚠️ größtenteils durch Baustein 1 erledigt — nur noch "Regex → LLM" offen
 
-Nach Baustein 1 (Volltext liegt vor) ist automatische Verschlagwortung eine weitere
-Pipeline-Stufe: `content_text` an ein LLM geben (naheliegend: Anthropic API, da bereits
-Umgebungskontext in diesem Projekt), Ergebnis in zwei bestehende bzw. native Bausteine schreiben:
+**Bei der Umsetzung von Baustein 1 (2026-09-05) ist das hier bereits mit erledigt worden**, nur
+anders als ursprünglich skizziert: der interaktive Kontroll-Dialog dort schreibt Tags (aus
+Bestandsabgleich, nicht LLM) bereits in `tag_ids`, und Werte (Datum/Rechnungsnr./Betrag) bereits in
+feste Felder (nicht `fields.Properties` - siehe Begründung in
+[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 22: ein `Properties`-Feld ist
+für dynamische, pro Dokumenttyp wechselnde Schemata gedacht, die Regex-Erkennung liefert aber ein
+festes, kleines Set). **Kein eigener Baustein mehr, nur noch eine mögliche spätere Erweiterung:**
 
-- **Tags:** direkt in `tag_ids` (`int_filemanager.tag`) — bestehendes Modell, bestehendes Widget,
-  keine Änderung nötig, nur ein neuer Schreiber.
-- **Extrahierte Werte** (Rechnungsnummer, Datum, Absender, Betrag, …): Odoos natives
-  `fields.Properties`-Feld — flexible, pro Datensatz unterschiedliche Key/Value-Metadaten, exakt
-  für diesen Fall entworfen. Bereits an anderer Stelle im Projekt als Konzept erwähnt (optionale
-  Spalten-Aufsplittung, [int_filemanager_native_ui.md](int_filemanager_native_ui.md) Punkt 3) —
-  hier wäre die naheliegende praktische Anwendung dafür.
+- Falls die Regex-Erkennung (Nutzerentscheidung 2026-09-05, bewusst gegen ein LLM) sich als zu
+  eingeschränkt erweist: `suggest_from_text()` (`fulltext.py`) durch einen LLM-Aufruf ersetzen
+  oder ergänzen - der Rest der Pipeline (Dialog, Schreibpfad, `res_reference`-Vorschlag) bleibt
+  unverändert, nur die Vorschlagsquelle würde sich ändern. **Echte Produktentscheidung, kein
+  Implementierungsdetail** - erst auf ausdrücklichen Wunsch angehen, nicht selbstständig
+  einführen (externe API, laufende Kosten, war schon einmal bewusst abgelehnt worden).
+- Falls doch einmal wirklich pro Dokumenttyp unterschiedliche Wertschemata gebraucht werden
+  (z.B. Verträge mit anderen Feldern als Rechnungen): dann wäre `fields.Properties` die richtige
+  native Wahl, aber erst wenn dieser Bedarf tatsächlich auftritt, nicht vorsorglich.
 
 ## Baustein 4: Ampel-Freigabe-Workflow
 
@@ -167,7 +175,7 @@ analog zu `action_generate_share_token`, um den Status zu wechseln. Passt als we
 `getStaticActionMenuItems()` (`native_list_view.js`), Muster identisch zu "Freigeben"/"Lokal
 öffnen" (siehe Commit `d0c7324`, heute).
 
-## Baustein 5: Digitale Signatur
+## Baustein 5 ⚠️ Voraussetzung ungeprüft: Digitale Signatur
 
 Statt eine eigene Signaturlösung zu bauen: Odoo hat mit **Odoo Sign** (`sign`-Modul) bereits eine
 vollständige native E-Signatur-App. Elegante Anbindung: ein weiterer `ActionMenus`-Eintrag
@@ -176,7 +184,12 @@ einen `sign.request` für das verlinkte `ir.attachment` der Datei erzeugt. Setzt
 `sign` als optionale Abhängigkeit ergänzt wird (`depends`); die Anbindung selbst folgt demselben
 Muster wie die heutige ONLYOFFICE-/Freigeben-Portierung.
 
-## Baustein 6: Revisionssichere/unveränderliche Archivierung (GoBD-Analogie)
+**Vor der Umsetzung zu klären, nicht anzunehmen:** ob `sign` auf HM-SRV überhaupt lizenziert/
+installiert ist (Odoo Sign kann je nach Lizenzmodell Enterprise-only sein - auf der Tower-
+Testinstanz noch nicht geprüft, live verifizieren statt zu vermuten, bevor die Abhängigkeit
+ergänzt wird).
+
+## Baustein 6 ⚠️ echte Produktentscheidung, nicht nur Implementierung: Revisionssichere Archivierung
 
 Versionierung existiert bereits ([filemanager_version.py](../int_filemanager/models/filemanager_version.py)).
 Was fehlt, ist eine **Unveränderlichkeits-Garantie** nach Archivierung. Eleganteste Anbindung:
@@ -186,7 +199,13 @@ Erweiterung der bestehenden `protected_folder`-ACL-Regel-Generierung
 Regeln pro Ordner erzeugt, bekommt eine zusätzliche Dimension ("niemand, auch kein Admin, darf
 löschen/überschreiben nach Datum X"), statt eine zweite, parallele Sicherheitsschicht einzuführen.
 
-## Baustein 7: E-Mail-Archivierung
+**Bewusst nicht ohne Rücksprache umsetzen:** eine Funktion, die selbst Admins das Löschen/
+Überschreiben verwehrt, ist eine Sicherheits-/Compliance-Entscheidung mit echten Konsequenzen
+(ein Fehler hier sperrt euch selbst aus), keine reine Implementierungsfrage wie die meisten
+anderen Bausteine hier. Vor Umsetzung: Rückfrage, ob GoBD-Konformität hier tatsächlich rechtlich
+gebraucht wird und wer die Ausnahme-Berechtigung bekommen soll.
+
+## Baustein 7 ⚠️ Voraussetzung ungeprüft: E-Mail-Archivierung
 
 Odoo hat mit `fetchmail.server`/`mail.thread` bereits eingehende Mailverarbeitung. Elegante
 Anbindung: ein Cron, der Anhänge (oder die komplette `.eml`) von markierten `mail.message`-
@@ -194,6 +213,10 @@ Datensätzen automatisch als `int_filemanager.file` ablegt und über die **berei
 `res_reference`-Verknüpfung ([filemanager_linkable_mixin.py](../int_filemanager/models/filemanager_linkable_mixin.py))
 mit dem ursprünglichen Datensatz/Kontakt verbindet — keine neue Verknüpfungslogik, nur ein neuer
 Schreiber in bestehende Felder.
+
+**Vor der Umsetzung zu klären, nicht anzunehmen:** ob auf HM-SRV überhaupt ein `fetchmail.server`
+konfiguriert ist bzw. eingehende Mails über Odoo laufen - ohne das ist dieser Baustein
+gegenstandslos, live prüfen statt anzunehmen.
 
 ---
 
@@ -210,11 +233,43 @@ Schreiber in bestehende Felder.
 
 ## Empfohlene Reihenfolge (bei Umsetzung)
 
-**Baustein 0 (Drag & Drop) zuerst** - ohne erhaltene Erfassungs-Routine nutzen Mitarbeiter das
-Tool im Alltag nicht, unabhängig davon, wie gut Suche/KI später sind; Scan-Eingangsordner ist
-reine Konfiguration und kann parallel eingerichtet werden. Danach Baustein 2 (mail.thread/
-activity) - praktisch aufwandsfrei, deckt die meisten übrigen Features ab, kein
-Abhängigkeitsrisiko. Danach Baustein 1 (Volltextsuche/OCR) - größter Nutzen, aber neue
-Abhängigkeit (OCR-Library) und Rechenkosten, verdient eine eigene Kapazitäts-/Performance-Prüfung
-wie die SearchPanel-Arbeit heute. Bausteine 3-7 bauen jeweils auf 1 oder 2 auf bzw. sind
-unabhängige, kleine Ergänzungen, die sich einzeln priorisieren lassen, sobald der Bedarf feststeht.
+~~Baustein 0 (Drag & Drop) zuerst~~ ✅ erledigt. ~~Baustein 2 (mail.thread/activity)~~ noch offen,
+war als nächstes vorgesehen, aber ~~Baustein 1 (Volltextsuche/OCR)~~ wurde stattdessen zuerst
+umgesetzt ✅ (Nutzerentscheidung, mehr Priorität als ursprünglich hier vorgeschlagen). **Nächster
+sinnvoller Schritt: Baustein 2** (`mail.thread`/`mail.activity.mixin`) - weiterhin praktisch
+aufwandsfrei, kein Abhängigkeitsrisiko, keine offene Rückfrage. Danach Bausteine 4 (Ampel-
+Freigabe, keine offene Rückfrage) vor 5/6/7 (jeweils mit ungeprüfter Voraussetzung bzw. echter
+Produktentscheidung, siehe die Warnhinweise dort).
+
+## Für eine neue Session: hier weitermachen
+
+**Stand 2026-09-05, Branch `experiment/native-listview`, zuletzt gepusht bis Commit `082a6fe`.**
+Fertig: Baustein 0 (Drag&Drop) und Baustein 1 (Volltextsuche/OCR + Kontroll-Dialog, deckt
+Baustein 3 mit ab). Offen: Bausteine 2, 4, 5, 6, 7 (siehe oben, in dieser Reihenfolge).
+
+**Bevor an einem der offenen Bausteine weitergearbeitet wird, unbedingt zuerst lesen:**
+[int_filemanager_native_ui.md](int_filemanager_native_ui.md) (Punkte 15-22) - dort steht die
+tatsächliche Arbeitsweise, die sich in dieser Session bewährt hat, nicht nur das Ergebnis:
+
+- **Änderungen live gegen die Odoo-19-Testinstanz auf Tower verifizieren, nicht nur Code schreiben
+  und committen.** SSH-Key `claude-code-unraid` liegt in `authorized_keys` auf Tower
+  (`192.168.178.73`, Container `odoo19-test`/`odoo19-test-db`, Login `admin`/`admin_test_2026`,
+  LAN-erreichbar unter `http://192.168.178.73:8169`). Reale Daten dort sind bewusst read-only
+  gemountet (`/mnt/user/Daten`, echte persönliche Daten - nicht schreibend testen ohne
+  Rücksprache).
+- **Vor Codeänderungen an nicht-trivialen Stellen den echten Odoo-19-Quellcode im Container lesen**
+  (`docker exec odoo19-test cat /usr/lib/python3/dist-packages/odoo/...`) statt aus dem Training
+  zu raten - mehrfach in dieser Session der Unterschied zwischen einer falschen und einer
+  funktionierenden Lösung gewesen (z.B. `useExternalListener` kommt aus `@odoo/owl`, nicht
+  `@web/core/utils/hooks`; `child_of` auf einem `_parent_name`-Feld ist selbst-inklusiv).
+- **Nach jeder Änderung: Modul-Upgrade/Neustart auf Tower, live durchklicken, danach die isolierte
+  Testsuite** (separate DB `odoo19test_ci`, niemals gegen die DB mit echten/großen Testdaten -
+  ein Testlauf gegen die befüllte DB lief in dieser Session einmal stundenlang fest).
+- **Jede Änderung dokumentieren** (neuer nummerierter Punkt in `int_filemanager_native_ui.md`,
+  Was/Warum/Live-Verifikation) **und committen**, bevor zum nächsten Baustein übergegangen wird -
+  nicht mehrere Bausteine gebündelt.
+- **Bei echten Produktentscheidungen (nicht Implementierungsdetails) nachfragen statt zu raten** -
+  in dieser Session hat sich das mehrfach ausgezahlt (Baustein 1 hat sich durch Rückfragen dreimal
+  wesentlich geändert: LLM→Regex, automatischer Hintergrund→interaktiver Kontroll-Dialog,
+  Backfill→kein Backfill). Die ⚠️-Markierungen bei den Bausteinen 5/6/7 oben zeigen konkret, wo das
+  vermutlich wieder relevant wird.
