@@ -7,6 +7,13 @@
                 <field name="is_dir" column_invisible="1"/>
                 <field name="path" column_invisible="1"/>
                 <field name="folder_path" column_invisible="1"/>
+                <!-- type="object"-Button in einer Listenzeile loest nie den Zeilenklick
+                     (openRecord/Navigation) aus - list_renderer.js prueft bei Klick, ob das
+                     Ziel ein <button> ist, und reicht nur bei Fehltreffer an die normale
+                     Zeilenlogik weiter. Deshalb reicht die reine Arch-Deklaration hier, kein
+                     JS-Klick-Abfang in native_list_view.js noetig. -->
+                <button name="action_open_form" type="object" icon="fa-arrow-right"
+                        title="Details öffnen" string=""/>
                 <field name="name"/>
                 <field name="size"/>
                 <field name="mtime"/>

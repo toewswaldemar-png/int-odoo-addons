@@ -414,6 +414,33 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
    Ordner neu bewerten (Alternative dann: `<searchpanel>` entfernen, Baum als kleine eigene
    Komponente mit gezielten `parent_id`-Queries pro Klick, analog der alten `/int_filemanager/tree`-
    Route aber ohne deren String-Pfad-Vergleich).
-6. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
+6. **Stichwörter-Spalte funktioniert nicht (2026-09-04) — gelöst über Formular-Dialog statt
+   Inline-Editing:** Ursache war keine Regression, sondern eine seit Branch-Beginn fehlende
+   Übernahme von `inline_tags.js` (der alten UI eigens gebaute Lösung für "Zelle klickbar
+   editierbar, Rest der Zeile bleibt Navigation") - unsere `<list>` hat kein `editable`, und
+   `editable` ist ohnehin Alles-oder-Nichts (`list_renderer.js: isInlineEditable()` gilt pro
+   Definition für die ganze Liste, nicht pro Spalte; mit `editable` gesetzt hätte auch ein Klick
+   auf "Name" nicht mehr navigiert, sondern die Zeile in Bearbeitung geschaltet - live am
+   Quellcode nachvollzogen, nicht vermutet).
+
+   Stattdessen umgesetzt: ein `<button type="object" icon="fa-arrow-right">` vor dem Namen
+   (`filemanager_file_list_view.xml`), der `action_open_form()` (neu, `filemanager_file.py`)
+   aufruft und ein Formular (`filemanager_file_form_view.xml`, neu: Name/Path/Größe/Geändert
+   readonly, `tag_ids` + `res_reference` editierbar) als Dialog öffnet. Kein JS-Klick-Abfang
+   nötig: ein `<button>` in einer Listenzeile löst nach `list_renderer.js` (`onButtonCellClicked`
+   prüft `ev.target.closest("button")`) nie `openRecord()`/Zeilennavigation aus - reine
+   Arch-Deklaration reicht. Icon `fa-arrow-right` gewählt in Anlehnung an das native
+   "Datensatz öffnen"-Pfeilsymbol bei Many2one-Feldern (`oi-arrow-right`/`oi-launch` in
+   `many2one.xml`) - inhaltlich dasselbe Symbol, nur im `fa`-Iconset, weil Listen-Buttons laut
+   `list_renderer.xml` ausschließlich `fa fa-fw {{button.icon}}` rendern (kein `oi`-Iconset).
+   `action_open_form()` setzt zusätzlich `"name": self.display_name`, damit der Dialogtitel den
+   Datei-/Ordnernamen statt generisch "Odoo" zeigt.
+
+   Live getestet: Pfeil-Klick bei Ordner ("Dokumente") und Datei (`Reparaturen.xlsx`) öffnet
+   jeweils das Formular, Tag hinzugefügt + gespeichert, per SQL verifiziert
+   (`int_filemanager_file_int_filemanager_tag_rel`) - Tag landet korrekt in der DB und erscheint
+   danach in der Listenspalte. Namensklick auf beide Zeilen weiterhin unverändert (Ordner
+   navigiert, Datei würde downloaden/previewen) - keine Überschneidung der beiden Klickziele.
+7. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
    temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
    zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).

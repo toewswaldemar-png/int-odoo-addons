@@ -20,6 +20,7 @@
         "views/menu.xml",
         "views/filemanager_protected_folder_views.xml",
         "views/res_partner_views.xml",
+        "views/filemanager_file_form_view.xml",
         "views/filemanager_file_list_view.xml",
         "views/filemanager_file_share_views.xml",
         "views/portal_templates.xml",
