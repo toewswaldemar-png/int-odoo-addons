@@ -49,6 +49,16 @@ export class IntFilemanagerListController extends ListController {
     static template = "int_filemanager.ListView";
 
     setup() {
+        // Die Action hat bewusst keine eigene statische Domain (siehe
+        // filemanager_file_list_view.xml - eine dort gesetzte waere PERMANENT Teil von
+        // props.domain, auch nach jeder Navigation, und wuerde jede Navigation weg von der
+        // Wurzel unmoeglich machen, live so erlebt). Fuer den allerersten Ladevorgang braucht
+        // der native ListController (super.setup() unten baut das Model synchron daraus auf)
+        // trotzdem die Wurzel-Einschraenkung - hier einmalig direkt in props injiziert, bevor
+        // super.setup() sie liest, statt per zweitem, konkurrierendem reload() danach (das
+        // hat mit dem Basisklassen-eigenen Erstladen um den Model-Zustand gewettlaufen und den
+        // Renderer leer haengen lassen).
+        this.props.domain = [...(this.props.domain || []), ["folder_path", "=", false]];
         super.setup();
         this.dialog = useService("dialog");
         this.notification = useService("notification");
@@ -84,6 +94,16 @@ export class IntFilemanagerListController extends ListController {
             clearTimeout(this._reloadTimeout);
             this.busService.unsubscribe("int_filemanager.change", this._onFilemanagerChange);
         });
+
+        // KEIN eigener Sync-Listener auf env.searchModel mehr (weder ein- noch zweiseitig) -
+        // live mehrfach probiert und wieder verworfen, siehe docs/int_filemanager_native_ui.md,
+        // Abschnitt "SearchPanel-Ordnerbaum-Klick <-> Zeilennavigation". Jeder Versuch, nach
+        // einem SearchPanel-Klick zusaetzlich selbst reload() aufzurufen, verliert unvorhersagbar
+        // das Race gegen einen nativen, unkontrollierten Reload, den toggleCategoryValue() selbst
+        // ausloest (nur this.props.domain, ohne meinen folder_path-Zusatz) - bis hin zu einer
+        // komplett ungefilterten ~400k-Zeilen-Liste nach Klick auf "Alle". Der SearchPanel-Baum
+        // bleibt vorerst rein visuell dekorativ (zeigt die Struktur, reagiert nicht auf Klicks) -
+        // besser als ein Feature, das falsche Daten anzeigen kann.
     }
 
     async openRecord(record) {
@@ -105,15 +125,13 @@ export class IntFilemanagerListController extends ListController {
     }
 
     async reload() {
-        // this.props.domain trägt bei, was Suchleiste/SearchPanel gerade beisteuern (z.B.
-        // eine parent_id-Ordnerbaum-Auswahl) - ANDen statt ersetzen, sonst würde jeder
-        // Zeilenklick/jede Mutation eine aktive SearchPanel-Auswahl wieder verwerfen.
-        // UNGETESTET: ob Klick auf einen SearchPanel-Ordnerknoten currentPath/Breadcrumbs
-        // seinerseits nachzieht, ist noch offen - die beiden Navigationswege (Zeilenklick
-        // über folder_path, SearchPanel über parent_id) sind bislang nicht gegenseitig
-        // synchronisiert.
-        const domain = [...(this.props.domain || []), ["folder_path", "=", this.currentPath || false]];
-        await this.model.load({ domain });
+        // Ersetzt die Domain komplett, statt this.props.domain (Suchleiste/SearchPanel)
+        // einzubeziehen - bewusst wieder zurueckgebaut (siehe docs/int_filemanager_native_ui.md,
+        // Abschnitt "SearchPanel-Ordnerbaum-Klick <-> Zeilennavigation"): ein Klick auf einen
+        // SearchPanel-Knoten loest ueber Odoos eigene Reaktivitaet moeglicherweise einen davon
+        // unabhaengigen, nicht kontrollierbaren Reload aus - diese Methode hier bleibt bewusst
+        // die einzige Autoritaet fuer normale Zeilen-/Breadcrumb-Navigation und ignoriert das.
+        await this.model.load({ domain: [["folder_path", "=", this.currentPath || false]] });
     }
 
     updateBreadcrumbs(path) {

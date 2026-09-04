@@ -300,15 +300,40 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
    deployed und live verifiziert (siehe oben). `int_filemanager_file_search` (Such-View, vorher
    ungenutzt) trägt jetzt das `<searchpanel>` und ist über `search_view_id` an die Test-Action
    `action_filemanager_file_list_native` gehängt.
-3. **Offen, noch nicht live getestet — SearchPanel- und Zeilenklick-Navigation sind zwei
-   unabhängige Wege, die noch nicht gegenseitig synchronisiert sind:**
-   `IntFilemanagerListController.reload()` kombiniert `this.props.domain` (was SearchPanel/
-   Suchleiste beisteuern) jetzt zwar per AND mit dem eigenen `folder_path`-Filter, statt ihn zu
-   verwerfen - aber ein Klick auf einen SearchPanel-Ordnerknoten aktualisiert weder `currentPath`
-   noch die Breadcrumbs, und umgekehrt zieht ein Zeilenklick/eine Mutation nicht nach, falls die
-   SearchPanel-Auswahl dadurch inhaltlich unpassend wird. Muss vor einem produktiven Rollout im
-   Browser geprüft und ggf. durch einen Listener auf die SearchPanel-Auswahl ergänzt werden, der
-   `goToFolder()` mit dem aufgelösten Pfad des gewählten Knotens aufruft.
+3. **SearchPanel-Ordnerbaum-Klick <-> Zeilennavigation — live probiert (2026-09-04), zurückgestellt:**
+   das `<searchpanel>` wurde testweise via `search_view_id` an die Test-Action gehängt und
+   funktionierte für sich genommen (Baum rendert korrekt mit Hierarchie/Zählern, `search_panel_select_range`
+   liefert saubere Daten - siehe Abschnitte oben). Das eigentliche Problem lag nicht im Backend,
+   sondern im native `RelationalModel`: sobald einmal `searchModel.toggleCategoryValue()` gefeuert
+   ist (egal ob durch einen echten Klick oder durch eigenen Code), reagiert das Model danach
+   selbstständig und unkontrollierbar auf `props.domain`-Änderungen und lädt die Liste neu -
+   **auch dann, wenn der eigene `IntFilemanagerListController` überhaupt keinen Listener auf
+   `env.searchModel` registriert und `reload()` `props.domain` gar nicht mehr referenziert.**
+   Mehrfach live durchprobiert:
+   - Reine Baum→Liste-Synchronisation (`useBus(env.searchModel, "update", ...)` → `goToFolder()`):
+     funktionierte für den ersten Klick, brach aber bei jeder Navigation weg vom zuletzt gewählten
+     Ast (Breadcrumb zurück zur Wurzel, "Alle" erneut anklicken) - der native Reload (nur
+     `props.domain`, ohne den eigenen `folder_path`-Zusatz) gewann das Race gegen den eigenen
+     `reload()`-Aufruf, unabhängig von der Aufruf-Reihenfolge im Code (sync-vor-reload und
+     reload-vor-sync beide getestet).
+   - Sogar **ganz ohne jeden Sync-Code**, rein durch einen einzigen vorherigen Baumklick in der
+     Session: ein späterer, komplett unbedingter `this.model.load({domain:[["folder_path","=",X]]})`-
+     Aufruf (kein `props.domain` mehr referenziert) wurde trotzdem von der nativen Reaktivität
+     überschrieben - bis zu einer komplett ungefilterten ~400k-Zeilen-Liste nach Klick auf "Alle".
+   - Das deutet auf einen Watcher tiefer im `RelationalModel`/`useModel`-Hook hin (nicht im
+     `ListController`, den man überschreiben könnte), der bei jeder `props.domain`-Änderung
+     eigenständig neu lädt - unabhängig vom eigenen Controller-Code. Für eine echte Lösung müsste
+     man diesen Mechanismus zuerst identifizieren (z.B. ob `RelationalModel` selbst einen
+     `onWillUpdateProps`-Hook auf `domain` registriert) statt weiter dagegen anzupatchen.
+
+   **Konsequenz:** `<searchpanel>` wieder aus `int_filemanager_file_search.xml` entfernt (Arch
+   dort auskommentiert, nicht gelöscht). `reload()` ersetzt die Domain wieder komplett
+   (`[["folder_path","=",currentPath]]`), keine `props.domain`-Kombination mehr. Zeilen-/
+   Breadcrumb-Navigation ist dadurch wieder vollständig stabil (mehrfach nacheinander getestet:
+   Wurzel → Album → peaks → Album → Wurzel, durchgehend korrekte Zählen). Das komplette Backend
+   (`parent_id`/`_parent_store`, Scan-BFS, Merge-Pfad, `search_panel_select_range`-Override,
+   Bestands-Backfill) bleibt unverändert fertig und getestet liegen - nur die UI-Einbindung des
+   Ordnerbaums ist vertagt, bis der native Reaktivitäts-Mechanismus verstanden ist.
 4. Entscheiden, ob/wie weit der native-ListView-Spike weiter ausgebaut wird (siehe oben) oder ob
    der jetzige Stand als Erkenntnis reicht und verworfen wird.
 5. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein

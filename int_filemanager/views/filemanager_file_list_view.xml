@@ -22,7 +22,14 @@
         <field name="view_mode">list</field>
         <field name="view_id" ref="view_filemanager_file_list_native"/>
         <field name="search_view_id" ref="int_filemanager_file_search"/>
-        <field name="domain">[('folder_path', '=', False)]</field>
+        <!-- Explizit [] statt das Feld wegzulassen: ein aus dem XML entferntes <field> wird von
+             Odoo beim Modul-Update NICHT zurueckgesetzt, der alte DB-Wert bleibt stehen (live so
+             erlebt). Kein statisches folder_path=False mehr noetig: der Controller uebernimmt die
+             Wurzel-Beschraenkung selbst (currentPath startet leer) - eine hier festgelegte Domain
+             waere dauerhaft Teil von props.domain (Odoo kombiniert Action-Domain + Suchdomain zu
+             einem einzigen props.domain, nicht getrennt) und wuerde jede Navigation in
+             Unterordner unmoeglich machen, weil reload() props.domain immer mit-ANDet. -->
+        <field name="domain">[]</field>
     </record>
 
     <menuitem id="menu_filemanager_native_test"
