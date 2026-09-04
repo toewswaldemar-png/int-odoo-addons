@@ -11,18 +11,30 @@
                 <separator/>
                 <filter name="filter_tagged" string="Mit Tags" domain="[('tag_ids','!=',False)]"/>
                 <filter name="filter_untagged" string="Ohne Tags" domain="[('tag_ids','=',False)]"/>
-                <!-- <searchpanel> mit parent_id-Ordnerbaum bewusst wieder entfernt (2026-09-04):
-                     ein einziger Klick auf einen Baumknoten bringt props.domain dauerhaft aus dem
-                     Tritt mit jeder folgenden normalen Zeilen-/Breadcrumb-Navigation - selbst ein
-                     unbedingter this.model.load({domain:[...]})-Aufruf im Controller, der
-                     props.domain gar nicht mehr referenziert, wird danach zuverlaessig von einem
-                     nativen, nicht kontrollierbaren Reload ueberschrieben (RelationalModel-interne
-                     Reaktivitaet auf Domain-Prop-Aenderungen, mehrfach live nachvollzogen, siehe
-                     docs/int_filemanager_native_ui.md, Abschnitt "SearchPanel-Ordnerbaum-Klick <->
-                     Zeilennavigation"). Backend (parent_id/_parent_store/Scan/
-                     search_panel_select_range-Override) bleibt vollstaendig fertig und getestet -
-                     nur die UI-Einbindung hier ist zurueckgestellt, bis das RelationalModel-
-                     Verhalten tiefer verstanden ist. -->
+                <!-- hierarchize bewusst NICHT auf 0 gesetzt (Gegenteil eines frueheren Versuchs
+                     hier, siehe Commit-Historie): hierarchize="0" unterdrueckt serverseitig
+                     komplett das Mitschicken von parent_id pro Baumwert (web/models/models.py,
+                     search_panel_select_range: "if hierarchize and parent_name in Comodel._fields:
+                     field_names.append(parent_name)") - ohne das faellt der Baum optisch flach
+                     zusammen (keine Einrueckung) UND native_list_view.js kann daraus keine
+                     Breadcrumb-Vorfahrenkette mehr rekonstruieren, live so beobachtet. Odoos
+                     Default (hierarchize="1", parent_id wird mitgeschickt) bleibt deshalb aktiv;
+                     den fuer einen Datei-Browser noetigen Operator-Wechsel "child_of" -> "="
+                     (direkte statt rekursive Kinder) und die Wurzel-Sonderbehandlung
+                     (activeValueId=false -> parent_id=false statt "kein Filter") uebernimmt
+                     komplett search_model_patch.js, gescopet auf int_filemanager.file - unabhaengig
+                     vom hierarchize-Wert. domain-Attribut bewusst weggelassen: wird fuer
+                     Category-Felder (kein select="multi") clientseitig ignoriert, live verifiziert
+                     - search_panel_select_range-Override auf dem Modell erzwingt is_dir=True
+                     stattdessen. limit="0" (kein Cap): expand ignoriert den aktuell gebrowsten Pfad
+                     fuer die Knotenauswahl und holt ohnehin immer den gesamten is_dir=True-Baum in
+                     einem Aufruf - der Odoo-Standard limit="200" wuerde bei vielen Ordnern sofort
+                     "Zu viele Elemente" ausloesen (siehe docs/int_filemanager_native_ui.md,
+                     Smoke-Test-Abschnitt). -->
+                <searchpanel>
+                    <field name="parent_id" string="Ordner" icon="fa-folder"
+                           enable_counters="1" expand="1" limit="0"/>
+                </searchpanel>
             </search>
         </field>
     </record>

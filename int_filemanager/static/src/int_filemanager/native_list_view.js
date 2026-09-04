@@ -2,12 +2,16 @@
 
 // EXPERIMENT (branch experiment/native-listview): does a real Odoo list view,
 // bound directly to int_filemanager.file, work well as a file browser? Only
-// override needed for navigation: clicking a folder row reloads the same list
-// with a new domain instead of opening a (non-existent) form view - see
-// ListRenderer's onCellClicked -> this.props.openRecord(record) in
-// list_renderer.js, which comes from ListController.openRecord
-// (list_controller.js). Sort, optional columns incl. Properties splitting,
-// pager, breadcrumbs are untouched native ListView behaviour.
+// override needed for navigation: clicking a folder row selects it in the
+// native parent_id SearchPanel category (env.searchModel.toggleCategoryValue)
+// instead of opening a (non-existent) form view - see ListRenderer's
+// onCellClicked -> this.props.openRecord(record) in list_renderer.js, which
+// comes from ListController.openRecord (list_controller.js). The resulting
+// reload itself is entirely native (searchModel -> WithSearch -> props.domain
+// -> useModel's own onWillUpdateProps, see setup() below for why that MUST
+// stay the only writer). Sort, optional columns incl. Properties splitting,
+// pager are untouched native ListView behaviour; breadcrumbs are rebuilt from
+// the SearchPanel category's own value chain (see updateBreadcrumbs()).
 //
 // Mutations (mkdir/rename/delete/upload/link) deliberately keep calling the
 // same /int_filemanager/* JSON-RPC routes the old custom UI
@@ -49,16 +53,6 @@ export class IntFilemanagerListController extends ListController {
     static template = "int_filemanager.ListView";
 
     setup() {
-        // Die Action hat bewusst keine eigene statische Domain (siehe
-        // filemanager_file_list_view.xml - eine dort gesetzte waere PERMANENT Teil von
-        // props.domain, auch nach jeder Navigation, und wuerde jede Navigation weg von der
-        // Wurzel unmoeglich machen, live so erlebt). Fuer den allerersten Ladevorgang braucht
-        // der native ListController (super.setup() unten baut das Model synchron daraus auf)
-        // trotzdem die Wurzel-Einschraenkung - hier einmalig direkt in props injiziert, bevor
-        // super.setup() sie liest, statt per zweitem, konkurrierendem reload() danach (das
-        // hat mit dem Basisklassen-eigenen Erstladen um den Model-Zustand gewettlaufen und den
-        // Renderer leer haengen lassen).
-        this.props.domain = [...(this.props.domain || []), ["folder_path", "=", false]];
         super.setup();
         this.dialog = useService("dialog");
         this.notification = useService("notification");
@@ -67,13 +61,31 @@ export class IntFilemanagerListController extends ListController {
         this.fileViewer = useFileViewer();
         this.fileInput = useRef("fileInput");
 
-        this.currentPath = "";
         // Everything already on the stack when this controller was created (normally
         // just the "Dateimanager (nativ, Test)" action entry itself) stays as-is; folder
         // levels get appended after it. Breadcrumbs.xml always renders the LAST array
         // entry as the current (bold, non-clickable) one and everything before it as a
         // real link - so no special-casing needed for "which crumb is active".
         this.rootBreadcrumbCount = this.env.config.breadcrumbs.length;
+
+        // Die letzte der bereits vorhandenen Root-Krumen ist IMMER die dieser Action selbst
+        // (alles davor, falls vorhanden, gehoert einer aufrufenden Action/einem Datensatz - z.B.
+        // "Kontakte / Administrator" -  und muss ihr eigenes, natives Verhalten behalten). Odoos
+        // eigenes onSelected dafuer ruft restore(jsId) auf denselben, bereits aktiven Controller
+        // auf (action_service.js) - live beobachtet, dass das die Kategorie-Auswahl NICHT
+        // zuruecksetzt (Klick auf die Wurzel-Krume aenderte weder Liste noch die eigenen
+        // Unterordner-Krumen). Deshalb hier zusaetzlich (nicht statt) auf Wurzel zuruecksetzen.
+        const ownRootCrumb = this.env.config.breadcrumbs[this.rootBreadcrumbCount - 1];
+        if (ownRootCrumb) {
+            const nativeOnSelected = ownRootCrumb.onSelected;
+            ownRootCrumb.onSelected = () => {
+                nativeOnSelected?.();
+                const section = this.getCategorySection();
+                if (section) {
+                    this.env.searchModel.toggleCategoryValue(section.id, false);
+                }
+            };
+        }
 
         useBus(this.fileUpload.bus, "FILE_UPLOAD_LOADED", (ev) => {
             if (ev.detail.upload.id === this.pendingUploadId) {
@@ -95,20 +107,36 @@ export class IntFilemanagerListController extends ListController {
             this.busService.unsubscribe("int_filemanager.change", this._onFilemanagerChange);
         });
 
-        // KEIN eigener Sync-Listener auf env.searchModel mehr (weder ein- noch zweiseitig) -
-        // live mehrfach probiert und wieder verworfen, siehe docs/int_filemanager_native_ui.md,
-        // Abschnitt "SearchPanel-Ordnerbaum-Klick <-> Zeilennavigation". Jeder Versuch, nach
-        // einem SearchPanel-Klick zusaetzlich selbst reload() aufzurufen, verliert unvorhersagbar
-        // das Race gegen einen nativen, unkontrollierten Reload, den toggleCategoryValue() selbst
-        // ausloest (nur this.props.domain, ohne meinen folder_path-Zusatz) - bis hin zu einer
-        // komplett ungefilterten ~400k-Zeilen-Liste nach Klick auf "Alle". Der SearchPanel-Baum
-        // bleibt vorerst rein visuell dekorativ (zeigt die Struktur, reagiert nicht auf Klicks) -
-        // besser als ein Feature, das falsche Daten anzeigen kann.
+        // Navigation (Zeilenklick, Breadcrumb, SearchPanel-Baum) laeuft ab jetzt AUSSCHLIESSLICH
+        // ueber env.searchModel.toggleCategoryValue() - siehe openRecord()/updateBreadcrumbs()
+        // unten. Kein eigenes this.model.load({domain:[...]}) fuer Ordnerwechsel mehr: useModel()
+        // (web/static/src/model/model.js) registriert selbst unbedingt
+        // onWillUpdateProps((nextProps) => model.load(getSearchParams(nextProps))) auf dieser
+        // Komponente - das laesst sich aus einer Subklasse nicht abschalten und laeuft bei jeder
+        // Props-Aenderung (ausgeloest durch WithSearch, das bei jedem searchModel "update"-Event
+        // neu rendert). Ein zweiter, eigener reload()-Aufruf mit eigener Domain war deshalb ein
+        // zweiter Schreiber auf dasselbe Model und hat live nachweisbar das Rennen gegen diesen
+        // nativen Reload verloren (siehe docs/int_filemanager_native_ui.md). Mit genau einem
+        // Schreiber (searchModel) ist das Rennen strukturell unmoeglich, nicht nur seltener.
+        //
+        // updateBreadcrumbs() unten haengt trotzdem an env.searchModel "update" - das schreibt
+        // aber nur das rein kosmetische env.config.breadcrumbs-Array, nie model/domain, und ist
+        // deshalb kein Ruecksturz in dasselbe Muster.
+        useBus(this.env.searchModel, "update", () => this.updateBreadcrumbs());
+        this.updateBreadcrumbs();
+    }
+
+    getCategorySection() {
+        const [section] = this.env.searchModel.getSections(
+            (s) => s.type === "category" && s.fieldName === "parent_id"
+        );
+        return section;
     }
 
     async openRecord(record) {
         if (record.data.is_dir) {
-            await this.goToFolder(record.data.path);
+            const section = this.getCategorySection();
+            this.env.searchModel.toggleCategoryValue(section.id, record.resId);
             return;
         }
         if (isPreviewable(record.data.name)) {
@@ -118,35 +146,48 @@ export class IntFilemanagerListController extends ListController {
         window.open(`/int_filemanager/download?path=${encodeURIComponent(record.data.path)}`, "_blank");
     }
 
-    async goToFolder(path) {
-        this.currentPath = path;
-        await this.reload();
-        this.updateBreadcrumbs(path);
-    }
-
     async reload() {
-        // Ersetzt die Domain komplett, statt this.props.domain (Suchleiste/SearchPanel)
-        // einzubeziehen - bewusst wieder zurueckgebaut (siehe docs/int_filemanager_native_ui.md,
-        // Abschnitt "SearchPanel-Ordnerbaum-Klick <-> Zeilennavigation"): ein Klick auf einen
-        // SearchPanel-Knoten loest ueber Odoos eigene Reaktivitaet moeglicherweise einen davon
-        // unabhaengigen, nicht kontrollierbaren Reload aus - diese Methode hier bleibt bewusst
-        // die einzige Autoritaet fuer normale Zeilen-/Breadcrumb-Navigation und ignoriert das.
-        await this.model.load({ domain: [["folder_path", "=", this.currentPath || false]] });
+        // Kein Domain-Argument: this.model.config behaelt die zuletzt von useModel() aus
+        // searchModel.domain uebernommene Domain bei (_getNextConfig merged nur fehlende
+        // Parameter) - ein Refresh nach Mutation aendert also nichts am aktuellen Ordner.
+        await this.model.load();
     }
 
-    updateBreadcrumbs(path) {
+    // Baut env.config.breadcrumbs UND this.currentPath aus der Vorfahrenkette des aktuell
+    // gewaehlten SearchPanel-Werts nach - dieselben Daten (values/parentId), die der Baum links
+    // ohnehin schon geladen hat, keine eigene, vom Model unabhaengige Pfad-Buchhaltung mehr.
+    // this.currentPath wird NICHT fuer die Listen-Domain verwendet (die kommt ausschliesslich
+    // aus searchModel.domain via useModel) - einziger Zweck ist der "path"-Parameter der
+    // bestehenden authz-geprueften mkdir/upload-Routen (siehe unten), die den literalen
+    // Dateisystempfad brauchen, nicht die parent_id. display_name je Ordner ist hier einfach
+    // dessen "name"-Feld (kein name_get-Override auf dem Modell) - Aneinanderreihen der Kette
+    // ergibt exakt denselben Pfadstring wie das "path"-Feld selbst.
+    updateBreadcrumbs() {
+        const section = this.getCategorySection();
         const crumbs = this.env.config.breadcrumbs;
         crumbs.length = this.rootBreadcrumbCount;
-        let acc = "";
-        for (const part of path ? path.split("/").filter(Boolean) : []) {
-            acc = acc ? `${acc}/${part}` : part;
-            const target = acc;
+        if (!section) {
+            this.currentPath = "";
+            return;
+        }
+        const chain = [];
+        let id = section.activeValueId;
+        while (id) {
+            const value = section.values.get(id);
+            if (!value) {
+                break;
+            }
+            chain.unshift(value);
+            id = value.parentId;
+        }
+        this.currentPath = chain.map((value) => value.display_name).join("/");
+        for (const value of chain) {
             crumbs.push({
-                jsId: `int_filemanager_crumb_${target}`,
-                name: part,
+                jsId: `int_filemanager_crumb_${value.id}`,
+                name: value.display_name,
                 isFormView: false,
                 url: "#",
-                onSelected: () => this.goToFolder(target),
+                onSelected: () => this.env.searchModel.toggleCategoryValue(section.id, value.id),
             });
         }
     }

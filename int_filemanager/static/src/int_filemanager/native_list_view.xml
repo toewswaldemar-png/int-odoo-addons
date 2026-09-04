@@ -8,10 +8,10 @@
     <t t-name="int_filemanager.ListView" t-inherit="web.ListView" t-inherit-mode="primary">
         <xpath expr="//t[@t-set-slot='control-panel-create-button']" position="replace">
             <t t-set-slot="control-panel-create-button">
-                <button type="button" class="btn btn-primary" t-on-click="onNewFolder">
+                <button type="button" class="btn btn-primary text-nowrap" t-on-click="onNewFolder">
                     Neuer Ordner
                 </button>
-                <button type="button" class="btn btn-secondary" t-on-click="triggerUpload">
+                <button type="button" class="btn btn-secondary text-nowrap" t-on-click="triggerUpload">
                     Hochladen
                 </button>
                 <input type="file" t-ref="fileInput" multiple="multiple" class="d-none" t-on-change="onFileInputChange"/>

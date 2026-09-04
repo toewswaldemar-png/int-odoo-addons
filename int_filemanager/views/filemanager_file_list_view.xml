@@ -24,11 +24,11 @@
         <field name="search_view_id" ref="int_filemanager_file_search"/>
         <!-- Explizit [] statt das Feld wegzulassen: ein aus dem XML entferntes <field> wird von
              Odoo beim Modul-Update NICHT zurueckgesetzt, der alte DB-Wert bleibt stehen (live so
-             erlebt). Kein statisches folder_path=False mehr noetig: der Controller uebernimmt die
-             Wurzel-Beschraenkung selbst (currentPath startet leer) - eine hier festgelegte Domain
-             waere dauerhaft Teil von props.domain (Odoo kombiniert Action-Domain + Suchdomain zu
-             einem einzigen props.domain, nicht getrennt) und wuerde jede Navigation in
-             Unterordner unmoeglich machen, weil reload() props.domain immer mit-ANDet. -->
+             erlebt). Kein statisches folder_path/parent_id-Filter hier noetig: die Navigation
+             (inkl. Wurzel-Ansicht) laeuft komplett ueber den parent_id-SearchPanel in
+             filemanager_file_search.xml + search_model_patch.js - eine hier gesetzte Domain
+             wuerde permanent in searchModel.globalDomain landen und mit jeder Kategorie-Auswahl
+             ge-ANDet, was Navigation in Unterordner unmoeglich machen wuerde. -->
         <field name="domain">[]</field>
     </record>
 

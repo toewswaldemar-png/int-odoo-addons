@@ -300,42 +300,101 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
    deployed und live verifiziert (siehe oben). `int_filemanager_file_search` (Such-View, vorher
    ungenutzt) trägt jetzt das `<searchpanel>` und ist über `search_view_id` an die Test-Action
    `action_filemanager_file_list_native` gehängt.
-3. **SearchPanel-Ordnerbaum-Klick <-> Zeilennavigation — live probiert (2026-09-04), zurückgestellt:**
-   das `<searchpanel>` wurde testweise via `search_view_id` an die Test-Action gehängt und
-   funktionierte für sich genommen (Baum rendert korrekt mit Hierarchie/Zählern, `search_panel_select_range`
-   liefert saubere Daten - siehe Abschnitte oben). Das eigentliche Problem lag nicht im Backend,
-   sondern im native `RelationalModel`: sobald einmal `searchModel.toggleCategoryValue()` gefeuert
-   ist (egal ob durch einen echten Klick oder durch eigenen Code), reagiert das Model danach
-   selbstständig und unkontrollierbar auf `props.domain`-Änderungen und lädt die Liste neu -
-   **auch dann, wenn der eigene `IntFilemanagerListController` überhaupt keinen Listener auf
-   `env.searchModel` registriert und `reload()` `props.domain` gar nicht mehr referenziert.**
-   Mehrfach live durchprobiert:
-   - Reine Baum→Liste-Synchronisation (`useBus(env.searchModel, "update", ...)` → `goToFolder()`):
-     funktionierte für den ersten Klick, brach aber bei jeder Navigation weg vom zuletzt gewählten
-     Ast (Breadcrumb zurück zur Wurzel, "Alle" erneut anklicken) - der native Reload (nur
-     `props.domain`, ohne den eigenen `folder_path`-Zusatz) gewann das Race gegen den eigenen
-     `reload()`-Aufruf, unabhängig von der Aufruf-Reihenfolge im Code (sync-vor-reload und
-     reload-vor-sync beide getestet).
-   - Sogar **ganz ohne jeden Sync-Code**, rein durch einen einzigen vorherigen Baumklick in der
-     Session: ein späterer, komplett unbedingter `this.model.load({domain:[["folder_path","=",X]]})`-
-     Aufruf (kein `props.domain` mehr referenziert) wurde trotzdem von der nativen Reaktivität
-     überschrieben - bis zu einer komplett ungefilterten ~400k-Zeilen-Liste nach Klick auf "Alle".
-   - Das deutet auf einen Watcher tiefer im `RelationalModel`/`useModel`-Hook hin (nicht im
-     `ListController`, den man überschreiben könnte), der bei jeder `props.domain`-Änderung
-     eigenständig neu lädt - unabhängig vom eigenen Controller-Code. Für eine echte Lösung müsste
-     man diesen Mechanismus zuerst identifizieren (z.B. ob `RelationalModel` selbst einen
-     `onWillUpdateProps`-Hook auf `domain` registriert) statt weiter dagegen anzupatchen.
+3. **SearchPanel-Ordnerbaum-Klick <-> Zeilennavigation — Root Cause gefunden (2026-09-04), am
+   Odoo-19-Quellcode verifiziert, live gegen die Unraid-Instanz getestet und bestätigt:**
 
-   **Konsequenz:** `<searchpanel>` wieder aus `int_filemanager_file_search.xml` entfernt (Arch
-   dort auskommentiert, nicht gelöscht). `reload()` ersetzt die Domain wieder komplett
-   (`[["folder_path","=",currentPath]]`), keine `props.domain`-Kombination mehr. Zeilen-/
-   Breadcrumb-Navigation ist dadurch wieder vollständig stabil (mehrfach nacheinander getestet:
-   Wurzel → Album → peaks → Album → Wurzel, durchgehend korrekte Zählen). Das komplette Backend
-   (`parent_id`/`_parent_store`, Scan-BFS, Merge-Pfad, `search_panel_select_range`-Override,
-   Bestands-Backfill) bleibt unverändert fertig und getestet liegen - nur die UI-Einbindung des
-   Ordnerbaums ist vertagt, bis der native Reaktivitäts-Mechanismus verstanden ist.
-4. Entscheiden, ob/wie weit der native-ListView-Spike weiter ausgebaut wird (siehe oben) oder ob
-   der jetzige Stand als Erkenntnis reicht und verworfen wird.
+   Ursache exakt lokalisiert (per `docker exec Odoo19` direkt im laufenden Container gelesen, nicht
+   angenommen): `useModel()` (`web/static/src/model/model.js:117`) registriert unbedingt
+   `onWillUpdateProps((nextProps) => model.load(getSearchParams(nextProps)))` auf der Komponente,
+   die `useModel` aufruft — bei `ListController` also auf sich selbst, **bevor** irgendein
+   Subklassen-Code läuft. Das lässt sich aus einer Subklasse nicht abschalten. `props.domain` kommt
+   aus `WithSearch` (`with_search.xml`: `t-slot domain="searchModel.domain"`), das per
+   `useBus(searchModel, "update", this.render)` bei jedem `searchModel`-Update neu rendert.
+   `toggleCategoryValue()` (`search_model.js:808`) setzt nur `activeValueId` und ruft `_notify()` —
+   das reicht, um die komplette Kette auszulösen. Ergebnis: zwei unabhängige Schreiber auf dasselbe
+   `model` (der eigene `folder_path`-Reload und der native, nicht abschaltbare `parent_id`-Reload) —
+   kein Timing-Bug, sondern zwei Wahrheiten für dieselbe Domain, wer zuletzt schreibt gewinnt.
+
+   Zusätzlicher, unabhängiger Fund: `_getCategoryDomain()` (`search_model.js:1531`) nutzt für ein
+   selbstreferenzierendes Many2one automatisch den Operator `child_of` (rekursiv: alle Nachfahren) statt
+   `=` (nur direkte Kinder) — richtig für Produktkategorien, falsch für einen Ein-Ebenen-Datei-Browser.
+   Und: `activeValueId === false` (Odoos "Alle") wird in `_getCategoryDomain` komplett übersprungen —
+   nativ heißt das "kein Filter", nicht "nur Wurzelebene". Erklärt den beobachteten Endzustand
+   (ungefilterte ~400k-Zeilen-Liste nach Klick auf "Alle") vollständig.
+
+   **Fix (kein Core-Patch-gegen-das-Race, sondern Autoritäts-Wechsel — searchModel wird einziger
+   Schreiber):**
+   - `search_model_patch.js` (neu): ein `patch(SearchModel.prototype, { _getCategoryDomain ... })`,
+     gescopet auf `this.resModel === "int_filemanager.file"` (gleiches Scoping-Muster wie
+     `int_web_tweaks/list_column_reorder.js` über `resModel`) — übernimmt für unsere `parent_id`-
+     Section komplett selbst den Domain-Aufbau: Operator immer `=` (nicht `child_of`) UND
+     `activeValueId === false` wird zu `[('parent_id','=',false)]` statt "überspringen". Kein
+     Core-Datei-Eingriff, jede andere View/Kategorie in der Instanz bleibt beim
+     Odoo-Standardverhalten unberührt.
+   - **Erster Anlauf über `hierarchize="0"` als Arch-Attribut verworfen, live als Fehler entdeckt:**
+     schaltet zwar den Operator um, aber `search_panel_select_range` (`web/models/models.py:1711-1715`)
+     lässt dann `parent_id` bei JEDEM Baumwert komplett weg (`if hierarchize and parent_name in
+     Comodel._fields: field_names.append(parent_name)`) — der Baum fiel dadurch optisch flach
+     zusammen (keine Einrückung mehr, jeder Ordner erschien als Wurzel) UND die
+     Breadcrumb-Vorfahrenkette brach nach einem Glied ab, weil `value.parentId` für jeden Ordner
+     `false` war. Live im Browser beobachtet (Klick auf "1" → "default" zeigte nur "default" in der
+     Breadcrumb, "1" fehlte). Behoben durch Rückbau auf Odoos Default (`hierarchize` unverändert,
+     `parent_id` wird wieder mitgeschickt) und stattdessen den kompletten Domain-Aufbau im Patch
+     selbst nachgebaut, unabhängig von `hierarchize`.
+   - `native_list_view.js` umgebaut: `this.currentPath`-getriebenes `reload()` entfernt.
+     `openRecord()` ruft bei Ordnern `env.searchModel.toggleCategoryValue(sectionId, record.resId)`
+     statt `model.load()` — es gibt jetzt nur noch einen Schreibkanal für die Domain, ein Race ist
+     strukturell unmöglich, nicht nur seltener. Breadcrumbs werden aus der `parentId`-Kette der
+     bereits geladenen Kategorie-Werte rekonstruiert (`updateBreadcrumbs()`, an
+     `searchModel`-"update" gehängt — das schreibt aber nur das kosmetische
+     `env.config.breadcrumbs`-Array, nie `model`/Domain, daher kein Rückfall in dasselbe
+     Race-Muster). `this.currentPath` existiert weiterhin, aber nur noch als aus der Breadcrumb-Kette
+     abgeleiteter String für die `path`-Parameter der bestehenden `mkdir`/`upload`-Routen — nicht
+     mehr als Domain-Quelle.
+   - `reload()` nach Mutationen ruft `this.model.load()` ohne Domain-Argument — `_getNextConfig`
+     (`relational_model.js:193`) merged nur fehlende Parameter, die aktuelle Domain bleibt erhalten.
+
+   **Live verifiziert (2026-09-04, echte Unraid-Instanz nach Vollsync auf 1.5.0 + Restart):**
+   Baum zeigt echte Einrückung mit Aufklapp-Pfeilen (1/Dokumente/HM-Test als Wurzeln, Dokumente
+   mit 6 direkten Kindern trotz "590" Nachfahren-Zähler - bestätigt `=` statt `child_of`).
+   Vollständiger Zyklus Wurzel → "1" → "default" → zurück zu "1" → zurück zu "Alle" durchgespielt:
+   Breadcrumb-Kette korrekt auf allen Stufen (`.o_breadcrumb`-DOM direkt inspiziert, nicht nur
+   Screenshot), "Alle" zeigt weiterhin nur die 3 echten Wurzelordner statt aller 601 Zeilen, keine
+   Konsolenfehler. Nebenbei aufgefallen und dokumentiert: die Instanz stand vor diesem Test bei
+   Modulversion 1.3.0 (Repo war bei 1.5.0) - Phase 4/5 + der komplette parent_id-Spike waren nie
+   tatsächlich deployed, nur im Repo committet. Vollsync aller 22 abweichenden Dateien + Modul-
+   Upgrade + Backfill (598 von 601 Zeilen per SQL-Self-Join, `_parent_store_compute()`) nachgeholt.
+
+   **Nachtrag, im Live-Test gefunden (2026-09-04): Klick auf die Wurzel-Breadcrumb tat nichts.**
+   Aus mehreren Ebenen Tiefe (z.B. "Dateimanager (nativ, Test) / Dokumente / Artikel-PRÜFDOKUMENTE")
+   auf den allerersten Breadcrumb-Eintrag geklickt → weder Liste noch die eigenen Unterordner-Krumen
+   änderten sich. Ursache: dieser erste Eintrag ist NICHT einer unserer selbstgebauten
+   Breadcrumb-Objekte (die reagieren korrekt über `toggleCategoryValue`), sondern der native
+   Action-Breadcrumb, den Odoo selbst beim Pushen dieses Controllers auf den Stack anlegt - sein
+   `onSelected` ruft nur `restore(controller.jsId)` auf denselben, bereits aktiven Controller auf
+   (`action_service.js`), was am ORM-/searchModel-Zustand nichts ändert. Fix: in `setup()` wird
+   `env.config.breadcrumbs[rootBreadcrumbCount - 1]` (der letzte bereits vorhandene Root-Eintrag -
+   alles davor gehört ggf. einer aufrufenden Action/einem Datensatz und muss ihr natives Verhalten
+   behalten) einmalig um einen zusätzlichen `toggleCategoryValue(section.id, false)` ergänzt, nach
+   dem nativen Handler. Live erneut bis in "Artikel-PRÜFDOKUMENTE" navigiert, auf die Wurzel-Krume
+   geklickt: Liste und Baum springen jetzt korrekt zurück auf die 3 Root-Ordner, `"Alle"` trägt die
+   `active`-Klasse im DOM.
+
+   **Zweiter Nachtrag, ebenfalls im Live-Test gefunden (2026-09-04): "Neuer Ordner"/"Hochladen"
+   erscheinen ab einer bestimmten Fensterbreite riesig, sobald ein Breadcrumb zu "..." einklappt.**
+   Reproduzierbar bei 1000px Fensterbreite (bei 800px nicht) - `resize_window` mit fester Breite
+   genutzt, um den schwankenden Effekt greifbar zu machen, ein Nutzerhinweis auf ein
+   deplaziertes Suchfeld als Begleitsymptom hat auf die richtige Spur gebracht. Per
+   `getBoundingClientRect()` verifiziert: `font-size`/`padding` blieben die ganze Zeit unverändert
+   (14px/5px 10px) - die Buttons wurden nicht größer gestylt, sondern der Text "Neuer Ordner" brach
+   bei dieser Breite in zwei Zeilen um (Höhe 53,6px statt 32,6px, Breite nur 68px statt 113px).
+   Ursache: unsere Buttons in `native_list_view.xml` hatten nur `class="btn btn-primary"` bzw.
+   `btn-secondary` - Odoos eigener nativer "Neu"-Button trägt zusätzlich `o_list_button_add`
+   (`list_controller.xml`), das genau diesen Umbruch verhindert. Fix: `text-nowrap` auf beide
+   Buttons ergänzt. Bei 1000px erneut bis "1-SIEMENS-Revision..." navigiert: Buttons bleiben
+   einzeilig (`getBoundingClientRect()` wieder 32,6px hoch, 113px breit).
+4. ~~Entscheiden, ob/wie weit der native-ListView-Spike weiter ausgebaut wird~~ — entschieden
+   (2026-09-04): weiter ausbauen, SearchPanel-Ordnerbaum ist jetzt verdrahtet (siehe Punkt 3).
 5. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
-   temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — zurücksetzen,
-   sobald nicht mehr gebraucht.
+   temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
+   zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).
