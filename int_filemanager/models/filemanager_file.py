@@ -85,6 +85,7 @@ class IntFilemanagerFile(models.Model):
     def _selection_target_model(self):
         return [(model.model, model.name) for model in self.env["ir.model"].sudo().search([])]
 
+    @api.model
     def search_panel_select_range(self, field_name, **kwargs):
         """Erzwingt is_dir=True fuer den parent_id-Ordnerbaum server-seitig. Noetig, weil das
         native SearchPanel fuer ein Category-Feld (kein select="multi") das eigene domain-
