@@ -873,3 +873,45 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     vor dem tatsächlichen Produktiv-Rollout, insbesondere die ACL-/ONLYOFFICE-Interaktion dort -
     das ist aber bewusst außerhalb des Codes/dieses Branches angesiedelt, kein offener
     Implementierungspunkt mehr.
+
+21. **Drag&Drop-Upload umgesetzt (2026-09-05) - Baustein 0 aus
+    [int_filemanager_paperoffice_recherche.md](int_filemanager_paperoffice_recherche.md).**
+    Auslöser: aktuelle Erfassungs-Praxis (PDF per Drag&Drop aus dem Dateisystem, Anhang aus
+    Outlook ziehen, direkt scannen) soll beim Umstieg von PaperOffice nicht verloren gehen.
+
+    **Umsetzung** (`native_list_view.js`/`.xml`/`.scss`): `window`-weite `dragenter`/`dragleave`/
+    `dragover`/`drop`-Listener (`useExternalListener` aus `@odoo/owl` - nicht `@web/core/utils/
+    hooks`, live gegen den Odoo-19-Quellcode verifiziert, wo die Funktion tatsächlich lebt) statt
+    einer einzelnen Drop-Zone - robust gegenüber der genauen DOM-Struktur des von `web.ListView`
+    geerbten Templates. Tiefenzähler statt Boolean gegen das erwartete Flackern beim Überqueren
+    von Kindelementen (dragenter/dragleave feuern pro Element). `dataTransfer.types.includes
+    ("Files")` filtert echte Datei-Drags von anderen Drag-Interaktionen heraus. Rein visuelles
+    Overlay (`position: fixed`, `pointer-events: none`) - das eigentliche Hochladen läuft über
+    denselben, bereits vorhandenen `this.fileUpload.upload(...)`-Pfad wie der bestehende
+    "Hochladen"-Button (gemeinsame `_uploadFiles()`-Methode, kein zweiter Code-Pfad).
+
+    **Dabei ein echter, vorbestehender Bug gefunden und behoben** (unabhängig von Drag&Drop -
+    betraf auch den bestehenden "Hochladen"-Button, live an einem 500er nachgewiesen, nicht nur
+    vermutet): `controllers/main.py`, `upload()`-Handler, Zeile `f.save(target)` übergab einen
+    Pfad-String an `werkzeug.FileStorage.save()`. Dieser Odoo-Build monkeypatcht `.save()`
+    (`odoo/_monkeypatches/werkzeug.py`: `FileStorage.save = lambda self, dst, ...:
+    copyfileobj(self.stream, dst, ...)`) und verlangt dadurch zwingend ein bereits offenes
+    Dateiobjekt statt eines Pfad-Strings, anders als Werkzeugs eigene Komfortvariante. Fix:
+    `with open(target, "wb") as dst: f.save(dst)` - exakt das Muster, das Odoos eigener Code
+    an der einzigen vergleichbaren Stelle im Kern selbst verwendet (`web/controllers/
+    database.py`: `with tempfile.NamedTemporaryFile(...) as data_file: backup_file.save
+    (data_file)`).
+
+    **Live verifiziert:** Overlay erscheint/verschwindet korrekt bei einem synthetischen
+    `dragenter`/`drop`-Event mit echter `File`-Payload (echter OS-Drag aus Explorer/Outlook lässt
+    sich aus einer Remote-Browser-Session heraus nicht auslösen - das bleibt ein Test, den nur ein
+    Nutzer im echten Browser machen kann). Vor dem Fix: `AttributeError: 'str' object has no
+    attribute 'write'`. Nach dem Fix: derselbe Testupload schlägt nur noch am bewusst
+    read-only gemounteten `/mnt/hm-daten` der Testinstanz fehl (`OSError: [Errno 30] Read-only
+    file system`) - der eigentliche Bug ist damit nachweislich behoben, der verbleibende Fehler
+    ist die eigene, gewollte Schreibschutz-Einstellung dieser Testinstanz, kein Defekt.
+
+    **Offener Punkt, bewusst nicht in dieser Session geklärt:** ob ein Drag aus der konkret
+    eingesetzten Outlook-Version tatsächlich als echtes Datei-Drag beim Browser ankommt
+    (versionsabhängig - klassisches Desktop-Outlook vs. neues Outlook/WebView2 vs. OWA), lässt
+    sich nur mit einem echten Nutzer-Test klären.

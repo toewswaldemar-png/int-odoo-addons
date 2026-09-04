@@ -26,7 +26,7 @@
 // "Sicherheitsrelevanter Stolperstein"). Routing through rpc() sidesteps
 // that duplication risk entirely: there is exactly one place (the
 // controller) that enforces access.
-import { onWillUnmount, useRef } from "@odoo/owl";
+import { onWillUnmount, useExternalListener, useRef, useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
@@ -101,6 +101,23 @@ export class IntFilemanagerListController extends ListController {
         this.busService = useService("bus_service");
         this.fileViewer = useFileViewer();
         this.fileInput = useRef("fileInput");
+
+        // Drag&Drop-Upload (2026-09-05): Mitarbeiter ziehen PDFs heute per Drag&Drop direkt aus
+        // dem Dateisystem oder als Anhang aus Outlook in PaperOffice - dieselbe Erfassungs-Routine
+        // sollte hier nicht verloren gehen, nur weil die UI wechselt (siehe
+        // docs/int_filemanager_paperoffice_recherche.md, Baustein 0). Auf window statt auf einem
+        // einzelnen DOM-Element gehaengt: robust gegenueber der genauen Struktur des von
+        // web.ListView geerbten Templates, kein eigenes Drop-Zone-Element noetig, das irgendwo
+        // exakt ueber der Liste sitzen muesste. dragenter/dragleave feuern bei jedem Kind-Element
+        // einzeln (Owl-Events bubbeln normal) - ein einfacher Boolean wuerde beim Ueberqueren von
+        // Kindelementen flackern, deshalb ein Tiefenzaehler statt eines Flags. dataTransfer.types
+        // filtert echte Datei-Drags von anderen Drag-Interaktionen (z.B. Text-Selektion) heraus.
+        this.dropState = useState({ dragging: false });
+        this._dragDepth = 0;
+        useExternalListener(window, "dragenter", this.onWindowDragEnter);
+        useExternalListener(window, "dragleave", this.onWindowDragLeave);
+        useExternalListener(window, "dragover", (ev) => ev.preventDefault());
+        useExternalListener(window, "drop", this.onWindowDrop);
 
         // Everything already on the stack when this controller was created (normally
         // just the "Dateimanager" action entry itself, or "Verknüpfte Dateien" when opened
@@ -354,19 +371,59 @@ export class IntFilemanagerListController extends ListController {
         this.fileInput.el.click();
     }
 
-    async onFileInputChange(ev) {
-        const files = [...ev.target.files];
-        ev.target.value = "";
+    // Gemeinsamer Upload-Pfad fuer den Datei-Dialog (onFileInputChange) und Drag&Drop
+    // (onWindowDrop) - beide liefern letztlich nur eine FileList/ein Array von File-Objekten,
+    // der Rest ist identisch. Fire-and-forget wie legacy_ui es tat: completion/errors surface
+    // via the file_upload service's bus events (FILE_UPLOAD_LOADED above, FILE_UPLOAD_ERROR
+    // shows its own toast automatically).
+    async _uploadFiles(files) {
         if (!files.length) {
             return;
         }
-        // Fire-and-forget like filemanager_action.js: completion/errors surface via the
-        // file_upload service's bus events (FILE_UPLOAD_LOADED above, FILE_UPLOAD_ERROR
-        // shows its own toast automatically).
         const upload = await this.fileUpload.upload("/int_filemanager/upload", files, {
             buildFormData: (formData) => formData.append("path", this.currentPath),
         });
         this.pendingUploadId = upload.id;
+    }
+
+    async onFileInputChange(ev) {
+        const files = [...ev.target.files];
+        ev.target.value = "";
+        await this._uploadFiles(files);
+    }
+
+    _isFileDrag(ev) {
+        return Boolean(ev.dataTransfer) && Array.from(ev.dataTransfer.types || []).includes("Files");
+    }
+
+    onWindowDragEnter(ev) {
+        if (!this._isFileDrag(ev)) {
+            return;
+        }
+        ev.preventDefault();
+        this._dragDepth++;
+        this.dropState.dragging = true;
+    }
+
+    onWindowDragLeave(ev) {
+        if (!this._isFileDrag(ev)) {
+            return;
+        }
+        ev.preventDefault();
+        this._dragDepth = Math.max(0, this._dragDepth - 1);
+        if (this._dragDepth === 0) {
+            this.dropState.dragging = false;
+        }
+    }
+
+    async onWindowDrop(ev) {
+        if (!this._isFileDrag(ev)) {
+            return;
+        }
+        ev.preventDefault();
+        this._dragDepth = 0;
+        this.dropState.dragging = false;
+        await this._uploadFiles([...ev.dataTransfer.files]);
     }
 
     onRename(record) {

@@ -235,7 +235,15 @@ class IntFilemanagerController(http.Controller):
             else:
                 # Neue Datei (auch: existiert auf Platte, aber noch nicht
                 # indexiert) - kein Versionierungsziel vorhanden.
-                f.save(target)
+                # FileStorage.save() erwartet in diesem Odoo-Build zwingend ein bereits offenes
+                # Dateiobjekt, keinen Pfad-String mehr - Odoos eigener Monkeypatch
+                # (_monkeypatches/werkzeug.py: "FileStorage.save = lambda self, dst, ...:
+                # copyfileobj(self.stream, dst, ...)") ersetzt Werkzeugs Komfortvariante, die einen
+                # String selbst geoeffnet haette. Gleiches Muster wie Odoos eigener Aufruf in
+                # web/controllers/database.py ("with tempfile.NamedTemporaryFile(...) as data_file:
+                # backup_file.save(data_file)") - live an einem 500er nachgewiesen, nicht vermutet.
+                with open(target, "wb") as dst:
+                    f.save(dst)
                 make_shareable(target, is_dir=False)
                 index_upsert(request.env, target)
             saved.append(name)

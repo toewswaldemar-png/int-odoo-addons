@@ -17,6 +17,17 @@
                 <input type="file" t-ref="fileInput" multiple="multiple" class="d-none" t-on-change="onFileInputChange"/>
             </t>
         </xpath>
+        <!-- Rein visuelles Overlay - das eigentliche Drop-Handling laeuft komplett ueber die
+             window-Listener aus setup() (siehe dortigen Kommentar), unabhaengig davon, ob dieses
+             Overlay gerade im DOM ist. Deshalb pointer-events: none (native_list_view.scss) -
+             es soll nichts abfangen, nur anzeigen. -->
+        <xpath expr="//div[@t-ref='root']" position="inside">
+            <div t-if="dropState.dragging" class="o_int_filemanager_dropzone">
+                <div class="o_int_filemanager_dropzone_label">
+                    <i class="fa fa-cloud-upload me-2"/>Dateien hier ablegen zum Hochladen
+                </div>
+            </div>
+        </xpath>
     </t>
 
 </templates>
