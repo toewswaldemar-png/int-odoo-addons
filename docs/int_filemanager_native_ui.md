@@ -526,6 +526,22 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     5,2-MB-Datei). Danach im echten Player auf `odoo/VID_20260904_130327.mp4` in die Timeline
     geklickt: Sprung direkt zu `0:02 / 0:03` mit sichtbar anderem Frame, kein sequentielles
     Abspielen bis dorthin. Keine Konsolenfehler.
-12. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
+12. **`size`-Spalte linksbündig statt nativ rechtsbündig (2026-09-04):** Odoo ordnet `float`/
+    `integer`/`monetary`-Feldern automatisch die Klasse `o_list_number` zu (`list_renderer.js:75-77`),
+    die per `list_renderer.scss` rechtsbündig ausrichtet - Nutzerwunsch war, `size` wie alle anderen
+    Spalten linksbündig zu zeigen. Bewusst **nicht** global überschrieben (würde jede Zahlenspalte
+    in jeder anderen Odoo-View im System mit verändern) - stattdessen eine eigene Scoping-Klasse:
+    `IntFilemanagerListController.get className()` hängt `o_int_filemanager_list` an
+    (`native_list_view.js`), neue `native_list_view.scss` überschreibt `.o_list_number`/
+    `.o_list_number_th` nur innerhalb dieser Klasse.
+
+    **Erster Versuch ohne `!important` scheiterte, live nachgewiesen** (`getComputedStyle` zeigte
+    weiterhin `text-align: right`, sowohl in dieser Session als auch vom Nutzer im eigenen Browser
+    bestätigt): die native Regel liegt verschachtelt unter `.o_list_renderer { ... }`, dadurch höhere
+    Spezifität als der eigene Zwei-Klassen-Selektor angenommen. Mit `!important` behoben - das ist
+    hier der akzeptierte Weg, eine Drittanbieter-Core-Regel gezielt von außen zu überschreiben, nicht
+    Bequemlichkeit. Live erneut per `getComputedStyle` bestätigt: `text-align: left` für Zelle und
+    Header, keine Konsolenfehler.
+13. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
     temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
     zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).

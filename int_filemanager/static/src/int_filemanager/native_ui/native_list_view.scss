@@ -1,0 +1,13 @@
+// Ueberschreibt Odoos native Rechtsbuendigkeit fuer Zahlenspalten (list_renderer.scss:
+// .o_list_number / .o_list_number_th, text-align: right) nur innerhalb unserer eigenen Liste
+// (o_int_filemanager_list, siehe native_list_view.js: get className()) - "Groesse" soll wie
+// alle anderen Spalten linksbuendig sein. !important noetig: die native Regel liegt verschachtelt
+// unter .o_list_renderer (list_renderer.scss), live geprueft hoehere Spezifitaet als ein simpler
+// Zwei-Klassen-Selektor hier - ohne !important gewinnt weiterhin Odoo (live so beobachtet, nicht
+// nur vermutet).
+.o_int_filemanager_list {
+    .o_list_number_th,
+    .o_list_number {
+        text-align: left !important;
+    }
+}

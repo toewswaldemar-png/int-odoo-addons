@@ -147,6 +147,14 @@ export class IntFilemanagerListController extends ListController {
         return section;
     }
 
+    // Scoping-Klasse fuer native_list_view.scss - rechtsbuendige Zahlenspalten (o_list_number,
+    // list_renderer.scss) sind fuer "Groesse" hier bewusst unerwuenscht (User-Wunsch: wie alle
+    // anderen Spalten linksbuendig). Ueberschrieben nur innerhalb dieser Klasse, nicht global -
+    // jede andere native Odoo-Liste im System behaelt die rechtsbuendige Zahlendarstellung.
+    get className() {
+        return [super.className, "o_int_filemanager_list"].filter(Boolean).join(" ");
+    }
+
     async openRecord(record) {
         if (record.data.is_dir) {
             const section = this.getCategorySection();
