@@ -697,9 +697,44 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     strukturell bessere Lösung, weil sie das *ganze* "kompletter Baum bei jedem Klick"-Problem
     eliminiert, nicht nur die Zählkosten darin.
 
-    **Stand des Patches:** liegt im Working Tree von `filemanager_file.py`, **noch nicht committet**.
+    **Stand des Patches:** committet auf `experiment/native-listview` (`1624412`), nicht gepusht.
     Testinstanz auf Tower (`odoo19-test`-Container + `odoo19-test-db`, eigenes Docker-Netzwerk
     `odoo19-test-net`) läuft weiter für künftige Verifikationen; SSH-Key `claude-code-unraid` liegt in
     `authorized_keys` auf Tower. Admin-Login der Testinstanz: `admin`/`admin_test_2026` - wie beim
     `TempDebug2026!`-Passwort auf HM-SRV (Punkt 13) ein Test-Zugang, der bewusst nicht besonders
-    abgesichert ist, weil die Instanz nur lokal (127.0.0.1, per SSH-Tunnel erreichbar) gebunden ist.
+    abgesichert ist. **Port 8169 ist inzwischen auf Tower fürs LAN freigegeben** (nicht mehr nur
+    127.0.0.1/SSH-Tunnel) - erreichbar unter `http://192.168.178.73:8169`, auf ausdrücklichen
+    Nutzerwunsch.
+
+17. **Bug gefunden und behoben: Tag-/Text-Suche in der Suchleiste fand nichts, sobald man nicht
+    exakt im Ordner der Datei stand (2026-09-04):** live reproduziert - Datei `ColorThemes`
+    (Tag `dfgdfg`) liegt unter `Audio/Projekte/REAPER/REAPER`. Suche nach dem Tag direkt in diesem
+    Ordner: korrekt 1 Treffer. Dieselbe Suche eine Ebene höher (`Audio/Projekte/REAPER`): 0 Treffer,
+    obwohl der SearchPanel-Zähler dort weiterhin "1" zeigt - der Treffer existierte also, war aber
+    unsichtbar.
+
+    **Ursache:** `search_model_patch.js` (Punkt "Fix" weiter oben) erzwingt für die
+    Ordner-Navigation immer den Operator `=` auf `parent_id` (nur direkte Kinder) - richtig für
+    reines Klicken/Browsen, aber kombiniert mit einer Suchleisten-Facette (Tag, Name, Filter)
+    verlangt Odoo dann zwangsläufig "matcht die Suche UND ist direktes Kind hier". Eine Datei zwei
+    Ebenen tiefer wird nie gefunden, unabhängig vom Suchbegriff. Odoos **eigener** Default für ein
+    selbstreferenzierendes Many2one-Kategoriefeld ist eigentlich `child_of` (rekursiv, über den
+    indizierten `parent_path`-Präfix) - wir hatten ihn für die Navigation bewusst auf `=`
+    heruntergestuft, aber das galt uneingeschränkt auch für den Suchfall.
+
+    Zum Vergleich: die alte UI (`master`) hatte dafür einen expliziten "auch Unterordner
+    durchsuchen"-Umschalter (`state.recursive`, Default `false`, `filemanager_action.js`) - kein
+    automatisches Verhalten beim Tippen.
+
+    **Fix, im selben bestehenden Override, kein neuer Code-Pfad:** `_getCategoryDomain()` in
+    `search_model_patch.js` prüft jetzt `this.query.length` (aktive Suchleisten-Facetten, komplett
+    unabhängig vom Ordner-Navigationsstatus `category.activeValueId`) - ist eine Suche aktiv, wird
+    `child_of` statt `=` verwendet; ist zusätzlich kein Ordner ausgewählt (`activeValueId` falsy,
+    "Alle" + Suche), wird gar keine `parent_id`-Klausel gesetzt (durchsucht den ganzen Baum, wie
+    Odoos ursprünglicher Default für eine leere Kategorie-Auswahl). Reine Navigation ohne aktive
+    Suche bleibt exakt beim bisherigen `=`-Verhalten.
+
+    **Bewusste Entscheidung gegen das alte Umschalter-Modell:** automatisch rekursiv sobald eine
+    Suche aktiv ist, kein zusätzliches UI-Element, kein Opt-in nötig - deckt sich mit modernen
+    Explorer-Suchfeldern und behebt den gemeldeten Bug ohne dass Nutzer erst einen Schalter kennen
+    müssen. Live im Browser gegen die Testinstanz nachgestellt und vom Nutzer selbst bestätigt.

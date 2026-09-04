@@ -18,6 +18,18 @@
 //    (parent_id = False). Verified live: without this fix, clicking "Alle" loaded every
 //    row in the table regardless of nesting depth instead of just the root folders.
 //
+// A third case, found live (2026-09-04): plain "=" also breaks combining folder
+// navigation with a search bar term (e.g. a tag) - browsing one level above a matching
+// file returns zero rows even though the file exists further down, because "=" only ever
+// matches direct children. Fix: fall back to Odoo's own native "child_of" (indexed via
+// parent_path, same mechanism product.category uses) whenever a search facet is active
+// (this.query.length > 0 - populated by search bar terms/filters, independent of the
+// category's own activeValueId), so a search recurses into subfolders instead of being
+// silently scoped to the current level. At "Alle" (activeValueId falsy) while searching,
+// no parent_id clause at all is pushed - not "= false" - so the search covers the whole
+// tree instead of only literal root-level rows, matching Odoo's original unselected-
+// category default. Plain navigation (no search facet) keeps "=" exactly as before.
+//
 // Scoped to int_filemanager.file via this.resModel so every other SearchPanel category in
 // the instance (product categories, stock reports, ...) keeps Odoo's default behaviour
 // untouched - same scoping pattern int_web_tweaks already uses in list_column_reorder.js
@@ -36,7 +48,14 @@ patch(SearchModel.prototype, {
                 continue;
             }
             if (category.fieldName === "parent_id") {
-                domain.push(["parent_id", "=", category.activeValueId || false]);
+                const value = category.activeValueId || false;
+                if (this.query.length) {
+                    if (value) {
+                        domain.push(["parent_id", "child_of", value]);
+                    }
+                } else {
+                    domain.push(["parent_id", "=", value]);
+                }
                 continue;
             }
             if (!category.activeValueId) {
