@@ -38,6 +38,7 @@ import { ListController } from "@web/views/list/list_controller";
 import { IntTextInputDialog } from "../shared/text_input_dialog";
 import { IntLinkRecordDialog } from "../shared/link_record_dialog";
 import { IntTextEditorDialog } from "./text_editor_dialog";
+import { IntDocumentReviewDialog } from "./document_review_dialog";
 
 // Video ist nativ im FileViewer verdrahtet (file_viewer.js/.xml: state.file.isVideo -> echtes
 // <video controls>) - hier nur an dessen bereits vorhandene Faehigkeit angeschlossen, nichts
@@ -87,6 +88,15 @@ function isPreviewable(name) {
 
 function isOfficeEditable(name) {
     return OFFICE_EDIT_EXTENSIONS.has(extOf(name));
+}
+
+// Muss mit fulltext.py's PLAIN_TEXT_EXTENSIONS/PDF_EXTENSIONS uebereinstimmen (nur zur
+// UI-Verfuegbarkeit des "Werte erkennen"-Menuepunkts - der Server bleibt bei der eigentlichen
+// Analyse die einzige Quelle der Wahrheit, siehe onAnalyzeDocument). TEXT_EDIT_EXTENSIONS oben
+// deckt sich bereits 1:1 mit PLAIN_TEXT_EXTENSIONS, daher wiederverwendet statt dupliziert.
+function isFulltextSupported(name) {
+    const ext = extOf(name);
+    return TEXT_EDIT_EXTENSIONS.has(ext) || ext === "pdf";
 }
 
 export class IntFilemanagerListController extends ListController {
@@ -149,6 +159,7 @@ export class IntFilemanagerListController extends ListController {
         useBus(this.fileUpload.bus, "FILE_UPLOAD_LOADED", (ev) => {
             if (ev.detail.upload.id === this.pendingUploadId) {
                 this.reload();
+                this._analyzeUploadedFiles(this.pendingUploadFiles || []);
             }
         });
         // Reload when anything changes the index server-side, whether from this tab
@@ -380,10 +391,56 @@ export class IntFilemanagerListController extends ListController {
         if (!files.length) {
             return;
         }
+        // Fuer den anschliessenden Analyse-Schritt gemerkt (siehe FILE_UPLOAD_LOADED oben) - der
+        // Upload-Service liefert im "loaded"-Event nur die id zurueck, nicht die Dateiliste.
+        this.pendingUploadFiles = files;
         const upload = await this.fileUpload.upload("/int_filemanager/upload", files, {
             buildFormData: (formData) => formData.append("path", this.currentPath),
         });
         this.pendingUploadId = upload.id;
+    }
+
+    // Pfad A (Baustein 1, docs/int_filemanager_paperoffice_recherche.md): fuer jede gerade
+    // hochgeladene Datei sofort Volltext/Werte erkennen und bei echten Treffern zur Kontrolle
+    // anzeigen - eine Datei nach der anderen (Nutzerentscheidung 2026-09-05), damit bei mehreren
+    // gleichzeitig gezogenen Dateien nicht mehrere Dialoge gleichzeitig aufploppen. Kein eigener
+    // Extension-Filter hier: nicht unterstuetzte Dateitypen (alles ausser PDF/Text, siehe
+    // fulltext.py) liefern serverseitig ohnehin leere Vorschlaege, der Server bleibt die einzige
+    // Quelle der Wahrheit dafuer, was unterstuetzt ist.
+    async _analyzeUploadedFiles(files) {
+        for (const file of files) {
+            // safe_name() (controllers/main.py) kann den serverseitig gespeicherten Namen
+            // geringfuegig aendern (Sonderzeichen) - in dem seltenen Fall liefert
+            // analyze_document unten schlicht keinen Treffer (res_id=false), einfach
+            // uebersprungen statt eines Fehlers.
+            const path = this.currentPath ? `${this.currentPath}/${file.name}` : file.name;
+            let result;
+            try {
+                result = await rpc("/int_filemanager/analyze_document", { path });
+            } catch {
+                continue;
+            }
+            if (!result.res_id) {
+                continue;
+            }
+            const hasSuggestions = result.suggested_tags.length || result.suggested_partner
+                || result.suggested_date || result.suggested_invoice_number || result.suggested_amount;
+            if (!hasSuggestions) {
+                continue;
+            }
+            await new Promise((resolve) => {
+                this.dialog.add(
+                    IntDocumentReviewDialog,
+                    {
+                        fileName: file.name,
+                        resId: result.res_id,
+                        suggestion: result,
+                        onSaved: () => this.reload(),
+                    },
+                    { onClose: resolve }
+                );
+            });
+        }
     }
 
     async onFileInputChange(ev) {
@@ -450,6 +507,30 @@ export class IntFilemanagerListController extends ListController {
         this.dialog.add(IntLinkRecordDialog, {
             path: record.data.path,
             metaId: record.resId,
+            onSaved: () => this.reload(),
+        });
+    }
+
+    // Manueller Auslöser fuer bereits bestehende Dateien (kein automatischer Backfill,
+    // Nutzerentscheidung 2026-09-05 - siehe docs/int_filemanager_paperoffice_recherche.md,
+    // Baustein 1) - derselbe interaktive Pfad A wie direkt nach einem Drag&Drop-Upload, nur
+    // manuell fuer eine ausgewaehlte Bestandsdatei ausgeloest statt automatisch.
+    async onAnalyzeDocument(record) {
+        let result;
+        try {
+            result = await rpc("/int_filemanager/analyze_document", { path: record.data.path });
+        } catch (e) {
+            this.notification.add(e.data?.message || e.message, { type: "danger" });
+            return;
+        }
+        if (!result.res_id) {
+            this.notification.add(_t("Für diesen Dateityp ist keine Erkennung verfügbar."), { type: "warning" });
+            return;
+        }
+        this.dialog.add(IntDocumentReviewDialog, {
+            fileName: record.data.name,
+            resId: result.res_id,
+            suggestion: result,
             onSaved: () => this.reload(),
         });
     }
@@ -534,6 +615,14 @@ export class IntFilemanagerListController extends ListController {
                 icon: "fa fa-external-link",
                 description: _t("Lokal öffnen"),
                 callback: () => this.onOpenLocal(selection[0]),
+            },
+            int_analyze: {
+                isAvailable: () => selection.length === 1 && !selection[0].data.is_dir
+                    && isFulltextSupported(selection[0].data.name),
+                sequence: 35,
+                icon: "fa fa-magic",
+                description: _t("Werte erkennen"),
+                callback: () => this.onAnalyzeDocument(selection[0]),
             },
             int_delete: {
                 isAvailable: () => selection.length > 0,

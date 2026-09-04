@@ -1,0 +1,48 @@
+<templates xml:space="preserve">
+    <t t-name="int_filemanager.DocumentReviewDialog" owl="1">
+        <Dialog title="'Erkannte Werte: ' + props.fileName" size="'md'">
+            <div t-if="!hasSuggestions" class="text-muted p-2">
+                Keine Tags/Werte erkannt - der Inhalt ist trotzdem durchsuchbar.
+            </div>
+            <div t-else="" class="p-2">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tags</label>
+                    <div t-if="!state.tags.length" class="text-muted">Keine erkannt.</div>
+                    <div class="d-flex flex-wrap gap-1">
+                        <span t-foreach="state.tags" t-as="tag" t-key="tag.id"
+                              class="badge text-bg-secondary d-flex align-items-center gap-1">
+                            <t t-esc="tag.name"/>
+                            <i class="fa fa-times" role="button" t-on-click="() => this.removeTag(tag_index)"/>
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Kontakt</label>
+                    <div t-if="!state.partner" class="text-muted">Kein Kontakt erkannt.</div>
+                    <div t-else="" class="d-flex align-items-center gap-2">
+                        <span t-esc="state.partner.name"/>
+                        <i class="fa fa-times" role="button" t-on-click="clearPartner"/>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-4">
+                        <label class="form-label fw-bold">Datum</label>
+                        <input type="text" class="form-control" t-model="state.date"/>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label fw-bold">Rechnungsnr.</label>
+                        <input type="text" class="form-control" t-model="state.invoiceNumber"/>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label fw-bold">Betrag</label>
+                        <input type="text" class="form-control" t-model="state.amount"/>
+                    </div>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-primary" t-on-click="onConfirm">Übernehmen</button>
+                <button class="btn btn-secondary" t-on-click="onSkip">Verwerfen</button>
+            </t>
+        </Dialog>
+    </t>
+</templates>

@@ -98,32 +98,29 @@ Empfehlung: Drag & Drop (deckt Fall 1 und 2 gemeinsam ab) zuerst umsetzen - klei
 umrissene Ergänzung an einer bestehenden Funktion, größter Alltagsnutzen. Scan-Eingangsordner ist
 reine Konfiguration, keine Entwicklung - kann parallel eingerichtet werden.
 
-## Baustein 1: Volltextsuche mit OCR
+## Baustein 1 ✅ umgesetzt (2026-09-05): Volltextsuche mit OCR + interaktive Werterkennung
 
-**Größte fehlende Fähigkeit.** Aktuell durchsucht die Suchleiste nur `name` und `tag_ids`
-(`filemanager_file_search.xml`) — der eigentliche Dokumenteninhalt ist unsichtbar für die Suche.
-Das ist PaperOffice größtes Alleinstellungsmerkmal ("beste Volltextsuche aller Zeiten").
+**War die größte fehlende Fähigkeit.** Details der tatsächlichen Umsetzung (Umfang enger als hier
+ursprünglich skizziert, plus ein interaktiver Kontroll-Dialog analog PaperOffice - siehe
+Konversation 2026-09-05):
+[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 22.
 
-**Vorschlag:**
-- Neues Feld `content_text` (`fields.Text`, oder direkt eine Postgres-`tsvector`-Spalte mit
-  GIN-Index für native Volltext-Rankings) auf `int_filemanager.file`.
-- Befüllung als **neue Pending-State-Pipeline-Stufe**, strukturell identisch zu
-  `mediameta.py`/`meta_state`: eigener `ocr_state`, damit OCR (teuer, oft Sekunden pro Seite) nicht
-  denselben Hash-Budget-Topf wie die schon vorhandene, günstigere Metadaten-Extraktion belegt.
-  - PDFs mit Textlayer: direkte Extraktion (PyPDF2 ist laut [int_filemanager_ausbau.md](int_filemanager_ausbau.md)
-    bereits vorhanden).
-  - Gescannte PDFs/Bilder: OCR via `pytesseract`/`ocrmypdf` (neue Abhängigkeit, analog zu
-    `mutagen` fürs Dockerfile).
-  - Office-Dokumente: Text extrahierbar über python-docx/openpyxl **oder** über die ohnehin
-    vorhandene ONLYOFFICE-Anbindung (Document-Server kann in Klartext konvertieren) — zweite
-    Option vermeidet eine weitere Abhängigkeit.
-- **Suchintegration braucht keine einzige Zeile JavaScript:** `<field name="content_text"
-  string="Inhalt"/>` in `filemanager_file_search.xml` reicht — das native "Search Inhalt for: …"
-  fügt sich automatisch ins bestehende Dropdown-Muster ein (dasselbe, das heute schon "Search Name"/
-  "Search Tags" anbietet), inklusive der heute schon gebauten rekursiven Suche
-  ([search_model_patch.js](../int_filemanager/static/src/int_filemanager/native_ui/search_model_patch.js),
-  siehe Punkt 3 dort — `this.query.length > 0` triggert automatisch `child_of`, unabhängig vom
-  Feldnamen).
+Kurzfassung der tatsächlichen Umsetzung ggü. diesem ursprünglichen Entwurf:
+- **v1 bewusst nur PDF + reine Textformate**, nicht Office-Dokumente/Bilder (siehe dort für die
+  Begründung) - Office-Textextraktion bleibt ein möglicher Baustein 1b.
+- **Zweistufige PDF-Behandlung** umgesetzt wie geplant: Textlayer zuerst (PyPDF2), OCR
+  (`pytesseract`/`pdf2image`, nicht `ocrmypdf`) nur als Fallback bei zu wenig Text pro Seite.
+- **Eigener `ocr_state`** wie geplant, plus feste Felder (`extracted_date`/
+  `extracted_invoice_number`/`extracted_amount`) statt eines `fields.Properties` - Regex-Erkennung
+  liefert ein festes, kleines Wertschema, kein dynamisches (siehe Punkt 22 für die Begründung).
+- **Suchintegration exakt wie hier vorhergesagt** - eine Zeile in der Search-View, kein JS nötig,
+  live bestätigt (Volltextsuche nach einem Wort, das nur im Dateiinhalt vorkommt, findet die
+  Datei).
+- **Zusätzlich, über diesen ursprünglichen Entwurf hinaus:** ein interaktiver Kontroll-Dialog
+  (PaperOffice-Vorbild: "reingezogene Datei wird direkt erkannt, Werte werden zur Kontrolle
+  angezeigt") - einfache Regex/Bestandsabgleich statt KI (Nutzerentscheidung), ein Dialog pro
+  Datei bei Mehrfach-Upload. Kein automatischer Backfill für bereits bestehende Dateien
+  (Nutzerentscheidung) - nur neu ankommende/manuell ausgewählte Dateien.
 
 ## Baustein 2: `mail.thread`/`mail.activity.mixin` erben — deckt drei PaperOffice-Features auf einmal ab
 

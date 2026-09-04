@@ -32,6 +32,17 @@
         <field name="active">True</field>
     </record>
 
+    <record id="ir_cron_extract_fulltext" model="ir.cron">
+        <field name="name">Filemanager: Volltext extrahieren (OCR/Text, Baustein 1)</field>
+        <field name="model_id" ref="model_int_filemanager_file"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_extract_fulltext()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="nextcall" eval="(datetime.now() + relativedelta(minutes=15)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="active">True</field>
+    </record>
+
     <record id="ir_cron_prune_scan_log" model="ir.cron">
         <field name="name">Filemanager: Alte Scan-Log-Einträge aufräumen</field>
         <field name="model_id" ref="model_int_filemanager_scan_log"/>

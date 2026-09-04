@@ -249,6 +249,19 @@ class IntFilemanagerController(http.Controller):
             saved.append(name)
         return self._json_response({"ok": True, "saved": saved})
 
+    @http.route("/int_filemanager/analyze_document", type="jsonrpc", auth="user", methods=["POST"])
+    def analyze_document(self, path=""):
+        """Interaktiver Pfad A (Baustein 1, siehe docs/int_filemanager_paperoffice_recherche.md):
+        wird direkt nach einem Drag&Drop-/Button-Upload fuer die betroffene Datei aufgerufen -
+        extrahiert synchron Volltext (OCR bei Bedarf) und leitet einfache Vorschlaege daraus ab,
+        zur Kontrolle im Dialog, nicht zur automatischen Uebernahme. "write"-Berechtigung, nicht
+        nur "read": das Ergebnis wird auf dem Datensatz gespeichert (content_text/ocr_state)."""
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        rel = to_relative(request.env, abs_path)
+        authz.require(request.env, rel, "write")
+        return request.env["int_filemanager.file"].action_analyze_document(rel)
+
     # ---------------------------------------------------------------------
     # versioning
     # ---------------------------------------------------------------------

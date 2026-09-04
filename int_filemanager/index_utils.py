@@ -4,6 +4,7 @@ from datetime import datetime
 
 from odoo import fields
 
+from .fulltext import fulltext_type_of
 from .mediameta import media_type_of
 from .path_utils import to_relative
 
@@ -45,6 +46,12 @@ def _entry_vals(env, abs_path):
             # Werte (Thumbnail etc.) bleiben bis dahin unveraendert stehen,
             # write() unten aendert nur die hier gesetzten Felder.
             vals["meta_state"] = "pending"
+        if fulltext_type_of(vals["name"]):
+            # Gleiches Prinzip fuer den Volltext (Baustein 1) - eigener Zustand (ocr_state), siehe
+            # filemanager_file.py fuer die Begruendung der Trennung von meta_state. Bewusst KEIN
+            # Backfill fuer bereits vor dieser Aenderung indexierte Bestandsdateien (Entscheidung
+            # 2026-09-05) - nur neu ankommende/geaenderte Dateien ab jetzt.
+            vals["ocr_state"] = "pending"
     return vals
 
 

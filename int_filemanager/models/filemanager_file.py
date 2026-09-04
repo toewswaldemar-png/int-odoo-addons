@@ -9,6 +9,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.fields import Domain
 
+from ..fulltext import FulltextTooLarge, extract_fulltext, fulltext_type_of, suggest_from_text
 from ..hash_utils import compute_stable_hash
 from ..mediameta import MetaTooLarge, extract_metadata, media_type_of
 from ..path_utils import get_root, to_relative
@@ -33,6 +34,16 @@ DEFAULT_META_MAX_BYTES = {
     "image": 50 * 1024 * 1024,
     "pdf": 100 * 1024 * 1024,
     "audio": 100 * 1024 * 1024,
+}
+
+# Deutlich kleinere Batchgroesse als MEDIA_META_CRON_BATCH_SIZE: OCR eines mehrseitigen Scans kann
+# real mehrere Sekunden bis niedrige zweistellige Sekunden dauern (Thumbnail/EXIF/Tags dagegen
+# Millisekunden) - ein zu grosser Batch wuerde den Cron-Lauf unnoetig in die Laenge ziehen.
+FULLTEXT_CRON_BATCH_SIZE = 20
+
+DEFAULT_FULLTEXT_MAX_BYTES = {
+    "plain": 5 * 1024 * 1024,
+    "pdf": 50 * 1024 * 1024,
 }
 
 
@@ -197,6 +208,41 @@ class IntFilemanagerFile(models.Model):
     audio_title = fields.Char(copy=False)
     audio_artist = fields.Char(copy=False)
     audio_album = fields.Char(copy=False)
+
+    # --- Baustein 1: Volltextsuche/OCR (siehe docs/int_filemanager_paperoffice_recherche.md) ----
+    # Eigener ocr_state statt meta_state wiederzuverwenden: OCR ist deutlich teurer als Thumbnail/
+    # EXIF/Tags und hat einen anderen Anwendungsbereich (PDF/Text statt Bild/PDF/Audio) - ein
+    # eigenes Budget/eigene Retry-Zaehlung vermeidet, dass beide Extraktionen sich gegenseitig
+    # ausbremsen. Gleiche vier Zustaende, gleiche Semantik wie meta_state.
+    ocr_state = fields.Selection(
+        [
+            ("pending", "Ausstehend"),
+            ("running", "Läuft"),
+            ("done", "Fertig"),
+            ("error", "Fehler"),
+        ],
+        index=True,
+        copy=False,
+    )
+    ocr_error = fields.Char(copy=False)
+    ocr_attempts = fields.Integer(copy=False, default=0)
+    ocr_source_size = fields.Integer(copy=False, help="Groesse zum Zeitpunkt der Extraktion.")
+    ocr_source_mtime_ns = fields.Char(
+        copy=False, help="mtime_ns zum Zeitpunkt der Extraktion, verlustfrei als Text."
+    )
+    content_text = fields.Text(
+        copy=False, help="Volltext aus OCR/Textextraktion - fuer die Suche, nicht zur Anzeige gedacht."
+    )
+
+    # Aus content_text per einfacher Regex vorgeschlagene Werte (siehe fulltext.suggest_from_text)
+    # - bewusst feste, einzelne Felder statt eines fields.Properties: die Regex-Erkennung liefert
+    # ein festes, kleines Set moeglicher Werte, kein pro Dokumenttyp wechselndes Schema (das waere
+    # der eigentliche Anwendungsfall fuer Properties, siehe echte Odoo-Beispiele wie
+    # event.registration.registration_properties - hier nicht gegeben). Nur ueber den interaktiven
+    # Analyse-Dialog befuellt, nie automatisch ungeprueft uebernommen.
+    extracted_date = fields.Char(copy=False, string="Erkanntes Datum")
+    extracted_invoice_number = fields.Char(copy=False, string="Erkannte Rechnungsnummer")
+    extracted_amount = fields.Char(copy=False, string="Erkannter Betrag")
 
     # --- Phase 5: Freigaben (intern & extern) -----------------------------
     # "Intern": shared_partner_ids - persistente Freigabe an konkrete Portal-
@@ -380,6 +426,92 @@ class IntFilemanagerFile(models.Model):
                 result["meta_error"] = False
                 rec.write(result)
             self.env["ir.cron"]._commit_progress(processed=1)
+
+    def _fulltext_max_bytes(self, fulltext_type):
+        ICP = self.env["ir.config_parameter"].sudo()
+        param = ICP.get_param("int_filemanager.fulltext_max_bytes_%s" % fulltext_type)
+        if param:
+            try:
+                return int(param)
+            except ValueError:
+                pass
+        return DEFAULT_FULLTEXT_MAX_BYTES[fulltext_type]
+
+    def _extract_fulltext_for_record(self, root=None):
+        """Fuehrt die Volltextextraktion fuer genau einen Datensatz aus und schreibt das Ergebnis
+        - gemeinsamer Kern fuer den Hintergrund-Cron (_cron_extract_fulltext, Pfad B: Scan-
+        Eingangsordner, niemand da zum Bestaetigen) UND den interaktiven Analyse-Endpunkt
+        (Pfad A: Drag&Drop direkt in die App, siehe controllers/main.py analyze_document) - beide
+        wollen exakt dieselbe Extraktion, nur zu unterschiedlichen Zeitpunkten ausgeloest. Gibt
+        content_text zurueck (leer, falls nichts extrahiert werden konnte) fuer den interaktiven
+        Aufrufer, der direkt im Anschluss Vorschlaege daraus ableiten will."""
+        self.ensure_one()
+        root = root or get_root(self.env)
+        fulltext_type = fulltext_type_of(self.name)
+        if fulltext_type is None:
+            self.write({"ocr_state": False})
+            return ""
+
+        abs_path = os.path.join(root, self.path)
+        max_bytes = self._fulltext_max_bytes(fulltext_type)
+        try:
+            result = extract_fulltext(abs_path, fulltext_type, max_bytes)
+        except FulltextTooLarge as exc:
+            self.write({"ocr_state": "error", "ocr_error": str(exc), "ocr_attempts": self.ocr_attempts + 1})
+            return ""
+        except Exception as exc:  # noqa: BLE001 - eine kaputte/fremde Datei darf den Aufrufer nicht abbrechen
+            _logger.warning("int_filemanager: Volltextextraktion für %s fehlgeschlagen: %s", self.path, exc)
+            self.write({"ocr_state": "error", "ocr_error": str(exc)[:500], "ocr_attempts": self.ocr_attempts + 1})
+            return ""
+
+        if result is None:
+            # Datei aendert sich gerade oder ist kurz verschwunden - bleibt pending.
+            return ""
+
+        result["ocr_state"] = "done"
+        result["ocr_error"] = False
+        self.write(result)
+        return result.get("content_text") or ""
+
+    def _cron_extract_fulltext(self):
+        """Asynchroner Batch-Job, analog zu _cron_extract_media_meta: extrahiert Volltext (Text
+        oder OCR) fuer alle Dateien mit ocr_state='pending'. Das ist Pfad B (siehe
+        docs/int_filemanager_paperoffice_recherche.md, Baustein 0/1) - Dateien, die z.B. ueber
+        einen beobachteten Scan-Eingangsordner ankommen, wo niemand einen Kontroll-Dialog
+        bestaetigen kann. Dient gleichzeitig als Sicherheitsnetz fuer Pfad A (Drag&Drop in die
+        App), falls der dortige interaktive Analyse-Aufruf uebersprungen oder abgebrochen wurde -
+        ocr_state bleibt in dem Fall pending und wird hier nachgeholt."""
+        root = get_root(self.env)
+        Model = self.env["int_filemanager.file"].sudo()
+        records = Model.search(
+            [("ocr_state", "=", "pending"), ("is_dir", "=", False)],
+            limit=FULLTEXT_CRON_BATCH_SIZE,
+        )
+        for rec in records:
+            rec._extract_fulltext_for_record(root=root)
+            self.env["ir.cron"]._commit_progress(processed=1)
+
+    @api.model
+    def action_analyze_document(self, path):
+        """Interaktiver Pfad A: fuehrt die Volltextextraktion synchron fuer eine einzelne, gerade
+        hochgeladene (oder manuell ausgewaehlte) Datei aus und leitet daraus Vorschlaege ab -
+        blockierend ist hier in Ordnung, es geht um genau eine Datei in einer Nutzerinteraktion,
+        nicht um einen Massenlauf wie beim Cron oben. res_id im Ergebnis, damit der Aufrufer (der
+        Kontroll-Dialog) bei Bestaetigung gezielt genau diesen Datensatz per normalem ORM-write()
+        aktualisieren kann - kein sudo() dafuer noetig/gewuenscht, das laeuft dann als der
+        eingeloggte Nutzer ueber dieselben generierten ir.rule-Regeln wie jede andere
+        Feldbearbeitung am Datensatz (siehe acl_rules.py) - anders als hier oben, wo sudo() den
+        bereits durch authz.require() im Controller abgedeckten Schreibzugriff nur fuer die
+        Extraktion selbst nutzt (gleiches Muster wie die Cron-Jobs weiter oben)."""
+        empty = {"res_id": False, "suggested_tags": [], "suggested_partner": False,
+                 "suggested_date": False, "suggested_invoice_number": False, "suggested_amount": False}
+        rec = self.env["int_filemanager.file"].sudo().search([("path", "=", path)], limit=1)
+        if not rec or rec.is_dir:
+            return empty
+        text = rec._extract_fulltext_for_record()
+        if not text:
+            return {**empty, "res_id": rec.id}
+        return {**suggest_from_text(self.env, text), "res_id": rec.id}
 
     def _scan_and_reconcile(self, batch_size=2000):
         """Full filesystem scan, reconciling the search index with disk state.

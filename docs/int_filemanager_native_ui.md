@@ -915,3 +915,74 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     eingesetzten Outlook-Version tatsächlich als echtes Datei-Drag beim Browser ankommt
     (versionsabhängig - klassisches Desktop-Outlook vs. neues Outlook/WebView2 vs. OWA), lässt
     sich nur mit einem echten Nutzer-Test klären.
+
+22. **Baustein 1 umgesetzt (2026-09-05): Volltextsuche (OCR/Textlayer) + interaktiver
+    Kontroll-Dialog** ([int_filemanager_paperoffice_recherche.md](int_filemanager_paperoffice_recherche.md)).
+    Auslöser: bei PaperOffice wird eine reingezogene Datei direkt per OCR erkannt, die erkannten
+    Werte lassen sich vor der Übernahme kontrollieren - reines Hintergrund-Volltextindizieren
+    (der ursprüngliche Baustein-1-Entwurf) hätte das nicht abgebildet.
+
+    **Architektur - Muster von `mediameta.py`/`_cron_extract_media_meta` 1:1 gespiegelt:** neue
+    Datei `fulltext.py` (`fulltext_type_of()`-Dispatch, `extract_fulltext()` mit derselben
+    Stable-Read-Garantie wie `mediameta.extract_metadata()`), eigener `ocr_state` (nicht
+    `meta_state` wiederverwendet - anderer Kostenrahmen), neuer Cron `_cron_extract_fulltext()`.
+    Bewusste Abgrenzungen ggü. dem ursprünglichen Recherche-Entwurf: **nur PDF + reine
+    Textformate** in v1 (Office-Dokumente/Bilder wären Baustein 1b - Bilder bewusst nie
+    automatisch, sonst OCR über private Fotos statt Scans); **zweistufige PDF-Behandlung**
+    (Textlayer zuerst per `PdfReader`, OCR via `pytesseract`/`pdf2image` nur wenn <20 Zeichen/Seite
+    - digital erzeugte PDFs sparen sich damit den teuren Schritt komplett); **kein Backfill** für
+    bereits bestehende Dateien (Nutzerentscheidung) - nur ab jetzt neu ankommende/geänderte Dateien
+    (`index_utils.py`) bzw. manuell ausgewählte (siehe unten).
+
+    **Zwei Erfassungswege, unterschiedlich behandelt** (deckt sich mit den zwei in Baustein 0
+    beschriebenen Gewohnheiten):
+    - **Pfad A (Drag&Drop/Upload in die App):** nach dem Upload synchron `POST
+      /int_filemanager/analyze_document` pro Datei (neue Route + `action_analyze_document()`,
+      `@api.model`) - OCR blockierend fürs UI ist hier bewusst in Ordnung, es geht um eine Datei in
+      einer Nutzerinteraktion, nicht um einen Massenlauf. Ergebnis geht in einen neuen Dialog
+      (`IntDocumentReviewDialog`, `native_ui/document_review_dialog.js/.xml`) - eine Datei nach der
+      anderen bei Mehrfach-Upload (Nutzerentscheidung), `dialog.add(..., {onClose: resolve})` als
+      Wartepunkt zwischen den Dateien. "Übernehmen" schreibt per normalem `this.orm.write()` -
+      bewusst kein `sudo()`/Custom-Endpoint dafür, das sind reine Feldänderungen
+      (`tag_ids`/`res_reference`/`extracted_*`), keine Dateisystem-Operation, laufen also korrekt
+      über dieselben `ir.rule`-Regeln wie jede andere Bearbeitung am Datensatz.
+    - **Pfad B (Scan-Eingangsordner):** der Hintergrund-Cron, niemand da zum Bestätigen. Dient
+      gleichzeitig als Sicherheitsnetz für Pfad A, falls der Dialog übersprungen wird (`ocr_state`
+      bleibt dann `pending`, Cron holt es nach). Beide Pfade rufen denselben Kern
+      (`_extract_fulltext_for_record()`) auf, nur zu unterschiedlichen Zeitpunkten ausgelöst.
+    - **Zusätzlich: manueller Auslöser für Bestandsdateien** ("Werte erkennen", neuer
+      `ActionMenus`-Eintrag, gleiches Muster wie "Freigeben"/"Lokal öffnen") - da kein Backfill
+      läuft, sonst gäbe es für alte Dateien keinen Weg zur interaktiven Erkennung.
+
+    **Werterkennung per einfacher Regex/Bestandsabgleich** (Nutzerentscheidung 2026-09-05, keine
+    LLM-Anbindung): Tags nur aus bereits existierenden `int_filemanager.tag`-Namen (kein Erfinden
+    neuer Tags), Kontakt aus Abgleich gegen existierende `res.partner`-Namen im Text (Treffer
+    schlägt vor, `res_reference` zu setzen - nutzt die Verknüpfungs-Logik einfach in die andere
+    Richtung), Datum/Rechnungsnr./Betrag per Regex. Nichts davon wird automatisch geschrieben -
+    erst "Übernehmen" im Dialog schreibt tatsächlich.
+
+    **Echter Bug im eigenen neuen Code gefunden und sofort behoben, live nachgewiesen:**
+    `_extract_fulltext_for_record(self, rec, root=None)` hatte `rec` fälschlich als eigenen
+    Parameter UND wurde als Instanzmethode aufgerufen (`rec._extract_fulltext_for_record()`) - der
+    Analyse-Endpunkt schlug mit `TypeError: missing 1 required positional argument: 'rec'` fehl.
+    Fix: `rec`-Parameter entfernt, `self` ist bereits der Datensatz (Methodenkörper nutzte intern
+    ohnehin schon durchgehend `self`, nur die Signatur war falsch).
+
+    **Neue Abhängigkeiten, System- nicht nur Python-Pakete (Dockerfile erweitert):**
+    `tesseract-ocr`/`tesseract-ocr-deu`/`poppler-utils` (apt) + `pytesseract`/`pdf2image` (pip) -
+    laufen alle in-process in derselben Odoo-Instanz, kein separater Dienst/Container nötig
+    (`pytesseract` ruft `tesseract` einfach per `subprocess` auf, wie `mutagen`/`Pillow` auch
+    lokal arbeiten). Image neu gebaut, `tesseract --version` im Container bestätigt (5.3.4).
+
+    **Live komplett Ende-zu-Ende verifiziert** (Testinstanz auf Tower, temporär auf einen
+    beschreibbaren Testordner umgeschaltet, da `/mnt/hm-daten` bewusst read-only ist - danach
+    wieder zurückgesetzt): Testdatei mit Inhalt, der alle Muster gleichzeitig trifft (bestehender
+    Tag "dfgdfg", bestehender Kontakt "My Company", Datum, Rechnungsnr., Betrag) per synthetischem
+    Drop hochgeladen - Dialog zeigte alle fünf Vorschläge korrekt. "Übernehmen" geklickt, per SQL
+    verifiziert: `tag_ids`, `res_reference=res.partner,1`, `extracted_date`,
+    `extracted_invoice_number`, `extracted_amount`, `content_text` alle korrekt gespeichert.
+    Zusätzlich über den manuellen "Werte erkennen"-Button denselben Dialog für eine
+    Bestandsdatei ausgelöst - identisches Ergebnis. Volltextsuche nach "Gesamtbetrag" (Wort kommt
+    nur im Dateiinhalt vor, nicht in Name/Tags) fand die Datei korrekt - bestätigt die
+    Sucheinbindung ohne jede JS-Änderung. Komplette Testsuite in isolierter DB weiterhin **0
+    failed, 0 error(s) of 66 tests** - keine Regression durch die neuen Felder/Route/Cron.
