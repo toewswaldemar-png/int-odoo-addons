@@ -738,3 +738,29 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Suche aktiv ist, kein zusätzliches UI-Element, kein Opt-in nötig - deckt sich mit modernen
     Explorer-Suchfeldern und behebt den gemeldeten Bug ohne dass Nutzer erst einen Schalter kennen
     müssen. Live im Browser gegen die Testinstanz nachgestellt und vom Nutzer selbst bestätigt.
+
+18. **Direkter Folgefund vom Nutzer, noch am selben Tag (2026-09-04): Klick auf einen
+    Ordner in der Liste navigierte in der Breadcrumb korrekt rein, die Listenansicht zeigte aber
+    weiterhin den alten Ordnerinhalt - bis der Tag-Filter entfernt wurde.** Live reproduziert:
+    Ordner `ColorThemes` trägt selbst den gesuchten Tag `dfgdfg`, hat aber (zu dem Zeitpunkt)
+    keine getaggten Kinder. Bei aktivem Tag-Filter eine Ebene höher hineingeklickt - Breadcrumb
+    zeigte `.../REAPER/ColorThemes`, die Liste zeigte weiterhin **`ColorThemes` selbst** als
+    einzige Zeile, nicht dessen (leeren) Inhalt.
+
+    **Root Cause, per Runtime-Patch auf `SearchModel.prototype._getCategoryDomain` live
+    nachgewiesen** (Odoo-Loader-Modul `@web/search/search_model` direkt im Browser gepatcht, um
+    jeden Aufruf mit `activeValueId`/Ergebnis zu loggen - kein Rätselraten): die Domain wurde
+    korrekt zu `[["parent_id","child_of",<ColorThemes-ID>]]` berechnet, `activeValueId` stimmte.
+    Der eigentliche Fehler lag tiefer: **`child_of` auf `parent_id` ist selbst-inklusiv, wenn das
+    Feld das eigene `_parent_name` des Modells ist** - die Query matcht den Ordner **selbst plus**
+    alle Nachfahren, nicht nur die Nachfahren. Da `ColorThemes` selbst der einzige Treffer war,
+    lieferte die (technisch korrekte) Query genau ihn zurück - sah aber aus wie "Navigation
+    passiert nicht", weil dieselbe Zeile schon eine Ebene höher sichtbar war.
+
+    **Fix (`search_model_patch.js`):** beim `parent_id`/`child_of`-Zweig zusätzlich
+    `["id", "!=", <activeValueId>]` gesetzt, damit der gerade betretene Ordner nie mehr als Zeile
+    seiner selbst erscheint, nur seine tatsächlichen Nachfahren. Verifiziert mit einem zweiten
+    Testfall (Tag zusätzlich auf eine Datei *innerhalb* von `ColorThemes` gesetzt, testweise, nach
+    Verifikation wieder entfernt): Suche von "Alle" aus findet weiterhin beide Treffer
+    (`ColorThemes` + die Datei), Klick auf `ColorThemes` zeigt jetzt korrekt nur noch die Datei
+    darin, nicht mehr `ColorThemes` selbst.

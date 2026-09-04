@@ -30,6 +30,16 @@
 // tree instead of only literal root-level rows, matching Odoo's original unselected-
 // category default. Plain navigation (no search facet) keeps "=" exactly as before.
 //
+// A fourth case, found live (2026-09-04): "child_of" on parent_id is self-inclusive when
+// the field is the model's own _parent_name (verified by logging _getCategoryDomain's own
+// result live) - it matches the selected folder ITSELF, not just its descendants. Browsing
+// into a folder that is itself tagged with the searched tag showed that folder listed as a
+// row of itself instead of its (empty, in that case) matching contents - breadcrumb
+// navigated in correctly, the list just re-displayed what was already visible one level up,
+// looking exactly like navigation silently failed. Fix: explicitly exclude the folder's own
+// id alongside child_of, so navigating in always shows descendants only, never the folder
+// currently being browsed.
+//
 // Scoped to int_filemanager.file via this.resModel so every other SearchPanel category in
 // the instance (product categories, stock reports, ...) keeps Odoo's default behaviour
 // untouched - same scoping pattern int_web_tweaks already uses in list_column_reorder.js
@@ -52,6 +62,7 @@ patch(SearchModel.prototype, {
                 if (this.query.length) {
                     if (value) {
                         domain.push(["parent_id", "child_of", value]);
+                        domain.push(["id", "!=", value]);
                     }
                 } else {
                     domain.push(["parent_id", "=", value]);
