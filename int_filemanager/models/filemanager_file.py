@@ -62,7 +62,12 @@ class IntFilemanagerFile(models.Model):
     _parent_name = "parent_id"
     _parent_store = True
     is_dir = fields.Boolean(string="Ist Ordner", index=True)
-    size = fields.Integer(string="Größe (Bytes)")
+    size = fields.Float(
+        string="Größe (Bytes)", digits=(0, 0),
+        help="Float statt Integer: Bytes sind zwar nie fraktional, aber int4 (Odoos Integer-Feld) "
+        "kappt bei ~2,1 GB - reale Dateien hier werden bis 15 GB groß. digits=(0,0) unterdrückt "
+        "trotzdem die Nachkommastellen in der Anzeige.",
+    )
     mtime = fields.Datetime(string="Geändert")
     last_seen = fields.Datetime(
         help="Zeitpunkt des letzten Scans, bei dem dieser Eintrag noch auf der Platte existierte "

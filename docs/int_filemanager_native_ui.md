@@ -545,3 +545,52 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
 13. **Sicherheitsrelevant, nicht vergessen:** für die Live-Tests in dieser Session wurde ein
     temporäres Admin-Passwort (`TempDebug2026!`) auf der Unraid-Instanz gesetzt — bewusst noch nicht
     zurückgesetzt (Stand 2026-09-04, auf Wunsch offen gelassen).
+14. **Deploy-Blocker gefunden und gefixt (2026-09-04): `size` als `Integer` überlebt reale Dateien
+    nicht.** Beim Ausrollen des kompletten Branch-Stands auf die Unraid-Instanz (Modul-Upgrade gegen
+    die echte `odoo`-DB mit 427.913 Zeilen) schlug die Spalten-Migration aus Punkt 10 mit
+    `psycopg2.errors.NumericValueOutOfRange: integer out of range` fehl. Ursache: Odoos `Integer`-Feld
+    ist ein 32-Bit `int4` (Max. ~2,1 GB) - `max(size)` im echten Bestand liegt bei **15.022.675.968
+    Bytes (~14 GB)**. Der frühere Test dieser Migration (Punkt 10) lief nur gegen kleine
+    Testdateien, nicht gegen den realen Bestand. Fix: `size` zurück auf `fields.Float`, aber mit
+    `digits=(0, 0)`, um weiterhin ohne Nachkommastellen anzuzeigen (der eigentliche Punkt-10-Wunsch)
+    - kein Integer-Overflow mehr möglich, da `numeric`/`double precision` in Postgres. `hash_size`/
+    `meta_source_size` bleiben `Integer` (bestehendes, nicht Teil dieser Änderung) - tragen
+    theoretisch dasselbe Risiko, aber das ist vorbestehend und nicht Gegenstand dieses Fixes.
+
+15. **SearchPanel-Skalierung erneut gemessen (2026-09-04) - diesmal gegen echte Daten UND mit dem
+    tatsächlich deployten `search_panel_select_range`-Override (nicht nur ein isoliertes Feld wie
+    beim Test in Punkt 5):** Server-seitig per `odoo shell` gemessen (kein Browser/Login nötig),
+    exakt derselbe Aufruf, den `native_list_view.js`/`search_model_patch.js` beim Laden auslösen.
+
+    | Ordner (`is_dir=True`) | Gesamtzeilen | ohne `enable_counters` | mit `enable_counters` |
+    |---|---|---|---|
+    | 29.120 (aktueller Realbestand) | 427.913 | 0,44s | 1,93s |
+    | 129.121 (+100.000 synthetisch) | 527.914 | 4,75s | 8,32s |
+
+    Synthetische Ordner per SQL-Bulk-Insert unter eigenem isolierten Wurzelpfad
+    `/synthetic-scale-test` angelegt (nicht per ORM-`write()`, siehe Kaskaden-Falle in Punkt
+    "Eigentlicher Aufwand"), `_parent_store_compute()` danach für die Neuberechnung, nach dem Test
+    rückstandsfrei gelöscht + erneut `_parent_store_compute()` - Endstand wieder exakt 427.913/29.120
+    verifiziert.
+
+    **Zwei unabhängige, klare Befunde:**
+    - **`enable_counters=True` ist teuer und skaliert mit der Gesamtzeilenzahl, nicht der
+      Ordnerzahl** - schon bei 29.120 realen Ordnern kostet es +1,49s (0,44s→1,93s), weil dabei
+      alle 427.913 Zeilen (nicht nur Ordner) pro Baumknoten gezählt werden müssen. Der in Punkt
+      "Die SearchPanel-Arch" genannte Vorteil ("Bonus passend zum DMS-Ziel") hat also einen realen
+      Preis, der beim ursprünglichen Smoke-Test (kleiner, dateiloser Testbestand) nicht sichtbar war.
+    - **Die Skalierung selbst ist deutlich schlechter als linear:** 4,4x mehr Ordner (29k→129k)
+      kosten 10,8x mehr Zeit ohne Counter (0,44s→4,75s), nicht ~4,4x. Vermutlich `expand=True` +
+      `hierarchize` (Baumaufbau in `search_panel_select_range`, `web/models/models.py`) - nicht
+      weiter root-caused, da für die Entscheidung hier nicht nötig.
+
+    **Einordnung gegenüber der bisherigen Entscheidung in Punkt 5** ("nativ belassen, erst bei
+    echtem Wachstum neu bewerten"): der reale Bestand *heute* liefert mit `enable_counters` bereits
+    1,93s Serverzeit für einen Aufruf, der bei jedem Seitenaufruf/Navigationsschritt in der
+    Dateimanager-Liste feuert (`useModel`/`SearchModel`-Reload) - das ist schon jetzt spürbar, nicht
+    erst bei künftigem Wachstum. Keine Änderung an Code/Verhalten in dieser Session vorgenommen
+    (reine Messung) - **offene Entscheidung für die nächste Session:** `enable_counters` default
+    abschalten (oder nur bei Bedarf einblenden) und/oder das in Punkt "Skalierung des
+    `<searchpanel>`" bereits skizzierte Lazy-Loading-Alternative jetzt angehen, statt wie bisher auf
+    "spürbares künftiges Wachstum" zu warten - die Zahlen zeigen, dass der Schwellenwert real schon
+    erreicht ist.
