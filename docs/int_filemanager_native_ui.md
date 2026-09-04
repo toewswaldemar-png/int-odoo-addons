@@ -594,3 +594,112 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     `<searchpanel>`" bereits skizzierte Lazy-Loading-Alternative jetzt angehen, statt wie bisher auf
     "spürbares künftiges Wachstum" zu warten - die Zahlen zeigen, dass der Schwellenwert real schon
     erreicht ist.
+
+16. **SearchPanel-Counter-Performance behoben, Navigations-Latenz produktionsnah gemessen, echte
+    Lazy-Alternative gefunden (2026-09-04) - Fortsetzung von Punkt 15:**
+
+    **Testumgebung, weil kein Zugriff auf HM-SRV bestand:** komplett separate Odoo-19-Instanz auf
+    einem *zweiten* Unraid-Server ("Tower", 192.168.178.73, nicht HM-SRV) aufgesetzt - eigenes
+    Docker-Image (Repo-`Dockerfile`), eigene Postgres-17-Instanz, `onlyoffice_odoo` vom offiziellen
+    `19.0`-Branch nachinstalliert (harte Manifest-Abhängigkeit, im Repo nicht enthalten). Echte
+    Datenbasis über `/mnt/user/Daten` (ein bestehender, aktiver persönlicher Datenbestand auf
+    diesem Server) **read-only** gemounted - explizit read-only, weil dort auch sensible Daten
+    liegen (u.a. ein `Keepass`-Ordner); erster Scan ergab 87.036 Zeilen/7.788 Ordner. Für
+    produktionsnahe Messungen zusätzlich synthetisch auf **427.914 Zeilen/29.121 Ordner** hochskaliert
+    (rohes SQL-Bulk-Insert unter isoliertem `synthetic-scale-test`-Pfad, `_parent_store_compute()`
+    danach, exakt die in Punkt "Eigentlicher Aufwand" dokumentierte Methode) - trifft den echten
+    HM-SRV-Bestand (427.913/29.120) fast exakt. Nach den Messungen rückstandsfrei wieder entfernt
+    (`DELETE ... WHERE path LIKE 'synthetic-scale-test%'` + erneutes `_parent_store_compute()`),
+    Endstand 87.040/7.788 verifiziert (die 4 zusätzlichen Zeilen ggü. dem ersten Scan sind keine
+    Testreste, sondern echte neue Dateien, die während der Session auf `/mnt/user/Daten` entstanden
+    sind - per Pfad/Zeitstempel verifiziert, nicht angenommen).
+
+    **Root Cause der Counter-Kosten, per `EXPLAIN ANALYZE` gefunden (kein N+1, wie zunächst
+    vermutet):** `search_panel_select_range` → `_search_panel_field_image` →
+    `_search_panel_domain_image` baut über `formatted_read_group` eine einzelne, aber schlecht
+    geplante Query - `GROUP BY`/`ORDER BY` teilen sich dieselben Spalten (Eltern-`is_dir`,
+    Eltern-`name`, `parent_id`), wodurch Postgres einen `GroupAggregate` wählt, der **alle** Roh-Kind-
+    Zeilen vorsortiert statt nur die Ergebnisgruppen danach. Bei 87.036 Zeilen: 125ms inkl.
+    Platten-Spill (`Sort Method: external merge`), mit `work_mem=64MB` (kein Spill mehr) immer noch
+    95ms - der Sort selbst ist die Kosten, nicht die I/O. Odoos eigenes, tieferliegendes `_read_group`
+    (statt `formatted_read_group`) liefert dieselben lokalen Zählungen ohne den Join/Sort in **10,8ms**
+    (kein N+1, eine einzelne indizierte `GROUP BY parent_id`-Query).
+
+    **Patch (chirurgisch, am bestehenden, bereits genutzten Erweiterungspunkt, kein Core-Patch):**
+    [filemanager_file.py](../int_filemanager/models/filemanager_file.py) - der bestehende
+    `search_panel_select_range`-Override wird um `_search_panel_parent_id_counters()` ergänzt: Baum
+    weiterhin unverändert nativ per `super()` mit `enable_counters=False` holen (bereits schnell),
+    lokale Zählung selbst per `self._read_group(...)` nachladen, danach Odoos **eigene**
+    `_search_panel_global_counters()` für den lokal→global-Rollup wiederverwenden (keine
+    Neuimplementierung - dieselbe Methode, die die rekursiven Nachfahren-Summen erzeugt, siehe das
+    "590"-Beispiel weiter oben). `count_domain` wird identisch zu Odoos eigener Formel
+    (`search_domain & category_domain & filter_domain`) über `Domain.AND([...])` nachgebaut, damit
+    aktive Filter/Suchen die Zählung weiterhin korrekt einschränken.
+
+    **Korrektheit verifiziert (nicht nur behauptet):** echte `BaseModel`-Implementierung per
+    MRO-Walk direkt aufgerufen (umgeht den eigenen Override) und mit dem gepatchten Ergebnis
+    verglichen - bitgenau identische `__count`-Werte in 4 Domain-Szenarien (kein Filter, nur Dateien,
+    nur Ordner, `name ilike 'a'`), sowohl bei 87k- als auch bei 427k-Zeilen-Skala (29.121 Knoten,
+    0 Abweichungen). Zusätzlich die komplette Addon-Testsuite (66 Tests) in einer **frischen,
+    isolierten** Datenbank (`odoo19test_ci`, ohne echte Daten, `-e HOST/USER/PASSWORD` statt
+    `--db_host`-CLI-Flags - der offizielle Odoo-Entrypoint prüft die DB-Verbindung selbst anhand
+    dieser Env-Variablen, bevor er eigene CLI-Argumente überhaupt sieht) laufen lassen: **0 failed,
+    0 error(s) of 66 tests.** (Ein erster Versuch, die Suite direkt gegen die echte, befüllte
+    `odoo19test`-DB laufen zu lassen, wurde abgebrochen - ein Media-Metadaten-Test verarbeitete dabei
+    versehentlich den kompletten realen `pending`-Medienbestand mit und lief absehbar sehr lange;
+    kein Datenverlust, da Odoo-Tests standardmäßig per Savepoint zurückgerollt werden, aber
+    methodisch falsch aufgesetzt - Lehre: Testsuiten dieses Addons nur gegen eine separate DB laufen
+    lassen, nie gegen eine mit echtem Datenbestand.)
+
+    **Navigations-Latenz im echten Browser gemessen (nicht nur Server-Funktion isoliert):** bei
+    427.914/29.121 Zeilen, per `performance.getEntriesByType('resource')` auf denselben Klick, direkt
+    nacheinander unter gleichem Cache-Zustand gemessen:
+
+    | | Server (`odoo shell`) | Browser (echter Klick) |
+    |---|---|---|
+    | Nativ | 3,48s | 1.744ms |
+    | Gepatcht | 0,46s | 572ms |
+
+    Browser-Verhältnis (≈3x) kleiner als das reine Server-Verhältnis (≈7,5x), weil im Browser fixe
+    Kosten (Rendering, Netzwerk, restliche Seite) mit reinspielen, die der Patch nicht verändert -
+    trotzdem ~1,2s realer Latenzgewinn pro Ordnerklick bei Produktionsgröße.
+
+    **Neuer, wichtiger Fund über die ursprüngliche Frage hinaus - echte Lazy-Navigation ist bereits
+    in Odoo eingebaut, keine SearchPanel-Interna-Patch nötig:** live im echten `search_model.js`
+    dieser Odoo-19-Version nachgelesen (`_reloadSections()`):
+    ```js
+    const toFetch = (section) =>
+        section.enableCounters || (searchDomainChanged && !section.expand);
+    ```
+    Mit `expand="1"` (wie in unserer Arch) reduziert sich das zu **`toFetch = enableCounters`** - der
+    komplette Baum wird bei *jedem* `toggleCategoryValue()`-Klick neu vom Server geholt, einzig und
+    allein *weil* `enable_counters="1"` gesetzt ist, unabhängig davon, ob sich die eigentliche
+    Such-/Filter-Domain überhaupt geändert hat. Live verifiziert: mit `enable_counters="0"`
+    (temporär testweise umgeschaltet, siehe unten) löst ein Ordnerklick **keinen** neuen
+    `search_panel_select_range`-Request mehr aus (per `performance`-Einträge nachgezählt: vorher/
+    nachher exakt ein Eintrag, nicht zwei) - nur die Hauptliste lädt neu (`web_search_read`, günstig,
+    indizierte `folder_path`/`parent_id`-Gleichheitsabfrage, vergleichbar mit der alten
+    `/int_filemanager/tree`-Route, dort 33ms für einen realen Ordner mit 31 Kindern, skaliert mit der
+    Kindanzahl, nicht mit der Gesamtgröße des Baums).
+
+    Damit ist die frühere Verwerfung einer Lazy-Variante in Punkt "Skalierung des `<searchpanel>`"
+    weiterhin richtig für den dort geprüften Ansatz (`SearchPanel.toggleCategory()`/
+    `SearchModel`-Interna patchen), aber nicht die einzige Lazy-Option: **`enable_counters`
+    abschalten liefert dieselbe Lazy-Charakteristik kostenlos**, weil Odoos eigene
+    Reload-Entscheidung ausschließlich daran hängt - kein Custom-Code, keine Versionsabhängigkeit.
+
+    **Entscheidung (2026-09-04): Counter bleiben vorerst an,** trotz der bekannten Mehrkosten -
+    Trefferzahlen im Baum wiegen aktuell stärker als die zusätzliche Latenz. Patch aus diesem Punkt
+    bleibt als Absicherung aktiv (reduziert die Kosten der Counter-Variante um ~3x im Browser,
+    ~7,5x serverseitig, ohne Verhaltensänderung). **Festgehalten für eine spätere Entscheidung:**
+    sollten die Trefferzahlen im Baum doch verzichtbar werden, ist `enable_counters="0"` (ein
+    Ein-Zeilen-Arch-Wechsel in `filemanager_file_search.xml`, kein weiterer Code nötig) die
+    strukturell bessere Lösung, weil sie das *ganze* "kompletter Baum bei jedem Klick"-Problem
+    eliminiert, nicht nur die Zählkosten darin.
+
+    **Stand des Patches:** liegt im Working Tree von `filemanager_file.py`, **noch nicht committet**.
+    Testinstanz auf Tower (`odoo19-test`-Container + `odoo19-test-db`, eigenes Docker-Netzwerk
+    `odoo19-test-net`) läuft weiter für künftige Verifikationen; SSH-Key `claude-code-unraid` liegt in
+    `authorized_keys` auf Tower. Admin-Login der Testinstanz: `admin`/`admin_test_2026` - wie beim
+    `TempDebug2026!`-Passwort auf HM-SRV (Punkt 13) ein Test-Zugang, der bewusst nicht besonders
+    abgesichert ist, weil die Instanz nur lokal (127.0.0.1, per SSH-Tunnel erreichbar) gebunden ist.

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.fields import Domain
 
 from ..hash_utils import compute_stable_hash
 from ..mediameta import MetaTooLarge, extract_metadata, media_type_of
@@ -96,9 +97,48 @@ class IntFilemanagerFile(models.Model):
         native SearchPanel fuer ein Category-Feld (kein select="multi") das eigene domain-
         Attribut der Arch clientseitig gar nicht erst an comodel_domain weiterreicht -
         live verifiziert, siehe docs/int_filemanager_native_ui.md, Smoke-Test-Abschnitt."""
-        if field_name == "parent_id":
-            kwargs["comodel_domain"] = (kwargs.get("comodel_domain") or []) + [("is_dir", "=", True)]
-        return super().search_panel_select_range(field_name, **kwargs)
+        if field_name != "parent_id":
+            return super().search_panel_select_range(field_name, **kwargs)
+        kwargs["comodel_domain"] = (kwargs.get("comodel_domain") or []) + [("is_dir", "=", True)]
+        if not kwargs.get("enable_counters") or not kwargs.get("hierarchize", True):
+            return super().search_panel_select_range(field_name, **kwargs)
+        return self._search_panel_parent_id_counters(**kwargs)
+
+    def _search_panel_parent_id_counters(self, **kwargs):
+        """Ersetzt Odoos eingebaute Counter-Berechnung fuer den parent_id-Ordnerbaum durch eine
+        aequivalente, aber deutlich billigere Zaehlung - liefert bitidentische Werte, nur schneller.
+
+        Root Cause (live per EXPLAIN ANALYZE gegen echte Daten verifiziert, siehe
+        docs/int_filemanager_native_ui.md): Odoos eigener Zaehlpfad
+        (_search_panel_field_image -> _search_panel_domain_image -> formatted_read_group) gruppiert
+        und sortiert nach denselben Spalten (Elternordner-is_dir/-name), wodurch Postgres alle
+        Rohzeilen VOR der Aggregation sortieren muss statt nur die Ergebnisgruppen danach - bei
+        87.036 Zeilen/7.788 Ordnern gemessen: 125ms statt 11ms fuer eine SQL-aequivalente
+        GROUP-BY-COUNT-Query ueber das ORM-eigene (nicht formatted_read_group) _read_group.
+
+        Vorgehen: Baumstruktur/Sortierung/Breadcrumb-Hierarchie unveraendert nativ von super() holen
+        (das ist bereits schnell, siehe docs), lokale Zaehlung selbst per _read_group nachladen,
+        danach Odoos eigene _search_panel_global_counters() fuer den lokal->global-Rollup
+        (Nachfahren-Summe die Ancestor-Kette hoch) wiederverwenden - keine Neuimplementierung von
+        Odoo-Kernlogik, nur der teure Teilschritt wird ersetzt.
+        """
+        result = super().search_panel_select_range("parent_id", **{**kwargs, "enable_counters": False})
+
+        count_domain = Domain.AND([
+            kwargs.get("search_domain") or [],
+            kwargs.get("category_domain") or [],
+            kwargs.get("filter_domain") or [],
+            [("parent_id", "!=", False)],
+        ])
+        groups = self._read_group(count_domain, groupby=["parent_id"], aggregates=["__count"])
+        local_counts = {parent.id: count for parent, count in groups}
+
+        field_range = {value["id"]: value for value in result["values"]}
+        for record_id, values in field_range.items():
+            values["__count"] = local_counts.get(record_id, 0)
+        self._search_panel_global_counters(field_range, "parent_id")
+
+        return {"parent_field": result["parent_field"], "values": list(field_range.values())}
 
     content_sha256 = fields.Char(
         index=True,
