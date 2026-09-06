@@ -5,14 +5,19 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
+                    <!-- Eine einzige Gruppe statt zwei getrennter: jede <group> ist ihr eigenes
+                         CSS-Grid mit eigener, unabhaengig berechneter Label-Spaltenbreite
+                         (form_controller.scss: "fit-content(150px)" pro Gruppe) - zwei Gruppen
+                         hiessen zwei verschieden breite Label-Spalten und damit nicht buendige
+                         Unterstriche zwischen "Status" und "Tags"/"Verknuepfter Datensatz"
+                         (live beobachtet). Mit einer Gruppe richten sich alle Zeilen am selben,
+                         gemeinsam berechneten Maximum aus. -->
                     <group>
                         <field name="name" readonly="1"/>
                         <field name="path" readonly="1"/>
                         <field name="size" readonly="1"/>
                         <field name="mtime" readonly="1"/>
                         <field name="status_id"/>
-                    </group>
-                    <group>
                         <field name="tag_ids" widget="many2many_tags"/>
                         <field name="res_reference"/>
                     </group>
