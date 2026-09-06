@@ -1046,6 +1046,13 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     `int_filemanager.file`-Datensätze mit demselben Mixin). Keine Konsolen-/Server-Fehler während
     des gesamten Tests.
 
+    **Nutzerfeedback nach dem ersten Test (2026-09-06):** Toggle-Button links bei den
+    Erfassungs-Buttons (Neuer Ordner/Hochladen) schlecht platziert. Verschoben in
+    `control-panel-navigation-additional` - denselben nativen Slot, in dem Odoo selbst den
+    Filter/Gruppieren-Toggle direkt neben dem Pager rendert (`control_panel.xml`,
+    `.o_control_panel_navigation`). Erneut live verifiziert (Tower) - Funktion unverändert, nur
+    Position rechts außen neben "1-38/38".
+
     **Nebenbefund beim Log-Check nach der Verifikation, nicht Teil dieses Bausteins:** der
     bestehende Hash-Cron (`_cron_compute_hashes`) schlägt für eine reale Datei >2 GB mit
     `psycopg2.errors.NumericValueOutOfRange` fehl, weil `hash_size` als `fields.Integer` (int4,
