@@ -37,8 +37,8 @@
 
     <menuitem id="menu_int_filemanager_protected_folders"
               name="Geschützte Ordner"
-              parent="menu_int_filemanager_root"
+              parent="menu_int_filemanager_configuration"
               action="action_filemanager_protected_folder"
               groups="int_filemanager.group_filemanager_admin"
-              sequence="90"/>
+              sequence="10"/>
 </odoo>

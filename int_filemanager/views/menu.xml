@@ -9,4 +9,14 @@
               action="action_filemanager_file_list_native"
               groups="int_filemanager.group_filemanager_user"
               sequence="20"/>
+
+    <!-- Sammelt die admin-only Einstellungs-Bildschirme (Geschuetzte Ordner, Status) unter
+         einem gemeinsamen Menuepunkt statt mehrerer flacher Eintraege direkt unter
+         "Dateimanager" - Nutzerwunsch 2026-09-06, uebliches Odoo-Muster (ein
+         "Konfiguration"-Menue pro App). -->
+    <menuitem id="menu_int_filemanager_configuration"
+              name="Konfiguration"
+              parent="menu_int_filemanager_root"
+              groups="int_filemanager.group_filemanager_admin"
+              sequence="80"/>
 </odoo>

@@ -1144,3 +1144,15 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Zweitzeilen-Menüleiste selbst rendert erst nach Direktaufruf der jeweiligen Action-URL, nicht
     beim Wechsel per Klick innerhalb derselben Session - rein clientseitige Owl-Eigenheit, keine
     Server-/Datenkorrektheitsfrage (per `load_menus`/`has_group`-RPC direkt verifiziert).
+
+    **Nachbesserung (2026-09-06), Nutzerwunsch:** Feld/Spalte von "Freigabestatus" auf schlicht
+    "Status" umbenannt (`status_id`-`string`) - die Werte sind seit obigem Umbau frei
+    konfigurierbar, das Feld ist nicht mehr zwingend an einen Freigabe-Workflow gebunden. Dabei
+    auch nachgefragt, ob eine reine DB-Umbenennung über Odoo Technical Settings reichen würde -
+    am Code verifiziert (`ir_model.py`, `_reflect_fields`), dass Odoo `field_description` bei
+    jedem Modul-Upgrade unbedingt aus dem Python-`string` neu synchronisiert (`upsert_en` bei
+    jeder Abweichung) - eine manuelle Umbenennung dort wäre beim nächsten Upgrade kommentarlos
+    verloren gegangen. Deshalb im Code umbenannt, nicht nur in der DB. Zusätzlich die beiden
+    Admin-Bildschirme ("Geschützte Ordner", "Status") unter einem neuen "Konfiguration"-Menüpunkt
+    gebündelt statt zwei flacher Einträge direkt unter "Dateimanager" (`menu.xml`, neuer
+    `menu_int_filemanager_configuration`).

@@ -28,7 +28,7 @@
     </record>
 
     <record id="action_filemanager_status" model="ir.actions.act_window">
-        <field name="name">Freigabestatus-Werte</field>
+        <field name="name">Status</field>
         <field name="res_model">int_filemanager.status</field>
         <field name="view_mode">list,form</field>
     </record>
@@ -37,9 +37,9 @@
          normale Nutzer sehen/waehlen die Werte nur ueber status_id auf der Datei (Lesezugriff,
          siehe ir.model.access.csv), koennen sie aber nicht anlegen/aendern. -->
     <menuitem id="menu_int_filemanager_status"
-              name="Freigabestatus-Werte"
-              parent="menu_int_filemanager_root"
+              name="Status"
+              parent="menu_int_filemanager_configuration"
               action="action_filemanager_status"
               groups="int_filemanager.group_filemanager_admin"
-              sequence="91"/>
+              sequence="20"/>
 </odoo>
