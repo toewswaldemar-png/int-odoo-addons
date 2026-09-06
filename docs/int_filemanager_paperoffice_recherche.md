@@ -181,7 +181,7 @@ plus grau für alles andere - kein Button/eigene Komponente nötig, der Punkt se
 Baustein 2 (`tracking=True` loggt jede Statusänderung automatisch im Chatter):
 [int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 24.
 
-## Baustein 5 ⚠️ Voraussetzung ungeprüft: Digitale Signatur
+## Baustein 5 ❌ verworfen (2026-09-06): Digitale Signatur
 
 Statt eine eigene Signaturlösung zu bauen: Odoo hat mit **Odoo Sign** (`sign`-Modul) bereits eine
 vollständige native E-Signatur-App. Elegante Anbindung: ein weiterer `ActionMenus`-Eintrag
@@ -195,7 +195,10 @@ installiert ist (Odoo Sign kann je nach Lizenzmodell Enterprise-only sein - auf 
 Testinstanz noch nicht geprüft, live verifizieren statt zu vermuten, bevor die Abhängigkeit
 ergänzt wird).
 
-## Baustein 6 ⚠️ echte Produktentscheidung, nicht nur Implementierung: Revisionssichere Archivierung
+**Verworfen (Nutzerentscheidung 2026-09-06):** nicht umgesetzt, keine weitere Prüfung/Rückfrage
+mehr geplant.
+
+## Baustein 6 ❌ verworfen (2026-09-06): Revisionssichere Archivierung
 
 Versionierung existiert bereits ([filemanager_version.py](../int_filemanager/models/filemanager_version.py)).
 Was fehlt, ist eine **Unveränderlichkeits-Garantie** nach Archivierung. Eleganteste Anbindung:
@@ -211,7 +214,10 @@ löschen/überschreiben nach Datum X"), statt eine zweite, parallele Sicherheits
 anderen Bausteine hier. Vor Umsetzung: Rückfrage, ob GoBD-Konformität hier tatsächlich rechtlich
 gebraucht wird und wer die Ausnahme-Berechtigung bekommen soll.
 
-## Baustein 7 ⚠️ Voraussetzung ungeprüft: E-Mail-Archivierung
+**Verworfen (Nutzerentscheidung 2026-09-06):** nicht umgesetzt, keine weitere Prüfung/Rückfrage
+mehr geplant.
+
+## Baustein 7 ❌ verworfen (2026-09-06): E-Mail-Archivierung
 
 Odoo hat mit `fetchmail.server`/`mail.thread` bereits eingehende Mailverarbeitung. Elegante
 Anbindung: ein Cron, der Anhänge (oder die komplette `.eml`) von markierten `mail.message`-
@@ -223,6 +229,9 @@ Schreiber in bestehende Felder.
 **Vor der Umsetzung zu klären, nicht anzunehmen:** ob auf HM-SRV überhaupt ein `fetchmail.server`
 konfiguriert ist bzw. eingehende Mails über Odoo laufen - ohne das ist dieser Baustein
 gegenstandslos, live prüfen statt anzunehmen.
+
+**Verworfen (Nutzerentscheidung 2026-09-06):** nicht umgesetzt, keine weitere Prüfung/Rückfrage
+mehr geplant.
 
 ---
 
@@ -242,17 +251,24 @@ gegenstandslos, live prüfen statt anzunehmen.
 ~~Baustein 0 (Drag & Drop) zuerst~~ ✅ erledigt. ~~Baustein 1 (Volltextsuche/OCR)~~ wurde vorgezogen
 zuerst umgesetzt ✅ (Nutzerentscheidung, mehr Priorität als ursprünglich hier vorgeschlagen).
 ~~Baustein 2 (mail.thread/activity)~~ ✅ erledigt. ~~Baustein 4 (Ampel-Freigabe)~~ ✅ erledigt.
-**Nächster sinnvoller Schritt: Baustein 5, 6 oder 7** - jeweils mit ungeprüfter Voraussetzung bzw.
-echter Produktentscheidung, siehe die Warnhinweise dort (Odoo Sign-Lizenzierung, GoBD-Rückfrage,
-fetchmail.server auf HM-SRV).
+**Bausteine 5, 6, 7 verworfen (Nutzerentscheidung 2026-09-06)** - keiner davon wird umgesetzt.
+Damit ist dieser Ausbauvorschlag **abgeschlossen**: alle noch offenen, elegant umsetzbaren
+Bausteine sind entweder erledigt oder bewusst verworfen.
 
-## Für eine neue Session: hier weitermachen
+## Für eine neue Session: Stand
 
-**Stand 2026-09-06, Branch `experiment/native-listview`.** Fertig: Baustein 0 (Drag&Drop),
-Baustein 1 (Volltextsuche/OCR + Kontroll-Dialog, deckt Baustein 3 mit ab), Baustein 2
+**2026-09-06, Branch `experiment/native-listview`.** PaperOffice-Ausbau abgeschlossen: Baustein 0
+(Drag&Drop), Baustein 1 (Volltextsuche/OCR + Kontroll-Dialog, deckt Baustein 3 mit ab), Baustein 2
 (mail.thread/mail.activity.mixin, plus ein einklappbares Chatter-Seitenpanel in der Liste als
-Folgearbeit), Baustein 4 (Ampel-Freigabe via `state_selection`). Offen: Bausteine 5, 6, 7 (siehe
-oben) - jeder davon braucht vor dem Loslegen eine Rückfrage/Prüfung, kein "einfach loslegen" mehr.
+Folgearbeit), Baustein 4 (Ampel-Freigabe via `state_selection`) sind umgesetzt, live verifiziert
+und vom Nutzer im eigenen Browser bestätigt. Bausteine 5/6/7 wurden explizit verworfen, nicht nur
+zurückgestellt - bei zukünftigem Bedarf müsste neu evaluiert werden, ob sich seitdem etwas an den
+offenen Voraussetzungen (Odoo Sign-Lizenzierung, GoBD-Anforderung, fetchmail.server auf HM-SRV)
+geändert hat, nicht einfach hier weitermachen.
+
+Separat noch offen, unabhängig von diesem Ausbau: der Hash-Cron-Bug bei Dateien >2GB (siehe
+[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 23, letzter Absatz) - als
+Hintergrund-Task geflaggt (`task_8eab8523`).
 
 **Separat geflaggter, unabhängiger Bug (noch offen):** Hash-Cron schlägt bei Dateien >2GB fehl
 (`hash_size` int4-Overflow) - siehe [int_filemanager_native_ui.md](int_filemanager_native_ui.md),
