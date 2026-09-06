@@ -15,15 +15,21 @@
                     Hochladen
                 </button>
                 <input type="file" t-ref="fileInput" multiple="multiple" class="d-none" t-on-change="onFileInputChange"/>
-                <!-- Chatter-Panel-Toggle - selbes Icon (oi-panel-right) wie der native
-                     Ordnerbaum-Ein-/Ausklapp-Button links, fuer Wiedererkennbarkeit. -->
-                <button type="button" class="btn btn-secondary text-nowrap"
-                        t-att-class="{ active: chatterState.open }"
-                        title="Notizen/Aktivitäten anzeigen"
-                        t-on-click="onToggleChatterPanel">
-                    <i class="oi oi-panel-right fa-flip-horizontal"/>
-                </button>
             </t>
+        </xpath>
+        <!-- Chatter-Panel-Toggle rechts aussen neben dem Pager statt links bei den
+             Erfassungs-Buttons (Nutzerfeedback 2026-09-06: dort schlecht platziert) -
+             derselbe native Slot, in dem Odoo selbst den Filter/Gruppieren-Toggle rendert
+             (control_panel.xml: ".o_control_panel_navigation", direkt nach dem Pager).
+             Selbes Icon (oi-panel-right) wie der native Ordnerbaum-Ein-/Ausklapp-Button
+             links, fuer Wiedererkennbarkeit. -->
+        <xpath expr="//t[@t-set-slot='control-panel-navigation-additional']" position="inside">
+            <button type="button" class="btn btn-secondary text-nowrap"
+                    t-att-class="{ active: chatterState.open }"
+                    title="Notizen/Aktivitäten anzeigen"
+                    t-on-click="onToggleChatterPanel">
+                <i class="oi oi-panel-right fa-flip-horizontal"/>
+            </button>
         </xpath>
         <!-- Rein visuelles Overlay - das eigentliche Drop-Handling laeuft komplett ueber die
              window-Listener aus setup() (siehe dortigen Kommentar), unabhaengig davon, ob dieses
