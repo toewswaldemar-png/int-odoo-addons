@@ -15,6 +15,14 @@
                     Hochladen
                 </button>
                 <input type="file" t-ref="fileInput" multiple="multiple" class="d-none" t-on-change="onFileInputChange"/>
+                <!-- Chatter-Panel-Toggle - selbes Icon (oi-panel-right) wie der native
+                     Ordnerbaum-Ein-/Ausklapp-Button links, fuer Wiedererkennbarkeit. -->
+                <button type="button" class="btn btn-secondary text-nowrap"
+                        t-att-class="{ active: chatterState.open }"
+                        title="Notizen/Aktivitäten anzeigen"
+                        t-on-click="onToggleChatterPanel">
+                    <i class="oi oi-panel-right fa-flip-horizontal"/>
+                </button>
             </t>
         </xpath>
         <!-- Rein visuelles Overlay - das eigentliche Drop-Handling laeuft komplett ueber die
@@ -26,6 +34,28 @@
                 <div class="o_int_filemanager_dropzone_label">
                     <i class="fa fa-cloud-upload me-2"/>Dateien hier ablegen zum Hochladen
                 </div>
+            </div>
+            <!-- Chatter-Seitenpanel (Baustein 2, docs/int_filemanager_paperoffice_recherche.md) -
+                 ueberlagerndes Fixed-Panel statt Platz verdraengendem Flex-Sibling neben der
+                 Liste, siehe Begruendung in native_list_view.js (setup()). topPx via JS
+                 vermessen, damit es exakt unter der eigenen Toolbar beginnt. -->
+            <div t-if="chatterState.open" class="o_int_filemanager_chatter_panel"
+                 t-attf-style="top: {{chatterState.topPx}}px;">
+                <div class="o_int_filemanager_chatter_panel_header">
+                    <span class="text-truncate fw-bold">
+                        <t t-if="chatterRecord" t-esc="chatterRecord.data.name"/>
+                        <t t-else="">Notizen/Aktivitäten</t>
+                    </span>
+                    <button type="button" class="btn-close" aria-label="Schließen"
+                            t-on-click="onToggleChatterPanel"/>
+                </div>
+                <div t-if="!chatterRecord" class="text-muted p-3">
+                    Datei oder Ordner in der Liste per Checkbox auswählen, um Notizen/Aktivitäten
+                    zu sehen.
+                </div>
+                <Chatter t-else="" threadModel="'int_filemanager.file'"
+                         threadId="chatterRecord.resId"
+                         isChatterAside="true" isInFormSheetBg="false"/>
             </div>
         </xpath>
     </t>

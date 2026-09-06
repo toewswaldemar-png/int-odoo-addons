@@ -35,6 +35,11 @@ import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { listView } from "@web/views/list/list_view";
 import { ListController } from "@web/views/list/list_controller";
+// Dieselbe Komponente, die Odoo intern in jedem Formular fuer den Chatter nutzt
+// (form_renderer.js) - kein eigener Nachbau, nur direkt eingebunden statt ueber
+// ein Formular-Arch (das <chatter/>-Tag funktioniert nur innerhalb einer echten
+// Form-View, siehe docs/int_filemanager_native_ui.md Punkt 23).
+import { Chatter } from "@mail/chatter/web_portal/chatter";
 import { IntTextInputDialog } from "../shared/text_input_dialog";
 import { IntLinkRecordDialog } from "../shared/link_record_dialog";
 import { IntTextEditorDialog } from "./text_editor_dialog";
@@ -101,6 +106,11 @@ function isFulltextSupported(name) {
 
 export class IntFilemanagerListController extends ListController {
     static template = "int_filemanager.ListView";
+    // Muss die geerbten Eintraege (Layout, SearchBar, ActionMenus, ...) mitnehmen -
+    // eine Neuzuweisung ohne Spread wuerde sie durch die statische Feld-Ueberschreibung
+    // verdecken und jedes t-component/<Tag>, das das geerbte web.ListView-Template nutzt,
+    // bräche.
+    static components = { ...ListController.components, Chatter };
 
     setup() {
         super.setup();
@@ -128,6 +138,24 @@ export class IntFilemanagerListController extends ListController {
         useExternalListener(window, "dragleave", this.onWindowDragLeave);
         useExternalListener(window, "dragover", (ev) => ev.preventDefault());
         useExternalListener(window, "drop", this.onWindowDrop);
+
+        // Chatter-Seitenpanel (Baustein 2 Folgearbeit, 2026-09-06): standardmaessig zu,
+        // per Toolbar-Toggle oeffenbar - siehe docs/int_filemanager_paperoffice_recherche.md,
+        // Baustein 2. Bewusst ein ueberlagerndes Fixed-Panel statt eines echten, Platz
+        // verdraengenden Flex-Layouts: Letzteres haette eine Patch von Odoos geteiltem
+        // "web.Layout"-Template gebraucht (main.o_content liegt INNERHALB von Layouts
+        // eigenem Template, nicht im hier ererbten "web.ListView"), was global jede
+        // Listen-/Kanban-Ansicht im System betroffen haette - fuer ein Panel, das nur
+        // dieser eine Dateimanager braucht, unverhaeltnismaessig riskant. topPx wird per
+        // getBoundingClientRect() auf ".o_content" vermessen, damit das Panel exakt unter
+        // der eigenen Toolbar/Breadcrumb-Zeile beginnt statt sie zu verdecken (Pager,
+        // Suche etc. bleiben bedienbar), statt eine Navbar-Hoehe zu raten.
+        this.chatterState = useState({ open: false, topPx: 0 });
+        useExternalListener(window, "resize", () => {
+            if (this.chatterState.open) {
+                this._measureChatterPanelTop();
+            }
+        });
 
         // Everything already on the stack when this controller was created (normally
         // just the "Dateimanager" action entry itself, or "Verknüpfte Dateien" when opened
@@ -201,6 +229,27 @@ export class IntFilemanagerListController extends ListController {
             (s) => s.type === "category" && s.fieldName === "parent_id"
         );
         return section;
+    }
+
+    onToggleChatterPanel() {
+        this.chatterState.open = !this.chatterState.open;
+        if (this.chatterState.open) {
+            this._measureChatterPanelTop();
+        }
+    }
+
+    _measureChatterPanelTop() {
+        const contentEl = this.rootRef.el?.querySelector(".o_content");
+        this.chatterState.topPx = contentEl ? Math.round(contentEl.getBoundingClientRect().top) : 0;
+    }
+
+    // Zeigt die (Checkbox-)Auswahl der Liste, dieselbe this.model.root.selection wie
+    // getStaticActionMenuItems() weiter unten - kein separater Auswahlmechanismus.
+    // Erste markierte Zeile bei Mehrfachauswahl (Reihenfolge = Anzeigereihenfolge der
+    // Liste), nicht die zuletzt angeklickte - einfach vorhersagbar, ohne eigene
+    // Klick-Reihenfolge-Buchhaltung.
+    get chatterRecord() {
+        return this.model.root.selection[0] || null;
     }
 
     // Scoping-Klasse fuer native_list_view.scss - rechtsbuendige Zahlenspalten (o_list_number,

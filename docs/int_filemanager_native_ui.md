@@ -1013,6 +1013,39 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Am echten Odoo-19-Quellcode verifiziert statt vermutet, bevor es fälschlich als eigener Bug
     behandelt worden wäre.
 
+    **Folgearbeit (2026-09-06): einklappbares Chatter-Seitenpanel für die Listenansicht**, da der
+    Pfeil-Button/Dialog wegen genau dieser `env.inDialog`-Sperre keinen Chatter zeigen kann und es
+    sonst keinen UI-Weg zu Notizen/Aktivitäten gab (nur die direkte URL zur vollen Formularseite).
+    Nutzerwunsch: standardmäßig zu, Toggle in der Toolbar, keine feste Platzverdrängung der
+    bestehenden Spalten. Umsetzung in `native_list_view.js/.xml/.scss`:
+    - Toolbar-Icon-Button (`oi-panel-right`, dasselbe Icon wie der native Ordnerbaum-Ein-/
+      Ausklapp-Button links - Wiedererkennbarkeit statt Neuerfindung) schaltet `chatterState.open`.
+    - Bewusst ein überlagerndes `position: fixed`-Panel statt eines echten, Platz verdrängenden
+      Flex-Layouts neben der Liste: Letzteres hätte einen Patch auf Odoos geteiltem
+      `web.Layout`-Template gebraucht (`main.o_content` liegt innerhalb von Layouts eigenem
+      Template, nicht im hier geerbten `web.ListView`) - global auf jede Listen-/Kanban-Ansicht im
+      System wirksam, für ein Panel das nur dieser eine Dateimanager braucht unverhältnismäßig
+      riskant. Stattdessen wird `top` per `getBoundingClientRect()` auf `.o_content` vermessen
+      (bei jedem Öffnen und bei `resize`), damit das Panel exakt unterhalb der eigenen
+      Toolbar/Breadcrumb-Zeile beginnt statt Suche/Pager/Buttons zu verdecken - kein geratener
+      Navbar-Höhen-Wert.
+    - Angezeigter Datensatz = erste markierte Zeile (`this.model.root.selection[0]`, dieselbe
+      Auswahl wie die bestehenden Mehrfachaktionen/`getStaticActionMenuItems()`) - reaktiv, kein
+      eigener Auswahlmechanismus. Leerzustand mit Hinweistext, wenn nichts markiert ist.
+    - `Chatter` (`@mail/chatter/web_portal/chatter`, dieselbe Komponente, die Odoo intern in jedem
+      Formular verwendet) direkt eingebunden (`static components = {...ListController.components,
+      Chatter}`, `threadModel="int_filemanager.file"`, `threadId=<resId>`), nicht über ein
+      Formular-Arch - dafür ist kein `<chatter/>`-Tag nötig, die Komponente funktioniert auch
+      freistehend.
+
+    **Live verifiziert (Tower):** Panel öffnet/schließt über den Toolbar-Toggle, positioniert
+    korrekt unterhalb der Toolbar (Suche/Pager bleiben bedienbar, keine Überdeckung). Notiz direkt
+    im Panel geloggt und im Chatter-Verlauf sichtbar. Auswahlwechsel (anderes Kontrollkästchen)
+    aktualisiert den angezeigten Thread live, ohne das Panel neu zu öffnen. Leerzustand bei
+    aufgehobener Auswahl korrekt. Funktioniert identisch für Ordner- und Dateizeilen (beide sind
+    `int_filemanager.file`-Datensätze mit demselben Mixin). Keine Konsolen-/Server-Fehler während
+    des gesamten Tests.
+
     **Nebenbefund beim Log-Check nach der Verifikation, nicht Teil dieses Bausteins:** der
     bestehende Hash-Cron (`_cron_compute_hashes`) schlägt für eine reale Datei >2 GB mit
     `psycopg2.errors.NumericValueOutOfRange` fehl, weil `hash_size` als `fields.Integer` (int4,
