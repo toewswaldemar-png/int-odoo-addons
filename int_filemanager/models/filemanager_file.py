@@ -93,6 +93,24 @@ class IntFilemanagerFile(models.Model):
         help="Eindeutige ID des Scan-Laufs, der diesen Datensatz zuletzt auf der Platte bestätigt hat.",
     )
     tag_ids = fields.Many2many("int_filemanager.tag", string="Tags")
+    # Baustein 4 (docs/int_filemanager_paperoffice_recherche.md): PaperOffice-Ampel-Freigabe
+    # ueber Odoos eigenes state_selection-Widget statt einer eigenen Ampel-Komponente. Werte
+    # folgen bewusst Odoos eigener kanban_state-Konvention (normal/blocked/done) - das Widget
+    # faerbt nur genau diese beiden Sonderwerte ein (blocked=rot, done=gruen), jeder andere
+    # Wert bleibt grau (live am Quellcode geprueft: web/static/src/views/fields/
+    # state_selection/state_selection_field.js, StateSelectionField.colors) - andere
+    # technische Werte wuerden also unbemerkt farblos bleiben.
+    state = fields.Selection(
+        [
+            ("normal", "Offen"),
+            ("blocked", "Rückfrage"),
+            ("done", "Freigegeben"),
+        ],
+        string="Freigabestatus",
+        default="normal",
+        required=True,
+        tracking=True,
+    )
     res_reference = fields.Reference(
         string="Verknüpfter Datensatz",
         selection="_selection_target_model",

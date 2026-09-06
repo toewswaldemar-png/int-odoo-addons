@@ -170,16 +170,16 @@ festes, kleines Set). **Kein eigener Baustein mehr, nur noch eine mögliche spä
   (z.B. Verträge mit anderen Feldern als Rechnungen): dann wäre `fields.Properties` die richtige
   native Wahl, aber erst wenn dieser Bedarf tatsächlich auftritt, nicht vorsorglich.
 
-## Baustein 4: Ampel-Freigabe-Workflow
+## Baustein 4 ✅ umgesetzt (2026-09-06): Ampel-Freigabe-Workflow
 
-PaperOffice bewirbt ein "Ampel-System" für Freigaben (z.B. Rechnungsfreigabe). Odoo hat dafür
-bereits ein **natives Widget**: `kanban_state` (das rot/gelb/grün-Kreis-Icon, das man aus Odoo-
-Kanban-Karten kennt) — keine eigene Ampel-Komponente nötig, nur ein neues Selection-Feld auf
-`int_filemanager.file` (`state = fields.Selection([...], default="normal")`,
-`widget="kanban_state"` in Liste/Formular) plus optional ein `ir.rule`/`type="object"`-Button
-analog zu `action_generate_share_token`, um den Status zu wechseln. Passt als weiterer Eintrag in
-`getStaticActionMenuItems()` (`native_list_view.js`), Muster identisch zu "Freigeben"/"Lokal
-öffnen" (siehe Commit `d0c7324`, heute).
+PaperOffice bewirbt ein "Ampel-System" für Freigaben (z.B. Rechnungsfreigabe). Umgesetzt über
+Odoos natives `state_selection`-Widget (Punkt statt Ampel-Icon: nur zwei Sonderfarben, rot/grün,
+plus grau für alles andere - kein Button/eigene Komponente nötig, der Punkt selbst ist per Klick
+änderbar). Details, inklusive eines geprüften und verworfenen reicheren Alternativ-Widgets
+(`project_task_state_selection` - sieht aus wie eine echte Ampel mit Icons, ist aber hart auf
+`project.task`s eigene Statuswerte kodiert, nicht generisch wiederverwendbar) und der Synergie mit
+Baustein 2 (`tracking=True` loggt jede Statusänderung automatisch im Chatter):
+[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 24.
 
 ## Baustein 5 ⚠️ Voraussetzung ungeprüft: Digitale Signatur
 
@@ -241,16 +241,18 @@ gegenstandslos, live prüfen statt anzunehmen.
 
 ~~Baustein 0 (Drag & Drop) zuerst~~ ✅ erledigt. ~~Baustein 1 (Volltextsuche/OCR)~~ wurde vorgezogen
 zuerst umgesetzt ✅ (Nutzerentscheidung, mehr Priorität als ursprünglich hier vorgeschlagen).
-~~Baustein 2 (mail.thread/activity)~~ ✅ erledigt. **Nächster sinnvoller Schritt: Baustein 4**
-(Ampel-Freigabe via `kanban_state`) - weiterhin praktisch aufwandsfrei, kein Abhängigkeitsrisiko,
-keine offene Rückfrage. Danach 5/6/7 (jeweils mit ungeprüfter Voraussetzung bzw. echter
-Produktentscheidung, siehe die Warnhinweise dort).
+~~Baustein 2 (mail.thread/activity)~~ ✅ erledigt. ~~Baustein 4 (Ampel-Freigabe)~~ ✅ erledigt.
+**Nächster sinnvoller Schritt: Baustein 5, 6 oder 7** - jeweils mit ungeprüfter Voraussetzung bzw.
+echter Produktentscheidung, siehe die Warnhinweise dort (Odoo Sign-Lizenzierung, GoBD-Rückfrage,
+fetchmail.server auf HM-SRV).
 
 ## Für eine neue Session: hier weitermachen
 
 **Stand 2026-09-06, Branch `experiment/native-listview`.** Fertig: Baustein 0 (Drag&Drop),
 Baustein 1 (Volltextsuche/OCR + Kontroll-Dialog, deckt Baustein 3 mit ab), Baustein 2
-(mail.thread/mail.activity.mixin). Offen: Bausteine 4, 5, 6, 7 (siehe oben, in dieser Reihenfolge).
+(mail.thread/mail.activity.mixin, plus ein einklappbares Chatter-Seitenpanel in der Liste als
+Folgearbeit), Baustein 4 (Ampel-Freigabe via `state_selection`). Offen: Bausteine 5, 6, 7 (siehe
+oben) - jeder davon braucht vor dem Loslegen eine Rückfrage/Prüfung, kein "einfach loslegen" mehr.
 
 **Separat geflaggter, unabhängiger Bug (noch offen):** Hash-Cron schlägt bei Dateien >2GB fehl
 (`hash_size` int4-Overflow) - siehe [int_filemanager_native_ui.md](int_filemanager_native_ui.md),

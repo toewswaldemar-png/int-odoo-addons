@@ -10,6 +10,7 @@
                         <field name="path" readonly="1"/>
                         <field name="size" readonly="1"/>
                         <field name="mtime" readonly="1"/>
+                        <field name="state" widget="state_selection"/>
                     </group>
                     <group>
                         <field name="tag_ids" widget="many2many_tags"/>

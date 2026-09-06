@@ -1060,3 +1060,40 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     bereits bewusst umgeht. Als separater Task geflaggt (nicht in dieser Session mit erledigt, da
     unabhängig von Baustein 2 und eigenständige Product-/Migrationsentscheidung: DB-Spaltentyp-
     Änderung an einer Tabelle mit ~87k Zeilen).
+
+24. **Baustein 4 umgesetzt (2026-09-06): Ampel-Freigabe über `state_selection`**
+    ([int_filemanager_paperoffice_recherche.md](int_filemanager_paperoffice_recherche.md)). Neues
+    Feld `state` auf `int_filemanager.file` (`fields.Selection`, Werte `normal`/`blocked`/`done` -
+    bewusst Odoos eigene `kanban_state`-Konvention übernommen, nicht frei erfunden: das native
+    `state_selection`-Widget (`web/static/src/views/fields/state_selection/
+    state_selection_field.js`) färbt **nur genau diese beiden Sonderwerte** ein (`blocked`=rot,
+    `done`=grün), jeder andere technische Wert bliebe grau - am Quellcode geprüft, bevor eigene
+    Werte gewählt wurden, sonst wäre die Ampel unbemerkt farblos geblieben). `tracking=True` dazu -
+    jede Statusänderung landet automatisch im Chatter (Baustein 2), ganz ohne Zusatzcode; reine
+    Synergie zwischen beiden Bausteinen.
+
+    **Zwischenzeitlicher Irrtum, aufgeklärt statt übernommen:** ein vom Nutzer gezeigter
+    Screenshot (Pill-Badge + individuelle Icons pro Status inkl. Gelb, aus einer Odoo-Projekt-Task-
+    Formularseite) sah nach einem reicheren nativen Widget aus, das man einfach wiederverwenden
+    könnte - am Quellcode geprüft (`project/static/src/components/project_task_state_selection/`):
+    ist tatsächlich natives Odoo, aber ein **eigenes Widget des `project`-Moduls**, dessen Icon-/
+    Farbzuordnung hart auf `project.task`s eigene Statuswerte kodiert ist (`01_in_progress` usw.) -
+    nicht generisch wiederverwendbar auf ein fremdes Modell. Wäre als eigene Widget-Klasse nach
+    diesem Vorbild machbar gewesen, aber echter Zusatzaufwand statt reiner Wiederverwendung -
+    Nutzerentscheidung 2026-09-06: stattdessen das generische, sofort einsetzbare
+    `state_selection` (Punkt statt Pill-Badge, kein individuelles Icon pro Status).
+
+    UI-Platzierung: Listenspalte direkt nach dem Öffnen-Pfeil (`nolabel="1"`, kein eigener
+    Button/eigene Komponente nötig - der Punkt selbst ist per Klick änderbar), zusätzlich im
+    Formular. Suchleiste um zwei Filter (`Rückfrage`/`Freigegeben`) und eine Gruppierung
+    (`Freigabestatus`) ergänzt, rein deklarativ, kein JS.
+
+    **Live verifiziert (Tower):** Modul-Upgrade sauber durchgelaufen, alle ~87.053 Bestandszeilen
+    per SQL bestätigt auf `state='normal'` befüllt (Odoos `_auto_init` backfillt den Python-Default
+    für neue Spalten bei bestehenden Zeilen automatisch - am echten Verhalten geprüft, nicht
+    angenommen). Punkt-Farbe/Dropdown funktionieren wie erwartet (grau/rot/grün), Klick auf
+    "Freigegeben" färbt den Punkt sofort grün um. Tracking bestätigt: die Änderung erscheint als
+    eigener Eintrag im Chatter-Panel ("Offen → Freigegeben (Freigabestatus)"). Keine neuen
+    Server-/Konsolen-Fehler (die einzigen geloggten Fehler während des Tests waren dieselben
+    bereits bekannten, unabhängigen `mail_presence`-Serialisierungskonflikte beim
+    Container-Neustart).
