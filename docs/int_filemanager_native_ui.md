@@ -986,3 +986,37 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     nur im Dateiinhalt vor, nicht in Name/Tags) fand die Datei korrekt - bestätigt die
     Sucheinbindung ohne jede JS-Änderung. Komplette Testsuite in isolierter DB weiterhin **0
     failed, 0 error(s) of 66 tests** - keine Regression durch die neuen Felder/Route/Cron.
+
+23. **Baustein 2 umgesetzt (2026-09-06): `mail.thread`/`mail.activity.mixin`-Vererbung**
+    ([int_filemanager_paperoffice_recherche.md](int_filemanager_paperoffice_recherche.md)).
+    Günstigster Baustein im ganzen Vorschlag - drei PaperOffice-Features (Aufgabenverwaltung mit
+    Fristen, Notizen, Audit-Trail) auf einmal, rein durch Odoo-Bordmittel: `_inherit =
+    ["mail.thread", "mail.activity.mixin"]` auf `int_filemanager.file` (`filemanager_file.py`),
+    `"mail"` als neue Modul-Abhängigkeit (`__manifest__.py` - war bisher nur transitiv über
+    `bus`/`portal` vorhanden, jetzt explizit), `<chatter/>` nach `</sheet>` in
+    `filemanager_file_form_view.xml` (Platzierung 1:1 aus Odoos eigenem `mail_blacklist_views.xml`
+    übernommen, nicht geraten). Kein neues Modell, kein neuer Controller, keine eigene
+    UI-Komponente.
+
+    **Live verifiziert (Tower-Testinstanz):** Modul-Upgrade sauber ohne Fehler durchgelaufen,
+    Chatter erscheint auf der vollen Formularseite (`/odoo/int_filemanager.file/<id>`) unterhalb
+    des Formulars mit "Send message"/"Log note"/"Activity". Funktional getestet: eine interne
+    Notiz geloggt (im Chatter-Verlauf sichtbar, Audit-Trail funktioniert), eine To-Do-Aktivität
+    geplant und wieder storniert (Fristverwaltung funktioniert).
+
+    **Zwischenzeitliche Verwirrung, aufgeklärt statt als Bug behandelt:** über den Pfeil-Button
+    in der nativen Liste (öffnet den Datensatz im `FormViewDialog`-Modal, `native_list_view.js`)
+    erscheint **kein** Chatter - das ist kein Fehler in dieser Erweiterung, sondern
+    Odoo-Kernverhalten für jedes Modell mit `mail.thread`: `mail/static/src/chatter/web/
+    form_compiler.js` setzt hart `"t-if": "!__comp__.env.inDialog"` auf den Chatter-Container,
+    d.h. der Chatter wird in jedem Odoo-Formular-Dialog systemweit unterdrückt, nicht nur hier.
+    Am echten Odoo-19-Quellcode verifiziert statt vermutet, bevor es fälschlich als eigener Bug
+    behandelt worden wäre.
+
+    **Nebenbefund beim Log-Check nach der Verifikation, nicht Teil dieses Bausteins:** der
+    bestehende Hash-Cron (`_cron_compute_hashes`) schlägt für eine reale Datei >2 GB mit
+    `psycopg2.errors.NumericValueOutOfRange` fehl, weil `hash_size` als `fields.Integer` (int4,
+    Cap ~2,1 GB) deklariert ist - derselbe Fallstrick, den `size` (im selben Model) mit `Float`
+    bereits bewusst umgeht. Als separater Task geflaggt (nicht in dieser Session mit erledigt, da
+    unabhängig von Baustein 2 und eigenständige Product-/Migrationsentscheidung: DB-Spaltentyp-
+    Änderung an einer Tabelle mit ~87k Zeilen).

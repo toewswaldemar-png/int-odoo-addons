@@ -10,7 +10,7 @@
     "version": "19.0.1.5.0",
     "category": "Productivity",
     "license": "LGPL-3",
-    "depends": ["base", "bus", "portal", "onlyoffice_odoo"],
+    "depends": ["base", "bus", "mail", "portal", "onlyoffice_odoo"],
     "post_load": "post_load",
     "post_init_hook": "post_init_hook",
     "data": [

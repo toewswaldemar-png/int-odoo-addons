@@ -49,6 +49,7 @@ DEFAULT_FULLTEXT_MAX_BYTES = {
 
 class IntFilemanagerFile(models.Model):
     _name = "int_filemanager.file"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _description = "Filemanager-Datei"
     _order = "is_dir desc, name"
 

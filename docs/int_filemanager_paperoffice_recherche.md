@@ -124,9 +124,15 @@ Kurzfassung der tatsächlichen Umsetzung ggü. diesem ursprünglichen Entwurf:
   Datei bei Mehrfach-Upload. Kein automatischer Backfill für bereits bestehende Dateien
   (Nutzerentscheidung) - nur neu ankommende/manuell ausgewählte Dateien.
 
-## Baustein 2: `mail.thread`/`mail.activity.mixin` erben — deckt drei PaperOffice-Features auf einmal ab
+## Baustein 2 ✅ umgesetzt (2026-09-06): `mail.thread`/`mail.activity.mixin` erben — deckt drei PaperOffice-Features auf einmal ab
 
-**Der günstigste Gewinn im ganzen Vorschlag.** `int_filemanager.file` erbt aktuell nur von
+**Der günstigste Gewinn im ganzen Vorschlag.** Umgesetzt wie unten beschrieben, live auf der
+Tower-Testinstanz verifiziert (Notiz geloggt, Aktivität geplant) - Details, inklusive einer
+aufgeklärten Verwirrung um fehlenden Chatter im Formular-Dialog (Odoo-Kernverhalten, kein Bug) und
+eines dabei entdeckten unabhängigen Bugs (Hash-Cron/int4-Overflow bei Dateien >2GB, separat
+geflaggt): [int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 23.
+
+`int_filemanager.file` erbte zuvor nur von
 `models.Model`. Odoo bringt mit `mail.thread` + `mail.activity.mixin` **nativ** genau das mit, was
 PaperOffice als eigene Features verkauft:
 
@@ -233,19 +239,22 @@ gegenstandslos, live prüfen statt anzunehmen.
 
 ## Empfohlene Reihenfolge (bei Umsetzung)
 
-~~Baustein 0 (Drag & Drop) zuerst~~ ✅ erledigt. ~~Baustein 2 (mail.thread/activity)~~ noch offen,
-war als nächstes vorgesehen, aber ~~Baustein 1 (Volltextsuche/OCR)~~ wurde stattdessen zuerst
-umgesetzt ✅ (Nutzerentscheidung, mehr Priorität als ursprünglich hier vorgeschlagen). **Nächster
-sinnvoller Schritt: Baustein 2** (`mail.thread`/`mail.activity.mixin`) - weiterhin praktisch
-aufwandsfrei, kein Abhängigkeitsrisiko, keine offene Rückfrage. Danach Bausteine 4 (Ampel-
-Freigabe, keine offene Rückfrage) vor 5/6/7 (jeweils mit ungeprüfter Voraussetzung bzw. echter
+~~Baustein 0 (Drag & Drop) zuerst~~ ✅ erledigt. ~~Baustein 1 (Volltextsuche/OCR)~~ wurde vorgezogen
+zuerst umgesetzt ✅ (Nutzerentscheidung, mehr Priorität als ursprünglich hier vorgeschlagen).
+~~Baustein 2 (mail.thread/activity)~~ ✅ erledigt. **Nächster sinnvoller Schritt: Baustein 4**
+(Ampel-Freigabe via `kanban_state`) - weiterhin praktisch aufwandsfrei, kein Abhängigkeitsrisiko,
+keine offene Rückfrage. Danach 5/6/7 (jeweils mit ungeprüfter Voraussetzung bzw. echter
 Produktentscheidung, siehe die Warnhinweise dort).
 
 ## Für eine neue Session: hier weitermachen
 
-**Stand 2026-09-05, Branch `experiment/native-listview`, zuletzt gepusht bis Commit `082a6fe`.**
-Fertig: Baustein 0 (Drag&Drop) und Baustein 1 (Volltextsuche/OCR + Kontroll-Dialog, deckt
-Baustein 3 mit ab). Offen: Bausteine 2, 4, 5, 6, 7 (siehe oben, in dieser Reihenfolge).
+**Stand 2026-09-06, Branch `experiment/native-listview`.** Fertig: Baustein 0 (Drag&Drop),
+Baustein 1 (Volltextsuche/OCR + Kontroll-Dialog, deckt Baustein 3 mit ab), Baustein 2
+(mail.thread/mail.activity.mixin). Offen: Bausteine 4, 5, 6, 7 (siehe oben, in dieser Reihenfolge).
+
+**Separat geflaggter, unabhängiger Bug (noch offen):** Hash-Cron schlägt bei Dateien >2GB fehl
+(`hash_size` int4-Overflow) - siehe [int_filemanager_native_ui.md](int_filemanager_native_ui.md),
+Punkt 23, letzter Absatz.
 
 **Bevor an einem der offenen Bausteine weitergearbeitet wird, unbedingt zuerst lesen:**
 [int_filemanager_native_ui.md](int_filemanager_native_ui.md) (Punkte 15-22) - dort steht die
