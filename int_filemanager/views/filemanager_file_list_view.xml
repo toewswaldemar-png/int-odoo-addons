@@ -16,11 +16,11 @@
                         title="Details öffnen" string=""/>
                 <!-- Baustein 4 (Ampel-Freigabe) - natives state_selection-Widget, kein eigener
                      Button/eigene Komponente noetig: der Punkt selbst ist per Klick aenderbar. -->
-                <field name="state" widget="state_selection" nolabel="1" string="Status"/>
+                <field name="state" widget="state_selection" nolabel="1" string="Status" optional="show"/>
                 <field name="name"/>
-                <field name="size" invisible="is_dir"/>
-                <field name="mtime"/>
-                <field name="tag_ids" widget="many2many_tags"/>
+                <field name="size" invisible="is_dir" optional="show"/>
+                <field name="mtime" optional="show"/>
+                <field name="tag_ids" widget="many2many_tags" optional="show"/>
                 <field name="res_reference" optional="hide"/>
             </list>
         </field>
