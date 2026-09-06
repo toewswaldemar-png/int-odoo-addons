@@ -13,7 +13,12 @@
                          (live beobachtet). Mit einer Gruppe richten sich alle Zeilen am selben,
                          gemeinsam berechneten Maximum aus. -->
                     <group>
-                        <field name="name" readonly="1"/>
+                        <!-- Editierbar (Nutzerwunsch 2026-09-06) - schreibt ueber
+                             int_filemanager.file.write() den echten Dateisystem-Rename
+                             (rename_entry() in index_utils.py), nicht nur die DB-Spalte.
+                             "Umbenennen" in der Toolbar bleibt zusaetzlich bestehen (ruft
+                             dieselbe Funktion ueber die /rename-Route auf). -->
+                        <field name="name"/>
                         <field name="path" readonly="1"/>
                         <field name="size" readonly="1"/>
                         <field name="mtime" readonly="1"/>

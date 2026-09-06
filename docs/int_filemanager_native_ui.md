@@ -1156,3 +1156,63 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Admin-Bildschirme ("Geschützte Ordner", "Status") unter einem neuen "Konfiguration"-Menüpunkt
     gebündelt statt zwei flacher Einträge direkt unter "Dateimanager" (`menu.xml`, neuer
     `menu_int_filemanager_configuration`).
+
+26. **Umbenennen direkt im Formular (2026-09-06), Nutzerwunsch.** `name` war bisher `readonly="1"`
+    im Formular (Pfeil-Button-Dialog) - Grund: das Feld ist nur ein Spiegel des echten
+    Dateisystem-Zustands, eine reine `write()` auf die Spalte hätte den DB-Datensatz von der
+    echten Datei entkoppelt (Downloads/Vorschau/ONLYOFFICE wären ins Leere gelaufen) und dabei die
+    sicherheitsrelevanten Authz-Prüfungen umgangen, die bisher nur in der `/int_filemanager/rename`-
+    Route lagen (`authz.require`/`authz.require_rename_or_move_allowed` - verhindert u.a.
+    Umbenennen über Schutzordner-Grenzen hinweg).
+
+    **Umbau statt Feld-Attribut-Flip:** die eigentliche Rename-Logik (Pfad auflösen, beide
+    Authz-Checks, `os.rename`, `index_move_tree`) aus der Route in eine neue gemeinsame Funktion
+    `rename_entry(env, old_rel, new_name)` (`index_utils.py`) gezogen. Sowohl die Route
+    (`controllers/main.py`, jetzt nur noch ein Aufruf) als auch ein neues `write()`-Override auf
+    `int_filemanager.file` (`models/filemanager_file.py`) rufen ausschließlich diese eine Funktion
+    auf - keine zweite, driftgefährdete Kopie der Sicherheitsprüfungen. "Umbenennen" in der Toolbar
+    bleibt zusätzlich bestehen (Nutzerwunsch), ruft jetzt intern dieselbe Funktion.
+
+    **Der eigentliche Frickel-Punkt, sauber gelöst statt ignoriert:** `rename_entry()` schreibt am
+    Ende selbst wieder `name` zurück (über `index_move_tree()`, um Pfad/Elternordner im Index
+    nachzuziehen) - ohne Gegenmaßnahme hätte `write()` das als weiteren Rename-Auftrag
+    missverstanden (Endlosschleife/falscher-alter-Pfad-Fehler). Gelöst über einen expliziten
+    Kontext-Guard (`int_filemanager_syncing_index`), den jede reine Index-Nachpflege setzen muss,
+    die `name` mitschreibt, ohne eine echte Rename-Absicht zu haben. Betraf am Ende **vier**
+    Stellen, nicht nur eine - alle beim Review gefunden und abgesichert, nicht erst live entdeckt:
+    `rename_entry()` selbst, `index_upsert()` (Watcher-CREATE/MODIFY auf unverändertem Pfad),
+    und zwei Stellen in der Scan-Identitätserkennung/Vollscan-Reconciliation
+    (`_scan_and_reconcile`), die `name` beim Wiederfinden einer bereits bekannten Datei ebenfalls
+    zurückschreiben. Ohne den Guard hätte z.B. jede Watcher-Inhaltsänderung oder jeder tägliche
+    Scan-Lauf unnötig `rename_entry()` samt Authz-Checks ausgelöst - im schlimmsten Fall mit einem
+    `AccessError` für Dateien in einem Schutzordner, obwohl nur der Inhalt geändert wurde.
+
+    **Formular-Gruppe:** `readonly="1"` beim `name`-Feld entfernt - dank der bereits
+    zusammengelegten Gruppe (Punkt davor) bleibt die Zeile bündig mit den anderen.
+
+    **Live verifiziert (Tower), inkl. Regressionstest:** komplette Testsuite in isolierter CI-DB
+    weiterhin **0 failed, 0 error(s) von 88 Tests** (inkl. der bestehenden ACL- und
+    Scan-Identitäts-Tests, die genau die geänderten Codepfade abdecken). Danach live gegen einen
+    temporär umgeschalteten, beschreibbaren Testordner (nie gegen `/mnt/hm-daten`, das ist
+    read-only): Name im Formular geändert und gespeichert - echte Datei auf der Platte tatsächlich
+    umbenannt (per `ls` bestätigt, nicht nur die DB-Spalte). Bestehendes "Umbenennen" in der
+    Toolbar funktioniert unverändert (derselbe gemeinsame Funktionsaufruf).
+
+    **Nebenbefund, kein Bug in dieser Änderung:** beim Testen beobachtet, dass der Datei-Watcher
+    gelegentlich mit einer interaktiven Umbenennung um denselben Datensatz konkurriert
+    (`could not serialize access due to concurrent update`, watcher-seitig geloggt und verworfen,
+    DB-Endzustand korrekt) - ein bereits bestehendes, self-healing Verhalten (Watcher-Ereignis
+    schlägt fehl, das tägliche Sicherheitsnetz gleicht es notfalls ab), unabhängig davon ob die
+    Umbenennung über die Route oder `write()` ausgelöst wurde.
+
+    **Eigener Fehler bei der Live-Verifikation, vollständig behoben:** beim Aufsetzen des
+    beschreibbaren Testordners wurde versehentlich der tägliche Sicherheitsnetz-Scan manuell
+    ausgelöst, während `root_path` noch auf den Testordner zeigte - dessen Stale-Erkennung
+    (`_scan_and_reconcile`) hat daraufhin alle ~87.000 echten Indexeinträge als "nicht mehr
+    vorhanden" gewertet und gelöscht. Die echten Dateien selbst waren nie betroffen (nur lesend
+    gemountet, per `find` bestätigt unversehrt) - nach Zurückschalten von `root_path` und einem
+    erneuten, korrekten Scan war der Index mit ~87.054 Zeilen wiederhergestellt. Nicht
+    wiederherstellbar: jegliche zuvor gesetzten `tag_ids`/`status_id`/Chatter-Notizen/Freigabe-Links
+    auf einzelnen Dateien (alle Zeilen sind fachlich neu angelegt, nicht die alten mit ID-Erhalt).
+    Siehe [[reference_tower_odoo_test_instance]] für die daraus gezogene, dauerhafte
+    Arbeitsanweisung (nie den Scan manuell auslösen, während `root_path` versetzt ist).

@@ -11,6 +11,7 @@ from odoo.fields import Domain
 
 from ..fulltext import FulltextTooLarge, extract_fulltext, fulltext_type_of, suggest_from_text
 from ..hash_utils import compute_stable_hash
+from ..index_utils import rename_entry
 from ..mediameta import MetaTooLarge, extract_metadata, media_type_of
 from ..path_utils import get_root, to_relative
 
@@ -120,6 +121,32 @@ class IntFilemanagerFile(models.Model):
 
     def _selection_target_model(self):
         return [(model.model, model.name) for model in self.env["ir.model"].sudo().search([])]
+
+    def write(self, vals):
+        """Direktes Bearbeiten von "name" im Formular (Nutzerwunsch 2026-09-06) - schreibt
+        NICHT einfach die Spalte, sondern loest denselben echten Dateisystem-Rename aus wie
+        der bestehende "Umbenennen"-Menuepunkt (rename_entry() in index_utils.py, dieselbe
+        Funktion, dieselben Authz-Pruefungen - keine zweite Kopie). Ohne das wuerde der
+        DB-Datensatz auf einen Pfad zeigen, der nicht mehr zur echten Datei passt.
+
+        int_filemanager_syncing_index-Kontext-Guard: jede reine Index-Nachpflege, die "name"
+        mitschreibt, ohne dass eine echte Rename-Absicht vorliegt, muss diesen Kontext setzen,
+        sonst wuerde sie hier faelschlich als (unnoetiger oder mit falschem altem Pfad
+        fehlschlagender) Rename-Auftrag verstanden. Betrifft: rename_entry() selbst
+        (index_utils.py, schreibt "name" am Ende ueber index_move_tree() zurueck),
+        index_upsert() (Watcher-CREATE/MODIFY auf unveraendertem Pfad) und die
+        Scan-Reconciliation weiter unten (Vollscan-Refresh sowie Identitaetserkennung nach
+        Umbenennen/Verschieben ausserhalb Odoos) - alle bereits entsprechend markiert.
+        """
+        if (
+            "name" in vals
+            and len(self) == 1
+            and not self.env.context.get("int_filemanager_syncing_index")
+        ):
+            rename_entry(self.env, self.path, vals.pop("name"))
+            if not vals:
+                return True
+        return super().write(vals)
 
     @api.model
     def search_panel_select_range(self, field_name, **kwargs):
@@ -617,7 +644,12 @@ class IntFilemanagerFile(models.Model):
                         write_vals["hash_state"] = "pending"
                         if media_type_of(vals["name"]):
                             write_vals["meta_state"] = "pending"
-                    rec.write(write_vals)
+                    # int_filemanager_syncing_index: rec wurde ueber denselben Pfad gefunden
+                    # (existing_by_path[vals["path"]]) - "name" hier ist immer schon der
+                    # aktuelle Name, keine Rename-Absicht. Ohne den Guard wuerde jeder
+                    # Scan-Lauf fuer JEDE unveraenderte Datei write() (siehe dort) und damit
+                    # unnoetig rename_entry() samt Authz-Pruefungen ausloesen.
+                    rec.with_context(int_filemanager_syncing_index=True).write(write_vals)
                     if vals["is_dir"]:
                         path_to_id_cache[vals["path"]] = rec.id
                 else:
@@ -711,7 +743,12 @@ class IntFilemanagerFile(models.Model):
                 old = stale_recs[0]
                 old_path = old.path
                 old_folder_path = old.folder_path or ""
-                old.write(
+                # int_filemanager_syncing_index: die Datei wurde ausserhalb Odoos
+                # umbenannt/verschoben (sonst waere sie nicht "stale") - das hier ist reine
+                # Index-Nachpflege auf den bereits existierenden neuen Pfad, kein Auftrag an
+                # write() (siehe dort), noch einmal einen (nicht mehr existierenden) alten
+                # Pfad umzubenennen.
+                old.with_context(int_filemanager_syncing_index=True).write(
                     {
                         "name": vals["name"],
                         "path": vals["path"],
@@ -770,7 +807,9 @@ class IntFilemanagerFile(models.Model):
                 continue
             vals = new_candidates[new_idx]
             old_path = stale_dir.path
-            stale_dir.write(
+            # int_filemanager_syncing_index: siehe Kommentar bei der Datei-Reconciliation
+            # oben - reine Index-Nachpflege, kein Rename-Auftrag an write().
+            stale_dir.with_context(int_filemanager_syncing_index=True).write(
                 {
                     "name": vals["name"],
                     "path": vals["path"],

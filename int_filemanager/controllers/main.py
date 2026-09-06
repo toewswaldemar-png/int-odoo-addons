@@ -10,7 +10,7 @@ from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 
 from .. import authz, write_service
-from ..index_utils import index_move_tree, index_remove_tree, index_upsert
+from ..index_utils import index_move_tree, index_remove_tree, index_upsert, rename_entry
 from ..path_utils import get_root, make_shareable, resolve_path, safe_name, to_relative
 
 _logger = logging.getLogger(__name__)
@@ -142,21 +142,13 @@ class IntFilemanagerController(http.Controller):
 
     @http.route("/int_filemanager/rename", type="jsonrpc", auth="user", methods=["POST"])
     def rename(self, path="", new_name=""):
+        """Delegiert komplett an rename_entry() (index_utils.py) - dieselbe Funktion, die
+        auch int_filemanager.file.write() fuers direkte Umbenennen im Formular aufruft, damit
+        die Authz-Pruefungen nur an einer Stelle existieren (siehe dort)."""
         self._check_access()
-        new_name = safe_name(new_name)
         abs_path = resolve_path(request.env, path)
         old_rel = to_relative(request.env, abs_path)
-        authz.require(request.env, old_rel, "write")
-        parent_rel = os.path.dirname(old_rel)
-        authz.require_rename_or_move_allowed(request.env, old_rel, parent_rel)
-        if not os.path.exists(abs_path):
-            raise UserError(_("Eintrag nicht gefunden."))
-        new_abs = os.path.join(os.path.dirname(abs_path), new_name)
-        new_rel = to_relative(request.env, new_abs)
-        if os.path.exists(new_abs):
-            raise UserError(_("Es existiert bereits ein Eintrag mit diesem Namen."))
-        os.rename(abs_path, new_abs)
-        index_move_tree(request.env, old_rel, new_rel)
+        rename_entry(request.env, old_rel, new_name)
         return {"ok": True}
 
     @http.route("/int_filemanager/move", type="jsonrpc", auth="user", methods=["POST"])
