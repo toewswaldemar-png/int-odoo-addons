@@ -12,8 +12,14 @@
                      Ziel ein <button> ist, und reicht nur bei Fehltreffer an die normale
                      Zeilenlogik weiter. Deshalb reicht die reine Arch-Deklaration hier, kein
                      JS-Klick-Abfang in native_list_view.js noetig. -->
+                <!-- width="40px" fixiert min=max in Odoos Spaltenbreiten-Algorithmus
+                     (column_width_hook.js: column.attrs.width -> minWidth=maxWidth) - ohne das
+                     wird ein <button>-Spalte (kein eigener column.type-Zweig dort, faellt auf
+                     canShrink=false + kein maxWidth zurueck) beim "Tabelle schmaler als Platz"-
+                     Fall wie eine normale Datenspalte mitgestreckt, live als breite Leerflaeche
+                     um den Pfeil beobachtet. -->
                 <button name="action_open_form" type="object" icon="fa-arrow-right"
-                        title="Details öffnen" string=""/>
+                        title="Details öffnen" string="" width="40px"/>
                 <!-- Baustein 4 (Ampel-Freigabe) - natives badge-Widget, Farbe kommt aus dem
                      frei konfigurierbaren int_filemanager.status-Modell (siehe
                      filemanager_status_views.xml). status_color nur als Datenquelle fuer
