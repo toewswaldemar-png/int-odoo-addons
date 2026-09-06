@@ -14,9 +14,12 @@
                      JS-Klick-Abfang in native_list_view.js noetig. -->
                 <button name="action_open_form" type="object" icon="fa-arrow-right"
                         title="Details öffnen" string=""/>
-                <!-- Baustein 4 (Ampel-Freigabe) - natives state_selection-Widget, kein eigener
-                     Button/eigene Komponente noetig: der Punkt selbst ist per Klick aenderbar. -->
-                <field name="state" widget="state_selection" nolabel="1" string="Status" optional="show"/>
+                <!-- Baustein 4 (Ampel-Freigabe) - natives badge-Widget, Farbe kommt aus dem
+                     frei konfigurierbaren int_filemanager.status-Modell (siehe
+                     filemanager_status_views.xml). status_color nur als Datenquelle fuer
+                     color_field, nicht selbst als Spalte gedacht. -->
+                <field name="status_color" column_invisible="1"/>
+                <field name="status_id" widget="badge" options="{'color_field': 'status_color'}" optional="show"/>
                 <field name="name"/>
                 <field name="size" invisible="is_dir" optional="show"/>
                 <field name="mtime" optional="show"/>

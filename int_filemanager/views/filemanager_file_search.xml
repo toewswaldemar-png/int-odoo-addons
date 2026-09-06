@@ -6,6 +6,7 @@
             <search>
                 <field name="name" string="Name"/>
                 <field name="tag_ids" string="Tags"/>
+                <field name="status_id" string="Freigabestatus"/>
                 <!-- Baustein 1 (docs/int_filemanager_paperoffice_recherche.md): reiht sich ohne
                      jede JS-Aenderung automatisch ins bestehende "Search X for: Y"-Dropdown ein,
                      inkl. der bereits gebauten rekursiven Suche (search_model_patch.js). Einfaches
@@ -18,10 +19,11 @@
                 <filter name="filter_tagged" string="Mit Tags" domain="[('tag_ids','!=',False)]"/>
                 <filter name="filter_untagged" string="Ohne Tags" domain="[('tag_ids','=',False)]"/>
                 <separator/>
-                <!-- Baustein 4 (Ampel-Freigabe) - reine Filter/Gruppierung, kein eigener Code. -->
-                <filter name="filter_state_blocked" string="Rückfrage" domain="[('state','=','blocked')]"/>
-                <filter name="filter_state_done" string="Freigegeben" domain="[('state','=','done')]"/>
-                <filter name="groupby_state" string="Freigabestatus" context="{'group_by': 'state'}"/>
+                <!-- Baustein 4 (Ampel-Freigabe) - keine festen Werte-Filter mehr (status_id ist
+                     seit der Umstellung auf int_filemanager.status frei konfigurierbar, es gibt
+                     keine technisch garantierten Werte mehr) - Suche ueber das obige Feld
+                     (Freigabestatus) plus Gruppierung reichen. -->
+                <filter name="groupby_status_id" string="Freigabestatus" context="{'group_by': 'status_id'}"/>
                 <!-- hierarchize bewusst NICHT auf 0 gesetzt (Gegenteil eines frueheren Versuchs
                      hier, siehe Commit-Historie): hierarchize="0" unterdrueckt serverseitig
                      komplett das Mitschicken von parent_id pro Baumwert (web/models/models.py,

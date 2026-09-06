@@ -1,0 +1,45 @@
+<odoo>
+    <record id="view_filemanager_status_list" model="ir.ui.view">
+        <field name="name">int_filemanager.status.list</field>
+        <field name="model">int_filemanager.status</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="name" widget="badge" options="{'color_field': 'color'}" string="Vorschau"/>
+                <field name="color" widget="color_picker"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_filemanager_status_form" model="ir.ui.view">
+        <field name="name">int_filemanager.status.form</field>
+        <field name="model">int_filemanager.status</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="color" widget="color_picker"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_filemanager_status" model="ir.actions.act_window">
+        <field name="name">Freigabestatus-Werte</field>
+        <field name="res_model">int_filemanager.status</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Admin-only, analog zu "Geschützte Ordner" (menu_int_filemanager_protected_folders) -
+         normale Nutzer sehen/waehlen die Werte nur ueber status_id auf der Datei (Lesezugriff,
+         siehe ir.model.access.csv), koennen sie aber nicht anlegen/aendern. -->
+    <menuitem id="menu_int_filemanager_status"
+              name="Freigabestatus-Werte"
+              parent="menu_int_filemanager_root"
+              action="action_filemanager_status"
+              groups="int_filemanager.group_filemanager_admin"
+              sequence="91"/>
+</odoo>

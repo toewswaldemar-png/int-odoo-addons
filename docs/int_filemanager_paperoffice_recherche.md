@@ -172,14 +172,16 @@ festes, kleines Set). **Kein eigener Baustein mehr, nur noch eine mögliche spä
 
 ## Baustein 4 ✅ umgesetzt (2026-09-06): Ampel-Freigabe-Workflow
 
-PaperOffice bewirbt ein "Ampel-System" für Freigaben (z.B. Rechnungsfreigabe). Umgesetzt über
-Odoos natives `state_selection`-Widget (Punkt statt Ampel-Icon: nur zwei Sonderfarben, rot/grün,
-plus grau für alles andere - kein Button/eigene Komponente nötig, der Punkt selbst ist per Klick
-änderbar). Details, inklusive eines geprüften und verworfenen reicheren Alternativ-Widgets
-(`project_task_state_selection` - sieht aus wie eine echte Ampel mit Icons, ist aber hart auf
-`project.task`s eigene Statuswerte kodiert, nicht generisch wiederverwendbar) und der Synergie mit
-Baustein 2 (`tracking=True` loggt jede Statusänderung automatisch im Chatter):
-[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 24.
+PaperOffice bewirbt ein "Ampel-System" für Freigaben (z.B. Rechnungsfreigabe). Erste Version über
+Odoos natives `state_selection`-Widget (Punkt, nur zwei Sonderfarben rot/grün fest im Odoo-Kern
+verdrahtet) - auf Nutzerwunsch danach umgebaut auf ein frei konfigurierbares
+`int_filemanager.status`-Modell (Menüpunkt "Freigabestatus-Werte", beliebige Werte/Farben ohne
+Code-Änderung, natives `badge`-Widget statt Punkt). Details, inklusive eines geprüften und
+verworfenen reicheren Alternativ-Widgets (`project_task_state_selection` - sieht aus wie eine
+echte Ampel mit Icons, ist aber hart auf `project.task`s eigene Statuswerte kodiert), der
+bewusst in Kauf genommenen Read-only-Einschränkung des `badge`-Widgets in der Liste, und der
+Datenmigration der ~87k Bestandszeilen:
+[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkte 24-25.
 
 ## Baustein 5 ❌ verworfen (2026-09-06): Digitale Signatur
 

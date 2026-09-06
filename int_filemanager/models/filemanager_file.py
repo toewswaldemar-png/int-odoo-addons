@@ -93,24 +93,22 @@ class IntFilemanagerFile(models.Model):
         help="Eindeutige ID des Scan-Laufs, der diesen Datensatz zuletzt auf der Platte bestätigt hat.",
     )
     tag_ids = fields.Many2many("int_filemanager.tag", string="Tags")
-    # Baustein 4 (docs/int_filemanager_paperoffice_recherche.md): PaperOffice-Ampel-Freigabe
-    # ueber Odoos eigenes state_selection-Widget statt einer eigenen Ampel-Komponente. Werte
-    # folgen bewusst Odoos eigener kanban_state-Konvention (normal/blocked/done) - das Widget
-    # faerbt nur genau diese beiden Sonderwerte ein (blocked=rot, done=gruen), jeder andere
-    # Wert bleibt grau (live am Quellcode geprueft: web/static/src/views/fields/
-    # state_selection/state_selection_field.js, StateSelectionField.colors) - andere
-    # technische Werte wuerden also unbemerkt farblos bleiben.
-    state = fields.Selection(
-        [
-            ("normal", "Offen"),
-            ("blocked", "Rückfrage"),
-            ("done", "Freigegeben"),
-        ],
+    # Baustein 4 (docs/int_filemanager_paperoffice_recherche.md): PaperOffice-Ampel-Freigabe.
+    # Erst als state_selection-Selection-Feld umgesetzt (nur zwei Sonderfarben, rot/gruen,
+    # hart im Odoo-Kern verdrahtet - siehe Punkt 24 in int_filemanager_native_ui.md), auf
+    # Nutzerwunsch dann auf ein frei konfigurierbares Many2one umgestellt: Admins koennen
+    # eigene Status-Werte samt Farbe unter "Dateimanager > Freigabestatus-Werte" anlegen,
+    # ohne Code-/Modul-Aenderung. status_color ist ein reines Hilfsfeld fuers badge-Widget
+    # (dessen color_field-Option ein Integer-Feld auf demselben Datensatz braucht, siehe
+    # web/static/src/views/fields/badge/badge_field.js - kann nicht direkt ueber die
+    # Many2one-Relation lesen).
+    status_id = fields.Many2one(
+        "int_filemanager.status",
         string="Freigabestatus",
-        default="normal",
-        required=True,
+        default=lambda self: self.env.ref("int_filemanager.filemanager_status_normal", raise_if_not_found=False),
         tracking=True,
     )
+    status_color = fields.Integer(related="status_id.color", string="Freigabestatus-Farbe")
     res_reference = fields.Reference(
         string="Verknüpfter Datensatz",
         selection="_selection_target_model",

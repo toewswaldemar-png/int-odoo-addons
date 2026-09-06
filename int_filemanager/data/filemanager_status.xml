@@ -1,0 +1,21 @@
+<odoo>
+    <!-- Startbelegung, entspricht der frueheren state_selection-Werte (normal/blocked/done) -
+         danach ueber "Dateimanager > Freigabestatus-Werte" frei erweiter-/umbenennbar, keine
+         dieser drei ist im Code fest verdrahtet (siehe filemanager_file.py, status_id). Farb-
+         Indizes aus web/static/src/core/colorlist/colorlist.js (0=No color, 1=Red, 10=Green). -->
+    <record id="filemanager_status_normal" model="int_filemanager.status">
+        <field name="name">Offen</field>
+        <field name="color">0</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="filemanager_status_blocked" model="int_filemanager.status">
+        <field name="name">Rückfrage</field>
+        <field name="color">1</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="filemanager_status_done" model="int_filemanager.status">
+        <field name="name">Freigegeben</field>
+        <field name="color">10</field>
+        <field name="sequence">30</field>
+    </record>
+</odoo>

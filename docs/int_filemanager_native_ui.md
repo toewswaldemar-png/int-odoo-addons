@@ -1097,3 +1097,50 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Server-/Konsolen-Fehler (die einzigen geloggten Fehler während des Tests waren dieselben
     bereits bekannten, unabhängigen `mail_presence`-Serialisierungskonflikte beim
     Container-Neustart).
+
+25. **Baustein 4 umgebaut (2026-09-06): `state`-Selection → frei konfigurierbares
+    `int_filemanager.status`-Modell.** Nutzerwunsch: Freigabestatus-Werte sollen sich über einen
+    Menüpunkt anlegen/umbenennen/farblich anpassen lassen, ohne Code-Änderung - mit dem hart
+    kodierten Selection-Feld aus Punkt 24 nicht möglich (Werte stehen im Python-Code, und
+    `state_selection` färbt ohnehin nur die zwei Sonderwerte `blocked`/`done` ein, siehe dort).
+
+    **Architektur - Muster von `int_filemanager.tag` uebernommen** (`name` + `color`, dieselbe
+    Odoo-Farbpalette): neues Modell `int_filemanager.status` (+ `sequence` fürs Umsortieren,
+    `widget="handle"`), eigene Konfigurationsseite "Dateimanager > Freigabestatus-Werte"
+    (`filemanager_status_views.xml`, admin-only wie "Geschützte Ordner" - normale Nutzer haben nur
+    Lesezugriff, siehe `ir.model.access.csv`). Auf `int_filemanager.file`: `state` (Selection)
+    ersetzt durch `status_id` (Many2one) + `status_color` (related Integer, reines Hilfsfeld).
+    Anzeige über das native `badge`-Widget (`web/static/src/views/fields/badge/badge_field.js`,
+    `options="{'color_field': 'status_color'}"`) - unterstützt beliebige Farben aus der vollen
+    12-Farben-Palette (`ColorList.COLORS`, am Quellcode geprüft), nicht nur Rot/Grün.
+
+    **Bewusst in Kauf genommener Nachteil, vorher mit dem Nutzer geklärt statt stillschweigend
+    verbaut:** `badge` ist rein lesend (`badge_field.xml`: nur `<span t-esc>`, keine
+    Klick-/Editier-Logik) - anders als `state_selection` lässt sich der Status jetzt **nicht**
+    mehr direkt in der Liste per Klick ändern, nur noch über das Formular (Pfeil-Button-Dialog
+    oder volle Seite). Alternative (eigene Klickbarkeit nach `inline_tags.js`-Vorbild) wurde
+    besprochen und explizit zugunsten der einfacheren Lösung verworfen.
+
+    **Datenmigration, nicht nur Backfill:** `migrations/19.0.1.6.0/
+    post-migrate_state_to_status.py` mappt die ~87k Bestandszeilen von den alten Textwerten
+    (`normal`/`blocked`/`done`) auf die IDs der drei per `data/filemanager_status.xml`
+    mitgelieferten Standard-Status (dieselben External IDs, damit `env.ref()` im Feld-Default
+    funktioniert). `post-migrate` (nicht `pre-`): läuft erst nachdem die Status-Datensätze aus
+    `data/` schon geladen sind. Modul-Version deshalb auf `19.0.1.6.0` angehoben, sonst hätte Odoo
+    das Skript beim Upgrade nicht ausgeführt.
+
+    **Live verifiziert (Tower):** erster Upgrade-Versuch schlug mit `could not serialize access`
+    fehl, weil der Hauptcontainer parallel weiterlief (derselbe bekannte Konflikttyp wie beim
+    `mail_presence`-Nebeneffekt) - sauber zurückgerollt (per SQL bestätigt: kein Teilzustand),
+    Hauptcontainer gestoppt, Upgrade danach fehlerfrei. Per SQL bestätigt: 87.053 Zeilen →
+    "Offen", 1 Zeile (aus einem früheren Test) → "Rückfrage", 0 NULL-Werte. Im Browser:
+    Konfigurationsseite zeigt alle drei Status mit korrekter Farb-Vorschau; neuer eigener Status
+    "In Prüfung" (Orange) angelegt, taucht sofort im Dropdown auf der Datei auf, Badge in der
+    Liste zeigt die korrekte Farbe - kompletter Kreis von "Wert anlegen" bis "sichtbar in der
+    Liste" ohne jede Code-Änderung bestätigt. Admin-Menüpunkte ("Geschützte Ordner",
+    "Freigabestatus-Werte") waren anfangs nicht sichtbar, weil der Test-Login nie in
+    `group_filemanager_admin` war (nicht durch diese Änderung verursacht) - nach Gruppenzuweisung
+    und Neustart (ORM-Gruppen-Cache reagiert nicht auf rohe SQL-Writes) sichtbar; die
+    Zweitzeilen-Menüleiste selbst rendert erst nach Direktaufruf der jeweiligen Action-URL, nicht
+    beim Wechsel per Klick innerhalb derselben Session - rein clientseitige Owl-Eigenheit, keine
+    Server-/Datenkorrektheitsfrage (per `load_menus`/`has_group`-RPC direkt verifiziert).

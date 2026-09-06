@@ -1,4 +1,5 @@
 from . import filemanager_tag
+from . import filemanager_status
 from . import filemanager_scan_log
 from . import filemanager_protected_folder
 from . import filemanager_file
