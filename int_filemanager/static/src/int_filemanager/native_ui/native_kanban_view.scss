@@ -1,0 +1,49 @@
+// Kanban-Galerie (native_kanban_view.js/.xml, filemanager_file_kanban_view.xml) - Kartenlayout
+// und Cover-Bereich fuer Thumbnail bzw. Icon-Platzhalter. Scoped auf o_int_filemanager_kanban
+// (siehe native_kanban_view.js: get className()), analog zum o_int_filemanager_list-Scoping in
+// native_list_view.scss - betrifft keine andere Kanban-Ansicht im System.
+.o_int_filemanager_kanban {
+    .o_int_filemanager_kanban_cover {
+        width: 100%;
+        height: 140px;
+        object-fit: contain;
+        background-color: var(--o-view-background-color, #fff);
+        border-bottom: 1px solid var(--border-color, #dee2e6);
+    }
+
+    // Platzhalter-Cover fuer Eintraege ohne thumbnail (Ordner, Office-Dokumente, Archive, ...) -
+    // dasselbe int_filemanager_name-Widget wie in der Liste (name_icon_field.js/.xml,
+    // .o_int_filemanager_name_cell), hier nur als grosse, zentrierte Flaeche statt als kleines
+    // Zeilen-Praefix gestylt (dort per native_list_view.scss auf 20x20px begrenzt - dieses
+    // Scoping betrifft nur .o_int_filemanager_list, hier gilt die eigene, groessere Regel).
+    .o_int_filemanager_kanban_cover_fallback {
+        height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--o-view-background-color-alt, #f8f9fa);
+        border-bottom: 1px solid var(--border-color, #dee2e6);
+
+        .o_int_filemanager_name_cell {
+            flex-direction: column;
+            gap: 0.5rem;
+
+            .o_image,
+            .fa-folder {
+                width: 48px;
+                height: 48px;
+                font-size: 48px;
+            }
+
+            span.text-truncate {
+                max-width: 100%;
+            }
+        }
+    }
+
+    .o_int_filemanager_kanban_body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}

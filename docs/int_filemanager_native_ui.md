@@ -1345,3 +1345,63 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     gesetzt). Bidirektionale Verknüpfung end-to-end per RPC bestätigt: `res.partner.
     action_view_int_filemanager_files()` liefert die korrekte domain
     `[["partner_id", "=", <id>]]`, `int_filemanager_count` zählt richtig. Keine neuen Fehler.
+
+32. **Native Kanban-Ansicht als zweite View neben der Liste (2026-09-07), Nutzerwunsch.**
+    Vorrecherche siehe Gesprächsverlauf: Odoo 19s Kanban-Arch nutzt die moderne
+    `<templates><t t-name="card">`-Syntax (nicht mehr `kanban-box`), `KanbanController` hat
+    einen eigenen `openRecord(record, {newWindow})`, der standardmäßig ein Formular öffnet -
+    für Ordner-Navigation musste das genauso überschrieben werden wie bei der Liste.
+    `search_model_patch.js` ist bereits view-unabhängig (auf `resModel` gescoped) und griff
+    ohne jede Änderung auch für Kanban. Nutzerentscheidung: reine Karten-Galerie, kein
+    gruppiertes Board, kein Drag&Drop - ein Status-Spalten-Board hätte die Baustein-4-
+    Entscheidung "Status-Badge ist read-only in der Liste" wieder aufgemacht, was explizit
+    nicht gewollt war.
+
+    **Refactoring vorweg:** die komplette Controller-Logik aus `native_list_view.js`
+    (Navigation, Mutationen, Breadcrumbs, Chatter-Panel, Aktionsmenü) in ein neues
+    `filemanager_controller_mixin.js` extrahiert (`filemanagerControllerMixin(Base) => class
+    extends Base {...}` - ein Mixin statt einer gemeinsamen Vaterklasse, weil JS keine
+    Mehrfachvererbung kennt und `IntFilemanagerListController` `ListController` erweitern muss,
+    `IntFilemanagerKanbanController` dagegen `KanbanController`). `native_list_view.js` wurde
+    dadurch auf Template/Components/Scoping-Klasse eingedampft, `native_kanban_view.js` ist das
+    Kanban-Äquivalent - `openRecord()` brauchte dort keinen eigenen Override, das Mixin deckt
+    Ordner-Navigation UND Datei-Öffnen-Dispatch bereits vollständig ab.
+
+    **Karte** (`filemanager_file_kanban_view.xml`): `thumbnail` (bereits vorhandenes Feld,
+    befüllt aus mediameta.py für Bilder/PDF/Audio) über das native `image`-Widget als Cover;
+    für alles ohne Thumbnail (Ordner, Office-Dokumente, Archive, ...) fällt die Karte auf
+    dasselbe `int_filemanager_name`-Widget zurück, das auch die Liste für Ordner-/Dateityp-
+    Icons nutzt (`invisible="thumbnail"`/`"not thumbnail"` auf zwei `<field name="name">`-
+    Knoten - mehrere Knoten für denselben Feldnamen sind in Kanban-Archs explizit vorgesehen,
+    `kanban_arch_parser.js`: `fieldNextIds`). Darunter Status-Badge, Tags, Kontakt - dieselben
+    Widgets wie in der Liste, unverändert wiederverwendbar: `getFieldFromRegistry()`
+    (`field.js`) probiert `jsClass.widget` → `viewType.widget` → `widget` ungeprefixt, unsere
+    Widgets sind ungeprefixt registriert und greifen dadurch identisch in beiden Views.
+
+    **Echter Bug gefunden und behoben, live auf Tower reproduziert:** beim allerersten Wechsel
+    zu einer in der Session noch nie besuchten Ansicht (Liste↔Kanban) während man in einem
+    Unterordner ist, stürzte `Breadcrumbs.template` ab ("Cannot read properties of undefined
+    (reading 'actionStack')"). Ursache: Odoos Breadcrumbs-Template wertet für jede NICHT-letzte
+    Krume `.url` aus (`router.stateToUrl(controller.state)`); `controller.state` wird für einen
+    frisch von `switchView()` erzeugten Controller erst in dessen eigenem `onMounted()` gesetzt
+    (`action_service.js`, dortiges `pushState()`). Da unser `updateBreadcrumbs()` bisher
+    synchron in `setup()` lief, war die native "Dateimanager"-Wurzelkrume beim allerersten
+    Render nicht mehr die letzte im Array (unsere Ordner-Krumen folgen ihr) und brauchte
+    `.url`, obwohl `controller.state` noch undefined war. Fix: der initiale
+    `updateBreadcrumbs()`-Aufruf läuft jetzt in `onMounted()` statt in `setup()` - beim ersten
+    Render ist die Wurzelkrume dadurch noch allein (keine `.url`-Auswertung nötig), die durch
+    unseren Push ausgelöste Nachzeichnung ist eine spätere, über Owls reaktiven Scheduler
+    asynchrone Aktualisierung, zu der `pushState()` bereits gelaufen ist.
+
+    **Live verifiziert (Tower):** Modul-Upgrade fehlerfrei, `view_mode="list,kanban"` ohne
+    eigenen `view_id`-Eintrag für Kanban (Odoo wählt die einzige vorhandene Kanban-View für das
+    Modell automatisch, gleiches Muster wie `filemanager_status_views.xml`). Nativer
+    View-Switcher zeigt beide Icons, Umschalten funktioniert. Durchgeklickt: Ordner-Navigation
+    per Kartenklick (inkl. korrekter Breadcrumb-Fortschreibung), Datei öffnen/downloaden,
+    Alt-Klick-Auswahl + Aktionsmenü (Umbenennen-Dialog getestet, Verfügbarkeitsregeln pro
+    Eintrag korrekt - z.B. "Freigeben"/"Werte erkennen" für Ordner ausgeblendet), Chatter-Panel-
+    Toggle, "Neu"-Dropdown (mkdir-Route erreicht, lief korrekt in eine "Read-only file
+    system"-Fehlermeldung, da `/mnt/hm-daten` auf dieser Testinstanz bewusst schreibgeschützt
+    ist - bestätigt die Fehlerbehandlung, kein Bug). Der oben beschriebene Breadcrumb-Absturz
+    wurde nach dem Fix in einem komplett frischen Browser-Tab mehrfach gegengeprüft (List→Audio→
+    Kanban und umgekehrt) - keine Konsolenfehler mehr.

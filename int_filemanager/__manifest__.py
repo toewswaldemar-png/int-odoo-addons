@@ -19,6 +19,7 @@
         "data/filemanager_status.xml",
         "views/filemanager_file_search.xml",
         "views/filemanager_file_list_view.xml",
+        "views/filemanager_file_kanban_view.xml",
         "views/menu.xml",
         "views/filemanager_protected_folder_views.xml",
         "views/filemanager_status_views.xml",

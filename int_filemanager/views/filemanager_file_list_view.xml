@@ -50,7 +50,12 @@
     <record id="action_filemanager_file_list_native" model="ir.actions.act_window">
         <field name="name">Dateimanager</field>
         <field name="res_model">int_filemanager.file</field>
-        <field name="view_mode">list</field>
+        <!-- "kanban" zusaetzlich zu "list" (2026-09-07, siehe
+             docs/int_filemanager_native_ui.md) - kein view_id-Eintrag fuer den Kanban-Teil
+             noetig: es gibt genau eine Kanban-View fuer dieses Modell
+             (filemanager_file_kanban_view.xml), Odoo waehlt sie automatisch (gleiches Muster
+             wie view_mode="list,form" ohne view_id in filemanager_status_views.xml). -->
+        <field name="view_mode">list,kanban</field>
         <field name="view_id" ref="view_filemanager_file_list_native"/>
         <field name="search_view_id" ref="int_filemanager_file_search"/>
         <!-- Explizit [] statt das Feld wegzulassen: ein aus dem XML entferntes <field> wird von
