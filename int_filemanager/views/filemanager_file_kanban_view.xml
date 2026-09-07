@@ -58,6 +58,18 @@
                                        options="{'color_field': 'status_color'}"/>
                                 <field name="tag_ids" widget="many2many_tags"/>
                                 <field name="partner_id"/>
+                                <!-- Baustein 1 (Werte erkennen) - analog zur Liste
+                                     (filemanager_file_list_view.xml) jetzt auch auf der Karte
+                                     sichtbar, Nutzerfeedback 2026-09-07. Jeweils per invisible
+                                     ausgeblendet statt einer leeren Zeile, da die meisten Dateien
+                                     keine erkannten Werte haben. -->
+                                <field name="extracted_date" invisible="not extracted_date"
+                                       class="text-muted small d-block"/>
+                                <field name="extracted_invoice_number"
+                                       invisible="not extracted_invoice_number"
+                                       class="text-muted small d-block"/>
+                                <field name="extracted_amount" invisible="not extracted_amount"
+                                       class="text-muted small d-block"/>
                             </div>
                         </div>
                     </t>

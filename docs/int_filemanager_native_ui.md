@@ -1466,3 +1466,16 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Datum): live ein neues Muster ("Lieferscheinnummer", `target_field=invoice_number`,
     `ignore_case=1`) über die Admin-UI angelegt, danach lieferte "Werte erkennen" für dieselbe
     Datei sofort die korrekte Rechnungsnr. "261144" - ohne Codeänderung, ohne Modul-Upgrade.
+
+35. **Erkannte Werte (Datum/Rechnungsnr./Betrag) in Liste und Kanban sichtbar (2026-09-07),
+    Nutzerfeedback.** `extracted_date`/`extracted_invoice_number`/`extracted_amount`
+    (`filemanager_file.py:297-299`) werden von "Werte erkennen" befüllt, waren bisher aber nur
+    im Formular sichtbar - Nutzerbeobachtung: ohne Sicht-/Filterbarkeit in der Übersicht kaum
+    auffindbar. Bewusst **keine** neue Odoo-Modul-Anbindung (Buchhaltung/Lager) - das wäre ein
+    Scope-Sprung von reinem DMS zu Buchhaltungs-/Lager-Integration und würde neue
+    Abhängigkeiten (`account`/`stock`/`purchase`) brauchen; discutiert und explizit auf die
+    schlanke Variante beschränkt (Nutzerentscheidung). Liste
+    (`filemanager_file_list_view.xml`): alle drei Felder als `optional="hide"`-Spalten, analog
+    zu `partner_id` - nicht jede Datei hat erkannte Werte, Standardansicht bleibt kompakt.
+    Kanban (`filemanager_file_kanban_view.xml`): dieselben drei Felder in der Kartenbody, je
+    einzeln per `invisible="not <feld>"` ausgeblendet statt einer leeren Zeile.

@@ -43,6 +43,14 @@
                 <field name="mtime" optional="show"/>
                 <field name="tag_ids" widget="many2many_tags" optional="show"/>
                 <field name="partner_id" optional="hide"/>
+                <!-- Baustein 1 (Werte erkennen) - bisher nur im Formular sichtbar, obwohl per
+                     "Werte erkennen"/Drag&Drop-Analyse befuellt (siehe document_review_dialog.js).
+                     Nutzerfeedback 2026-09-07: ohne Sicht-/Filterbarkeit in der Liste sind diese
+                     Werte kaum auffindbar. optional="hide" wie partner_id - nicht jede Datei hat
+                     erkannte Werte, Standardansicht bleibt unveraendert kompakt. -->
+                <field name="extracted_date" optional="hide"/>
+                <field name="extracted_invoice_number" optional="hide"/>
+                <field name="extracted_amount" optional="hide"/>
             </list>
         </field>
     </record>
