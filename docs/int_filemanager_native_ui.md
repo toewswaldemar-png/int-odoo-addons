@@ -1514,3 +1514,44 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     aktualisiert. Die zurückgelieferten Werte (Datum 28.08.2026, Rechnungsnr. 261144) blieben
     dabei unveraendert korrekt, da nur die (teure) Extraktion übersprungen wird, nicht die
     (billige) Musterauswertung auf dem bereits gespeicherten `content_text`.
+
+37. **Die drei restlichen Effizienz-Punkte aus Punkt 36 umgesetzt (2026-09-07).**
+
+    **(a) Mehrfachauswahl für "Werte erkennen":** `int_analyze` im Aktionsmenü
+    (`filemanager_controller_mixin.js`) verfügbar sobald mindestens eine Auswahl passt
+    (`selection.some(...)`) statt nur bei genau einer. Neue `onAnalyzeSelected()` filtert
+    Ordner/nicht unterstützte Typen heraus und verarbeitet den Rest sequenziell - dieselbe
+    Dialog-Wartschleife wie `_analyzeUploadedFiles()` für Mehrfach-Uploads. Dafür musste
+    `onAnalyzeDocument()` selbst auf das Schließen seines Dialogs warten (`onClose`-Option,
+    wie beim Upload-Pfad) - vorher feuerte es den Dialog nur fire-and-forget.
+
+    **(b) `ocr_state`-Sichtbarkeit:** in der Liste per nativem `decoration-warning`/
+    `decoration-danger`-Attribut auf dem `ocr_state`-Feld (verifiziert: `list_arch_parser.js`'s
+    `getDecoration()`, pro Feld auswertbar, kein eigenes Widget nötig), im Kanban per zwei
+    `invisible`-gesteuerten Feldknoten (gleiches Muster wie die erkannten Werte, Punkt 35).
+    Bewusst nur `pending`/`error` markiert - `done` ist der Normalfall und bleibt unauffällig.
+
+    **(c) Direkter Icon-Button statt nur Aktionsmenü:** neues natives `<widget>`
+    (`analyze_button_widget.js/.xml`, `registry.category("view_widgets")` - verifiziert am
+    Odoo-19-Quellcode `web/static/src/views/widgets/widget.js`) statt eines
+    `<button type="object">`: "Werte erkennen" ist ein rein clientseitiger RPC+Dialog-Ablauf,
+    keine serverseitige Action wie `action_open_form`. Das Widget bekommt über `props.record`
+    vollen Zugriff auf den Datensatz und ruft `dialog`/`rpc` selbstständig auf - dieselbe Logik
+    wie `onAnalyzeDocument()`, nur ohne Umweg über den Controller. `extOf`/`isFulltextSupported`
+    aus `filemanager_controller_mixin.js` exportiert statt dupliziert, damit Widget und
+    Controller dieselbe Quelle der Wahrheit für "welcher Dateityp gilt als unterstützt" nutzen.
+    Klick-Propagation wird im Widget selbst gestoppt (`ev.stopPropagation()`) - anders als bei
+    `<button type="object">` bekommt ein `<widget>`-Knoten nicht automatisch die
+    `oe_kanban_action`-Klasse, die Odoos Kanban-Compiler dort einsetzt (verifiziert in
+    `kanban_compiler.js`), um Klicks von der Kartennavigation auszunehmen. In der Liste reicht
+    das native `<button>`-Element im Widget-Template allein schon aus (`list_renderer.js` prüft
+    ohnehin `ev.target.closest("button")`). Style-Aufteilung: die Bootstrap-Klassen sitzen im
+    Widget-Template selbst auf dem `<button>`, die arch-`class` (landet laut
+    `view_compiler.js`'s `compileWidget()` auf dem umschließenden `<div class="o_widget ...">`)
+    dient nur der Positionierung - im Kanban ein eigener runder Overlay-Button unten rechts
+    (`.o_int_filemanager_kanban_analyze` in `native_kanban_view.scss`), damit er sich nicht mit
+    "Details öffnen" oben rechts überlappt.
+
+    **Live verifiziert (Tower):** Modul-Upgrade fehlerfrei, keine Konsolenfehler auf der
+    Kanban-Startseite (nur Ordner sichtbar - Button zeigt sich dort korrekt gar nicht, da
+    `widget.visible` für `is_dir=true` `false` liefert).

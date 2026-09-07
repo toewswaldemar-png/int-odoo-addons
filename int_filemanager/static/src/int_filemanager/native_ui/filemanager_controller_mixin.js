@@ -63,7 +63,11 @@ const OFFICE_PROTOCOL = {
     ppt: "ms-powerpoint", pptx: "ms-powerpoint",
 };
 
-function extOf(name) {
+// Exportiert (statt modulintern), weil analyze_button_widget.js (der neue Direkt-Icon-Button
+// auf Zeile/Karte, siehe docs/int_filemanager_native_ui.md) dieselbe Erweiterungs-Pruefung
+// braucht, um sich fuer Ordner/nicht-unterstuetzte Dateitypen unsichtbar zu machen - eine
+// einzige Quelle der Wahrheit dafuer statt einer zweiten, potenziell abweichenden Kopie.
+export function extOf(name) {
     const i = name.lastIndexOf(".");
     return i === -1 ? "" : name.slice(i + 1).toLowerCase();
 }
@@ -80,7 +84,7 @@ function isOfficeEditable(name) {
 // UI-Verfuegbarkeit des "Werte erkennen"-Menuepunkts - der Server bleibt bei der eigentlichen
 // Analyse die einzige Quelle der Wahrheit, siehe onAnalyzeDocument). TEXT_EDIT_EXTENSIONS oben
 // deckt sich bereits 1:1 mit PLAIN_TEXT_EXTENSIONS, daher wiederverwendet statt dupliziert.
-function isFulltextSupported(name) {
+export function isFulltextSupported(name) {
     const ext = extOf(name);
     return TEXT_EDIT_EXTENSIONS.has(ext) || ext === "pdf";
 }
@@ -557,7 +561,13 @@ export function filemanagerControllerMixin(Base) {
         // Manueller Auslöser fuer bereits bestehende Dateien (kein automatischer Backfill,
         // Nutzerentscheidung 2026-09-05 - siehe docs/int_filemanager_paperoffice_recherche.md,
         // Baustein 1) - derselbe interaktive Pfad A wie direkt nach einem Drag&Drop-Upload, nur
-        // manuell fuer eine ausgewaehlte Bestandsdatei ausgeloest statt automatisch.
+        // manuell fuer eine ausgewaehlte Bestandsdatei ausgeloest statt automatisch. Wartet seit
+        // 2026-09-07 (Mehrfachauswahl-Nutzerfeedback) selbst auf das Schliessen des Dialogs
+        // (onClose-Option, gleiches Wartemuster wie _analyzeUploadedFiles unten) - noetig, damit
+        // onAnalyzeSelected() mehrere Dateien nacheinander statt gleichzeitig abfragen kann.
+        // Fuer den Einzelaufruf (Aktionsmenue mit genau einer Auswahl, neuer
+        // analyze_button_widget.js-Button) aendert das Warten selbst nichts, da bisher niemand
+        // auf das zurueckgegebene Promise gewartet hat.
         async onAnalyzeDocument(record) {
             let result;
             try {
@@ -570,12 +580,33 @@ export function filemanagerControllerMixin(Base) {
                 this.notification.add(_t("Für diesen Dateityp ist keine Erkennung verfügbar."), { type: "warning" });
                 return;
             }
-            this.dialog.add(IntDocumentReviewDialog, {
-                fileName: record.data.name,
-                resId: result.res_id,
-                suggestion: result,
-                onSaved: () => this.reload(),
+            await new Promise((resolve) => {
+                this.dialog.add(
+                    IntDocumentReviewDialog,
+                    {
+                        fileName: record.data.name,
+                        resId: result.res_id,
+                        suggestion: result,
+                        onSaved: () => this.reload(),
+                    },
+                    { onClose: resolve }
+                );
             });
+        }
+
+        // Mehrfachauswahl (2026-09-07, Nutzerfeedback "aktuell nicht sehr effizient") - dieselbe
+        // Sequenziell-Dialog-Schleife wie _analyzeUploadedFiles() fuer Mehrfach-Uploads, nur fuer
+        // eine manuelle Auswahl bestehender Dateien statt gerade hochgeladener. Ordner und nicht
+        // unterstuetzte Dateitypen werden aus der Auswahl still uebersprungen (der Server bleibt
+        // ohnehin die einzige Quelle der Wahrheit dafuer, was unterstuetzt ist - isFulltextSupported
+        // hier nur zur Vermeidung unnoetiger RPCs).
+        async onAnalyzeSelected() {
+            const records = this.model.root.selection.filter(
+                (r) => !r.data.is_dir && isFulltextSupported(r.data.name)
+            );
+            for (const record of records) {
+                await this.onAnalyzeDocument(record);
+            }
         }
 
         // Freigeben - oeffnet dieselbe action_filemanager_file_share (ir.actions.act_window,
@@ -660,12 +691,15 @@ export function filemanagerControllerMixin(Base) {
                     callback: () => this.onOpenLocal(selection[0]),
                 },
                 int_analyze: {
-                    isAvailable: () => selection.length === 1 && !selection[0].data.is_dir
-                        && isFulltextSupported(selection[0].data.name),
+                    // Mehrfachauswahl seit 2026-09-07 (Nutzerfeedback) - verfuegbar sobald
+                    // MINDESTENS eine ausgewaehlte Zeile/Karte in Frage kommt, nicht mehr nur bei
+                    // Einzelauswahl. onAnalyzeSelected() filtert Ordner/nicht unterstuetzte Typen
+                    // selbst heraus.
+                    isAvailable: () => selection.some((r) => !r.data.is_dir && isFulltextSupported(r.data.name)),
                     sequence: 35,
                     icon: "fa fa-magic",
                     description: _t("Werte erkennen"),
-                    callback: () => this.onAnalyzeDocument(selection[0]),
+                    callback: () => this.onAnalyzeSelected(),
                 },
                 int_delete: {
                     isAvailable: () => selection.length > 0,

@@ -17,6 +17,8 @@
                 <field name="folder_path"/>
                 <!-- Datenquelle fuer status_id's color_field, wie in der Liste. -->
                 <field name="status_color"/>
+                <!-- Fuer den pending/error-Indikator unten - siehe Kommentar dort. -->
+                <field name="ocr_state"/>
                 <templates>
                     <t t-name="card">
                         <!-- Eigene Wrapper-Div fuer position:relative - Anker fuer den
@@ -38,6 +40,17 @@
                             <button name="action_open_form" type="object" icon="fa-arrow-right"
                                     title="Details öffnen" string=""
                                     class="btn btn-light btn-sm o_int_filemanager_kanban_open_form"/>
+                            <!-- Direkter "Werte erkennen"-Button (2026-09-07, Nutzerfeedback)
+                                 analog zum Listen-Pendant - eigenes <widget>, siehe
+                                 analyze_button_widget.js fuer die Begruendung (kein
+                                 <button type="object"> moeglich, da rein clientseitiger Ablauf).
+                                 Eigene Ecke (unten rechts) statt neben "Details öffnen", damit
+                                 sich die beiden Overlay-Buttons nicht ueberlappen - die
+                                 Positionierungsklasse hier landet auf dem umschliessenden
+                                 <div class="o_widget ...">, das Aussehen des Buttons selbst
+                                 kommt aus analyze_button_widget.xml. -->
+                            <widget name="int_filemanager_analyze_button"
+                                    class="o_int_filemanager_kanban_analyze"/>
                             <!-- thumbnail (filemanager_file.py) ist fuer Bilder/PDFs/Audio bereits
                                  befuellt (mediameta.py) - natives image-Widget, kein neuer Code.
                                  Fuer alles ohne Thumbnail (Ordner, Office-Dokumente, Archive, ...)
@@ -70,6 +83,13 @@
                                        class="text-muted small d-block"/>
                                 <field name="extracted_amount" invisible="not extracted_amount"
                                        class="text-muted small d-block"/>
+                                <!-- ocr_state-Indikator (2026-09-07, Nutzerfeedback) - analog
+                                     zur Liste nur fuer pending/error, "done" ist der
+                                     Normalfall und bleibt unauffaellig. -->
+                                <field name="ocr_state" invisible="ocr_state != 'pending'"
+                                       class="text-warning small d-block"/>
+                                <field name="ocr_state" invisible="ocr_state != 'error'"
+                                       class="text-danger small d-block"/>
                             </div>
                         </div>
                     </t>
