@@ -1405,3 +1405,24 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     ist - bestätigt die Fehlerbehandlung, kein Bug). Der oben beschriebene Breadcrumb-Absturz
     wurde nach dem Fix in einem komplett frischen Browser-Tab mehrfach gegengeprüft (List→Audio→
     Kanban und umgekehrt) - keine Konsolenfehler mehr.
+
+33. **"Details öffnen"-Button auf der Kanban-Karte (2026-09-07), Nutzerfeedback.** Kartenklick
+    löste bisher ausschließlich `openRecord()` aus (Ordner-Navigation bzw. Datei öffnen/
+    downloaden) - es gab keinen Weg, das volle Formular (exakte Byte-Größe, alle Felder) von der
+    Karte aus zu erreichen, obwohl die Liste dafür bereits einen eigenen Pfeil-Button
+    (`action_open_form`) hat. Am Kanban-Compiler-Quellcode verifiziert: `kanban_compiler.js`
+    (`compileButton()`) versieht jeden `<button type="object">`/`type="action"` in einer
+    Kanban-Karte automatisch mit der Klasse `oe_kanban_action`, die in `CANCEL_GLOBAL_CLICK`
+    steht (`kanban_record.js`) - ein Klick darauf löst nie `openRecord()`/die Kartennavigation
+    aus, exakt dasselbe native Verhalten wie der Listen-Button. Kein neuer JS-Code nötig, nur
+    ein `<button name="action_open_form" type="object" icon="fa-arrow-right".../>` in der
+    Kartenvorlage (`filemanager_file_kanban_view.xml`), als kleiner runder Overlay-Button oben
+    rechts positioniert (`native_kanban_view.scss`, `.o_int_filemanager_kanban_open_form`) -
+    dafür die Kartenvorlage in eine eigene `position:relative`-Div gewrappt, da die Karte selbst
+    keinen eigenen positionierten Container mitbringt.
+
+    **Live verifiziert (Tower):** Modul-Upgrade fehlerfrei. Button erscheint auf jeder Karte
+    (Ordner und Dateien), öffnet zuverlässig den Formular-Dialog mit allen Feldern (Name, Path,
+    Größe, Geändert, Status, Tags, Kontakt) - identisch zum Listen-Pendant. Kartenklick daneben
+    navigiert weiterhin normal in Unterordner bzw. öffnet die Datei, keine gegenseitige
+    Störung. Keine Konsolenfehler.

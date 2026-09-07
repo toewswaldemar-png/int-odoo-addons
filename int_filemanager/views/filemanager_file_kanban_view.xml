@@ -19,26 +19,46 @@
                 <field name="status_color"/>
                 <templates>
                     <t t-name="card">
-                        <!-- thumbnail (filemanager_file.py) ist fuer Bilder/PDFs/Audio bereits
-                             befuellt (mediameta.py) - natives image-Widget, kein neuer Code.
-                             Fuer alles ohne Thumbnail (Ordner, Office-Dokumente, Archive, ...)
-                             faellt die Karte auf dasselbe int_filemanager_name-Widget zurueck,
-                             das auch die Liste fuer Ordner-/Dateityp-Icons nutzt
-                             (name_icon_field.js/.xml) - dieselbe Icon-Logik, hier nur als
-                             groesseres Platzhalter-Cover statt als kleines Spalten-Praefix.
-                             Zwei <field name="name">-Knoten statt einer dynamischen Klasse:
-                             mehrere Knoten fuer denselben Feldnamen sind in Kanban-Archs
-                             explizit vorgesehen (kanban_arch_parser.js: fieldNextIds). -->
-                        <field name="thumbnail" invisible="not thumbnail" widget="image"
-                               class="o_int_filemanager_kanban_cover"/>
-                        <div class="o_int_filemanager_kanban_body p-2">
-                            <field name="name" invisible="thumbnail" widget="int_filemanager_name"
-                                   class="o_int_filemanager_kanban_cover_fallback"/>
-                            <field name="name" invisible="not thumbnail" class="text-truncate fw-bold d-block"/>
-                            <field name="status_id" widget="badge"
-                                   options="{'color_field': 'status_color'}"/>
-                            <field name="tag_ids" widget="many2many_tags"/>
-                            <field name="partner_id"/>
+                        <!-- Eigene Wrapper-Div fuer position:relative - Anker fuer den
+                             "Details öffnen"-Button unten (position:absolute soll sich auf die
+                             ganze Karte beziehen, nicht auf die Seite). -->
+                        <div class="position-relative">
+                            <!-- Pendant zum Pfeil-Button in der Liste (filemanager_file_list_view.xml,
+                                 action_open_form) - Kartenklick loest hier ausschliesslich
+                                 openRecord() aus (Ordner-Navigation bzw. Datei oeffnen/downloaden,
+                                 filemanager_controller_mixin.js), es gibt sonst keinen Weg, das
+                                 volle Formular (exakte Byte-Groesse, alle Felder, Chatter als
+                                 Vollseite statt Seitenpanel) von der Karte aus zu erreichen. Kein
+                                 eigener Klick-Abfang noetig: der Kanban-Compiler versieht jeden
+                                 <button type="object"> automatisch mit der Klasse
+                                 "oe_kanban_action" (kanban_compiler.js), die in
+                                 CANCEL_GLOBAL_CLICK steht (kanban_record.js) - ein Klick darauf
+                                 loest nie openRecord()/die Kartennavigation aus, exakt dasselbe
+                                 native Verhalten wie der Listen-Button. -->
+                            <button name="action_open_form" type="object" icon="fa-arrow-right"
+                                    title="Details öffnen" string=""
+                                    class="btn btn-light btn-sm o_int_filemanager_kanban_open_form"/>
+                            <!-- thumbnail (filemanager_file.py) ist fuer Bilder/PDFs/Audio bereits
+                                 befuellt (mediameta.py) - natives image-Widget, kein neuer Code.
+                                 Fuer alles ohne Thumbnail (Ordner, Office-Dokumente, Archive, ...)
+                                 faellt die Karte auf dasselbe int_filemanager_name-Widget zurueck,
+                                 das auch die Liste fuer Ordner-/Dateityp-Icons nutzt
+                                 (name_icon_field.js/.xml) - dieselbe Icon-Logik, hier nur als
+                                 groesseres Platzhalter-Cover statt als kleines Spalten-Praefix.
+                                 Zwei <field name="name">-Knoten statt einer dynamischen Klasse:
+                                 mehrere Knoten fuer denselben Feldnamen sind in Kanban-Archs
+                                 explizit vorgesehen (kanban_arch_parser.js: fieldNextIds). -->
+                            <field name="thumbnail" invisible="not thumbnail" widget="image"
+                                   class="o_int_filemanager_kanban_cover"/>
+                            <div class="o_int_filemanager_kanban_body p-2">
+                                <field name="name" invisible="thumbnail" widget="int_filemanager_name"
+                                       class="o_int_filemanager_kanban_cover_fallback"/>
+                                <field name="name" invisible="not thumbnail" class="text-truncate fw-bold d-block"/>
+                                <field name="status_id" widget="badge"
+                                       options="{'color_field': 'status_color'}"/>
+                                <field name="tag_ids" widget="many2many_tags"/>
+                                <field name="partner_id"/>
+                            </div>
                         </div>
                     </t>
                 </templates>
