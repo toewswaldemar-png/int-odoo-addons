@@ -639,7 +639,7 @@ export class IntFilemanagerListController extends ListController {
                 isAvailable: () => selection.length === 1,
                 sequence: 10,
                 icon: "fa fa-link",
-                description: _t("Verknüpfen"),
+                description: _t("Kontakt verknüpfen"),
                 callback: () => this.onLinkRecord(selection[0]),
             },
             int_share: {

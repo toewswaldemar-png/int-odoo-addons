@@ -24,7 +24,7 @@
                         <field name="mtime" readonly="1"/>
                         <field name="status_id"/>
                         <field name="tag_ids" widget="many2many_tags"/>
-                        <field name="res_reference"/>
+                        <field name="partner_id"/>
                     </group>
                 </sheet>
                 <chatter/>

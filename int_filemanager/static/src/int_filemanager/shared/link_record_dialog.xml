@@ -7,13 +7,13 @@
                 values="initialValues"
                 mode="'edit'"
                 t-slot-scope="data">
-            <Dialog title="'Mit Datensatz verknüpfen'" size="'md'">
+            <Dialog title="'Mit Kontakt verknüpfen'" size="'md'">
                 <div class="p-2">
-                    <Field name="'res_reference'" record="data.record" type="'reference'"/>
+                    <Field name="'partner_id'" record="data.record" type="'many2one'"/>
                 </div>
                 <t t-set-slot="footer">
                     <button class="btn btn-primary" t-on-click="() => this.onSave(data.record)">Speichern</button>
-                    <button t-if="data.record.data.res_reference" class="btn btn-link text-danger"
+                    <button t-if="data.record.data.partner_id" class="btn btn-link text-danger"
                             t-on-click="() => this.onClear(data.record)">Verknüpfung entfernen</button>
                     <button class="btn btn-secondary" t-on-click="() => this.props.close()">Abbrechen</button>
                 </t>

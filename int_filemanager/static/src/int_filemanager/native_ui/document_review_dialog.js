@@ -4,7 +4,7 @@
 // einfacher Regex vorgeschlagenen Tags/Werte (fulltext.suggest_from_text) - zeigt nur an, was
 // schon im System existiert bzw. im Text gefunden wurde, schreibt aber NICHTS automatisch. Erst
 // "Übernehmen" schreibt via normalem this.orm.write() - bewusst kein sudo()/kein Custom-Endpoint
-// dafuer, das sind reine Feldaenderungen (tag_ids/res_reference/extracted_*), keine
+// dafuer, das sind reine Feldaenderungen (tag_ids/partner_id/extracted_*), keine
 // Dateisystem-Operation, laufen also korrekt ueber dieselben ir.rule-Regeln wie jede andere
 // Bearbeitung am Datensatz (siehe filemanager_file.py, action_analyze_document-Docstring).
 import { Component, useState } from "@odoo/owl";
@@ -53,7 +53,7 @@ export class IntDocumentReviewDialog extends Component {
             extracted_date: this.state.date || false,
             extracted_invoice_number: this.state.invoiceNumber || false,
             extracted_amount: this.state.amount || false,
-            res_reference: this.state.partner ? `res.partner,${this.state.partner.id}` : false,
+            partner_id: this.state.partner ? this.state.partner.id : false,
         };
         await this.orm.write("int_filemanager.file", [this.props.resId], vals);
         this.props.onSaved?.();

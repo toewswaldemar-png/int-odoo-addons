@@ -42,7 +42,7 @@
 //
 // A fifth case, added when the "Verknuepfte Dateien"-smart-button (filemanager_linkable_mixin.py)
 // was ported off the now-deleted legacy_ui client action tag (2026-09-04): that action opens this
-// same native list permanently domain-restricted (res_reference = the linking record), not via a
+// same native list permanently domain-restricted (partner_id = the linking contact), not via a
 // user-typed search facet - this.query stays empty there, so the third case above never fires and
 // browsing would default to root only (parent_id = False), almost always empty since a linked
 // file/folder is essentially never a filesystem root item itself. Reusing the exact context key

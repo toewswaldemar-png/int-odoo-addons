@@ -1316,3 +1316,32 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     leer (`NULL`) statt automatisch "Offen". Keine neuen Fehler (nur erwartete "Read-only file
     system"-Meldungen von eigenen Testversuchen gegen das absichtlich schreibgeschuetzte
     `/mnt/hm-daten`).
+
+31. **`res_reference` ersetzt durch `partner_id` (2026-09-07), Nutzerentscheidung.** Ausgangspunkt:
+    Vergleich mit PaperOffice zeigte, dass "Verknüpfter Datensatz" als generisches Feld eine
+    unnötig umständliche Bedienung hat. Am Code bestätigt (`web/static/src/views/fields/
+    reference/reference_field.xml`): ein `Reference`-Feld rendert immer zuerst ein `<select>`
+    über **alle** installierten Modelle (`_selection_target_model()` lieferte ungefiltert jedes
+    Odoo-Modell), erst danach die eigentliche Datensatz-Suche - für den in der Praxis einzigen
+    Anwendungsfall (Kunde/Lieferant verknüpfen) unnötig umständlich. Die ursprüngliche
+    Generalität (Docstring-Beispiel: "z.B. Reparaturauftrag") war nie tatsächlich genutzt (0
+    Bestandszeilen mit gesetztem `res_reference` vor der Umstellung, per SQL geprüft).
+
+    **Umbau:** `res_reference` (Reference) ersetzt durch `partner_id` (Many2one auf `res.partner`,
+    `filemanager_file.py`) - einfache Ein-Feld-Suche, kein Modell-Picker mehr. Betraf mehrere
+    Stellen, alle beim Review gefunden statt erst live: Formular/Liste (`filemanager_file_form_
+    view.xml`/`filemanager_file_list_view.xml`), Baustein-1-OCR-Vorschlag-Übernahme
+    (`document_review_dialog.js`), der eigene "Verknüpfen"-Dialog (`shared/link_record_dialog.js`/
+    `.xml` - dabei deutlich vereinfacht: der eigene `ir.model`-Abruf fürs Modell-Picker-`<select>`
+    entfällt komplett), das ActionMenus-Label ("Verknüpfen" → "Kontakt verknüpfen"), sowie
+    `filemanager_linkable_mixin.py` (die "Verknüpfte Dateien"-Smart-Button-Logik auf `res.partner`
+    - Domain jetzt `[("partner_id", "=", record.id)]` statt der alten polymorphen
+    `"model,id"`-String-Übereinstimmung; Mixin-Docstring aktualisiert, dass es damit faktisch auf
+    `res.partner` zugeschnitten ist, nicht mehr generisch für beliebige Modelle).
+
+    **Live verifiziert (Tower):** Modul-Upgrade fehlerfrei (keine Bestandsdaten zu migrieren, da
+    `res_reference` vorher ungenutzt war). "Kontakt verknüpfen"-Dialog zeigt jetzt eine einzelne
+    Kontakt-Suche statt Modell-Dropdown, Speichern per SQL bestätigt (`partner_id` korrekt
+    gesetzt). Bidirektionale Verknüpfung end-to-end per RPC bestätigt: `res.partner.
+    action_view_int_filemanager_files()` liefert die korrekte domain
+    `[["partner_id", "=", <id>]]`, `int_filemanager_count` zählt richtig. Keine neuen Fehler.

@@ -115,15 +115,20 @@ class IntFilemanagerFile(models.Model):
         tracking=True,
     )
     status_color = fields.Integer(related="status_id.color", string="Status-Farbe")
-    res_reference = fields.Reference(
-        string="Verknüpfter Datensatz",
-        selection="_selection_target_model",
-        help="Beliebiger Odoo-Datensatz (z.B. Reparaturauftrag, Kontakt), mit dem diese "
-        "Datei/dieser Ordner inhaltlich verknüpft ist.",
+    # War zunaechst ein generisches Reference-Feld (beliebiges Odoo-Modell) - auf
+    # Nutzerentscheidung 2026-09-07 ersetzt durch ein dediziertes Many2one auf res.partner.
+    # Grund: Reference-Feldera rendern nativ eine zweistufige Modell-dann-Datensatz-Auswahl
+    # (web/static/src/views/fields/reference/reference_field.xml: <select> ueber ALLE
+    # installierten Modelle, erst danach die Many2one-Suche) - fuer den in der Praxis
+    # einzigen tatsaechlichen Anwendungsfall (Kunde/Lieferant verknuepfen) unnoetig
+    # umstaendlich. Die urspruenglich bewusste Generalitaet (Beispiel im alten Docstring:
+    # "z.B. Reparaturauftrag") wird damit aufgegeben, war aber nie tatsaechlich genutzt.
+    partner_id = fields.Many2one(
+        "res.partner",
+        string="Kontakt",
+        help="Kunde/Lieferant/Kontakt, mit dem diese Datei/dieser Ordner inhaltlich "
+        "verknüpft ist.",
     )
-
-    def _selection_target_model(self):
-        return [(model.model, model.name) for model in self.env["ir.model"].sudo().search([])]
 
     def write(self, vals):
         """Direktes Bearbeiten von "name" im Formular (Nutzerwunsch 2026-09-06) - schreibt

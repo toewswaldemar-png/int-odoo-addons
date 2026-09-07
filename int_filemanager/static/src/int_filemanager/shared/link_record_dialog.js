@@ -1,11 +1,17 @@
 /** @odoo-module **/
 
-import { Component, onWillStart, useState } from "@odoo/owl";
+import { Component } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { Record } from "@web/model/record";
 import { Field } from "@web/views/fields/field";
-import { useService } from "@web/core/utils/hooks";
 
+// War urspruenglich fuer ein generisches Reference-Feld gebaut (beliebiges Odoo-Modell,
+// daher der eigene ir.model-Abruf fuer den Modell-Picker) - auf Nutzerentscheidung
+// 2026-09-07 vereinfacht auf ein festes Many2one auf res.partner (siehe
+// filemanager_file.py, partner_id), weil das Reference-Feld fuer den einzigen
+// tatsaechlichen Anwendungsfall (Kunde/Lieferant verknuepfen) eine unnoetig umstaendliche
+// zweistufige Modell-dann-Datensatz-Auswahl erzwang. Kein eigener ir.model-Abruf mehr
+// noetig, dadurch deutlich einfacher als vorher.
 export class IntLinkRecordDialog extends Component {
     static template = "int_filemanager.LinkRecordDialog";
     static components = { Dialog, Record, Field };
@@ -16,26 +22,13 @@ export class IntLinkRecordDialog extends Component {
         onSaved: Function,
     };
 
-    setup() {
-        this.orm = useService("orm");
-        // The model picklist is the same "every installed model" list Odoo's own
-        // ir.actions.server.resource_ref field builds server-side
-        // (_selection_target_model) - fetched once since this Record is hand-built
-        // rather than introspected from a real fields_get.
-        this.state = useState({ selection: [] });
-        onWillStart(async () => {
-            const models = await this.orm.searchRead("ir.model", [], ["model", "name"]);
-            this.state.selection = models.map((m) => [m.model, m.name]);
-        });
-    }
-
     get fields() {
         return {
             path: { type: "char", string: "Path" },
-            res_reference: {
-                type: "reference",
-                string: "Verknüpfter Datensatz",
-                selection: this.state.selection,
+            partner_id: {
+                type: "many2one",
+                string: "Kontakt",
+                relation: "res.partner",
             },
         };
     }
@@ -43,12 +36,12 @@ export class IntLinkRecordDialog extends Component {
     get activeFields() {
         return {
             path: {},
-            res_reference: {},
+            partner_id: {},
         };
     }
 
     get initialValues() {
-        return this.props.metaId ? undefined : { path: this.props.path, res_reference: false };
+        return this.props.metaId ? undefined : { path: this.props.path, partner_id: false };
     }
 
     async onSave(record) {
@@ -58,7 +51,7 @@ export class IntLinkRecordDialog extends Component {
     }
 
     async onClear(record) {
-        record.update({ res_reference: false });
+        record.update({ partner_id: false });
         await record.save({ reload: false });
         this.props.onSaved(record.resId);
         this.props.close();
