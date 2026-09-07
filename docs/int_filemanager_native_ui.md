@@ -1253,3 +1253,26 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Bild-Icon, `.pdf` das rote PDF-Icon, `.mp3` das Audio-Icon, `.html` das Web-Code-Icon -
     unbekannte Endungen (`.exe`, `.asd`, `.paw3`, `.dnt`) korrekt auf das generische Fallback-Icon.
     Keine Konsolen-/Server-Fehler.
+
+28. **Menschlich lesbare Größenanzeige in der Liste (2026-09-07), Nutzerwunsch.** Vorher rohe
+    Byte-Zahl (z.B. "816965"). Recherchiert, bevor umgesetzt: Odoo hat dafür bereits eine
+    fertige interne Formatierung - `humanSize()` (`web/static/src/views/fields/formatters.js`),
+    die jede `Binary`-Feld-Größe im ganzen System genauso zeigt ("12.34Mb"/"700Mb"/"512 Bytes",
+    via `humanNumber()` mit `decimals: 2` - überflüssige Nachkommastellen fallen automatisch weg,
+    kein eigenes Rundungsverhalten erfunden). Direkt wiederverwendbar war sie aber nicht:
+    `formatBinary()`/`humanSize()` erwarten Base64-Daten oder Odoos eigenen `bin_size`-Platzhalter-
+    String, keine rohe Zahl - unser `size` ist bewusst `fields.Float` (int4-2GB-Limit, siehe
+    Kommentar dort), keine Binary-Spalte.
+
+    **Lösung:** neues kleines Feld-Widget `size_human_field.js`/`.xml` (Widget-Key
+    `int_filemanager_size`), das dieselbe Logik mit dem oeffentlich exportierten Kern-Baustein
+    `humanNumber()` (`web/core/utils/numbers.js`) 1:1 nachbildet, nur fuer eine rohe Zahl statt
+    eines Binary-Werts. Nur die Liste betroffen (`widget="int_filemanager_size"
+    string="Größe"` in `filemanager_file_list_view.xml`) - das Formular zeigt bewusst weiterhin
+    die exakte Byte-Zahl unter "Größe (Bytes)", unveraendert, fuer Faelle wo der genaue Wert
+    gebraucht wird.
+
+    **Live verifiziert (Tower):** Liste zeigt z.B. "816.97kb"/"5.30Mb"/"6.95Mb" statt roher
+    Zahlen, Formular zur selben Datei zeigt weiterhin "816.965" exakt - beide konsistent
+    zueinander. Keine neuen Fehler (der einzige geloggte Fehler war der bereits bekannte,
+    unabhaengige `hash_size`-int4-Overflow-Bug, siehe Punkt 23).

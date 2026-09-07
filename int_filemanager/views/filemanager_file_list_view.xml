@@ -31,7 +31,15 @@
                      many2one_avatar-Widget (Icon + Feldwert in einer Zelle). Rein clientseitig
                      aus is_dir/Dateiendung abgeleitet, kein neues Backend-Feld. -->
                 <field name="name" widget="int_filemanager_name"/>
-                <field name="size" invisible="is_dir" optional="show"/>
+                <!-- Menschlich lesbar (z.B. "12.34Mb"/"700Mb"/"512 Bytes") statt roher Byte-
+                     Zahl - dieselbe Formatierung, die Odoo intern fuer jede Binary-Feld-Groesse
+                     nutzt (humanSize() in web/static/src/views/fields/formatters.js), hier
+                     nachgebaut, weil size bewusst kein Binary-Feld ist (siehe
+                     size_human_field.js). Nur die Liste - das Formular zeigt weiterhin die
+                     exakte Byte-Zahl (eigenes string="Größe" hier statt "Größe (Bytes)", da
+                     die Werte nicht mehr woertlich Bytes sind). -->
+                <field name="size" invisible="is_dir" optional="show"
+                       widget="int_filemanager_size" string="Größe"/>
                 <field name="mtime" optional="show"/>
                 <field name="tag_ids" widget="many2many_tags" optional="show"/>
                 <field name="res_reference" optional="hide"/>
