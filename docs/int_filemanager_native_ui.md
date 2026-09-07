@@ -1479,3 +1479,38 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     zu `partner_id` - nicht jede Datei hat erkannte Werte, Standardansicht bleibt kompakt.
     Kanban (`filemanager_file_kanban_view.xml`): dieselben drei Felder in der Kartenbody, je
     einzeln per `invisible="not <feld>"` ausgeblendet statt einer leeren Zeile.
+
+36. **Redundante Neuextraktion bei wiederholtem "Werte erkennen" behoben (2026-09-07),
+    Nutzerfeedback ("aktuell nicht sehr effizient").** Analyse der gesamten OCR-Bedienung ergab:
+    `_extract_fulltext_for_record()` ([filemanager_file.py:494](../int_filemanager/models/filemanager_file.py))
+    rief bei **jedem** Klick auf "Werte erkennen" bedingungslos die volle Extraktion (bei
+    Scan-PDFs inkl. teurer Tesseract-OCR) neu auf - auch wenn `ocr_state` bereits `"done"` war
+    und sich die Datei seit der letzten Extraktion nicht geändert hatte (z.B. beim erneuten
+    Prüfen nach dem Anlegen eines neuen Erkennungsmusters, siehe Punkt 34 - genau dieser Fall
+    trat live beim `261144.pdf`-Test auf). Fix: neuer Kurzschluss am Anfang der Methode - wenn
+    `ocr_state == "done"` UND die aktuelle Dateigröße/mtime mit den beim letzten Lauf
+    gespeicherten `ocr_source_size`/`ocr_source_mtime_ns` übereinstimmen, wird direkt das
+    gespeicherte `content_text` zurückgegeben, keine erneute Extraktion. Der Hintergrund-Cron
+    (`_cron_extract_fulltext`) ist davon nicht betroffen - der filtert ohnehin nur auf
+    `ocr_state="pending"`, der Kurzschluss greift ausschließlich für den interaktiven
+    Wiederholungsfall.
+
+    Im selben Zuge die gesamte "Werte erkennen"-Bedienung analysiert und drei weitere,
+    noch nicht behobene Schwachstellen dokumentiert (Priorität 2-4, auf Nutzerwunsch zunächst
+    zurückgestellt): (a) das Aktionsmenü erlaubt nur Einzelauswahl (`selection.length === 1` in
+    `getStaticActionMenuItems()`), obwohl `_analyzeUploadedFiles()` bereits ein funktionierendes
+    Sequenziell-Dialog-Muster für mehrere Dateien mitbringt, nur nicht für manuelle
+    Mehrfachauswahl freigeschaltet; (b) `ocr_state` (pending/running/done/error) taucht in
+    keiner View auf - keine Möglichkeit zu sehen, welche Dateien noch nicht analysiert wurden,
+    ohne es an jeder einzeln auszuprobieren; (c) "Werte erkennen" ist nur über das
+    Aktionen-Dropdown erreichbar, kein direkter Icon-Button wie beim neuen "Details
+    öffnen"-Pfeil (Punkt 33).
+
+    **Live verifiziert (Tower):** isolierter CI-DB-Testlauf erneut fehlerfrei bzgl. der
+    Änderung (identische 12 vorbestehende `dbfilter`-Fehlschläge, siehe Punkt 34/Memory). Fix
+    per SQL bewiesen, nicht nur behauptet: `write_date` von `261144.pdf` blieb nach einem
+    erneuten "Werte erkennen"-Klick unverändert auf dem Stand vor der Codeänderung (10:19:24
+    Uhr) stehen - ein `self.write(result)` (wie im alten Verhalten) hätte den Zeitstempel
+    aktualisiert. Die zurückgelieferten Werte (Datum 28.08.2026, Rechnungsnr. 261144) blieben
+    dabei unveraendert korrekt, da nur die (teure) Extraktion übersprungen wird, nicht die
+    (billige) Musterauswertung auf dem bereits gespeicherten `content_text`.

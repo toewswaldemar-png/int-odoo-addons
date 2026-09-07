@@ -507,6 +507,29 @@ class IntFilemanagerFile(models.Model):
             return ""
 
         abs_path = os.path.join(root, self.path)
+
+        # Schon fertig extrahiert und die Datei seitdem unveraendert (gleiche Groesse/mtime wie
+        # beim letzten Lauf)? Dann reicht der gespeicherte content_text - keine erneute, bei
+        # Scan-PDFs teure OCR-Extraktion. Nutzerfeedback 2026-09-07: der interaktive Analyse-
+        # Endpunkt (Pfad A, via action_analyze_document) rief bisher bei JEDEM "Werte
+        # erkennen"-Klick unbedingt neu auf, auch wenn sich an der Datei seit der letzten (ggf.
+        # vom Cron laengst erledigten) Extraktion nichts geaendert hatte - z.B. beim erneuten
+        # Pruefen nach dem Anlegen eines neuen Erkennungsmusters, wo nur die bereits vorhandenen
+        # content_text-Rohdaten neu ausgewertet werden muessen, nicht die Datei selbst. Der Cron
+        # unten filtert ohnehin nur auf ocr_state="pending", dieser Kurzschluss greift also
+        # ausschliesslich fuer den interaktiven Wiederholungsfall.
+        if self.ocr_state == "done":
+            try:
+                current = os.stat(abs_path)
+            except OSError:
+                current = None
+            if (
+                current is not None
+                and current.st_size == self.ocr_source_size
+                and str(current.st_mtime_ns) == self.ocr_source_mtime_ns
+            ):
+                return self.content_text or ""
+
         max_bytes = self._fulltext_max_bytes(fulltext_type)
         try:
             result = extract_fulltext(abs_path, fulltext_type, max_bytes)
