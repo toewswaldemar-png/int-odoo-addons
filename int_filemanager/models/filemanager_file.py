@@ -105,10 +105,13 @@ class IntFilemanagerFile(models.Model):
     # Many2one-Relation lesen). string bewusst allgemein "Status" statt "Freigabestatus"
     # (Nutzerwunsch 2026-09-06) - die Werte sind frei konfigurierbar, das Feld ist nicht
     # mehr zwingend an einen Freigabe-Workflow gebunden.
+    # Bewusst OHNE default (Nutzerwunsch 2026-09-07) - neue Dateien/Ordner starten ohne
+    # Status statt automatisch auf "Offen" (kein required=True, das Feld war schon vorher
+    # ueber das Formular leerbar - jetzt ist "leer" auch der tatsaechliche Startzustand,
+    # nicht nur ein erreichbarer Zwischenzustand).
     status_id = fields.Many2one(
         "int_filemanager.status",
         string="Status",
-        default=lambda self: self.env.ref("int_filemanager.filemanager_status_normal", raise_if_not_found=False),
         tracking=True,
     )
     status_color = fields.Integer(related="status_id.color", string="Status-Farbe")

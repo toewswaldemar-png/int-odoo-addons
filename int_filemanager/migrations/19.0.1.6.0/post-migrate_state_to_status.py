@@ -16,9 +16,10 @@ def migrate(cr, version):
         "WHERE table_name = 'int_filemanager_file' AND column_name = 'state'"
     )
     if not cr.fetchone():
-        # Frische Installation ohne Vorgeschichte - status_id bekommt seinen
-        # Default (filemanager_status_normal) ganz normal ueber den Python-Default
-        # bei jeder Neuanlage, hier gibt es nichts zu migrieren.
+        # Frische Installation ohne Vorgeschichte - es gibt keine alten state-Werte,
+        # die auf status_id gemappt werden muessten. status_id selbst hat inzwischen
+        # bewusst keinen Python-Default mehr (Nutzerwunsch 2026-09-07) - neue Datensaetze
+        # starten ohne Status, nicht automatisch auf "Offen".
         return
 
     cr.execute(

@@ -1293,3 +1293,26 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Optionen, "Neuer Ordner" schliesst das Dropdown und oeffnet den bestehenden Anlegen-Dialog
     korrekt, "Hochladen" schliesst das Dropdown und loest den bestehenden Datei-Auswahl-Dialog
     aus - keine Konsolen-/Server-Fehler.
+
+30. **`status_id` ohne Default (2026-09-07), Nutzerwunsch.** Vorher `default=lambda self:
+    self.env.ref(".../filemanager_status_normal", ...)` - jede neue Datei/jeder neue Ordner
+    bekam automatisch "Offen". Beobachtung des Nutzers: das Feld liess sich im Formular schon
+    vorher leeren (kein `required=True`) - "leer" war also ein erreichbarer Zustand, nur nicht
+    der Startzustand. Reine Standard-Feldkonfiguration, keine besondere Odoo-Funktion noetig:
+    `default` einfach entfernt, `fields.Many2one` ohne `default` ist bei jeder Neuanlage
+    automatisch leer.
+
+    **Betrifft alle Neuanlage-Wege**, nicht nur die UI-Buttons: auch vom Watcher/Scan neu
+    entdeckte Dateien (`index_upsert`/`_scan_and_reconcile`, die keinen `status_id` in ihren
+    `vals` setzen) starten jetzt ohne Status-Badge statt automatisch "Offen" zu zeigen -
+    bewusst in Kauf genommen, entspricht dem Nutzerwunsch fuer *jede* Neuanlage, nicht nur die
+    manuelle.
+
+    **Migrations-Skript-Kommentar korrigiert:** `post-migrate_state_to_status.py` erwaehnte den
+    jetzt nicht mehr existierenden Default fuer den Frisch-Installations-Fall - richtiggestellt,
+    Verhalten der Migration selbst (Mapping alter `state`-Werte bei einem Upgrade) unveraendert.
+
+    **Live verifiziert (Tower):** neuer Datensatz per RPC angelegt, `status_id` per SQL bestaetigt
+    leer (`NULL`) statt automatisch "Offen". Keine neuen Fehler (nur erwartete "Read-only file
+    system"-Meldungen von eigenen Testversuchen gegen das absichtlich schreibgeschuetzte
+    `/mnt/hm-daten`).
