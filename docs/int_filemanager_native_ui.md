@@ -1426,3 +1426,43 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Größe, Geändert, Status, Tags, Kontakt) - identisch zum Listen-Pendant. Kartenklick daneben
     navigiert weiterhin normal in Unterordner bzw. öffnet die Datei, keine gegenseitige
     Störung. Keine Konsolenfehler.
+
+34. **Erkennungsmuster (Baustein 1) admin-konfigurierbar gemacht (2026-09-07), Nutzerwunsch.**
+    Die drei Regex-Konstanten für die interaktive Werterkennung (`_DATE_RE`/`_INVOICE_NO_RE`/
+    `_AMOUNT_RE`, bisher hartkodiert in `fulltext.py`) waren nur per Codeänderung + Modul-
+    Upgrade anpassbar. Neues Modell `int_filemanager.extraction_pattern`
+    (`models/filemanager_extraction_pattern.py`) nach demselben, bereits etablierten Muster wie
+    `int_filemanager.status`/`tag`: `name`, `target_field` (Selection `date`/`invoice_number`/
+    `amount` - bewusst eine feste Auswahl statt eines freien Feldnamens, damit kein Muster
+    versehentlich in ein unerwartetes Feld schreiben kann), `pattern` (Char, die Regex selbst),
+    `ignore_case` (Boolean, ersetzt das bisherige feste `re.IGNORECASE` nur auf der
+    Rechnungsnummer-Regex), `group_index` (welche Erfassungsgruppe den Wert liefert - 0 fuer den
+    ganzen Treffer), `sequence` (Auswertungsreihenfolge, erster Treffer pro `target_field`
+    gewinnt), `active`. Validierung via `@api.constrains("pattern")` +
+    `re.compile()`/`ValidationError` (identisches Muster wie `filemanager_protected_folder.py`'s
+    Pfad-Validierung) - eine kaputte Regex wird beim Speichern abgelehnt, nicht erst beim
+    naechsten "Werte erkennen"-Klick sichtbar. Admin-only Menü "Dateimanager > Konfiguration >
+    Erkennungsmuster" (List+Form, `sequence`-Handle zum Umsortieren), ACL analog zu Status
+    (`int_filemanager.group_filemanager_user`: nur lesend, `group_filemanager_admin`: voll).
+    Startdaten (`data/filemanager_extraction_pattern.xml`) entsprechen 1:1 den bisherigen drei
+    Konstanten - bewusst ohne `noupdate="1"`, analog zu `filemanager_status.xml` (dort ebenfalls
+    keins gesetzt). `fulltext.py:suggest_from_text()` liest die Muster jetzt per
+    `_match_extraction_patterns()` aus der DB (Performance unkritisch: nur interaktiv pro
+    einzelnem Dokument, nie im Massenlauf) - reine Odoo-Bordmittel, kein natives Odoo-Feature für
+    UI-konfigurierbare Extraktionsmuster existiert (verifiziert: kein `iap_extract` auf dieser
+    Instanz, das waere ohnehin Enterprise-only und cloud-basiert statt editierbarer Regex).
+
+    **Live verifiziert (Tower):** isolierter CI-DB-Testlauf (`--test-tags /int_filemanager`,
+    nicht die 87k-Zeilen-Hauptdatenbank) fehlerfrei bzgl. der neuen Funktionalität - die einzigen
+    12 Fehlschläge (`test_acl_http.py`/`test_sharing.py`/`test_versioning_http.py`) sind ein
+    vorbestehendes, unabhängiges Umgebungsproblem dieser Tower-Instanz (`dbfilter = ^odoo19test$`
+    in `odoo.conf` lehnt die Test-DB `odoo19test_ci` bei echten HTTP-Requests ab, reproduzierbar
+    über zwei unabhängige frische CI-DB-Läufe identisch), nicht durch diese Änderung verursacht.
+    Modul-Upgrade auf der Hauptdatenbank fehlerfrei, die drei Startdatensätze korrekt geladen.
+    Ungültige Regex beim Speichern korrekt abgelehnt ("Ungültiger regulärer Ausdruck:
+    unterminated character set at position 9"). Voller End-to-End-Beweis anhand einer echten
+    Bestandsdatei (`261144.pdf`, enthält eine Lieferscheinnummer statt einer Rechnungsnummer -
+    passte auf keins der drei Startmuster, "Werte erkennen" lieferte korrekt nur das erkannte
+    Datum): live ein neues Muster ("Lieferscheinnummer", `target_field=invoice_number`,
+    `ignore_case=1`) über die Admin-UI angelegt, danach lieferte "Werte erkennen" für dieselbe
+    Datei sofort die korrekte Rechnungsnr. "261144" - ohne Codeänderung, ohne Modul-Upgrade.

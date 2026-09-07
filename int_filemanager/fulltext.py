@@ -102,18 +102,38 @@ def extract_fulltext(abs_path, fulltext_type, max_bytes):
 # --- Interaktive Werterkennung (nur fuer den Analyse-Endpunkt, nicht den Hintergrund-Cron) ------
 # Bewusst einfache Regex statt eines Sprachmodells (Nutzerentscheidung 2026-09-05) - keine externe
 # Abhaengigkeit, keine laufenden Kosten pro Dokument, dafuer erwartungsgemaess eingeschraenkter als
-# eine echte KI-Erkennung.
-
-_DATE_RE = re.compile(r"\b(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})\b")
-_INVOICE_NO_RE = re.compile(
-    r"(?:Rechnung(?:s-?nr\.?|snummer)|Invoice\s*No\.?|Beleg-?Nr\.?)\s*[:.]?\s*([A-Za-z0-9\-/]+)",
-    re.IGNORECASE,
-)
-_AMOUNT_RE = re.compile(r"(\d{1,3}(?:\.\d{3})*,\d{2})\s*(?:€|EUR)")
+# eine echte KI-Erkennung. Die Muster selbst liegen seit 2026-09-07 nicht mehr hier als Konstanten,
+# sondern im admin-konfigurierbaren int_filemanager.extraction_pattern-Modell (siehe
+# models/filemanager_extraction_pattern.py, "Dateimanager > Konfiguration > Erkennungsmuster") -
+# diese Funktion liest sie nur noch aus, aendert nichts an der Auswertungslogik selbst.
 
 # Nur Kontakte ab dieser Namenslaenge pruefen - kurze Namen (z.B. "AG", "GmbH"-Fragmente durch
 # schlechte OCR) wuerden sonst reihenweise falsch-positiv im Fliesstext "gefunden".
 _MIN_PARTNER_NAME_LENGTH = 5
+
+
+def _match_extraction_patterns(env, text):
+    """Ein Treffer pro target_field, das erste passende Muster in sequence-Reihenfolge gewinnt -
+    spaetere Muster fuer dasselbe Feld dienen als Fallback, falls das bevorzugte Muster nicht
+    greift. Ein einzelnes ungueltiges Muster (sollte durch die Konstraint auf dem Modell nicht
+    vorkommen, aber IndexError bei einer zu hoch gewaehlten group_index ist erst zur Matchzeit
+    pruefbar) wird uebersprungen statt die gesamte Erkennung abzubrechen."""
+    result = {"date": False, "invoice_number": False, "amount": False}
+    patterns = env["int_filemanager.extraction_pattern"].sudo().search([], order="sequence, id")
+    for rec in patterns:
+        if result.get(rec.target_field) is not False:
+            continue
+        try:
+            match = re.compile(rec.pattern, re.IGNORECASE if rec.ignore_case else 0).search(text)
+        except re.error:
+            continue
+        if not match:
+            continue
+        try:
+            result[rec.target_field] = match.group(rec.group_index)
+        except IndexError:
+            continue
+    return result
 
 
 def suggest_from_text(env, text):
@@ -136,14 +156,12 @@ def suggest_from_text(env, text):
             suggested_partner = {"id": partner.id, "name": partner.display_name}
             break
 
-    date_match = _DATE_RE.search(text)
-    invoice_match = _INVOICE_NO_RE.search(text)
-    amount_match = _AMOUNT_RE.search(text)
+    matched = _match_extraction_patterns(env, text)
 
     return {
         "suggested_tags": suggested_tags,
         "suggested_partner": suggested_partner,
-        "suggested_date": date_match.group(0) if date_match else False,
-        "suggested_invoice_number": invoice_match.group(1) if invoice_match else False,
-        "suggested_amount": amount_match.group(1) if amount_match else False,
+        "suggested_date": matched["date"],
+        "suggested_invoice_number": matched["invoice_number"],
+        "suggested_amount": matched["amount"],
     }
