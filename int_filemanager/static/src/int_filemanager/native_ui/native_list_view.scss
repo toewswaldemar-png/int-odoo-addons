@@ -23,6 +23,19 @@
     }
 }
 
+// Dieselbe Drop-Ziel-Hervorhebung wie oben, aber fuer den Seitenleisten-Ordnerbaum
+// (2026-09-07, search_panel_patch.xml) - liegt AUSSERHALB von .o_int_filemanager_list/_kanban
+// (der SearchPanel ist eine eigene, geteilte Komponente neben der eigentlichen View, kein
+// Nachfahre davon), deshalb hier bewusst ohne diesen Scope. Kein Risiko fuer andere
+// Kategorie-Baeume im System: die Klasse wird ausschliesslich von unserem eigenen JS gesetzt,
+// und nur wenn der Kategoriewert zu unserer eigenen SearchPanel-Section gehoert (siehe
+// _dropTargetFromEvent() in filemanager_controller_mixin.js).
+.o_search_panel_category_value > header.o_int_filemanager_drop_target {
+    background-color: rgba(var(--ButtonPrimary-bg-rgb, 113, 75, 103), 0.25) !important;
+    outline: 2px dashed var(--ButtonPrimary-bg, #714b67);
+    outline-offset: -2px;
+}
+
 // Name-Spalten-Icon (name_icon_field.js/.xml) - Odoos natives .o_image (mimetypes.scss) ist
 // mit 38x38px fuer eine kompakte Listenzeile gedacht (dort z.B. Anhang-Vorschaukacheln) -
 // hier nur als kleines Praefix-Icon vor dem Namen, deshalb ueberschrieben statt eine neue

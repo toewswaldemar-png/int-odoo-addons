@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Ordnerbaum in der Seitenleiste als Drop-Ziel fuer Verschieben per Drag&Drop
+         (2026-09-07, Nutzerwunsch) - Odoos geteiltes web.SearchPanel.Category-Template traegt
+         keinerlei natives Identifikations-Attribut pro Baumeintrag (anders als List-Zeilen/
+         Kanban-Karten mit ihrem nativen data-id, siehe filemanager_controller_mixin.js), also
+         additiv per t-inherit-mode="extension" (gleiche Technik wie file_viewer_patch.xml)
+         ergaenzt. Gilt fuer JEDEN Kategorie-Baum im System (z.B. Produktkategorien), bleibt
+         aber folgenlos ausserhalb dieses Addons: das Attribut ist ein reiner Datentraeger, den
+         nur unser eigener Drag&Drop-Code liest, und der nur reagiert, wenn der gezogene
+         dataTransfer-Typ von einem unserer eigenen Zeilen/Karten-Drags stammt (siehe
+         onWindowDragOverRecord/onWindowDropRecord).
+
+         t-attf- statt t-att- bewusst: der Wurzel-Wert ("Alle") hat valueId===false (JS-
+         boolean) - t-att- wuerde das Attribut fuer einen falsy-wertigen Ausdruck komplett
+         weglassen (Owl-Konvention, analog zu React). ABER: live gegen Owls kompilierte
+         Render-Funktion geprueft (Tower, 2026-09-07) zeigt, dass auch t-attf- mit dem reinen
+         Ausdruck "{{valueId}}" das Attribut fuer diesen einen Eintrag komplett weglaesst statt
+         "false" zu rendern (vermutlich blockdom-interne Sonderbehandlung von false, nicht nur
+         eine t-att-Eigenheit) - alle anderen 37 von 38 Eintraegen (echte IDs) waren dagegen
+         korrekt gesetzt. Deshalb hier explizit auf einen nie-falsy String "root" statt des
+         rohen valueId gemappt; filemanager_controller_mixin.js's _dropTargetFromEvent()
+         erkennt "root" statt "false" und liefert dafuer path="" (Wurzelordner). -->
+    <t t-inherit="web.SearchPanel.Category" t-inherit-mode="extension">
+        <xpath expr="//header[@t-on-click='() =&gt; this.toggleCategory(section, value)']" position="attributes">
+            <attribute name="t-attf-data-int-filemanager-value-id">{{valueId === false ? 'root' : valueId}}</attribute>
+        </xpath>
+    </t>
+
+</templates>

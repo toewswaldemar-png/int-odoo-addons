@@ -1637,3 +1637,48 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     den `mkdir`-Test blockiert hatte (Punkt 34) - keine Daten verändert, saubere
     Fehlermeldung im Toast, Hervorhebung nach Drop korrekt wieder entfernt. Keine
     Konsolenfehler.
+
+40. **Ordnerbaum in der Seitenleiste zusätzlich als Drop-Ziel (2026-09-07), Nutzerwunsch -
+    erweitert Punkt 39 genau um die dort bewusst offengelassene Option.** Odoos geteiltes
+    `web.SearchPanel.Category`-Template trägt anders als List-Zeilen/Kanban-Karten kein
+    natives Identifikations-Attribut pro Baumeintrag - additiv per `t-inherit-mode="extension"`
+    ergänzt (`search_panel_patch.xml`, gleiche Technik wie `file_viewer_patch.xml` für den
+    Audio-Player), statt den Baum selbst nachzubauen. `_dropTargetFromEvent()` in
+    `filemanager_controller_mixin.js` vereinheitlicht seitdem beide möglichen Ziel-Arten (Zeile/
+    Karte der offenen Ansicht ODER Baumeintrag) auf dieselbe schlanke Form, `_isValidDropTarget()`
+    und die Highlight-Logik (`onWindowDragOverRecord`/`onWindowDropRecord`) bleiben dadurch für
+    beide Fälle identisch.
+
+    **Live-Debugging-Befund, der die Umsetzung geändert hat:** die Wurzel ("Alle",
+    `valueId === false`) verhält sich anders als jeder echte Ordnereintrag, in zwei
+    unabhängigen Punkten - beide erst durch Live-Introspektion der kompilierten Owl-Templates
+    gefunden (`app.getRawTemplate()`/`app.getTemplate()` über `odoo.__WOWL_DEBUG__`, nicht nur
+    am Quelltext abgelesen):
+    - `t-attf-data-int-filemanager-value-id="{{valueId}}"` erzeugt für `valueId===false` live
+      nachweisbar **gar kein** Attribut (37 von 38 Headern hatten es, exakt der "Alle"-Header
+      fehlte) - trotz `t-attf-`, das laut Owl-Konvention eigentlich immer einen String bauen
+      soll. Behoben, indem die Vorlage explizit auf einen garantiert nie-falsy String mappt:
+      `{{valueId === false ? 'root' : valueId}}`.
+    - `section.values` (die Map, aus der `_pathForCategoryValue()` die Vorfahrenkette liest) hat
+      für die Wurzel gar keinen Eintrag - live gegen `search_model.js` geprüft: `rootIds`
+      enthält `false` nur als Sentinel, `values` wird ausschließlich aus echten, per Groupby
+      gelesenen Datensätzen befüllt. `_dropTargetFromEvent()` behandelt `rawId === "root"`
+      deshalb jetzt als eigenen Fall ohne Map-Lookup (`{resId: false, path: "", isDir: true}`),
+      statt wie bei echten IDs über `section.values.get()` zu gehen - ein Map-Lookup hätte hier
+      immer `undefined` geliefert und die Wurzel als Ziel unbrauchbar gemacht, unabhängig vom
+      Attribut-Fix oben.
+
+    **Live verifiziert (Tower):** nach dem Fix trugen alle 38 Sidebar-Header
+    `data-int-filemanager-value-id`, der Wurzel-Header korrekt `"root"`. Per dispatchten
+    `DragEvent`s (`dragstart`→`dragover`→`drop`, wie in Punkt 39) dreimal geprüft: Drop auf
+    "Alle" löste `/int_filemanager/move` mit korrektem `dest_path=""` aus; Drop auf einen
+    echten Wurzelordner ("Benutzer") löste denselben Aufruf mit korrektem `dest_path="Benutzer"`
+    aus - beide scheiterten nur an derselben schreibgeschützten `/mnt/hm-daten`-Umgebung wie
+    Punkt 39, keine Daten verändert. Ein dritter Testversuch traf zufällig einen Ordner mit
+    einem vorbestehenden Dateninkonsistenz-Datensatz (`parent_id` in der DB `NULL`, obwohl das
+    gespeicherte `path`-Feld eine tiefe Verschachtelung zeigt - zwei Ordner namens
+    "Alternatives" betroffen, per SQL bestätigt) - dort lieferte unser Code exakt den aus der
+    (unvollständigen) Vorfahrenkette rekonstruierbaren Pfad, der Server lehnte ihn sauber mit
+    "Zielordner nicht gefunden" ab. Kein Bug dieser Änderung, sondern ein bereits vorbestehender
+    Indexierungs-Datenfehler in der Testinstanz, separat zu untersuchen, nicht Teil dieser
+    Aufgabe.

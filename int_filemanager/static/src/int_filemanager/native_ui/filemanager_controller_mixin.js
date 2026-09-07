@@ -603,9 +603,13 @@ export function filemanagerControllerMixin(Base) {
         // identisch ist, und - falls einer der gezogenen Datensaetze selbst ein Ordner ist -
         // auch kein eigener Unterordner davon (serverseitig ohnehin nochmal geprueft, siehe
         // main.py's move()-Route, aber die Live-Rueckmeldung beim Ziehen soll nicht erst nach
-        // einem fehlgeschlagenen RPC kommen).
+        // einem fehlgeschlagenen RPC kommen). target hier ist die vereinheitlichte Form aus
+        // _dropTargetFromEvent() ({el, resId, path, isDir}), NICHT direkt ein ORM-Record - der
+        // Seitenleisten-Ordnerbaum liefert nie ein echtes Record-Objekt (nur SearchPanel-
+        // Kategoriewerte, siehe dort), deshalb diese gemeinsame, schlankere Form fuer beide
+        // Zielarten.
         _isValidDropTarget(records, target) {
-            if (!target.data.is_dir) {
+            if (!target.isDir) {
                 return false;
             }
             return records.every((r) => {
@@ -614,12 +618,73 @@ export function filemanagerControllerMixin(Base) {
                 }
                 if (r.data.is_dir) {
                     const prefix = r.data.path + "/";
-                    if (target.data.path === r.data.path || target.data.path.startsWith(prefix)) {
+                    if (target.path === r.data.path || target.path.startsWith(prefix)) {
                         return false;
                     }
                 }
                 return true;
             });
+        }
+
+        // Baut den literalen Zielpfad aus der Vorfahrenkette eines SearchPanel-Kategoriewerts -
+        // dieselbe Technik wie updateBreadcrumbs() oben (dort bewusst nicht wiederverwendet, um
+        // die dort bereits live gehaertete Breadcrumb-Logik nicht anzufassen), nur hier fuer
+        // einen BELIEBIGEN Baumeintrag statt zwingend den aktuell aktiven. valueId===false (die
+        // Wurzel/"Alle") liefert korrekt "" (leere Kette), wie an anderer Stelle auch (z.B.
+        // this.currentPath bei geoeffneter Wurzel).
+        _pathForCategoryValue(section, valueId) {
+            const chain = [];
+            let id = valueId;
+            while (id) {
+                const value = section.values.get(id);
+                if (!value) {
+                    break;
+                }
+                chain.unshift(value);
+                id = value.parentId;
+            }
+            return chain.map((value) => value.display_name).join("/");
+        }
+
+        // Vereinheitlicht die zwei moeglichen Drop-Ziel-Arten auf dieselbe schlanke Form
+        // ({el, resId, path, isDir}): eine Zeile/Karte der aktuell offenen Ansicht (natives
+        // data-id, siehe oben) ODER ein Eintrag im Seitenleisten-Ordnerbaum
+        // (data-int-filemanager-value-id, per search_panel_patch.xml additiv auf das geteilte
+        // web.SearchPanel.Category-Template aufgebracht - der Baum kann JEDEN Ordner im System
+        // zeigen, nicht nur die der aktuell offenen Ansicht, deshalb kein echtes Record-Objekt
+        // dafuer verfuegbar). Gibt null zurueck, wenn unter dem Mauszeiger keins von beidem
+        // liegt oder der Kategoriewert zu keiner unserer eigenen SearchPanel-Sections gehoert.
+        _dropTargetFromEvent(ev) {
+            const rowEl = ev.target.closest("[data-id]");
+            if (rowEl) {
+                const record = this._recordForLocalId(rowEl.dataset.id);
+                if (record) {
+                    return { el: rowEl, resId: record.resId, path: record.data.path, isDir: record.data.is_dir };
+                }
+            }
+            const treeEl = ev.target.closest("[data-int-filemanager-value-id]");
+            if (treeEl) {
+                const section = this.getCategorySection();
+                const rawId = treeEl.dataset.intFilemanagerValueId;
+                // "root" statt "false": search_panel_patch.xml mappt valueId===false explizit auf
+                // diesen String, weil Owls kompiliertes Template das Attribut fuer den rohen
+                // false-Wert live nachweisbar komplett wegliess (siehe Kommentar dort) - "root"
+                // ist als String garantiert nie leer/falsy und uebersteht das unbeschadet.
+                if (section && rawId === "root") {
+                    // Die Wurzel ("Alle") ist nur ein Sentinel (category.rootIds enthaelt sie,
+                    // category.values als Map aber nicht - live gegen search_model.js geprueft:
+                    // dort wird ausschliesslich ueber echte, aus dem groupby gelesene Datensaetze
+                    // befuellt) - deshalb hier ohne Map-Lookup direkt als gueltiges Ziel mit
+                    // leerem Pfad behandelt, statt wie unten ueber section.values.get() zu gehen.
+                    return { el: treeEl, resId: false, path: "", isDir: true };
+                }
+                const valueId = section ? parseInt(rawId, 10) : null;
+                const value = section && section.values.get(valueId);
+                if (value) {
+                    return { el: treeEl, resId: valueId, path: this._pathForCategoryValue(section, valueId), isDir: true };
+                }
+            }
+            return null;
         }
 
         onWindowDragStartRecord(ev) {
@@ -644,10 +709,10 @@ export function filemanagerControllerMixin(Base) {
             if (!this._draggedRecords || !Array.from(ev.dataTransfer.types || []).includes("application/x-int-filemanager-move")) {
                 return;
             }
-            const rowEl = ev.target.closest("[data-id]");
-            const target = rowEl && this._recordForLocalId(rowEl.dataset.id);
+            const target = this._dropTargetFromEvent(ev);
+            const targetEl = target?.el;
             const valid = target && this._isValidDropTarget(this._draggedRecords, target);
-            if (this._dropTargetEl && this._dropTargetEl !== rowEl) {
+            if (this._dropTargetEl && this._dropTargetEl !== targetEl) {
                 this._dropTargetEl.classList.remove("o_int_filemanager_drop_target");
                 this._dropTargetEl = null;
             }
@@ -661,9 +726,9 @@ export function filemanagerControllerMixin(Base) {
             // eigener "ungueltig"-Zweig noetig.
             ev.preventDefault();
             ev.dataTransfer.dropEffect = "move";
-            if (this._dropTargetEl !== rowEl) {
-                rowEl.classList.add("o_int_filemanager_drop_target");
-                this._dropTargetEl = rowEl;
+            if (this._dropTargetEl !== targetEl) {
+                targetEl.classList.add("o_int_filemanager_drop_target");
+                this._dropTargetEl = targetEl;
             }
         }
 
@@ -677,8 +742,7 @@ export function filemanagerControllerMixin(Base) {
                 this._dropTargetEl.classList.remove("o_int_filemanager_drop_target");
                 this._dropTargetEl = null;
             }
-            const rowEl = ev.target.closest("[data-id]");
-            const target = rowEl && this._recordForLocalId(rowEl.dataset.id);
+            const target = this._dropTargetFromEvent(ev);
             if (!target || !this._isValidDropTarget(records, target)) {
                 return;
             }
@@ -686,7 +750,7 @@ export function filemanagerControllerMixin(Base) {
             const errors = [];
             for (const record of records) {
                 try {
-                    await rpc("/int_filemanager/move", { path: record.data.path, dest_path: target.data.path });
+                    await rpc("/int_filemanager/move", { path: record.data.path, dest_path: target.path });
                 } catch (e) {
                     errors.push(e.data?.message || e.message);
                 }
