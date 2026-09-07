@@ -26,7 +26,11 @@
                      color_field, nicht selbst als Spalte gedacht. -->
                 <field name="status_color" column_invisible="1"/>
                 <field name="status_id" widget="badge" options="{'color_field': 'status_color'}" optional="show"/>
-                <field name="name"/>
+                <!-- Ordner-/Datei-Typ-Icon vor dem Namen - eigenes kleines Feld-Widget
+                     (name_icon_field.js/.xml), nach dem Muster von Odoos eigenem
+                     many2one_avatar-Widget (Icon + Feldwert in einer Zelle). Rein clientseitig
+                     aus is_dir/Dateiendung abgeleitet, kein neues Backend-Feld. -->
+                <field name="name" widget="int_filemanager_name"/>
                 <field name="size" invisible="is_dir" optional="show"/>
                 <field name="mtime" optional="show"/>
                 <field name="tag_ids" widget="many2many_tags" optional="show"/>

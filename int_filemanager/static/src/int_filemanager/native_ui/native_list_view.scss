@@ -12,6 +12,18 @@
     }
 }
 
+// Name-Spalten-Icon (name_icon_field.js/.xml) - Odoos natives .o_image (mimetypes.scss) ist
+// mit 38x38px fuer eine kompakte Listenzeile gedacht (dort z.B. Anhang-Vorschaukacheln) -
+// hier nur als kleines Praefix-Icon vor dem Namen, deshalb ueberschrieben statt eine neue
+// eigene Icon-Klasse zu erfinden.
+.o_int_filemanager_name_cell {
+    .o_image {
+        width: 20px;
+        height: 20px;
+        flex: none;
+    }
+}
+
 // Drag&Drop-Upload-Overlay (native_list_view.js/.xml) - position:fixed statt relativ zum Root-Div,
 // damit es unabhaengig von dessen eigener Groesse/Overflow immer den ganzen sichtbaren Bereich
 // abdeckt (gleiches Muster wie die Vollbild-Vorschau in der alten UI, siehe

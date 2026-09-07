@@ -1216,3 +1216,40 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     auf einzelnen Dateien (alle Zeilen sind fachlich neu angelegt, nicht die alten mit ID-Erhalt).
     Siehe [[reference_tower_odoo_test_instance]] für die daraus gezogene, dauerhafte
     Arbeitsanweisung (nie den Scan manuell auslösen, während `root_path` versetzt ist).
+
+27. **Ordner-/Datei-Typ-Icon in der Name-Spalte (2026-09-07), Nutzerwunsch.** Vorher reiner Text,
+    kein Icon weder für Ordner noch für Dateien. Recherche vor der Umsetzung: Odoo hat kein
+    fertiges Feld-Widget dafür, aber zwei wiederverwendbare native Bausteine.
+
+    **Baustein 1 - Odoos eigenes Mimetype-Icon-Set** (`web/static/img/mimetypes/*.svg`: pdf,
+    document, spreadsheet, presentation, image, video, audio, archive, text, web_code, unknown,
+    ...), angesprochen rein über CSS-Attribut-Selektoren auf `data-mimetype`
+    (`web/static/src/scss/mimetypes.scss`, z.B. `&[data-mimetype*='spreadsheet']` - ein
+    Teilstring reicht, kein echter MIME-Type nötig). Geprüft: **kein Ordner-Icon** in diesem Set
+    (nur für Anhänge/Dateien gedacht) - dafür stattdessen dasselbe `fa-folder` wie im Ordnerbaum
+    links (`filemanager_file_search.xml`, `searchpanel icon="fa-folder"`), für Konsistenz.
+
+    **Baustein 2 - Odoos Muster für "Icon + Feldwert in einer Zelle"**: eigenes kleines
+    Feld-Widget in der `fields`-Registry, nach Vorbild von `many2one_avatar` (`web/static/src/
+    views/fields/many2one_avatar/`) - dort Avatar-Bild + Wert nebeneinander in einem
+    `d-flex`-Container, hier analog Icon + Dateiname. Neue Dateien `name_icon_field.js`/`.xml`,
+    registriert als Widget `int_filemanager_name`, `<field name="name"
+    widget="int_filemanager_name"/>` in `filemanager_file_list_view.xml`.
+
+    **Bewusst clientseitig, kein neues Backend-Feld:** Endung→Icon-Kategorie-Zuordnung
+    (`EXT_TO_PSEUDO_MIMETYPE` in `name_icon_field.js`) läuft rein in JS aus dem bereits geladenen
+    `name`-Wert - keine neue Spalte, keine Migration, keine zusätzliche Query (Performance vorher
+    explizit durchdacht: `mimetypes.guess_type()` wäre serverseitig ebenfalls trivial billig
+    gewesen, aber clientseitig noch günstiger, da komplett ohne Backend-Änderung). Unbekannte
+    Endungen (z.B. `.exe`, `.asd`) fallen bewusst auf Odoos generisches `unknown.svg` zurück,
+    kein Fehlerfall.
+
+    **CSS-Größenanpassung:** Odoos `.o_image` ist mit 38×38px für eigenständige
+    Anhang-Vorschaukacheln gedacht, hier nur als kleines Präfix-Icon vor dem Namen - auf 20×20px
+    verkleinert, gescopet auf `.o_int_filemanager_name_cell` (`native_list_view.scss`), keine
+    globale Änderung an Odoos eigener Klasse.
+
+    **Live verifiziert (Tower):** Ordner zeigen das gelbe `fa-folder`-Icon, Bilder (`.jpg`) das
+    Bild-Icon, `.pdf` das rote PDF-Icon, `.mp3` das Audio-Icon, `.html` das Web-Code-Icon -
+    unbekannte Endungen (`.exe`, `.asd`, `.paw3`, `.dnt`) korrekt auf das generische Fallback-Icon.
+    Keine Konsolen-/Server-Fehler.
