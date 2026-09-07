@@ -1595,3 +1595,45 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     **Live verifiziert (Tower):** Modul-Neustart fehlerfrei, keine Template-Kompilierfehler
     (eine falsche xpath-Übereinstimmung hätte beim Laden sofort einen Fehler geworfen) - vom
     Nutzer selbst durchgeklickt und nach der Nachbesserung bestätigt.
+
+39. **Verschieben zwischen Ordnern per Drag&Drop (2026-09-07), Nutzerwunsch.** Der Server
+    konnte das schon lange (`/int_filemanager/move`, [main.py:154](../int_filemanager/controllers/main.py),
+    mit eigener Autorisierungsprüfung `authz.require_rename_or_move_allowed`), es gab dafür nur
+    keine UI. Zwei Design-Entscheidungen vorab mit dem Nutzer geklärt: Drop-Ziele sind bewusst
+    **nur Ordner-Zeilen/-Karten der aktuell offenen Ansicht** (nicht der Seitenleisten-
+    Ordnerbaum - das würde eine fremde, geteilte SearchPanel-Komponente patchen wie beim
+    Audio-Player, hier bewusst vermieden), und eine bestehende Mehrfachauswahl wandert beim
+    Ziehen komplett mit (nicht nur die angefasste Zeile).
+
+    **Mechanismus:** bewusst NICHT Odoos `useSortable`-Hook (der ist fürs Umsortieren
+    *innerhalb* einer nach einem Feld gruppierten Liste gedacht, passt strukturell nicht auf
+    "Zeile auf eine andersartige Zeile ziehen"), sondern die nackte HTML5-Drag&Drop-API von
+    Hand, per Event-Delegation auf `window` - gleiches Grundmuster wie der bestehende Upload-
+    Drag&Drop, über den `dataTransfer`-Typ sauber getrennt (`application/x-int-filemanager-move`
+    statt `"Files"`, kollidiert nie mit einem echten OS-Datei-Drop). Zeilen/Karten werden von
+    Odoos ListRenderer/KanbanRecord selbst gerendert - wir bekommen ihr Wurzelelement nicht in
+    die Hand, aber jede Zeile/Karte trägt nativ bereits `data-id` (verifiziert:
+    `list_renderer.xml`/`kanban_record.xml`, `t-att-data-id="record.id"`), das reicht als
+    Angriffspunkt für die Delegation. `draggable="true"` wird deshalb nicht deklarativ in der
+    Arch gesetzt (ginge nicht), sondern nach jedem Render imperativ nachgetragen
+    (`onMounted`+`onPatched`) - dasselbe Grundmuster, das Odoo selbst in `file_viewer.js` für
+    eine vergleichbare Notwendigkeit nutzt (`useEffect` dort für `hidePDFJSButtons()`).
+
+    Gültiges Ziel = ein Ordner, der zu keinem gezogenen Datensatz identisch ist und (falls ein
+    gezogener Datensatz selbst ein Ordner ist) auch kein eigener Unterordner davon - Live-
+    Rückmeldung schon beim Ziehen (Hervorhebung per `.o_int_filemanager_drop_target`), nicht
+    erst nach einem fehlgeschlagenen RPC. Serverseitig zusätzlich gehärtet: `main.py`'s
+    `move()`-Route hätte ein "Ordner in sich selbst verschieben" bisher mit einer rohen
+    `shutil.move()`-Python-Fehlermeldung abgelehnt statt einer verständlichen deutschen - jetzt
+    vorher abgefangen.
+
+    **Live verifiziert (Tower):** reine Maus-Emulation löst native HTML5-Drag&Drop-Events
+    nicht zuverlässig aus - stattdessen echte `DragEvent`-Objekte per JS dispatcht
+    (`dragstart`→`dragover`→`drop`). Bestätigt: `draggable=true` korrekt auf allen 39 Karten
+    gesetzt, `dragover` markierte das gültige Zielfeld farblich und rief `preventDefault()`
+    korrekt auf, `drop` löste exakt den richtigen `/int_filemanager/move`-Aufruf aus (Quelle
+    `2025-12-31 Bilder Abschluss` → Ziel `.../2026-04-08 Beerdigung Johann Friesen/...`) -
+    scheiterte nur an derselben schreibgeschützten `/mnt/hm-daten`-Testumgebung, die auch schon
+    den `mkdir`-Test blockiert hatte (Punkt 34) - keine Daten verändert, saubere
+    Fehlermeldung im Toast, Hervorhebung nach Drop korrekt wieder entfernt. Keine
+    Konsolenfehler.

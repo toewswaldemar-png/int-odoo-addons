@@ -94,4 +94,15 @@
         flex-direction: column;
         gap: 0.25rem;
     }
+
+    // Hervorhebung des Drop-Ziels beim Verschieben per Drag&Drop (2026-09-07) -
+    // filemanager_controller_mixin.js setzt/entfernt diese Klasse direkt am nativen
+    // Kartenwurzelelement (data-id sitzt laut kanban_record.xml auf dem <div
+    // class="o_kanban_record ...">, nicht auf unserer eigenen inneren position:relative-Div),
+    // siehe onWindowDragOverRecord().
+    .o_int_filemanager_drop_target {
+        outline: 2px dashed var(--ButtonPrimary-bg, #714b67);
+        outline-offset: -2px;
+        background-color: rgba(var(--ButtonPrimary-bg-rgb, 113, 75, 103), 0.15);
+    }
 }

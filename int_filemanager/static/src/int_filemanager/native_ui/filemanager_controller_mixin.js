@@ -15,7 +15,7 @@
 // /int_filemanager/* JSON-RPC-Routen auf statt native type="object"-Buttons - Begruendung
 // unveraendert siehe docs/int_filemanager_native_ui.md, Abschnitt "Sicherheitsrelevanter
 // Stolperstein".
-import { onMounted, onWillUnmount, useExternalListener, useRef, useState } from "@odoo/owl";
+import { onMounted, onPatched, onWillUnmount, useExternalListener, useRef, useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { useBus, useService } from "@web/core/utils/hooks";
@@ -132,6 +132,30 @@ export function filemanagerControllerMixin(Base) {
             useExternalListener(window, "dragleave", this.onWindowDragLeave);
             useExternalListener(window, "dragover", (ev) => ev.preventDefault());
             useExternalListener(window, "drop", this.onWindowDrop);
+
+            // Verschieben per Drag&Drop zwischen Ordnern (2026-09-07, Nutzerwunsch) - eigene,
+            // von der Datei-Upload-Drag&Drop-Logik oben unabhaengige Ereigniskette (beide
+            // laufen ueber dieselben nativen dragstart/dragover/drop-Events auf window, werden
+            // aber ueber den dataTransfer-Typ sauber auseinandergehalten: ein OS-Datei-Drag
+            // traegt immer den Typ "Files" - siehe _isFileDrag oben -, unser eigener interner
+            // Verschiebe-Drag NIE, weil wir ihn selbst ohne "Files" setzen). Bewusst KEIN
+            // useSortable (Odoos Kanban-Spalten-Drag-Hook): der ist fuers Umsortieren
+            // *innerhalb* einer nach einem Feld gruppierten Liste gedacht (Schreiben von
+            // sequence/dem Gruppierungsfeld), nicht fuer "Zeile auf eine andere, inhaltlich
+            // andersartige Zeile ziehen" - passt strukturell nicht. Stattdessen die nackte
+            // HTML5-Drag&Drop-API von Hand, ueber Event-Delegation auf window (gleiches
+            // Grundmuster wie der Upload-Drop oben) statt ueber eigene t-on-dragstart-Attribute
+            // in der Arch: Zeilen/Karten werden von Odoos ListRenderer/KanbanRecord selbst
+            // gerendert, wir bekommen deren Wurzelelement nicht direkt in die Hand - aber jede
+            // Zeile/Karte traegt nativ bereits ein data-id-Attribut (list_renderer.xml/
+            // kanban_record.xml: t-att-data-id="record.id", am Odoo-19-Quellcode verifiziert),
+            // das reicht als Angriffspunkt fuer die Ereignis-Delegation vollstaendig aus.
+            onMounted(() => this._makeRecordsDraggable());
+            onPatched(() => this._makeRecordsDraggable());
+            useExternalListener(window, "dragstart", this.onWindowDragStartRecord);
+            useExternalListener(window, "dragover", this.onWindowDragOverRecord);
+            useExternalListener(window, "drop", this.onWindowDropRecord);
+            useExternalListener(window, "dragend", this.onWindowDragEndRecord);
 
             // Chatter-Seitenpanel (Baustein 2 Folgearbeit, 2026-09-06): standardmaessig zu,
             // per Toolbar-Toggle oeffenbar - siehe docs/int_filemanager_paperoffice_recherche.md,
@@ -544,6 +568,144 @@ export function filemanagerControllerMixin(Base) {
             this._dragDepth = 0;
             this.dropState.dragging = false;
             await this._uploadFiles([...ev.dataTransfer.files]);
+        }
+
+        // -----------------------------------------------------------------
+        // Verschieben per Drag&Drop (2026-09-07) - siehe ausfuehrliche Begruendung des Ansatzes
+        // in setup() oben.
+        // -----------------------------------------------------------------
+
+        // draggable wird bewusst NICHT deklarativ in einer Arch gesetzt (koennten wir auch gar
+        // nicht - wir bekommen die von ListRenderer/KanbanRecord gerenderten Zeilen-/
+        // Kartenwurzeln nie in die Hand), sondern nach jedem Render imperativ nachgetragen -
+        // exakt dasselbe Grundmuster, das Odoo selbst in file_viewer.js fuer eine vergleichbare
+        // "nach dem Rendern noch etwas am echten DOM nachjustieren"-Notwendigkeit nutzt
+        // (useEffect dort fuer hidePDFJSButtons()), hier per onMounted+onPatched.
+        _makeRecordsDraggable() {
+            const els = this.rootRef.el?.querySelectorAll("[data-id]") || [];
+            for (const el of els) {
+                el.draggable = true;
+            }
+        }
+
+        _recordForLocalId(id) {
+            return this.model.root.records.find((r) => r.id === id);
+        }
+
+        // Wird die gerade angefasste Zeile/Karte bereits mitausgewaehlt (Checkbox/Alt-Klick),
+        // wandert die ganze Mehrfachauswahl mit - sonst nur der eine angefasste Datensatz.
+        _recordsForDrag(startRecord) {
+            const selection = this.model.root.selection;
+            return selection.includes(startRecord) ? selection : [startRecord];
+        }
+
+        // Ein Ziel ist gueltig, wenn es ein Ordner ist, der zu KEINEM der gezogenen Datensaetze
+        // identisch ist, und - falls einer der gezogenen Datensaetze selbst ein Ordner ist -
+        // auch kein eigener Unterordner davon (serverseitig ohnehin nochmal geprueft, siehe
+        // main.py's move()-Route, aber die Live-Rueckmeldung beim Ziehen soll nicht erst nach
+        // einem fehlgeschlagenen RPC kommen).
+        _isValidDropTarget(records, target) {
+            if (!target.data.is_dir) {
+                return false;
+            }
+            return records.every((r) => {
+                if (r.resId === target.resId) {
+                    return false;
+                }
+                if (r.data.is_dir) {
+                    const prefix = r.data.path + "/";
+                    if (target.data.path === r.data.path || target.data.path.startsWith(prefix)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+        }
+
+        onWindowDragStartRecord(ev) {
+            if (!this.rootRef.el?.contains(ev.target)) {
+                return;
+            }
+            const rowEl = ev.target.closest("[data-id]");
+            const record = rowEl && this._recordForLocalId(rowEl.dataset.id);
+            if (!record) {
+                return;
+            }
+            this._draggedRecords = this._recordsForDrag(record);
+            ev.dataTransfer.effectAllowed = "move";
+            // Nur ein Marker, keine echten Nutzdaten - der eigentliche Zustand (welche
+            // Datensaetze gezogen werden) lebt in this._draggedRecords, siehe oben. Der Marker
+            // dient ausschliesslich dazu, dragover/drop unten von einem OS-Datei-Drag (Upload)
+            // zu unterscheiden.
+            ev.dataTransfer.setData("application/x-int-filemanager-move", "1");
+        }
+
+        onWindowDragOverRecord(ev) {
+            if (!this._draggedRecords || !Array.from(ev.dataTransfer.types || []).includes("application/x-int-filemanager-move")) {
+                return;
+            }
+            const rowEl = ev.target.closest("[data-id]");
+            const target = rowEl && this._recordForLocalId(rowEl.dataset.id);
+            const valid = target && this._isValidDropTarget(this._draggedRecords, target);
+            if (this._dropTargetEl && this._dropTargetEl !== rowEl) {
+                this._dropTargetEl.classList.remove("o_int_filemanager_drop_target");
+                this._dropTargetEl = null;
+            }
+            if (!valid) {
+                return;
+            }
+            // preventDefault() ist bei HTML5-Drag&Drop zwingend, um dragover ueberhaupt als
+            // gueltiges Ziel zu erlauben - ohne das zeigt der Browser automatisch den
+            // "nicht erlaubt"-Cursor, genau das gewuenschte Verhalten fuer ungueltige Ziele
+            // (Dateien, das gezogene Element selbst, ein eigener Unterordner), deshalb hier kein
+            // eigener "ungueltig"-Zweig noetig.
+            ev.preventDefault();
+            ev.dataTransfer.dropEffect = "move";
+            if (this._dropTargetEl !== rowEl) {
+                rowEl.classList.add("o_int_filemanager_drop_target");
+                this._dropTargetEl = rowEl;
+            }
+        }
+
+        async onWindowDropRecord(ev) {
+            if (!this._draggedRecords || !Array.from(ev.dataTransfer.types || []).includes("application/x-int-filemanager-move")) {
+                return;
+            }
+            const records = this._draggedRecords;
+            this._draggedRecords = null;
+            if (this._dropTargetEl) {
+                this._dropTargetEl.classList.remove("o_int_filemanager_drop_target");
+                this._dropTargetEl = null;
+            }
+            const rowEl = ev.target.closest("[data-id]");
+            const target = rowEl && this._recordForLocalId(rowEl.dataset.id);
+            if (!target || !this._isValidDropTarget(records, target)) {
+                return;
+            }
+            ev.preventDefault();
+            const errors = [];
+            for (const record of records) {
+                try {
+                    await rpc("/int_filemanager/move", { path: record.data.path, dest_path: target.data.path });
+                } catch (e) {
+                    errors.push(e.data?.message || e.message);
+                }
+            }
+            await this.reload();
+            if (errors.length) {
+                this.notification.add(errors.join("\n"), { type: "danger" });
+            }
+        }
+
+        // Feuert immer am Ende eines Drags (egal ob erfolgreich abgeschlossen oder z.B. per Esc
+        // abgebrochen) - reines Aufraeumen, damit kein Highlight/Zustand haengen bleibt, falls
+        // drop aus irgendeinem Grund nicht gefeuert hat.
+        onWindowDragEndRecord() {
+            this._draggedRecords = null;
+            if (this._dropTargetEl) {
+                this._dropTargetEl.classList.remove("o_int_filemanager_drop_target");
+                this._dropTargetEl = null;
+            }
         }
 
         onRename(record) {

@@ -10,6 +10,17 @@
     .o_list_number {
         text-align: left !important;
     }
+
+    // Hervorhebung des Drop-Ziels beim Verschieben per Drag&Drop (2026-09-07) -
+    // filemanager_controller_mixin.js setzt/entfernt diese Klasse direkt am nativen
+    // <tr data-id="...">-Zeilenelement, siehe onWindowDragOverRecord(). !important aus
+    // demselben Grund wie oben: eine einfache Regel gewinnt sonst nicht gegen Odoos eigene,
+    // spezifischere Zeilen-Hintergrundregeln (list_renderer.scss).
+    .o_int_filemanager_drop_target {
+        background-color: rgba(var(--ButtonPrimary-bg-rgb, 113, 75, 103), 0.25) !important;
+        outline: 2px dashed var(--ButtonPrimary-bg, #714b67);
+        outline-offset: -2px;
+    }
 }
 
 // Name-Spalten-Icon (name_icon_field.js/.xml) - Odoos natives .o_image (mimetypes.scss) ist

@@ -163,6 +163,11 @@ class IntFilemanagerController(http.Controller):
         authz.require_rename_or_move_allowed(request.env, old_rel, dest_dir_rel)
         if not os.path.isdir(abs_dest_dir):
             raise UserError(_("Zielordner nicht gefunden."))
+        # shutil.move() wuerde das mit einer rohen Python-Fehlermeldung ("Cannot move a
+        # directory into itself") ablehnen - hier vorher mit einer verstaendlichen deutschen
+        # Meldung abgefangen (Drag&Drop-Verschieben, 2026-09-07).
+        if dest_dir_rel == old_rel or dest_dir_rel.startswith(old_rel + "/"):
+            raise UserError(_("Ein Ordner kann nicht in sich selbst oder einen eigenen Unterordner verschoben werden."))
         new_abs = os.path.join(abs_dest_dir, os.path.basename(abs_src))
         new_rel = to_relative(request.env, new_abs)
         if os.path.exists(new_abs):
