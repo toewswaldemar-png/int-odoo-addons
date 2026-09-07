@@ -1555,3 +1555,43 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     **Live verifiziert (Tower):** Modul-Upgrade fehlerfrei, keine Konsolenfehler auf der
     Kanban-Startseite (nur Ordner sichtbar - Button zeigt sich dort korrekt gar nicht, da
     `widget.visible` für `is_dir=true` `false` liefert).
+
+38. **Audio-Wiedergabe (mp3 etc.) über den nativen FileViewer, 2026-09-07, Nutzerwunsch.**
+    Am Odoo-19-Quellcode geprüft: `web/core/file_viewer/file_viewer.js`/`.xml` (bereits für
+    Bild/PDF/Video in diesem Addon genutzt) hat Zweige für `isImage`/`isPdf`/`isText`/`isVideo`/
+    `isUrlYoutube`, aber **keinen** `isAudio`-Zweig - anders als bei Video gibt es in Odoo
+    keinen fertigen Datei-Audio-Player (zusätzlich alle installierten Module nach `<audio`/
+    `new Audio()` durchsucht: nur zwei Treffer im ganzen System, ein Scan-Signalton und ein
+    Discuss-Anruf-Preview, kein Datei-Player).
+
+    Lösung: `web.FileViewer` selbst additiv erweitert statt eines eigenen Players -
+    `file_viewer_patch.xml` mit `t-inherit="web.FileViewer" t-inherit-mode="extension"` (kein
+    eigener `t-name`, das waere `t-inherit-mode="primary"` und würde eine separate Kopie statt
+    einer echten In-Place-Erweiterung der geteilten Komponente erzeugen - Unterschied am
+    Quellcode verifiziert: `mail/static/src/chatter/web/form_controller.xml` patcht
+    `web.FormView` mit genau demselben `mode="extension"`-Muster ohne `t-name`). Zwei
+    `<xpath position="after">` fügen einen `<i t-if="state.file.isAudio">`-Icon neben dem
+    bestehenden Video-Icon sowie ein `<audio t-if="state.file.isAudio" controls>` neben dem
+    bestehenden `<video>`-Element ein - strukturell identisch zum schon vorhandenen
+    Video-Zweig, nur mit `<audio>` statt `<video>`. Kein Risiko für den Rest des Systems, da
+    `state.file.isAudio` sonst nirgends gesetzt wird - die Erweiterung bleibt folgenlos für
+    jeden anderen FileViewer-Aufruf.
+
+    `AUDIO_EXTENSIONS`/`AUDIO_MIME_TYPES` in `filemanager_controller_mixin.js` (mirrort
+    `VIDEO_EXTENSIONS`), zu `PREVIEWABLE_EXTENSIONS` hinzugefügt, `toViewerFile()` setzt
+    `isAudio`/`mimetype` analog zu `isVideo` (und `isImage` schließt `isAudio` jetzt zusätzlich
+    aus, sonst hätte eine mp3 versucht, als `<img>` zu rendern). Bewusst **ohne** `wma`, obwohl
+    `mediameta.py` das serverseitig für Metadaten unterstützt - kein Browser spielt das
+    proprietäre Format nativ ab (gleiche Begründung wie das bereits fehlende `mov` bei Video).
+
+    **Nachbesserung (Nutzerfeedback "sieht nicht besonders aus"):** ein nacktes
+    `<audio controls>` auf dem sonst leeren dunklen Viewer-Hintergrund wirkte verloren.
+    Ersetzt durch eine kleine weiße Karte (Icon + Dateiname + Player) statt des rohen Browser-
+    Elements - kein Album-Cover verfügbar (`mediameta.py`'s `_extract_audio` liest nur Titel/
+    Interpret/Album/Dauer als Text, keine eingebettete Cover-Art extrahiert), das
+    Noten-Icon dient als visueller Anker anstelle dessen, gleiches Prinzip wie das
+    Platzhalter-Icon, das Liste/Kanban für Dateien ohne `thumbnail` schon nutzen.
+
+    **Live verifiziert (Tower):** Modul-Neustart fehlerfrei, keine Template-Kompilierfehler
+    (eine falsche xpath-Übereinstimmung hätte beim Laden sofort einen Fehler geworfen) - vom
+    Nutzer selbst durchgeklickt und nach der Nachbesserung bestätigt.

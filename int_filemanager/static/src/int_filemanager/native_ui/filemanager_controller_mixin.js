@@ -34,13 +34,27 @@ import { IntDocumentReviewDialog } from "./document_review_dialog";
 const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "ogv"]);
 const VIDEO_MIME_TYPES = { mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg" };
 
+// Audio ist NICHT nativ im FileViewer verdrahtet - anders als bei Video gibt es dort keinen
+// isAudio-Zweig (am Odoo-19-Quellcode geprueft: web/core/file_viewer/file_viewer.js/.xml kennt
+// nur isImage/isPdf/isText/isVideo/isUrlYoutube). Deshalb file_viewer_patch.xml (t-inherit
+// mode="extension" gegen web.FileViewer, gleiches Muster wie mail/static/src/chatter/web/
+// form_controller.xml es fuer web.FormView nutzt) - patcht die geteilte Komponente selbst
+// additiv um einen <audio>-Zweig, statt einen eigenen Player zu bauen. Bewusst ohne "wma" -
+// mediameta.py unterstuetzt es serverseitig fuer Metadaten, aber kein Browser spielt das
+// proprietaere Format nativ ab (gleiche Begruendung wie das fehlende "mov" bei Video oben).
+const AUDIO_EXTENSIONS = new Set(["mp3", "wav", "flac", "ogg", "m4a", "aac"]);
+const AUDIO_MIME_TYPES = {
+    mp3: "audio/mpeg", wav: "audio/wav", flac: "audio/flac",
+    ogg: "audio/ogg", m4a: "audio/mp4", aac: "audio/aac",
+};
+
 // Reine Textformate oeffnen direkt den Editor (IntTextEditorDialog) statt der readonly
 // FileViewer-Vorschau - deshalb bewusst NICHT Teil von PREVIEWABLE_EXTENSIONS (das wuerde ueber
 // onPreview() die alte iframe-Vorschau ausloesen, die der Editor ersetzt).
 const TEXT_EDIT_EXTENSIONS = new Set(["txt", "csv", "log", "md", "json"]);
 
 const PREVIEWABLE_EXTENSIONS = new Set([
-    "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", ...VIDEO_EXTENSIONS,
+    "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS,
 ]);
 
 // Ported from legacy_ui/filemanager_action.js's EDITABLE_EXTENSIONS - narrowed to actual
@@ -382,14 +396,16 @@ export function filemanagerControllerMixin(Base) {
             const ext = extOf(record.data.name);
             const isPdf = ext === "pdf";
             const isVideo = VIDEO_EXTENSIONS.has(ext);
+            const isAudio = AUDIO_EXTENSIONS.has(ext);
             return {
                 path,
                 name: record.data.name,
                 downloadUrl,
-                isImage: PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && !isVideo,
+                isImage: PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && !isVideo && !isAudio,
                 isPdf,
                 isVideo,
-                mimetype: isVideo ? VIDEO_MIME_TYPES[ext] : undefined,
+                isAudio,
+                mimetype: isVideo ? VIDEO_MIME_TYPES[ext] : isAudio ? AUDIO_MIME_TYPES[ext] : undefined,
                 isViewable: isPreviewable(record.data.name),
                 defaultSource: isPdf
                     ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(downloadUrl)}#pagemode=none`

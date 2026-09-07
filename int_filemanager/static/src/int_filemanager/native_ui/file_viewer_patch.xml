@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Audio ist anders als Video NICHT nativ im FileViewer verdrahtet (am Odoo-19-Quellcode
+         geprueft: web/core/file_viewer/file_viewer.js/.xml kennt nur isImage/isPdf/isText/
+         isVideo/isUrlYoutube, keinen isAudio-Zweig) - deshalb hier additiv per
+         t-inherit-mode="extension" ergaenzt, statt einen eigenen Player zu bauen. Dieselbe
+         Patch-Technik, mit der z.B. mail/static/src/chatter/web/form_controller.xml
+         web.FormView erweitert: KEIN eigener t-name (das waere t-inherit-mode="primary" und
+         wuerde eine separate, neue Kopie des Templates erzeugen statt die geteilte Komponente
+         selbst zu aendern) - diese Erweiterung gilt fuer JEDEN FileViewer-Aufruf im System,
+         bleibt aber folgenlos ausserhalb dieses Addons, da state.file.isAudio nirgends sonst
+         gesetzt wird. isAudio/mimetype werden in filemanager_controller_mixin.js's
+         toViewerFile() befuellt. -->
+    <t t-inherit="web.FileViewer" t-inherit-mode="extension">
+        <xpath expr="//i[@t-if='state.file.isVideo']" position="after">
+            <i t-if="state.file.isAudio" class="fa fa-volume-up" role="img" title="Audio"/>
+        </xpath>
+        <!-- Statt eines nackten <audio controls> (browsereigene Default-Optik, wirkt auf dem
+             sonst leeren dunklen Hintergrund verloren) eine kleine weisse Karte mit Icon und
+             Dateiname darueber - kein Album-Cover verfuegbar (mediameta.py's _extract_audio
+             liest nur Titel/Interpret/Album/Dauer als Text, keine eingebettete Cover-Art), das
+             Icon ersetzt es als visueller Anker, analog zum grossen Platzhalter-Icon, das die
+             Liste/Kanban-Galerie fuer Dateien ohne thumbnail schon nutzt
+             (name_icon_field.js/.xml, native_kanban_view.scss). -->
+        <xpath expr="//video[@t-if='state.file.isVideo']" position="after">
+            <div t-if="state.file.isAudio" class="d-flex flex-column align-items-center bg-white rounded-3 p-5 shadow">
+                <i class="fa fa-music fa-4x text-muted mb-4" role="img"/>
+                <div class="h5 mb-4 text-truncate" style="max-width: 60vw;" t-esc="state.file.name"/>
+                <audio t-on-click.stop="" controls="controls" style="width: 400px; max-width: 70vw;">
+                    <source t-att-data-type="state.file.mimetype" t-att-src="state.file.defaultSource"/>
+                </audio>
+            </div>
+        </xpath>
+    </t>
+
+</templates>
