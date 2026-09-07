@@ -1276,3 +1276,20 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Zahlen, Formular zur selben Datei zeigt weiterhin "816.965" exakt - beide konsistent
     zueinander. Keine neuen Fehler (der einzige geloggte Fehler war der bereits bekannte,
     unabhaengige `hash_size`-int4-Overflow-Bug, siehe Punkt 23).
+
+29. **"Neuer Ordner"/"Hochladen" unter einem "Neu"-Dropdown gebündelt (2026-09-07),
+    Nutzerwunsch.** Vorher zwei einzelne nebeneinanderstehende Buttons. Umgesetzt mit Odoos
+    generischem `Dropdown`/`DropdownItem`-Paar (`web/core/dropdown/`) - demselben Baukasten,
+    den Odoo selbst fuer dieses Toggle-plus-Menue-Muster nutzt (z.B. `control_panel.xml`,
+    `SearchBarMenu`/`embeddedActionsDropdown`). Toggle-Button jetzt "Neu" mit
+    `o-dropdown-caret` (natives Karet-Icon), Inhalt zwei `DropdownItem`s ("Neuer Ordner"/
+    "Hochladen") mit `onSelected="..."` - schliesst das Dropdown nach Auswahl automatisch
+    (Default-`closingMode` von `DropdownItem`), kein eigener Zusatzcode dafuer noetig. Die
+    beiden Handler-Methoden (`onNewFolder`/`triggerUpload`) unveraendert wiederverwendet, nur
+    die Toolbar-Struktur geaendert (`native_list_view.xml`), `Dropdown`/`DropdownItem` dafuer
+    in `static components` registriert (`native_list_view.js`).
+
+    **Live verifiziert (Tower):** "Neu"-Button mit Karet erscheint, Dropdown zeigt beide
+    Optionen, "Neuer Ordner" schliesst das Dropdown und oeffnet den bestehenden Anlegen-Dialog
+    korrekt, "Hochladen" schliesst das Dropdown und loest den bestehenden Datei-Auswahl-Dialog
+    aus - keine Konsolen-/Server-Fehler.

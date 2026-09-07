@@ -33,6 +33,8 @@ import { rpc } from "@web/core/network/rpc";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { Dropdown } from "@web/core/dropdown/dropdown";
+import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { listView } from "@web/views/list/list_view";
 import { ListController } from "@web/views/list/list_controller";
 // Dieselbe Komponente, die Odoo intern in jedem Formular fuer den Chatter nutzt
@@ -110,7 +112,7 @@ export class IntFilemanagerListController extends ListController {
     // eine Neuzuweisung ohne Spread wuerde sie durch die statische Feld-Ueberschreibung
     // verdecken und jedes t-component/<Tag>, das das geerbte web.ListView-Template nutzt,
     // bräche.
-    static components = { ...ListController.components, Chatter };
+    static components = { ...ListController.components, Chatter, Dropdown, DropdownItem };
 
     setup() {
         super.setup();

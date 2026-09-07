@@ -3,17 +3,24 @@
 
     <!-- Replaces the native "New" button slot (guarded by activeActions.create,
          which is false here - arch has create="false") with our own always-visible
-         "Neuer Ordner"/"Hochladen" buttons, wired to IntFilemanagerListController
-         methods that call the existing authz-checked /int_filemanager/* routes. -->
+         "Neu"-Dropdown ("Neuer Ordner"/"Hochladen"), wired to IntFilemanagerListController
+         methods that call the existing authz-checked /int_filemanager/* routes. Native
+         Dropdown/DropdownItem (Nutzerwunsch 2026-09-07, statt zwei einzelner Buttons) -
+         dasselbe Baukasten-Paar, das Odoo selbst z.B. in control_panel.xml
+         (SearchBarMenu/embeddedActionsDropdown) fuer genau dieses Toggle-plus-Menue-Muster
+         nutzt; onSelected schliesst das Dropdown automatisch nach der Auswahl. -->
     <t t-name="int_filemanager.ListView" t-inherit="web.ListView" t-inherit-mode="primary">
         <xpath expr="//t[@t-set-slot='control-panel-create-button']" position="replace">
             <t t-set-slot="control-panel-create-button">
-                <button type="button" class="btn btn-primary text-nowrap" t-on-click="onNewFolder">
-                    Neuer Ordner
-                </button>
-                <button type="button" class="btn btn-secondary text-nowrap" t-on-click="triggerUpload">
-                    Hochladen
-                </button>
+                <Dropdown>
+                    <button type="button" class="btn btn-primary text-nowrap o-dropdown-caret">
+                        Neu
+                    </button>
+                    <t t-set-slot="content">
+                        <DropdownItem onSelected="() => this.onNewFolder()">Neuer Ordner</DropdownItem>
+                        <DropdownItem onSelected="() => this.triggerUpload()">Hochladen</DropdownItem>
+                    </t>
+                </Dropdown>
                 <input type="file" t-ref="fileInput" multiple="multiple" class="d-none" t-on-change="onFileInputChange"/>
             </t>
         </xpath>
