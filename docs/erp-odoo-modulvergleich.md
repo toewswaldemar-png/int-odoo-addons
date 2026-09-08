@@ -53,7 +53,7 @@ beziehen sich auf diesen Dreiklang.
 | Geräte | kein direktes Standardmodul | ggf. Custom-Feld/-Modell nötig (Seriennummern? `stock.lot`?) |
 | Rep-Bestellung, Status Reparaturen | `repair` (Repair Orders) | passt zu `int_repair_workshop` |
 | **Einkauf**: Anfragen, Rahmenbestellung, Bestellung, Rechnungsprüfung, Bestellliste | `purchase` | RFQ, Blanket Orders (Enterprise), 3-way-match |
-| 8D Lieferant, Rahmen Reparatur | `quality` (8D-Reports) + `repair` | Odoo Quality hat "5 Why"/MRP-Anbindung, kein natives 8D-Formular – evtl. Custom |
+| 8D Lieferant, Rahmen Reparatur | `quality` (8D-Reports) + `repair` | Odoo Quality hat "5 Why"/MRP-Anbindung, kein natives 8D-Formular – evtl. Custom. *Validiert 2026-09-09: der Sub-Tab "Belastungsanzeige" in der Artikelinfo trägt intern durchgängig die Steuerelement-Namen `tsh8dl`/`dbg8dL`/`ds8dl` – Label wurde offenbar nachträglich von "8D Lieferant" auf "Belastungsanzeige" geändert, ohne die Komponenten umzubenennen. Fachlich naheliegend: eine 8D-Lieferantenreklamation mündet oft in eine Belastung (Chargeback) des Lieferanten – beide Konzepte teilen sich hier ein Formular* |
 | Eingangsrechnungen, Beistellung | `account` (Vendor Bills) | Beistellung (Kundenmaterial) kein direktes Pendant, oft über Kit/Consignment gelöst |
 | **Produktion**: Produktion, Produktionsarten, Laufkarten, Protokoll, FAM | `mrp` (Manufacturing Orders, Work Orders) | Laufkarten ≈ Arbeitsscheine/Shop Floor |
 | 8DIntern, 8D-Kunde | `quality` + Custom | wie oben |
@@ -204,7 +204,7 @@ bestehenden Testballon-Felder aus [`int_legacy_erp_import`](../int_legacy_erp_im
 | `x_alt_hauptlieferant` | `ARTIKEL.HAUPTLIEFERANT` | `INTEGER` (Fremdschlüssel) | **Typ-Diskrepanz**: Addon modelliert als `Char` ("Hauptlieferant-Code"), real ist es eine Ganzzahl-Referenz auf `ADRESSEN.OID`. Validiert über die aktuelle EXE: eigene Query `Select OID, Name1, ... from Adressen where not Krednr is NULL ... order by coalesce(HauptLieferant, 'F') Desc` bestätigt den Verweis auf Lieferanten-Adressen. Sollte als `Many2one` auf `res.partner` modelliert werden, nicht als Freitext |
 | `x_alt_gruppe` | `ARTIKEL.GRUPPE` | `INTEGER` (Fremdschlüssel) | **Typ-Diskrepanz**: Addon modelliert als `Char` ("Gruppe"), real eine Ganzzahl-Referenz. Validiert über aktuelle EXE: `... Artikel A left join Artikelgruppen G on G.GID = coalesce(A.Gruppe,-1)` – Join gegen `ARTIKELGRUPPEN.GID`, nicht `.OID`. Sollte als `Many2one`/`product.category`-Verknüpfung modelliert werden |
 | `x_alt_einheit` | `ARTIKEL.EINHEIT` | `VARCHAR(10)` | bestätigt, Char-Feld korrekt (kürzelbasiert wie `uom.uom`, kein FK im Altsystem) |
-| `x_alt_hersteller_ref_ids` (`product.legacy.manufacturer.ref`, Codes BT/LH/FY/NK/KO/VK/BE/TK/DB/HO/WE) | `ARTIKEL.IDENTNR1` … `IDENTNR5` (2011-Schema) bzw. bis `IDENTNR12` (aktuelle EXE) | `VARCHAR(60)` je Slot | **Teilweise bestätigt, teilweise offen**: Es gibt kein eigenes Hersteller-Referenz-Modell in der DB – stattdessen 5 (2011) bzw. bis zu 12 (aktuell) generische, positionsbasierte `IDENTNRn`-Spalten direkt auf `ARTIKEL` (auch gespiegelt auf `STUECKLISTEN`/`STUECKLISTENARTIKEL`). Die 11 Codes im Addon passen zahlenmäßig zu den positionsbasierten Slots, aber welche feste Position (`IDENTNR1`…`IDENTNR11`) zu welchem Code (BT, LH, …) gehört, ließ sich aus dem verfügbaren 2018er-Quellcode nicht ableiten (nur toter, auskommentierter Code mit Netzlaufwerkspfaden `Z:\dokument\Liebherr\...` gefunden, keine Feldbindung). Für eine belastbare Zuordnung bräuchte es entweder die Formularbeschriftungen aus der laufenden Anwendung (Screenshot der Artikel-Karteikarte mit den 11 Identifikationszeilen) oder eine DFM-Analyse einer aktuelleren Quellcode-Version |
+| `x_alt_hersteller_ref_ids` (`product.legacy.manufacturer.ref`, Codes BT/LH/FY/NK/KO/VK/BE/TK/DB/HO/WE) | `ARTIKEL.IDENTNR1` … `IDENTNR5` (2011-Schema) bzw. bis `IDENTNR12` (aktuelle EXE) | `VARCHAR(60)` je Slot | **Geklärt 2026-09-09 über Live-Screenshot der Artikel-Karteikarte**: Der Reiter "Allgemein" zeigt ein "ID-Nummer"-Feld mit zwölf beschrifteten Zeilen **BT/LH/FY/NK/KO/VK/BE/TK/DB/HO/WE/SI** – am Beispielartikel "Klimagerät FRR TRAXX AC3" ist `BT` mit `3EGM064970R0001` befüllt. Dieser Wert ist **identisch** mit dem `IdentNr`-Wert, der zuvor am selben Gerät im Reparaturmodul (`REPARTIKEL.IDENTNR`) gesehen wurde – belastbarer Beweis, dass der generische Reparatur-"IdentNr" aus dem **BT-Slot** stammt. Die Reihenfolge der 12 UI-Zeilen entspricht plausibel `IDENTNR1`…`IDENTNR12` (passend zur Feldanzahl und zur parallelen `ZEICHNUNGSNR0`/`ZEICHNUNGSNR2`–`11`-Spaltenfolge), aber eine direkte DFM-Bindung, die das beweist, wurde nicht gefunden – die Zuordnung stützt sich auf den Wertevergleich, nicht auf eine Steuerelement-Referenz. **Nebenbefund:** Es gibt einen 12. Code **"SI"**, der im Addon fehlt (nur 11 Codes gepflegt) – das Selection-Feld ist unvollständig |
 
 **Beobachtung:** Die einfachen Textfelder (Artikelnummer, Kurzbezeichnung,
 Bestellnummer, Einheit) sind im Addon korrekt nachgebildet. Die beiden
@@ -214,8 +214,409 @@ würde aber bei einem echten Import zu unverknüpften Werten führen (keine
 Beziehung zu `res.partner`/`product.category`, keine Wiederverwendung
 bestehender Odoo-Datensätze). Die Hersteller-Ident-Referenzen sind strukturell
 richtig als flexible Zeilen statt starrer Spalten modelliert (das ist sogar eine
-Verbesserung ggü. dem starren Altsystem-Schema), aber die genaue
-Code-zu-Spalten-Zuordnung bleibt ein offener Punkt.
+Verbesserung ggü. dem starren Altsystem-Schema); die Code-zu-Spalten-Zuordnung
+ist inzwischen über einen Live-Screenshot geklärt (siehe oben), fehlt dem Addon
+aber noch der zwölfte Code "SI".
+
+### Artikel-Karteikarte: weitere Tabs und Felder
+
+Validiert 2026-09-09 über Live-Screenshot. Die volle Artikelmaske hat sechs
+Reiter (Allgemein/Zusätzlich/Preise & Referenzen/Lagerorte/Anlagen/Alternative)
+– der Testballon-Addon deckt nur eine Handvoll Felder aus "Allgemein" ab. Zwei
+weitere Funde aus diesem Reiter:
+
+- **"Bestände/Nummern"-Block ist berechnet, nicht direkt gespeichert.** Die
+  Felder (Bestand verfügbar, Bestellt, Bedarf Prod.Auftrag, Fertigung offen,
+  Auftrag ges., Abruf.Auftrag offen, Auftrag zu Liefern) binden nicht an rohe
+  `ARTIKEL`-Spalten, sondern an ein separates Dataset `dsInfoBestand` mit
+  Computed-Feldern (`Prodoffen`, `Produktion`, `Bestellt`, `Auftrag`) –
+  vermutlich gespeist über eine Stored Procedure `P_Bestand` (an anderer
+  Stelle referenziert: `Select Bestand from P_Bestand(A.OID)`). Reiht sich
+  ein in das bereits beim EngpassCockpit gesehene Muster vorberechneter
+  Status-Panels.
+- **Erneute Feld-Wiederverwendung, diesmal bei Steuerelement statt DB-Feld:**
+  Das Label "Fertigung offen" sitzt auf einem Steuerelement namens
+  `lblMeldebestand` (Meldebestand = Nachbestellpunkt), "Bedarf Prod.Auftrag"
+  auf `lblReserviert` (Reserviert = reservierter Bestand) – die
+  Beschriftungen wurden offenbar nachträglich geändert, ohne die
+  Komponenten umzubenennen.
+
+#### Reiter "Zusätzlich": größtenteils bereits bekannte Felder, zwei weitere Label-Vertauschungen
+
+Validiert 2026-09-09 über Live-Screenshot + direkte DFM-Bindungen. Die
+meisten Felder dieses Tabs waren bereits aus dem 2011er-Schema bekannt und
+werden hier nur mit ihrer UI-Beschriftung bestätigt: `WAMONAT`/`WAJAHR`/
+`WEMONAT`/`WEJAHR` (WA/WE Monat/Jahr), `GEWICHT`/`VOLUMEN`, `TEILEART`/
+`WARENSCHLUESSEL`, `KUPFERZAHL`/`EDELMETALLZAHL`, `VERSCHLEISSTEIL`/
+`ERSATZTEIL`/`QSPFLICHT` (als Ja/Nein-Radiogruppen), `INVDATUM`,
+`BESCHAFFUNGSSCHLUESSEL`/`CHARACTERSCHLUESSEL`/`DISPOSITIONSART`,
+`MINDESTBESTANDALT`/`NEU`, `TAGE_HALT`/`ZEIT_HALT` ("Verarbeitung innerhalb"
+Tagen/Stunden).
+
+Zwei weitere Fälle vertauschter Feldbeschriftungen (Ergänzung zum bereits im
+Reparatur-Abschnitt dokumentierten Muster):
+
+| UI-Feld | DB-Feld | Anmerkung |
+|---|---|---|
+| "Änderungstext" | `ARTIKELTEXTE.TEXTINTERN` (`dbebemerkung`) | Bindungsname spricht für "Interner Text" – Caption sitzt vertauscht |
+| "Interner Text" | `ARTIKELTEXTE.TEXTZUSATZ` (`gbeTextZusatz`) | genau umgekehrt zur natürlichen Lesart |
+| "Zeugnispflicht - Text" (Checkbox) | `ARTIKEL.AOFTEST` | Beschriftung nennt Zeugnispflicht, gebunden ist das AOF-Test-Feld |
+| Funktionstest (Checkbox, zum Vergleich) | `ARTIKEL.FUNKTIONSTEST` | hier korrekt zugeordnet |
+| Inventurbestand | `ARTIKEL.BESTAND` | **wiederverwendet** – kein eigenes Feld, zeigt den allgemeinen Bestandswert |
+| **Zeugnistext (EK)** | **`ARTIKEL.Zeugnistext`** | **neu entdeckt** – kein Feld im 2011-Schema, spätere Ergänzung, direkt über `DBEdit20`→`DataField Zeugnistext` bestätigt |
+
+#### Reiter "Preise / Referenzen": Preisfelder größtenteils direkt, "alter Wert" ist berechnet
+
+Validiert 2026-09-09 über Live-Screenshot + DFM-Bindungen.
+
+| UI-Feld | DB-Feld | Bindungsnachweis |
+|---|---|---|
+| USt.-Satz | `ARTIKEL.MWST` | `dbcbxMwst` → `DataField MWST`, Dropdown-Werte **Voll/Halb/Ohne/Dupo** (4 statt der erwarteten 2 Optionen) |
+| Einkauf | `ARTIKEL.EKNETTO` | `dbeEKNetto` → `DataField EKNetto` |
+| Verkauf | `ARTIKEL.VKNETTO` | `dbeVKNetto` → `DataField VKNETTO` |
+| (VK Brutto) | berechnet | `dbeVKBrutto` → `DataField calcVPBrutto` (Computed, kein Rohfeld) |
+| Kalkulation / Angebotspreis (Datumsteil) | `ARTIKEL.KALKPREISUPDATE` | `dbtKalkDatum` → `DataField Kalkpreisupdate` |
+| kein Preisupdate (Checkbox) | `ARTIKEL.noAutoUpdate` | **neu entdeckt**, nicht im 2011-Schema, `DBCheckBox8` → `DataField noAutoUpdate` |
+| **alter Wert / Letzter RP** | **kein `ARTIKEL`-Feld** | `dbeLEK` bindet an `dsInfoBestand` (dasselbe Computed-Dataset wie "Bestand verfügbar"/"Bedarf Prod.Auftrag" auf dem Allgemein-Tab), nicht an `dsArtikel` – live aus der Bestellhistorie abgeleitet. Live-Beleg: Wert `2,92`/`22.10.2024` entspricht exakt der zweitletzten Bestellzeile (Beleg 241990, Riegler & Co.KG) aus dem Einkauf-Tab |
+| Lieferantenpreis-Grid | `ARTIKELPREISE` | Grid heißt `dbgArtikelPreise`; Spalten passen 1:1 zum Schema (`LIEFNR`/`LIEFERNAME`/`DATUM`/`MENGEVON`/`MENGEBIS`/`EKBRUTTO`/`RABATT`/`LIEFERZEIT`/`PREISEINHEIT`). Die "LEK"-Checkbox-Spalte am Zeilenende ist vermutlich reine UI-Markierung, kein gespeichertes Feld – nicht bestätigt |
+
+**Beobachtung:** Auch hier zeigt sich das bereits mehrfach dokumentierte
+Muster berechneter Anzeigepanels statt gespeicherter Werte – "alter Wert"
+wirkt wie ein Stammdatenfeld, ist aber tatsächlich eine Live-Ableitung aus
+der Belegzeilen-Historie.
+
+#### Reiter "Lagerorte": zwei getrennte Ebenen, beide live berechnet bzw. neu ergänzt
+
+Validiert 2026-09-09. Zwei unabhängige Grids mit unterschiedlicher Herkunft.
+
+**Links "Lager - Bestände"** – Bestand je Standort, vollständig live berechnet:
+
+```sql
+Select L.Lager, Sum(B.Menge) as Bestand from Lagerorte L
+left join Lagerbuchung B on B.LagerOID = L.OId and B.Artoid = :parOID and Storno = 'F'
+group by L.lager
+```
+
+| UI-Spalte | Herkunft |
+|---|---|
+| Standortcode (H-01, P01, S01…) | `LAGERORTE.LAGER` |
+| Betrag | `SUM(LAGERBUCHUNG.MENGE)` je Standort, live aggregiert – kein gespeicherter Bestandswert |
+
+**Bonusfund:** vollständige Stored-Procedure-Definition im Klartext gefunden:
+
+```sql
+ALTER PROCEDURE P_BESTANDV (AOID INTEGER) RETURNS (BESTAND NUMERIC(15,2)) AS
+  ...
+  SELECT SUM(MENGE) FROM LAGERBUCHUNG WHERE ArtOID = :AOID
+    AND (LAGEROID IN (SELECT OID from Lagerorte where coalesce(art,'0') <> 'S') OR LAGEROID = 0)
+  INTO :ZUB; ...
+```
+
+Zeigt: `LAGERORTE` hat ein Feld **`ART`**, das Standorttypen unterscheidet –
+`'S'` kennzeichnet vermutlich Schrott-/Sperrlager, die bei der "echten"
+verfügbaren Bestandsberechnung explizit ausgeschlossen werden. Erklärt die
+separaten S01/S02/S03-Zeilen neben den regulären Standorten.
+
+**Rechts "Lagerplätze"** – eigenständige, feingranulare Bin-Verwaltung mit
+Artikelzuordnung, **nicht im 2011-Schema vorhanden** (spätere Ergänzung):
+
+```sql
+select p.Name, p.beschreibung, c.menge from lagerplatzcross C, lagerplaetze P, Artikel A
+where C.isentry = 'T' and C.Artoid = A.Oid and P.oid = C.masteroid And A.Artnr = '...'
+```
+
+| UI-Spalte | DB-Feld |
+|---|---|
+| Name | `LAGERPLAETZE.NAME` (z. B. "A-01.01") |
+| Beschreibung | `LAGERPLAETZE.BESCHREIBUNG` |
+| Voll (Checkbox) | vermutlich `LAGERPLAETZE`-Feld – nicht direkt bestätigt |
+
+`LAGERPLAETZE` (Bin-Stammdaten) + `LAGERPLATZCROSS` (Artikel-zu-Bin-Zuordnung
+mit `MENGE`/`ISENTRY`) bilden eine deutlich feinere Lagerplatzverwaltung als
+das einfache `ARTIKEL.LAGERORT`/`LAGERPLATZ`-Textfeld aus dem 2011er-Schema –
+echte Bin-Level-Verwaltung mit Mengenzuordnung, vergleichbar mit Odoos
+mehrstufiger `stock.location`-Hierarchie.
+
+### "Fertigungsteil" → Stückliste: STUECKLISTEN-Schema fast vollständig bestätigt
+
+Validiert 2026-09-09 über zwei Live-Screenshots (Artikel-Link "Fertigungsteil"
++ die per Doppelklick geöffnete Stückliste). `ARTIKEL.STUECKOID` ist die
+Verknüpfung – der Link erscheint nur, wenn diese Referenz gesetzt ist
+(bestätigt über eine bereits bekannte Query: `coalesce(StueckOID, 0) > 0`).
+Die Stückliste selbst bestätigt fast das komplette `STUECKLISTEN`-Schema:
+
+| UI-Feld | DB-Feld | Anmerkung |
+|---|---|---|
+| Melden | `STUECKLISTEN.MELDEN` (`BOOLEAN`) | exakter Namenstreffer |
+| Freigegeben AV | `STUECKLISTEN.FREIGABEAV` (`BOOLEAN`) | exakter Namenstreffer |
+| Freigegeben GL | vermutlich `STUECKLISTEN.FREIGABE` (`BOOLEAN`) | zweites Freigabefeld, GL = Geschäftsleitung |
+| geprüft | `STUECKLISTEN.GEPRUEFT` (`VARCHAR30`) | Feld ist Text (vermutlich Prüfer-Kürzel), UI zeigt nur leer/nicht-leer als Checkbox |
+| Ausg. | `STUECKLISTEN.AUSG` (`VARCHAR30`) | exakter Namenstreffer |
+| Status | `STUECKLISTEN.STATUS` (`VARCHAR30`) | exakter Namenstreffer |
+| Abmessung | `STUECKLISTEN.ABMESS` (`VARCHAR60`) | exakter Namenstreffer |
+| ID-Nummer (BT/LH/…) | `STUECKLISTEN.IDENTNR1-3` (2011-Schema; im Live-Beispiel sind 12 Slots sichtbar wie bei `ARTIKEL` – vermutlich ebenso gewachsen) | BT/LH-Werte identisch mit den Artikel-Werten – bestätigt die im Schema bereits angelegte Spiegelung zwischen `ARTIKEL` und `STUECKLISTEN` |
+| Zustand Z. / Zustand S. | `STUECKLISTEN.AUSGZ` (`dbeausgz`) / `AUSGST` (`dbeausgst`) | *Nachträglich bestätigt 2026-09-09 über direkte DFM-Bindung* |
+| Bearb. / Gepr. / Freig. (zwei Zeilen) | `STUECKLISTEN.B1`/`G1`/`F1` (Zeile 1), `B2`/`G2`/`F2` (Zeile 2) | *Bestätigt 2026-09-09*: zwei Sign-off-Zeilen (Initialen), **keine separaten Datumsfelder je Zeile** im Schema – die im Screenshot dreifach gleich angezeigten Daten stammen vermutlich alle aus einem gemeinsamen Feld, nicht aus drei unabhängigen Zeitstempeln |
+| Änd./Datum | `STUECKLISTEN.ANLAGE` (`dbeaenddat`) | **wiederverwendet** – Feld heißt fachlich "Anlage" (Erstellungsdatum), hier als Änderungsdatum gebunden; wieder das etablierte Feld-Wiederverwendungsmuster |
+| Material-Grid (Sort/Artikel/Anzahl/Einheit/BezeichnungA/B/Bemerkung) | `STUECKLISTENARTIKEL` (`NUMMER`/`ARTOID`/`ANZAHL`/`EINHEIT`/`BEZEICHNUNG1`/`BEZEICHNUNG2`/`BEMERKUNG`) | vollständiger 1:1-Treffer – das sind die echten BOM-Zeilen |
+| Zweites ID-Nummer-Panel (neben dem Material-Grid) | vermutlich `STUECKLISTENARTIKEL.IDENTNR1-5`, gebunden an die aktuell markierte Materialzeile | plausibel (im Beispiel leer, während das Kopf-Feld links befüllt ist), aber keine direkte Steuerelement-Bindung gefunden – nicht bewiesen |
+| "22094" / "110376" (Kopfbereich, mit @-/Personen-Icon) | unbekannt | keine Feldbindung gefunden – ungeklärt |
+| "keine Splittung" (Checkbox, an anderer Stelle desselben Tabs) | `STUECKLISTEN.NOSPLITT` (`BOOLEAN`) | *Bestätigt 2026-09-09*, exakter Namenstreffer |
+| Rechtes Baum-Panel | — | zeigt ein Expand-Symbol ("+") vor dem obersten Eintrag – bestätigt eine echte Hierarchie (mehrstufige Baugruppen), keine Flachliste; vergleichbar mit verschachtelten `mrp.bom`-Strukturen in Odoo |
+
+**Querverweis zu Produktion:** `STUECKLISTEN` hat zusätzlich `SCHRITTZEIT1`–`7`
+und `RUESTZEIT1`–`7` (Schritt-/Rüstzeiten für bis zu 7 Arbeitsgänge) – erklärt
+den Tab "Arbeitsgänge / Material" und verknüpft sich direkt mit den bereits
+im Produktions-Abschnitt dokumentierten `KONSTPRODSCHRITTE`/`PMANNZEIT`/
+`PMASCHZEIT`-Feldern. Die Stückliste trägt also selbst schon
+Routing-Zeitdaten, nicht nur Materialstammdaten – Odoo trennt das sauberer
+in `mrp.bom` (Material) vs. `mrp.routing.workcenter` (Zeiten je Arbeitsgang).
+
+### Artikelinfo (F2): Bedarfs-/Preis-/Verbrauchsübersicht
+
+Validiert 2026-09-09 über Live-Screenshot + Label-Reihenfolge aus der EXE
+(`Tfrmartikelinfo2`/`FArtikelinfo2`). Eigenständiges Nachschlagefenster, per
+F2 aus dem Artikelkontext aufrufbar, mit einem "Artikel"-Eingabefeld +
+"aktualisieren"-Button für Sprünge zu anderen Artikeln.
+
+| Block | Feld | DB-Bezug |
+|---|---|---|
+| Bedarf | Produktion / Auftrag | `dsInfoBestand.Produktion`/`.Auftrag` (bereits aus der Artikelmaske bekannt) |
+| Bedarf | Reserviert | `ARTIKEL.RESERVIERT` |
+| Bedarf | Bestellt | `dsInfoBestand.Bestellt` |
+| Bedarf | **Geliefert** *(neu)* | vermutlich aggregiertes `BELEGPOS.GELIEFERT` |
+| Bedarf | **Rahmenbestellung offen** *(neu, Querverweis Einkauf)* | offene Abrufmenge aus Rahmenbestellungen (Belegart 74) für diesen Artikel – Label exakt bestätigt |
+| Preise | EK/VK/Aufschlag %/LEK (vom)/MEK | `ARTIKEL.EKNETTO`/`VKNETTO`/`AUFSCHLAG`/`LEK`/`MEK` |
+| Preise | **alter EK (vom)** *(neu)* | historischer EK-Wert mit Datum, kein Feld im 2011-Schema identifiziert – vermutlich spätere Ergänzung |
+| Verbrauch 12/24/36 Monate | Fertigung/Lieferschein/Lager/Reparatur | rollierende Verbrauchsstatistik nach denselben vier Belegkategorien, die auch sonst im System wiederkehren |
+| Kupferzuschlag / m | `ARTIKEL.KUPFERZAHL`/`KUPFERFAKTOR` | bestätigt über `Select Kupferzahl, Gewicht from Artikel where OID = :parOID` und Prozedur `TGetKupferZuschlag` – Rohstoff-Preisgleitklausel für kupferhaltige Bauteile, in Odoo kein natives Äquivalent |
+| Reiter Buchungen/Teileverwendung/Einkauf/Vertrieb/Reservierung/Kommission/Inventurwerte | Grids für zugehörige Belege | erklärt über benachbarte Double-Click-Handler im selben Formular (`dbgBestellungenDblClick`, `dbgRepDblClick`, `dbgAngeboteDblClick`, `dbgAuftragDblClick`, `dbgLieferscheinTSPDblClick`, `dbgRechnungenDblClick`, `dbgRahmenbestellungDblClick`, `dbg8dLDblClick`) – jeder Tab zeigt vermutlich alle Belege des jeweiligen Typs, in denen dieser Artikel vorkommt |
+| ID-Nummer/Zeichnung-Panels (rechts) | dieselben `IDENTNR`/`ZEICHNUNGSNR`-Felder wie im Artikelstamm | **Auffälligkeit:** Zeichnung-Spalte zeigt für LH und FY denselben Wert `200060000` – entweder echte Mehrfachnutzung derselben Zeichnung oder Anzeige-Artefakt des scrollbaren Mini-Grids, nicht geklärt |
+
+#### Reiter "Buchungen": Lagerbewegungsjournal, vollständig aufgeklärt
+
+Validiert 2026-09-09 – exakte SQL-Query gefunden. Zwei baugleiche Tabellen
+bilden die Sub-Tabs **Aktive**/**Historie**:
+
+```sql
+with AllBuchung as (
+  select 'Aktiv' as Art, ... from lagerbuchung where artoid = :parOID
+  union
+  select 'Hist ' as Art, ... from lagerbuchung_HIST where artoid = :parOID2
+)
+```
+
+`LAGERBUCHUNG`/`LAGERBUCHUNG_HIST` (baugleich: `OID`, `ARTOID`, `POSOID`,
+`BELEGOID`, `LAGEROID`, `AUFTRAGOID`, `BUCHUNGSOID`, `MENGE`, `BEMERKUNG`,
+`DATUM`, `STORNO`).
+
+| Grid-Spalte | Herkunft |
+|---|---|
+| BUCHDATUM | `LAGERBUCHUNG.DATUM` |
+| MENGE | `LAGERBUCHUNG.MENGE` |
+| **Bestand** | **kein gespeicherter Wert** – live berechnete laufende Summe aller Buchungen bis zu diesem Datum (korrelierte Subquery `Sum(Menge) ... where Datum <= L.Datum`) |
+| Nummer / BELEGDATUM | verlinkter `BELEG` (über `BELEGOID`/`AUFTRAGOID`), außer bei Fertigungs-/Inventurbuchungen – dann `L.Belegoid`/`L.Datum` direkt |
+| VORGANGART | **berechnet, kein Feld**: `'Produktion'` bei Bemerkungstext wie `Fertigmeldung%`/`%Prod%`, sonst die Belegbezeichnung des verknüpften Belegs |
+| BEMERKUNG | `LAGERBUCHUNG.BEMERKUNG` – reines Freitextfeld; "Inventur…Wert: …" ist einfach hineingeschriebener Text, kein strukturiertes Feld |
+| **BG** (Baugruppe) | bei Materialentnahmen während der Produktion (`Bemerkung like 'Entna%'`) per Subquery über `PRODUKTION`→`STUECKLISTEN` ermittelt: zeigt die übergeordnete Baugruppe, aus der das Material entnommen wurde |
+
+**Beobachtung:** Mehrere fachlich unterschiedliche Vorgänge (reguläre
+Belegbuchungen, Fertigungsentnahmen, Inventurzählungen) werden über
+Bemerkungstext-Mustererkennung (`LIKE 'Fertigmeldung%'`, `'%Inven%'`,
+`'Entna%'`) unterschieden statt über ein strukturiertes Typfeld – Freitext
+übernimmt hier die Rolle einer fehlenden Kategorisierungsspalte. Odoo würde
+das über `stock.move` mit einem echten `picking_type_id` lösen.
+
+#### Reiter "Teileverwendung": Where-used-Bericht, Gegenstück zur Stückliste
+
+Validiert 2026-09-09 über zwei Live-Screenshots (einmal leer, einmal mit
+Daten). Zeigt, in welchen übergeordneten Baugruppen der aktuelle Artikel als
+Bauteil verwendet wird – umgekehrte Richtung zur Stückliste. Bestätigter
+Mechanismus:
+
+```sql
+Select A.OID, S.Nummer from Stuecklistenartikel A, Stuecklisten S
+where A.ArtOID = :parOID and A.Soid = S.OID
+```
+
+| UI-Spalte | DB-Feld |
+|---|---|
+| Nummer | `STUECKLISTEN.NUMMER` (der übergeordneten Baugruppe) |
+| Bezeichnung | `STUECKLISTEN.BEZEICHNUNG1` (der übergeordneten Baugruppe) |
+| Pos | `STUECKLISTENARTIKEL.NUMMER` (Position innerhalb der Baugruppe) |
+| Menge | `STUECKLISTENARTIKEL.ANZAHL` |
+
+Live-Beispiel: ein Artikel erscheint in Baugruppe "2927 – Druckschutzklappen
+System kpl" an Position 33 mit Menge 1,00 – bestätigt exakt die erwartete
+Spaltenzuordnung. Beim zuvor gezeigten Klimagerät (40803-ETL) ist die Liste
+leer, weil dieses selbst die oberste Ebene seiner eigenen Stückliste ist und
+in keiner anderen Baugruppe als Bauteil vorkommt.
+
+Odoo-Bezug: entspricht nativ Odoos "Where Used"/"Used In"-Funktion auf
+`product.template` (invertierte `bom_line_ids`) – kein struktureller
+Unterschied, funktional 1:1 abbildbar.
+
+#### Reiter "Einkauf": Bestellhistorie je Artikel, vollständig über DFM bestätigt
+
+Validiert 2026-09-09. Fünf Sub-Tabs: Bestelliste/Anfrage/**Bestellung**/
+Rahmenbestellung/Belastungsanzeige. Grid-Spalten des "Bestellung"-Sub-Tabs
+(`TCheckDBGrid dbgBestellungen` → `DataSource dsBestellungen`) direkt aus der
+DFM-Spaltendefinition, keine Vermutung nötig:
+
+| UI-Spalte | `FieldName` | DB-Feld |
+|---|---|---|
+| Belegnr. | `Nummer` | `BELEG.NUMMER` |
+| Lieferdatum | `Liefertermin` | `BELEGPOS.LIEFERTERMIN` |
+| Name | `name1` | `BELEG.NAME1` |
+| Artikel | `artnr` | `BELEGPOS.ARTNR` |
+| Menge | `stck` | `BELEGPOS.STCK` |
+| Geliefert | `Geliefert` | `BELEGPOS.GELIEFERT` |
+| Preis | `Epreis` | `BELEGPOS.EPREIS` |
+| **Rp-Preis** | `Lieferpreis` | `BELEGPOS.LIEFERPREIS` – eigenständiges Feld für den tatsächlichen Lieferpreis, unabhängig vom bestellten Preis; erklärt Live-Beispiele mit stark abweichenden Preis-/Rp-Preis-Werten |
+| Preis PE | `PreisPreiseinheit` | `BELEGPOS.PREISPREISEINHEIT` |
+| Rabatt | `RABATT` | `BELEGPOS.RABATT` |
+| PE | `Preiseinheit` | `BELEGPOS.PREISEINHEIT` |
+| G. (Checkbox) | `abgeschlossen` | vermutlich `BELEG.ABGESCHLOSSEN` je Zeile mitgeführt |
+
+Der "Rahmenbestellung"-Sub-Tab bestätigt dieselben, bereits aus dem
+Einkaufs-Kapitel bekannten `BELEG`-Felder direkt über die DFM-Spalten:
+`Abrufmenge`→"Menge", `Bestelltermin`→"Laufz. von", `Liefertermin`→"Laufz. bis",
+`Rahmennr`, `Abrufpreis`, `projekt`.
+
+#### Reiter "Vertrieb": Verkaufs-/Reparaturhistorie je Artikel
+
+Validiert 2026-09-09. Fünf Sub-Tabs: Angebot/Auftrag/Lieferschein/Rechnung/
+**Reparatur**. Der Reparatur-Sub-Tab entspricht exakt einer bereits früher
+gefundenen `UNION`-Query (siehe Reparatur-Abschnitt weiter unten), jetzt mit
+sichtbarem UI-Kontext und echten Daten:
+
+```sql
+select B.Nummer, B.Name1, B.Belegdatum, trim(K.Anrede) as Herkunft,
+  P0.stck, P0.text, P0.Artnr, p0.soid, 'Mat.' as Art
+from Belegpos P0, Beleg B, Repkopf K
+where B.Belegart = 154 and P0.Soid = B.oid and B.nummer = K.Belegnummer and P0.ArtOID = :parOID
+union select ..., 'Kost1.' as Art from Repkpos P1, Beleg B, Repkopf K where ...
+union select ..., 'Kost2.' as Art from Repkpos2 P1, Beleg B, Repkopf K where ...
+union select ..., 'St...' as Art from Repbuchartikel P3, Beleg B, Repkopf K where ...
+```
+
+| UI-Spalte | Herkunft | DB-Feld |
+|---|---|---|
+| Beleg | `B.Nummer` | `BELEG.NUMMER` |
+| Datum | `B.Belegdatum` | `BELEG.BELEGDATUM` |
+| Name | `B.Name1` | `BELEG.NAME1` (Kunde) |
+| Stck. | `P0.stck` | `BELEGPOS.STCK` |
+| Artikel | `P0.text` | **`BELEGPOS.TEXT`** – trotz Spaltentitel "Artikel" wird die Beschreibung angezeigt, nicht `ARTNR` |
+| Art | Literal `'Mat.'`/`'Kost1.'`/`'Kost2.'`/`'St...'` | keine Spalte, sondern Konstante je `UNION`-Zweig – kennzeichnet die Quelltabelle (`Belegpos`/`Repkpos`/`Repkpos2`/`Repbuchartikel`) |
+| Herkunft | `trim(K.Anrede)` | `REPKOPF.ANREDE`, wiederverwendet – Live-Werte wie "Kassel", "Bellinzona", "Kamenz" bestätigen endgültig, dass dieses Feld hier als Einsatzort dient (siehe auch Korrektur im Reparatur-Abschnitt) |
+
+**Funktionsweise:** artikelübergreifende Reparaturhistorie – für welchen
+Kunden, an welchem Standort und wann ein bestimmtes Ersatzteil verbaut
+wurde, über vier interne Positions-/Verbrauchstabellen hinweg
+zusammengeführt. Die übrigen vier Sub-Tabs zeigen vermutlich dieselbe
+Grid-Form mit `Belegart` 100/101/102/103 statt 154, ohne die
+REPKPOS/REPBUCHARTIKEL-Zusatzquellen (nicht einzeln geprüft).
+
+#### Reiter "Reservierung (Auftrag)": Materialbedarf anderer Fertigungsaufträge
+
+Validiert 2026-09-09. Bestätigte Query:
+
+```sql
+Select Anzahl, Prodmenge, Artnr, Bezeichnung1, Kw, Jahr
+from V_BereitMaterial
+where Artoid = :parOID And not ProdOID = :parAuftrag
+```
+
+| UI-Spalte | Herkunft |
+|---|---|
+| Anzahl | `V_BereitMaterial.Anzahl` |
+| KW | `V_BereitMaterial.Kw` |
+| Jahr | `V_BereitMaterial.Jahr` |
+
+Zeigt Zeilen der View nur mit den drei relevanten Spalten (`Artnr`/
+`Bezeichnung1` entfallen, da der Artikel bereits im Fenstertitel steht;
+`Prodmenge` im Grid nicht übernommen). `V_BereitMaterial` ist dieselbe
+View-Familie, die dem "Materialengpass"-Indikator im **EngpassCockpit**
+(Produktions-Kapitel) zugrunde liegt: `not ProdOID = :parAuftrag` schließt
+den aktuell betrachteten Auftrag aus und zeigt, ob dieser Artikel
+anderweitig – für andere Fertigungsaufträge – bereits benötigt/reserviert
+ist, gegliedert nach Kalenderwoche/Jahr des Bedarfstermins.
+
+Odoo-Bezug: am ehesten Odoos Bedarfsvorschau (Reservierungen aus offenen
+`mrp.production`/`sale.order`-Zeilen), aber mit konkreten Terminen statt der
+hier nativen KW/Jahr-Granularität.
+
+#### Reiter "Kommision": offener Kommissionierbedarf je Baugruppe
+
+Validiert 2026-09-09, aber **nur über Feldnamen aus verwandten Queries
+plausibilisiert, nicht über eine direkte Grid-Spaltendefinition bewiesen**.
+Grid-Spalten: KW/Jahr/Restmenge/SOLLMEN(GE)/Baugruppe/Bezeichnung/
+Prodmenge/Fertig. Passende Quelle: `V_ProdMaterial`, dieselbe View-Familie
+wie beim EngpassCockpit und bei "Reservierung (Auftrag)":
+
+```sql
+Select * from V_ProdMaterial where Artoid = :parOID
+  And (Sollmenge - Buchmenge) > 0 and (Status <> -1 or Status is NULL) and (Einheitmenge > 0)
+```
+
+| UI-Spalte | Vermutete Herkunft | Sicherheit |
+|---|---|---|
+| KW / Jahr | `V_ProdMaterial.Kw`/`.Jahr` | plausibel (an anderer Stelle mit `V_ProdMaterial` kombiniert referenziert) |
+| Restmenge | berechnet als `Sollmenge - Buchmenge` (Formel mehrfach im Code so verwendet) | plausibel |
+| SOLLMEN(GE) | `V_ProdMaterial.Sollmenge` | plausibel |
+| Baugruppe / Bezeichnung | vermutlich `STUECKLISTEN.NUMMER`/`.BEZEICHNUNG1` des bedarfsauslösenden Fertigungsauftrags | unbestätigt |
+| Prodmenge | vermutlich `PRODUKTION.MENGE` | unbestätigt |
+| Fertig | vermutlich `PRODUKTION.FERTIG` oder aus `Status` abgeleitet | unbestätigt |
+
+**Funktionsweise:** zeigt, für welche Baugruppen/Fertigungsaufträge dieser
+Artikel noch offen ist (`Sollmenge - Buchmenge > 0`, also noch nicht
+vollständig aus dem Lager entnommen/gebucht), gegliedert nach
+Kalenderwoche/Jahr. Funktional eng verwandt mit "Reservierung (Auftrag)",
+aber mit Fokus auf den tatsächlichen Kommissionierstatus statt bloßer
+Reservierung. Alle drei Tabs (EngpassCockpit, Reservierung, Kommission)
+greifen auf dieselbe `V_ProdMaterial`/`V_BereitMaterial`-Sichtenfamilie
+zurück – ein zentraler, wiederverwendeter Verfügbarkeits-Berechnungskern für
+die gesamte Produktionsplanung.
+
+#### Reiter "Inventurwerte": jede Inventur ist eine eigene Datenbanktabelle
+
+Validiert 2026-09-09 – bemerkenswertester Einzelfund im gesamten
+Artikelinfo-Fenster. Bestätigte, dynamisch gebaute Query:
+
+```sql
+Select cast('<tabellenname>' as varchar30) as Inventur,
+  cast(Inventurdatum as varchar10) as Vom,
+  Artnr, Bezeichnung1, Bestand as Sollbestand, Istbestand, Lagerorte
+from <tabellenname> where OID = ...
+UNION Select ... from <nächste Tabelle> ...
+-- (dynamisch pro vorhandener Inventur-Tabelle wiederholt)
+
+with AllInv as ( ... ) Select * from AllInv order by Inventur desc
+```
+
+**Die Spalte "INVENTUR" enthält keinen Code, sondern den tatsächlichen
+Tabellennamen.** Format entschlüsselt: `Inventur0` + Datum als `JJJJMMTT`
+(z. B. `Inventur020251215` = 15.12.2025, `Inventur020210104` = 04.01.2021 –
+beide gegen die zugehörige VOM-Spalte verifiziert). **Für jede einzelne
+Inventurzählung wird offenbar eine eigene, neue Tabelle angelegt**, nicht
+eine Zeile in einer gemeinsamen Tabelle – dieser Tab führt sie per
+dynamisch gebautem `UNION` zu einer historischen Liste zusammen. Passt zum
+bereits dokumentierten Muster datierter Einzeltabellen (`ARTIKEL_N`,
+`PRODARTIKEL020100727`, `INVENT0701`), hier aber als durchgängiges,
+jährlich wiederkehrendes Verfahren statt einmaliger Altlast – der
+extremste bisher gefundene Ausprägung dieses Architekturmusters.
+
+| UI-Spalte | Herkunft |
+|---|---|
+| INVENTUR | Tabellenname selbst (als Text gecastet) |
+| VOM | `Inventurdatum`-Spalte der jeweiligen Tabelle |
+| SOLLBESTAND | `Bestand`-Spalte, umbenannt (wiederverwendet) |
+| ISTBESTAND | `Istbestand` |
+| LAGERORTE | `Lagerorte` (kommagetrennte Liste, z. B. "H-01,") |
+
+Odoo-Bezug: entspricht `stock.inventory`/`stock.quant` mit Inventurhistorie,
+aber ohne separate Tabellen je Zählung – in Odoo sind alle Inventuren Zeilen
+derselben Tabelle.
 
 ## Detailvergleich: Einkauf/Bestellung
 
@@ -599,7 +1000,7 @@ sind drei an inhaltlich fachfremde `REPKOPF`-Spalten gebunden.
 |---|---|---|---|
 | Meldungs-Nr. / Ausfall-Nr. (ein Eingabefeld) | `REPKOPF.TECHNIKER` | `dbeTECHNIKER` → `DataField TECHNIKER` | wiederverwendet – Feld heißt fachlich "Techniker" |
 | FAM - Nummer | `REPKOPF.FAMNR` | `dbeFamnr` → `DataField Famnr` | direkt |
-| Herkunft-Ort | `REPKOPF.ANREDE` | `dbeHerkunft` → `DataField Anrede` | **wiederverwendet** – Feld heißt fachlich "Anrede" |
+| Herkunft-Ort | `REPKOPF.ANREDE` | `dbeHerkunft` → `DataField Anrede` | **wiederverwendet** – Feld heißt fachlich "Anrede". *Endgültig bestätigt 2026-09-09 über die Artikelinfo (Reiter Vertrieb→Reparatur): dieselbe Query liefert echte Werte wie "Kassel", "Bellinzona", "Kamenz", "Dessau" – eindeutig Einsatzorte, keine Anrede-Werte* |
 | Herkunft-Einheit | `REPKOPF.RARTIKELNR` | `DBEdit15` → `DataField RARTIKELNR` | wiederverwendet |
 | Ausbaudatum | `REPKOPF.AUSBAUDATM` | `dbeAUSBAUDATM` → `DataField AUSBAUDATM` | direkt |
 | Einsatzzeit | `REPKOPF.EINSATZZEIT` | `dbeEINSATZZEIT` → `DataField EINSATZZEIT` | direkt |
