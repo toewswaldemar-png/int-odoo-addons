@@ -1518,6 +1518,126 @@ Es existieren zehn weitere `P_BESTAND*`-Varianten (`P_BESTANDBLOCK`,
 Sperr-/Schrottlager, nicht einzeln nachverfolgt, aber vollständiger
 Quelltext liegt in `all_procedure_sources.sql` vor.
 
+## Prozess-Modul: als BPM-System gebaut, in der Praxis nur als Aktivitäts-Zeitstempel genutzt (2026-09-08)
+
+Quelle: `HMS/Module/UProzessObjects.pas` (5220 Zeilen, Autor HJE, "ab 11 2012"
+laut Kopfkommentar), `HMS/Module/Prozess/FProzessDlg.pas`/`.dfm`, Live-DB.
+
+**Konzept laut Kopfkommentar:**
+
+```
+Beschreibung:  - Process überwachung
+                 Process-Objekt: Produktion, Auftrag, Kunde, Zeitrahmen,
+                 Baugruppe (alle Unterbaugruppen als eigene Processobjekte),
+                 MaterialObjekt, PersonalObjekt .....
+
+ Konzept ProzessLink:  Verbindung zwischen Modul, Objektart.... und Zeiterfassung
+                       Zeit wird auf Link gestempelt
+
+ Konzept Zeiterfassung:   Auf ProzessLink angestempelt
+                          Ablauf:
+                          Diff zwischen Beginn (Anwesenheit) und erster Prozess
+                          Diff zwischen Prozessen
+                          Diff zwischen letzter Prozess und Ende (Anwesenheit)
+                          ergibt Prozesszeiten
+                          -> Tätigkeiten als Prozess anlegen
+```
+
+Die Tabellenstruktur bildet ein vollständiges kleines BPM-System ab:
+`PROZESSMAIN` (Prozessdefinitionen: OID/UserID/ProzessID/GruppenID/
+Bezeichnung/Beschreibung) → `PROZESSSTRUKTUR` (Teilprozess-Hierarchie:
+ParentProzessID/ClientProzessID/Nummer/Sortier/TodoID, mehrfach gleiche
+Unterprozesse erlaubt) → `PROZESSABTEILUNGEN` (Abteilungszuordnung) →
+`PROZESSOBJEKTE` (generischer Link zu *jedem* Modul-Objekt via
+`ModulID`/`ObjektID`, plus `TodoID`) → `PROZESSLINK` (verbindet Prozess +
+Objektart + Datum, sortierbar) → `PROZESSZEITEN` (die eigentlichen
+Zeitstempel).
+
+Der Typkatalog zeigt den beabsichtigten Umfang – praktisch jede Tätigkeit im
+Betrieb sollte als "Prozess" stempelbar sein:
+
+```pascal
+TProzessObjektArten = (obaProjekt = 0, obaProzess = 1, obaRep = 2, obaLaufkarte = 3,
+  obaAnwesendBeginn = 4, obaAnwesendEnde = 44, obaWartung = 5, obaPruefung = 6,
+  obaPause = 88, obaBesprechung = 89, obaSchulung = 90, obaReinigung = 91,
+  obaNone = 99, obaAll = 98, obaUser = 97, obaANummer = 50, obaAngebot = 51,
+  obaAuftrag = 52, obaBaugruppe = 53, oba8D = 54, obaVue = 55, obaBeleg = 56,
+  obaProtokoll = 57);
+```
+
+**Live-Datenprüfung (2026-09-08) zeigt: die Definitionsschicht wurde nie
+produktiv benutzt.**
+
+```sql
+SELECT COUNT(*) FROM PROZESSMAIN;        -- 0
+SELECT COUNT(*) FROM PROZESSGRUPPEN;     -- 0
+SELECT COUNT(*) FROM PROZESSSTRUKTUR;    -- 0
+SELECT COUNT(*) FROM PROZESSABTEILUNGEN; -- 0
+SELECT COUNT(*) FROM PROZESSOBJEKTE;     -- 0
+SELECT COUNT(*) FROM PROZESSLINK;        -- 1.825
+SELECT COUNT(*) FROM PROZESSZEITEN;      -- 355.389
+SELECT COUNT(*) FROM WARTUNG;            -- 1
+SELECT COUNT(*) FROM PROTOKOLL;          -- 0
+```
+
+`FProzessDlg.dfm` (Caption "Prozesse", Grid mit Spalten Bezeichnung/
+Beschreibung, Button "Drucken") ist die zugehörige Verwaltungsmaske für
+`PROZESSMAIN` – existiert im UI, wird aber laut Datenlage nie benutzt. Auch
+das an dieselben Objekte angeschlossene Kalibrierungs-/Wartungs-Subsystem
+(`TCustomProzessWartungsValue`: Nummer/Bezeichnung/Messbereich/Fälligkeit/
+Kalibrierintervall/Status, mit automatischem Mail-Dämon `TMailProzessWartung`
+bei Fälligkeit) hat nur 1 Zeile in `WARTUNG` – ebenfalls praktisch tot.
+
+**Was tatsächlich aktiv ist:** ausschließlich die Zeitstempel-Ebene
+`PROZESSZEITEN`, mit klarer Nutzungsschwerpunkt-Verteilung:
+
+```sql
+SELECT OBJEKTART, COUNT(*) FROM PROZESSZEITEN GROUP BY OBJEKTART ORDER BY 2 DESC;
+-- OBJEKTART=0      156.257   (obaProjekt – generische Projektzeit)
+-- OBJEKTART=154    133.636   (identisch mit BELEGART 154 = Reparatur!)
+-- OBJEKTART=20001   65.492   (nicht im kleinen Enum – vermutlich Modul-spezifischer Code)
+-- OBJEKTART=7591436      2   (Ausreißer/Datenmüll)
+-- OBJEKTART=31640052     2   (Ausreißer/Datenmüll)
+```
+
+`OBJEKTART=154` fällt sofort auf: das ist derselbe numerische Code wie
+`BELEG.BELEGART=154` (Reparatur), an anderer Stelle in diesem Dokument
+mehrfach bestätigt – hier offenbar direkt wiederverwendet statt über das
+kleine `TProzessObjektArten`-Enum. Damit ist belegt: `PROZESSZEITEN` wird in
+der Praxis überwiegend für **Zeitbuchung je einzelnem Reparaturvorgang** und
+generische Projektzeit genutzt (zusammen 290k von 355k Zeilen) – eine
+feingranulare, tätigkeitsbezogene Ergänzung zur klassischen
+Kommt/Geht-Zeiterfassung (`ZEITEN`/`ZEITGRUND`), nicht das ursprünglich in
+den Kopfkommentaren beschriebene generische Prozessmodell.
+
+**`PROZESSZEITENK`/`PROZESSZEITENS` sind Migrationsartefakte, kein
+eigenständiges Konzept.** `HMS/Module/Parameter/DTextkonstanten.pas` enthält
+eine einmalige Datenreparaturroutine:
+
+```pascal
+// 1. Daten verschieben
+TExecuteSQL.Execute('insert into prozesszeitens select * from prozesszeiten', ...);
+ShowMessage('Daten gesichert');
+// ... läuft User→Jahr→Monat→Tag durch, korrigiert unvollständige
+//     Stempel-Paare (Marker ProzessID=999) in cdsKorrekt2 ...
+TExecuteSQL.Execute('Delete from prozesszeiten', ...);
+TExecuteSQL.Execute('insert into prozesszeiten select * from prozesszeitenk', ...);
+ShowMessage('Update beendet');
+```
+
+`ProzessZeitenS` = **S**icherung (Backup der Originaldaten vor der Reparatur),
+`ProzessZeitenK` = **K**orrektur (bereinigte Ersatzdaten, danach zurück nach
+`PROZESSZEITEN` kopiert). Die nahezu identischen, aber nicht exakt gleichen
+Zeilenzahlen (187.031 bzw. 188.528 gegenüber 355.389 in `PROZESSZEITEN`
+heute) passen zu diesem Bild: Momentaufnahmen zum Reparaturzeitpunkt,
+`PROZESSZEITEN` ist seither weitergewachsen.
+
+**Querverweis Laufkarten:** `TDBLaufkartenObject.NewLaufkarte`
+(`UProzessObjects.pas`) erzeugt eine neue Laufkarte über ein internes
+`TDBProzessLinkObject` – die bereits im Produktions-Abschnitt dokumentierten
+Laufkarten sind technisch also selbst eine `PROZESSLINK`-Instanz, nicht ein
+eigenständiger Mechanismus.
+
 ## Stückliste: Kopf-Zahlenfelder "22094"/"110376" sind interne OIDs (2026-09-08)
 
 DFM-Ausschnitt aus `TFRMSTUECKLISTENTSP.dfm.txt`, direkt neben dem

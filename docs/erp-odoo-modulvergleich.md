@@ -1198,8 +1198,19 @@ additives Wachstum – bestätigt Architekturmuster 3 unten (Alt+Neu-Koexistenz)
 nicht mehr nur an Einzelbeispielen, sondern mit vollständigen Zahlen. Die 243
 neuen Tabellen bilden mehrere seit 2011 komplett neu entstandene Subsysteme:
 
-- **Prozess-/Arbeitsplan-Modul** (`PROZESSMAIN` u. a.) – zusätzlicher
-  Workflow-Layer neben der alten `PRODUKTION`/`PRODSCHRITTE`-Kette.
+- **Prozess-Modul** (`PROZESSMAIN`/`-GRUPPEN`/`-STRUKTUR`/`-ABTEILUNGEN`/
+  `-OBJEKTE`/`-LINK`/`-ZEITEN`) – als generisches Aktivitäts-Zeitstempelsystem
+  konzipiert (ab 2012, `UProzessObjects.pas`), in der Praxis aber etwas
+  anderes als der Name suggeriert: **die eigentliche BPM-Definitionsschicht
+  (`PROZESSMAIN`/`-GRUPPEN`/`-STRUKTUR`/`-ABTEILUNGEN`/`-OBJEKTE`) hat 0 Zeilen
+  in der Live-DB** – nie produktiv genutzt. Aktiv ist nur die darunterliegende
+  Zeitstempel-Ebene `PROZESSZEITEN` (355.389 Zeilen, bis 2026 aktuell) plus
+  `PROZESSLINK` (1.825 Zeilen), überwiegend für generische Projektzeit
+  (`OBJEKTART=0`, 156.257 Buchungen) und **Zeitbuchung je Reparaturvorgang**
+  (`OBJEKTART=154` = derselbe `BELEGART`-Code wie bei Reparatur, 133.636
+  Buchungen) – de facto eine feingranulare Ergänzung zur klassischen
+  Zeiterfassung, nicht das ursprünglich vorgesehene Prozessmodell. Details
+  und Beleg in `aktuelle-exe-validierung.md`.
 - **AOI-Testintegration** (`PMESSAOI`, `PFEHLERAOI`, `PRODFEHLERTESTER`,
   `SNRFEHLER`) – automatische optische Inspektion/Tester an die Fertigung
   angebunden, kein Odoo-Standardpendant (am ehesten `quality` + Custom).
@@ -1289,11 +1300,15 @@ Rahmenbestellung (Belegart 74), die Vertreterabrechnung/Provisionsberechnung
 unterschiedliche Arbeitszeit-/Pausenregelung der Mitarbeiterzeit (`ZEITGRUND`,
 je Wochentag eigene Soll-Arbeitszeit-/Pausenfelder – die dort ebenfalls
 vorgesehenen `*ZUSCHLAG`-Spalten sind dagegen in der Live-DB durchgängig leer,
-siehe Zeiterfassungs-Abschnitt oben), sowie zwei erst über die Live-DB
-gefundene Bereiche: die **AOI-Testintegration**
-(automatische optische Inspektion in der Fertigung, `PMESSAOI`/`PFEHLERAOI`/
-`SNRFEHLER`) und das separate **Prozess-/Arbeitsplan-Modul** (`PROZESSMAIN`
-u. a.) neben der klassischen `PRODUKTION`/`PRODSCHRITTE`-Kette.
+siehe Zeiterfassungs-Abschnitt oben), sowie die erst über die Live-DB
+gefundene **AOI-Testintegration** (automatische optische Inspektion in der
+Fertigung, `PMESSAOI`/`PFEHLERAOI`/`SNRFEHLER`). Das ursprünglich als
+weiteren Lücken-Kandidaten vermutete **Prozess-Modul** (`PROZESSMAIN` u. a.)
+zählt dagegen *nicht* mehr dazu – seine BPM-Definitionsschicht erwies sich
+als produktiv ungenutzt (0 Zeilen), nur die Zeitstempel-Ebene
+(`PROZESSZEITEN`) ist aktiv und deckt sich inhaltlich mit der bereits oben
+genannten Zeiterfassungs-Lücke, ist also kein eigenständiger zusätzlicher
+Bereich.
 
 **Bessere Passung als ursprünglich angenommen:** "Abschlussrechnung" stellte
 sich als Fehllesung heraus – real ist es "Abschlagrechnung" (Anzahlung), wofür
