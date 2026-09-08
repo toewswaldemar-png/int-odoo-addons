@@ -69,7 +69,16 @@ beziehen sich auf diesen Dreiklang.
 
 ## Detailvergleich: Adressen (Stammdaten → Adressen-Suchen)
 
-Feldebene der "Adressen - Suchen"-Maske gegen `res.partner`:
+Feldebene der "Adressen - Suchen"-Maske gegen `res.partner`.
+
+**Validiert 2026-09-09 über Live-Screenshot + DFM-Feldbindungen — wichtige
+Korrektur der ursprünglichen Lesart:** Die rechte Box "Sortierung" ist **kein
+Sortier-Menü für die Ergebnisliste**, sondern eine Radiobutton-Auswahl
+(`rbtName1`/`rbtName2`/`rbtName3`/`rbtKurzname`/`rbtPlz`/`rbtOrt`/`rbtDebNr`/
+`rbtKredNr`), die festlegt, **welches der acht Eingabefelder als aktiver
+Suchschlüssel dient** – `rbtName1` ist standardmäßig aktiv. Das ist eine
+grundsätzlich andere Suchlogik als in Odoo, wo alle gefüllten Filterfelder
+gleichzeitig kombiniert (UND-verknüpft) würden.
 
 | Feld (aktuelles ERP) | Odoo-Äquivalent | Anmerkung |
 |---|---|---|
@@ -79,17 +88,23 @@ Feldebene der "Adressen - Suchen"-Maske gegen `res.partner`:
 | Kurzname | kein Standardfeld | am ehesten `ref`, aber semantisch anders belegt (interne Referenz statt Kurzname) |
 | Strasse | `street` | |
 | Plz / Ort | `zip` / `city` | |
-| Debit.-Nummer | kein 1:1-Feld | Odoo nutzt Partner-ID/`ref`; eine eigenständige, ggf. anders formatierte Debitorennummer braucht Custom-Feld + eigene Sequenz |
+| Debit.-Nummer / **allg. Nummer** | kein 1:1-Feld | Odoo nutzt Partner-ID/`ref`; eine eigenständige, ggf. anders formatierte Debitorennummer braucht Custom-Feld + eigene Sequenz. *Validiert: nur **ein** Eingabefeld (`edtDebNr`), "allg. Nummer" ist eine zweite Beschriftungszeile für dasselbe Feld – die Debitorennummer dient offenbar zugleich als allgemeine Nummernsuche, kein separates zweites Feld* |
 | Kredit.-Nummer | kein 1:1-Feld | analog zur Debitorennummer, i. d. R. Custom-Feld |
 | Ansprechpartner | Kontaktpersonen (`res.partner` mit `parent_id`) | bestätigt: eigene Tabelle je Adresse mit Anrede, Name, Vorname, Fon, Fax, Mobil, E-Mail, Funktion je Kontakt – bildet sich sehr gut auf Odoos Kontaktpersonen-Modell ab (Titel/Vorname-Nachname/`phone`/`mobile`/`email`/`function` sind alles native Felder auf `res.partner`); einer der saubersten 1:1-Fälle in diesem Vergleich |
-| Gruppe / Nr. | `category_id` (Partner-Tags) | "Nr." als zusätzliche Nummerierung innerhalb der Gruppe hat kein Pendant, ggf. Custom |
-| "Adressen Filtern" (Checkbox) | Odoo-Suchfilter/-Views | kein Datenfeld, sondern Sucheinstellung – in Odoo über Standard-Filter/Gruppierung gelöst |
+| Gruppe / Nr. | `category_id` (Partner-Tags) | "Nr." als zusätzliche Nummerierung innerhalb der Gruppe hat kein Pendant, ggf. Custom. *Validiert: `edtGruppe` ist **ReadOnly** (`Color clSilver`) – nicht direkt eintippbar, nur über einen Auswahl-Button befüllbar, mit separatem `edtGruppeBez` für die Bezeichnung daneben* |
+| "Adressen Filtern" (Checkbox) | Odoo-Suchfilter/-Views | kein Datenfeld, sondern Sucheinstellung – in Odoo über Standard-Filter/Gruppierung gelöst. *Validiert: `cbxFilter`, standardmäßig **aktiv** (`Checked=True`)* |
+| *(neu entdeckt)* "letzte Suche"-Button | kein Pendant | `btnLastSearch` – wiederholt die zuletzt ausgeführte Suche, in Odoo allenfalls über gespeicherte Filter nachbaubar |
+| *(neu entdeckt)* "Alle markieren"-Button | `select all` (nativ in Odoo-Listenansichten) | generische, in mehreren Formularen wiederverwendete Beschriftung, nicht Adressen-spezifisch |
 
 **Beobachtung:** Die größte strukturelle Lücke ist die dreizeilige Namensfelder-Logik
 (Name 1–3) sowie eigenständige, frei formatierbare Debitoren-/Kreditorennummern
 getrennt von der internen Odoo-ID. Beides wäre bei einer Migration entweder per
 Custom-Feld auf `res.partner` oder durch Umgewöhnung an Odoos Kontaktmodell
-(Firma + Kontaktpersonen statt Namenszeilen) zu lösen.
+(Firma + Kontaktpersonen statt Namenszeilen) zu lösen. Hinzu kommt jetzt die
+validierte Erkenntnis, dass die Suche selbst anders funktioniert als
+angenommen (ein aktives Suchfeld statt kombinierter Filter) – bei einer
+Odoo-Migration ohnehin hinfällig, da Odoos Suchleiste mehrere Kriterien nativ
+kombiniert.
 
 ## Detailvergleich: Adressen (Detailmaske, Reiter "Allgemein")
 
@@ -101,8 +116,9 @@ konkreten Adress-/Kontaktdatensatzes:
 | Nummer | interne ID / `ref` | |
 | Anlage / Änderung (Datum) | `create_date` / `write_date` | in Odoo Systemfelder, nicht standardmäßig auf dem Formular sichtbar |
 | Anrede: Firma / Person | `company_type` | passt direkt |
-| Art: Allgemein / Kunde / Lieferant (exklusiv) | `customer_rank` / `supplier_rank` | **struktureller Unterschied**: Odoo behandelt Kunde/Lieferant nicht exklusiv – ein Partner kann beides gleichzeitig sein, hier ist es eine Radio-Auswahl. *Validiert 2026-09-08: kein eigenes Exklusiv-Feld im Schema gefunden (weder 2011-DB noch aktuelle EXE) – `DebNr` und `KredNr` sind unabhängige Felder, die "Exklusivität" ist vermutlich reine UI-Logik, nicht im Datenmodell erzwungen* |
-| Postfach | kein Feld | Custom-Feld nötig |
+| Art: Allgemein / Kunde / Lieferant (exklusiv) | `customer_rank` / `supplier_rank` | **struktureller Unterschied**: Odoo behandelt Kunde/Lieferant nicht exklusiv – ein Partner kann beides gleichzeitig sein, hier ist es eine Radio-Auswahl. *Validiert 2026-09-08: kein eigenes Exklusiv-Feld im Schema gefunden (weder 2011-DB noch aktuelle EXE) – `DebNr` und `KredNr` sind unabhängige Felder, die "Exklusivität" ist vermutlich reine UI-Logik, nicht im Datenmodell erzwungen. Live-Beispiel 2026-09-09 (Railpool GmbH): "Kunde" ausgewählt, `DebNr` gefüllt (11722), `KredNr` leer – starkes Indiz für die Ableitungs-These, aber weiterhin keine direkte Steuerelement-Bindung gefunden, also kein endgültiger Beweis* |
+| Postfach | kein Feld | Custom-Feld nötig. *Validiert 2026-09-09: tatsächlich zwei getrennte Felder `POSTFACH` + `POSTFACHPLZ` (eigene Postleitzahl fürs Postfach, unabhängig von der Straßen-PLZ) – noch granularer als ursprünglich angenommen* |
+| Ansprechpartner-Funktion (Spalte "Funkti..." im Kontaktgrid) | `function` (natives Feld auf `res.partner`) | passt inhaltlich, aber *Validiert 2026-09-09: real ist es kein eigenes `FUNKTION`-Feld auf `ADRESSENANSPRECH`, sondern das wiederverwendete Feld `NOTIZ` (`Select distinct Notiz from AdressenAnsprech order by Notiz` liefert die Dropdown-Werteliste) – dasselbe Feld-Wiederverwendungsmuster wie mehrfach in der Reparaturmaske* |
 | Lkz (Ländercode) | `country_id` | |
 | Etikette (Checkbox) | kein Feld | Druck-/Etikettensteuerung, vermutlich Custom oder Report-Filter |
 | inaktiv (Checkbox) | `active` (Archivierung) | **Semantikunterschied**: Odoos `active=False` blendet den Datensatz komplett aus Standard-Views aus; falls "inaktiv" hier nur einen Status markiert und der Datensatz weiter sichtbar bleiben soll, braucht es ein eigenes Feld statt `active` |
@@ -111,7 +127,7 @@ konkreten Adress-/Kontaktdatensatzes:
 | ist Vertreter (Checkbox) | kein Feld | am ehesten über Partner-Tag/Kategorie lösbar |
 | Buyer Ref. | kein Feld | Custom |
 | unsere Nummer bei Kunde/Lieferant | kein Feld | eigene Kundennummer beim Geschäftspartner – kein Odoo-Standardfeld (zu unterscheiden von `ref`, das die eigene interne Nummer ist) |
-| Fon / Fon 2 / Fax / Mobil | `phone` / `mobile` | Odoo kennt nur je ein Feld für Telefon und Mobil, kein zweites Telefonfeld, Fax in neueren Odoo-Versionen entfernt |
+| Fon / Fon 2 / Fax / Mobil | `phone` / `mobile` | Odoo kennt nur je ein Feld für Telefon und Mobil, kein zweites Telefonfeld, Fax in neueren Odoo-Versionen entfernt. *Validiert 2026-09-09: `FON2` existiert als eigenständiges Feld (mehrfach als Referenz bestätigt), unabhängig von `FON1` – die Odoo-Lücke ist damit real, nicht nur vermutet* |
 | E-M@il Zentral / Rechnung / Vertrieb / Einkauf / GL / Info (je mit CC/BCC) | `email` (ein Feld) + Kontaktpersonen mit Adresstyp | Odoo löst mehrere Zwecke eher über zusätzliche Kontakt-Datensätze (Rechnungsadresse, Lieferadresse) statt über mehrere E-Mail-Felder am selben Partner; CC/BCC pro Zweck hat kein Pendant. *Validiert 2026-09-08 anhand der aktuellen EXE (SQL-String aus dem Adressen-Ladeformular): reale Feldnamen sind `EMail` (Zentral), `EmailBuchhaltung` (Rechnung), `EMailVT` (Vertrieb), `EmailEK` (Einkauf), `EmailGL`, `EmailInfo`, dazu je ein CC/BCC-Paar (`BUCHHALTUNGCC/BCC`, `VTCC/BCC`, `EKCC/BCC`, `GLCC/BCC`, `InfoCC/BCC`, `EmailCC/BCC`) sowie separate Versand-Flags `MailAngebot`, `MailAuftrag`, `MailLieferschein`, `MailRechnung`, `MailBestellung` und Rechnungskopie-Routing `RechCopyAll/Norm/VT/Fibu/Opos` – die Behauptung war korrekt, sogar granularer als zunächst dokumentiert* |
 | WWW | `website` | |
 | XRechnung-Block (Buyerreferenz, Endpoint, Contractnr, Leitweg ID, eigene ID, ID Kunde) | Peppol-/E-Invoicing-Felder (`peppol_eas`, `peppol_endpoint`) bzw. deutsche Lokalisierung | thematisch verwandt (E-Rechnungspflicht), aber nicht feldgleich – bei einer Migration eigener Prüfpunkt, da B2B-E-Rechnungspflicht in Deutschland gerade schrittweise scharf geschaltet wird. *Validiert 2026-09-08: reale Feldnamen `LeitwegID` und `BuyerRef`/`BuyerReference` auf `Adressen`, dazu `Xemail`/`Xrech`-Flags; ruft extern `xrechnung.exe` auf (liegt lokal unter `Herrmann_Work/20211007/XRechnung.exe`). Existiert weder in der 2011-DB noch im 2018er-Quellcode – nachweislich erst danach eingeführt (passt zur E-Rechnungspflicht 2024/2025)* |
@@ -122,6 +138,55 @@ exklusiv, in Odoo nicht: (2) mehrere zweckgebundene E-Mail-Felder mit eigenem
 CC/BCC pro Adresse gibt es in Odoo nicht in dieser Form. Der XRechnung-Block ist
 inhaltlich der einzige Bereich mit einer nativen Odoo-Entsprechung (Peppol/E-Invoicing),
 aber ohne 1:1-Feldabgleich.
+
+### Adress-Info, Reiter "Sonstiges"
+
+Validiert 2026-09-09 über Live-Screenshot + Feldreferenzen aus der aktuellen
+EXE. Bisher nicht dokumentierter dritter Bereich der Adress-Detailmaske:
+
+| UI-Element | DB-Feld | Anmerkung |
+|---|---|---|
+| Bemerkung | `ADRESSEN.BEMERKUNG` (`VARCHAR200`) | |
+| "Bedingungen des Lieferanten / Kunden" (Zahlung/Versand) | `ADRESSEN.ZKONDI`/`VERSAND` | Konditionen des Geschäftspartners |
+| "Bedingungen Herrmann" (Zahlung/Versand) | `ADRESSEN.ZKONDIL`/`VERSANDL` | Herrmanns **eigene** Konditionen diesem Partner gegenüber – Label an anderer Stelle sogar als "Bedingungen Herrmann (Angebot)" gefunden |
+| Liefertage (Mo–So, 7 Checkboxen) | `ADRESSEN.LIEFERTAGE` (`VARCHAR30`) | ein einzelnes Feld, als 7 Checkboxen dargestellt – vermutlich positionscodierter String, ein Zeichen je Wochentag |
+| Lieferadressen-Grid (Name 1/2, Strasse, Lkz, Plz, Ort) | eigene Tabelle `ADRESSENLIEFER` | echte 1:n-Tabelle je Hauptadresse |
+
+**Beobachtung:** Zwei getrennte Konditionen-Paare pro Adresse (Partner-Konditionen
+vs. Herrmanns eigene Konditionen) sind ein struktureller Unterschied zu Odoo,
+das nur ein Zahlungsbedingungsfeld (`property_payment_term_id`) je Partner
+kennt, keine "unsere vs. seine Bedingungen"-Trennung. Lieferadressen
+(`ADRESSENLIEFER`) ist dagegen der sauberste Fall auf diesem Tab – bildet sich
+1:1 auf Odoos Mehrfach-Lieferadressen ab (`res.partner` mit `type='delivery'`).
+
+### Adress-Info, Reiter "Kartei"
+
+Validiert 2026-09-09 über Live-Screenshot + Feldreferenzen. Dritter,
+bisher nicht dokumentierter Bereich der Adress-Detailmaske: eine
+**Preis-/Bestellhistorie je Artikel für diesen Kunden**. Technisch:
+`TTabSheet tshKartei` → `TDBGrid dbgBeleg` → `DataSource dsKartei`, gespeist
+über eine Stored Procedure `TSQLGetKartei` (Name bestätigt, genauer
+SQL-Text nicht extrahierbar). Sehr ähnliches, eindeutig zuordenbares Muster
+an anderer Stelle im Programm:
+
+```sql
+select B.Belegdatum, B.Adrnr, B.Name1, B.Ort, P.Artnr, P.Stck, P.Text, P.Epreis
+from Beleg B, Belegpos P
+where B.oid = p.soid and B.Belegart = :parArt and B.Adroid = :parAdr
+  and B.Belegdatum between :parVon and :parBis
+order by Belegdatum, Artnr
+```
+
+Zeigt jede Position aus jedem Beleg dieses Kunden – im Live-Beispiel sichtbar
+an denselben Artikelnummern (1014 "4-Leiter Durchgangsklemme", 1088
+"Kontakt-Stift Han-C 2,5 AG"), die über mehrere Jahre und Belege hinweg
+wiederkehren, inkl. Preisentwicklung (Artikel 1014: 2,42€ in 2019 → 3,22€ in
+2026). Funktional eine Preishistorie je Artikel/Kunde für die
+Kostenvoranschlags-Erstellung.
+
+Odoo-Bezug: am ehesten über einen gefilterten `sale.order.line`-Bericht
+(Partner+Produkt) nachbaubar, aber kein dediziertes, kundenbezogenes
+Kartei-Tab wie hier.
 
 ## Detailvergleich: Artikel
 
@@ -412,29 +477,43 @@ From Beleg B
 WHERE B.Belegart = 154
 ```
 
+**Zusätzlich validiert 2026-09-09 anhand eines Live-Screenshots** der
+Belegmaske (Auftrag 9260929, Kunde Railpool GmbH) – bestätigt praktisch jedes
+Feld unten nochmals visuell und liefert vier bisher nicht dokumentierte
+Details: einen direkten "Produktion >"-Button im Gerät-Block (Sprung von
+Reparatur zu `PRODUKTION`), `Snr Alt`/`Snr Neu`-Felder auf Positionsebene
+(bestätigt `BELEGPOS.SNRALT`/`SNRNEU` im Reparatur-Kontext), die Checkboxen
+"nicht drucken"/"nicht buchen" je Position (Kehrwert von
+`BELEGPOS.DRUCKEN`/`BUCHEN`), sowie **FAM**- und **BGS**-Buttons direkt auf
+der Positionszeile (bestätigt `BELEG.FAMID` bzw. `BEGLEITSCHEIN`-Zugriff
+schon auf Ebene einzelner Reparaturpositionen, nicht nur am Belegkopf).
+
 | Feld/Bereich (aktuelles ERP) | Odoo-Äquivalent | Anmerkung |
 |---|---|---|
 | Kunde + Ansprechpartner | `partner_id` | nativ |
 | Beleg-Nr. + Typ (Kostenvoranschlag/Auftrag/…) | `name` + `state` | Odoo kennt den Lebenszyklus als Status (quotation → confirmed → under_repair → done), nicht als eigenständige, separat nummerierte Belegtypen |
 | Datum/Sparte | `date_order` | "Sparte" (Geschäftsbereich) hat kein natives Feld |
 | Bearbeiter | `user_id` | nativ |
-| Rahmen (Rahmenauftrag, mit Detail-Link) | kein Standardfeld | passt zu "Rahmenbestellung"/"Rahmen Reparatur" aus dem Einkaufsmenü – Odoo hat kein Konzept für Rahmen-/Blanket-Reparaturaufträge. *Validiert: reales Feld ist `BELEG.ABSCHLAGAUFTRAG` (per Alias `as Rahmen` in der obigen Query) – liegt also am generischen Belegkopf, nicht bei REPKOPF* |
+| Rahmen (Rahmenauftrag, mit Detail-Link) | kein Standardfeld | passt zu "Rahmenbestellung"/"Rahmen Reparatur" aus dem Einkaufsmenü – Odoo hat kein Konzept für Rahmen-/Blanket-Reparaturaufträge. *Validiert: reales Feld ist `BELEG.ABSCHLAGAUFTRAG` (per Alias `as Rahmen` in der obigen Query) – liegt also am generischen Belegkopf, nicht bei REPKOPF. Live-Beispiel: Feld tatsächlich befüllt (Wert `260020`), kein Leerfeld* |
 | Abgeschlossen / Gedruckt (Checkboxen) | `state == 'done'` deckt "Abgeschlossen" | "Gedruckt" (Beleg wurde gedruckt) hat kein natives Flag. *Validiert: `REPKOPF.GEDRUCKT` (`CHAR(1)`) bestätigt* |
-| Bewerten (Checkbox) | kein Feld | siehe bereits notiertes "nicht bewerten" bei Adressen – Anknüpfungspunkt Lieferanten-/Auftragsbewertung. *Validiert: reales Feld ist `ADRESSEN.BEWERTEN` (`coalesce(A.Bewerten, 'F')` mehrfach in Bestell-/Lieferquoten-Queries verwendet) – liegt am Kunden, nicht am Reparaturbeleg selbst* |
+| Bewerten (Checkbox) | kein Feld | siehe bereits notiertes "nicht bewerten" bei Adressen – Anknüpfungspunkt Lieferanten-/Auftragsbewertung. *Validiert: reales Feld ist `ADRESSEN.BEWERTEN` (`coalesce(A.Bewerten, 'F')` mehrfach in Bestell-/Lieferquoten-Queries verwendet) – liegt am Kunden, nicht am Reparaturbeleg selbst. Live-Beispiel: Checkbox tatsächlich aktiv gesetzt, also produktiv genutzt und nicht nur theoretisch vorhanden* |
 | Bestell-/Liefertermin | `schedule_date` bzw. bereits eigenes `x_lieferdatum` | Liefertermin schon durch `int_repair_workshop` abgedeckt |
 | Bestellnummer (Kunden-PO) | kein Feld auf `repair.order` | `sale.order` hat `client_order_ref`, `repair.order` nicht – Lücke |
 | Lieferschein-Ausg | `stock.picking`-Verknüpfung | Reparatur erzeugt in Odoo Lieferungen, aber keine eigene "Lieferschein-Ausgang"-Referenz auf dem Formular. *Validiert: `REPKOPF.LIEFSCHNR`/`LIEFSCHDATUM` bestätigt* |
-| Gerät: GID, Gruppe, IdentNr, Seriennr, Bezeichnung | `product_id` + `lot_id` (Serien-/Losnummer) | Produkt/Serie nativ vorhanden; GID/Gruppe/IdentNr sind eigene Geräte-Stammdaten (siehe bereits notierte Lücke bei "Geräte" in den Stammdaten). *Validiert: `REPARTIKEL.OID`(GID)/`.IDENTNR`/`.BEZEICHNUNG`, `REPARTIKEL.GRUPPE` → FK auf `REPGRUPPEN.OID`, Seriennummer sitzt aber nicht auf REPARTIKEL selbst, sondern auf `REPAUFTRAG.SERIENNR` (je Auftrag, nicht je Gerätestammsatz)* |
+| Gerät: GID, Gruppe, IdentNr, Seriennr, Bezeichnung | `product_id` + `lot_id` (Serien-/Losnummer) | Produkt/Serie nativ vorhanden; GID/Gruppe/IdentNr sind eigene Geräte-Stammdaten (siehe bereits notierte Lücke bei "Geräte" in den Stammdaten). *Validiert: `REPARTIKEL.OID`(GID)/`.IDENTNR`/`.BEZEICHNUNG`, `REPARTIKEL.GRUPPE` → FK auf `REPGRUPPEN.OID`, Seriennummer sitzt aber nicht auf REPARTIKEL selbst, sondern auf `REPAUFTRAG.SERIENNR` (je Auftrag, nicht je Gerätestammsatz). Live-Beispiel: GID 17442, Gruppe "TKL AC3", IdentNr "3EGM064970R0001", Bezeichnung "Klimagerät FRR TRAXX AC3", Seriennr "0085/2015" – UI-Label lautet wörtlich "GID", nicht nur intern so benannt. Der Gerät-Block hat zusätzlich einen direkten **"Produktion >"-Button**, der offenbar auf einen zugehörigen `PRODUKTION`-Datensatz springt – bisher nicht dokumentierte Reparatur→Produktion-Verlinkung.*
+
+  **Semantik von GID/IdentNr/Seriennr geklärt (Vergleich zweier Belege, 2026-09-09):** Ein zweiter Beleg zeigt GID `18866`, gleiche Gruppe "TKL AC3", gleiche Bezeichnung und **gleiche IdentNr `3EGM064970R0001`**, aber andere Seriennr `1023/2022`. Damit: `IDENTNR` ist die Hersteller-Typ-/Modellnummer (modellweit gleich über alle Exemplare), `GID` (`REPARTIKEL.OID`) ist die interne ID des einzelnen physischen Exemplars, `SERIENNR` (`REPAUFTRAG.SERIENNR`) die Herstellerseriennummer genau dieses Exemplars. `REPARTIKEL` ist damit ein Hybrid aus Typ- und Instanzdaten in einer Zeile – Odoo trennt das sauberer in `product.template`(≈IdentNr)/`product.product` und `stock.lot`(≈GID+Seriennr) |
 | Kopftext / Fusstext | kein 1:1-Feld | am ehesten `quotation_notes`/interne Notizen, aber kein separates Kopf-/Fußtext-Konzept |
-| Material | Reparaturzeilen (`repair.order.line`) | nativ abgedeckt |
-| Versand Eingang / Versand Ausgang | kein Feld | Wareneingang/-ausgang des Reparaturgeräts explizit als eigener Vorgang – in Odoo nur implizit über Lagerbewegungen, nicht als Belegfeld. *Validiert: `REPKOPF.WEINGANGDATUM` (Versand Eingang) bestätigt; für "Versand Ausgang" kein eigenes Feld gefunden – vermutlich deckungsgleich mit Lieferschein-Ausg. (`LIEFSCHNR`/`LIEFSCHDATUM`)* |
-| Reparatur-Beschr. | Beschreibungs-/Diagnosefeld | größtenteils nativ abbildbar. *Validiert: `REPKOPF.REPBESCHREIB` (`VARCHAR(600)`) exakt bestätigt, dazu `REPKOPF.AUSFALL` (`VARCHAR(600)`, Ausfallbeschreibung) als verwandtes Zusatzfeld* |
+| Material | Reparaturzeilen (`repair.order.line`) | nativ abgedeckt. **Funktionsweise (validiert 2026-09-09):** jede Grid-Zeile ist ein `BELEGPOS`-Datensatz mit `SOID` = dieser Reparaturbeleg; Spalten Pos./Artikel/Menge/Einheit/Text/E-Preis/Rabatt/G-Preis = `POSNR`/`ARTNR`(`ARTOID`)/`STCK`/`EINHEIT`/`TEXT`/`EPREIS`/`RABATT`/`GPREIS`. Für Druck-/Übersichtszwecke werden `BELEGPOS` **und** eine zweite, im 2011-Schema noch nicht vorhandene Tabelle `REPBUCHARTIKEL` per `UNION` zusammengeführt (`... union select ... from REPBUCHARTIKEL K2 where K2.soid = :parOID2`) – vermutlich tatsächlich aus dem Lager gebuchtes Verbrauchsmaterial getrennt von kalkulierten Positionen |
+| *(Positionszeile, per Screenshot 2026-09-09 neu entdeckt)* Snr Alt/Neu, "nicht drucken"/"nicht buchen", FAM-Button, BGS-Button, "L"/"K"-Buttons, DruckID-Nr. | `lot_id` (Serie) deckt Snr; für Druck-/Buchungsflags und FAM/BGS kein Pendant | Snr Alt/Neu bestätigt `BELEGPOS.SNRALT`/`SNRNEU` – Seriennummer des aus-/eingebauten Teils **je Materialzeile**, nicht nur am Gerät. "nicht drucken"/"nicht buchen" bestätigt `BELEGPOS.DRUCKEN`/`BUCHEN` (invertiert dargestellt), belegt durch Live-Query mit `coalesce(Drucken, 'F') = 'F'`-Filter. FAM/BGS bestätigen `BELEG.FAMID`/`BEGLEITSCHEIN` schon auf Positions-, nicht nur Belegebene erreichbar. **"L"/"K"-Buttons und die genaue Funktion von "DruckID-Nr." bleiben ungeklärt** – keine Treffer in den extrahierten EXE-Strings, reine Spekulation wäre nicht belastbar |
+| Versand Eingang / Versand Ausgang | kein Feld | Wareneingang/-ausgang des Reparaturgeräts explizit als eigener Vorgang – in Odoo nur implizit über Lagerbewegungen, nicht als Belegfeld. *Vollständig validiert 2026-09-09 (eigener Tab, nicht nur ein Datumsfeld): `REPKOPF.KDLSNR` (Kundenlieferschein-Nr.), `SPEDITION`/`SPEDNR` (Spediteur/Frachtbrief-Nr.), `VEDATUM` (Datum), `TRANSPORT` (Transportkosten), `SENDNUMMER`/`SENDORT` (Sendungsnr./Ort) – alle über DFM-Steuerelementbindung bestätigt. Die Checkboxen "frei"/"unfrei" binden beide auf dasselbe Feld `FREI` (Frei-Haus vs. Empfänger zahlt), keine zwei getrennten Felder. Für "Versand Ausgang" weiterhin kein eigener Tab-Inhalt geprüft – vermutlich spiegelbildlich mit denselben Feldern, aber nicht bestätigt* |
+| Reparatur-Beschr. | Beschreibungs-/Diagnosefeld | größtenteils nativ abbildbar. *Vollständig validiert 2026-09-09 (eigener Tab mit drei Textfeldern für drei Erzählperspektiven, nicht nur ein Feld): `REPKOPF.AUSFALL` (Kundenmeldung, Box "Fehlerbeschreibung aus Meldung"), `REPKOPF.FEHLER` (eigene technische Fehleranalyse, zweite Box), `REPKOPF.REPBESCHREIB` (eigentliche Reparaturbeschreibung) – alle über DFM-`TDBMemo`-Bindung bestätigt. Dazu Meldungskontext-Felder: `TECHNIKER` (wiederverwendet als "Meldungs-Nr./Ausfall-Nr."), `FAMNR`, `AUSBAUDATM`/`EINSATZZEIT`, `SCHLAGWORT`, `ANREDE` (wiederverwendet als "Herkunft-Ort"), `RARTIKELNR` (wiederverwendet als "Herkunft-Einheit"), `USTIDENT` (wiederverwendet als "Bezugsnummer"), `KNAME` – siehe eigener Unterabschnitt unten* |
 | Anlagen | `ir.attachment` | nativ |
 | Bemerkungen | interne Notizen | nativ |
 | Stl. Material | `mrp.bom`-Materialliste | nativ über Stückliste abbildbar |
-| Geräte Info | kein Standardmodell | wie oben, eigene Geräte-Stammdaten |
-| Fehlerzuordnung | kein Standardfeld | Fehler-/Defektklassifizierung – Anknüpfungspunkt an `quality`-Modul, thematisch verwandt mit den bereits notierten 8D-Lücken. *Validiert: `REPKOPF.FEHLER` (`VARCHAR(2000)`) bestätigt, aber als Freitextfeld – keine strukturierte Klassifizierung/Enum im Altsystem, insofern auch dort keine echte "Zuordnung" zu festen Fehlerkategorien* |
-| *(kein Feld in der Belegmaske, aber vom Addon abgebildet)* `x_werkstattstufe` | Selection (6 Werkstattstufen) | **Nicht im Altsystem-Schema gefunden**: `REPARTIKEL.STATUS` sieht auf den ersten Blick passend aus, hält aber laut aktueller EXE Gerätelebenszyklus-Werte wie `'Im Einsatz'` (`Update Repartikel set ... Status = 'Im Einsatz'`), nicht Werkstatt-Durchlaufstufen. Für die sechs Stufen (Außenreinigung/Eingangsprüfung/Gesamtreinigung/In Bearbeitung/Endprüfung/Verpacken) wurden zwar passende UI-Elemente gefunden (`btnEndpruefung`, Label-Captions "Reinigung"/"Reparatur"/"Endprüfung"/"Abwicklung"), aber kein rückführbares Datenbankfeld – vermutlich reine Anzeigelogik im alten Formular, kein persistenter Status. `x_werkstattstufe` ist damit wohl eine **Odoo-seitige Neukonzeption**, keine 1:1-Migration eines Altsystem-Felds |
+| Geräte Info | kein Standardmodell | wie oben, eigene Geräte-Stammdaten. *Validiert 2026-09-09: eigener Tab mit drei Teilen – Reparaturhistorie des Geräts (`Beleg`/`RepAuftrag`/`RepArtikel`-Join), generische Dokumentenanhänge (`InfoDokumente`) und vermutlich Notizen (`InfoNotizen`), siehe eigener Unterabschnitt unten. `InfoDokumente`/`InfoNotizen` sind anwendungsweit wiederverwendbar (Schlüssel `ModulID`+`ObjektID`), nicht reparaturspezifisch – strukturell ungewöhnlich nah an Odoos `ir.attachment` (`res_model`+`res_id`)* |
+| Fehlerzuordnung (Button im UI tatsächlich mit Tippfehler "Fehlerzuordnumg" beschriftet, Screenshot 2026-09-09) | kein Standardfeld | Fehler-/Defektklassifizierung – Anknüpfungspunkt an `quality`-Modul, thematisch verwandt mit den bereits notierten 8D-Lücken. *Validiert: `REPKOPF.FEHLER` (`VARCHAR(2000)`) bestätigt, aber als Freitextfeld – keine strukturierte Klassifizierung/Enum im Altsystem, insofern auch dort keine echte "Zuordnung" zu festen Fehlerkategorien* |
+| *(kein Feld in der Belegmaske, aber vom Addon abgebildet)* `x_werkstattstufe` | Selection (6 Werkstattstufen) | **Nicht im Altsystem-Schema gefunden**: `REPARTIKEL.STATUS` sieht auf den ersten Blick passend aus, hält aber laut aktueller EXE Gerätelebenszyklus-Werte wie `'Im Einsatz'` (`Update Repartikel set ... Status = 'Im Einsatz'`), nicht Werkstatt-Durchlaufstufen. Für die sechs Stufen (Außenreinigung/Eingangsprüfung/Gesamtreinigung/In Bearbeitung/Endprüfung/Verpacken) wurden zwar passende UI-Elemente gefunden (`btnEndpruefung`, Label-Captions "Reinigung"/"Reparatur"/"Endprüfung"/"Abwicklung"), aber kein rückführbares Datenbankfeld – vermutlich reine Anzeigelogik im alten Formular, kein persistenter Status. `x_werkstattstufe` ist damit wohl eine **Odoo-seitige Neukonzeption**, keine 1:1-Migration eines Altsystem-Felds. *Korrektur 2026-09-09: Die Label-Captions "Reparatur"/"Reinigung"/"Abwicklung"/"Endprüfung" haben doch ein Datenbankfeld – sie gehören zur Kalkulationstabelle im Kostenvoranschlag-Tab (`REPKOPF.KST2-5`/`KFKT2-5`/`KWERT2-5`, siehe unten). Das ist aber eine reine Kostenkategorisierung (Stunden × Faktor = Wert je Phase), kein Werkstatt-Durchlaufstatus – die Kernaussage bleibt: für `x_werkstattstufe` als Status-Feld gibt es weiterhin keine Altsystem-Entsprechung, nur zufällig gleich benannte Kalkulationszeilen* |
 
 **Beobachtung:** `int_repair_workshop` ist bewusst auf die Werkstattstufen-Logik
 begrenzt – es dient als Listenansicht/Übersicht für die Mitarbeiter in der
@@ -444,6 +523,136 @@ Fehlerzuordnung) sind entsprechend keine Lücken *dieses Moduls*, sondern liegen
 außerhalb seines Scopes; sie wären, falls überhaupt, Sache eines eigenen
 Beleg-/Auftragsmoduls. Geräte-Stammdaten (GID/Gruppe/IdentNr) bleiben davon
 unabhängig eine durchgängige Lücke über alle bisher verglichenen Masken hinweg.
+
+### Kostenvoranschlag-Tab: Kalkulation nach Bearbeitungsphase
+
+Validiert 2026-09-09 anhand eines Live-Screenshots plus DFM-Feldbindungen aus
+der aktuellen EXE. Der Tab zeigt fünf Kalkulationszeilen (Befundung,
+Reparatur, Reinigung, Abwicklung, Endprüfung), je mit den Spalten Std./
+Faktor/Wert. Die DFM-Steuerelemente sind direkt an `REPKOPF` gebunden
+(`DataSource: dsRepKopf`), Feld für Feld nachweisbar am Präfix-Muster der
+Steuerelementnamen (`dbebs`/`dbebf`/`dbebw` = Befundung, `dbers`/… =
+Reparatur, usw.):
+
+| UI-Zeile | Std. | Faktor | Wert |
+|---|---|---|---|
+| Befundung | `REPKOPF.KST1` | `REPKOPF.KFKT1` | `REPKOPF.KWERT1` |
+| Reparatur | `KST2` | `KFKT2` | `KWERT2` |
+| Reinigung | `KST3` | `KFKT3` | `KWERT3` |
+| Abwicklung | `KST4` | `KFKT4` | `KWERT4` |
+| Endprüfung | `KST5` | `KFKT5` | `KWERT5` |
+
+Das erklärt die fünf `KST`/`KFKT`/`KWERT`-Slots im Schema: Stunden × Faktor
+(Stundensatz-Multiplikator) = Wert, separat je Bearbeitungsphase.
+
+Der separate Block "Endprüfung: von … am …" (unterhalb der Kalkulation, mit
+eigener Checkbox) ist **nicht** dieselbe Endprüfung-Zeile, sondern bindet an
+`BELEG.ENDPRUEFUSER` ("von") und `BELEG.ENDPRUEFDATUM` ("am") – wer/wann die
+Endprüfung am Beleg insgesamt durchgeführt hat, unabhängig vom Kalkulationswert.
+
+Das Positionsgrid darunter ist strukturell identisch zum Material-Tab
+(`BELEGPOS`), mit zwei zusätzlichen, dort nicht vorhandenen Flags:
+
+| Feld | DB-Bezug | Anmerkung |
+|---|---|---|
+| "Rep. Lager" | `BELEGPOS.REPLAGER` | bestätigt (Feldname `replager`, mehrfach in DFM-Bindungen); im 2011-Schema noch nicht vorhanden – spätere Ergänzung |
+| "Übern." | vermutlich `REPAUFTRAG.UEBERNOMMEN` | kein direktes `BELEGPOS`-Feld gefunden; `REPAUFTRAG.UEBERNOMMEN` existiert und wird aktiv abgefragt. Plausibelste Deutung: ob diese Kostenvoranschlag-Position in den tatsächlichen Auftrag übernommen wurde – aber nur auf Ebene des Reparaturauftrags nachgewiesen, nicht zweifelsfrei auf Positionsebene |
+
+Odoo hat für dieses phasenweise Stunden×Faktor-Kalkulationsmodell kein
+natives Äquivalent – `repair.order.line` kennt Menge×Einzelpreis, aber keine
+Aufteilung der Gesamtkalkulation nach Bearbeitungsphasen mit eigenem
+Stundensatz-Faktor je Phase.
+
+### Versand-Eingang-Tab: Frachtdaten der eingehenden Sendung
+
+Validiert 2026-09-09 über Live-Screenshot + DFM-Feldbindungen. Bildet den
+Wareneingang der Reparatursendung ab (Frachtdaten des vom Kunden
+eintreffenden Pakets), vollständig auf `REPKOPF` gebunden:
+
+| UI-Feld | DB-Feld | Bindungsnachweis |
+|---|---|---|
+| Kundenlieferschein Nr. | `REPKOPF.KDLSNR` (`VARCHAR30`) | DFM-Referenz `KDLSNR` |
+| Spedition | `REPKOPF.SPEDITION` (`CHAR40`) | `dbeSPEDITION` → `DataField SPEDITION` |
+| Speditions-Nr. / Frachtbrief-Nr. | `REPKOPF.SPEDNR` (`CHAR40`) | `dbeSPEDNR` → `DataField SPEDNR` |
+| Datum | `REPKOPF.VEDATUM` | `dbeVEDATUM` → `DataField VEDATUM` |
+| Transportkosten | `REPKOPF.TRANSPORT` (`FLOAT`) | `dbeTransport` → `DataField Transport` |
+| "frei" / "unfrei" (Checkboxen) | **beide** `REPKOPF.FREI` | `dbcfrei`/`dbcunfrei` binden auf dasselbe Feld – zwei sich gegenseitig ausschließende Ansichten eines Boolean-Felds, keine zwei getrennten Felder |
+| Sendungsnummer | `REPKOPF.SENDNUMMER` (`CHAR15`) | `dbeSENDNUMMER` → `DataField SENDNUMMER` |
+| Ort | `REPKOPF.SENDORT` (`CHAR40`) | `dbeSENDORT` → `DataField SENDORT` |
+
+Live-Beispiel: Kundenlieferschein-Nr. `LS 56010832/104` – gleiches
+Präfix-/Nummernmuster wie die Bestellnummer `LS 56010756/104` des
+Hauptbelegs desselben Kunden (Railpool GmbH), deutet auf einen gemeinsamen
+kundeninternen Belegkreis hin.
+
+Odoo-Bezug: am ehesten Trackingfelder auf `stock.picking` (Spediteur,
+Sendungsnummer), aber ohne eigenes Frachtkosten-Feld und ohne die
+frei/unfrei-Frachtbedingung als eigenes Konzept.
+
+### Reparatur-Beschr.-Tab: drei Textfelder für drei Erzählperspektiven
+
+Validiert 2026-09-09 über Live-Screenshot + DFM-Feldbindungen. Auffälligstes
+Muster: **massive Feldwiederverwendung** – von acht sichtbaren UI-Feldern
+sind drei an inhaltlich fachfremde `REPKOPF`-Spalten gebunden.
+
+| UI-Feld | DB-Feld | Bindungsnachweis | Hinweis |
+|---|---|---|---|
+| Meldungs-Nr. / Ausfall-Nr. (ein Eingabefeld) | `REPKOPF.TECHNIKER` | `dbeTECHNIKER` → `DataField TECHNIKER` | wiederverwendet – Feld heißt fachlich "Techniker" |
+| FAM - Nummer | `REPKOPF.FAMNR` | `dbeFamnr` → `DataField Famnr` | direkt |
+| Herkunft-Ort | `REPKOPF.ANREDE` | `dbeHerkunft` → `DataField Anrede` | **wiederverwendet** – Feld heißt fachlich "Anrede" |
+| Herkunft-Einheit | `REPKOPF.RARTIKELNR` | `DBEdit15` → `DataField RARTIKELNR` | wiederverwendet |
+| Ausbaudatum | `REPKOPF.AUSBAUDATM` | `dbeAUSBAUDATM` → `DataField AUSBAUDATM` | direkt |
+| Einsatzzeit | `REPKOPF.EINSATZZEIT` | `dbeEINSATZZEIT` → `DataField EINSATZZEIT` | direkt |
+| Schlagwort (Dropdown) | `REPKOPF.SCHLAGWORT` | `dbcschlagwort` → `DataField Schlagwort` | direkt |
+| Bezugsnummer | `REPKOPF.USTIDENT` | `DBEdit17` → `DataField USTIDENT` | **wiederverwendet** – Feld heißt fachlich "USt-IdNr." |
+| K-Name (Einzeilenfeld) | `REPKOPF.KNAME` | `DBEdit19` → `DataField KName` | direkt |
+| Fehlerbeschreibung aus Meldung (Memo, befüllt) | `REPKOPF.AUSFALL` | `dbmAUSFALL` → `DataField AUSFALL` | Kundenmeldungstext |
+| zweite Memo-Box (leer im Beispiel) | `REPKOPF.FEHLER` | `dbmFEHLER` → `DataField FEHLER` | eigene technische Fehleranalyse |
+| *(im Screenshot nicht sicher zuordenbar, vermutlich die große Fläche rechts)* | `REPKOPF.REPBESCHREIB` | `dbmREPBESCHREIB` → `DataField REPBESCHREIB` | eigentliche Reparaturbeschreibung, namensgebend für den Tab |
+
+Funktional trennt der Tab drei Erzählperspektiven auf denselben Vorgang:
+was der Kunde gemeldet hat (`AUSFALL`), was die eigene Diagnose ergibt
+(`FEHLER`), und was tatsächlich repariert wurde/wird (`REPBESCHREIB`) – dazu
+Meldungs-Metadaten (wer/wo/wann/Referenz). Odoo hätte dafür `description`
+(ein Feld) plus ggf. Chatter-Notizen, aber keine strukturell getrennten
+Kunde-/Diagnose-/Reparatur-Textfelder.
+
+### Geräte-Info-Tab: Reparaturhistorie + generisches Anhänge-/Notizsystem
+
+Validiert 2026-09-09 über Live-Screenshot + Live-SQL. Drei Teile mit
+unterschiedlicher Datenherkunft:
+
+**Links, "Reparatur"/"Datum":** echte Service-Historie dieses Geräts —
+bestätigt über eine Query, die exakt Beleg/RepKopf/RepAuftrag/RepArtikel
+für dieses `GeraetID` zusammenführt:
+
+```sql
+Select B.OID, Name1, Ort, Nummer, AdrNr, Belegdatum, Gedruckt, Abgeschlossen,
+  Hauptauftrag, Liefstrasse, Orderzaehl, Ordernr
+from Beleg B, Repkopf K
+  left join RepAuftrag A on A.Belegnummer = K.Belegnummer
+  left join RepArtikel R on R.OID = A.Geraetid
+WHERE B.Belegart = 154 And K.Belegnummer = B.Nummer and B.Abgeschlossen = 'F'
+Order By Nummer DESC
+```
+
+**Mitte, "Dokument":** **kein** reparaturspezifisches Objekt, sondern die
+anwendungsweite, polymorphe Anhänge-Tabelle `InfoDokumente`
+(`ModulID`+`ObjektID` als generischer Fremdschlüssel, `BenutzerID`+`GlobalU`
+für Sichtbarkeit, `Pfad` als Dateireferenz) – vermutlich auch in anderen
+Modulen (Artikel, Adressen …) wiederverwendet, nicht auf Reparatur/Geräte
+beschränkt.
+
+**Rechts, unbeschriftet:** vermutlich `InfoNotizen` (gleiches
+`ModulID`/`ObjektID`/`GlobalU`-Schema wie `InfoDokumente`, nur `Notiz`-Text
+statt Dateipfad) – strukturell plausibel, aber keine Query gefunden, die
+eindeutig dieses dritte Grid referenziert.
+
+**Bemerkenswert:** Das `InfoDokumente`/`InfoNotizen`-Muster (generische
+Tabelle, polymorpher Schlüssel `ModulID`+`ObjektID`) ist einer der wenigen
+Fälle in diesem gesamten Vergleich, wo das Altsystem bereits **näher an
+Odoos Architektur liegt als umgekehrt** – vergleichbar mit `ir.attachment`
+(`res_model`+`res_id`), nicht mit einer Odoo-Lücke.
 
 ## Kernbeobachtung
 
