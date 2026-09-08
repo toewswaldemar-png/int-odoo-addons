@@ -16,10 +16,9 @@
 
 **Noch NICHT passiert:**
 - Kein Rollout auf die Produktivinstanz — auf HM-SRV läuft weiterhin die alte, vom Repo entkoppelte Version unter dem historischen Modulnamen `hm_filemanager` (19.0.1.0.0, ohne Phase 1–5). Das produktive Dockerfile (`/mnt/user/appdata/odoo/Dockerfile`) hat `mutagen` noch nicht installiert.
-- `int_filemanager.watcher_enabled`-Kill-Switch fehlt weiterhin (siehe Rollout-Abschnitt unten).
 - Bei einem künftigen Upgrade einer bereits laufenden Installation (nicht bei einer Erstinstallation) muss `rebuild_rules` einmalig manuell angestoßen werden - `post_init_hook` feuert laut Odoo-Quellcode nur bei `update_operation == 'install'`, nicht bei `'upgrade'` (siehe Phase-5-Ist-Stand unten).
 
-**Wie weiterarbeiten:** Der Plan ist inhaltlich vollständig umgesetzt. Offen bleibt ausschließlich der eigentliche Produktiv-Rollout (siehe Verifikation & Rollout unten) - dafür vorher den Kill-Switch nachziehen und die dort dokumentierte Checkliste durchgehen.
+**Wie weiterarbeiten:** Der Plan ist inhaltlich vollständig umgesetzt. Offen bleibt ausschließlich der eigentliche Produktiv-Rollout (siehe Verifikation & Rollout unten) - der `watcher_enabled`-Kill-Switch aus der dortigen Checkliste ist implementiert (`watcher.py`, `_watcher_enabled()`/`_run_watcher()`), noch nicht aber gegen eine Wegwerf-Instanz getestet.
 
 ---
 
@@ -227,10 +226,10 @@ access_int_filemanager_file_portal,int_filemanager.file.portal,model_int_fileman
 
 - `TransactionCase` + `HttpCase` — **bestätigtes Vorgehen** (siehe Phase-1–3-Umsetzung): Wegwerf-DB + eigenes Docker-Image (Basis-Image-Digest + `pyjwt` für `onlyoffice_odoo`) auf HM-SRV, `--test-enable --test-tags=/int_filemanager`, danach vollständig entfernt (DB drop, Image rmi, temp-Dateien). Kein Test lief je gegen die Produktiv-DB `odoodb`.
 - **Pre-Flight** pro Phase gegen eine wegwerfbare Testinstanz, zusätzlich für Phase 4: Dockerfile-Build + `mutagen`-Smoke-Test.
-- Vor jedem Modul-Update auf Produktiv: DB-Backup, Teilbaum-Backup, Watcher-Kill-Switch (noch nicht implementiert — `int_filemanager.watcher_enabled`-Config-Flag fehlt noch), dokumentiertes Rollback (Backup zurückspielen + Code-Revert), Integritätsvergleich vor/nach Scan.
+- Vor jedem Modul-Update auf Produktiv: DB-Backup, Teilbaum-Backup, Watcher-Kill-Switch (`int_filemanager.watcher_enabled` auf `false` setzen, Odoo neu starten — der Watcher liest das Flag nur beim Prozessstart in `_run_watcher()`, siehe unten), dokumentiertes Rollback (Backup zurückspielen + Code-Revert), Integritätsvergleich vor/nach Scan.
 - Kein automatisiertes Browser-Verifizieren ohne expliziten Wunsch.
 
 ### Bekannte Lücken aus dem Rollout-Abschnitt, noch nicht umgesetzt
-- `int_filemanager.watcher_enabled`-Kill-Switch (`start_watcher()` soll ihn vor dem Start prüfen) ist im Plan vorgesehen, aber im Code noch nicht vorhanden — vor dem ersten Produktiv-Rollout nachziehen, damit der Watcher während eines Modul-Updates kontrolliert gestoppt werden kann.
+- ~~`int_filemanager.watcher_enabled`-Kill-Switch~~ **implementiert (2026-09-08):** `_watcher_enabled(env)` in `watcher.py` liest den `ir.config_parameter` (Default `"true"`, jeder Wert außer `false`/`0`/`no`/`off` gilt als aktiviert). Geprüft wird er in `_run_watcher()`, nicht in `start_watcher()` selbst — beim `post_load`-Aufruf von `start_watcher()` steht noch kein DB-Cursor zur Verfügung (`Registry(dbname)` ist zu diesem Zeitpunkt noch nicht fertig geladen, siehe Kommentar in `_run_watcher()`). Die Prüfung sitzt deshalb in derselben Retry-Schleife, die schon `get_root()` auflöst, direkt danach vor `_watch_loop()`. Folge: das Flag wirkt erst nach einem Odoo-Neustart, kein Live-Toggle im laufenden Prozess — genau der im Rollout-Ablauf oben vorgesehene Ablauf (Flag setzen → Neustart fürs Update → Flag zurücksetzen → erneuter Neustart). Unit-Test für die reine Entscheidungsfunktion in `tests/test_watcher.py`; noch nicht gegen eine echte Wegwerf-Odoo-Instanz verifiziert (kein Docker/SSH-Zugriff in dieser Session).
 - Der neue `post_init_hook` (Phase 5, regeneriert die ACL-`domain_force` bei Installation) feuert nur bei einer Erstinstallation, nicht bei einem Upgrade einer bereits laufenden Installation (Odoo-Verhalten, siehe Phase-5-Ist-Stand). Da der eigentliche Produktiv-Rollout ohnehin ein Neu-Install unter dem Namen `int_filemanager` wäre (nicht ein Upgrade der alten `hm_filemanager`), ist das für den aktuell absehbaren Rollout-Weg unkritisch — falls stattdessen doch upgegradet wird: einmalig `env["int_filemanager.protected_folder"]._rebuild_acl_rules()` manuell ausführen.
 

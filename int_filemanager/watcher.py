@@ -158,11 +158,22 @@ def _watch_loop(root_abs):
             _logger.exception("int_filemanager watcher: error processing event batch")
 
 
+def _watcher_enabled(env):
+    # Enabled unless explicitly turned off, so an unset parameter (the
+    # common case) never accidentally disables production indexing - and a
+    # capitalized "True"/"1" typed by hand in Settings still means enabled.
+    value = env["ir.config_parameter"].sudo().get_param("int_filemanager.watcher_enabled", "true")
+    return str(value).strip().lower() not in ("false", "0", "no", "off")
+
+
 def _run_watcher():
     # post_load fires while Registry.new(dbname) for this very database is
     # still on the call stack - reentering Registry(dbname) here immediately
     # returns a not-yet-finished registry. Retry until module loading has
-    # actually finished and cached the ready registry.
+    # actually finished and cached the ready registry. The
+    # int_filemanager.watcher_enabled check has to live here rather than in
+    # start_watcher() for the same reason: no cursor is available yet at
+    # post_load time, only once this retry loop gets a working registry.
     dbname = config["db_name"][0]
     root = None
     for _attempt in range(30):
@@ -170,6 +181,11 @@ def _run_watcher():
             reg = Registry(dbname)
             with reg.cursor() as cr:
                 env = Environment(cr, SUPERUSER_ID, {})
+                if not _watcher_enabled(env):
+                    _logger.info(
+                        "int_filemanager: watcher disabled via int_filemanager.watcher_enabled, not starting"
+                    )
+                    return
                 root = get_root(env)
             break
         except Exception:
@@ -199,7 +215,10 @@ def start_watcher():
       gevent's event loop - verified empirically, the observer starts but
       silently never receives a single event. Needs a real greenlet
       (gevent.spawn) instead. The other, non-evented workers under
-      workers>0 skip starting anything at all."""
+      workers>0 skip starting anything at all.
+
+    The int_filemanager.watcher_enabled kill switch is checked later, inside
+    _run_watcher() once a cursor is available - not here, see its docstring."""
     global _started
     workers = config["workers"] or 0
     if workers > 0 and not getattr(odoo, "evented", False):
