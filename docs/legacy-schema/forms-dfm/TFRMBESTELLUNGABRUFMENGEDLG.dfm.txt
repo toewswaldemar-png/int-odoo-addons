@@ -1,0 +1,48 @@
+object frmBestellungAbrufMengeDlg: TfrmBestellungAbrufMengeDlg
+  Left = 929
+  Top = 349
+  BorderStyle = 'bsDialog'
+  Caption = 'Menge eintragen'
+  ClientHeight = 113
+  ClientWidth = 236
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  OnActivate = 'FormActivate'
+  DesignSize = (236 113)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 66
+    Top = 79
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 146
+    Top = 79
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object ledMenge: TLabeledEdit
+    Left = 24
+    Top = 32
+    Width = 121
+    Height = 21
+    EditLabel.Width = 33
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Menge'
+    TabOrder = 2
+  end
+end

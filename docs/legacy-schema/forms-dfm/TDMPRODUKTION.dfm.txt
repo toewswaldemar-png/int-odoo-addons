@@ -1,0 +1,1308 @@
+object dmProduktion: TdmProduktion
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 807
+  Top = 178
+  Height = 485
+  Width = 503
+  object cdsProduktion: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    AfterPost = 'cdsProduktionAfterPost'
+    BeforeDelete = 'cdsProduktionBeforeDelete'
+    AfterScroll = 'cdsProduktionAfterScroll'
+    OnReconcileError = 'cdsProduktionReconcileError'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdMaster'
+    WriteLastSQL = False
+    Left = 31
+    Top = 8
+    object cdsProduktionprodstatus: TStringField
+      FieldKind = 'fkLookup'
+      FieldName = 'prodstatus'
+      LookupDataSet = 'cdsKonststatus'
+      LookupKeyFields = 'oid'
+      LookupResultField = 'Bezeichnung'
+      KeyFields = 'status'
+      Size = 30
+      Lookup = True
+    end
+    object cdsProduktionstatus: TIntegerField
+      FieldName = 'status'
+    end
+    object cdsProduktionoid: TIntegerField
+      FieldName = 'oid'
+    end
+    object cdsProduktionkw: TIntegerField
+      FieldName = 'kw'
+      OnChange = 'cdsProduktionkwChange'
+    end
+    object cdsProduktionbemerkung: TStringField
+      FieldName = 'bemerkung'
+      Size = 60
+    end
+    object cdsProduktionjahr: TIntegerField
+      FieldName = 'jahr'
+    end
+    object cdsProduktionfertig: TIntegerField
+      FieldName = 'fertig'
+    end
+    object cdsProduktionartoid: TIntegerField
+      FieldName = 'artoid'
+    end
+    object cdsProduktionbeginndatum: TSQLTimeStampField
+      FieldName = 'beginndatum'
+      OnChange = 'cdsProduktionbeginndatumChange'
+    end
+    object cdsProduktionauftragoid: TIntegerField
+      FieldName = 'auftragoid'
+    end
+    object cdsProduktionendedatum: TSQLTimeStampField
+      FieldName = 'endedatum'
+    end
+    object cdsProduktionmenge: TIntegerField
+      FieldName = 'menge'
+    end
+    object cdsProduktionprodStuecknummer: TStringField
+      FieldKind = 'fkLookup'
+      FieldName = 'prodStuecknummer'
+      LookupDataSet = 'cdsProdStueckliste'
+      LookupKeyFields = 'OID'
+      LookupResultField = 'Nummer'
+      KeyFields = 'artoid'
+      Lookup = True
+    end
+    object cdsProduktionDruckStatus: TStringField
+      FieldName = 'DruckStatus'
+      Size = 30
+    end
+    object cdsProduktionBemerkung2: TStringField
+      FieldName = 'Bemerkung2'
+      Size = 60
+    end
+    object cdsProduktionlfndr: TIntegerField
+      FieldName = 'lfndr'
+    end
+    object cdsProduktionfreizelle: TIntegerField
+      FieldName = 'freizelle'
+    end
+    object cdsProduktionprodStckBez1: TStringField
+      FieldKind = 'fkLookup'
+      FieldName = 'prodStckBez1'
+      LookupDataSet = 'cdsProdStueckliste'
+      LookupKeyFields = 'OID'
+      LookupResultField = 'Bezeichnung1'
+      KeyFields = 'artoid'
+      Size = 80
+      Lookup = True
+    end
+  end
+  object cdsProdSchritte: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    OnNewRecord = 'cdsProdSchritteNewRecord'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdDetail'
+    WriteLastSQL = False
+    Left = 32
+    Top = 72
+  end
+  object cdsProduktionBereit: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    BeforeOpen = 'cdsProduktionBereitBeforeOpen'
+    OnReconcileError = 'cdsProduktionBereitReconcileError'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 127
+    Top = 8
+    object cdsProduktionBereitprodstatus: TStringField
+      FieldKind = 'fkLookup'
+      FieldName = 'prodstatus'
+      LookupDataSet = 'cdsKonstStatusBereit'
+      LookupKeyFields = 'oid'
+      LookupResultField = 'Bezeichnung'
+      KeyFields = 'status'
+      Size = 30
+      Lookup = True
+    end
+    object cdsProduktionBereitstatus: TIntegerField
+      FieldName = 'status'
+    end
+    object cdsProduktionBereitoid: TIntegerField
+      FieldName = 'oid'
+    end
+    object cdsProduktionBereitkw: TIntegerField
+      FieldName = 'kw'
+      OnChange = 'cdsProduktionBereitkwChange'
+    end
+    object cdsProduktionBereitbemerkung: TStringField
+      FieldName = 'bemerkung'
+      Size = 60
+    end
+    object cdsProduktionBereitjahr: TIntegerField
+      FieldName = 'jahr'
+    end
+    object cdsProduktionBereitartoid: TIntegerField
+      FieldName = 'artoid'
+    end
+    object cdsProduktionBereitbeginndatum: TSQLTimeStampField
+      FieldName = 'beginndatum'
+      OnChange = 'cdsProduktionBereitbeginndatumChange'
+    end
+    object cdsProduktionBereitauftragoid: TIntegerField
+      FieldName = 'auftragoid'
+    end
+    object cdsProduktionBereitendedatum: TSQLTimeStampField
+      FieldName = 'endedatum'
+    end
+    object cdsProduktionBereitmenge: TIntegerField
+      FieldName = 'menge'
+    end
+    object cdsProduktionBereitprodAuftragName: TStringField
+      FieldKind = 'fkLookup'
+      FieldName = 'prodAuftragName'
+      LookupDataSet = 'cdsResAuftrag'
+      LookupKeyFields = 'OID'
+      LookupResultField = 'Name1'
+      KeyFields = 'auftragoid'
+      Size = 40
+      Lookup = True
+    end
+    object cdsProduktionBereitprodStuecknummer: TStringField
+      FieldKind = 'fkLookup'
+      FieldName = 'prodStuecknummer'
+      LookupDataSet = 'cdsResStueckliste'
+      LookupKeyFields = 'OID'
+      LookupResultField = 'Nummer'
+      KeyFields = 'artoid'
+      Lookup = True
+    end
+    object cdsProduktionBereitprodAuftragNummer: TIntegerField
+      FieldKind = 'fkLookup'
+      FieldName = 'prodAuftragNummer'
+      LookupDataSet = 'cdsResAuftrag'
+      LookupKeyFields = 'OID'
+      LookupResultField = 'Nummer'
+      KeyFields = 'auftragoid'
+      Lookup = True
+    end
+    object cdsProduktionBereitprodStckBez1: TStringField
+      FieldKind = 'fkLookup'
+      FieldName = 'prodStckBez1'
+      LookupDataSet = 'cdsResStueckliste'
+      LookupKeyFields = 'OID'
+      LookupResultField = 'Bezeichnung1'
+      KeyFields = 'artoid'
+      Size = 80
+      Lookup = True
+    end
+    object cdsProduktionBereitproAuftraghauptauftrag: TStringField
+      FieldKind = 'fkLookup'
+      FieldName = 'proAuftraghauptauftrag'
+      LookupDataSet = 'cdsProdAuftrag'
+      LookupKeyFields = 'OID'
+      LookupResultField = 'Hauptauftrag'
+      KeyFields = 'auftragoid'
+      Lookup = True
+    end
+    object cdsProduktionBereitnoSplit: TStringField
+      FieldName = 'noSplit'
+      EditMask = '>c;_'
+      Size = 1
+    end
+    object cdsProduktionBereitEinlastdelta: TIntegerField
+      FieldName = 'Einlastdelta'
+    end
+    object cdsProduktionBereitDurchlauf: TIntegerField
+      FieldName = 'Durchlauf'
+    end
+    object cdsProduktionBereitmaxBeschaffung: TIntegerField
+      FieldName = 'maxBeschaffung'
+    end
+    object cdsProduktionBereitUebernommen: TIntegerField
+      FieldName = 'Uebernommen'
+    end
+  end
+  object cdsStueckArtikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 128
+    Top = 72
+  end
+  object cdsProdArtikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    BeforeOpen = 'cdsProdArtikelBeforeOpen'
+    AfterOpen = 'cdsProdArtikelAfterOpen'
+    OnReconcileError = 'cdsProdArtikelReconcileError'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 223
+    Top = 8
+  end
+  object cdsReserviert: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 31
+    Top = 136
+  end
+  object cdsFertigung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 127
+    Top = 136
+  end
+  object cdsFehlmengen: TClientDataSetHit
+    Aggregates = <
+    >
+    DisableStringTrim = True
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 223
+    Top = 184
+    object cdsFehlmengenStueckOID: TIntegerField
+      FieldName = 'StueckOID'
+      Visible = False
+    end
+    object cdsFehlmengenArtnr: TStringField
+      DisplayWidth = 20
+      FieldName = 'Artnr'
+      Size = 30
+    end
+    object cdsFehlmengenArttext: TStringField
+      FieldName = 'Arttext'
+      Size = 60
+    end
+    object cdsFehlmengenArtoid: TIntegerField
+      FieldName = 'Artoid'
+      Visible = False
+    end
+    object cdsFehlmengenSollmenge: TFloatField
+      FieldName = 'Sollmenge'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlmengenBestand: TFloatField
+      FieldName = 'Bestand'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlmengenBestellt: TFloatField
+      FieldName = 'Bestellt'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlmengenkw: TIntegerField
+      FieldName = 'kw'
+    end
+    object cdsFehlmengenjahr: TIntegerField
+      FieldName = 'jahr'
+    end
+    object cdsFehlmengenAuftrag: TIntegerField
+      FieldName = 'Auftrag'
+    end
+    object cdsFehlmengenOID: TIntegerField
+      FieldName = 'OID'
+      Visible = False
+    end
+    object cdsFehlmengenBestellkw: TIntegerField
+      FieldName = 'Bestellkw'
+    end
+    object cdsFehlmengenBestelljahr: TIntegerField
+      FieldName = 'Bestelljahr'
+    end
+    object cdsFehlmengenABTermin: TStringField
+      FieldName = 'ABTermin'
+      Size = 10
+    end
+    object cdsFehlmengenProdJahr: TIntegerField
+      FieldName = 'ProdJahr'
+    end
+    object cdsFehlmengenprodkw: TIntegerField
+      FieldName = 'prodkw'
+    end
+    object cdsFehlmengenProdReserviert: TFloatField
+      FieldName = 'ProdReserviert'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlmengenAutoOID: TIntegerField
+      FieldName = 'AutoOID'
+    end
+    object cdsFehlmengenVE: TFloatField
+      FieldName = 'VE'
+    end
+  end
+  object cdsReserviertArtikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 32
+    Top = 184
+  end
+  object cdsFehlKWJahr: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 128
+    Top = 184
+    object cdsFehlKWJahrArtnr: TStringField
+      DisplayWidth = 20
+      FieldName = 'Artnr'
+      Size = 30
+    end
+    object cdsFehlKWJahrArttext: TStringField
+      FieldName = 'Arttext'
+      Size = 60
+    end
+    object cdsFehlKWJahrArtoid: TIntegerField
+      FieldName = 'Artoid'
+    end
+    object cdsFehlKWJahrSollmenge: TFloatField
+      FieldName = 'Sollmenge'
+    end
+    object cdsFehlKWJahrBestand: TFloatField
+      FieldName = 'Bestand'
+    end
+    object cdsFehlKWJahrBestellt: TFloatField
+      FieldName = 'Bestellt'
+    end
+    object cdsFehlKWJahrkw: TIntegerField
+      FieldName = 'kw'
+    end
+    object cdsFehlKWJahrjahr: TIntegerField
+      FieldName = 'jahr'
+    end
+    object cdsFehlKWJahrAuftrag: TIntegerField
+      FieldName = 'Auftrag'
+    end
+    object cdsFehlKWJahrOID: TIntegerField
+      FieldName = 'OID'
+    end
+    object cdsFehlKWJahrBestellkw: TIntegerField
+      FieldName = 'Bestellkw'
+    end
+    object cdsFehlKWJahrBestelljahr: TIntegerField
+      FieldName = 'Bestelljahr'
+    end
+    object cdsFehlKWJahrABTermin: TStringField
+      FieldName = 'ABTermin'
+      Size = 10
+    end
+    object cdsFehlKWJahrkw1: TIntegerField
+      FieldName = 'kw1'
+    end
+    object cdsFehlKWJahrJahr1: TIntegerField
+      FieldName = 'Jahr1'
+    end
+    object cdsFehlKWJahrBestand1: TFloatField
+      FieldName = 'Bestand1'
+    end
+    object cdsFehlKWJahrBestell1: TFloatField
+      FieldName = 'Bestell1'
+    end
+    object cdsFehlKWJahrRest1: TFloatField
+      FieldName = 'Rest1'
+    end
+    object cdsFehlKWJahrkw2: TIntegerField
+      FieldName = 'kw2'
+    end
+    object cdsFehlKWJahrJahr2: TIntegerField
+      FieldName = 'Jahr2'
+    end
+    object cdsFehlKWJahrBestand2: TFloatField
+      FieldName = 'Bestand2'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrBestell2: TFloatField
+      FieldName = 'Bestell2'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrRest2: TFloatField
+      FieldName = 'Rest2'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw3: TIntegerField
+      FieldName = 'kw3'
+    end
+    object cdsFehlKWJahrJahr3: TIntegerField
+      FieldName = 'Jahr3'
+    end
+    object cdsFehlKWJahrBestand3: TFloatField
+      FieldName = 'Bestand3'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrBestell3: TFloatField
+      FieldName = 'Bestell3'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrRest3: TFloatField
+      FieldName = 'Rest3'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw4: TIntegerField
+      FieldName = 'kw4'
+    end
+    object cdsFehlKWJahrJahr4: TIntegerField
+      FieldName = 'Jahr4'
+    end
+    object cdsFehlKWJahrBestand4: TFloatField
+      FieldName = 'Bestand4'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrBestell4: TFloatField
+      FieldName = 'Bestell4'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrRest4: TFloatField
+      FieldName = 'Rest4'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw5: TIntegerField
+      FieldName = 'kw5'
+    end
+    object cdsFehlKWJahrJahr5: TIntegerField
+      FieldName = 'Jahr5'
+    end
+    object cdsFehlKWJahrBestand5: TFloatField
+      FieldName = 'Bestand5'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrBestell5: TFloatField
+      FieldName = 'Bestell5'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrRest5: TFloatField
+      FieldName = 'Rest5'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw6: TIntegerField
+      FieldName = 'kw6'
+    end
+    object cdsFehlKWJahrJahr6: TIntegerField
+      FieldName = 'Jahr6'
+    end
+    object cdsFehlKWJahrBestand6: TFloatField
+      FieldName = 'Bestand6'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrBestell6: TFloatField
+      FieldName = 'Bestell6'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrRest6: TFloatField
+      FieldName = 'Rest6'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw7: TIntegerField
+      FieldName = 'kw7'
+    end
+    object cdsFehlKWJahrJahr7: TIntegerField
+      FieldName = 'Jahr7'
+    end
+    object cdsFehlKWJahrBestand7: TFloatField
+      FieldName = 'Bestand7'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrBestell7: TFloatField
+      FieldName = 'Bestell7'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrRest7: TFloatField
+      FieldName = 'Rest7'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw8: TIntegerField
+      FieldName = 'kw8'
+    end
+    object cdsFehlKWJahrJahr8: TIntegerField
+      FieldName = 'Jahr8'
+    end
+    object cdsFehlKWJahrBestand8: TFloatField
+      FieldName = 'Bestand8'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrBestell8: TFloatField
+      FieldName = 'Bestell8'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrRest8: TFloatField
+      FieldName = 'Rest8'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw9: TIntegerField
+      FieldName = 'kw9'
+    end
+    object cdsFehlKWJahrjahr9: TIntegerField
+      FieldName = 'jahr9'
+    end
+    object cdsFehlKWJahrBestand9: TFloatField
+      FieldName = 'Bestand9'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrBestell9: TFloatField
+      FieldName = 'Bestell9'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrrest9: TFloatField
+      FieldName = 'rest9'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw10: TIntegerField
+      FieldName = 'kw10'
+    end
+    object cdsFehlKWJahrjahr10: TIntegerField
+      FieldName = 'jahr10'
+    end
+    object cdsFehlKWJahrbestand10: TFloatField
+      FieldName = 'bestand10'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrbestell10: TFloatField
+      FieldName = 'bestell10'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrrest10: TFloatField
+      FieldName = 'rest10'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw11: TIntegerField
+      FieldName = 'kw11'
+    end
+    object cdsFehlKWJahrjahr11: TIntegerField
+      FieldName = 'jahr11'
+    end
+    object cdsFehlKWJahrbestand11: TFloatField
+      FieldName = 'bestand11'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrrest11: TFloatField
+      FieldName = 'rest11'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrkw12: TIntegerField
+      FieldName = 'kw12'
+    end
+    object cdsFehlKWJahrjahr12: TIntegerField
+      FieldName = 'jahr12'
+    end
+    object cdsFehlKWJahrbestand12: TFloatField
+      FieldName = 'bestand12'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrbestell12: TFloatField
+      FieldName = 'bestell12'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrrest12: TFloatField
+      FieldName = 'rest12'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrbestell11: TFloatField
+      FieldName = 'bestell11'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd1: TFloatField
+      FieldName = 'Prod1'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd2: TFloatField
+      FieldName = 'Prod2'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd3: TFloatField
+      FieldName = 'Prod3'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd4: TFloatField
+      FieldName = 'Prod4'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd5: TFloatField
+      FieldName = 'Prod5'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd6: TFloatField
+      FieldName = 'Prod6'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd7: TFloatField
+      FieldName = 'Prod7'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd8: TFloatField
+      FieldName = 'Prod8'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd9: TFloatField
+      FieldName = 'Prod9'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd10: TFloatField
+      FieldName = 'Prod10'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd11: TFloatField
+      FieldName = 'Prod11'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProd12: TFloatField
+      FieldName = 'Prod12'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlKWJahrProdreserviert: TFloatField
+      FieldName = 'Prodreserviert'
+    end
+  end
+  object cdsFehlArtikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 319
+    Top = 184
+    object cdsFehlArtikelArtnr: TStringField
+      DisplayWidth = 20
+      FieldName = 'Artnr'
+      Size = 30
+    end
+    object cdsFehlArtikelArttext: TStringField
+      FieldName = 'Arttext'
+      Size = 60
+    end
+    object cdsFehlArtikelArtoid: TIntegerField
+      FieldName = 'Artoid'
+    end
+    object cdsFehlArtikelSollmenge: TFloatField
+      FieldName = 'Sollmenge'
+    end
+    object cdsFehlArtikelBestand: TFloatField
+      FieldName = 'Bestand'
+    end
+    object cdsFehlArtikelBestellt: TFloatField
+      FieldName = 'Bestellt'
+    end
+    object cdsFehlArtikelkw: TIntegerField
+      FieldName = 'kw'
+    end
+    object cdsFehlArtikeljahr: TIntegerField
+      FieldName = 'jahr'
+    end
+    object cdsFehlArtikelAuftrag: TIntegerField
+      FieldName = 'Auftrag'
+    end
+    object cdsFehlArtikelOID: TIntegerField
+      FieldName = 'OID'
+    end
+    object cdsFehlArtikelBestellkw: TIntegerField
+      FieldName = 'Bestellkw'
+    end
+    object cdsFehlArtikelBestelljahr: TIntegerField
+      FieldName = 'Bestelljahr'
+    end
+    object cdsFehlArtikelABTermin: TStringField
+      FieldName = 'ABTermin'
+      Size = 10
+    end
+    object cdsFehlArtikelkw1: TIntegerField
+      FieldName = 'kw1'
+    end
+    object cdsFehlArtikelJahr1: TIntegerField
+      FieldName = 'Jahr1'
+    end
+    object cdsFehlArtikelBestand1: TFloatField
+      FieldName = 'Bestand1'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelBestell1: TFloatField
+      FieldName = 'Bestell1'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelRest1: TFloatField
+      FieldName = 'Rest1'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw2: TIntegerField
+      FieldName = 'kw2'
+    end
+    object cdsFehlArtikelJahr2: TIntegerField
+      FieldName = 'Jahr2'
+    end
+    object cdsFehlArtikelBestand2: TFloatField
+      FieldName = 'Bestand2'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelBestell2: TFloatField
+      FieldName = 'Bestell2'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelRest2: TFloatField
+      FieldName = 'Rest2'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw3: TIntegerField
+      FieldName = 'kw3'
+    end
+    object cdsFehlArtikelJahr3: TIntegerField
+      FieldName = 'Jahr3'
+    end
+    object cdsFehlArtikelBestand3: TFloatField
+      FieldName = 'Bestand3'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelBestell3: TFloatField
+      FieldName = 'Bestell3'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelRest3: TFloatField
+      FieldName = 'Rest3'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw4: TIntegerField
+      FieldName = 'kw4'
+    end
+    object cdsFehlArtikelJahr4: TIntegerField
+      FieldName = 'Jahr4'
+    end
+    object cdsFehlArtikelBestand4: TFloatField
+      FieldName = 'Bestand4'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelBestell4: TFloatField
+      FieldName = 'Bestell4'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelRest4: TFloatField
+      FieldName = 'Rest4'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw5: TIntegerField
+      FieldName = 'kw5'
+    end
+    object cdsFehlArtikelJahr5: TIntegerField
+      FieldName = 'Jahr5'
+    end
+    object cdsFehlArtikelBestand5: TFloatField
+      FieldName = 'Bestand5'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelBestell5: TFloatField
+      FieldName = 'Bestell5'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelRest5: TFloatField
+      FieldName = 'Rest5'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw6: TIntegerField
+      FieldName = 'kw6'
+    end
+    object cdsFehlArtikelJahr6: TIntegerField
+      FieldName = 'Jahr6'
+    end
+    object cdsFehlArtikelBestand6: TFloatField
+      FieldName = 'Bestand6'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelBestell6: TFloatField
+      FieldName = 'Bestell6'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelRest6: TFloatField
+      FieldName = 'Rest6'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw7: TIntegerField
+      FieldName = 'kw7'
+    end
+    object cdsFehlArtikelJahr7: TIntegerField
+      FieldName = 'Jahr7'
+    end
+    object cdsFehlArtikelBestand7: TFloatField
+      FieldName = 'Bestand7'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelBestell7: TFloatField
+      FieldName = 'Bestell7'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelRest7: TFloatField
+      FieldName = 'Rest7'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw8: TIntegerField
+      FieldName = 'kw8'
+    end
+    object cdsFehlArtikelJahr8: TIntegerField
+      FieldName = 'Jahr8'
+    end
+    object cdsFehlArtikelBestand8: TFloatField
+      FieldName = 'Bestand8'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelBestell8: TFloatField
+      FieldName = 'Bestell8'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelRest8: TFloatField
+      FieldName = 'Rest8'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw9: TIntegerField
+      FieldName = 'kw9'
+    end
+    object cdsFehlArtikeljahr9: TIntegerField
+      FieldName = 'jahr9'
+    end
+    object cdsFehlArtikelBestand9: TFloatField
+      FieldName = 'Bestand9'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelBestell9: TFloatField
+      FieldName = 'Bestell9'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelrest9: TFloatField
+      FieldName = 'rest9'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw10: TIntegerField
+      FieldName = 'kw10'
+    end
+    object cdsFehlArtikeljahr10: TIntegerField
+      FieldName = 'jahr10'
+    end
+    object cdsFehlArtikelbestand10: TFloatField
+      FieldName = 'bestand10'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelbestell10: TFloatField
+      FieldName = 'bestell10'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelrest10: TFloatField
+      FieldName = 'rest10'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw11: TIntegerField
+      FieldName = 'kw11'
+    end
+    object cdsFehlArtikeljahr11: TIntegerField
+      FieldName = 'jahr11'
+    end
+    object cdsFehlArtikelbestand11: TFloatField
+      FieldName = 'bestand11'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelrest11: TFloatField
+      FieldName = 'rest11'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelkw12: TIntegerField
+      FieldName = 'kw12'
+    end
+    object cdsFehlArtikeljahr12: TIntegerField
+      FieldName = 'jahr12'
+    end
+    object cdsFehlArtikelbestand12: TFloatField
+      FieldName = 'bestand12'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelbestell12: TFloatField
+      FieldName = 'bestell12'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelrest12: TFloatField
+      FieldName = 'rest12'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelbestell11: TFloatField
+      FieldName = 'bestell11'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd2: TFloatField
+      FieldName = 'Prod2'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd3: TFloatField
+      FieldName = 'Prod3'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd4: TFloatField
+      FieldName = 'Prod4'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd5: TFloatField
+      FieldName = 'Prod5'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd6: TFloatField
+      FieldName = 'Prod6'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd7: TFloatField
+      FieldName = 'Prod7'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd8: TFloatField
+      FieldName = 'Prod8'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd9: TFloatField
+      FieldName = 'Prod9'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd10: TFloatField
+      FieldName = 'Prod10'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd11: TFloatField
+      FieldName = 'Prod11'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd12: TFloatField
+      FieldName = 'Prod12'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelProd1: TFloatField
+      FieldName = 'Prod1'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsFehlArtikelVE: TFloatField
+      FieldName = 'VE'
+    end
+  end
+  object cdsSuchen: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 224
+    Top = 72
+  end
+  object cdsDruckProduktion: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 224
+    Top = 136
+  end
+  object cdsLagerOrte: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 320
+    Top = 8
+  end
+  object cdsProduktionPlanung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 319
+    Top = 72
+  end
+  object cdsKonststatus: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 31
+    Top = 240
+  end
+  object cdsKonstStatusBereit: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 127
+    Top = 240
+  end
+  object cdsPrint: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 224
+    Top = 240
+  end
+  object cdsProdStueckliste: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 31
+    Top = 296
+  end
+  object cdsProdAuftrag: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 127
+    Top = 296
+  end
+  object cdsResStueckliste: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 223
+    Top = 293
+  end
+  object cdsResAuftrag: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 315
+    Top = 294
+  end
+  object cdsProdbuchung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 35
+    Top = 350
+  end
+  object cdsProdZeiten: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    OnNewRecord = 'cdsProdZeitenNewRecord'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdDetail'
+    WriteLastSQL = False
+    Left = 320
+    Top = 136
+  end
+  object cdsProdStempeln: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 128
+    Top = 352
+  end
+  object cdsSchritte: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 315
+    Top = 246
+  end
+  object cdsStueckInfo: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 223
+    Top = 352
+  end
+  object cdsArbAuftrag: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    AfterScroll = 'cdsArbAuftragAfterScroll'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 295
+    Top = 352
+  end
+  object cdsArbRel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    OnNewRecord = 'cdsArbRelNewRecord'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 383
+    Top = 296
+  end
+  object cdsPlanartikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    BeforeOpen = 'cdsProdArtikelBeforeOpen'
+    AfterOpen = 'cdsProdArtikelAfterOpen'
+    OnReconcileError = 'cdsProdArtikelReconcileError'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 383
+    Top = 360
+  end
+end

@@ -1,0 +1,39 @@
+object dmNGruppen: TdmNGruppen
+  OldCreateOrder = False
+  OnDestroy = 'DataModuleDestroy'
+  Left = 367
+  Top = 294
+  Height = 224
+  Width = 197
+  object cdsGruppe: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdMaster'
+    WriteLastSQL = False
+    Left = 48
+    Top = 24
+  end
+  object dsGruppe: TDataSource
+    DataSet = 'cdsGruppe'
+    Left = 48
+    Top = 80
+  end
+  object cdsBenutzer: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 120
+    Top = 24
+  end
+end

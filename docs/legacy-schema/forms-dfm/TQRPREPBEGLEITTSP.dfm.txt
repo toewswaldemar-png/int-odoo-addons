@@ -1,0 +1,2044 @@
+object qrpRepBegleitTSP: TqrpRepBegleitTSP
+  Left = 478
+  Top = 106
+  Width = 906
+  Height = 1100
+  VertScrollBar.Position = 21
+  Caption = 'Beleg'
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = False
+  Scaled = False
+  OnClose = 'FormClose'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object qrBeleg: TQuickRep
+    Left = 16
+    Top = -62
+    Width = 794
+    Height = 1123
+    Frame.Color = 'clBlack'
+    Frame.DrawTop = False
+    Frame.DrawBottom = False
+    Frame.DrawLeft = False
+    Frame.DrawRight = False
+    DataSet = 'cdsDruckRepKopf'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -13
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    Functions.Strings = ('PAGENUMBER' 'COLUMNNUMBER' 'REPORTTITLE')
+    Functions.DATA = ('0' '0' "''")
+    Options = [FirstPageHeader, LastPageFooter]
+    Page.Columns = 1
+    Page.Orientation = 'poPortrait'
+    Page.PaperSize = 'A4'
+    Page.Values = ('<extended:00000000000000fe0540>' '<extended:000000000000a0b90a40>' '<extended:00000000000000fe0540>' '<extended:00000000000040830a40>' '<extended:00000000000000fe0540>' '<extended:00000000000000fe0540>' '<extended:00000000000000000000>')
+    PrinterSettings.Copies = 1
+    PrinterSettings.OutputBin = 'Auto'
+    PrinterSettings.Duplex = False
+    PrinterSettings.FirstPage = 0
+    PrinterSettings.LastPage = 0
+    PrinterSettings.UseStandardprinter = False
+    PrinterSettings.UseCustomBinCode = False
+    PrinterSettings.CustomBinCode = 0
+    PrinterSettings.ExtendedDuplex = 0
+    PrinterSettings.UseCustomPaperCode = False
+    PrinterSettings.CustomPaperCode = 0
+    PrinterSettings.PrintMetaFile = False
+    PrinterSettings.PrintQuality = 0
+    PrinterSettings.Collate = 0
+    PrinterSettings.ColorOption = 0
+    PrintIfEmpty = True
+    SnapToGrid = True
+    Units = 'MM'
+    Zoom = 100
+    PrevFormStyle = 'fsNormal'
+    PreviewInitialState = 'wsNormal'
+    PrevInitialZoom = 'qrZoomToFit'
+    PreviewDefaultSaveType = 'stPDF'
+    object PageHeaderBand1: TQRBand
+      Left = 48
+      Top = 48
+      Width = 698
+      Height = 113
+      Frame.Color = 'clBlack'
+      Frame.DrawTop = False
+      Frame.DrawBottom = False
+      Frame.DrawLeft = False
+      Frame.DrawRight = False
+      AlignToBottom = False
+      BeforePrint = 'PageHeaderBand1BeforePrint'
+      Color = 'clWhite'
+      TransparentBand = False
+      ForceNewColumn = False
+      ForceNewPage = False
+      Size.Values = ('<extended:065a555555557d950740>' '<extended:106155555555d9e60940>')
+      PreCaluculateBandHeight = False
+      KeepOnOnePage = False
+      BandType = 'rbPageHeader'
+      object QRShape9: TQRShape
+        Left = 8
+        Top = 39
+        Width = 537
+        Height = 45
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:00000000000020ee0540>' '<extended:d75c5555555555a90340>' '<extended:00000000000060ce0540>' '<extended:0000000000009ab10940>')
+        Brush.Color = 14148065
+        Shape = 'qrsRectangle'
+        VertAdjust = 0
+      end
+      object QRSysData1: TQRSysData
+        Left = 592
+        Top = 88
+        Width = 90
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:f09eaaaaaaaacac30940>' '<extended:f34b55555555d5e80640>' '<extended:00000000000020ee0640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        Color = 'clWhite'
+        Data = 'qrsPageNumber'
+        Text = 'Seite: '
+        Transparent = False
+        ExportAs = 'exptText'
+        FontSize = 10
+      end
+      object QRLabel1: TQRLabel
+        Left = 20
+        Top = 51
+        Width = 186
+        Height = 23
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaa6af30440>' '<extended:6baeaaaaaaaaaad30440>' '<extended:000000000000f0860640>' '<extended:00000000000010f60740>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Reparatur-Begleitschein'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -16
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 12
+      end
+      object QRDBText1: TQRDBText
+        Left = 214
+        Top = 51
+        Width = 74
+        Height = 20
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaaad30440>' '<extended:fd52555555558d8d0840>' '<extended:000000000000f0860640>' '<extended:0db4aaaaaaaacac30640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckBeleg'
+        DataField = 'NUMMER'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -16
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 12
+      end
+      object logo1: TQRImage
+        Left = 560
+        Top = 40
+        Width = 126
+        Height = 39
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:00000000000060ce0540>' '<extended:10615555555535b90940>' '<extended:e797aaaaaaaaaad30540>' '<extended:000000000000b0a60740>')
+        Center = True
+        Picture.Data = <binary 12188 bytes>
+        Stretch = True
+      end
+    end
+    object PageFooterBand1: TQRBand
+      Left = 48
+      Top = 1138
+      Width = 698
+      Height = 66
+      Frame.Color = 'clBlack'
+      Frame.DrawTop = False
+      Frame.DrawBottom = False
+      Frame.DrawLeft = False
+      Frame.DrawRight = False
+      AlignToBottom = False
+      Color = 'clWhite'
+      TransparentBand = False
+      ForceNewColumn = False
+      ForceNewPage = False
+      Size.Values = ('<extended:000000000000a0ae0640>' '<extended:106155555555d9e60940>')
+      PreCaluculateBandHeight = False
+      KeepOnOnePage = False
+      BandType = 'rbPageFooter'
+      object QRShape8: TQRShape
+        Left = 13
+        Top = 3
+        Width = 665
+        Height = 33
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000a0ae0540>' '<extended:d75c5555555595890440>' '<extended:00000000000000fe0140>' '<extended:106155555555efdb0940>')
+        Brush.Color = 14148065
+        Shape = 'qrsRectangle'
+        VertAdjust = 0
+      end
+      object QRLabel18: TQRLabel
+        Left = 21
+        Top = 11
+        Width = 27
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:00000000000040de0440>' '<extended:d75c55555555d5e80340>' '<extended:000000000000e08e0540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Prüfung'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel19: TQRLabel
+        Left = 189
+        Top = 11
+        Width = 22
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:00000000000008fa0740>' '<extended:d75c55555555d5e80340>' '<extended:955155555555d5e80440>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Prüfer'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel20: TQRLabel
+        Left = 473
+        Top = 11
+        Width = 22
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:1061555555556f9c0940>' '<extended:d75c55555555d5e80340>' '<extended:955155555555d5e80440>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Datum'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object labpruef: TQRLabel
+        Left = 191
+        Top = 70
+        Width = 25
+        Height = 17
+        Enabled = False
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:065a55555555adfc0740>' '<extended:f34b5555555535b90640>' '<extended:caa8aaaaaaaa4a840540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = '        '
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object labEdatum: TQRLabel
+        Left = 234
+        Top = 72
+        Width = 25
+        Height = 17
+        Enabled = False
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:000000000000c89a0840>' '<extended:00000000000080be0640>' '<extended:caa8aaaaaaaa4a840540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = '        '
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object labpruefung: TQRLabel
+        Left = 23
+        Top = 40
+        Width = 63
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:6baeaaaaaaaa6af30440>' '<extended:e797aaaaaaaaaad30540>' '<extended:000000000000b0a60640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Endabnahme'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText11: TQRDBText
+        Left = 191
+        Top = 40
+        Width = 67
+        Height = 15
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000c09e0440>' '<extended:065a55555555adfc0740>' '<extended:e797aaaaaaaaaad30540>' '<extended:f34b5555555545b10640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckBeleg'
+        DataField = 'endpruefuser'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText12: TQRDBText
+        Left = 475
+        Top = 40
+        Width = 74
+        Height = 15
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000c09e0440>' '<extended:f09eaaaaaaaa189d0940>' '<extended:e797aaaaaaaaaad30540>' '<extended:0db4aaaaaaaacac30640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckBeleg'
+        DataField = 'endpruefdatum'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+    end
+    object QRSubDetail1: TQRSubDetail
+      Left = 48
+      Top = 1121
+      Width = 698
+      Height = 17
+      Frame.Color = 'clBlack'
+      Frame.DrawTop = False
+      Frame.DrawBottom = False
+      Frame.DrawLeft = False
+      Frame.DrawRight = False
+      AlignToBottom = False
+      Color = 'clWhite'
+      TransparentBand = False
+      ForceNewColumn = False
+      ForceNewPage = False
+      LinkBand = 'DetailBand1'
+      Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:106155555555d9e60940>')
+      PreCaluculateBandHeight = False
+      KeepOnOnePage = False
+      Master = 'qrBeleg'
+      DataSet = 'cdsDruckBelegPos'
+      HeaderBand = 'DetailBand1'
+      PrintBefore = False
+      PrintIfEmpty = True
+      object QRDBText13: TQRDBText
+        Left = 20
+        Top = 2
+        Width = 61
+        Height = 15
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000c09e0440>' '<extended:6baeaaaaaaaaaad30440>' '<extended:56585555555555a90140>' '<extended:f34b5555555565a10640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckBelegPos'
+        DataField = 'Artnr'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText18: TQRDBText
+        Left = 96
+        Top = 2
+        Width = 225
+        Height = 15
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000c09e0440>' '<extended:00000000000000fe0640>' '<extended:56585555555555a90140>' '<extended:000000000000d4940840>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = True
+        Color = 'clWhite'
+        DataSet = 'cdsDruckBelegPos'
+        DataField = 'text'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText19: TQRDBText
+        Left = 334
+        Top = 2
+        Width = 42
+        Height = 15
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000c09e0440>' '<extended:fc5255555555eddc0840>' '<extended:56585555555555a90140>' '<extended:00000000000040de0540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckBelegPos'
+        DataField = 'SNRALT'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText20: TQRDBText
+        Left = 474
+        Top = 2
+        Width = 42
+        Height = 15
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000c09e0440>' '<extended:000000000000c49c0940>' '<extended:56585555555555a90140>' '<extended:00000000000040de0540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckBelegPos'
+        DataField = 'SNRNEU'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText21: TQRDBText
+        Left = 628
+        Top = 2
+        Width = 22
+        Height = 15
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000c09e0440>' '<extended:f09eaaaaaaaab2cf0940>' '<extended:56585555555555a90140>' '<extended:955155555555d5e80440>')
+        Alignment = 'taRightJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckBelegPos'
+        DataField = 'Stck'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+    end
+    object TitleBand1: TQRBand
+      Left = 48
+      Top = 161
+      Width = 698
+      Height = 896
+      Frame.Color = 'clBlack'
+      Frame.DrawTop = False
+      Frame.DrawBottom = False
+      Frame.DrawLeft = False
+      Frame.DrawRight = False
+      AlignToBottom = False
+      Color = 'clWhite'
+      TransparentBand = False
+      ForceNewColumn = False
+      ForceNewPage = False
+      Size.Values = ('<extended:88b0aaaaaaaa2a940a40>' '<extended:106155555555d9e60940>')
+      PreCaluculateBandHeight = False
+      KeepOnOnePage = False
+      BandType = 'rbTitle'
+      object QRShape3: TQRShape
+        Left = 9
+        Top = 99
+        Width = 665
+        Height = 21
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:00000000000040de0440>' '<extended:00000000000080be0340>' '<extended:000000000000f8820740>' '<extended:106155555555efdb0940>')
+        Brush.Color = 14148065
+        Shape = 'qrsRectangle'
+        VertAdjust = 0
+      end
+      object QRShape2: TQRShape
+        Left = 8
+        Top = 39
+        Width = 665
+        Height = 21
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:00000000000040de0440>' '<extended:d75c5555555555a90340>' '<extended:00000000000060ce0540>' '<extended:106155555555efdb0940>')
+        Brush.Color = 14148065
+        Shape = 'qrsRectangle'
+        VertAdjust = 0
+      end
+      object QRShape1: TQRShape
+        Left = 8
+        Top = 15
+        Width = 665
+        Height = 53
+        Enabled = False
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:0db4aaaaaaaa3a8c0640>' '<extended:d75c5555555555a90340>' '<extended:000000000000c09e0440>' '<extended:106155555555efdb0940>')
+        Brush.Color = 14148065
+        Shape = 'qrsRectangle'
+        VertAdjust = 0
+      end
+      object QRLabel2: TQRLabel
+        Left = 268
+        Top = 19
+        Width = 186
+        Height = 23
+        Enabled = False
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaa6af30440>' '<extended:fc525555555545b10840>' '<extended:95515555555515c90440>' '<extended:00000000000010f60740>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Reparatur-Begleitschein'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -16
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 12
+      end
+      object labnummer: TQRLabel
+        Left = 628
+        Top = 27
+        Width = 25
+        Height = 23
+        Enabled = False
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaa6af30440>' '<extended:f09eaaaaaaaab2cf0940>' '<extended:000000000000e08e0540>' '<extended:caa8aaaaaaaa4a840540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = '      '
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -16
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 12
+      end
+      object QRDBText3: TQRDBText
+        Left = 229
+        Top = 75
+        Width = 131
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:fc525555555579970840>' '<extended:00000000000070c60640>' '<extended:065a555555554dad0740>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckRepKopf'
+        DataField = 'ANREDE'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRLabel5: TQRLabel
+        Left = 16
+        Top = 49
+        Width = 48
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:95515555555555a90440>' '<extended:f34b55555555a5810640>' '<extended:00000000000000fe0540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Bezeichnung :'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel6: TQRLabel
+        Left = 489
+        Top = 49
+        Width = 50
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:000000000000baa10940>' '<extended:f34b55555555a5810640>' '<extended:0db4aaaaaaaa4a840640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Seriennummer:'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRDBText6: TQRDBText
+        Left = 616
+        Top = 74
+        Width = 134
+        Height = 19
+        Enabled = False
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:95515555555515c90440>' '<extended:f09eaaaaaaaabacb0940>' '<extended:0db4aaaaaaaacac30640>' '<extended:065a5555555545b10740>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckRepKopf'
+        DataField = 'RBESTELLNR'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText4: TQRDBText
+        Left = 368
+        Top = 74
+        Width = 150
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:04adaaaaaaaa6af30840>' '<extended:0db4aaaaaaaacac30640>' '<extended:00000000000070c60740>')
+        Alignment = 'taRightJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckRepKopf'
+        DataField = 'RARTIKELNR'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRLabel12: TQRLabel
+        Left = 230
+        Top = 49
+        Width = 31
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:04adaaaaaaaa22980840>' '<extended:f34b55555555a5810640>' '<extended:caa8aaaaaaaa0aa40540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Ident-Nr.'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel4: TQRLabel
+        Left = 17
+        Top = 101
+        Width = 91
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:6baeaaaaaaaaeab30440>' '<extended:065a555555559d850740>' '<extended:f34b55555555c5f00640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Meldungs-Nr. / Ausfall-Nr.'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel13: TQRLabel
+        Left = 230
+        Top = 101
+        Width = 44
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:04adaaaaaaaa22980840>' '<extended:065a555555559d850740>' '<extended:196855555555d5e80540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Herkunft-Ort'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel14: TQRLabel
+        Left = 370
+        Top = 101
+        Width = 56
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:fc5255555555bdf40840>' '<extended:065a555555559d850740>' '<extended:0db4aaaaaaaa2a940640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Herkunft-Einheit'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel15: TQRLabel
+        Left = 529
+        Top = 101
+        Width = 56
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:f09eaaaaaaaaf4ae0940>' '<extended:065a555555559d850740>' '<extended:0db4aaaaaaaa2a940640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Lieferschein-Nr.'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRShape4: TQRShape
+        Left = 9
+        Top = 137
+        Width = 665
+        Height = 33
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000a0ae0540>' '<extended:00000000000080be0340>' '<extended:065a555555553db50740>' '<extended:106155555555efdb0940>')
+        Brush.Color = 14148065
+        Shape = 'qrsRectangle'
+        VertAdjust = 0
+      end
+      object QRLabel3: TQRLabel
+        Left = 17
+        Top = 143
+        Width = 113
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:6baeaaaaaaaaeab30440>' '<extended:065a555555552dbd0740>' '<extended:065a555555557d950740>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Fehlerbeschreibung aus Meldung'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRDBText14: TQRDBText
+        Left = 20
+        Top = 75
+        Width = 106
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:6baeaaaaaaaaaad30440>' '<extended:00000000000070c60640>' '<extended:faa5aaaaaaaa3a8c0740>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckRepKopf'
+        DataField = 'TECHNIKER'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText15: TQRDBText
+        Left = 608
+        Top = 19
+        Width = 70
+        Height = 17
+        Enabled = False
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:10615555555515c90940>' '<extended:95515555555515c90440>' '<extended:f34b5555555535b90640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckRepKopf'
+        DataField = 'ORDERZAEHL'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText16: TQRDBText
+        Left = 134
+        Top = 74
+        Width = 90
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:065a5555555545b10740>' '<extended:0db4aaaaaaaacac30640>' '<extended:00000000000020ee0640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckRepKopf'
+        DataField = 'FAMNR'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRLabel21: TQRLabel
+        Left = 134
+        Top = 101
+        Width = 32
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:065a5555555545b10740>' '<extended:065a555555559d850740>' '<extended:36575555555555a90540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'FAM-Nr.'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel22: TQRLabel
+        Left = 134
+        Top = 49
+        Width = 26
+        Height = 17
+        Enabled = False
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:065a5555555545b10740>' '<extended:f34b55555555a5810640>' '<extended:36575555555595890540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Gruppe'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object labrd1: TQRLabel
+        Left = 17
+        Top = 26
+        Width = 22
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:6baeaaaaaaaaeab30440>' '<extended:36575555555595890540>' '<extended:955155555555d5e80440>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = '       '
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object labrd2: TQRLabel
+        Left = 228
+        Top = 26
+        Width = 22
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:000000000000d0960840>' '<extended:36575555555595890540>' '<extended:955155555555d5e80440>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = '       '
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object labrd3: TQRLabel
+        Left = 488
+        Top = 17
+        Width = 177
+        Height = 32
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:36575555555555a90540>' '<extended:10615555555565a10940>' '<extended:6baeaaaaaaaaeab30440>' '<extended:00000000000028ea0740>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Caption = '       '
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText10: TQRDBText
+        Left = 214
+        Top = 27
+        Width = 74
+        Height = 20
+        Enabled = False
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaaad30440>' '<extended:fd52555555558d8d0840>' '<extended:000000000000e08e0540>' '<extended:0db4aaaaaaaacac30640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckBeleg'
+        DataField = 'NUMMER'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -16
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 12
+      end
+      object labrd7: TQRLabel
+        Left = 530
+        Top = 73
+        Width = 22
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:10615555555549af0940>' '<extended:f34b5555555525c10640>' '<extended:955155555555d5e80440>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = '       '
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRShape6: TQRShape
+        Left = 13
+        Top = 459
+        Width = 665
+        Height = 33
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000a0ae0540>' '<extended:95515555555595890440>' '<extended:000000000000ce970940>' '<extended:106155555555efdb0940>')
+        Brush.Color = 14148065
+        Shape = 'qrsRectangle'
+        VertAdjust = 0
+      end
+      object QRShape5: TQRShape
+        Left = 9
+        Top = 267
+        Width = 665
+        Height = 33
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:000000000000a0ae0540>' '<extended:00000000000080be0340>' '<extended:0000000000009cb00840>' '<extended:106155555555efdb0940>')
+        Brush.Color = 14148065
+        Shape = 'qrsRectangle'
+        VertAdjust = 0
+      end
+      object QRLabel7: TQRLabel
+        Left = 20
+        Top = 275
+        Width = 116
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:6baeaaaaaaaaaad30440>' '<extended:04adaaaaaaaae6b50840>' '<extended:065a5555555575990740>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Ausfallgrund / festgestellter Fehler'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRDBText8: TQRDBText
+        Left = 16
+        Top = 304
+        Width = 657
+        Height = 145
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:faa5aaaaaaaad2bf0740>' '<extended:95515555555555a90440>' '<extended:fc525555555515c90840>' '<extended:0000000000004ad90940>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckRepKopf'
+        DataField = 'AUSFALL'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRLabel8: TQRLabel
+        Left = 21
+        Top = 465
+        Width = 80
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:00000000000040de0440>' '<extended:000000000000ca990940>' '<extended:0db4aaaaaaaaaad30640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Reparaturbeschreibung'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRDBText9: TQRDBText
+        Left = 20
+        Top = 503
+        Width = 653
+        Height = 378
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:00000000000008fa0840>' '<extended:6baeaaaaaaaaaad30440>' '<extended:1061555555555ba60940>' '<extended:106155555555f7d70940>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckRepKopf'
+        DataField = 'REPBESCHREIB'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+      object QRDBText5: TQRDBText
+        Left = 12
+        Top = 175
+        Width = 653
+        Height = 82
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:f34b55555555f5d80640>' '<extended:00000000000000fe0340>' '<extended:faa5aaaaaaaa82e70740>' '<extended:106155555555f7d70940>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = False
+        AutoStretch = False
+        Color = 'clWhite'
+        DataSet = 'cdsDruckRepKopf'
+        DataField = 'FEHLER'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+        Transparent = False
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 8
+      end
+    end
+    object DetailBand1: TQRBand
+      Left = 48
+      Top = 1057
+      Width = 698
+      Height = 64
+      Frame.Color = 'clBlack'
+      Frame.DrawTop = False
+      Frame.DrawBottom = False
+      Frame.DrawLeft = False
+      Frame.DrawRight = False
+      AlignToBottom = False
+      Color = 'clWhite'
+      TransparentBand = False
+      ForceNewColumn = True
+      ForceNewPage = True
+      Size.Values = ('<extended:f34b5555555555a90640>' '<extended:106155555555d9e60940>')
+      PreCaluculateBandHeight = False
+      KeepOnOnePage = True
+      BandType = 'rbGroupHeader'
+      object QRShape7: TQRShape
+        Left = 9
+        Top = 15
+        Width = 665
+        Height = 43
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:e797aaaaaaaa8ae30540>' '<extended:00000000000080be0340>' '<extended:000000000000c09e0440>' '<extended:106155555555efdb0940>')
+        Brush.Color = 14148065
+        Shape = 'qrsRectangle'
+        VertAdjust = 0
+      end
+      object QRLabel9: TQRLabel
+        Left = 17
+        Top = 23
+        Width = 67
+        Height = 12
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:00000000000000fe0340>' '<extended:6baeaaaaaaaaeab30440>' '<extended:6baeaaaaaaaa6af30440>' '<extended:f34b5555555545b10640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'erneuertes Material'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel11: TQRLabel
+        Left = 98
+        Top = 37
+        Width = 44
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:065a55555555a5810740>' '<extended:caa8aaaaaaaacac30540>' '<extended:196855555555d5e80540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Bezeichnung'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel16: TQRLabel
+        Left = 333
+        Top = 37
+        Width = 53
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:00000000000044dc0840>' '<extended:caa8aaaaaaaacac30540>' '<extended:0db4aaaaaaaa3a8c0640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Serien-Nr. ALT'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel17: TQRLabel
+        Left = 473
+        Top = 37
+        Width = 56
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:1061555555556f9c0940>' '<extended:caa8aaaaaaaacac30540>' '<extended:0db4aaaaaaaa2a940640>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Serien-Nr. NEU'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel23: TQRLabel
+        Left = 625
+        Top = 37
+        Width = 24
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:f09eaaaaaaaab4ce0940>' '<extended:caa8aaaaaaaacac30540>' '<extended:00000000000000fe0440>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Anzahl'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+      object QRLabel10: TQRLabel
+        Left = 17
+        Top = 40
+        Width = 38
+        Height = 17
+        Frame.Color = 'clBlack'
+        Frame.DrawTop = False
+        Frame.DrawBottom = False
+        Frame.DrawLeft = False
+        Frame.DrawRight = False
+        Size.Values = ('<extended:6baeaaaaaaaaeab30440>' '<extended:6baeaaaaaaaaeab30440>' '<extended:e797aaaaaaaaaad30540>' '<extended:19685555555515c90540>')
+        Alignment = 'taLeftJustify'
+        AlignToBand = False
+        AutoSize = True
+        AutoStretch = False
+        Caption = 'Benennung'
+        Color = 'clWhite'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -8
+        Font.Name = 'Arial'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Transparent = True
+        WordWrap = True
+        ExportAs = 'exptText'
+        FontSize = 6
+      end
+    end
+  end
+  object cdsDruckRepKopf: TClientDataSet
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    ProviderName = 'DataSetProvider1'
+    OnCalcFields = 'cdsDruckRepKopfCalcFields'
+    Left = 72
+    Top = 16
+  end
+  object cdsDruckBeleg: TClientDataSet
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'oid'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    Left = 32
+    Top = 16
+    object cdsDruckBelegOID: TIntegerField
+      FieldName = 'OID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object cdsDruckBelegNAME1: TStringField
+      FieldName = 'NAME1'
+      Size = 60
+    end
+    object cdsDruckBelegNAME2: TStringField
+      FieldName = 'NAME2'
+      Size = 60
+    end
+    object cdsDruckBelegNAME3: TStringField
+      FieldName = 'NAME3'
+      Size = 60
+    end
+    object cdsDruckBelegSTRASSE: TStringField
+      FieldName = 'STRASSE'
+      Size = 60
+    end
+    object cdsDruckBelegLAND: TStringField
+      FieldName = 'LAND'
+      Size = 3
+    end
+    object cdsDruckBelegPLZ: TStringField
+      FieldName = 'PLZ'
+      Size = 15
+    end
+    object cdsDruckBelegORT: TStringField
+      FieldName = 'ORT'
+      Size = 60
+    end
+    object cdsDruckBelegZKONDI: TIntegerField
+      FieldName = 'ZKONDI'
+    end
+    object cdsDruckBelegGEDRUCKT: TStringField
+      FieldName = 'GEDRUCKT'
+      FixedChar = True
+      Size = 1
+    end
+    object cdsDruckBelegABGESCHLOSSEN: TStringField
+      FieldName = 'ABGESCHLOSSEN'
+      FixedChar = True
+      Size = 1
+    end
+    object cdsDruckBelegBELEGDATUM: TSQLTimeStampField
+      FieldName = 'BELEGDATUM'
+      DisplayFormat = 'dd/mm/yyyy'
+    end
+    object cdsDruckBelegVERSANDART: TIntegerField
+      FieldName = 'VERSANDART'
+    end
+    object cdsDruckBelegLIEFERTERMIN: TSQLTimeStampField
+      FieldName = 'LIEFERTERMIN'
+    end
+    object cdsDruckBelegNUMMER: TIntegerField
+      Alignment = 'taLeftJustify'
+      FieldName = 'NUMMER'
+    end
+    object cdsDruckBelegBELEGART: TSmallintField
+      FieldName = 'BELEGART'
+    end
+    object cdsDruckBelegADROID: TIntegerField
+      FieldName = 'ADROID'
+    end
+    object cdsDruckBelegANREDE: TStringField
+      FieldName = 'ANREDE'
+    end
+    object cdsDruckBelegFAELLIG: TSQLTimeStampField
+      FieldName = 'FAELLIG'
+    end
+    object cdsDruckBelegADRNR: TIntegerField
+      Alignment = 'taLeftJustify'
+      FieldName = 'ADRNR'
+    end
+    object cdsDruckBelegMWST: TFMTBCDField
+      FieldName = 'MWST'
+      DisplayFormat = '###0.,00 €'
+      Precision = 15
+      Size = 2
+    end
+    object cdsDruckBelegMWSTHALB: TFMTBCDField
+      FieldName = 'MWSTHALB'
+      DisplayFormat = '###0.,00 €'
+      Precision = 15
+      Size = 2
+    end
+    object cdsDruckBelegNETTO: TFMTBCDField
+      FieldName = 'NETTO'
+      DisplayFormat = '###0.,00 €'
+      Precision = 15
+      Size = 2
+    end
+    object cdsDruckBelegBRUTTO: TFMTBCDField
+      FieldName = 'BRUTTO'
+      DisplayFormat = '###0.,00 €'
+      Precision = 15
+      Size = 2
+    end
+    object cdsDruckBelegOFFEN: TFMTBCDField
+      FieldName = 'OFFEN'
+      DisplayFormat = '###0.,00 €'
+      Precision = 15
+      Size = 2
+    end
+    object cdsDruckBelegKOPFTEXT: TMemoField
+      FieldName = 'KOPFTEXT'
+      BlobType = 'ftMemo'
+      Size = 1
+    end
+    object cdsDruckBelegFUSSTEXT: TMemoField
+      FieldName = 'FUSSTEXT'
+      BlobType = 'ftMemo'
+      Size = 1
+    end
+    object cdsDruckBelegBEARBEITER: TStringField
+      FieldName = 'BEARBEITER'
+      Size = 30
+    end
+    object cdsDruckBelegUSTIDENT: TStringField
+      FieldName = 'USTIDENT'
+      Size = 30
+    end
+    object cdsDruckBelegBELEGBEZ: TStringField
+      FieldName = 'BELEGBEZ'
+      Size = 30
+    end
+    object cdsDruckBelegBearbeiterfon: TStringField
+      FieldName = 'Bearbeiterfon'
+      Size = 30
+    end
+    object cdsDruckBelegUNSKDNR: TStringField
+      FieldName = 'UNSKDNR'
+      Size = 10
+    end
+    object cdsDruckBelegSTEUERNR: TStringField
+      FieldName = 'STEUERNR'
+      Size = 30
+    end
+    object cdsDruckBelegBemerkung: TStringField
+      FieldName = 'Bemerkung'
+      Size = 60
+    end
+    object cdsDruckBelegBestelldatum: TSQLTimeStampField
+      FieldName = 'Bestelltermin'
+    end
+    object cdsDruckBelegKontrakt: TStringField
+      FieldName = 'Kontrakt'
+      Size = 30
+    end
+    object cdsDruckBelegFromBelegart: TIntegerField
+      FieldName = 'FromBelegart'
+    end
+    object cdsDruckBelegvsonst: TFloatField
+      FieldName = 'vsonst'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsDruckBelegendpruefuser: TStringField
+      FieldName = 'endpruefuser'
+      Size = 60
+    end
+    object cdsDruckBelegendpruefdatum: TSQLTimeStampField
+      FieldName = 'endpruefdatum'
+    end
+    object cdsDruckBelegmwstsatz: TFMTBCDField
+      FieldName = 'mwstsatz'
+      DisplayFormat = '00.,00 %'
+    end
+    object cdsDruckBelegBestellnr: TStringField
+      FieldName = 'Bestellnr'
+      Size = 30
+    end
+    object cdsDruckBelegVertreter: TIntegerField
+      FieldName = 'Vertreter'
+    end
+    object cdsDruckBelegHauptauftrag: TIntegerField
+      FieldName = 'Hauptauftrag'
+    end
+    object cdsDruckBelegvuenummer: TStringField
+      FieldName = 'vuenummer'
+      Size = 60
+    end
+    object cdsDruckBelegProvTag: TFloatField
+      FieldName = 'ProvTag'
+    end
+    object cdsDruckBelegBearbeiterfax: TStringField
+      FieldName = 'Bearbeiterfax'
+      Size = 30
+    end
+    object cdsDruckBelegbearbeiteremail: TStringField
+      FieldName = 'bearbeiteremail'
+      Size = 60
+    end
+    object cdsDruckBelegnummeralt: TStringField
+      FieldName = 'nummeralt'
+      Size = 30
+    end
+    object cdsDruckBelegBemerkung2: TStringField
+      FieldName = 'Bemerkung2'
+      Size = 200
+    end
+    object cdsDruckBelegSNRNummer: TStringField
+      FieldName = 'SNRNummer'
+      Size = 60
+    end
+    object cdsDruckBelegIdentNr: TStringField
+      FieldName = 'IdentNr'
+      Size = 60
+    end
+  end
+  object cdsDruckRepPos: TClientDataSet
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    ProviderName = 'DataSetProvider1'
+    Left = 112
+    Top = 16
+  end
+  object cdsVertreter: TClientDataSet
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    ProviderName = 'DataSetProvider1'
+    Left = 152
+    Top = 16
+    object cdsVertreterName: TStringField
+      FieldName = 'Name'
+      Size = 60
+    end
+    object cdsVertreterVorname: TStringField
+      FieldName = 'Vorname'
+      Size = 60
+    end
+    object cdsVertreterTele1: TStringField
+      FieldName = 'Tele1'
+      Size = 60
+    end
+    object cdsVertreterfax1: TStringField
+      FieldName = 'fax1'
+      Size = 60
+    end
+  end
+  object cdsDruckBelegPos: TClientDataSet
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    ProviderName = 'DataSetProvider1'
+    OnCalcFields = 'cdsDruckRepKopfCalcFields'
+    Left = 32
+    Top = 64
+  end
+end

@@ -1,0 +1,18 @@
+object frmAendGrundDlg: TfrmAendGrundDlg
+  Left = 652
+  Top = 301
+  Caption = 'Änderungsbegründung'
+  ClientHeight = 232
+  ClientWidth = 517
+  PixelsPerInch = 96
+  TextHeight = 13
+  object btnOk: TAdvGlowButton
+    Left = 326
+    Top = 192
+    OfficeHint.ShowHelp = False
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 406
+    Top = 192
+  end
+end

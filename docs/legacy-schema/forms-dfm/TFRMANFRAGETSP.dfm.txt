@@ -1,0 +1,1061 @@
+object frmAnfrageTSP: TfrmAnfrageTSP
+  Left = 360
+  Top = 210
+  Width = 1120
+  Height = 813
+  Caption = 'Anfrage'
+  Icon.Data = <binary 766 bytes>
+  OnActivate = 'FormActivate'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object splTree: TAdvSplitter
+    Left = 856
+    Height = 749
+    OnMoved = 'splTreeMoved'
+  end
+  object pnlBeleg: TPanel
+    Width = 856
+    Height = 749
+    object pnlBelegKopf: TPanel
+      Width = 854
+      Height = 200
+      object gbxAnschrift: TGroupBox
+        Height = 201
+        object lblNummer: TLabel
+          Left = 328
+        end
+        object lblDatum: TLabel
+          Left = 328
+          Width = 102
+          Caption = 'Druckdatum / Anlage'
+        end
+        object lblBearbeiter: TLabel
+          Left = 328
+        end
+        object lblProjekt: TLabel
+          Left = 328
+          Width = 52
+          Caption = 'Baugruppe'
+        end
+        object lblVue: TLabel
+          Left = 14
+          Top = 154
+          Width = 78
+          Height = 13
+          Caption = 'Ansprechpartner'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object btnBenutzersuchen: TSpeedButton
+          Left = 592
+          Top = 67
+          Width = 23
+          Height = 22
+          OnClick = 'btnBenutzersuchenClick'
+        end
+        object Label16: TLabel
+          Left = 327
+          Top = 146
+          Width = 70
+          Height = 13
+          Caption = 'Projektnummer'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object btnprojektsuche: TSpeedButton
+          Left = 593
+          Top = 142
+          Width = 23
+          Height = 22
+          OnClick = 'btnprojektsucheClick'
+        end
+        object lblAendIndex: TLabel
+          Left = 516
+          Top = 42
+          Width = 26
+          Height = 13
+          Caption = 'Index'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dblcbProjekt: TDBLookupComboBox
+          Visible = False
+        end
+        object dbeAdrNr: TDBEdit
+          OnDblClick = 'dbeAdrNrDblClick'
+          OnEnter = None
+          OnExit = None
+        end
+        object debDatum: TDBEdit
+          Left = 433
+          Width = 80
+          OnClick = 'actGetDateExecute'
+          OnDblClick = 'actGetDateExecute'
+        end
+        object dbcBelegart: TDBComboBox
+          Items.Strings = ('Anfrage')
+        end
+        object dblcbSparte: TDBLookupComboBox
+          Left = 138
+          Top = 8
+          Visible = False
+        end
+        object dbeBearbeiter: TDBEdit
+          Width = 161
+        end
+        object dbeHauptauftrag: TDBEdit
+          Width = 185
+          DataField = 'Rahmennr'
+        end
+        object btnAdresseNeuanlage: TAdvGlowButton
+          TabOrder = 22
+        end
+        object btndial: TAdvMetroButton
+          TabOrder = 23
+        end
+        object dbeWunschdatum: TDBEdit
+          Left = 576
+          Top = 39
+          Width = 40
+          Height = 21
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 'clBtnFace'
+          DataField = 'Wunschtermin'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          ReadOnly = True
+          TabOrder = 17
+          Visible = False
+          OnClick = 'actGetDateExecute'
+          OnDblClick = 'actGetDateExecute'
+        end
+        object DBCheckBox1: TDBCheckBox
+          Left = 328
+          Top = 122
+          Width = 97
+          Height = 17
+          TabStop = False
+          Caption = 'geändert'
+          DataField = 'Pufferlager'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 18
+          ValueChecked = 'T'
+          ValueUnchecked = 'F'
+        end
+        object dbeVue: TDBEdit
+          Left = 104
+          Top = 150
+          Width = 185
+          Height = 21
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'Bemerkung'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 19
+        end
+        object dbeNummerAlt: TDBEdit
+          Left = 432
+          Top = 142
+          Width = 158
+          Height = 21
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'NUMMERAlt'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 20
+        end
+        object dbeAendIndex: TDBEdit
+          Left = 545
+          Top = 40
+          Width = 69
+          Height = 21
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'AendIndex'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 21
+        end
+      end
+    end
+    object pgcBeleg: TPageControl
+      Top = 201
+      Width = 854
+      Height = 547
+      TabWidth = 125
+      object tshKopftext: TTabSheet
+        OnShow = 'tshKopftextShow'
+      end
+      object tshPositionen: TTabSheet
+        object lblMenge: TLabel
+          Left = 134
+        end
+        object lblEinheit: TLabel
+          Left = 181
+        end
+        object lblText: TLabel
+          Left = 220
+        end
+        object lblEP: TLabel
+          Width = 49
+          Caption = 'EPreis/PE'
+        end
+        object lblRabatt: TLabel
+          Visible = False
+        end
+        object gbxSumme: TGroupBox
+          object lblZKondi: TLabel
+            Top = 17
+          end
+          object lblVersandTSP: TLabel
+            Left = 312
+            Top = 41
+            Width = 39
+            Height = 13
+            Caption = 'Versand'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+          end
+          object dblcbZkondi: TDBLookupComboBox
+            Top = 12
+          end
+          object dblcbVersandTSP: TDBLookupComboBox
+            Left = 360
+            Top = 36
+            Width = 257
+            Height = 21
+            Color = 16120304
+            DataField = 'VERSANDART'
+            DataSource = 'dsBeleg'
+            DropDownRows = 6
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            KeyField = 'OID'
+            ListField = 'NAME'
+            ListSource = 'dsVersand'
+            ParentFont = False
+            ParentShowHint = False
+            ShowHint = False
+            TabOrder = 7
+          end
+        end
+        object dbcgPos: TDBCtrlGrid
+          Left = 3
+          PanelHeight = 77
+          RowCount = 5
+          SelectedColor = 11053224
+          OnPaintPanel = 'dbcgPosPaintPanel'
+          object Label1: TLabel
+            Left = 520
+            Top = 31
+            Width = 14
+            Height = 13
+            Caption = 'PE'
+          end
+          object lblMwstTSP: TLabel
+            Left = 520
+            Top = 59
+            Width = 30
+            Height = 13
+            Caption = 'MwSt.'
+          end
+          object Label2: TLabel
+            Left = 370
+            Top = 61
+            Width = 70
+            Height = 13
+            Caption = 'Rahmennr. Int.'
+          end
+          object lblLhnr2: TLabel
+            Left = 9
+            Top = 58
+            Width = 57
+            Height = 13
+            Caption = 'DruckID-Nr.'
+          end
+          object Label18: TLabel
+            Left = 338
+            Top = 56
+            Width = 30
+            Height = 13
+            Caption = 'übern.'
+          end
+          object dbeArtNr: TDBEdit
+            Width = 91
+            CharCase = 'ecUpperCase'
+            OnChange = 'dbeArtNrChange'
+            OnDblClick = 'dbeArtNrDblClick'
+          end
+          object dbeStck: TDBEdit
+            Left = 128
+            Width = 43
+            Color = 16764108
+          end
+          object dbeEinheit: TDBEdit
+            Left = 173
+          end
+          object dbeText: TDBEdit
+            Left = 216
+            Width = 235
+          end
+          object dbeEPreis: TDBEdit
+            OnExit = 'dbeEPreisExit'
+          end
+          object dbeRabatt: TDBEdit
+            Visible = False
+          end
+          object dbeGPreis: TDBEdit
+            Color = 15000804
+            ReadOnly = True
+          end
+          object dbmLangtext: TDBMemo
+            Left = 216
+            Width = 235
+            ReadOnly = True
+            TabOrder = 12
+          end
+          object pnlLangtext: TPanel
+            TabOrder = 15
+          end
+          object dbeMwStPos: TDBEdit
+            Top = 74
+            TabOrder = 14
+            Visible = False
+          end
+          object dbePosKz: TDBEdit
+            TabOrder = 16
+          end
+          object dblcbMwst: TDBComboBox
+            Top = 54
+            TabOrder = 9
+            TabStop = False
+          end
+          object dbeBestellNr: TDBEdit
+            Width = 176
+            ReadOnly = False
+            TabOrder = 13
+            OnExit = None
+          end
+          object dbeGeliefert: TDBEdit
+            Left = 552
+            Top = 75
+            Width = 57
+            TabStop = False
+            Color = 15395562
+            ReadOnly = True
+            TabOrder = 11
+            Visible = False
+          end
+          object dbePreisPreiseinheit: TDBEdit
+            Left = 451
+            Top = 26
+            Width = 60
+            Height = 21
+            DataField = 'PREISPREISEINHEIT'
+            DataSource = 'dsBelegPos'
+            TabOrder = 8
+            OnExit = 'dbePreisPreiseinheitExit'
+          end
+          object dbePE: TDBEdit
+            Left = 551
+            Top = 26
+            Width = 60
+            Height = 21
+            TabStop = False
+            Color = 15000804
+            DataField = 'PREISEINHEIT'
+            DataSource = 'dsBelegPos'
+            ReadOnly = True
+            TabOrder = 10
+          end
+          object dbeRahmenArtikel: TDBEdit
+            Left = 450
+            Top = 53
+            Width = 61
+            Height = 21
+            TabStop = False
+            Color = 15395562
+            DataField = 'RAHMENTEXT'
+            DataSource = 'dsBelegPos'
+            ReadOnly = True
+            TabOrder = 17
+          end
+          object dbeBestBemerk: TDBEdit
+            Left = 309
+            Top = 52
+            Width = 25
+            Height = 20
+            TabStop = False
+            Color = 15395562
+            DataField = 'rechfreigabe'
+            DataSource = 'dsBelegPos'
+            TabOrder = 18
+            OnExit = 'dbeArtNrExit'
+          end
+          object dbecbldnr: TDBComboBox
+            Left = 73
+            Top = 52
+            Width = 232
+            Height = 21
+            Color = 15395562
+            DataField = 'IndentNrDruck'
+            DataSource = 'dsBelegPos'
+            ItemHeight = 13
+            TabOrder = 19
+          end
+        end
+      end
+      object tshAnlagen: TTabSheet
+        object Button1: TButton
+          Left = 8
+          Top = 136
+          Width = 75
+          Height = 25
+          Caption = 'Button1'
+          TabOrder = 1
+        end
+      end
+      object TabSheet1: TTabSheet
+        Caption = 'Preisübernahme'
+        ImageIndex = 4
+        object dbcPreise: TDBCtrlGrid
+          Left = 3
+          Top = 16
+          Width = 633
+          Height = 400
+          AllowDelete = False
+          AllowInsert = False
+          DataSource = 'dsBelegPos'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          PanelHeight = 100
+          PanelWidth = 616
+          ParentFont = False
+          PopupMenu = 'popPreise'
+          TabOrder = 0
+          RowCount = 4
+          SelectedColor = 11053224
+          OnPaintPanel = 'dbcgPosPaintPanel'
+          object Label4: TLabel
+            Left = 536
+            Top = 31
+            Width = 14
+            Height = 13
+            Caption = 'PE'
+          end
+          object Label7: TLabel
+            Left = 294
+            Top = 31
+            Width = 70
+            Height = 13
+            Caption = 'Angebotspreis:'
+          end
+          object Label5: TLabel
+            Left = 10
+            Top = 31
+            Width = 57
+            Height = 13
+            Caption = 'Menge von:'
+          end
+          object Label6: TLabel
+            Left = 154
+            Top = 31
+            Width = 52
+            Height = 13
+            Caption = 'Menge bis:'
+          end
+          object Label8: TLabel
+            Left = 10
+            Top = 55
+            Width = 43
+            Height = 13
+            Caption = 'Bestellnr:'
+          end
+          object Label9: TLabel
+            Left = 517
+            Top = 55
+            Width = 21
+            Height = 13
+            Caption = 'VPE'
+          end
+          object Label10: TLabel
+            Left = 10
+            Top = 79
+            Width = 25
+            Height = 13
+            Caption = 'MOQ'
+          end
+          object Label11: TLabel
+            Left = 190
+            Top = 79
+            Width = 44
+            Height = 13
+            Caption = 'gültig bis:'
+          end
+          object Label12: TLabel
+            Left = 228
+            Top = 55
+            Width = 53
+            Height = 13
+            Caption = 'Bezeichng.'
+          end
+          object Label13: TLabel
+            Left = 310
+            Top = 80
+            Width = 42
+            Height = 13
+            Caption = 'Lieferzeit'
+          end
+          object Label14: TLabel
+            Left = 409
+            Top = 79
+            Width = 57
+            Height = 13
+            Caption = 'Angebot Nr.'
+          end
+          object Label3: TLabel
+            Left = 378
+            Top = 79
+            Width = 25
+            Height = 13
+            Caption = 'Tage'
+          end
+          object Label15: TLabel
+            Left = 446
+            Top = 31
+            Width = 32
+            Height = 13
+            Caption = 'Rabatt'
+          end
+          object Label17: TLabel
+            Left = 114
+            Top = 79
+            Width = 28
+            Height = 13
+            Caption = 'K.Zhl.'
+          end
+          object DBEdit1: TDBEdit
+            Left = 4
+            Top = 4
+            Width = 33
+            Height = 21
+            DataField = 'POS'
+            DataSource = 'dsBelegPos'
+            TabOrder = 12
+          end
+          object DBEdit2: TDBEdit
+            Left = 38
+            Top = 4
+            Width = 91
+            Height = 21
+            CharCase = 'ecUpperCase'
+            DataField = 'ARTNR'
+            DataSource = 'dsBelegPos'
+            TabOrder = 13
+            OnDblClick = 'dbeArtNrDblClick'
+            OnEnter = 'dbeArtNrEnter'
+            OnExit = 'dbeArtNrExit'
+          end
+          object DBEdit3: TDBEdit
+            Left = 128
+            Top = 4
+            Width = 43
+            Height = 21
+            Color = 16764108
+            DataField = 'STCK'
+            DataSource = 'dsBelegPos'
+            TabOrder = 14
+            OnExit = 'dbeStckExit'
+          end
+          object DBEdit4: TDBEdit
+            Left = 173
+            Top = 4
+            Width = 41
+            Height = 21
+            DataField = 'EINHEIT'
+            DataSource = 'dsBelegPos'
+            TabOrder = 16
+          end
+          object DBEdit5: TDBEdit
+            Left = 216
+            Top = 4
+            Width = 235
+            Height = 21
+            DataField = 'TEXT'
+            DataSource = 'dsBelegPos'
+            TabOrder = 15
+          end
+          object DBEdit6: TDBEdit
+            Left = 451
+            Top = 4
+            Width = 60
+            Height = 21
+            DataField = 'EPREIS'
+            DataSource = 'dsBelegPos'
+            TabOrder = 17
+            OnExit = 'dbeEPreisExit'
+          end
+          object DBEdit7: TDBEdit
+            Left = 512
+            Top = 4
+            Width = 39
+            Height = 21
+            DataField = 'RABATT'
+            DataSource = 'dsBelegPos'
+            TabOrder = 18
+            Visible = False
+          end
+          object DBEdit8: TDBEdit
+            Left = 552
+            Top = 4
+            Width = 60
+            Height = 21
+            Color = 15000804
+            DataField = 'GPREIS'
+            DataSource = 'dsBelegPos'
+            ReadOnly = True
+            TabOrder = 19
+          end
+          object DBEdit14: TDBEdit
+            Left = 551
+            Top = 26
+            Width = 60
+            Height = 21
+            TabStop = False
+            Color = 8709854
+            DataField = 'PREISEINHEIT'
+            DataSource = 'dsBelegPos'
+            ReadOnly = True
+            TabOrder = 3
+          end
+          object dbepreis: TDBEdit
+            Left = 368
+            Top = 27
+            Width = 73
+            Height = 21
+            Color = 8709854
+            DataField = 'ORGPREIS'
+            DataSource = 'dsBelegPos'
+            TabOrder = 2
+          end
+          object dbemvon: TDBEdit
+            Left = 72
+            Top = 27
+            Width = 73
+            Height = 21
+            Color = 8709854
+            DataField = 'rpversand'
+            DataSource = 'dsBelegPos'
+            TabOrder = 0
+          end
+          object dbembis: TDBEdit
+            Left = 216
+            Top = 27
+            Width = 73
+            Height = 21
+            Color = 8709854
+            DataField = 'rpverpackung'
+            DataSource = 'dsBelegPos'
+            TabOrder = 1
+          end
+          object dbebesntl: TDBEdit
+            Left = 72
+            Top = 51
+            Width = 145
+            Height = 21
+            Color = 8709854
+            DataField = 'abNr'
+            DataSource = 'dsBelegPos'
+            TabOrder = 4
+          end
+          object dbevpe: TDBEdit
+            Left = 539
+            Top = 51
+            Width = 73
+            Height = 21
+            Color = 8709854
+            DataField = 'rpsonst'
+            DataSource = 'dsBelegPos'
+            TabOrder = 6
+          end
+          object dbemoq: TDBEdit
+            Left = 72
+            Top = 75
+            Width = 41
+            Height = 21
+            DataField = 'rpKupfer'
+            DataSource = 'dsBelegPos'
+            TabOrder = 7
+          end
+          object dbegbis: TDBEdit
+            Left = 236
+            Top = 75
+            Width = 73
+            Height = 21
+            DataField = 'LIEFERTERMIN'
+            DataSource = 'dsBelegPos'
+            TabOrder = 9
+          end
+          object dbebezl: TDBEdit
+            Left = 288
+            Top = 52
+            Width = 225
+            Height = 21
+            TabStop = False
+            Color = 8709854
+            DataField = 'BESTBemerk'
+            DataSource = 'dsBelegPos'
+            TabOrder = 5
+          end
+          object dbelzeit: TDBEdit
+            Left = 354
+            Top = 75
+            Width = 23
+            Height = 21
+            Color = 8709854
+            DataField = 'RGNrIntern'
+            DataSource = 'dsBelegPos'
+            TabOrder = 10
+          end
+          object dbeangebnr: TDBEdit
+            Left = 468
+            Top = 75
+            Width = 145
+            Height = 21
+            DataField = 'abrahmen'
+            DataSource = 'dsBelegPos'
+            TabOrder = 11
+          end
+          object DBEdit9: TDBEdit
+            Left = 480
+            Top = 27
+            Width = 33
+            Height = 21
+            DataField = 'RABATT'
+            DataSource = 'dsBelegPos'
+            TabOrder = 20
+          end
+          object dbekupfer: TDBEdit
+            Left = 145
+            Top = 76
+            Width = 41
+            Height = 21
+            DataField = 'UFaktor'
+            DataSource = 'dsBelegPos'
+            TabOrder = 8
+          end
+        end
+      end
+    end
+  end
+  object fraBtn: TfraBtn
+    Width = 1104
+    object tlbFunktionen: TAdvToolBar
+      object btnSearch: TAdvGlowButton
+        PopupMenu = 'popBelegDirekt'
+      end
+      object btnSearchArt: TAdvGlowButton
+        DropDownMenu = 'pmSuchen'
+      end
+      object btnPrint: TAdvGlowMenuButton
+        OnClick = 'btnPrintClick'
+      end
+    end
+    object ilFunktionen: TImageList
+      Left = 669
+      Top = 2
+    end
+    object pmCopy: TPopupMenu
+      object Kopieren1: TMenuItem
+        Caption = 'Kopieren'
+        OnClick = 'Kopieren1Click'
+      end
+      object Bestellung1: TMenuItem
+        Caption = '-> Bestellung'
+        OnClick = 'Bestellung1Click'
+      end
+    end
+    object pmFunktionen: TPopupMenu
+      object miBest1TSP: TMenuItem
+        Caption = '-'
+      end
+      object ArtikelInfo2: TMenuItem
+        Action = 'actArtikelInfo'
+      end
+      object N6: TMenuItem
+        Caption = '-'
+      end
+      object Fehlmengenberechnen2: TMenuItem
+        Caption = 'Fehlmengen berechnen'
+        OnClick = 'Fehlmengenberechnen1Click'
+      end
+      object Auftrgezeigen2: TMenuItem
+        Caption = 'Aufträge zeigen'
+        OnClick = 'Auftrgezeigen1Click'
+      end
+      object N8: TMenuItem
+        Caption = '-'
+      end
+      object Pre1: TMenuItem
+        Action = 'actPreisInfo'
+      end
+    end
+    object pmDrucken: TPopupMenu
+      Top = 1
+      object N3: TMenuItem
+        Caption = '-'
+      end
+      object Excel1: TMenuItem
+        Caption = '-> Excel'
+        OnClick = 'Excel1Click'
+      end
+      object N7: TMenuItem
+        Caption = '-'
+      end
+      object Abschliessenlter6Monate1: TMenuItem
+        Caption = 'Abschliessen älter 6 Monate'
+        OnClick = 'Abschliessenlter6Monate1Click'
+      end
+    end
+  end
+  object fraTree1: TfraTreeList
+    Left = 859
+    Height = 749
+    object trlNav: TTreeList
+      Height = 733
+    end
+  end
+  object pmPos: TPopupMenu
+    Left = 647
+    Top = 488
+    object pmiZwischensummeEinfuegen: TMenuItem
+      Visible = False
+    end
+    object pmiZwischensumme: TMenuItem
+      Visible = False
+    end
+    object pmiAlternativ: TMenuItem
+      Visible = False
+    end
+    object N1: TMenuItem
+      Visible = False
+    end
+    object pmiAlternativpositionumwandeln: TMenuItem
+      Visible = False
+    end
+    object pmiAlsStandardpositionumwandel: TMenuItem
+      Visible = False
+    end
+    object N2: TMenuItem
+      Visible = False
+    end
+    object AllePositionenohneMwSt1: TMenuItem
+      Visible = False
+    end
+    object Rahmenpositionlschen1: TMenuItem
+      Caption = 'Rahmenposition löschen'
+    end
+    object N5: TMenuItem
+      Caption = '-'
+    end
+    object ArtikelInfo1: TMenuItem
+      Action = 'actArtikelInfo'
+    end
+    object NeuePoszeile1: TMenuItem
+      Action = 'actNewPos'
+    end
+    object LschenPosition1: TMenuItem
+      Action = 'actDelPos'
+    end
+    object miAktPos: TMenuItem
+      Action = 'actAktuelle'
+    end
+    object miAktArtikel: TMenuItem
+      Action = 'actArtikelFilter'
+    end
+    object pmiPosKopieren: TMenuItem
+      Action = 'actCopyPos'
+    end
+    object miStrich3: TMenuItem
+      Visible = False
+    end
+    object Positioneinfgen1: TMenuItem
+    end
+    object miABNrAlle: TMenuItem
+      Caption = 'AB-Nr. für alle Positionen'
+    end
+    object ABDatumfrallePositionen1: TMenuItem
+      Caption = 'AB-Datum für alle Positionen'
+    end
+    object WunschterminfrallePositionen1: TMenuItem
+      Caption = 'Wunschtermin für alle Positionen'
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
+    object Fehlmengenberechnen1: TMenuItem
+      Caption = 'Fehlmengen berechnen'
+      OnClick = 'Fehlmengenberechnen1Click'
+    end
+    object Auftrgezeigen1: TMenuItem
+      Caption = 'Aufträge zeigen'
+      OnClick = 'Auftrgezeigen1Click'
+    end
+  end
+  object dsSparte: TDataSource
+    Left = 646
+  end
+  object dsAnlagen: TDataSource
+    Left = 647
+  end
+  object WordDocument: TWordDocument
+    Left = 645
+  end
+  object WordApplication: TWordApplication
+    Left = 645
+  end
+  object dsBelegposLager: TDataSource
+    DataSet = 'dmBestellungTSP.cdsBelegposLager'
+    Left = 645
+    Top = 421
+  end
+  object dsLagerChaos: TDataSource
+    DataSet = 'dmBestellungTSP.cdsLagerChaos'
+    Left = 645
+    Top = 453
+  end
+  object pmSuchen: TPopupMenu
+    Left = 708
+    Top = 2
+    object Artikelsuchen1: TMenuItem
+      Caption = 'Artikel suchen'
+      OnClick = 'btnSearchArtClick'
+    end
+  end
+  object aclDateFields: TActionList
+    Left = 645
+    Top = 51
+    object actGetDate: TAction
+      ShortCut = 16452
+      OnExecute = 'actGetDateExecute'
+    end
+    object actArtikelInfo: TAction
+      Caption = 'Artikel-Info'
+      ShortCut = 113
+      OnExecute = 'actArtInfo'
+    end
+    object actNewPos: TAction
+      Caption = 'Neue Position'
+      ShortCut = 114
+      OnExecute = 'actNewPosExecute'
+    end
+    object actDelPos: TAction
+      Caption = 'Löschen Position'
+      ShortCut = 120
+      OnExecute = 'actDelPosExecute'
+    end
+    object actCopyPos: TAction
+      Caption = 'Kopieren Position'
+      ShortCut = 116
+      OnExecute = 'actCopyPosExecute'
+    end
+    object actAktuelle: TAction
+      Caption = 'nur Aktuelle Positionen'
+      ShortCut = 117
+    end
+    object actArtikelFilter: TAction
+      Caption = 'nur gewählte Artikelnummer'
+      ShortCut = 118
+      OnExecute = 'actArtikelFilterExecute'
+    end
+    object actPreisInfo: THITAction
+      Category = 'HIT'
+      Caption = 'Preisinfo'
+      ShortCut = 123
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actPreisInfoExecute'
+    end
+  end
+  object dsVersand: TDataSource
+    DataSet = 'dmTextkonstanten.cdsVersand'
+    Left = 645
+    Top = 99
+  end
+  object popPreise: TPopupMenu
+    Left = 645
+    Top = 522
+    object inArtikelbernehmen1: TMenuItem
+      Caption = 'in Artikel übernehmen'
+      OnClick = 'inArtikelbernehmen1Click'
+    end
+  end
+end

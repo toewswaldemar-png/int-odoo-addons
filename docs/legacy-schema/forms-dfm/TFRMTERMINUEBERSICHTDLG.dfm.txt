@@ -1,0 +1,238 @@
+object frmterminuebersichtDlg: TfrmterminuebersichtDlg
+  Left = 360
+  Top = 165
+  BorderStyle = 'bsDialog'
+  Caption = 'Termine'
+  ClientHeight = 566
+  ClientWidth = 713
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (713 566)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object SpeedButton1: TSpeedButton
+    Left = 32
+    Top = 536
+    Width = 89
+    Height = 22
+    Caption = 'Filtern'
+    OnClick = 'SpeedButton1Click'
+  end
+  object SpeedButton2: TSpeedButton
+    Left = 128
+    Top = 536
+    Width = 89
+    Height = 22
+    Caption = 'aufheben'
+    OnClick = 'SpeedButton2Click'
+  end
+  object OKBtn: TButton
+    Left = 543
+    Top = 532
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 623
+    Top = 532
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object dbcTermine: TDBCtrlGrid
+    Left = 16
+    Top = 16
+    Width = 666
+    Height = 462
+    DataSource = 'dsTermine'
+    PanelHeight = 66
+    PanelWidth = 649
+    TabOrder = 2
+    RowCount = 7
+    OnPaintPanel = 'dbcTerminePaintPanel'
+    object dbtDatum: TDBText
+      Left = 8
+      Top = 8
+      Width = 65
+      Height = 17
+      DataField = 'Termin'
+      DataSource = 'dsTermine'
+    end
+    object dbtUhrzeit: TDBText
+      Left = 88
+      Top = 8
+      Width = 65
+      Height = 17
+      DataField = 'Uhrzeit'
+      DataSource = 'dsTermine'
+    end
+    object dbtBezeich: TDBText
+      Left = 160
+      Top = 8
+      Width = 217
+      Height = 17
+      DataField = 'Beschreibung'
+      DataSource = 'dsTermine'
+      OnClick = 'dbtBezeichClick'
+    end
+    object imgAdresse: TImage
+      Left = 8
+      Top = 32
+      Width = 25
+      Height = 25
+      Picture.Data = <binary 2068 bytes>
+      Transparent = True
+      OnClick = 'imgBelegDblClick'
+      OnDblClick = 'imgBelegDblClick'
+    end
+    object lblAdresse: TLabel
+      Left = 40
+      Top = 37
+      Width = 46
+      Height = 13
+      Caption = 'Adresse'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 2697711
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      WordWrap = True
+      OnClick = 'imgBelegDblClick'
+    end
+    object imgArtikel: TImage
+      Left = 120
+      Top = 32
+      Width = 25
+      Height = 25
+      Center = True
+      Picture.Data = <binary 2068 bytes>
+      Stretch = True
+      Transparent = True
+      OnClick = 'imgBelegDblClick'
+      OnDblClick = 'imgBelegDblClick'
+    end
+    object lblArtikel: TLabel
+      Left = 152
+      Top = 37
+      Width = 37
+      Height = 13
+      Caption = 'Artikel'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 2697711
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      WordWrap = True
+      OnClick = 'imgBelegDblClick'
+    end
+    object imgBeleg: TImage
+      Left = 216
+      Top = 32
+      Width = 25
+      Height = 25
+      Center = True
+      Picture.Data = <binary 1562 bytes>
+      Stretch = True
+      Transparent = True
+      OnClick = 'imgBelegDblClick'
+      OnDblClick = 'imgBelegDblClick'
+    end
+    object lblBeleg: TLabel
+      Left = 248
+      Top = 37
+      Width = 33
+      Height = 13
+      Caption = 'Beleg'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 2697711
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      WordWrap = True
+      OnClick = 'imgBelegDblClick'
+    end
+    object imgBenutzer: TImage
+      Left = 312
+      Top = 32
+      Width = 25
+      Height = 25
+      Center = True
+      Picture.Data = <binary 2068 bytes>
+      Stretch = True
+      Transparent = True
+      OnClick = 'imgBelegDblClick'
+    end
+    object lblBenutzer: TLabel
+      Left = 344
+      Top = 37
+      Width = 51
+      Height = 13
+      Caption = 'Benutzer'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 2697711
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      WordWrap = True
+      OnClick = 'imgBelegDblClick'
+    end
+    object imgAktion: TImage
+      Left = 432
+      Top = 32
+      Width = 25
+      Height = 25
+      Center = True
+      Picture.Data = <binary 1652 bytes>
+      Stretch = True
+      Transparent = True
+      OnClick = 'imgAktionDblClick'
+      OnDblClick = 'imgAktionDblClick'
+    end
+    object lblAktion: TLabel
+      Left = 464
+      Top = 37
+      Width = 85
+      Height = 13
+      Caption = 'Termin bearbeiten'
+      WordWrap = True
+      OnClick = 'imgAktionDblClick'
+    end
+    object dbtBemerk: TDBText
+      Left = 384
+      Top = 8
+      Width = 257
+      Height = 17
+      DataField = 'Bemerkung'
+      DataSource = 'dsTermine'
+      OnClick = 'dbtBezeichClick'
+    end
+  end
+  object dtpTag: TDateTimePicker
+    Left = 32
+    Top = 509
+    Width = 186
+    Height = 21
+    Date = '<extended:80bcedf4a68d999b0e40>'
+    Time = '<extended:80bcedf4a68d999b0e40>'
+    TabOrder = 3
+  end
+  object dsTermine: TDataSource
+    Left = 224
+    Top = 504
+  end
+end

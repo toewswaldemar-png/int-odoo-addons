@@ -1,0 +1,3 @@
+object dmFAMSuche: TdmFAMSuche
+  OldCreateOrder = True
+end

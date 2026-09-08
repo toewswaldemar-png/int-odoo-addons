@@ -1,0 +1,22 @@
+object dmToDo: TdmToDo
+  OldCreateOrder = False
+  OnDestroy = 'DataModuleDestroy'
+  Left = 757
+  Top = 136
+  Height = 150
+  Width = 215
+  object cdsTodo: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    OnNewRecord = 'cdsTodoNewRecord'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 24
+    Top = 16
+  end
+end

@@ -1,0 +1,696 @@
+object dmBelegeKalkulation: TdmBelegeKalkulation
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 871
+  Top = 325
+  Height = 285
+  Width = 387
+  object cdsKalkulation: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'dsp'
+    OnNewRecord = 'cdsKalkulationNewRecord'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdMaster'
+    WriteLastSQL = False
+    Left = 48
+    Top = 32
+    object cdsKalkulationOID: TIntegerField
+      FieldName = 'OID'
+      Required = True
+    end
+    object cdsKalkulationSOID: TIntegerField
+      FieldName = 'SOID'
+      Required = True
+    end
+    object cdsKalkulationNUMMER: TIntegerField
+      FieldName = 'NUMMER'
+    end
+    object cdsKalkulationANLAGE: TSQLTimeStampField
+      FieldName = 'ANLAGE'
+    end
+    object cdsKalkulationGRUPPE: TIntegerField
+      FieldName = 'GRUPPE'
+    end
+    object cdsKalkulationBEZEICHNUNG1: TStringField
+      FieldName = 'BEZEICHNUNG1'
+      Size = 60
+    end
+    object cdsKalkulationBEZEICHNUNG2: TStringField
+      FieldName = 'BEZEICHNUNG2'
+      Size = 60
+    end
+    object cdsKalkulationBEZEICHNUNG3: TStringField
+      FieldName = 'BEZEICHNUNG3'
+      Size = 60
+    end
+    object cdsKalkulationEKNETTO: TFMTBCDField
+      FieldName = 'EKNETTO'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsKalkulationVKNETTO: TFMTBCDField
+      FieldName = 'VKNETTO'
+      OnChange = 'cdsKalkulationVKNETTOChange'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsKalkulationMWST: TStringField
+      FieldName = 'MWST'
+      Size = 5
+    end
+    object cdsKalkulationEINHEIT: TStringField
+      FieldName = 'EINHEIT'
+      Size = 10
+    end
+    object cdsKalkulationBESTELLNR: TStringField
+      FieldName = 'BESTELLNR'
+      Size = 30
+    end
+    object cdsKalkulationAUFSCHLAG: TFMTBCDField
+      FieldName = 'AUFSCHLAG'
+      Precision = 15
+      Size = 2
+    end
+    object cdsKalkulationARTTEXT: TMemoField
+      FieldName = 'ARTTEXT'
+      BlobType = 'ftMemo'
+      Size = 1
+    end
+    object cdsKalkulationKURZBEZEICHNUNG: TStringField
+      FieldName = 'KURZBEZEICHNUNG'
+      Size = 30
+    end
+    object cdsKalkulationARTNR: TStringField
+      FieldName = 'ARTNR'
+      Size = 30
+    end
+    object cdsKalkulationANZAHL: TFMTBCDField
+      FieldName = 'ANZAHL'
+      OnChange = 'cdsKalkulationANZAHLChange'
+      Precision = 15
+      Size = 2
+    end
+    object cdsKalkulationARTOID: TIntegerField
+      FieldName = 'ARTOID'
+    end
+    object cdsKalkulationGPREIS: TFMTBCDField
+      FieldName = 'GPREIS'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsKalkulationHAUPTLIEFERANT: TIntegerField
+      FieldName = 'HAUPTLIEFERANT'
+    end
+  end
+  object cdsLieferanten: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 48
+    Top = 176
+  end
+  object cdsLieferantenArtikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'parLieferant'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+      item1 = {
+        DataType = 'ftInteger'
+        Name = 'parBelegOID'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 152
+    Top = 104
+  end
+  object cdsBestellungPos: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 272
+    Top = 104
+    object cdsBestellungPosSOID: TIntegerField
+      FieldName = 'SOID'
+      Required = True
+    end
+    object cdsBestellungPosPOSNR: TIntegerField
+      Alignment = 'taCenter'
+      FieldName = 'POSNR'
+    end
+    object cdsBestellungPosOID: TIntegerField
+      FieldName = 'OID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object cdsBestellungPosTEXT: TStringField
+      FieldName = 'TEXT'
+      FixedChar = True
+      Size = 60
+    end
+    object cdsBestellungPosEINHEIT: TStringField
+      FieldName = 'EINHEIT'
+      Size = 8
+    end
+    object cdsBestellungPosPOS: TStringField
+      FieldName = 'POS'
+      Size = 10
+    end
+    object cdsBestellungPosZWSUMME: TStringField
+      FieldName = 'ZWSUMME'
+      Size = 1
+    end
+    object cdsBestellungPosMWST: TStringField
+      FieldName = 'MWST'
+      FixedChar = True
+      Size = 4
+    end
+    object cdsBestellungPosKZ: TStringField
+      FieldName = 'KZ'
+      FixedChar = True
+      Size = 1
+    end
+    object cdsBestellungPosSTCK: TFloatField
+      FieldName = 'STCK'
+    end
+    object cdsBestellungPosEPREIS: TFMTBCDField
+      FieldName = 'EPREIS'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungPosGPREIS: TFMTBCDField
+      FieldName = 'GPREIS'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungPosRABATT: TFMTBCDField
+      FieldName = 'RABATT'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungPosPOSTEXT: TMemoField
+      FieldName = 'POSTEXT'
+      BlobType = 'ftMemo'
+      Size = 1
+    end
+    object cdsBestellungPosORGPREIS: TFMTBCDField
+      FieldName = 'ORGPREIS'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungPosORGEK: TFMTBCDField
+      FieldName = 'ORGEK'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungPosARTOID: TIntegerField
+      FieldName = 'ARTOID'
+    end
+    object cdsBestellungPosARTNR: TStringField
+      FieldName = 'ARTNR'
+      Size = 30
+    end
+    object cdsBestellungPosPOSSORT: TIntegerField
+      FieldName = 'POSSORT'
+    end
+    object cdsBestellungPosBESTELLNR: TStringField
+      FieldName = 'BESTELLNR'
+      Size = 30
+    end
+    object cdsBestellungPosGELIEFERT: TFloatField
+      FieldName = 'GELIEFERT'
+    end
+    object cdsBestellungPoscalcEP: TFloatField
+      FieldKind = 'fkCalculated'
+      FieldName = 'calcEP'
+      DisplayFormat = '###0.,00'
+      Calculated = True
+    end
+    object cdsBestellungPoscalcSumKalk: TFloatField
+      FieldKind = 'fkCalculated'
+      FieldName = 'calcSumKalk'
+      DisplayFormat = '###0.,00'
+      Calculated = True
+    end
+  end
+  object cdsBestellung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'oid'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 272
+    Top = 32
+    object cdsBestellungOID: TIntegerField
+      FieldName = 'OID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object cdsBestellungNAME1: TStringField
+      FieldName = 'NAME1'
+      Size = 60
+    end
+    object cdsBestellungNAME2: TStringField
+      FieldName = 'NAME2'
+      Size = 60
+    end
+    object cdsBestellungNAME3: TStringField
+      FieldName = 'NAME3'
+      Size = 60
+    end
+    object cdsBestellungSTRASSE: TStringField
+      FieldName = 'STRASSE'
+      Size = 60
+    end
+    object cdsBestellungLAND: TStringField
+      FieldName = 'LAND'
+      Size = 3
+    end
+    object cdsBestellungPLZ: TStringField
+      FieldName = 'PLZ'
+      Size = 15
+    end
+    object cdsBestellungORT: TStringField
+      FieldName = 'ORT'
+      Size = 60
+    end
+    object cdsBestellungZKONDI: TIntegerField
+      FieldName = 'ZKONDI'
+    end
+    object cdsBestellungHAUPTAUFTRAG: TIntegerField
+      Alignment = 'taLeftJustify'
+      FieldName = 'HAUPTAUFTRAG'
+    end
+    object cdsBestellungGEDRUCKT: TStringField
+      FieldName = 'GEDRUCKT'
+      FixedChar = True
+      Size = 1
+    end
+    object cdsBestellungABGESCHLOSSEN: TStringField
+      FieldName = 'ABGESCHLOSSEN'
+      FixedChar = True
+      Size = 1
+    end
+    object cdsBestellungBELEGDATUM: TSQLTimeStampField
+      FieldName = 'BELEGDATUM'
+      DisplayFormat = 'dd/mm/yyyy'
+    end
+    object cdsBestellungVERSANDART: TIntegerField
+      FieldName = 'VERSANDART'
+    end
+    object cdsBestellungLIEFERTERMIN: TSQLTimeStampField
+      FieldName = 'LIEFERTERMIN'
+      DisplayFormat = 'dd/mm/yyyy'
+    end
+    object cdsBestellungNUMMER: TIntegerField
+      Alignment = 'taLeftJustify'
+      FieldName = 'NUMMER'
+    end
+    object cdsBestellungBELEGART: TSmallintField
+      FieldName = 'BELEGART'
+    end
+    object cdsBestellungADROID: TIntegerField
+      FieldName = 'ADROID'
+    end
+    object cdsBestellungANREDE: TStringField
+      FieldName = 'ANREDE'
+    end
+    object cdsBestellungFAELLIG: TSQLTimeStampField
+      FieldName = 'FAELLIG'
+    end
+    object cdsBestellungADRNR: TIntegerField
+      Alignment = 'taLeftJustify'
+      FieldName = 'ADRNR'
+    end
+    object cdsBestellungMWST: TFMTBCDField
+      FieldName = 'MWST'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungMWSTHALB: TFMTBCDField
+      FieldName = 'MWSTHALB'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungNETTO: TFMTBCDField
+      FieldName = 'NETTO'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungBRUTTO: TFMTBCDField
+      FieldName = 'BRUTTO'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungOFFEN: TFMTBCDField
+      FieldName = 'OFFEN'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungKOPFTEXT: TMemoField
+      FieldName = 'KOPFTEXT'
+      BlobType = 'ftMemo'
+      Size = 1
+    end
+    object cdsBestellungFUSSTEXT: TMemoField
+      FieldName = 'FUSSTEXT'
+      BlobType = 'ftMemo'
+      Size = 1
+    end
+    object cdsBestellungMWSTSATZ: TFMTBCDField
+      FieldName = 'MWSTSATZ'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungMWSTSATZHALB: TFMTBCDField
+      FieldName = 'MWSTSATZHALB'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungBELEGBEZ: TStringField
+      FieldName = 'BELEGBEZ'
+      Size = 30
+    end
+    object cdsBestellungSPARTE: TIntegerField
+      FieldName = 'SPARTE'
+    end
+    object cdsBestellungBEARBEITER: TStringField
+      FieldName = 'BEARBEITER'
+      Size = 30
+    end
+    object cdsBestellungPROJEKT: TIntegerField
+      FieldName = 'PROJEKT'
+    end
+    object cdsBestellungERLOESKONTO: TIntegerField
+      FieldName = 'ERLOESKONTO'
+    end
+    object cdsBestellungBEWERTUNG: TSmallintField
+      FieldName = 'BEWERTUNG'
+    end
+    object cdsBestellungUSTIDENT: TStringField
+      FieldName = 'USTIDENT'
+      Size = 30
+    end
+    object cdsBestellungSTEUERNR: TStringField
+      FieldName = 'STEUERNR'
+      Size = 30
+    end
+    object cdsBestellungSPERRE: TStringField
+      FieldName = 'SPERRE'
+      FixedChar = True
+      Size = 1
+    end
+    object cdsBestellungRECHNAME1: TStringField
+      FieldName = 'RECHNAME1'
+      Size = 60
+    end
+    object cdsBestellungRECHNAME2: TStringField
+      FieldName = 'RECHNAME2'
+      Size = 60
+    end
+    object cdsBestellungRECHNAME3: TStringField
+      FieldName = 'RECHNAME3'
+      Size = 60
+    end
+    object cdsBestellungRECHSTRASSE: TStringField
+      FieldName = 'RECHSTRASSE'
+      Size = 60
+    end
+    object cdsBestellungRECHPLZ: TStringField
+      FieldName = 'RECHPLZ'
+      Size = 10
+    end
+    object cdsBestellungRECHORT: TStringField
+      FieldName = 'RECHORT'
+      Size = 60
+    end
+    object cdsBestellungABSCHLAGAUFTRAG: TIntegerField
+      Alignment = 'taLeftJustify'
+      FieldName = 'ABSCHLAGAUFTRAG'
+    end
+    object cdsBestellungNETTOVOLL: TFMTBCDField
+      FieldName = 'NETTOVOLL'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungNETTOHALB: TFMTBCDField
+      FieldName = 'NETTOHALB'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsBestellungADRDEBNR: TStringField
+      FieldName = 'ADRDEBNR'
+      Size = 10
+    end
+    object cdsBestellungADRKREDNR: TStringField
+      FieldName = 'ADRKREDNR'
+      Size = 10
+    end
+    object cdsBestellungLIEFNAME1: TStringField
+      FieldName = 'LIEFNAME1'
+      Size = 60
+    end
+    object cdsBestellungLIEFNAME2: TStringField
+      FieldName = 'LIEFNAME2'
+      Size = 60
+    end
+    object cdsBestellungLIEFNAME3: TStringField
+      FieldName = 'LIEFNAME3'
+      Size = 60
+    end
+    object cdsBestellungLIEFSTRASSE: TStringField
+      FieldName = 'LIEFSTRASSE'
+      Size = 60
+    end
+    object cdsBestellungLIEFPLZ: TStringField
+      FieldName = 'LIEFPLZ'
+      Size = 10
+    end
+    object cdsBestellungLIEFORT: TStringField
+      FieldName = 'LIEFORT'
+      Size = 60
+    end
+    object cdsBestellungMAHNKZ: TStringField
+      FieldName = 'MAHNKZ'
+      FixedChar = True
+      Size = 1
+    end
+  end
+  object cdsDest: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 48
+    Top = 104
+    object IntegerField1: TIntegerField
+      FieldName = 'OID'
+      Required = True
+    end
+    object IntegerField2: TIntegerField
+      FieldName = 'SOID'
+      Required = True
+    end
+    object IntegerField3: TIntegerField
+      FieldName = 'NUMMER'
+    end
+    object SQLTimeStampField1: TSQLTimeStampField
+      FieldName = 'ANLAGE'
+    end
+    object IntegerField4: TIntegerField
+      FieldName = 'GRUPPE'
+    end
+    object StringField1: TStringField
+      FieldName = 'BEZEICHNUNG1'
+      Size = 60
+    end
+    object StringField2: TStringField
+      FieldName = 'BEZEICHNUNG2'
+      Size = 60
+    end
+    object StringField3: TStringField
+      FieldName = 'BEZEICHNUNG3'
+      Size = 60
+    end
+    object FMTBCDField1: TFMTBCDField
+      FieldName = 'EKNETTO'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object FMTBCDField2: TFMTBCDField
+      FieldName = 'VKNETTO'
+      OnChange = 'cdsKalkulationVKNETTOChange'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object StringField4: TStringField
+      FieldName = 'MWST'
+      Size = 5
+    end
+    object StringField5: TStringField
+      FieldName = 'EINHEIT'
+      Size = 10
+    end
+    object StringField6: TStringField
+      FieldName = 'BESTELLNR'
+      Size = 30
+    end
+    object FMTBCDField3: TFMTBCDField
+      FieldName = 'AUFSCHLAG'
+      Precision = 15
+      Size = 2
+    end
+    object MemoField1: TMemoField
+      FieldName = 'ARTTEXT'
+      BlobType = 'ftMemo'
+      Size = 1
+    end
+    object StringField7: TStringField
+      FieldName = 'KURZBEZEICHNUNG'
+      Size = 30
+    end
+    object StringField8: TStringField
+      FieldName = 'ARTNR'
+      Size = 30
+    end
+    object FMTBCDField4: TFMTBCDField
+      FieldName = 'ANZAHL'
+      OnChange = 'cdsKalkulationANZAHLChange'
+      Precision = 15
+      Size = 2
+    end
+    object IntegerField5: TIntegerField
+      FieldName = 'ARTOID'
+    end
+    object FMTBCDField5: TFMTBCDField
+      FieldName = 'GPREIS'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object IntegerField6: TIntegerField
+      FieldName = 'HAUPTLIEFERANT'
+    end
+  end
+  object cdsSumKalk: TClientDataSetHit
+    Tag = 2
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 152
+    Top = 32
+    object cdsSumKalkSUM: TFMTBCDField
+      FieldName = 'SUM'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+  end
+  object cdsArtikelSucheDatanorm: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    ConnectionHit = 'conDatanorm'
+    WriteLastSQL = False
+    Left = 272
+    Top = 176
+  end
+  object cdsArtikelSuche: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 152
+    Top = 176
+  end
+end

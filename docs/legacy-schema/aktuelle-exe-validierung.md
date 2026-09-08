@@ -536,6 +536,394 @@ select p.Name, p.beschreibung, c.menge from lagerplatzcross C, lagerplaetze P, A
 Insert into Lagerplatzcross (OID, MasterOID, ArtOID, IsEntry) Values(Gen_ID(G_Lagerplatzcross,1), ...)
 ```
 
+## Pascal-Quellcode Auftrag/Bestellung/Produktion: relevante Auszüge (2026-09-10)
+
+Quellen: `HMS/Module/Belege/FAuftragTSP.pas` (1222 Zeilen),
+`HMS/Module/Bestellung/FBestellungTSP.pas` (1960 Zeilen),
+`HMS/Module/Produktion/FProduktion.pas` (2521 Zeilen). Alle Stand 2018,
+lokal unter `Herrmann_Work/`, nicht Teil dieses Repos.
+
+```pascal
+// FAuftragTSP.pas – HAUPTAUFTRAG-Ursprung
+procedure TfrmAuftragTSP.btnInsertClick(Sender: TObject);
+...
+  DataModul.cdsBeleg.Edit;
+  DataModul.cdsBelegHAUPTAUFTRAG.AsString := DataModul.cdsBelegNUMMER.AsString;
+...
+
+// FAuftragTSP.pas – tote Menüpunkte (nur Kommentar, kein Code)
+procedure TfrmAuftragTSP.pmiBestellungClick(Sender: TObject);
+begin
+  //
+end;
+-- identisch leer: pmiSammellieferscheinClick, pmiRechnungClick,
+   pmiSammelrechnungClick, Abschlagrechnung1Click, Schlussrechnung1Click
+
+// FAuftragTSP.pas – Auftrag -> Lieferschein
+procedure TfrmAuftragTSP.pmiLieferscheinClick(Sender: TObject);
+...
+  DataModul.CopyChangeBelegAuftragLieferschein(genNummerPrefix + tblLieferschein, fidLieferschein, rstTrue);
+  ...
+  DataModul.SetFullGeliefert(DataModul.cdsBelegOID.AsInteger);
+```
+
+```pascal
+// FBestellungTSP.pas – Wareneingang buchen, Qualitäts-Gate + 8D-Trigger
+procedure TfrmBestellungTSP.btnBuchenClick(Sender: TObject);
+begin
+  if (DataModul.ISPruefeArtikel = True) or (DataModul.ISZeugnisArtikel = True) then
+  begin
+    if (DataModul.cdsBelegPosgeprueft.AsString <> 'T') then
+    begin
+      MessageDlg('Erst Prüfung vornehmen.', mtError, mbOKCancel, 0); Exit;
+    end;
+    if DataModul.ISZeugnisArtikel = True then
+      if (DataModul.cdsBelegPosZeugnis.AsString <> 'T') then
+      begin
+        MessageDlg('erst Zeugnis bestätigen.', mtError, mbOKCancel, 0); Exit;
+      end;
+  end;
+  ...
+  if DataModul.cdsBelegPosReplager.AsString <> 'T' then
+    TBucheKanbanArtikel.Execute(...)
+  if DataModul.cdsBelegPosReplager.AsString = 'T' then
+    TBucheKanbanArtikel.ExecuteReplager(...)
+  DataModul.SetBestellbuchung;
+  if (dbeAusschuss.Text <> '0') then
+  begin
+    A8dAnzahl := StrToFloat(dbeAusschuss.Text);
+    if A8dAnzahl > 0 then
+    begin
+      CreateBelastungsAnzeige;
+      MessageDlg('Achtung 8D - Lieferant ausgelöst.', mtConfirmation, mbOKCancel, 0);
+    end;
+  end;
+...
+
+procedure TfrmBestellungTSP.CreateBelastungsAnzeige;
+...
+  ABelegOID := TCreateBeleg.Execute(fidBelastungValue, DataModul.cdsBelegADROID.AsInteger,
+    'G_NrBelastung', '', '8D Lieferant', DataModul.GetCDSController);
+  ...
+  TSetBelegField.Execute(ABelegOID, 'Liefname3', DataModul.cdsBelegNUMMER.AsString, ftString, ...);
+  ...
+  TCreateExcel8D.Execute(ExcelApp1, ABelegObj.OID, 'L', ..., CurrentEnvirement.Pfade.AchtDLPath);
+```
+
+```pascal
+// FProduktion.pas – "In Fertigung nehmen": Werktage-Rückwärtsterminierung
+procedure TfrmProduktion.actInFertigungExecute(Sender: TObject);
+...
+  AGetWorkDays := TGetWorkDays.Create;
+  AProdDatum := AGetWorkDays.Execute(AProdDatum, AVorlauf, Zurueck);
+  AGetWorkDays.Free;
+  AWeek := WeekOf(AProdDatum);
+  AYear := YearOf(AProdDatum);
+  ...
+  if ASplittArt = nichtSplitten then
+    TSetFertigung.Create(ABereitstellung, AProdMenge, DataModul.GetCDSController, True);
+  if ASplittArt = inBaugruppensplitten then
+    TSetFertigung.Create(DataModul.cdsSuchen, 0, DataModul.GetCDSController, True);
+```
+
+## Pascal-Quellcode Lieferschein/Rechnung/Zeiterfassung (2026-09-10)
+
+Quellen: `HMS/Module/Belege/FLieferscheinTSP.pas` (1053 Zeilen),
+`HMS/Module/Belege/FRechnungTSP.pas` (763 Zeilen),
+`HMS/Module/Zeiterfassung/FMitarbeiterZeiterfassung.pas` (1790 Zeilen).
+
+```pascal
+// FLieferscheinTSP.pas – der einzige echte Weg zur Rechnung
+procedure TfrmLieferscheinTSP.pmiRechnungClick(Sender: TObject);
+begin
+  if DataModul.cdsBelegABGESCHLOSSEN.AsString <> 'T' then
+  begin
+    if DataModul.AllPreisGeprueft = True then
+    begin
+      if MessageDlg('Lieferschein in Rechnung übernehmen?', mtConfirmation, mbOKCancel, 0) = mrOk then
+        DataModul.CopyChangeBelegLieferschein(genNummerPrefix + tblRechnung,
+          fidRechnungValue, 'T', '',
+          'Liefer-/Leistungsdatum: ' + DataModul.cdsBelegBELEGDATUM.AsString +
+          ' Lieferschein: ' + DataModul.cdsBelegNUMMER.AsString);
+        ...
+    end
+    else
+      MessageDlg('Übernahme nicht möglich, nicht alle Preise geprüft.', mtInformation, mbOKCancel, 0);
+  end;
+end;
+```
+
+```pascal
+// FRechnungTSP.pas – Gutschrift
+procedure TfrmRechnungTSP.RechnungnachGutschriftkopieren1Click(Sender: TObject);
+begin
+  if MessageDlg(mldRechnunginGutschrift, mtConfirmation, mbOKCancel, 0) = mrOk then
+    DataModul.CopyChangeBelegGutschrift(genNummerPrefix + genRechnung, fidRechnung, 'F',
+      DataModul.cdsBelegHAUPTAUFTRAG.AsString, DataModul.cdsBelegNUMMER.AsString, 0);
+  ...
+end;
+-- zusätzlich: RechnungnachGutschriftkopierenmitRckbuchung1Click (mit Rückbuchung)
+```
+
+```pascal
+// FMitarbeiterZeiterfassung.pas – Monatsabschluss
+procedure TfrmMitarbeiterZeiterfassung.WriteMonatNew(AMonat, AJahr: Integer);
+...
+  AGrundValue := TGrundValues.Create;
+  AGrundValue.GetValues(DataModul.cdsBenutzerOID.AsInteger, DataModul.GetCDSController);
+  AMonatValue := TFQZeitform.ExecuteNoPrint(AVT, AUrlaubgen, DataModul.cdsBenutzerOID.AsInteger, ...);
+  AMonatValue.MonatArbeitstage := WerktageImMonat(AMonat, AJahr, 5);
+  ...
+  DataModul.cdsMonatwert.FieldByName('Sollzeit').AsFloat := AMonatValue.MonatSollminuten / 60;
+```
+
+## Pascal-Quellcode F8D.pas: relevante Auszüge (2026-09-10)
+
+Quelle: `HMS/Module/Belege/8D/F8D.pas` (1880 Zeilen, lokal unter
+`Herrmann_Work/`, Timestamp 13.09.2018 – nicht Teil dieses Repos).
+**Achtung Altersstand:** Wie die DB (2011) und der übrige Pascal-Code ist
+auch diese Datei von 2018 – für Felder/Buttons, die erst nach 2018 ergänzt
+wurden (z. B. `REPLAGER`, `UEBERNAHME`), zeigt der Quellcode entsprechend
+nichts; dort bleibt die DFM/EXE-Extraktion die einzige verfügbare Quelle.
+
+```pascal
+procedure Tfrm8D.pnlKalkulationClick(Sender: TObject);
+begin
+  DataModul.DataKalkulation.GetKalkulation(DataModul.cdsBelegPosOID.AsInteger);
+  TfrmKalkulation.Execute(DataModul.DataKalkulation.cdsKalkulation, fraBtn.btnSave.Enabled, DataModul);
+end;
+
+procedure Tfrm8D.Panel1Click(Sender: TObject);
+begin
+  TfrmLangtext.Execute(TfrmLangtext, DataModul.cdsRepKpos);
+end;
+
+procedure Tfrm8D.dbeefExit(Sender: TObject);
+begin
+  TChangeThreeFieldsDB.ExecuteDB(dbees, dbeef, dbeew, ChangeFieldThree, MathMultiplikation, 1);
+end;
+
+procedure Tfrm8D.btnRahmenClick(Sender: TObject);
+...
+  DataModul.cdsBeleg.edit;
+  DataModul.cdsBelegABSCHLAGAUFTRAG.AsInteger := ABelegObj.Nummer;
+...
+
+procedure Tfrm8D.btnEndpruefungClick(Sender: TObject);
+...
+  DataModul.cdsBeleg.Edit;
+  DataModul.cdsBelegendpruefuser.AsString := AName;
+  DataModul.cdsBelegendpruefdatum.AsString := DateToStr(Date);
+...
+
+procedure Tfrm8D.dbcgPosPaintPanel(DBCtrlGrid: TDBCtrlGrid; Index: Integer);
+begin
+  if DataModul.cdsBelegPosRefOID.AsInteger > 0 then
+    lblFam.Font.Color := clGreen else lblFam.Font.Color := clWhite;
+  if DataModul.cdsBelegPosRefOID2.AsInteger > 0 then
+    lblBgs.Font.Color := clGreen else lblBgs.Font.Color := clWhite;
+end;
+
+procedure Tfrm8D.pnlFamClick(Sender: TObject);
+...
+  AFam := TFAMObject.Create(DataModul.GetCDSController);
+  AFam.New(famFam);
+  ...
+  AFam.STANDORT := dbeHerkunft.Text;
+  AFam.AUSFALLNR := dbeFamnr.Text;
+  AFam.IDENTNR := DataModul.cdsBelegPosIndentNrDruck.AsString;
+  AFam.ARTIKELNR := AArtObj.HauptLiefer;
+  AFam.BEZEICHNUNG := AArtObj.Bestellnr;
+  ...
+  DataModul.cdsBelegPos.Edit;
+  DataModul.cdsBelegPosRefOID.AsInteger := AFamID;
+...
+
+procedure Tfrm8D.pnlBGSClick(Sender: TObject);
+...
+  AFam := TFAMObject.Create(DataModul.GetCDSController);
+  AFam.New(famBGS);       -- gleiche Klasse, anderer Typ als pnlFamClick
+  ...
+  DataModul.cdsBelegPos.Edit;
+  DataModul.cdsBelegPosRefOID2.AsInteger := AFamID;
+...
+
+procedure Tfrm8D.btnaktiv1Click(Sender: TObject);
+begin
+  if DataModul.cdsBelegpufferlager.AsString = 'T' then ShowMessage('Bereits in Lieferschein.');
+  grpkva2.Color := clrFieldStandard; grpkva1.Color := clrKostAktiv;
+  DataModul.cdsBeleg.Edit; DataModul.cdsBelegFromBelegart.AsInteger := 2;
+end;
+-- btnAktiv2Click analog, setzt FromBelegart := 1
+
+procedure Tfrm8D.btnSearchAdrClick(Sender: TObject);
+...
+  DataModul.cdsBeleg.Edit;
+  DataModul.cdsBelegMWSTSATZ.AsFloat := AAdressObject.AbwUst;
+...
+
+procedure Tfrm8D.dbmREPBESCHREIBEnter(Sender: TObject);
+begin
+  pnlBeschreib.Left := 19; pnlBeschreib.Width := 650;
+end;
+procedure Tfrm8D.dbmREPBESCHREIBExit(Sender: TObject);
+begin
+  pnlBeschreib.Left := 415; pnlBeschreib.Width := 350;
+end;
+```
+
+Keine Fundstelle für "Werkstatt"/"Reinigung"/"Eingangsprüfung"/"Verpacken"
+im gesamten File (`grep` über alle 1880 Zeilen, 0 Treffer).
+
+## Echter Programmierfehler gefunden: doppelte DataField-Bindung (TFRMARTIKELINFO2)
+
+```
+object DBEdit8: TDBEdit    Top=19   DataField = 'Zeichnung'       -- BT-Zeile
+object DBEdit9: TDBEdit    Top=43   DataField = 'ZeichnungsNr2'   -- LH-Zeile
+object DBEdit10: TDBEdit   Top=67   DataField = 'ZeichnungsNr2'   -- FY-Zeile, SOLLTE ZeichnungsNr3 sein!
+```
+
+Beide `ReadOnly = True`. Erklärt den im Screenshot beobachteten identischen
+Wert `200060000` bei LH und FY: `DBEdit10` liest denselben Datenbankwert wie
+`DBEdit9`, weil beim Kopieren der Komponente das `DataField` nicht auf
+`ZeichnungsNr3` umgestellt wurde – ein Bug im Originalformular, kein
+Anzeige- oder Datenartefakt.
+
+## Echte DFM-Extraktion, Runde 2 (2026-09-09): sieben weitere Klärungen
+
+### IDENTNR1-12 = BT...SI, jetzt koordinatenbasiert bewiesen (TFRMARTIKELTSP)
+
+```
+GroupBox13 "ID-Nummer":
+  Label62 "BT"  Top=20   dbeid1  Top=16  DataField=Identnr1
+  Label63 "LH"  Top=43   dbeid2  Top=39  DataField=Identnr2
+  Label64 "FY"  Top=67   dbeid3  Top=63  DataField=Identnr3
+  Label65 "NK"  Top=90                   DataField=Identnr4
+  Label66 "KO"  Top=114                  DataField=Identnr5
+  Label68 "VK"  Top=138                  DataField=Identnr6
+  Label69 "BE"  Top=161                  DataField=Identnr7
+  Label81 "TK"  Top=185                  DataField=Identnr8
+  Label82 "DB"  Top=209                  DataField=Identnr9
+  Label84 "HO"  Top=232                  DataField=Identnr10
+  Label17 "WE"  Top=256                  DataField=Identnr11
+  Label53 "SI"  Top=280                  DataField=Identnr12
+```
+
+### ARTIKELPREISE-Grid, vollständige 15-Spalten-Liste (TFRMARTIKELTSP)
+
+```
+dbgArtikelPreise: TDBGrid  DataSource=dsArtikelPreise
+  LIEFERNAME "Lieferant" | MENGEVON "Menge von" | MENGEBIS "Menge bis"
+  | EKBRUTTO "Ek. Preis" | Mindestmenge "VP-Einheit" | Lieferzeit
+  | Preiseinheit | BESTELLNR "Bestell-Nr." | RABATT | Kupferzahl "Kupferbasis"
+  | BEZEICHNUNG | DATUM | Angebotnummer | Ufaktor "Faktor" | UEinheit "Einheit"
+```
+
+Keine Spalte heißt "LEK" – frühere Lesart des Screenshots war falsch.
+
+### Material-Tab (TFRM8D, DataSource=dsBelegPos): K-Button, DruckID-Nr., Artikel-ersetzen-Button
+
+```
+object pnlKalkulation: TPanel
+  Caption = 'K'; OnClick = 'pnlKalkulationClick'      -- "K" = Kalkulation
+object lblLhnr2: TLabel
+  Caption = 'DruckID-Nr.'
+object dbecbldnr: TDBComboBox
+  DataField = 'IndentNrDruck'; DataSource = 'dsBelegPos'
+  Items.Strings = ('Voll' 'Halb' 'Ohne')
+object pnlFam: TPanel     Caption = 'FAM'; OnClick = 'pnlFamClick'
+object pnlBGS: TPanel     Caption = 'BGS'; OnClick = 'pnlBGSClick'
+object pnlArtersetz: TPanel  Caption = '<-'; OnClick = 'pnlArtersetzClick'   -- neu entdeckt
+```
+
+Kein "L"-Button auf diesem Tab. Das einzige `Caption = 'L'` im ganzen
+Formular ist `Panel1` im separaten Kostenvoranschlag-Grid (Funktion
+weiterhin unklar).
+
+### Versand-Ausgang-Tab (TFRM8D): eigener, reicherer Feldsatz statt Spiegel-Tab
+
+```
+dbername1/2/3, dberstrasse, dberplz, dberort, dberkundenr  -- Lieferadresse (dsRepKopf: Name1-3/Strasse/Plz/Ort/KUNDENUMMER)
+dberv1..dberv7   DataField VFELD1..VFELD7
+dberbetrag1/2    DataField BETRAG1/BETRAG2
+eberabw          DataField ABWICKLUNG
+dbRkm/dberkmfaktor/dberkmwert     DataField RKM/RKMFAKTOR/RKMWERT
+dbRstd/dbeRSTDFAKTOR/dbeRSTDWERT  DataField RSTD/RSTDFAKTOR/RSTDWERT
+```
+
+Labels bestätigen die Zuordnung: "Transport"/"Verpackung"/"Gewicht" (Kopf),
+"Abholung"/"Zustellung bis"/"Frachtzahler"/"Besteller" (Termine/Parteien),
+"km"/"Faktor" und "Std."/"Faktor" (zwei Std./Faktor/Wert-Rechenblöcke wie
+im Kostenvoranschlag, hier für Versandkosten).
+
+### REPBESCHREIB-Box: Größe bestätigt die Zuordnung
+
+```
+object dbmREPBESCHREIB: TDBMemo
+  Left = 1; Top = 1; Width = 343; Height = 197; Align = 'alClient'
+  DataField = 'REPBESCHREIB'; DataSource = 'dsRepKopf'
+```
+
+343×197px, füllt seinen Container vollständig – bestätigt die große
+Fläche rechts im Reparatur-Beschr.-Tab.
+
+## Echte DFM-Extraktion (2026-09-09): Werkzeug + drei Korrekturen
+
+Ab hier auf Basis eines selbstgebauten Decoders für das binäre Delphi-DFM-
+Format (`docs/legacy-schema/dfm-tool/`), nicht mehr auf `strings`-Textsuche
+gestützt. Details zum Werkzeug: [`dfm-tool/README.md`](dfm-tool/README.md).
+Alle 471 Formulare aus `Herrmann.exe` liegen dekodiert unter
+[`forms-dfm/`](forms-dfm/).
+
+### Korrektur 1: "Kommision"-Tab, echte FieldNames
+
+```
+object dbgKomm: TDBGrid
+  DataSource = 'dsKomm'
+  Columns = <
+    item0 = { FieldName = 'Kw' }
+    item1 = { FieldName = 'Jahr' }
+    item2 = { FieldName = 'Anzahl'; Title.Caption = 'Restmenge' }
+    item3 = { FieldName = 'Sollmenge' }
+    item4 = { FieldName = 'Stuecknummer'; Title.Caption = 'Baugruppe' }
+    item5 = { FieldName = 'stbez'; Title.Caption = 'Bezeichnung' }
+    item6 = { FieldName = 'Prodmenge' }
+    item7 = { FieldName = 'Fertig' }
+    item8 = { FieldName = 'Auftragnummer'; Visible = False }
+    item9 = { FieldName = 'Kunde'; Visible = False }
+  >
+```
+
+Vorherige Vermutung (`Restmenge = Sollmenge - Buchmenge` berechnet,
+`Baugruppe`/`Bezeichnung` = `STUECKLISTEN.NUMMER`/`.BEZEICHNUNG1`) war
+falsch – reale Feldnamen sind `Anzahl`/`Stuecknummer`/`stbez` (eigene
+Aliase, SQL-Quelle weiterhin nicht im Klartext auffindbar).
+
+### Korrektur 2+3: Reparatur-Belegmaske ist intern `TFRM8D`
+
+Kein separates `TFRMREPARATUR` gefunden – die komplette Belegmaske
+(Kostenvoranschlag/Material/Versand-Tabs) ist die Delphi-Klasse `TFRM8D`.
+Das Positionsgrid im Kostenvoranschlag-Tab bindet an `dsrepkpos`
+(`REPKPOS`), nicht an `BELEGPOS`:
+
+```
+object dbcDruckenK: TDBCheckBox
+  Caption = 'nicht drucken'; DataField = 'drucken'; DataSource = 'dsrepkpos'
+object dbcrepkbuchen: TDBCheckBox
+  Caption = 'nicht buchen'; DataField = 'buchen'; DataSource = 'dsrepkpos'
+object Panel1: TPanel
+  Caption = 'L'; OnClick = 'Panel1Click'          -- echter Action-Button, Zweck unklar
+object DBCheckBox2: TDBCheckBox
+  Caption = 'Rep. Lager'; DataField = 'replager'; DataSource = 'dsrepkpos'
+object DBCheckBox6: TDBCheckBox
+  Caption = 'Übern.'; DataField = 'uebernahme'; DataSource = 'dsrepkpos'
+```
+
+Frühere Vermutung `REPAUFTRAG.UEBERNOMMEN` für "Übern." war falsch – reales
+Feld ist `REPKPOS.UEBERNAHME`. "Rep. Lager" auf diesem Grid ist
+`REPKPOS.REPLAGER`, nicht `BELEGPOS.REPLAGER` (das bleibt für das separate
+Material-Tab-Grid bestehen).
+
 ## Adressen: vollständige SELECT-Query (Ladeformular)
 
 ```sql
@@ -960,10 +1348,416 @@ Insert/Update auf `PERSONAL` – beide vermutlich Altlast, aber mit den
 verfügbaren Quellen (String-Extraktion, kein Volltext-Quellcode der aktuellen
 Version) nicht abschließend zu beweisen, nur die Abwesenheit von Treffern.
 
+## Option C: Zugriff auf die aktuelle Live-Datenbank (Stand 2026-09-08)
+
+Bisherige Quellen (2011er-DB-Kopie, 2018er-Pascal-Code, EXE-String-Extraktion)
+durch echten Zugriff auf die **tagesaktuelle Produktiv-Datenbank** ergänzt.
+`DbConfig.ini` im `Herrmann_Work`-Verzeichnis verweist auf einen Firebird-Server
+im Firmennetz (`192.100.0.116:E:\TES_Data\IBDB.FDB`, passt zum bekannten
+DHCP-Bereich, siehe Memory `project_herrmann_network_dhcp`) – ein direkter
+Netzwerkzugriff war aber gar nicht nötig: Im übergeordneten Ordner
+`Herrman Work Test` lag bereits eine lokale Kopie `IBDB.FDB` (2.186.559.488
+Bytes ≈ 2,04 GB, Dateidatum 2026-09-08 14:13), erkennbar am Pfad als dieselbe
+Datenbank wie auf dem Server referenziert.
+
+**Verbindung:** dieselbe x86-Firebird-2.5.9-Embedded-Engine wie für die
+2011er-DB (x64-Embedded schlägt weiterhin mit "not a valid database" fehl).
+Login `sysdba`/`masterkey` (Firebird-Default) funktioniert – im
+Embedded-Modus wird das im Programmcode gefundene Credential-Beispiel
+(`gds32aufrufe.pas`, ursprünglich nur für eine Benutzerverwaltungs-Demo
+gehalten) tatsächlich für den echten produktiven Datenbankzugriff verwendet.
+
+### Aktualitätsnachweis
+
+```sql
+SELECT MAX(BELEGDATUM), MIN(BELEGDATUM), COUNT(*) FROM BELEG;
+-- MAX_D: 8-SEP-2026   MIN_D: 11-DEC-2002   ANZ: 161183
+```
+
+`MAX(BELEGDATUM)` = Prüfungsdatum selbst → zweifelsfrei die tagesaktuelle
+Produktivdatenbank, kein Backup mit Verzögerung.
+
+### Schema-Wachstum 2011 → 2026: 194 → 437 Tabellen (+243), keine Tabelle entfernt
+
+```sql
+SELECT COUNT(*) FROM rdb$relations WHERE rdb$system_flag = 0 AND rdb$view_blr IS NULL; -- 437 Tabellen
+SELECT COUNT(*) FROM rdb$relations WHERE rdb$system_flag = 0 AND rdb$view_blr IS NOT NULL; -- 47 Views
+SELECT COUNT(*) FROM rdb$procedures WHERE rdb$system_flag = 0; -- 111 Prozeduren
+```
+
+Vollständiger DDL-Export: [`full_schema_current.sql`](full_schema_current.sql)
+(19.373 Zeilen, vs. 6.931 in der 2011er-Version). Tabellendiff (`comm` gegen
+die 2011er-Tabellenliste) bestätigt: **0 Tabellen entfernt, 243 neu
+hinzugekommen** – exakt das in der Kernbeobachtung des Hauptdokuments
+beschriebene "nichts wird aufgeräumt"-Muster, jetzt mit echten Zahlen statt
+Einzelbeispielen belegt.
+
+Neue Tabellen gruppieren sich in klar erkennbare, seit 2011 komplett neu
+entstandene Subsysteme:
+
+- **Prozess-/Arbeitsplan-Modul**: `PROZESSMAIN`, `PROZESSSTRUKTUR`,
+  `PROZESSABTEILUNGEN`, `PROZESSGRUPPEN`, `PROZESSZEITEN(-K/-S)`,
+  `PROZESSOBJEKTE`, `PROZESSLINK`, `VIPROZESSCROSS` – ein zusätzlicher
+  Workflow-/Arbeitsschritt-Layer neben der alten `PRODUKTION`/`PRODSCHRITTE`-Kette.
+- **AOI-Testintegration** (Automated Optical Inspection): `PMESSAOI`,
+  `PFEHLERAOI`, `PFEHLERAOIFILES`, `PRODFEHLERAOI`, `PRODFEHLERTESTER`,
+  `SNRFEHLER` – Anbindung automatischer optischer Prüfgeräte/Tester an die
+  Fertigung, 2011 nicht vorhanden.
+- **Aufgaben-/Terminverwaltung**: `TODO`, `TODOLINKS`, `TODOPARAM`,
+  `USERTODO`, `USERTODOAKTION`, `CHECKLISTENKOPF`, `CHECKLISTENTODO`,
+  `TERMINE`, `TERMINPROTOKOLL`, `OBJEKTTERMINE`.
+- **Zertifikate/Qualität/Regulatorik**: `ZERTIFIKATE`, `ZERTI_QUALI`,
+  `ZERTIQUALICROSS`, `NORMROHS` (RoHS-Konformität) – bestätigt die bereits
+  dokumentierte Vermutung, dass regulatorische Felder erst nach 2011 kamen,
+  jetzt mit konkreter Tabelle statt nur den XRechnung/Gelangensbestätigung-Funden.
+- **Historisierung**: `BELEGHISTORY`, `BELEGPOSHISTORY`, `DATUMHISTORY` –
+  anders als bisher angenommen ("keine Audit-Trail-Tabellen gefunden") gibt es
+  inzwischen doch eine Änderungshistorie, nur eben erst nach 2011 eingeführt.
+- **Multi-Währung/Zahlung**: `WECHSELKURSE`, `BANKEN`, `TEILZAHLUNG`.
+- **Artikel-Ergänzungen**: `ALTERNATIVARTIKEL` (Substitutionsartikel),
+  `ARTLIEFERFREIGABE` (Lieferantenfreigabe je Artikel), `HERSTELLERALIAS`,
+  `ADRESSBEWERTUNG`, `ADRGESAMTRABATTE`.
+- **Jahres-Schnappschusstabellen statt echter Historie**: pro Jahr neu
+  angelegte, im Namen datierte Tabellen (`INVENTUR020111201` …
+  `INVENTUR020251215`, `PROD020111201` … `PROD020251215`,
+  `LAGERPAH_241217`/`LAGERPIR_241217`/`LAGERPSZ_241217` usw.) – die
+  Jahresinventuren werden offenbar manuell per neu erstellter Tabelle
+  eingefroren statt in einer versionierten/historisierten Struktur
+  gespeichert.
+
+### Views bestätigen bisher aus `strings` vermutete Join-Ketten
+
+```sql
+CREATE VIEW V_PRODMATERIAL (...) AS
+select P.OID, P.KW, P.Jahr, P.Menge, P.Fertig, P.Status,
+  A.OID, A.Nummer, P.Beginndatum, A.name1, A.Adrnr, A.Liefertermin,
+  S.Nummer,
+  M.Artoid, M.Artnr, M.Bezeichnung1, M.Bezeichnung2,
+  M.Anzahl, M.Sollmenge, M.Buchmenge,
+  M.einheitmenge, M.ASOID, M.OID, M.Zelle
+from Produktion P
+  join Beleg A on A.OID = P.AuftragOID
+  join Stuecklisten S on S.oid = P.Artoid
+  left join Prodartikel M on (m.Soid = P.OID);
+
+CREATE VIEW V_BEREITMATERIAL (...) AS
+select P.OID, P.KW, P.Jahr, P.Menge - coalesce(P.Uebernommen, 0),
+  A.OID, A.Nummer, A.name1, A.Adrnr, A.Liefertermin,
+  S.Nummer, S.OID,
+  M.Artoid, M.Artnr, M.Bezeichnung1, M.Bezeichnung2,
+  M.Anzahl, M.ASOID, NoSplit
+from ProduktionBereit P, Beleg A, Stuecklisten S, Stuecklistenartikel M
+where (P.Status is null or P.Status > -1)
+  and S.OID = M.Soid and S.OID = P.ArtOID and A.OID = P.AuftragOID;
+```
+
+`V_BEREITMATERIAL` bestätigt außerdem einen bisher nicht dokumentierten
+Rechenschritt: "bereite Menge" ist nicht die geplante Menge, sondern
+`Menge - coalesce(Uebernommen, 0)` – also die geplante Produktionsmenge
+abzüglich bereits kommissionierter/übernommener Menge.
+
+### Stored-Procedure-Quelltexte: `isql -a` liefert nur Stubs, echter Code über `rdb$procedure_source`
+
+Auffälligkeit beim Schema-Export: `isql -a` gibt für alle 111 Prozeduren nur
+`CREATE PROCEDURE ... AS BEGIN SUSPEND; END` aus – ein Extraktions-Artefakt
+dieser isql-Version/-Kombination, nicht ein leerer Prozedurkörper. Bestätigt
+über `SELECT OCTET_LENGTH(RDB$PROCEDURE_SOURCE) FROM RDB$PROCEDURES WHERE
+RDB$PROCEDURE_NAME = 'P_BESTANDV'` → 344 Bytes vorhanden. Direkter Zugriff via
+`SET BLOB ALL; SELECT RDB$PROCEDURE_NAME, RDB$PROCEDURE_SOURCE FROM
+RDB$PROCEDURES ORDER BY RDB$PROCEDURE_NAME;` liefert alle echten Quelltexte,
+abgelegt unter [`all_procedure_sources.sql`](all_procedure_sources.sql).
+
+Zwei zentrale, bisher nur aus String-Fragmenten vermutete Berechnungen jetzt
+vollständig bekannt:
+
+```sql
+-- P_BESTANDV: Bestand = Summe aller Lagerbuchungen, Schrott-/Sperrlager ausgenommen
+CREATE PROCEDURE P_BESTANDV (AOID INTEGER) RETURNS (BESTAND NUMERIC(15,2)) AS
+DECLARE VARIABLE ZUB NUMERIC(15,2);
+BEGIN
+  SELECT SUM(MENGE) FROM LAGERBUCHUNG
+  WHERE ArtOID = :AOID
+    AND (LAGEROID IN (SELECT OID FROM Lagerorte WHERE coalesce(art,'0') <> 'S') OR LAGEROID = 0)
+  INTO :ZUB;
+  IF (:ZUB IS NULL) THEN ZUB = 0; ELSE ZUB = :ZUB;
+  BESTAND = ZUB;
+  SUSPEND;
+END
+
+-- P_BEDARF: Nettoverfügbarkeit = offene Bestellmenge + Bestand - offener Produktionsbedarf
+CREATE PROCEDURE P_BEDARF (AOID INTEGER) RETURNS (BEDARF NUMERIC(15,2)) AS
+DECLARE VARIABLE ZUB NUMERIC(15,2); DECLARE VARIABLE ABB NUMERIC(15,2); DECLARE VARIABLE BST NUMERIC(15,2);
+BEGIN
+  SELECT SUM(STCK)-SUM(GELIEFERT) FROM BELEGPOS P, BELEG B
+    WHERE B.BELEGART = 105 AND B.OID = P.SOID AND B.ABGESCHLOSSEN <> 'T' AND ARTOID = :AOID
+  INTO :ZUB;
+  IF (:ZUB IS NULL) THEN ZUB = 0; ELSE ZUB = :ZUB;
+  SELECT SUM(SOLLMENGE-BUCHMENGE) FROM PRODARTIKEL A, PRODUKTION P
+    WHERE P.OID = A.SOID AND P.STATUS <> -1 AND A.ARTOID = :AOID
+  INTO :ABB;
+  IF (:ABB IS NULL) THEN ABB = 0; ELSE ABB = :ABB;
+  SELECT BESTAND FROM P_BESTANDV(:AOID) INTO :BST;
+  IF (:BST IS NULL) THEN BST = 0; ELSE BST = :BST;
+  BEDARF = ZUB + BST - ABB;
+  SUSPEND;
+END
+```
+
+`P_BESTANDV` bestätigt: der Bestand ist rein buchungsbasiert (Summe
+`LAGERBUCHUNG.MENGE`), nicht aus einer separaten Bestandstabelle gelesen –
+passt zu Odoos Stock-Move-Ledger-Prinzip (`stock.move` + berechneter
+`stock.quant`), nicht zu einem direkt editierbaren Bestandsfeld. `P_BEDARF`
+zeigt, dass "Bedarf" im Altsystem tatsächlich eine **Nettoverfügbarkeit**
+ist (kann negativ werden = echter Fehlbedarf, positiv = Überschuss), nicht
+ein reiner Bedarfswert – Namensgebung ist irreführend.
+
+Es existieren zehn weitere `P_BESTAND*`-Varianten (`P_BESTANDBLOCK`,
+`P_BESTANDMINDEST`, `P_BESTANDNACH`, `P_BESTANDREP`, `P_BESTANDSCHROTT`,
+`P_BESTANDSPERR`, `P_BESTANDSPERR2`, `P_BESTANDVNEW`,
+`P_BESTAND_MINDESTKONT`) – jeweils Bestandsvarianten für Block-/Mindest-/
+Sperr-/Schrottlager, nicht einzeln nachverfolgt, aber vollständiger
+Quelltext liegt in `all_procedure_sources.sql` vor.
+
+## Stückliste: Kopf-Zahlenfelder "22094"/"110376" sind interne OIDs (2026-09-08)
+
+DFM-Ausschnitt aus `TFRMSTUECKLISTENTSP.dfm.txt`, direkt neben dem
+Nummernfeld der Stückliste:
+
+```
+object dbeNummer: TDBEdit
+  DataField = 'NUMMER'
+  DataSource = 'dsStueckliste'
+end
+object dbeoid: TDBEdit
+  Left = 736  Top = 12  Width = 53
+  Color = 14802903
+  DataField = 'OID'
+  DataSource = 'dsStueckliste'
+  ReadOnly = True
+end
+object dbesoid: TDBEdit
+  Left = 796  Top = 12  Width = 53
+  Color = clWhite
+  DataField = 'Artoid'
+  DataSource = 'dsStueckliste'
+end
+```
+
+Zwei schreibgeschützte Felder unmittelbar rechts neben der eigentlichen
+Stücklisten-Nummer: `dbeoid` = `STUECKLISTEN.OID` (die interne ID des
+Stücklisten-Datensatzes selbst), `dbesoid` = `STUECKLISTEN.ARTOID` (die
+interne ID des verknüpften Artikels). Live-DB-Abgleich bestätigt den
+Wertebereich:
+
+```sql
+SELECT MIN(OID), MAX(OID) FROM STUECKLISTEN;  -- 126 .. 22758
+SELECT MIN(OID), MAX(OID) FROM ARTIKEL;       -- 52801 .. 114927
+```
+
+Beide im Screenshot beobachteten Zahlen ("22094" für das erste, "110376" für
+das zweite Feld) liegen exakt in diesen Wertebereichen – reine technische
+OID-Anzeige zur internen Referenz/zum Debugging, keine fachliche Bedeutung.
+
+## Herrmann.dpr: der überwiegende Quellcode liegt außerhalb von `Herrmann_Work` (2026-09-08)
+
+`HMS/Module/Herrmann.dpr` ist die tatsächliche Hauptprojektdatei. Ihre
+`uses`-Klausel referenziert jede Unit über einen expliziten relativen Pfad:
+
+```pascal
+uses
+  FAdressen in '..\Standard\Module\Adressen\FAdressen.pas' {frmAdressen},
+  ...
+  DServer in '..\..\..\..\ERP-Software\D2000\V0.0\Server\DServer.pas' {dmServer: TDataModule},
+  UArtikelObject in '..\..\..\..\ERP-Software\D2000\V0.0\UArtikelObject.pas',
+  UDBWorkObjects in '..\..\..\..\ERP-Software\D2000\V0.0\UDBWorkObjects.pas',
+  UBelegObject in '..\..\..\..\ERP-Software\D2000\V0.0\UBelegObject.pas',
+  ...
+```
+
+Ausgezählt: **195 von 196** `in '...'`-Pfadangaben zeigen auf
+`..\..\..\..\ERP-Software\D2000\...` (Unterordner `V0.0`, `V3.1\ZeroVersion`,
+`V4.0`) – aufgelöst von `HMS/Module/Herrmann.dpr` aus vier Ebenen nach oben,
+also `<Herrman Work Test-Elternordner>\ERP-Software\D2000\...`. Dieser
+Ordner **existiert auf diesem Rechner nicht**:
+
+```bash
+$ find "/c/Users/waldemar.toews/Desktop" -maxdepth 1 -iname "ERP-Software"
+# (kein Treffer)
+```
+
+Nur eine kleine Minderheit der Units (`FAdressen`, `DAdressen`,
+`FGruppenDialog`, `FBenutzer`, `FTextbau`, `UArtikelObjectTSP` u. a.) liegt
+über lokale Pfade (`..\Standard\Module\...` bzw.
+`Module\Global\GlobalObjects\...`) tatsächlich innerhalb von
+`Herrmann_Work`.
+
+**Konsequenz für die beiden dokumentierten `UArtikelObject.pas`-Kopien**
+(`HMS/Module/UArtikelObject.pas`, 2017, größer; `HMS/Module/Global/
+GlobalObjects/UArtikelObject.pas`, 2014, kleiner): Die `.dpr` referenziert
+**keine von beiden** – die tatsächlich aktive Quelle liegt laut Projektdatei
+unter `ERP-Software\D2000\V0.0\UArtikelObject.pas`, einem hier nicht
+vorhandenen Pfad. Dasselbe gilt unverändert für `UBelegObject.pas` und
+`UDBWorkObjects.pas`. Beide lokal vorhandenen Kopien sind damit als
+verwaiste/frühere Zwischenstände einzustufen (vermutlich Reste eines
+Refactoring-/Migrationsversuchs), nicht als "die eine aktive Version" zu
+identifizieren.
+
+**Einordnung für alle bereits gelesenen Formular-Quelldateien** (F8D.pas,
+FAuftragTSP.pas, FBestellungTSP.pas, FProduktion.pas, FLieferscheinTSP.pas,
+FRechnungTSP.pas, FMitarbeiterZeiterfassung.pas): diese liegen zufällig
+*zusätzlich* lokal unter `HMS/Module/...` vor (sonst wären sie über den
+gegebenen Zugriff gar nicht lesbar gewesen) – die `.dpr` bestätigt aber nicht,
+dass exakt diese lokalen Kopien dem produktiv gebauten Stand entsprechen.
+Die dort gewonnenen Erkenntnisse bleiben verlässlich, weil sie im Rahmen
+dieser Recherche jeweils zusätzlich gegen DFM (UI-Struktur) und/oder Live-DB
+(Datenwerte) gegengeprüft wurden – reiner Pascal-Code-Fund ohne
+Zweitquelle wäre ab jetzt mit dieser Einschränkung zu lesen.
+
+## Zeiterfassung: Zuschlagsformel geklärt – nur Minutenzählung, kein Prozentsatz (2026-09-08)
+
+`HMS/Module/Zeiterfassung/UConstsZeit.pas` definiert die Zeitfenster:
+
+```pascal
+ZeitNachtBeginn = '01.01.2000 22:00';
+ZeitNachtEnde = '01.01.2000 06:00:00';
+ZeitSpaetBeginn = '01.01.2000 14:00:00';
+ZeitSpaetEnde = '01.01.2000 22:00:00';
+ZeitSpaetZuschlagBeginn = '01.01.2000 20:00:00';
+ZeitSpaetZuschlagEnde = '01.01.2000 23:59:59';
+```
+
+`HMS/Module/Zeiterfassung/UZeitenWork.pas` (`TWorkTimeObject`) berechnet daraus
+ausschließlich Minutenwerte, keine Prozentsätze oder Euro-Beträge:
+
+```pascal
+function TWorkTimeObject.GetFeiertagszeit: Integer;
+begin
+  ...
+  if FFeier = 'J' then
+  begin // Fallunterscheidung über Nacht
+    if IsUeberNacht = True then
+      FFeierTagMinuten := Round((StrToTime('23:59:59') - StrToTime(ABeginnZeit)) * 24 * 60);
+  end
+  else if IsUeberNacht = True then
+  begin
+    // Prüft, ob der FOLGETAG ein Feiertag ist (Beginn Werktag, Ende Feiertag)
+    ANextDayTimeObject.GetFeiertag;
+    if ANextDayTimeObject.FFeier = 'J' then
+      FFeierTagMinuten := FFeierTagMinuten + Round((StrToTime(AEndeZeit)) * 24 * 60);
+  end;
+  Result := FFeierTagMinuten;
+end;
+
+function TWorkTimeObject.GetSonntagszeit: Integer;
+begin
+  ...
+  if Wochentag = 'So' then
+    FSonnMinuten := Round(StrToTime(AEndeZeit)*24*60) - round(StrToTime(ABeginnZeit)*24*60) - 1
+  ...
+end;
+```
+
+Die resultierenden Properties (`Nachtminuten`, `SonnMinuten`,
+`FeiertagsMinuten`) werden **an keiner Stelle im gesamten `HMS`-Baum**
+weiterverarbeitet (keine Treffer für `.Nachtminuten`/`.SonnMinuten`/
+`.FeiertagsMinuten` außerhalb ihrer eigenen Definition in
+`UZeitenWork.pas`) – sie dienen ausschließlich der Anzeige/dem Export, nicht
+einer internen Lohnberechnung.
+
+Die Tabelle `ZEITGRUND` hat dennoch eigene, dafür augenscheinlich vorgesehene
+Spalten:
+
+```sql
+CREATE TABLE ZEITGRUND (OID D_OID, WAZ D_DOUBLE, PAUSEREG D_DOUBLE, RAUSE9 D_DOUBLE,
+  SONNZUSCHLAG D_DOUBLE, FEIERZUSCHLAG D_DOUBLE, NACHTZUSCHLAG D_DOUBLE,
+  MAZ D_DOUBLE, MOAZ D_DOUBLE, MOPAUSE D_DOUBLE, ... (je Wochentag AZ/PAUSE) ...
+  PID INTEGER, URLAUB CHAR(12), ...);
+```
+
+Live-Datenprüfung (2026-09-08, 99 Zeilen):
+
+```sql
+SELECT COUNT(*) FROM ZEITGRUND WHERE SONNZUSCHLAG IS NOT NULL;   -- 0
+SELECT COUNT(*) FROM ZEITGRUND WHERE FEIERZUSCHLAG IS NOT NULL;  -- 0
+SELECT COUNT(*) FROM ZEITGRUND WHERE NACHTZUSCHLAG IS NOT NULL;  -- 0
+
+SELECT FIRST 3 PID, WAZ, PAUSEREG, MOAZ, MOPAUSE, URLAUB FROM ZEITGRUND;
+-- PID=1: WAZ=40.0, URLAUB=30   (regulär befüllt)
+-- PID=6: WAZ=40.0, PAUSEREG=0.5, URLAUB=30
+```
+
+**Schlussfolgerung:** Die drei Zuschlagsspalten existieren im Schema, sind
+aber in der produktiven Nutzung komplett ungenutzt (0 von 99 Zeilen befüllt),
+während benachbarte Konfigurationsfelder derselben Tabelle normal gepflegt
+werden. Zusammen mit dem Code-Befund (Minutenzählung ohne
+Weiterverarbeitung) belegt das zweifelsfrei: die Sonn-/Feiertags-/
+Nachtzuschlagsberechnung (Minuten × Prozentsatz = Euro) ist **kein
+Bestandteil des ERP**, sondern läuft extern (Lohnbüro/Payroll-Software), die
+vermutlich die exportierten Rohminuten als Eingabe nutzt.
+
+## Rechnung: "Vertreterprovision1Click" ist ein Label/Code-Mismatch (2026-09-08)
+
+`HMS/Module/Belege/FRechnungTSP.pas`, Zeile 423:
+
+```pascal
+procedure TfrmRechnungTSP.Vertreterprovision1Click(Sender: TObject);
+var
+  ABelegArtObject: TBelegArtObject;
+begin
+  inherited;
+  ABelegArtObject := TFrmlieferscheinDlg.Execute(DataModul.GetCDSController,
+    DataModul.cdsBelegPosRefOID.AsInteger);
+  if ABelegArtObject.FBelegOID > 0 then
+    FormController.Show(ABelegArtObject.FBelegart, TOIDParam.Create(ABelegArtObject.FBelegOID));
+  ABelegArtObject.Free;
+end;
+```
+
+Der Methodenname (und damit der Delphi-Komponentenname `Vertreterprovision1`)
+suggeriert Provisionslogik. Die DFM zeigt aber die tatsächliche Beschriftung:
+
+```
+object Vertreterprovision1: TMenuItem
+  Caption = 'Belege zeigen'
+  OnClick = 'Vertreterprovision1Click'
+end
+```
+
+`TFrmlieferscheinDlg` (`HMS/Module/Belege/FLieferscheinDlg.pas`) ist ein
+generischer "zeig mir die verknüpften Belege/Lieferscheine zu dieser
+Position/diesem Artikel"-Dialog – exakt derselbe Aufruf-Pattern findet sich
+in `FAuftragTSP.pas:647` und `FAuftragH.pas:640` (dort mit `cdsBelegPosOID`
+statt `cdsBelegPosRefOID`), wo er unzweifelhaft der Belegnavigation dient,
+nicht der Provisionsberechnung.
+
+**Schlussfolgerung:** Kein funktionaler Bug, sondern ein reines
+Namens-Artefakt – vermutlich wurde der Menüpunkt aus einem anderen Formular
+kopiert und nur die Caption angepasst, nicht der Komponentenname. Reiht sich
+ein in dasselbe wiederkehrende Muster wie `tsh8dl`/"Belastungsanzeige":
+UI-Beschriftung im Lauf der Zeit geändert, interner Code-Identifier nicht
+nachgezogen. Die eigentliche Vertreterprovisions-Logik (`ProvPos`,
+`BELEGPOS.PROVISION`, `ADRESSEN.PROVISION`/`PROVISION2`) ist bereits an
+anderer Stelle in diesem Dokument belegt (Abschnitt Vertreterabrechnung).
+
 ## Reproduktion
 
 ```bash
 strings -n 4 Herrmann_Work/Herrmann.exe > exe_strings_ascii.txt
 strings -n 4 -e l Herrmann_Work/Herrmann.exe > exe_strings_unicode.txt
 grep -in "xrechnung\|leitweg\|peppol\|gelangen" exe_strings_ascii.txt exe_strings_unicode.txt
+```
+
+### Reproduktion (Live-DB-Zugriff, Option C)
+
+```bash
+# x86 Firebird-2.5.9-Embedded-Engine (identisch zur 2011er-DB-Auswertung)
+isql.exe "C:\...\Herrman Work Test\IBDB.FDB" -user SYSDBA -password masterkey
+
+# Vollschema-Export
+isql.exe <db> -user SYSDBA -password masterkey -a -o full_schema_current.sql
+
+# Stored-Procedure-Quelltexte (isql -a liefert hier nur Stubs!)
+SET BLOB ALL;
+SELECT RDB$PROCEDURE_NAME, RDB$PROCEDURE_SOURCE
+FROM RDB$PROCEDURES ORDER BY RDB$PROCEDURE_NAME;
 ```

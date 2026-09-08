@@ -1,0 +1,66 @@
+object frmProdStatusDlg: TfrmProdStatusDlg
+  Left = 430
+  Top = 179
+  BorderStyle = 'bsDialog'
+  Caption = 'Produktionsstatus'
+  ClientHeight = 164
+  ClientWidth = 349
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (349 164)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object lblStatus: TLabel
+    Left = 16
+    Top = 64
+    Width = 30
+    Height = 13
+    Caption = 'Status'
+  end
+  object lblArtikel: TLabel
+    Left = 16
+    Top = 8
+    Width = 42
+    Height = 13
+    Caption = '--------------'
+  end
+  object lblAuftrag: TLabel
+    Left = 16
+    Top = 24
+    Width = 36
+    Height = 13
+    Caption = 'lAuftrag'
+  end
+  object OKBtn: TButton
+    Left = 179
+    Top = 130
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 259
+    Top = 130
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object cbxStatus: TComboBox
+    Left = 16
+    Top = 80
+    Width = 201
+    Height = 21
+    ItemHeight = 13
+    TabOrder = 2
+  end
+end

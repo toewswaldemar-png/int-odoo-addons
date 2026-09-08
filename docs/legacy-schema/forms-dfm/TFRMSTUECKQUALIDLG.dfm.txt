@@ -1,0 +1,11 @@
+object frmStueckQualiDlg: TfrmStueckQualiDlg
+  Caption = 'frmStueckQualiDlg'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object movelr: TButton
+    Visible = False
+  end
+  object moverl: TButton
+    Visible = False
+  end
+end

@@ -1,0 +1,169 @@
+object frmStueckGruppenDialog: TfrmStueckGruppenDialog
+  Left = 489
+  Top = 171
+  Width = 485
+  Height = 583
+  HorzScrollBar.Range = 417
+  HorzScrollBar.Visible = False
+  VertScrollBar.Range = 545
+  VertScrollBar.Visible = False
+  BorderIcons = [biSystemMenu]
+  BorderStyle = 'bsSingle'
+  Caption = 'Stuecklisten - Gruppen '
+  Color = 12829635
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  OnClose = 'FormClose'
+  OnDestroy = 'FormDestroy'
+  OnShow = 'FormShow'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object SpeedButton1: TSpeedButton
+    Left = 432
+    Top = 48
+    Width = 23
+    Height = 22
+    OnClick = 'SpeedButton1Click'
+  end
+  object tlbFkt: TToolBar
+    Left = 0
+    Top = 0
+    Width = 469
+    Height = 29
+    ButtonHeight = 23
+    ButtonWidth = 28
+    Caption = 'tlbFkt'
+    Color = 'clBtnFace'
+    Flat = True
+    Images = 'ilFunktionen'
+    ParentColor = False
+    TabOrder = 0
+    object btnNeu: TToolButton
+      Left = 0
+      Top = 0
+      Hint = 'Neu'
+      Caption = 'btnNeu'
+      Enabled = False
+      ImageIndex = 0
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object btnLoeschen: TToolButton
+      Left = 28
+      Top = 0
+      Hint = 'Löschen'
+      Caption = 'btnLoeschen'
+      Enabled = False
+      ImageIndex = 11
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object btnSpeichern: TToolButton
+      Left = 56
+      Top = 0
+      Hint = 'Speichern'
+      Caption = 'btnSpeichern'
+      Enabled = False
+      ImageIndex = 3
+    end
+    object btnTr2: TToolButton
+      Left = 84
+      Top = 0
+      Width = 25
+      Caption = 'btnTr2'
+      ImageIndex = 13
+      Style = 'tbsSeparator'
+    end
+    object btnSuchen: TToolButton
+      Left = 109
+      Top = 0
+      Hint = 'in Suche übernhehmen'
+      Caption = 'btnSuchen'
+      Enabled = False
+      ImageIndex = 5
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = 'btnSuchenClick'
+    end
+    object btnTr1: TToolButton
+      Left = 137
+      Top = 0
+      Width = 24
+      Caption = 'btnTr1'
+      ImageIndex = 5
+      Style = 'tbsSeparator'
+    end
+    object btnUebernehmen: TToolButton
+      Left = 161
+      Top = 0
+      Hint = 'Übernehmen'
+      Caption = 'btnUebernehmen'
+      Enabled = False
+      ImageIndex = 10
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = 'btnUebernehmenClick'
+    end
+    object btnAbbruch: TToolButton
+      Left = 189
+      Top = 0
+      Hint = 'Abbrechen'
+      Caption = 'btnAbbruch'
+      Enabled = False
+      ImageIndex = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = 'btnAbbruchClick'
+    end
+  end
+  object dbgStGruppen: TDBGrid
+    Left = 8
+    Top = 40
+    Width = 409
+    Height = 497
+    DataSource = 'dsStueckGruppen'
+    TabOrder = 1
+    TitleFont.Charset = 'DEFAULT_CHARSET'
+    TitleFont.Color = 'clWindowText'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = []
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'Bezeichnung'
+        Title.Caption = 'Baugruppe'
+        Width = 120
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'Name1'
+        Title.Caption = 'Name 1'
+        Width = 120
+        Visible = True
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'Name2'
+        Title.Caption = 'Name 2'
+        Width = 120
+        Visible = True
+      }
+    >
+  end
+  object ilFunktionen: TImageList
+    Left = 376
+    Top = 40
+    Bitmap = <binary 17062 bytes>
+  end
+  object dsStueckGruppen: TDataSource
+    Left = 376
+    Top = 80
+  end
+end

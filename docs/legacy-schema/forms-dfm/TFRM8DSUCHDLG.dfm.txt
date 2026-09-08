@@ -1,0 +1,515 @@
+object frm8DSuchDlg: Tfrm8DSuchDlg
+  Left = 511
+  Top = 197
+  Width = 1024
+  Height = 672
+  Caption = 'Belege Suchen'
+  OnKeyDown = 'FormKeyDown'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object lblNr: TLabel
+    Top = 106
+  end
+  object lblOrt: TLabel
+    Top = 74
+  end
+  object lblLang: TLabel
+    Top = 143
+  end
+  object lblAbDAtum: TLabel
+    Top = 448
+  end
+  object lblArtNr: TLabel
+    Top = 177
+    Width = 78
+    Caption = 'Ansprechpartner'
+  end
+  object lblAltnummer: TLabel
+    Left = 12
+    Top = 210
+    Width = 49
+    Height = 13
+    Caption = 'Bestellnr...'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblAuftrag: TLabel
+    Left = 133
+    Top = 484
+    Width = 202
+    Height = 13
+    Caption = 'Auftrag / Lieferschein Nr. und Positionstext'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    Visible = False
+  end
+  object Label1: TLabel
+    Left = 13
+    Top = 239
+    Width = 35
+    Height = 13
+    Caption = 'Ordernr'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Left = 13
+    Top = 263
+    Width = 37
+    Height = 13
+    Caption = 'Fam-Nr.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label3: TLabel
+    Left = 13
+    Top = 287
+    Width = 47
+    Height = 13
+    Caption = 'G.Identnr.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label4: TLabel
+    Left = 13
+    Top = 311
+    Width = 35
+    Height = 13
+    Caption = 'Gruppe'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label5: TLabel
+    Left = 13
+    Top = 359
+    Width = 40
+    Height = 13
+    Caption = 'Rahmen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label6: TLabel
+    Left = 13
+    Top = 415
+    Width = 41
+    Height = 13
+    Caption = 'Herkunft'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label7: TLabel
+    Left = 13
+    Top = 335
+    Width = 42
+    Height = 13
+    Caption = 'Seriennr.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object gbxSort: TGroupBox
+    Height = 377
+    object rbtOrt: TRadioButton
+      Top = 53
+    end
+    object rbtNummer: TRadioButton
+      Top = 86
+    end
+    object rbtAdrNr: TRadioButton
+      Top = 119
+    end
+    object rdbLTermin: TRadioButton
+      Left = 8
+      Top = 353
+      Width = 69
+      Height = 17
+      Caption = 'Liefertermn.'
+      TabOrder = 4
+      Visible = False
+    end
+  end
+  object edtName1: TEdit
+    OnKeyDown = None
+  end
+  object edtOrt: TEdit
+    Top = 67
+  end
+  object edtNummer: TEdit
+    Top = 100
+  end
+  object edtAdrNr: TEdit
+    Top = 137
+  end
+  object cbxFilter: TCheckBox
+    Top = 495
+  end
+  object cbxAktuell: TCheckBox
+    Top = 472
+  end
+  object cbxDatum: TCheckBox
+    Top = 446
+  end
+  object dtpBis: TDateTimePicker
+    Top = 444
+  end
+  object dbgTreffer: TDBGrid
+    Left = 628
+    Top = 184
+    Align = 'alNone'
+    PopupMenu = 'popSuchen'
+    Visible = False
+    OnDblClick = 'btnOKClick'
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'NAME1'
+        Title.Caption = 'Name 1'
+        Width = 187
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'ORT'
+        Title.Caption = 'Ort'
+        Width = 187
+        Visible = True
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'NUMMER'
+        Title.Caption = 'Nummer'
+        Width = 75
+        Visible = True
+      }
+      item3 = {
+        Expanded = False
+        FieldName = 'BELEGBEZ'
+        Title.Caption = 'Belegart'
+        Width = 75
+        Visible = True
+      }
+    >
+  end
+  object edtArtNr: TEdit
+    Left = 96
+    Top = 171
+    Width = 233
+  end
+  object btnSuche: TAdvGlowButton
+    Top = 529
+    Height = 23
+  end
+  object btnOk: TAdvGlowButton
+    Top = 527
+    OnClick = 'btnOKClick'
+  end
+  object btnCancel: TAdvGlowButton
+    Top = 527
+  end
+  object edtAltnummer: TEdit
+    Left = 68
+    Top = 204
+    Width = 261
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 21
+  end
+  object edtAuftrag: TEdit
+    Left = 184
+    Top = 502
+    Width = 265
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 15
+    Visible = False
+  end
+  object edtOrder: TEdit
+    Left = 68
+    Top = 234
+    Width = 117
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 16
+  end
+  object edtOrderzaehl: TEdit
+    Left = 209
+    Top = 234
+    Width = 117
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 17
+  end
+  object edtFamnr: TEdit
+    Left = 68
+    Top = 258
+    Width = 257
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 18
+  end
+  object edtGIdent: TEdit
+    Left = 68
+    Top = 282
+    Width = 257
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 19
+  end
+  object dbgTrefferneu: TDBGrid
+    Left = 461
+    Top = 0
+    Width = 547
+    Height = 633
+    Align = 'alRight'
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    DataSource = 'dsSuchen'
+    PopupMenu = 'popSuchen'
+    TabOrder = 20
+    TitleFont.Charset = 'DEFAULT_CHARSET'
+    TitleFont.Color = 'clWindowText'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = []
+    OnDblClick = 'dbgTrefferDblClick'
+  end
+  object btnLastSearch: TAdvGlowButton
+    Left = 336
+    Top = 527
+  end
+  object edtGruppe: TEdit
+    Left = 68
+    Top = 306
+    Width = 221
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 22
+  end
+  object edtRahmen: TEdit
+    Left = 68
+    Top = 354
+    Width = 257
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 23
+  end
+  object cbxNoRahmen: TCheckBox
+    Left = 68
+    Top = 387
+    Width = 149
+    Height = 17
+    TabStop = False
+    Caption = 'ohne Rahmen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 24
+  end
+  object btnGruppe: TAdvGlowButton
+    Left = 294
+    Top = 306
+    Width = 33
+    Height = 25
+    Caption = 'Gr.'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 25
+    OnClick = 'btnGruppeClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object edtherkunft: TEdit
+    Left = 68
+    Top = 410
+    Width = 257
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 26
+  end
+  object edtsnr: TEdit
+    Left = 68
+    Top = 330
+    Width = 257
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 27
+  end
+  object aclSuchen: TActionList
+    Top = 524
+  end
+  object ilFunktionen: TImageList
+    Top = 480
+  end
+  object Imgform: TImageList
+    Top = 480
+  end
+  object popSuchen: TPopupMenu
+    Left = 424
+    Top = 40
+    object Excel1: TMenuItem
+      Caption = '-> Excel'
+      OnClick = 'Excel1Click'
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object unformatiertExcel1: TMenuItem
+      Caption = 'unformatiert -> Excel'
+      OnClick = 'unformatiertExcel1Click'
+    end
+  end
+end

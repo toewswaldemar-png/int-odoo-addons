@@ -1,0 +1,955 @@
+object frmFehlmengenDlg: TfrmFehlmengenDlg
+  Left = 404
+  Top = 195
+  BorderStyle = 'bsDialog'
+  Caption = 'Dialog'
+  ClientHeight = 506
+  ClientWidth = 953
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  DesignSize = (953 506)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 783
+    Top = 472
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 871
+    Top = 472
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object pgcAll: TPageControl
+    Left = 0
+    Top = 0
+    Width = 953
+    Height = 446
+    ActivePage = 'tshFehlmenge'
+    TabOrder = 2
+    object tshFehlmenge: TTabSheet
+      Caption = 'Fehlmengenliste'
+      ImageIndex = 2
+      object dbcFehl: TDBCtrlGrid
+        Left = 0
+        Top = 48
+        Width = 901
+        Height = 300
+        DataSource = 'dsfehl'
+        PanelHeight = 100
+        PanelWidth = 884
+        TabOrder = 0
+        OnPaintPanel = 'dbcFehlPaintPanel'
+        object dbtArtnr: TDBText
+          Left = 4
+          Top = 8
+          Width = 97
+          Height = 14
+          DataField = 'Artnr'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+          Transparent = False
+        end
+        object dbtArttext: TDBText
+          Left = 109
+          Top = 8
+          Width = 369
+          Height = 17
+          DataField = 'Arttext'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblkwfehl: TLabel
+          Left = 3
+          Top = 24
+          Width = 18
+          Height = 13
+          Caption = 'Kw'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblresfehl: TLabel
+          Left = 3
+          Top = 37
+          Width = 54
+          Height = 13
+          Caption = 'reserviert'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblbestellfehl: TLabel
+          Left = 3
+          Top = 68
+          Width = 43
+          Height = 13
+          Caption = 'Bestellt'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblverffehl: TLabel
+          Left = 3
+          Top = 82
+          Width = 55
+          Height = 13
+          Caption = 'verfügbar'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtkw1: TDBText
+          Left = 112
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw1'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+          Visible = False
+        end
+        object dbtkw2: TDBText
+          Left = 162
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw2'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtkw3: TDBText
+          Left = 230
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw3'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtkw4: TDBText
+          Left = 298
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw4'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtkw5: TDBText
+          Left = 365
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw5'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtkw6: TDBText
+          Left = 433
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw6'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtkw7: TDBText
+          Left = 501
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw7'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtkw8: TDBText
+          Left = 569
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw8'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtr1: TDBText
+          Left = 66
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest1'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtr2: TDBText
+          Left = 132
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest2'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtr3: TDBText
+          Left = 200
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest3'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtr4: TDBText
+          Left = 268
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest4'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtr5: TDBText
+          Left = 335
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest5'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtr6: TDBText
+          Left = 403
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest6'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtr7: TDBText
+          Left = 471
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest7'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtr8: TDBText
+          Left = 539
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest8'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtb1: TDBText
+          Left = 66
+          Top = 66
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestell1'
+          DataSource = 'dsfehl'
+        end
+        object dbtb2: TDBText
+          Left = 132
+          Top = 66
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestell2'
+          DataSource = 'dsfehl'
+        end
+        object dbtb3: TDBText
+          Left = 200
+          Top = 66
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestell3'
+          DataSource = 'dsfehl'
+        end
+        object dbtb4: TDBText
+          Left = 268
+          Top = 66
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestell4'
+          DataSource = 'dsfehl'
+        end
+        object dbtb5: TDBText
+          Left = 335
+          Top = 66
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestell5'
+          DataSource = 'dsfehl'
+        end
+        object dbtb6: TDBText
+          Left = 403
+          Top = 66
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestell6'
+          DataSource = 'dsfehl'
+        end
+        object dbtb7: TDBText
+          Left = 471
+          Top = 66
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestell7'
+          DataSource = 'dsfehl'
+        end
+        object dbtb8: TDBText
+          Left = 539
+          Top = 66
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestell8'
+          DataSource = 'dsfehl'
+        end
+        object dbtv1: TDBText
+          Left = 66
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand1'
+          DataSource = 'dsfehl'
+        end
+        object dbtv2: TDBText
+          Left = 132
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand2'
+          DataSource = 'dsfehl'
+        end
+        object dbtv3: TDBText
+          Left = 200
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand3'
+          DataSource = 'dsfehl'
+        end
+        object dbtv4: TDBText
+          Left = 268
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand4'
+          DataSource = 'dsfehl'
+        end
+        object dbtv5: TDBText
+          Left = 335
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand5'
+          DataSource = 'dsfehl'
+        end
+        object dbtv6: TDBText
+          Left = 403
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand6'
+          DataSource = 'dsfehl'
+        end
+        object dbtv7: TDBText
+          Left = 471
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand7'
+          DataSource = 'dsfehl'
+        end
+        object dbtv8: TDBText
+          Left = 539
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand8'
+          DataSource = 'dsfehl'
+        end
+        object DBText1: TDBText
+          Left = 696
+          Top = 8
+          Width = 70
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Bestand'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblbestandfehl: TLabel
+          Left = 642
+          Top = 8
+          Width = 55
+          Height = 13
+          Caption = 'Bestand: '
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtkw9: TDBText
+          Left = 637
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw9'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtr9: TDBText
+          Left = 607
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest9'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtb9: TDBText
+          Left = 607
+          Top = 66
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestell9'
+          DataSource = 'dsfehl'
+        end
+        object dbtv9: TDBText
+          Left = 607
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand9'
+          DataSource = 'dsfehl'
+        end
+        object dbtkw10: TDBText
+          Left = 705
+          Top = 24
+          Width = 17
+          Height = 17
+          DataField = 'kw10'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtr10: TDBText
+          Left = 675
+          Top = 36
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest10'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtb10: TDBText
+          Left = 675
+          Top = 67
+          Width = 65
+          Height = 12
+          Alignment = 'taRightJustify'
+          DataField = 'bestell10'
+          DataSource = 'dsfehl'
+        end
+        object dbtv10: TDBText
+          Left = 675
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand10'
+          DataSource = 'dsfehl'
+        end
+        object dbtkw11: TDBText
+          Left = 772
+          Top = 25
+          Width = 17
+          Height = 17
+          DataField = 'kw11'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtr11: TDBText
+          Left = 742
+          Top = 37
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest11'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtb11: TDBText
+          Left = 742
+          Top = 67
+          Width = 65
+          Height = 12
+          Alignment = 'taRightJustify'
+          DataField = 'bestell11'
+          DataSource = 'dsfehl'
+        end
+        object dbtv11: TDBText
+          Left = 742
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand11'
+          DataSource = 'dsfehl'
+        end
+        object dbtr12: TDBText
+          Left = 810
+          Top = 37
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'rest12'
+          DataSource = 'dsfehl'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clNavy'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbtb12: TDBText
+          Left = 810
+          Top = 67
+          Width = 65
+          Height = 12
+          Alignment = 'taRightJustify'
+          DataField = 'bestell12'
+          DataSource = 'dsfehl'
+        end
+        object dbtv12: TDBText
+          Left = 810
+          Top = 80
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'bestand12'
+          DataSource = 'dsfehl'
+        end
+        object Label1: TLabel
+          Left = 856
+          Top = 24
+          Width = 15
+          Height = 13
+          Caption = '>>'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object Label2: TLabel
+          Left = 3
+          Top = 52
+          Width = 80
+          Height = 13
+          Caption = 'in Kommission'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object dbtp1: TDBText
+          Left = 80
+          Top = 51
+          Width = 51
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod1'
+          DataSource = 'dsfehl'
+        end
+        object dbtp2: TDBText
+          Left = 132
+          Top = 51
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod2'
+          DataSource = 'dsfehl'
+        end
+        object dbtp3: TDBText
+          Left = 200
+          Top = 51
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod3'
+          DataSource = 'dsfehl'
+        end
+        object dbtp4: TDBText
+          Left = 268
+          Top = 51
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod4'
+          DataSource = 'dsfehl'
+        end
+        object dbtp5: TDBText
+          Left = 335
+          Top = 51
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod5'
+          DataSource = 'dsfehl'
+        end
+        object dbtp6: TDBText
+          Left = 403
+          Top = 51
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod6'
+          DataSource = 'dsfehl'
+        end
+        object dbtp7: TDBText
+          Left = 471
+          Top = 51
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod7'
+          DataSource = 'dsfehl'
+        end
+        object dbtp8: TDBText
+          Left = 539
+          Top = 51
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod8'
+          DataSource = 'dsfehl'
+        end
+        object dbtp9: TDBText
+          Left = 607
+          Top = 51
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod9'
+          DataSource = 'dsfehl'
+        end
+        object dbtp10: TDBText
+          Left = 675
+          Top = 51
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod10'
+          DataSource = 'dsfehl'
+        end
+        object dbtp11: TDBText
+          Left = 742
+          Top = 52
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod11'
+          DataSource = 'dsfehl'
+        end
+        object dbtp12: TDBText
+          Left = 810
+          Top = 52
+          Width = 65
+          Height = 17
+          Alignment = 'taRightJustify'
+          DataField = 'Prod12'
+          DataSource = 'dsfehl'
+        end
+        object Label3: TLabel
+          Left = 112
+          Top = 24
+          Width = 15
+          Height = 13
+          Caption = '<<'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+      end
+      object btnDruck: TButton
+        Left = 369
+        Top = 24
+        Width = 121
+        Height = 25
+        Caption = 'Druck'
+        TabOrder = 1
+        Visible = False
+        OnClick = 'btnDruckClick'
+      end
+      object btnDruckBestellung: TButton
+        Left = 1
+        Top = 0
+        Width = 152
+        Height = 25
+        Caption = 'Druck mit Bestellung'
+        TabOrder = 2
+        OnClick = 'btnDruckBestellungClick'
+      end
+      object btnArtikel: TButton
+        Left = 641
+        Top = 16
+        Width = 120
+        Height = 25
+        Caption = 'Artikel berechnen'
+        TabOrder = 3
+        OnClick = 'btnArtikelClick'
+      end
+      object btnFehlauftragDruck: TButton
+        Left = 193
+        Top = 0
+        Width = 152
+        Height = 25
+        Caption = 'Druck mit Auftrag'
+        TabOrder = 4
+        OnClick = 'btnFehlauftragDruckClick'
+      end
+      object Button1: TButton
+        Left = 1
+        Top = 24
+        Width = 152
+        Height = 25
+        Caption = 'Druck Bestellung nur Bedarf'
+        TabOrder = 5
+        OnClick = 'Button1Click'
+      end
+      object Button2: TButton
+        Left = 193
+        Top = 24
+        Width = 152
+        Height = 25
+        Caption = 'Druck Auftrag nur Bedarf'
+        TabOrder = 6
+        OnClick = 'Button2Click'
+      end
+      object btnExcel: TButton
+        Left = 369
+        Top = -1
+        Width = 121
+        Height = 25
+        Caption = '-> Excel'
+        TabOrder = 7
+        OnClick = 'Excel1Click'
+      end
+      object rdgFehlAuswahl: TRadioGroup
+        Left = 504
+        Top = -3
+        Width = 129
+        Height = 49
+        ItemIndex = 0
+        Items.Strings = ('mit Reservierung' 'ohne Reservierung')
+        TabOrder = 8
+        OnClick = 'rdgFehlAuswahlClick'
+      end
+    end
+  end
+  object dsfehl: TDataSource
+    Left = 808
+    Top = 37
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 772
+    Top = 40
+    object Excel1: TMenuItem
+      Caption = '-> Excel'
+      OnClick = 'Excel1Click'
+    end
+  end
+end

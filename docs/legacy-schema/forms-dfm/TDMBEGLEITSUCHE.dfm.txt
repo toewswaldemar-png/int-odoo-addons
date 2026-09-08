@@ -1,0 +1,3 @@
+object dmBegleitSuche: TdmBegleitSuche
+  OldCreateOrder = True
+end

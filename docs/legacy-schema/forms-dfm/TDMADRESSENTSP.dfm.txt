@@ -1,0 +1,541 @@
+object dmAdressenTSP: TdmAdressenTSP
+  OldCreateOrder = True
+  Left = 624
+  Top = 368
+  Height = 543
+  Width = 625
+  object cdsAnsprech: TClientDataSetHit
+    object cdsAnsprechStandardEmail: TStringField
+      FieldName = 'StandardEmail'
+      Size = 30
+    end
+    object cdsAnsprechstandardCC: TStringField
+      FieldName = 'standardCC'
+      Size = 200
+    end
+    object cdsAnsprechstandardBcc: TStringField
+      FieldName = 'standardBcc'
+      Size = 200
+    end
+  end
+  object cdsAdressen: TClientDataSetHit
+    object cdsAdressenUNSKDNR: TStringField
+      Size = 30
+    end
+    object cdsAdressenProvision: TFloatField
+      FieldName = 'Provision'
+    end
+    object cdsAdressenIsVertreter: TStringField
+      FieldName = 'IsVertreter'
+      Size = 1
+    end
+    object cdsAdressenVertreter: TIntegerField
+      FieldName = 'Vertreter'
+    end
+    object cdsAdressenVersand: TIntegerField
+      FieldName = 'Versand'
+    end
+    object cdsAdressenAbwUst: TFloatField
+      FieldName = 'AbwUst'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsAdressenBestellobligo: TFloatField
+      FieldName = 'Bestelloblig'
+    end
+    object cdsAdressenMinderaufschlag: TFloatField
+      FieldName = 'Minderaufschlag'
+    end
+    object cdsAdressenpostfachplz: TStringField
+      FieldName = 'postfachplz'
+      Size = 10
+    end
+    object cdsAdressensperre: TStringField
+      FieldName = 'sperre'
+      Size = 1
+    end
+    object cdsAdressenproduktionzelle: TIntegerField
+      FieldName = 'produktionzelle'
+    end
+    object cdsAdressenversandL: TIntegerField
+      FieldName = 'versandL'
+    end
+    object cdsAdressenzkondil: TIntegerField
+      FieldName = 'zkondil'
+    end
+    object cdsAdressenvinummer: TIntegerField
+      FieldName = 'vinummer'
+    end
+    object cdsAdressenZERTI1: TStringField
+      FieldName = 'ZERTI1'
+      Size = 30
+    end
+    object cdsAdressenZERTI2: TStringField
+      FieldName = 'ZERTI2'
+      Size = 30
+    end
+    object cdsAdressenzerti3: TStringField
+      FieldName = 'zerti3'
+      Size = 30
+    end
+    object cdsAdressenzerti4: TStringField
+      FieldName = 'zerti4'
+      Size = 30
+    end
+    object cdsAdressenzerti5: TStringField
+      FieldName = 'zerti5'
+      Size = 30
+    end
+    object cdsAdressenzerti6: TStringField
+      FieldName = 'zerti6'
+      Size = 30
+    end
+    object cdsAdressenzerti7: TStringField
+      FieldName = 'zerti7'
+      Size = 30
+    end
+    object cdsAdressenZERTIBEM1: TStringField
+      FieldName = 'ZERTIBEM1'
+      Size = 80
+    end
+    object cdsAdressenZERTIBEM2: TStringField
+      FieldName = 'ZERTIBEM2'
+      Size = 80
+    end
+    object cdsAdressenZERTIBEM3: TStringField
+      FieldName = 'ZERTIBEM3'
+      Size = 80
+    end
+    object cdsAdressenZERTIBEM4: TStringField
+      FieldName = 'ZERTIBEM4'
+      Size = 80
+    end
+    object cdsAdressenZERTIBEM5: TStringField
+      FieldName = 'ZERTIBEM5'
+      Size = 80
+    end
+    object cdsAdressenZERTIBEM6: TStringField
+      FieldName = 'ZERTIBEM6'
+      Size = 80
+    end
+    object cdsAdressenZERTIBEM7: TStringField
+      FieldName = 'ZERTIBEM7'
+      Size = 80
+    end
+    object cdsAdressenZERTIPFAD1: TStringField
+      FieldName = 'ZERTIPFAD1'
+      Size = 200
+    end
+    object cdsAdressenZERTIPFAD2: TStringField
+      FieldName = 'ZERTIPFAD2'
+      Size = 200
+    end
+    object cdsAdressenZERTIPFAD3: TStringField
+      FieldName = 'ZERTIPFAD3'
+      Size = 200
+    end
+    object cdsAdressenZERTIPFAD4: TStringField
+      FieldName = 'ZERTIPFAD4'
+      Size = 200
+    end
+    object cdsAdressenZERTIPFAD5: TStringField
+      FieldName = 'ZERTIPFAD5'
+      Size = 200
+    end
+    object cdsAdressenZERTIPFAD6: TStringField
+      FieldName = 'ZERTIPFAD6'
+      Size = 200
+    end
+    object cdsAdressenZERTIPFAD7: TStringField
+      FieldName = 'ZERTIPFAD7'
+      Size = 200
+    end
+    object cdsAdressenLiefertage: TStringField
+      FieldName = 'Liefertage'
+      Size = 30
+    end
+    object cdsAdressenswift: TStringField
+      FieldName = 'swift'
+      Size = 60
+    end
+    object cdsAdresseniban: TStringField
+      FieldName = 'iban'
+      Size = 60
+    end
+    object cdsAdressenzeitraum8d: TFloatField
+      FieldName = 'zeitraum8d'
+      DisplayFormat = '##0.,00'
+    end
+    object cdsAdressenprovision2: TFloatField
+      FieldName = 'provision2'
+    end
+    object cdsAdressenlogopfad: TStringField
+      FieldName = 'logopfad'
+      Size = 200
+    end
+    object cdsAdressenBewerten: TStringField
+      FieldName = 'Bewerten'
+      Size = 1
+    end
+    object cdsAdressenZkondiE: TIntegerField
+      FieldName = 'ZkondiE'
+    end
+    object cdsAdressenVersandE: TIntegerField
+      FieldName = 'VersandE'
+    end
+    object cdsAdressenanzkopie: TIntegerField
+      FieldName = 'anzkopie'
+    end
+    object cdsAdressenneedAuftragAdr: TStringField
+      FieldName = 'needAuftragAdr'
+      Size = 1
+    end
+    object cdsAdressenneedLieferAdr: TStringField
+      FieldName = 'needLieferAdr'
+      Size = 1
+    end
+    object cdsAdressenneedPDFRechnung: TStringField
+      FieldName = 'needPDFRechnung'
+      Size = 1
+    end
+    object cdsAdressenMandantenID: TStringField
+      FieldName = 'MandantenID'
+      Size = 60
+    end
+    object cdsAdressenBuchhaltungBCC: TStringField
+      FieldName = 'BuchhaltungBCC'
+      Size = 200
+    end
+    object cdsAdressenBuchhaltungCC: TStringField
+      FieldName = 'BuchhaltungCC'
+      Size = 200
+    end
+    object cdsAdressenVTCC: TStringField
+      FieldName = 'VTCC'
+      Size = 200
+    end
+    object cdsAdressenVTBCC: TStringField
+      FieldName = 'VTBCC'
+      Size = 200
+    end
+    object cdsAdressenEKCC: TStringField
+      FieldName = 'EKCC'
+      Size = 200
+    end
+    object cdsAdressenEKBCC: TStringField
+      FieldName = 'EKBCC'
+      Size = 200
+    end
+    object cdsAdressenGLCC: TStringField
+      FieldName = 'GLCC'
+      Size = 200
+    end
+    object cdsAdressenGLBCC: TStringField
+      FieldName = 'GLBCC'
+      Size = 200
+    end
+    object cdsAdressenINfocc: TStringField
+      FieldName = 'INfocc'
+      Size = 200
+    end
+    object cdsAdresseniNFOBCC: TStringField
+      FieldName = 'iNFOBCC'
+      Size = 200
+    end
+    object cdsAdressenEmailcc: TStringField
+      FieldName = 'Emailcc'
+      Size = 200
+    end
+    object cdsAdressenemailBcc: TStringField
+      FieldName = 'emailBcc'
+      Size = 200
+    end
+    object cdsAdressenBuyerRef: TStringField
+      FieldName = 'BuyerRef'
+      Size = 30
+    end
+    object cdsAdressenRechSteuerDruck: TStringField
+      FieldName = 'RechSteuerDruck'
+      Size = 1
+    end
+    object cdsAdressenBuyerReference: TStringField
+      FieldName = 'BuyerReference'
+      Size = 30
+    end
+    object cdsAdressenEndPointID: TStringField
+      FieldName = 'EndPointID'
+      Size = 30
+    end
+    object cdsAdressenVertragsnummer: TStringField
+      FieldName = 'Vertragsnummer'
+      Size = 30
+    end
+    object cdsAdressenSellerID: TStringField
+      FieldName = 'SellerID'
+      Size = 30
+    end
+    object cdsAdressenCustomID: TStringField
+      FieldName = 'CustomID'
+      Size = 30
+    end
+  end
+  object cdsKdArtRabatt: TClientDataSetHit
+    object cdsKdArtRabattsmt: TIntegerField
+      FieldName = 'smt'
+    end
+    object cdsKdArtRabatttht: TIntegerField
+      FieldName = 'tht'
+    end
+    object cdsKdArtRabattbg: TIntegerField
+      FieldName = 'bg'
+    end
+    object cdsKdArtRabattmaterial: TIntegerField
+      FieldName = 'material'
+    end
+  end
+  object fcrEtiketten: TFlexCelReport
+    AutoClose = False
+    DataModule = 'Owner'
+    Left = 480
+    Top = 40
+  end
+  object cdsVertreter: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 288
+    Top = 256
+  end
+  object cdsVersand: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    OnNewRecord = 'cdsLieferNewRecord'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 304
+    Top = 128
+  end
+  object cdsVertreterProv: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 368
+    Top = 256
+  end
+  object cdsInfo: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 496
+    Top = 144
+  end
+  object cdsHersteller: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterScroll = 'cdsHerstellerAfterScroll'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 288
+    Top = 192
+  end
+  object cdsProdukt: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 368
+    Top = 192
+  end
+  object flxAdressen: TFlexCelReport
+    AutoClose = False
+    Adapter = 'OLEAdapter1'
+    DataModule = 'Owner'
+    Left = 408
+    Top = 40
+  end
+  object OLEAdapter1: TOLEAdapter
+    BlockSize = 250
+    SaveFormatExtended = []
+    Left = 408
+    Top = 88
+  end
+  object cdsRahmenInfo: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 408
+    Top = 144
+  end
+  object cdsRahmenRechnung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 480
+    Top = 200
+  end
+  object cdsZkondiL: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    OnNewRecord = 'cdsLieferNewRecord'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 24
+    Top = 320
+  end
+  object cdsVersandL: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    OnNewRecord = 'cdsLieferNewRecord'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 304
+    Top = 320
+  end
+  object cdsVI: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 368
+    Top = 320
+  end
+  object progBar: THITProgressBar
+    ProgFormStyle = 'fsNormal'
+    InThread = False
+    Caption = 'Processing...'
+    BarHeight = 12
+    ShowDialog = True
+    WaitTillFinish = True
+    CanCancel = True
+    TextString = 'Please wait'
+    UpdateTImes = 10
+    FormPosition = 'fpCenter'
+    Left = 488
+    Top = 88
+  end
+  object cdsPrint: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 440
+    Top = 320
+  end
+  object cdsQualiCross: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 24
+    Top = 384
+  end
+  object cdsQuali: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 104
+    Top = 384
+  end
+  object cdsAdrQuali: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 176
+    Top = 384
+  end
+  object cdsLeistung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    OnNewRecord = 'cdsLeistungNewRecord'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 120
+    Top = 320
+  end
+end

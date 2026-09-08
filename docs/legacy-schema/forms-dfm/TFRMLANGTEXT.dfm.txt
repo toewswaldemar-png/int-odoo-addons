@@ -1,0 +1,38 @@
+object frmLangtext: TfrmLangtext
+  Left = 465
+  Top = 270
+  Width = 474
+  Height = 347
+  Caption = 'Langtext'
+  OldCreateOrder = True
+  PixelsPerInch = 96
+  TextHeight = 13
+  object dbmLangtext: TDBMemo
+    Left = 8
+    Top = 10
+    Width = 449
+    Height = 263
+    Color = 16120304
+    DataField = 'POSTEXT'
+    DataSource = 'dsDataDialog'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -13
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    ScrollBars = 'ssVertical'
+    TabOrder = 2
+  end
+  object btnOk: TButton
+    Left = 298
+    Top = 283
+  end
+  object btnCancel: TButton
+    Left = 378
+    Top = 283
+  end
+  object dsDataDialog: TDataSource
+    Top = 32
+  end
+end

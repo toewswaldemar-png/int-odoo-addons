@@ -1,0 +1,173 @@
+object frmFuhrparkDruckDlg: TfrmFuhrparkDruckDlg
+  Left = 524
+  Top = 218
+  BorderIcons = [biSystemMenu]
+  BorderStyle = 'bsSingle'
+  Caption = 'Fuhrpark Listen'
+  ClientHeight = 290
+  ClientWidth = 326
+  Color = 'clSilver'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  OnClose = 'FormClose'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object btnCancel: TButton
+    Left = 229
+    Top = 251
+    Width = 75
+    Height = 25
+    Cancel = True
+    Caption = 'Abbrechen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ModalResult = 2
+    ParentFont = False
+    TabOrder = 0
+  end
+  object btnOK: TButton
+    Left = 141
+    Top = 251
+    Width = 75
+    Height = 25
+    Caption = 'OK'
+    Default = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ModalResult = 1
+    ParentFont = False
+    TabOrder = 1
+    OnClick = 'btnOKClick'
+  end
+  object gbxAuswahl: TGroupBox
+    Left = 24
+    Top = 112
+    Width = 278
+    Height = 113
+    Caption = 'Auswahl'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 2
+    object lblVon: TLabel
+      Left = 8
+      Top = 32
+      Width = 52
+      Height = 13
+      Caption = 'von Datum'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblBis: TLabel
+      Left = 144
+      Top = 32
+      Width = 47
+      Height = 13
+      Caption = 'bis Datum'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label1: TLabel
+      Left = 8
+      Top = 72
+      Width = 36
+      Height = 13
+      Caption = 'von Kfz'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label2: TLabel
+      Left = 144
+      Top = 72
+      Width = 31
+      Height = 13
+      Caption = 'bis Kfz'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object edtVon: TMaskEdit
+      Left = 68
+      Top = 29
+      Width = 65
+      Height = 21
+      Color = 16120304
+      EditMask = '!99/99/0000;1;_'
+      MaxLength = 10
+      TabOrder = 0
+      Text = '  .  .    '
+    end
+    object edtBis: TMaskEdit
+      Left = 200
+      Top = 29
+      Width = 65
+      Height = 21
+      Color = 16120304
+      EditMask = '!99/99/0000;1;_'
+      MaxLength = 10
+      TabOrder = 1
+      Text = '  .  .    '
+    end
+    object edtVonKfz: TMaskEdit
+      Left = 68
+      Top = 69
+      Width = 64
+      Height = 21
+      Color = 16120304
+      TabOrder = 2
+    end
+    object edtBisKfz: TMaskEdit
+      Left = 200
+      Top = 69
+      Width = 65
+      Height = 21
+      Color = 16120304
+      TabOrder = 3
+    end
+  end
+  object rgpListe: TRadioGroup
+    Left = 24
+    Top = 16
+    Width = 281
+    Height = 81
+    Caption = 'Liste'
+    ItemIndex = 0
+    Items.Strings = ('KM - Aufstellung' 'Kostenliste' 'TÜV - Liste')
+    TabOrder = 3
+  end
+end

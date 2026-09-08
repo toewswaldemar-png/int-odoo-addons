@@ -1,0 +1,64 @@
+object dmFuhrpark: TdmFuhrpark
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 813
+  Top = 168
+  Height = 227
+  Width = 238
+  object cdsFahrzeug: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdMaster'
+    WriteLastSQL = False
+    Left = 40
+    Top = 104
+  end
+  object cdsTree: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 40
+    Top = 32
+  end
+  object cdsTouren: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    AfterOpen = 'cdsTourenAfterOpen'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 144
+    Top = 104
+  end
+end

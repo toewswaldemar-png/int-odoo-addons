@@ -1,0 +1,91 @@
+object dmBuchung: TdmBuchung
+  OldCreateOrder = False
+  OnDestroy = 'DataModuleDestroy'
+  Left = 433
+  Top = 161
+  Height = 248
+  Width = 335
+  object cdsBuchungBeleg: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 40
+    Top = 64
+  end
+  object cdsInfo: TClientDataSetHit
+    Tag = 1
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 40
+    Top = 8
+  end
+  object cdsBuchungPos: TClientDataSetHit
+    Tag = 1
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 128
+    Top = 64
+  end
+  object cdsLagerOrtVerteilung: TClientDataSetHit
+    Tag = 1
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 224
+    Top = 64
+  end
+end

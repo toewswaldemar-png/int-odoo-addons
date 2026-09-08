@@ -1,0 +1,52 @@
+object dmEngpass: TdmEngpass
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 692
+  Top = 229
+  Height = 150
+  Width = 215
+  object cdsProduktion: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    AfterScroll = 'cdsProduktionAfterScroll'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdMaster'
+    WriteLastSQL = False
+    Left = 31
+    Top = 8
+  end
+  object cdsInfo: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 111
+    Top = 8
+  end
+  object cdsFABem: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 31
+    Top = 64
+  end
+end

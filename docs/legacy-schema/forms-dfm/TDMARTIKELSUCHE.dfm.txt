@@ -1,0 +1,22 @@
+object dmArtikelSuche: TdmArtikelSuche
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 816
+  Top = 550
+  Height = 150
+  Width = 215
+  object cdsSuchen: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 80
+    Top = 40
+  end
+end

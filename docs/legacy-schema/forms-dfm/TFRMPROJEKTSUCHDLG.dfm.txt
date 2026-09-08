@@ -1,0 +1,86 @@
+object frmProjektsuchDlg: TfrmProjektsuchDlg
+  Left = 532
+  Top = 204
+  BorderStyle = 'bsDialog'
+  Caption = 'Suche'
+  ClientHeight = 308
+  ClientWidth = 488
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (488 308)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 295
+    Top = 278
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 383
+    Top = 278
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object dbgProjekte: TDBGrid
+    Left = 25
+    Top = 46
+    Width = 416
+    Height = 219
+    Color = 16120304
+    DataSource = 'dsp'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 2
+    TitleFont.Charset = 'ANSI_CHARSET'
+    TitleFont.Color = 'clBlack'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Pitch = 'fpVariable'
+    TitleFont.Style = []
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'Baugruppe'
+        Title.Caption = 'Nummer'
+        Width = 120
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'Hauptprojekt'
+        Title.Caption = 'Hauptprojekt '
+        Width = 120
+        Visible = True
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'Projektname'
+        Title.Caption = 'Projektname '
+        Width = 120
+        Visible = True
+      }
+    >
+  end
+  object dsp: TDataSource
+    Left = 448
+    Top = 232
+  end
+end

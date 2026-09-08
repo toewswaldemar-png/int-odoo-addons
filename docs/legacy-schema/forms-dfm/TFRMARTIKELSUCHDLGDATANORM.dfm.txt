@@ -1,0 +1,491 @@
+object frmArtikelSuchDlgDatanorm: TfrmArtikelSuchDlgDatanorm
+  Left = 661
+  Top = 310
+  Width = 1000
+  Height = 468
+  ActiveControl = 'edtBezeichnung1'
+  BorderIcons = []
+  Caption = 'Datanormartikel - Suchen'
+  Color = 'clSilver'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object btnGruppen: TSpeedButton
+    Left = 355
+    Top = 276
+    Width = 22
+    Height = 22
+    Flat = True
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = 13
+    Font.Name = 'cursor'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    Glyph.Data = <binary 250 bytes>
+    ParentFont = False
+    OnClick = 'btnGruppenClick'
+  end
+  object lblAnschrift: TLabel
+    Left = 8
+    Top = 38
+    Width = 62
+    Height = 13
+    Caption = 'Bezeichnung'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblNr: TLabel
+    Left = 8
+    Top = 116
+    Width = 39
+    Height = 13
+    Caption = 'Nummer'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblGruppe: TLabel
+    Left = 8
+    Top = 280
+    Width = 60
+    Height = 13
+    Caption = 'Gruppe / Nr.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label1: TLabel
+    Left = 8
+    Top = 78
+    Width = 67
+    Height = 13
+    Caption = 'Kurzbezeichn.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblLang: TLabel
+    Left = 8
+    Top = 159
+    Width = 41
+    Height = 13
+    Caption = 'Langtext'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 199
+    Width = 48
+    Height = 13
+    Caption = 'Bestell-Nr.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object gbxSort: TGroupBox
+    Left = 352
+    Top = 16
+    Width = 65
+    Height = 241
+    Caption = 'Sortierung'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 0
+    object rbtBezeichnung1: TRadioButton
+      Left = 12
+      Top = 20
+      Width = 37
+      Height = 17
+      Checked = True
+      TabOrder = 0
+      TabStop = True
+    end
+    object rbtKurzbezeichnung: TRadioButton
+      Left = 12
+      Top = 60
+      Width = 37
+      Height = 17
+      TabOrder = 1
+    end
+    object rbtNummer: TRadioButton
+      Left = 12
+      Top = 99
+      Width = 37
+      Height = 17
+      TabOrder = 2
+    end
+    object rbtArttext: TRadioButton
+      Left = 12
+      Top = 139
+      Width = 37
+      Height = 17
+      TabOrder = 3
+    end
+    object rbtRang: TRadioButton
+      Left = 12
+      Top = 214
+      Width = 37
+      Height = 17
+      TabOrder = 4
+    end
+    object rbtBestellNr: TRadioButton
+      Left = 12
+      Top = 179
+      Width = 37
+      Height = 17
+      TabOrder = 5
+    end
+  end
+  object edtBezeichnung1: TEdit
+    Left = 88
+    Top = 35
+    Width = 249
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+  end
+  object edtKurzbezeichnung: TEdit
+    Left = 88
+    Top = 75
+    Width = 249
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 2
+  end
+  object edtNummer: TEdit
+    Left = 88
+    Top = 113
+    Width = 249
+    Height = 21
+    AutoSize = False
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 3
+  end
+  object edtGruppe: TEdit
+    Left = 272
+    Top = 276
+    Width = 65
+    Height = 21
+    TabStop = False
+    AutoSize = False
+    Color = 'clSilver'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 5
+  end
+  object btnCancel: TButton
+    Left = 253
+    Top = 395
+    Width = 75
+    Height = 25
+    Cancel = True
+    Caption = 'Abbrechen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ModalResult = 2
+    ParentFont = False
+    TabOrder = 6
+  end
+  object btnOK: TButton
+    Left = 168
+    Top = 395
+    Width = 75
+    Height = 25
+    Caption = 'OK'
+    Default = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ModalResult = 1
+    ParentFont = False
+    TabOrder = 7
+  end
+  object cbxFilter: TCheckBox
+    Left = 88
+    Top = 320
+    Width = 105
+    Height = 17
+    Caption = 'Artikel Filtern'
+    Checked = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    State = 'cbChecked'
+    TabOrder = 8
+  end
+  object edtArttext: TEdit
+    Left = 88
+    Top = 153
+    Width = 249
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 4
+  end
+  object edtGruppeBez: TMaskEdit
+    Left = 88
+    Top = 276
+    Width = 177
+    Height = 21
+    TabStop = False
+    Color = 'clSilver'
+    TabOrder = 9
+  end
+  object rgpAppend: TRadioGroup
+    Left = 88
+    Top = 344
+    Width = 249
+    Height = 33
+    Columns = 2
+    ItemIndex = 0
+    Items.Strings = ('Anhängen' 'Einfügen')
+    TabOrder = 10
+  end
+  object dbgTreffer: TDBGrid
+    Left = 423
+    Top = 0
+    Width = 561
+    Height = 430
+    Align = 'alRight'
+    BorderStyle = 'bsNone'
+    Color = 14739688
+    DataSource = 'dsSuchen'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
+    ParentFont = False
+    PopupMenu = 'pmTreffer'
+    TabOrder = 11
+    TitleFont.Charset = 'ANSI_CHARSET'
+    TitleFont.Color = 'clBlack'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Pitch = 'fpVariable'
+    TitleFont.Style = []
+    OnDblClick = 'dbgTrefferDblClick'
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'BEZEICHNUNG1'
+        Title.Caption = 'Bezeichnung 1'
+        Width = 145
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'KURZBEZEICHNUNG'
+        Title.Caption = 'Kurzbezeichnung'
+        Width = 130
+        Visible = True
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'ARTNR'
+        Title.Caption = 'Nummer'
+        Width = 60
+        Visible = True
+      }
+      item3 = {
+        Expanded = False
+        FieldName = 'BESTELLNR'
+        Title.Caption = 'Bestell-Nr.'
+        Width = 80
+        Visible = True
+      }
+      item4 = {
+        Expanded = False
+        FieldName = 'GRUPPENAME'
+        Title.Caption = 'Gruppe'
+        Width = 65
+        Visible = True
+      }
+      item5 = {
+        Expanded = False
+        FieldName = 'RANG'
+        Title.Caption = 'Rang'
+        Width = 45
+        Visible = True
+      }
+      item6 = {
+        Expanded = False
+        FieldName = 'EKNETTO'
+        Title.Caption = 'Einkauf'
+        Visible = True
+      }
+      item7 = {
+        Expanded = False
+        FieldName = 'VKNETTO'
+        Title.Caption = 'Verkauf'
+        Visible = True
+      }
+    >
+  end
+  object btnSuche: TButton
+    Left = 85
+    Top = 395
+    Width = 75
+    Height = 25
+    Action = 'actSuche'
+    Default = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 12
+  end
+  object cbxRenner: TCheckBox
+    Left = 88
+    Top = 234
+    Width = 177
+    Height = 17
+    Caption = 'nur schon verwendete Artikel'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 13
+  end
+  object edtBestellNr: TEdit
+    Left = 88
+    Top = 193
+    Width = 249
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 14
+  end
+  object dsSuchen: TDataSource
+    DataSet = 'dmArtikelSuche.cdsSuchen'
+    Left = 928
+    Top = 72
+  end
+  object aclSuchen: TActionList
+    Left = 24
+    Top = 392
+    object actSuche: TAction
+      Caption = '&Suchen'
+      ShortCut = 16467
+      OnExecute = 'actSucheExecute'
+    end
+    object actUebernahme: TAction
+      Caption = 'Übernahme in Artikelstamm'
+      OnExecute = 'actUebernahmeExecute'
+    end
+  end
+  object pmTreffer: TPopupMenu
+    Left = 24
+    Top = 352
+    object bernahmeinArtikelstamm1: TMenuItem
+      Action = 'actUebernahme'
+    end
+  end
+end

@@ -1,0 +1,246 @@
+object dmAuswertung: TdmAuswertung
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 479
+  Top = 339
+  Height = 269
+  Width = 643
+  object cdsAuswertung1: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 40
+    Top = 8
+  end
+  object cdsAuswertung2: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 128
+    Top = 8
+  end
+  object cdsAuswertung3: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 216
+    Top = 8
+  end
+  object cdsAuswertung4: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 304
+    Top = 8
+  end
+  object flxAuswertung: TFlexCelReport
+    AutoClose = False
+    Adapter = 'oleAuswertung'
+    DataModule = 'Owner'
+    Left = 32
+    Top = 64
+  end
+  object oleAuswertung: TOLEAdapter
+    BlockSize = 250
+    SaveFormatExtended = []
+    Left = 104
+    Top = 64
+  end
+  object cdsAuswertung5: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 392
+    Top = 8
+  end
+  object Excel: TExcelApplication
+    AutoConnect = False
+    ConnectKind = 'ckRunningOrNew'
+    AutoQuit = False
+    Left = 192
+    Top = 64
+  end
+  object exlWBook: TExcelWorkbook
+    AutoConnect = False
+    ConnectKind = 'ckRunningOrNew'
+    Left = 256
+    Top = 64
+  end
+  object exlWSheet: TExcelWorksheet
+    AutoConnect = False
+    ConnectKind = 'ckRunningOrNew'
+    Left = 320
+    Top = 64
+  end
+  object cdsAuswertung6: TClientDataSetHit
+    Aggregates = <
+    >
+    AutoCalcFields = False
+    DisableStringTrim = True
+    FetchOnDemand = False
+    ObjectView = False
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 488
+    Top = 8
+  end
+  object FlxImport: TFlexCelImport
+    Adapter = 'oleAuswertung'
+    Left = 456
+    Top = 64
+  end
+  object cds1: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 24
+    Top = 136
+  end
+  object cds2: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 112
+    Top = 136
+  end
+  object cds3: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 192
+    Top = 136
+  end
+  object cdsInfo: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 272
+    Top = 136
+  end
+end

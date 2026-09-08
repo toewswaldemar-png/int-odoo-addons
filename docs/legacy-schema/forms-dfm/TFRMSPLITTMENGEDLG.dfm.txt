@@ -1,0 +1,35 @@
+object frmSplittmengeDlg: TfrmSplittmengeDlg
+  Caption = 'Menge'
+  ClientHeight = 123
+  ClientWidth = 324
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 154
+    Top = 89
+  end
+  object CancelBtn: TButton
+    Left = 234
+    Top = 89
+  end
+  object lblWeek: TLabeledEdit
+    Left = 160
+    Top = 32
+    Width = 65
+    Height = 21
+    EditLabel.Width = 35
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Woche'
+    TabOrder = 3
+  end
+  object lblYear: TLabeledEdit
+    Left = 232
+    Top = 32
+    Width = 65
+    Height = 21
+    EditLabel.Width = 20
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Jahr'
+    TabOrder = 4
+  end
+end

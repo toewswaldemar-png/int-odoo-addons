@@ -1,0 +1,1753 @@
+object frmBestellungShow: TfrmBestellungShow
+  Left = 350
+  Top = 122
+  Width = 728
+  Height = 725
+  BorderIcons = [biSystemMenu]
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  FormStyle = 'fsStayOnTop'
+  OldCreateOrder = False
+  Position = 'poScreenCenter'
+  Visible = True
+  OnClose = 'FormClose'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object gbxAnschrift: TGroupBox
+    Left = 4
+    Top = 0
+    Width = 629
+    Height = 193
+    Color = 'clBtnFace'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = 12
+    Font.Name = 'MS Shell Dlg'
+    Font.Pitch = 'fpVariable'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+    TabOrder = 0
+    object lblNummer: TLabel
+      Left = 336
+      Top = 19
+      Width = 27
+      Height = 13
+      Caption = 'Beleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblDatum: TLabel
+      Left = 336
+      Top = 45
+      Width = 67
+      Height = 13
+      Caption = 'Datum/Sparte'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblBearbeiter: TLabel
+      Left = 336
+      Top = 71
+      Width = 48
+      Height = 13
+      Caption = 'Bearbeiter'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblProjekt: TLabel
+      Left = 336
+      Top = 98
+      Width = 96
+      Height = 13
+      Caption = 'Hauptauftrag/Alt-Nr.'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblLiefertermin: TLabel
+      Left = 336
+      Top = 124
+      Width = 93
+      Height = 13
+      Caption = 'Bestell-/Liefertermin'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblProv: TLabel
+      Left = 12
+      Top = 149
+      Width = 43
+      Height = 13
+      Caption = 'Provision'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label2: TLabel
+      Left = 108
+      Top = 149
+      Width = 40
+      Height = 13
+      Caption = 'Kontrakt'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblkdzeichen: TLabel
+      Left = 12
+      Top = 170
+      Width = 46
+      Height = 13
+      Caption = 'Kd.Zeich.'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblBestellnummer: TLabel
+      Left = 336
+      Top = 146
+      Width = 68
+      Height = 13
+      Caption = 'Bestellnummer'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblVue: TLabel
+      Left = 163
+      Top = 170
+      Width = 15
+      Height = 13
+      Caption = 'VÜ'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblAendIndex: TLabel
+      Left = 509
+      Top = 42
+      Width = 26
+      Height = 13
+      Caption = 'Index'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object dblcbProjekt: TDBLookupComboBox
+      Left = 498
+      Top = 168
+      Width = 122
+      Height = 21
+      Color = 16120304
+      DataField = 'PROJEKT'
+      DropDownRows = 10
+      Enabled = False
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      KeyField = 'OID'
+      ListField = 'PROJEKT'
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = False
+      TabOrder = 14
+      TabStop = False
+      Visible = False
+    end
+    object dbeName1: TDBEdit
+      Left = 12
+      Top = 32
+      Width = 277
+      Height = 22
+      Hint = 'Name1'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'NAME1'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 1
+    end
+    object dbeName2: TDBEdit
+      Left = 12
+      Top = 54
+      Width = 277
+      Height = 22
+      Hint = 'Name2'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'NAME2'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 2
+    end
+    object dbeName3: TDBEdit
+      Left = 12
+      Top = 76
+      Width = 277
+      Height = 22
+      Hint = 'Name3'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'NAME3'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 3
+    end
+    object dbeStrasse: TDBEdit
+      Left = 12
+      Top = 98
+      Width = 277
+      Height = 22
+      Hint = 'Strasse'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'STRASSE'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 4
+    end
+    object dbeLand: TDBEdit
+      Left = 12
+      Top = 122
+      Width = 29
+      Height = 22
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'LAND'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 5
+    end
+    object dbePlz: TDBEdit
+      Left = 41
+      Top = 122
+      Width = 61
+      Height = 22
+      Hint = 'Plz'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'PLZ'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 6
+    end
+    object dbeOrt: TDBEdit
+      Left = 106
+      Top = 122
+      Width = 183
+      Height = 22
+      Hint = 'Ort'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'ORT'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 7
+    end
+    object dbeAdrNr: TDBEdit
+      Left = 12
+      Top = 10
+      Width = 53
+      Height = 22
+      Hint = 'Land'
+      TabStop = False
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'ADRNR'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 0
+    end
+    object dbeNummer: TDBEdit
+      Left = 432
+      Top = 14
+      Width = 65
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 'clBtnFace'
+      DataField = 'NUMMER'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 8
+    end
+    object debDatum: TDBEdit
+      Left = 432
+      Top = 40
+      Width = 65
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'BELEGDATUM'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 10
+    end
+    object dbcBelegart: TDBComboBox
+      Left = 498
+      Top = 14
+      Width = 122
+      Height = 21
+      Color = 16120304
+      DataField = 'BELEGBEZ'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'Microsoft Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ItemHeight = 13
+      Items.Strings = ('AUFTRAG' 'AUFTRAGSBESTÄTIGUNG')
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 9
+      TabStop = False
+    end
+    object dblcbSparte: TDBLookupComboBox
+      Left = 584
+      Top = 40
+      Width = 36
+      Height = 21
+      Color = 16120304
+      DataField = 'SPARTE'
+      DataSource = 'dsBeleg'
+      DropDownRows = 10
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      KeyField = 'OID'
+      ListField = 'NAME'
+      ParentFont = False
+      ParentShowHint = False
+      ReadOnly = True
+      ShowHint = False
+      TabOrder = 11
+      TabStop = False
+      Visible = False
+    end
+    object dbeBearbeiter: TDBEdit
+      Left = 432
+      Top = 66
+      Width = 187
+      Height = 22
+      Hint = 'Name1'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'BEARBEITER'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 12
+    end
+    object dbcbxAbgeschlossen: TDBCheckBox
+      Left = 432
+      Top = 170
+      Width = 97
+      Height = 17
+      TabStop = False
+      Caption = 'Abgeschlossen'
+      DataField = 'ABGESCHLOSSEN'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 15
+      ValueChecked = 'T'
+      ValueUnchecked = 'F'
+    end
+    object dbeHauptauftrag: TDBEdit
+      Left = 432
+      Top = 94
+      Width = 65
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'HAUPTAUFTRAG'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 13
+    end
+    object dbcbGedruckt: TDBCheckBox
+      Left = 544
+      Top = 170
+      Width = 81
+      Height = 17
+      TabStop = False
+      Caption = 'Gedruckt'
+      DataField = 'GEDRUCKT'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 16
+      ValueChecked = 'T'
+      ValueUnchecked = 'F'
+    end
+    object dbeLiefertermin: TDBEdit
+      Left = 500
+      Top = 120
+      Width = 117
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'LIEFERTERMIN'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 17
+    end
+    object dbeProvision: TDBEdit
+      Left = 64
+      Top = 146
+      Width = 37
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'PROvision'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 18
+    end
+    object dbeNummerAlt: TDBEdit
+      Left = 499
+      Top = 94
+      Width = 117
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'NUMMERAlt'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 19
+    end
+    object dbeBestelltermin: TDBEdit
+      Left = 432
+      Top = 120
+      Width = 65
+      Height = 21
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'Bestelltermin'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 20
+    end
+    object dbeKontrakt: TDBEdit
+      Left = 154
+      Top = 145
+      Width = 135
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'Kontrakt'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 21
+    end
+    object dbeBemerkungKD: TDBEdit
+      Left = 64
+      Top = 167
+      Width = 97
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'Bemerkung'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 22
+    end
+    object dbeVue: TDBEdit
+      Left = 180
+      Top = 166
+      Width = 109
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'vueNummer'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 24
+    end
+    object dbeWunschtermin: TDBEdit
+      Left = 500
+      Top = 142
+      Width = 117
+      Height = 21
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'Wunschtermin'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 25
+    end
+    object dbeBestellnr: TDBEdit
+      Left = 432
+      Top = 142
+      Width = 185
+      Height = 21
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'Bestellnr'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 23
+    end
+    object dbeAendIndex: TDBEdit
+      Left = 549
+      Top = 40
+      Width = 69
+      Height = 21
+      Hint = 'Land'
+      AutoSelect = False
+      AutoSize = False
+      Color = 16120304
+      DataField = 'AendIndex'
+      DataSource = 'dsBeleg'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 26
+    end
+  end
+  object pgcBeleg: TPageControl
+    Left = 0
+    Top = 200
+    Width = 673
+    Height = 470
+    ActivePage = 'tshPositionen'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 1
+    TabWidth = 126
+    object tshPositionen: TTabSheet
+      Caption = 'Positionen'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ImageIndex = 1
+      ParentFont = False
+      object lblPos: TLabel
+        Left = 8
+        Top = 0
+        Width = 21
+        Height = 13
+        Caption = 'Pos.'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clNavy'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblArtikel: TLabel
+        Left = 44
+        Top = 0
+        Width = 29
+        Height = 13
+        Caption = 'Artikel'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clNavy'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblMenge: TLabel
+        Left = 123
+        Top = 0
+        Width = 33
+        Height = 13
+        Caption = 'Menge'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clNavy'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblEinheit: TLabel
+        Left = 163
+        Top = 0
+        Width = 32
+        Height = 13
+        Caption = 'Einheit'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clNavy'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblText: TLabel
+        Left = 207
+        Top = 0
+        Width = 21
+        Height = 13
+        Caption = 'Text'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clNavy'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblEP: TLabel
+        Left = 456
+        Top = 0
+        Width = 52
+        Height = 13
+        Caption = 'E-Preis/PE'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clNavy'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblRabatt: TLabel
+        Left = 520
+        Top = 0
+        Width = 32
+        Height = 13
+        Caption = 'Rabatt'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clNavy'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblGpreis: TLabel
+        Left = 573
+        Top = 0
+        Width = 34
+        Height = 13
+        Caption = 'G-Preis'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clNavy'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object gbxSumme: TGroupBox
+        Left = 2
+        Top = 416
+        Width = 633
+        Height = 65
+        Color = 'clBtnFace'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = 12
+        Font.Name = 'MS Shell Dlg'
+        Font.Pitch = 'fpVariable'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        TabOrder = 0
+        Visible = False
+        object lblNetto: TLabel
+          Left = 8
+          Top = 17
+          Width = 26
+          Height = 13
+          Caption = 'Netto'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object lblMwst1: TLabel
+          Left = 152
+          Top = 17
+          Width = 27
+          Height = 13
+          Caption = 'USt 1'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object lblMwst2: TLabel
+          Left = 152
+          Top = 41
+          Width = 27
+          Height = 13
+          Caption = 'USt 2'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object lblBrutto: TLabel
+          Left = 8
+          Top = 41
+          Width = 28
+          Height = 13
+          Caption = 'Brutto'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object lblZKondi: TLabel
+          Left = 312
+          Top = 41
+          Width = 34
+          Height = 13
+          Caption = 'ZKondi'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object lblVersandTSP: TLabel
+          Left = 312
+          Top = 17
+          Width = 39
+          Height = 13
+          Caption = 'Versand'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbeNetto: TDBEdit
+          Left = 48
+          Top = 12
+          Width = 93
+          Height = 22
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'NETTO'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 0
+        end
+        object dbeMwStHalb: TDBEdit
+          Left = 216
+          Top = 12
+          Width = 85
+          Height = 22
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'MWSTHALB'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 2
+        end
+        object dbeMwStVoll: TDBEdit
+          Left = 216
+          Top = 36
+          Width = 85
+          Height = 22
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'MWST'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 4
+        end
+        object dbeBrutto: TDBEdit
+          Left = 48
+          Top = 36
+          Width = 93
+          Height = 22
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'BRUTTO'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 5
+        end
+        object dblcbZkondi: TDBLookupComboBox
+          Left = 360
+          Top = 37
+          Width = 257
+          Height = 21
+          Color = 16120304
+          DataField = 'ZKONDI'
+          DropDownRows = 6
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          KeyField = 'OID'
+          ListField = 'NAME'
+          ParentFont = False
+          ParentShowHint = False
+          ShowHint = False
+          TabOrder = 6
+        end
+        object dbeMwstSatzHalb: TDBEdit
+          Left = 192
+          Top = 12
+          Width = 24
+          Height = 22
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'MWSTSATZHALB'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 1
+        end
+        object dbeMwstSatzVoll: TDBEdit
+          Left = 192
+          Top = 36
+          Width = 24
+          Height = 22
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'MWSTSATZ'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 3
+        end
+        object dblcbVersandTSP: TDBLookupComboBox
+          Left = 360
+          Top = 12
+          Width = 257
+          Height = 21
+          Color = 16120304
+          DataField = 'VERSANDART'
+          DropDownRows = 6
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          KeyField = 'OID'
+          ListField = 'NAME'
+          ParentFont = False
+          ParentShowHint = False
+          ShowHint = False
+          TabOrder = 7
+        end
+      end
+      object btnSpeichern: TAdvGlowButton
+        Left = 8
+        Top = 400
+        Width = 81
+        Height = 33
+        Caption = 'Speichern'
+        NotesFont.Charset = 'DEFAULT_CHARSET'
+        NotesFont.Color = 'clWindowText'
+        NotesFont.Height = -11
+        NotesFont.Name = 'Tahoma'
+        NotesFont.Style = []
+        TabOrder = 1
+        OnClick = 'btnSpeichernClick'
+        Appearance.ColorChecked = 16111818
+        Appearance.ColorCheckedTo = 16367008
+        Appearance.ColorDisabled = 15921906
+        Appearance.ColorDisabledTo = 15921906
+        Appearance.ColorDown = 16111818
+        Appearance.ColorDownTo = 16367008
+        Appearance.ColorHot = 16117985
+        Appearance.ColorHotTo = 16372402
+        Appearance.ColorMirrorHot = 16107693
+        Appearance.ColorMirrorHotTo = 16775412
+        Appearance.ColorMirrorDown = 16102556
+        Appearance.ColorMirrorDownTo = 16768988
+        Appearance.ColorMirrorChecked = 16102556
+        Appearance.ColorMirrorCheckedTo = 16768988
+        Appearance.ColorMirrorDisabled = 11974326
+        Appearance.ColorMirrorDisabledTo = 15921906
+        Enabled = False
+      end
+      object navHist: TDBAdvNavigator
+        Left = 184
+        Top = 400
+        Width = 280
+        Height = 30
+        AutoThemeAdapt = False
+        DataSource = 'dsBeleg'
+        VisibleButtons = [nbFirst, nbPrior, nbNext, nbLast]
+        Color = 'clBtnFace'
+        ColorTo = 'clNone'
+        ColorDown = 14210002
+        ColorDownTo = 'clNone'
+        ColorHot = 13289415
+        ColorHotTo = 'clNone'
+        DeleteDisabled = False
+        InsertDisabled = False
+        GlyphSize = 'gsLarge'
+        GlyphCustomSize = 0
+        Orientation = 'noHorizontal'
+        TabOrder = 2
+        Visible = False
+        Version = '1.3.1.2'
+      end
+      object btnAendGrund: TAdvGlowButton
+        Left = 536
+        Top = 400
+        Width = 81
+        Height = 33
+        Caption = 'Begründung'
+        NotesFont.Charset = 'DEFAULT_CHARSET'
+        NotesFont.Color = 'clWindowText'
+        NotesFont.Height = -11
+        NotesFont.Name = 'Tahoma'
+        NotesFont.Style = []
+        TabOrder = 3
+        Visible = False
+        OnClick = 'btnAendGrundClick'
+        Appearance.ColorChecked = 16111818
+        Appearance.ColorCheckedTo = 16367008
+        Appearance.ColorDisabled = 15921906
+        Appearance.ColorDisabledTo = 15921906
+        Appearance.ColorDown = 16111818
+        Appearance.ColorDownTo = 16367008
+        Appearance.ColorHot = 16117985
+        Appearance.ColorHotTo = 16372402
+        Appearance.ColorMirrorHot = 16107693
+        Appearance.ColorMirrorHotTo = 16775412
+        Appearance.ColorMirrorDown = 16102556
+        Appearance.ColorMirrorDownTo = 16768988
+        Appearance.ColorMirrorChecked = 16102556
+        Appearance.ColorMirrorCheckedTo = 16768988
+        Appearance.ColorMirrorDisabled = 11974326
+        Appearance.ColorMirrorDisabledTo = 15921906
+      end
+      object btnDruck: TAdvGlowButton
+        Left = 96
+        Top = 400
+        Width = 81
+        Height = 33
+        Caption = 'Drucken'
+        NotesFont.Charset = 'DEFAULT_CHARSET'
+        NotesFont.Color = 'clWindowText'
+        NotesFont.Height = -11
+        NotesFont.Name = 'Tahoma'
+        NotesFont.Style = []
+        TabOrder = 4
+        OnClick = 'btnDruckClick'
+        Appearance.ColorChecked = 16111818
+        Appearance.ColorCheckedTo = 16367008
+        Appearance.ColorDisabled = 15921906
+        Appearance.ColorDisabledTo = 15921906
+        Appearance.ColorDown = 16111818
+        Appearance.ColorDownTo = 16367008
+        Appearance.ColorHot = 16117985
+        Appearance.ColorHotTo = 16372402
+        Appearance.ColorMirrorHot = 16107693
+        Appearance.ColorMirrorHotTo = 16775412
+        Appearance.ColorMirrorDown = 16102556
+        Appearance.ColorMirrorDownTo = 16768988
+        Appearance.ColorMirrorChecked = 16102556
+        Appearance.ColorMirrorCheckedTo = 16768988
+        Appearance.ColorMirrorDisabled = 11974326
+        Appearance.ColorMirrorDisabledTo = 15921906
+      end
+      object dbcgPos: TDBCtrlGrid
+        Left = 5
+        Top = 16
+        Width = 644
+        Height = 363
+        AllowDelete = False
+        AllowInsert = False
+        DataSource = 'dsBelegPos'
+        PanelHeight = 121
+        PanelWidth = 627
+        TabOrder = 5
+        SelectedColor = 'clSilver'
+        object lblProv2: TLabel
+          Left = 152
+          Top = 77
+          Width = 43
+          Height = 13
+          Caption = 'Provision'
+          Visible = False
+        end
+        object dbtBestellnr: TDBText
+          Left = 122
+          Top = 51
+          Width = 273
+          Height = 18
+          Color = 'clBtnFace'
+          DataSource = 'dsBelegPos'
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -8
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentColor = False
+          ParentFont = False
+          WordWrap = True
+        end
+        object Label1: TLabel
+          Left = 520
+          Top = 31
+          Width = 14
+          Height = 13
+          Caption = 'PE'
+          Visible = False
+        end
+        object Label4: TLabel
+          Left = 451
+          Top = 53
+          Width = 62
+          Height = 13
+          Caption = 'Terminkunde'
+        end
+        object lblGeliefert: TLabel
+          Left = 563
+          Top = 94
+          Width = 39
+          Height = 13
+          Caption = 'Geliefert'
+          Visible = False
+        end
+        object lblGeliefertRahmem: TLabel
+          Left = 8
+          Top = 52
+          Width = 45
+          Height = 13
+          Caption = 'Geliefert: '
+        end
+        object lblLhnr2: TLabel
+          Left = 9
+          Top = 80
+          Width = 57
+          Height = 13
+          Caption = 'DruckID-Nr.'
+        end
+        object lblUeber: TLabel
+          Left = 307
+          Top = 77
+          Width = 41
+          Height = 13
+          Caption = 'Übertrag'
+        end
+        object imgInsert: TImage
+          Left = 464
+          Top = 26
+          Width = 32
+          Height = 32
+          Hint = 'Position einfügen'
+          AutoSize = True
+          ParentShowHint = False
+          Picture.Data = <binary 28220 bytes>
+          ShowHint = True
+          Stretch = True
+          Transparent = True
+          Visible = False
+        end
+        object imgposappend: TImage
+          Left = 242
+          Top = 73
+          Width = 34
+          Height = 33
+          Hint = 'Position anhängen'
+          ParentShowHint = False
+          Picture.Data = <binary 28220 bytes>
+          ShowHint = True
+          Stretch = True
+          Transparent = True
+          Visible = False
+        end
+        object Label3: TLabel
+          Left = 451
+          Top = 85
+          Width = 75
+          Height = 13
+          Caption = 'Auslieferung am'
+        end
+        object Label16: TLabel
+          Left = 408
+          Top = 54
+          Width = 19
+          Height = 13
+          Caption = 'Sort'
+        end
+        object dbePos: TDBEdit
+          Left = 4
+          Top = 4
+          Width = 33
+          Height = 21
+          Color = 14869218
+          DataField = 'POS'
+          DataSource = 'dsBelegPos'
+          TabOrder = 0
+        end
+        object dbeArtNr: TDBEdit
+          Left = 38
+          Top = 4
+          Width = 82
+          Height = 21
+          CharCase = 'ecUpperCase'
+          Color = 14869218
+          DataField = 'ARTNR'
+          DataSource = 'dsBelegPos'
+          TabOrder = 1
+        end
+        object dbeStck: TDBEdit
+          Left = 120
+          Top = 4
+          Width = 36
+          Height = 21
+          Color = 14869218
+          DataField = 'STCK'
+          DataSource = 'dsBelegPos'
+          ReadOnly = True
+          TabOrder = 2
+        end
+        object dbeEinheit: TDBEdit
+          Left = 157
+          Top = 4
+          Width = 41
+          Height = 21
+          Color = 14869218
+          DataField = 'EINHEIT'
+          DataSource = 'dsBelegPos'
+          ReadOnly = True
+          TabOrder = 3
+        end
+        object dbeText: TDBEdit
+          Left = 200
+          Top = 4
+          Width = 251
+          Height = 21
+          Color = 14869218
+          DataField = 'TEXT'
+          DataSource = 'dsBelegPos'
+          TabOrder = 4
+        end
+        object dbeEPreis: TDBEdit
+          Left = 451
+          Top = 4
+          Width = 60
+          Height = 21
+          Color = 14869218
+          DataField = 'EPREIS'
+          DataSource = 'dsBelegPos'
+          ReadOnly = True
+          TabOrder = 5
+        end
+        object pnlLangtext: TPanel
+          Left = 5
+          Top = 28
+          Width = 21
+          Height = 19
+          Caption = 'L'
+          TabOrder = 8
+        end
+        object dbeMwStPos: TDBEdit
+          Left = 552
+          Top = 50
+          Width = 60
+          Height = 21
+          TabStop = False
+          Color = 'clSilver'
+          DataField = 'MWST'
+          DataSource = 'dsBelegPos'
+          ReadOnly = True
+          TabOrder = 10
+        end
+        object dbePosKz: TDBEdit
+          Left = 53
+          Top = 26
+          Width = 34
+          Height = 21
+          TabStop = False
+          Color = 'clSilver'
+          DataField = 'KZ'
+          DataSource = 'dsBelegPos'
+          ReadOnly = True
+          TabOrder = 13
+          Visible = False
+        end
+        object dblcbMwst: TDBComboBox
+          Left = 124
+          Top = 73
+          Width = 60
+          Height = 21
+          DataField = 'MWST'
+          DataSource = 'dsBelegPos'
+          ItemHeight = 13
+          Items.Strings = ('Voll' 'Halb' 'Ohne')
+          TabOrder = 12
+          Visible = False
+        end
+        object pnlKalkulation: TPanel
+          Left = 29
+          Top = 28
+          Width = 87
+          Height = 19
+          Caption = 'Auftrag >>>'
+          TabOrder = 9
+        end
+        object dbeProvisionPos: TDBEdit
+          Left = 75
+          Top = 74
+          Width = 39
+          Height = 21
+          DataField = 'Provision'
+          DataSource = 'dsBelegPos'
+          TabOrder = 14
+          Visible = False
+        end
+        object dbePreisPreiseinheit: TDBEdit
+          Left = 451
+          Top = 26
+          Width = 60
+          Height = 21
+          DataField = 'PREISPREISEINHEIT'
+          DataSource = 'dsBelegPos'
+          TabOrder = 15
+          Visible = False
+        end
+        object dbePE: TDBEdit
+          Left = 552
+          Top = 26
+          Width = 60
+          Height = 21
+          TabStop = False
+          Color = 15000804
+          DataField = 'PREISEINHEIT'
+          DataSource = 'dsBelegPos'
+          TabOrder = 16
+          Visible = False
+        end
+        object dbeLieferterminpos: TDBEdit
+          Left = 450
+          Top = 65
+          Width = 68
+          Height = 21
+          DataField = 'LIEFERTERMIN'
+          DataSource = 'dsBelegPos'
+          TabOrder = 17
+        end
+        object dbeGeliefert: TDBEdit
+          Left = 558
+          Top = 89
+          Width = 41
+          Height = 21
+          TabStop = False
+          Color = 15329769
+          DataField = 'GELIEFERT'
+          DataSource = 'dsBelegPos'
+          TabOrder = 18
+          Visible = False
+        end
+        object dbmLangtext: TDBMemo
+          Left = 120
+          Top = 26
+          Width = 331
+          Height = 21
+          Color = 'clWhite'
+          DataField = 'POSTEXT'
+          DataSource = 'dsBelegPos'
+          ScrollBars = 'ssVertical'
+          TabOrder = 11
+        end
+        object dbeRabatt: TDBEdit
+          Left = 512
+          Top = 4
+          Width = 39
+          Height = 21
+          Color = 14869218
+          DataField = 'RABATT'
+          DataSource = 'dsBelegPos'
+          ReadOnly = True
+          TabOrder = 6
+        end
+        object dbeRGeliefert: TDBEdit
+          Left = 61
+          Top = 49
+          Width = 54
+          Height = 21
+          TabStop = False
+          Color = 12171705
+          DataField = 'GELIEFERT'
+          DataSource = 'dsBelegPos'
+          TabOrder = 19
+        end
+        object dbeBestbemerk: TDBEdit
+          Left = 576
+          Top = 97
+          Width = 17
+          Height = 21
+          DataField = 'identnr2'
+          DataSource = 'dsBelegPos'
+          TabOrder = 30
+          Visible = False
+        end
+        object dbeGPreis: TDBEdit
+          Left = 552
+          Top = 4
+          Width = 60
+          Height = 21
+          Color = 14869218
+          DataField = 'GPREIS'
+          DataSource = 'dsBelegPos'
+          ReadOnly = True
+          TabOrder = 7
+        end
+        object dbcGeprueft: TDBCheckBox
+          Left = 549
+          Top = 92
+          Width = 60
+          Height = 17
+          Caption = 'Preis gepüft'
+          DataField = 'Geprueft'
+          DataSource = 'dsBelegPos'
+          TabOrder = 21
+          ValueChecked = 'T'
+          ValueUnchecked = 'F'
+          Visible = False
+        end
+        object dbeLastU: TDBEdit
+          Left = 552
+          Top = 72
+          Width = 32
+          Height = 21
+          TabStop = False
+          Color = 15329769
+          DataField = 'LastUser'
+          DataSource = 'dsBelegPos'
+          TabOrder = 20
+        end
+        object dbecbldnr: TDBComboBox
+          Left = 73
+          Top = 74
+          Width = 232
+          Height = 21
+          Color = 15395562
+          DataField = 'IndentNrDruck'
+          DataSource = 'dsBelegPos'
+          ItemHeight = 13
+          Items.Strings = ('Voll' 'Halb' 'Ohne')
+          TabOrder = 24
+        end
+        object dbeUeber: TDBEdit
+          Left = 354
+          Top = 73
+          Width = 41
+          Height = 21
+          TabStop = False
+          Color = 15329769
+          DataField = 'FalschLieferMenge'
+          DataSource = 'dsBelegPos'
+          TabOrder = 22
+        end
+        object DBEdit2: TDBEdit
+          Left = 587
+          Top = 72
+          Width = 29
+          Height = 21
+          DataField = 'POSNR'
+          DataSource = 'dsBelegPos'
+          TabOrder = 23
+          Visible = False
+        end
+        object btnTerminaend: TPanel
+          Left = 522
+          Top = 52
+          Width = 25
+          Height = 19
+          Hint = 'Terminänderung'
+          Caption = 'TÄ'
+          TabOrder = 25
+        end
+        object DBCheckBox1: TDBCheckBox
+          Left = 10
+          Top = 98
+          Width = 71
+          Height = 17
+          Caption = 'Drucken'
+          DataField = 'drucken'
+          DataSource = 'dsBelegPos'
+          TabOrder = 26
+          ValueChecked = 'T'
+          ValueUnchecked = 'F'
+        end
+        object dbekz: TDBEdit
+          Left = 592
+          Top = 72
+          Width = 20
+          Height = 21
+          TabStop = False
+          Color = 'clSilver'
+          DataField = 'KZ'
+          DataSource = 'dsBelegPos'
+          ReadOnly = True
+          TabOrder = 27
+        end
+        object dbeldatum: TDBEdit
+          Left = 450
+          Top = 98
+          Width = 68
+          Height = 21
+          DataField = 'Lieferscheindatum'
+          DataSource = 'dsBelegPos'
+          TabOrder = 28
+        end
+        object dbesort: TDBEdit
+          Left = 429
+          Top = 50
+          Width = 20
+          Height = 21
+          TabStop = False
+          Color = 'clSilver'
+          DataField = 'POSNR'
+          DataSource = 'dsBelegPos'
+          TabOrder = 29
+        end
+        object btnLiefadrPos: TAdvPanel
+          Left = 166
+          Top = 98
+          Width = 137
+          Height = 19
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 31
+          UseDockManager = True
+          Version = '2.1.0.4'
+          Caption.Color = 'clHighlight'
+          Caption.ColorTo = 'clNone'
+          Caption.Font.Charset = 'DEFAULT_CHARSET'
+          Caption.Font.Color = 'clBlack'
+          Caption.Font.Height = -11
+          Caption.Font.Name = 'MS Sans Serif'
+          Caption.Font.Style = []
+          StatusBar.Font.Charset = 'DEFAULT_CHARSET'
+          StatusBar.Font.Color = 'clWindowText'
+          StatusBar.Font.Height = -11
+          StatusBar.Font.Name = 'Tahoma'
+          StatusBar.Font.Style = []
+          Text = 'abweichende Lieferadresse'
+          TextVAlign = 'tvaCenter'
+          FullHeight = 19
+        end
+      end
+    end
+  end
+  object dsBelegPos: TDataSource
+    DataSet = 'dmBelege.cdsBelegPos'
+    Left = 301
+    Top = 18
+  end
+  object dsBeleg: TDataSource
+    DataSet = 'dmBelege.cdsBeleg'
+    Left = 301
+    Top = 47
+  end
+end

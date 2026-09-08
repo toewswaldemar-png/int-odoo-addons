@@ -1,0 +1,11 @@
+object frmStatusIODlg: TfrmStatusIODlg
+  Left = 404
+  Top = 290
+  Caption = 'Status'
+  FormStyle = 'fsNormal'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object stgOutput: TAdvStringGrid
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing]
+  end
+end

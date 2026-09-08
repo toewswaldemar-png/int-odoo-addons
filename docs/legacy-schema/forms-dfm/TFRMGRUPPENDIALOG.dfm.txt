@@ -1,0 +1,196 @@
+object frmGruppenDialog: TfrmGruppenDialog
+  Left = 712
+  Top = 329
+  Width = 435
+  Height = 583
+  HorzScrollBar.Range = 417
+  HorzScrollBar.Visible = False
+  VertScrollBar.Range = 545
+  VertScrollBar.Visible = False
+  ActiveControl = 'tvwGroups'
+  BorderIcons = [biSystemMenu]
+  BorderStyle = 'bsSingle'
+  Caption = 'Gruppen '
+  Color = 12829635
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  OnActivate = 'FormActivate'
+  OnClose = 'FormClose'
+  OnDestroy = 'FormDestroy'
+  OnShow = 'FormShow'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object tvwGroups: TTreeView
+    Left = 8
+    Top = 104
+    Width = 409
+    Height = 441
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    Images = 'ilTree'
+    Indent = 19
+    ParentFont = False
+    TabOrder = 0
+    OnClick = 'tvwGroupsClick'
+    OnDblClick = 'tvwGroupsDblClick'
+    OnDragDrop = 'tvwGroupsDragDrop'
+    OnDragOver = 'tvwGroupsDragOver'
+    OnEdited = 'tvwGroupsEdited'
+    OnMouseDown = 'tvwGroupsMouseDown'
+    OnMouseMove = 'tvwGroupsMouseMove'
+  end
+  object tlbFkt: TToolBar
+    Left = 0
+    Top = 0
+    Width = 427
+    Height = 29
+    ButtonHeight = 23
+    ButtonWidth = 28
+    Caption = 'tlbFkt'
+    Color = 'clBtnFace'
+    Flat = True
+    Images = 'ilFunktionen'
+    ParentColor = False
+    TabOrder = 1
+    object btnNeu: TToolButton
+      Left = 0
+      Top = 0
+      Hint = 'Neu'
+      Caption = 'btnNeu'
+      Enabled = False
+      ImageIndex = 0
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = 'btnNeuClick'
+    end
+    object btnLoeschen: TToolButton
+      Left = 28
+      Top = 0
+      Hint = 'Löschen'
+      Caption = 'btnLoeschen'
+      Enabled = False
+      ImageIndex = 11
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = 'btnLoeschenClick'
+    end
+    object btnSpeichern: TToolButton
+      Left = 56
+      Top = 0
+      Hint = 'Speichern'
+      Caption = 'btnSpeichern'
+      Enabled = False
+      ImageIndex = 3
+      OnClick = 'btnSpeichernClick'
+    end
+    object btnTr2: TToolButton
+      Left = 84
+      Top = 0
+      Width = 25
+      Caption = 'btnTr2'
+      ImageIndex = 13
+      Style = 'tbsSeparator'
+    end
+    object btnSuchen: TToolButton
+      Left = 109
+      Top = 0
+      Hint = 'in Suche übernhehmen'
+      Caption = 'btnSuchen'
+      Enabled = False
+      ImageIndex = 5
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = 'btnSuchenClick'
+    end
+    object btnTr1: TToolButton
+      Left = 137
+      Top = 0
+      Width = 24
+      Caption = 'btnTr1'
+      ImageIndex = 5
+      Style = 'tbsSeparator'
+    end
+    object btnUebernehmen: TToolButton
+      Left = 161
+      Top = 0
+      Hint = 'Übernehmen'
+      Caption = 'btnUebernehmen'
+      Enabled = False
+      ImageIndex = 10
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = 'btnUebernehmenClick'
+    end
+    object btnAbbruch: TToolButton
+      Left = 189
+      Top = 0
+      Hint = 'Abbrechen'
+      Caption = 'btnAbbruch'
+      Enabled = False
+      ImageIndex = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = 'btnAbbruchClick'
+    end
+  end
+  object gbxNeu: TGroupBox
+    Left = 8
+    Top = 36
+    Width = 409
+    Height = 61
+    Color = 'clSilver'
+    ParentColor = False
+    TabOrder = 2
+    object lblBezeichnung: TLabel
+      Left = 7
+      Top = 8
+      Width = 64
+      Height = 13
+      Caption = 'Neue Gruppe'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object edtBezeichnung: TEdit
+      Left = 8
+      Top = 28
+      Width = 393
+      Height = 21
+      AutoSize = False
+      Color = 16767152
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      MaxLength = 60
+      ParentFont = False
+      TabOrder = 0
+    end
+  end
+  object ilFunktionen: TImageList
+    Left = 16
+    Top = 112
+    Bitmap = <binary 17062 bytes>
+  end
+  object ilTree: TImageList
+    Left = 16
+    Top = 142
+    Bitmap = <binary 4390 bytes>
+  end
+end

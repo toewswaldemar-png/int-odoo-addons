@@ -1,0 +1,50 @@
+object frmStandardTextDlg: TfrmStandardTextDlg
+  Left = 718
+  Top = 233
+  Caption = 'Text'
+  ClientHeight = 228
+  ClientWidth = 520
+  DesignSize = (520 228)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object ofihelpT: TAdvOfficeImage
+    Left = 24
+    Top = 184
+    Width = 33
+    Height = 29
+    Picture.Data = <binary 3126 bytes>
+    ShowHint = True
+    Stretch = True
+    OfficeHint.Title = 'neuer Index'
+    OfficeHint.Notes.Strings = ('Begründung für die Erstellung eines' 'neuen Index angeben.' 'Benutzer und Datum werden automatisch erfasst.')
+    OfficeHint.ShowHelp = True
+    Version = '1.1.0.0'
+  end
+  object lblTitel: TLabel
+    Left = 24
+    Top = 16
+    Width = 12
+    Height = 13
+    Caption = '    '
+  end
+  object ofihelpStd: TAdvOfficeImage
+    Left = 61
+    Top = 187
+    Visible = False
+  end
+  object btnOk: TAdvGlowButton
+    Left = 329
+    Top = 188
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 409
+    Top = 188
+  end
+  object memText: TMemo
+    Left = 24
+    Top = 40
+    Width = 457
+    Height = 137
+    TabOrder = 2
+  end
+end

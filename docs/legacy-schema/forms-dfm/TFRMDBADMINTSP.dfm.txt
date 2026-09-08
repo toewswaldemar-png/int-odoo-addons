@@ -1,0 +1,45 @@
+object frmDbAdminTSP: TfrmDbAdminTSP
+  Left = 282
+  Top = 262
+  Caption = 'DBAdministration'
+  OldCreateOrder = True
+  PixelsPerInch = 96
+  TextHeight = 13
+  object btnCheck: TButton
+    Width = 113
+  end
+  object btnLockDelete: TButton
+    Left = 163
+    Top = 8
+    Width = 113
+    Height = 25
+    Caption = 'Record - Lock aufheben'
+    TabOrder = 3
+    OnClick = 'btnLockDeleteClick'
+  end
+  object btnDeleteErrors: TButton
+    Left = 291
+    Top = 8
+    Width = 113
+    Height = 25
+    Caption = 'Fehler löschen'
+    TabOrder = 4
+    OnClick = 'btnDeleteErrorsClick'
+  end
+  object btHistorie: TButton
+    Left = 411
+    Top = 8
+    Width = 113
+    Height = 25
+    Caption = 'Historie ansehen'
+    TabOrder = 5
+    OnClick = 'btHistorieClick'
+  end
+  object srvBackup: TIBBackupService
+    Left = 584
+    Top = 40
+  end
+  object srvCheck: TIBValidationService
+    Left = 584
+  end
+end

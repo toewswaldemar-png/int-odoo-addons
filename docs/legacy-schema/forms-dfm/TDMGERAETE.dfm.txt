@@ -1,0 +1,105 @@
+object dmGeraete: TdmGeraete
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 717
+  Top = 253
+  Height = 225
+  Width = 239
+  object cdsStueck: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'BelegArt'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    OnNewRecord = 'cdsStueckNewRecord'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdMaster'
+    WriteLastSQL = False
+    Left = 16
+    Top = 8
+  end
+  object cdsBauteil: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'BelegArt'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 88
+    Top = 8
+  end
+  object cdsKartei: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'BelegArt'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 88
+    Top = 56
+  end
+  object cdsTree: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'BelegArt'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 16
+    Top = 56
+  end
+  object cdsArtikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'BelegArt'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 16
+    Top = 112
+  end
+end

@@ -1,0 +1,237 @@
+object frmBegleitSuchenDlgTSP: TfrmBegleitSuchenDlgTSP
+  Left = 493
+  Top = 216
+  Caption = 'Begleitschein suchen'
+  OnKeyDown = 'FormKeyDown'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object lblAnschrift: TLabel
+    Top = 40
+    Width = 33
+    Caption = 'Identnr'
+  end
+  object lblNr: TLabel
+    Top = 106
+    Width = 29
+    Caption = 'Famnr'
+  end
+  object lblOrt: TLabel
+    Top = 74
+    Width = 23
+    Caption = 'SNR'
+  end
+  object lblLang: TLabel
+    Top = 143
+    Width = 31
+    Caption = 'Kunde'
+  end
+  object lblAbDAtum: TLabel
+    Top = 321
+    Visible = False
+  end
+  object lblArtNr: TLabel
+    Top = 177
+  end
+  object lblAltnummer: TLabel
+    Left = 12
+    Top = 210
+    Width = 49
+    Height = 13
+    Caption = 'Bestellnr...'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    Visible = False
+  end
+  object lblAuftrag: TLabel
+    Left = 13
+    Top = 261
+    Width = 202
+    Height = 13
+    Caption = 'Auftrag / Lieferschein Nr. und Positionstext'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    Visible = False
+  end
+  object Label1: TLabel
+    Left = 13
+    Top = 239
+    Width = 39
+    Height = 13
+    Caption = 'Belegart'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    Visible = False
+  end
+  object gbxSort: TGroupBox
+    Height = 321
+    object rbtOrt: TRadioButton
+      Top = 53
+    end
+    object rbtNummer: TRadioButton
+      Top = 86
+    end
+    object rbtAdrNr: TRadioButton
+      Top = 119
+    end
+    object rdbLTermin: TRadioButton
+      Left = 8
+      Top = 297
+      Width = 69
+      Height = 17
+      Caption = 'Liefertermn.'
+      TabOrder = 4
+      Visible = False
+    end
+  end
+  object edtName1: TEdit
+    OnKeyDown = None
+  end
+  object edtOrt: TEdit
+    Top = 67
+  end
+  object edtNummer: TEdit
+    Top = 100
+  end
+  object edtAdrNr: TEdit
+    Top = 137
+  end
+  object cbxFilter: TCheckBox
+    Top = 368
+  end
+  object cbxAktuell: TCheckBox
+    Top = 345
+    Checked = False
+    State = 'cbUnchecked'
+  end
+  object cbxDatum: TCheckBox
+    Top = 319
+    Visible = False
+  end
+  object dtpBis: TDateTimePicker
+    Top = 317
+    Visible = False
+  end
+  object dbgTreffer: TDBGrid
+    PopupMenu = 'popSuchen'
+    OnDblClick = 'btnOKClick'
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'identnr'
+        Title.Caption = 'Identnummer'
+        Width = 187
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'snr'
+        Title.Caption = 'Snr '
+        Width = 187
+        Visible = True
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'aufallnr'
+        Title.Caption = 'Fam-Nr.'
+        Width = 75
+        Visible = True
+      }
+      item3 = {
+        Expanded = False
+        FieldName = 'artikelname'
+        Title.Caption = 'Artikel'
+        Width = 75
+        Visible = True
+      }
+    >
+  end
+  object edtArtNr: TEdit
+    Top = 171
+  end
+  object btnSuche: TAdvGlowButton
+    Top = 400
+  end
+  object btnOk: TAdvGlowButton
+    Top = 400
+  end
+  object btnCancel: TAdvGlowButton
+    Top = 400
+  end
+  object edtAltnummer: TEdit
+    Left = 68
+    Top = 204
+    Width = 261
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 17
+    Visible = False
+  end
+  object edtAuftrag: TEdit
+    Left = 64
+    Top = 279
+    Width = 265
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 15
+    Visible = False
+  end
+  object edtBelegbez: TComboBox
+    Left = 70
+    Top = 235
+    Width = 259
+    Height = 21
+    Color = 16120304
+    ItemHeight = 13
+    TabOrder = 16
+    Visible = False
+    Items.Strings = ('Auftrag' 'Auftragsbestätigung' 'Lieferschein' 'Rechnung' 'Gutschrift')
+  end
+  object btnLastSearch: TAdvGlowButton
+    Left = 312
+    Top = 344
+  end
+  object aclSuchen: TActionList
+    Top = 397
+  end
+  object popSuchen: TPopupMenu
+    Left = 424
+    Top = 40
+    object Excel1: TMenuItem
+      Caption = '-> Excel'
+      OnClick = 'Excel1Click'
+    end
+  end
+end

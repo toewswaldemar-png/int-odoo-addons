@@ -1,0 +1,126 @@
+object frmBucheKanban: TfrmBucheKanban
+  Left = 342
+  Top = 208
+  BorderStyle = 'bsDialog'
+  Caption = 'Material in Produktion einbuchen'
+  ClientHeight = 271
+  ClientWidth = 563
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (563 271)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 401
+    Top = 237
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 481
+    Top = 237
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object DBGrid1: TDBGrid
+    Left = 24
+    Top = 24
+    Width = 529
+    Height = 201
+    DataSource = 'dsProdMat'
+    TabOrder = 2
+    TitleFont.Charset = 'DEFAULT_CHARSET'
+    TitleFont.Color = 'clWindowText'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = []
+    Columns = <
+      item0 = {
+        Color = 'clSilver'
+        Expanded = False
+        FieldName = 'Kw'
+        ReadOnly = True
+        Title.Caption = 'Kw '
+        Width = 34
+        Visible = True
+      }
+      item1 = {
+        Color = 'clSilver'
+        Expanded = False
+        FieldName = 'Jahr'
+        ReadOnly = True
+        Title.Caption = 'Jahr '
+        Width = 55
+        Visible = True
+      }
+      item2 = {
+        Color = 'clSilver'
+        Expanded = False
+        FieldName = 'Auftragnummer'
+        ReadOnly = True
+        Title.Caption = 'Auftragnummer '
+        Width = 85
+        Visible = True
+      }
+      item3 = {
+        Color = 'clSilver'
+        Expanded = False
+        FieldName = 'Stuecknummer'
+        ReadOnly = True
+        Title.Caption = 'Baugruppe '
+        Width = 85
+        Visible = True
+      }
+      item4 = {
+        Color = 'clSilver'
+        Expanded = False
+        FieldName = 'Sollmenge'
+        ReadOnly = True
+        Title.Caption = 'Sollmenge '
+        Width = 55
+        Visible = True
+      }
+      item5 = {
+        Color = 'clSilver'
+        Expanded = False
+        FieldName = 'Buchmenge'
+        ReadOnly = True
+        Title.Caption = 'gebucht'
+        Width = 55
+        Visible = True
+      }
+      item6 = {
+        Expanded = False
+        FieldName = 'Artnr'
+        PickList.Strings = ('SMT 1' 'SMT 2' 'THT 1' 'THT 2' 'THT 3' 'THT 4' 'THT 5' 'THT 6' 'Kabelkonfektionierung 1' 'Kabelkonfektionierung 2' 'Kabelkonfektionierung 3' 'Kabelkonfektionierung 4' 'Gerätemontage 1' 'Gerätemontage 2' 'Gerätemontage 3' 'Gerätemontage 4' 'Wareneingang' 'Warenausgang' 'Test AOI' 'Test FT' 'Test ICFT' 'Test ICT 1' 'Test ICT 2')
+        Title.Caption = 'Zelle '
+        Width = 50
+        Visible = True
+      }
+      item7 = {
+        Color = 'clWhite'
+        Expanded = False
+        FieldName = 'Anzahl'
+        Title.Caption = 'Buchen'
+        Width = 55
+        Visible = True
+      }
+    >
+  end
+  object dsProdMat: TDataSource
+    Left = 520
+    Top = 200
+  end
+end

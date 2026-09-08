@@ -1,0 +1,598 @@
+object frmExport: TfrmExport
+  Left = 493
+  Top = 199
+  Width = 480
+  Height = 367
+  Caption = 'Export'
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  FormStyle = 'fsMDIForm'
+  Icon.Data = <binary 3262 bytes>
+  OldCreateOrder = False
+  Position = 'poScreenCenter'
+  OnCreate = 'FormCreate'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object tlbFkt: TToolBar
+    Left = 0
+    Top = 0
+    Width = 472
+    Height = 29
+    ButtonHeight = 23
+    Caption = 'tlbFkt'
+    Color = 'clBtnFace'
+    Flat = True
+    Images = 'ilFunktionen'
+    ParentColor = False
+    TabOrder = 0
+    object btnNeu: TToolButton
+      Left = 0
+      Top = 0
+      Hint = 'Neu'
+      Caption = 'btnNeu'
+      Enabled = False
+      ImageIndex = 0
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object btnLoeschen: TToolButton
+      Left = 23
+      Top = 0
+      Hint = 'Löschen'
+      Caption = 'btnLoeschen'
+      Enabled = False
+      ImageIndex = 11
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object btnSpeichern: TToolButton
+      Left = 46
+      Top = 0
+      Hint = 'Speichern'
+      Caption = 'btnSpeichern'
+      Enabled = False
+      ImageIndex = 3
+    end
+    object btnTr2: TToolButton
+      Left = 69
+      Top = 0
+      Width = 25
+      Caption = 'btnTr2'
+      ImageIndex = 13
+      Style = 'tbsSeparator'
+    end
+    object btnSuchen: TToolButton
+      Left = 94
+      Top = 0
+      Hint = 'in Suche übernhehmen'
+      Caption = 'btnSuchen'
+      Enabled = False
+      ImageIndex = 5
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object btnTr1: TToolButton
+      Left = 117
+      Top = 0
+      Width = 24
+      Caption = 'btnTr1'
+      ImageIndex = 5
+      Style = 'tbsSeparator'
+    end
+    object btnUebernehmen: TToolButton
+      Left = 141
+      Top = 0
+      Hint = 'Übernehmen'
+      Caption = 'btnUebernehmen'
+      ImageIndex = 10
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = 'btnUebernehmenClick'
+    end
+    object btnAbbruch: TToolButton
+      Left = 164
+      Top = 0
+      Hint = 'Abbrechen'
+      Caption = 'btnAbbruch'
+      Enabled = False
+      ImageIndex = 2
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object btnTr3: TToolButton
+      Left = 187
+      Top = 0
+      Width = 18
+      Caption = 'btnTr3'
+      ImageIndex = 3
+      Style = 'tbsSeparator'
+    end
+    object btnPruefen: TToolButton
+      Left = 205
+      Top = 0
+      Hint = 'Prüfen Lexware Rechnungen'
+      Caption = 'Lexware Rechnungen Prüfen'
+      ImageIndex = 9
+      ParentShowHint = False
+      ShowHint = True
+      Visible = False
+      OnClick = 'btnPruefenClick'
+    end
+  end
+  object pnlExport: TPanel
+    Left = 0
+    Top = 29
+    Width = 472
+    Height = 307
+    Align = 'alClient'
+    TabOrder = 1
+    object lblLexwarePruefen: TLabel
+      Left = 40
+      Top = 304
+      Width = 169
+      Height = 13
+      Caption = 'Rechnungen ohne Erlöskonto'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWindowText'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object gbxBereich: TGroupBox
+      Left = 40
+      Top = 184
+      Width = 385
+      Height = 113
+      Caption = 'Bereich'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 0
+      object lblVon: TLabel
+        Left = 16
+        Top = 32
+        Width = 35
+        Height = 13
+        Caption = 'von Nr.'
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblBis: TLabel
+        Left = 200
+        Top = 32
+        Width = 30
+        Height = 13
+        Caption = 'bis Nr.'
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblVonDat: TLabel
+        Left = 16
+        Top = 60
+        Width = 52
+        Height = 13
+        Caption = 'von Datum'
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblBisDat: TLabel
+        Left = 200
+        Top = 60
+        Width = 47
+        Height = 13
+        Caption = 'bis Datum'
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblVonAenderung: TLabel
+        Left = 16
+        Top = 88
+        Width = 67
+        Height = 13
+        Caption = 'von Änderung'
+        Enabled = False
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblBisAenderung: TLabel
+        Left = 200
+        Top = 88
+        Width = 62
+        Height = 13
+        Caption = 'bis Änderung'
+        Enabled = False
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+      end
+      object edtVonNr: TEdit
+        Left = 92
+        Top = 28
+        Width = 85
+        Height = 21
+        AutoSize = False
+        Color = 16120304
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 0
+        Text = '0'
+      end
+      object edtBisNr: TEdit
+        Left = 268
+        Top = 28
+        Width = 85
+        Height = 21
+        AutoSize = False
+        Color = 16120304
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 1
+        Text = '999999'
+      end
+      object edtVonDat: TMaskEdit
+        Left = 92
+        Top = 56
+        Width = 83
+        Height = 21
+        Color = 16120304
+        EditMask = '!99/99/0000;1;_'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        MaxLength = 10
+        ParentFont = False
+        TabOrder = 2
+        Text = '01.01.2000'
+      end
+      object edtBisDat: TMaskEdit
+        Left = 268
+        Top = 56
+        Width = 84
+        Height = 21
+        Color = 16120304
+        EditMask = '!99/99/0000;1;_'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        MaxLength = 10
+        ParentFont = False
+        TabOrder = 3
+        Text = '01.01.2010'
+      end
+      object edtVonAenderung: TMaskEdit
+        Left = 92
+        Top = 82
+        Width = 83
+        Height = 21
+        Color = 16120304
+        Enabled = False
+        EditMask = '!99/99/0000;1;_'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        MaxLength = 10
+        ParentFont = False
+        TabOrder = 4
+        Text = '01.01.2000'
+      end
+      object edtBisAenderung: TMaskEdit
+        Left = 268
+        Top = 82
+        Width = 83
+        Height = 21
+        Color = 16120304
+        Enabled = False
+        EditMask = '!99/99/0000;1;_'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        MaxLength = 10
+        ParentFont = False
+        TabOrder = 5
+        Text = '01.01.2010'
+      end
+    end
+    object gdxAuswahl: TGroupBox
+      Left = 40
+      Top = -2
+      Width = 385
+      Height = 179
+      Caption = 'Auswahl'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 1
+      object lblVorgang: TLabel
+        Left = 16
+        Top = 72
+        Width = 40
+        Height = 13
+        Caption = 'Vorgang'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblSchnitt: TLabel
+        Left = 16
+        Top = 40
+        Width = 60
+        Height = 13
+        Caption = 'Schnittstelle '
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label1: TLabel
+        Left = 16
+        Top = 104
+        Width = 51
+        Height = 13
+        Caption = 'Exportpfad'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label2: TLabel
+        Left = 16
+        Top = 136
+        Width = 62
+        Height = 13
+        Caption = 'Bezeichnung'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object cbxVorgang: TComboBox
+        Left = 92
+        Top = 68
+        Width = 263
+        Height = 21
+        Color = 16120304
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ItemHeight = 13
+        ParentFont = False
+        TabOrder = 0
+        OnExit = 'cbxVorgangExit'
+        Items.Strings = ('Rechnungen' 'Adressen')
+      end
+      object cbxSchnittstelle: TComboBox
+        Left = 92
+        Top = 36
+        Width = 263
+        Height = 21
+        Color = 16120304
+        DropDownCount = 3
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ItemHeight = 13
+        ParentFont = False
+        TabOrder = 1
+        Text = 'Lexware / Datev'
+        Items.Strings = ('Lexware / Datev')
+      end
+      object edtPfad: TEdit
+        Left = 92
+        Top = 100
+        Width = 261
+        Height = 21
+        AutoSize = False
+        Color = 16120304
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 2
+        Text = 'C:\\Temp'
+      end
+      object edBezeichnung: TEdit
+        Left = 92
+        Top = 132
+        Width = 261
+        Height = 21
+        AutoSize = False
+        Color = 16120304
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clBlack'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Pitch = 'fpVariable'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 3
+        Text = 'Debit-Kredit'
+      end
+    end
+    object dbgLexwarePruefen: TDBGrid
+      Left = 40
+      Top = 328
+      Width = 385
+      Height = 147
+      DataSource = 'dsLexwarePruefen'
+      TabOrder = 2
+      TitleFont.Charset = 'DEFAULT_CHARSET'
+      TitleFont.Color = 'clWindowText'
+      TitleFont.Height = -11
+      TitleFont.Name = 'MS Sans Serif'
+      TitleFont.Style = []
+      Columns = <
+        item0 = {
+          Expanded = False
+          FieldName = 'BELEGDATUM'
+          Title.Caption = 'Datum'
+          Width = 75
+          Visible = True
+        }
+        item1 = {
+          Expanded = False
+          FieldName = 'NUMMER'
+          Title.Caption = 'Nummer'
+          Width = 65
+          Visible = True
+        }
+        item2 = {
+          Expanded = False
+          FieldName = 'NAME1'
+          Title.Caption = 'Name'
+          Width = 200
+          Visible = True
+        }
+      >
+    end
+  end
+  object ilFunktionen: TImageList
+    Left = 8
+    Top = 32
+    Bitmap = <binary 17062 bytes>
+  end
+  object dsLexwarePruefen: TDataSource
+    DataSet = 'dmExport.cdsBelege'
+    Left = 392
+    Top = 325
+  end
+  object timWait: TTimer
+    Enabled = False
+    Interval = 10000
+    OnTimer = 'timWaitTimer'
+    Left = 8
+    Top = 77
+  end
+  object AdvFocusHelper1: TAdvFocusHelper
+    Blur = 5
+    Color = 'clBlack'
+    ExcludeControls = []
+    IncludeControls = []
+    Size = 2
+    Opacity = 230
+    Version = '1.1.0.3'
+    Left = 8
+    Top = 117
+  end
+  object altWindow: TAdvAlertWindow
+    AlertMessages = <
+    >
+    AlwaysOnTop = False
+    AutoHide = True
+    AutoSize = False
+    AutoDelete = False
+    BorderColor = 13815240
+    BtnHoverColor = 9102333
+    BtnHoverColorTo = 9102333
+    BtnDownColor = 7131391
+    BtnDownColorTo = 7131391
+    CaptionColor = 13946827
+    CaptionColorTo = 13946827
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    GradientDirection = 'gdVertical'
+    HintNextBtn = 'Next'
+    HintPrevBtn = 'Previous'
+    HintCloseBtn = 'Close'
+    HintDeleteBtn = 'Delete'
+    HintPopupBtn = 'Popup'
+    Hover = False
+    MarginX = 4
+    MarginY = 1
+    PopupLeft = 0
+    PopupTop = 0
+    PopupWidth = 300
+    PopupHeight = 100
+    PositionFormat = '%d of %d'
+    WindowColor = 'clWhite'
+    WindowColorTo = 15590880
+    ShowScrollers = False
+    ShowDelete = True
+    ShowPopup = False
+    AlphaEnd = 0
+    AlphaStart = 180
+    DisplayTime = 5000
+    FadeStep = 2
+    WindowPosition = 'wpCenter'
+    Style = 'asOffice2010Silver'
+    Version = '1.8.0.0'
+    Left = 8
+    Top = 157
+  end
+end

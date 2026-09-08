@@ -1,0 +1,133 @@
+object frmStandardNummerDatumDlg: TfrmStandardNummerDatumDlg
+  Left = 541
+  Top = 244
+  Caption = 'Auswahl'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object gbxAuswahl: TGroupBox
+    Left = 56
+    Top = 35
+    Width = 278
+    Height = 97
+    Caption = 'Auswahl'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 2
+    object lblVon: TLabel
+      Left = 8
+      Top = 32
+      Width = 35
+      Height = 13
+      Caption = 'von Nr.'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblBis: TLabel
+      Left = 144
+      Top = 32
+      Width = 30
+      Height = 13
+      Caption = 'bis Nr.'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblVonDat: TLabel
+      Left = 8
+      Top = 61
+      Width = 20
+      Height = 13
+      Caption = 'vom'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lblBisDat: TLabel
+      Left = 144
+      Top = 61
+      Width = 13
+      Height = 13
+      Caption = 'bis'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+    end
+    object edtVon: TEdit
+      Left = 52
+      Top = 28
+      Width = 82
+      Height = 21
+      AutoSize = False
+      Color = 16120304
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 0
+      Text = '000000000'
+    end
+    object edtBis: TEdit
+      Left = 180
+      Top = 28
+      Width = 82
+      Height = 21
+      AutoSize = False
+      Color = 16120304
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 1
+      Text = '999999999'
+    end
+    object edtVom: TMaskEdit
+      Left = 52
+      Top = 56
+      Width = 82
+      Height = 21
+      Color = 16120304
+      EditMask = '!99/99/0000;1;_'
+      MaxLength = 10
+      TabOrder = 2
+      Text = '01.01.2005'
+    end
+    object edtBisZum: TMaskEdit
+      Left = 180
+      Top = 56
+      Width = 82
+      Height = 21
+      Color = 16120304
+      EditMask = '!99/99/0000;1;_'
+      MaxLength = 10
+      TabOrder = 3
+      Text = '31.12.2005'
+    end
+  end
+end

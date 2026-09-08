@@ -1,0 +1,134 @@
+object dmTextbau: TdmTextbau
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 498
+  Top = 134
+  Height = 160
+  Width = 360
+  object cdszeittexte: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 176
+    Top = 32
+  end
+  object cdsTextbau: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereKeyOnly'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdMaster'
+    WriteLastSQL = False
+    Left = 32
+    Top = 32
+    object cdsTextbauOID: TIntegerField
+      FieldName = 'OID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object cdsTextbauNAME: TStringField
+      FieldName = 'NAME'
+      Size = 40
+    end
+    object cdsTextbauTEXT: TBlobField
+      FieldName = 'TEXT'
+      Size = 1
+    end
+    object cdsTextbauVON: TSQLTimeStampField
+      FieldName = 'VON'
+      DisplayFormat = 'dd/mm/yyyy'
+      EditMask = '!99/99/0000;1;_'
+    end
+    object cdsTextbauBIS: TSQLTimeStampField
+      FieldName = 'BIS'
+      DisplayFormat = 'dd/mm/yyyy'
+      EditMask = '!99/99/0000;1;_'
+    end
+    object cdsTextbauBELEG: TStringField
+      FieldName = 'BELEG'
+      Size = 60
+    end
+    object cdsTextbauNUMMER: TIntegerField
+      FieldName = 'NUMMER'
+    end
+  end
+  object cdsTree: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 112
+    Top = 32
+    object cdsTreeOID: TIntegerField
+      FieldName = 'OID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object cdsTreeNAME: TStringField
+      FieldName = 'NAME'
+      Size = 40
+    end
+    object cdsTreeTEXT: TBlobField
+      FieldName = 'TEXT'
+      Size = 1
+    end
+    object cdsTreeVON: TSQLTimeStampField
+      FieldName = 'VON'
+    end
+    object cdsTreeBIS: TSQLTimeStampField
+      FieldName = 'BIS'
+    end
+    object cdsTreeBELEG: TStringField
+      FieldName = 'BELEG'
+    end
+    object cdsTreeNUMMER: TIntegerField
+      FieldName = 'NUMMER'
+    end
+  end
+  object cdsTreeZeit: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 240
+    Top = 32
+  end
+  object cdsZeitRel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 296
+    Top = 32
+  end
+end

@@ -1,0 +1,23 @@
+object frmAdressAuswahlDlg: TfrmAdressAuswahlDlg
+  Left = 607
+  Top = 274
+  Caption = 'FAdressAuswahlDlg'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object movelr: TButton
+    Visible = False
+  end
+  object moverl: TButton
+    Visible = False
+  end
+  object btnsuchen: TButton
+    Left = 464
+    Top = 24
+    Width = 113
+    Height = 25
+    Caption = 'Suchen'
+    TabOrder = 8
+    Visible = False
+    OnClick = 'btnsuchenClick'
+  end
+end

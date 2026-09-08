@@ -1,0 +1,78 @@
+object frmRepJahresDlg: TfrmRepJahresDlg
+  Left = 277
+  Top = 127
+  Caption = 'Reparatur Jahreswerte'
+  ClientHeight = 637
+  ClientWidth = 1237
+  PixelsPerInch = 96
+  TextHeight = 13
+  object ofihelpStd: TAdvOfficeImage
+    Left = 1200
+    Top = 594
+  end
+  object btnOk: TAdvGlowButton
+    Left = 1046
+    Top = 597
+  end
+  object stgOutput: TAdvStringGrid
+    Left = 24
+    Top = 8
+    Width = 1185
+    Height = 569
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing]
+    FilterDropDown.AutoSize = True
+    FixedFooters = 1
+    FloatingFooter.CalculateHiddenRows = False
+    FloatingFooter.Visible = True
+    SortSettings.Show = True
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 1126
+    Top = 597
+  end
+  object btnZeiten: TAdvGlowButton
+    Left = 32
+    Top = 593
+    Width = 137
+    Height = 25
+    Caption = '--> Excel'
+    ImageIndex = 21
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 3
+    OnClick = 'btnZeitenClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object exlIO: TAdvGridExcelIO
+    Options.ExportWordWrapped = True
+    Options.ExportShowInExcel = True
+    Options.ExportHardBorders = True
+    Options.ExportSummaryRowsBelowDetail = True
+    GridStartRow = 0
+    GridStartCol = 0
+  end
+  object SaveDialog1: TSaveDialog
+    DefaultExt = '.xls'
+    Left = 808
+    Top = 8
+  end
+end

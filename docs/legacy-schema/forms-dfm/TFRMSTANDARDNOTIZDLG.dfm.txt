@@ -1,0 +1,61 @@
+object frmStandardNotizDlg: TfrmStandardNotizDlg
+  Left = 535
+  Top = 362
+  Caption = 'Notiz'
+  ClientHeight = 305
+  ClientWidth = 490
+  PixelsPerInch = 96
+  TextHeight = 13
+  object ofihelpStd: TAdvOfficeImage
+    Left = 101
+    Top = 270
+  end
+  object btnOk: TAdvGlowButton
+    Left = 320
+    Top = 273
+  end
+  object htmNotiz: THTMLStaticText
+    Left = 8
+    Top = 8
+    Width = 465
+    Height = 241
+    EnableBlink = True
+    MiniScroll = True
+    TabOrder = 2
+    Version = '1.3.1.1'
+  end
+  object AdvGlowButton1: TAdvGlowButton
+    Left = 10
+    Top = 271
+    Width = 87
+    Height = 28
+    Caption = 'Bearbeiten'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 3
+    OnClick = 'AdvGlowButton1Click'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 403
+    Top = 272
+  end
+end

@@ -1,0 +1,69 @@
+object frmTerminAendDlg: TfrmTerminAendDlg
+  Left = 426
+  Top = 304
+  BorderStyle = 'bsDialog'
+  Caption = 'Terminänderung'
+  ClientHeight = 169
+  ClientWidth = 290
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (290 169)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object lblVon: TLabel
+    Left = 40
+    Top = 16
+    Width = 53
+    Height = 13
+    Caption = 'von Termin'
+  end
+  object lblBis: TLabel
+    Left = 43
+    Top = 70
+    Width = 46
+    Height = 13
+    Caption = 'zu Termin'
+  end
+  object OKBtn: TButton
+    Left = 112
+    Top = 135
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 192
+    Top = 135
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object dtpvon: TDateTimePicker
+    Left = 40
+    Top = 40
+    Width = 186
+    Height = 21
+    Date = '<extended:81b7521cdf71b49d0e40>'
+    Time = '<extended:81b7521cdf71b49d0e40>'
+    TabOrder = 2
+  end
+  object dtpBis: TDateTimePicker
+    Left = 40
+    Top = 89
+    Width = 186
+    Height = 21
+    Date = '<extended:efc430c5e071b49d0e40>'
+    Time = '<extended:efc430c5e071b49d0e40>'
+    TabOrder = 3
+  end
+end

@@ -1,0 +1,462 @@
+object frmAuftragSuchDlg: TfrmAuftragSuchDlg
+  Left = 421
+  Top = 305
+  Width = 990
+  Height = 423
+  ActiveControl = 'edtName1'
+  BorderIcons = []
+  Caption = 'Aufträge - Suchen'
+  Color = 'clSilver'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object lblAnschrift: TLabel
+    Left = 12
+    Top = 35
+    Width = 28
+    Height = 13
+    Caption = 'Name'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblNr: TLabel
+    Left = 12
+    Top = 135
+    Width = 39
+    Height = 13
+    Caption = 'Belegnr.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblOrt: TLabel
+    Left = 12
+    Top = 86
+    Width = 14
+    Height = 13
+    Caption = 'Ort'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblLang: TLabel
+    Left = 12
+    Top = 183
+    Width = 44
+    Height = 13
+    Caption = 'Adressnr.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblDatum: TLabel
+    Left = 12
+    Top = 236
+    Width = 49
+    Height = 13
+    Caption = 'Datum ab '
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblTermin: TLabel
+    Left = 12
+    Top = 260
+    Width = 50
+    Height = 13
+    Caption = 'Termin ab '
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    Visible = False
+  end
+  object gbxSort: TGroupBox
+    Left = 344
+    Top = 16
+    Width = 69
+    Height = 193
+    Caption = 'Sortierung'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 4
+    object rbtName1: TRadioButton
+      Left = 12
+      Top = 20
+      Width = 37
+      Height = 17
+      TabOrder = 0
+    end
+    object rbtOrt: TRadioButton
+      Left = 12
+      Top = 65
+      Width = 37
+      Height = 17
+      TabOrder = 1
+    end
+    object rbtNummer: TRadioButton
+      Left = 12
+      Top = 115
+      Width = 37
+      Height = 17
+      Checked = True
+      TabOrder = 2
+      TabStop = True
+    end
+    object rbtAdrNr: TRadioButton
+      Left = 12
+      Top = 163
+      Width = 37
+      Height = 17
+      TabOrder = 3
+    end
+  end
+  object edtName1: TEdit
+    Left = 68
+    Top = 35
+    Width = 261
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 0
+  end
+  object edtOrt: TEdit
+    Left = 68
+    Top = 79
+    Width = 261
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+  end
+  object edtNummer: TEdit
+    Left = 68
+    Top = 129
+    Width = 261
+    Height = 21
+    AutoSize = False
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 2
+  end
+  object btnCancel: TButton
+    Left = 237
+    Top = 355
+    Width = 75
+    Height = 25
+    Cancel = True
+    Caption = 'Abbrechen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ModalResult = 2
+    ParentFont = False
+    TabOrder = 5
+  end
+  object btnOK: TButton
+    Left = 157
+    Top = 355
+    Width = 75
+    Height = 25
+    Caption = 'OK'
+    Default = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ModalResult = 1
+    ParentFont = False
+    TabOrder = 6
+  end
+  object edtAdrNr: TEdit
+    Left = 68
+    Top = 177
+    Width = 261
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 3
+  end
+  object cbxFilter: TCheckBox
+    Left = 68
+    Top = 320
+    Width = 149
+    Height = 17
+    TabStop = False
+    Caption = 'Belege Filtern'
+    Checked = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    State = 'cbChecked'
+    TabOrder = 7
+    Visible = False
+  end
+  object cbxAktuell: TCheckBox
+    Left = 68
+    Top = 296
+    Width = 149
+    Height = 17
+    TabStop = False
+    Caption = 'nur aktuelle Belege'
+    Checked = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    State = 'cbChecked'
+    TabOrder = 8
+  end
+  object cbxDatum: TCheckBox
+    Left = 164
+    Top = 234
+    Width = 149
+    Height = 17
+    TabStop = False
+    Caption = 'Datum berücksichtigen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 9
+  end
+  object dtpDatum: TDateTimePicker
+    Left = 68
+    Top = 232
+    Width = 81
+    Height = 21
+    Date = '<extended:9843ff63ce9d94950e40>'
+    Time = '<extended:9843ff63ce9d94950e40>'
+    Color = 16120304
+    TabOrder = 10
+    TabStop = False
+  end
+  object dbgTreffer: TDBGrid
+    Left = 424
+    Top = 0
+    Width = 558
+    Height = 392
+    Align = 'alRight'
+    BorderStyle = 'bsNone'
+    Color = 14739688
+    DataSource = 'dsSuchen'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
+    ParentFont = False
+    TabOrder = 11
+    TitleFont.Charset = 'ANSI_CHARSET'
+    TitleFont.Color = 'clBlack'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Pitch = 'fpVariable'
+    TitleFont.Style = []
+    OnDblClick = 'dbgTrefferDblClick'
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'NAME1'
+        Title.Caption = 'Name 1'
+        Width = 187
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'ORT'
+        Title.Caption = 'Ort'
+        Width = 187
+        Visible = True
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'NUMMER'
+        Title.Caption = 'Nummer'
+        Width = 75
+        Visible = True
+      }
+      item3 = {
+        Expanded = False
+        FieldName = 'ADRNR'
+        Title.Caption = 'Adr.-Nr.'
+        Width = 75
+        Visible = True
+      }
+    >
+  end
+  object btnSuche: TButton
+    Left = 77
+    Top = 355
+    Width = 75
+    Height = 25
+    Action = 'actSuche'
+    Default = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 12
+  end
+  object dtpTermin: TDateTimePicker
+    Left = 68
+    Top = 256
+    Width = 81
+    Height = 21
+    Date = '<extended:9843ff63ce9d94950e40>'
+    Time = '<extended:9843ff63ce9d94950e40>'
+    Color = 16120304
+    TabOrder = 13
+    TabStop = False
+    Visible = False
+  end
+  object cbxTermin: TCheckBox
+    Left = 164
+    Top = 258
+    Width = 165
+    Height = 17
+    TabStop = False
+    Caption = 'Liefertermin berücksichtigen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 14
+    Visible = False
+  end
+  object btnLastSearch: TAdvGlowButton
+    Left = 232
+    Top = 288
+    Width = 89
+    Height = 25
+    Caption = 'letzte Suche'
+    ImageIndex = 10
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 15
+    OnClick = 'btnLastSearchClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object dsSuchen: TDataSource
+    DataSet = 'dmBelegeSuche.cdsSuchen'
+    Left = 952
+    Top = 8
+  end
+  object aclSuchen: TActionList
+    Left = 24
+    Top = 352
+    object actSuche: TAction
+      Caption = '&Suchen'
+      ShortCut = 16467
+      OnExecute = 'actSucheExecute'
+    end
+  end
+end

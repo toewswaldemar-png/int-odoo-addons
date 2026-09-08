@@ -1,13 +1,14 @@
 # Modulvergleich: aktuelles ERP ↔ Odoo 19
 
-Stand: 2026-08-31 (Menü/Feldübersicht), Validierung 2026-09-08. Ausgangspunkt war
-ein Screenshot der Hauptmenü-Übersicht des aktuellen (Windows-Legacy-)ERP-Systems.
-Zweck dieses Dokuments: Einordnung, welche Odoo-Standardmodule bzw. bestehende
+Stand: 2026-08-31 (Menü/Feldübersicht), Validierung 2026-09-08, erweitert um
+Live-DB-Zugriff 2026-09-08. Ausgangspunkt war ein Screenshot der
+Hauptmenü-Übersicht des aktuellen (Windows-Legacy-)ERP-Systems. Zweck dieses
+Dokuments: Einordnung, welche Odoo-Standardmodule bzw. bestehende
 `int_`-Addons die einzelnen Bereiche abdecken, und wo Lücken bestehen.
 
 ## Quellenlage (Reverse Engineering, Stand 2026-09-08)
 
-Die Screenshot-Angaben wurden gegen drei unterschiedlich aktuelle Quellen
+Die Screenshot-Angaben wurden gegen vier unterschiedlich aktuelle Quellen
 geprüft:
 
 | Quelle | Stand | Inhalt |
@@ -15,17 +16,40 @@ geprüft:
 | `IBDB.GDB` (Firebird/InterBase-DB, aus `db/BAK/IBDB.zip`) | 2011-11-09 | Vollständiges DDL-Schema (194 Tabellen), extrahiert via `isql -a`; abgelegt unter [`legacy-schema/full_schema.sql`](legacy-schema/full_schema.sql) |
 | `HMS/Module/*.pas` (Delphi-Quellcode) | bis 2018-11 | Datenmodul-/Geschäftslogik; jüngste Datei-Timestamps liegen bei Nov. 2018 |
 | `Herrmann.exe` (kompiliertes aktuelles Programm) | 2026-09-06 | String-/Ressourcenextraktion (`strings` auf ASCII + UTF-16LE) aus dem produktiv gebauten Binary |
+| `IBDB.FDB` (lokale Kopie der Produktiv-DB, `Herrman Work Test/IBDB.FDB`) | **2026-09-08 (tagesaktuell)** | Vollständiges DDL-Schema (437 Tabellen, 47 Views, 111 Stored Procedures) direkt aus der Live-Datenbank, inkl. vollständiger Prozedur-/View-Quelltexte; abgelegt unter [`legacy-schema/full_schema_current.sql`](legacy-schema/full_schema_current.sql) und [`legacy-schema/all_procedure_sources.sql`](legacy-schema/all_procedure_sources.sql) |
 
-**Wichtige Erkenntnis:** Die DB-Kopie und der lokal vorliegende Pascal-Quellcode
-sind beide veraltet (2011 bzw. 2018) und bilden nur den **stabilen Datenkern**
-korrekt ab. Neuere, regulatorisch getriebene Felder (v. a. XRechnung/Peppol,
-eingeführt im Zuge der deutschen E-Rechnungspflicht 2024/2025) fehlen in
-beiden Quellen komplett. Das `Herrmann_Work`-Verzeichnis enthält jedoch
-laufend aktualisierte kompilierte Programmversionen (u. a. `Herrmann.exe` vom
-06.09.2026, nur 2 Tage vor dieser Prüfung) – daraus lassen sich per
-String-Extraktion auch aktuelle Feldnamen/SQL-Fragmente gewinnen, ohne den
-Quellcode selbst zu haben. Alle nachfolgenden „bestätigt"/„korrigiert"-Vermerke
-beziehen sich auf diesen Dreiklang.
+**Wichtige Erkenntnis:** Die 2011er-DB-Kopie und der lokal vorliegende
+Pascal-Quellcode (bis 2018) waren beide veraltet und bildeten nur den
+**stabilen Datenkern** korrekt ab. Mit dem Live-DB-Zugriff (Option C, siehe
+unten) ist diese Lücke jetzt geschlossen: alle vier Quellen zusammen decken
+Datenbankebene (aktuell), UI-Ebene (471 DFM-Formulare aus der EXE) und
+Geschäftslogik-Ebene (2018er-Pascal-Code der zentralen Formulare) ab. Alle
+„bestätigt"/„korrigiert"-Vermerke beziehen sich auf diesen Quellen-Mix; wo
+ein Fund nur aus der 2011/2018-Kombination stammt und (noch) nicht gegen die
+Live-DB nachgeprüft wurde, ist das im jeweiligen Abschnitt vermerkt.
+
+**Wichtige Einschränkung zum Pascal-Quellcode (geklärt 2026-09-08):** Die
+`HMS/Module/Herrmann.dpr`-Projektdatei zeigt, dass `Herrmann_Work` **kein
+eigenständig baubares Projekt** ist. 195 von 196 `uses`-Zeilen verweisen über
+relative Pfade (`..\..\..\..\ERP-Software\D2000\...`) auf einen separaten,
+auf diesem Rechner nicht vorhandenen Quellbaum – nur eine Handvoll Formulare
+(`FAdressen`, `FBenutzer`, `FTextbau` u. a.) liegen tatsächlich lokal unter
+`HMS/Standard/Module/...`. Das bedeutet: der überwiegende Teil der bisher
+gelesenen Geschäftslogik-Dateien (F8D.pas, FAuftragTSP.pas,
+FBestellungTSP.pas, FProduktion.pas, FLieferscheinTSP.pas, FRechnungTSP.pas,
+FMitarbeiterZeiterfassung.pas u. a.) liegt zufällig *zusätzlich* lokal in
+`Herrmann_Work` vor (sonst wären sie gar nicht lesbar gewesen), ist aber laut
+Projektdatei **nicht** die vom echten Build referenzierte Quelle. Für die in
+diesem Dokument zitierten Formulare ist das unkritisch, da deren Code separat
+gegen DFM/Live-DB gegengeprüft wurde. Bei zwei tatsächlich **doppelt
+vorhandenen** Dateien (`UArtikelObject.pas`/`UBelegObject.pas`/
+`UDBWorkObjects.pas`, einmal unter `HMS/Module/` von 2017, einmal unter
+`HMS/Module/Global/GlobalObjects/` von 2014) zeigt die `.dpr` eindeutig: **keine
+von beiden ist die aktive Quelle** – referenziert wird stattdessen
+`..\..\..\..\ERP-Software\D2000\V0.0\UArtikelObject.pas`, ein Pfad, der in
+diesem Verzeichnisbaum nicht existiert. Beide lokalen Kopien sind damit als
+verwaiste/veraltete Zwischenstände einzuordnen, nicht als Kandidaten für
+"welche ist aktiv".
 
 ## Aktuelles Menü (Ist-Zustand)
 
@@ -53,7 +77,7 @@ beziehen sich auf diesen Dreiklang.
 | Geräte | kein direktes Standardmodul | ggf. Custom-Feld/-Modell nötig (Seriennummern? `stock.lot`?) |
 | Rep-Bestellung, Status Reparaturen | `repair` (Repair Orders) | passt zu `int_repair_workshop` |
 | **Einkauf**: Anfragen, Rahmenbestellung, Bestellung, Rechnungsprüfung, Bestellliste | `purchase` | RFQ, Blanket Orders (Enterprise), 3-way-match |
-| 8D Lieferant, Rahmen Reparatur | `quality` (8D-Reports) + `repair` | Odoo Quality hat "5 Why"/MRP-Anbindung, kein natives 8D-Formular – evtl. Custom. *Validiert 2026-09-09: der Sub-Tab "Belastungsanzeige" in der Artikelinfo trägt intern durchgängig die Steuerelement-Namen `tsh8dl`/`dbg8dL`/`ds8dl` – Label wurde offenbar nachträglich von "8D Lieferant" auf "Belastungsanzeige" geändert, ohne die Komponenten umzubenennen. Fachlich naheliegend: eine 8D-Lieferantenreklamation mündet oft in eine Belastung (Chargeback) des Lieferanten – beide Konzepte teilen sich hier ein Formular* |
+| 8D Lieferant, Rahmen Reparatur | `quality` (8D-Reports) + `repair` | Odoo Quality hat "5 Why"/MRP-Anbindung, kein natives 8D-Formular – evtl. Custom. *Validiert 2026-09-09: der Sub-Tab "Belastungsanzeige" in der Artikelinfo trägt intern durchgängig die Steuerelement-Namen `tsh8dl`/`dbg8dL`/`ds8dl` – Label wurde offenbar nachträglich von "8D Lieferant" auf "Belastungsanzeige" geändert, ohne die Komponenten umzubenennen. Fachlich naheliegend: eine 8D-Lieferantenreklamation mündet oft in eine Belastung (Chargeback) des Lieferanten – beide Konzepte teilen sich hier ein Formular. **Erweitert 2026-09-09 über vollständige DFM-Extraktion**: Das geht noch weiter – die komplette Reparatur-Belegmaske (Kostenvoranschlag/Material/Versand-Tabs, alles bisher unter "Reparatur" dokumentierte) ist intern als Delphi-Klasse **`TFRM8D`** implementiert. Es gibt kein separates `TFRMREPARATUR`-Formular – "Reparatur" und "8D" waren also ursprünglich ein und dasselbe Formular, nur die UI-Beschriftung wurde im Lauf der Zeit auf "Reparatur" umgestellt* |
 | Eingangsrechnungen, Beistellung | `account` (Vendor Bills) | Beistellung (Kundenmaterial) kein direktes Pendant, oft über Kit/Consignment gelöst |
 | **Produktion**: Produktion, Produktionsarten, Laufkarten, Protokoll, FAM | `mrp` (Manufacturing Orders, Work Orders) | Laufkarten ≈ Arbeitsscheine/Shop Floor |
 | 8DIntern, 8D-Kunde | `quality` + Custom | wie oben |
@@ -204,7 +228,7 @@ bestehenden Testballon-Felder aus [`int_legacy_erp_import`](../int_legacy_erp_im
 | `x_alt_hauptlieferant` | `ARTIKEL.HAUPTLIEFERANT` | `INTEGER` (Fremdschlüssel) | **Typ-Diskrepanz**: Addon modelliert als `Char` ("Hauptlieferant-Code"), real ist es eine Ganzzahl-Referenz auf `ADRESSEN.OID`. Validiert über die aktuelle EXE: eigene Query `Select OID, Name1, ... from Adressen where not Krednr is NULL ... order by coalesce(HauptLieferant, 'F') Desc` bestätigt den Verweis auf Lieferanten-Adressen. Sollte als `Many2one` auf `res.partner` modelliert werden, nicht als Freitext |
 | `x_alt_gruppe` | `ARTIKEL.GRUPPE` | `INTEGER` (Fremdschlüssel) | **Typ-Diskrepanz**: Addon modelliert als `Char` ("Gruppe"), real eine Ganzzahl-Referenz. Validiert über aktuelle EXE: `... Artikel A left join Artikelgruppen G on G.GID = coalesce(A.Gruppe,-1)` – Join gegen `ARTIKELGRUPPEN.GID`, nicht `.OID`. Sollte als `Many2one`/`product.category`-Verknüpfung modelliert werden |
 | `x_alt_einheit` | `ARTIKEL.EINHEIT` | `VARCHAR(10)` | bestätigt, Char-Feld korrekt (kürzelbasiert wie `uom.uom`, kein FK im Altsystem) |
-| `x_alt_hersteller_ref_ids` (`product.legacy.manufacturer.ref`, Codes BT/LH/FY/NK/KO/VK/BE/TK/DB/HO/WE) | `ARTIKEL.IDENTNR1` … `IDENTNR5` (2011-Schema) bzw. bis `IDENTNR12` (aktuelle EXE) | `VARCHAR(60)` je Slot | **Geklärt 2026-09-09 über Live-Screenshot der Artikel-Karteikarte**: Der Reiter "Allgemein" zeigt ein "ID-Nummer"-Feld mit zwölf beschrifteten Zeilen **BT/LH/FY/NK/KO/VK/BE/TK/DB/HO/WE/SI** – am Beispielartikel "Klimagerät FRR TRAXX AC3" ist `BT` mit `3EGM064970R0001` befüllt. Dieser Wert ist **identisch** mit dem `IdentNr`-Wert, der zuvor am selben Gerät im Reparaturmodul (`REPARTIKEL.IDENTNR`) gesehen wurde – belastbarer Beweis, dass der generische Reparatur-"IdentNr" aus dem **BT-Slot** stammt. Die Reihenfolge der 12 UI-Zeilen entspricht plausibel `IDENTNR1`…`IDENTNR12` (passend zur Feldanzahl und zur parallelen `ZEICHNUNGSNR0`/`ZEICHNUNGSNR2`–`11`-Spaltenfolge), aber eine direkte DFM-Bindung, die das beweist, wurde nicht gefunden – die Zuordnung stützt sich auf den Wertevergleich, nicht auf eine Steuerelement-Referenz. **Nebenbefund:** Es gibt einen 12. Code **"SI"**, der im Addon fehlt (nur 11 Codes gepflegt) – das Selection-Feld ist unvollständig |
+| `x_alt_hersteller_ref_ids` (`product.legacy.manufacturer.ref`, Codes BT/LH/FY/NK/KO/VK/BE/TK/DB/HO/WE) | `ARTIKEL.IDENTNR1` … `IDENTNR5` (2011-Schema) bzw. bis `IDENTNR12` (aktuelle EXE) | `VARCHAR(60)` je Slot | **Endgültig bewiesen 2026-09-09 über echte DFM-Extraktion** (vorher nur per Wertevergleich plausibilisiert): Labels und Eingabefelder im "ID-Nummer"-Groupbox sind über identische Y-Koordinaten eindeutig gepaart – `BT`(Top 20)→`dbeid1`(Top 16, `DataField=Identnr1`), `LH`(43)→`dbeid2`(39, `Identnr2`), `FY`(67)→`dbeid3`(63, `Identnr3`), `NK`(90)→`Identnr4`, `KO`(114)→`Identnr5`, `VK`(138)→`Identnr6`, `BE`(161)→`Identnr7`, `TK`(185)→`Identnr8`, `DB`(209)→`Identnr9`, `HO`(232)→`Identnr10`, `WE`(256)→`Identnr11`, `SI`(280)→`Identnr12`. Damit ist **`BT`=`IDENTNR1` … `SI`=`IDENTNR12`** zweifelsfrei belegt, nicht mehr nur eine Vermutung. **Weiterhin offen:** Der 12. Code **"SI"** fehlt im Addon (nur 11 Codes gepflegt) – das Selection-Feld ist unvollständig |
 
 **Beobachtung:** Die einfachen Textfelder (Artikelnummer, Kurzbezeichnung,
 Bestellnummer, Einheit) sind im Addon korrekt nachgebildet. Die beiden
@@ -278,7 +302,7 @@ Validiert 2026-09-09 über Live-Screenshot + DFM-Bindungen.
 | Kalkulation / Angebotspreis (Datumsteil) | `ARTIKEL.KALKPREISUPDATE` | `dbtKalkDatum` → `DataField Kalkpreisupdate` |
 | kein Preisupdate (Checkbox) | `ARTIKEL.noAutoUpdate` | **neu entdeckt**, nicht im 2011-Schema, `DBCheckBox8` → `DataField noAutoUpdate` |
 | **alter Wert / Letzter RP** | **kein `ARTIKEL`-Feld** | `dbeLEK` bindet an `dsInfoBestand` (dasselbe Computed-Dataset wie "Bestand verfügbar"/"Bedarf Prod.Auftrag" auf dem Allgemein-Tab), nicht an `dsArtikel` – live aus der Bestellhistorie abgeleitet. Live-Beleg: Wert `2,92`/`22.10.2024` entspricht exakt der zweitletzten Bestellzeile (Beleg 241990, Riegler & Co.KG) aus dem Einkauf-Tab |
-| Lieferantenpreis-Grid | `ARTIKELPREISE` | Grid heißt `dbgArtikelPreise`; Spalten passen 1:1 zum Schema (`LIEFNR`/`LIEFERNAME`/`DATUM`/`MENGEVON`/`MENGEBIS`/`EKBRUTTO`/`RABATT`/`LIEFERZEIT`/`PREISEINHEIT`). Die "LEK"-Checkbox-Spalte am Zeilenende ist vermutlich reine UI-Markierung, kein gespeichertes Feld – nicht bestätigt |
+| Lieferantenpreis-Grid | `ARTIKELPREISE` | **Korrigiert 2026-09-09 über echte DFM-Extraktion** (`dbgArtikelPreise: TDBGrid`, `DataSource=dsArtikelPreise`): **15 Spalten**, keine davon heißt "LEK" – die ursprüngliche Lesart des Screenshots war falsch/unvollständig. Reale Spalten: `LIEFERNAME`("Lieferant"), `MENGEVON`("Menge von"), `MENGEBIS`("Menge bis"), `EKBRUTTO`("Ek. Preis"), **`Mindestmenge`("VP-Einheit" – Label/Feld-Diskrepanz)**, `Lieferzeit`, `Preiseinheit`, `BESTELLNR`("Bestell-Nr."), `RABATT`, `Kupferzahl`("Kupferbasis"), `BEZEICHNUNG`, `DATUM`, `Angebotnummer`, `Ufaktor`("Faktor"), `UEinheit`("Einheit") |
 
 **Beobachtung:** Auch hier zeigt sich das bereits mehrfach dokumentierte
 Muster berechneter Anzeigepanels statt gespeicherter Werte – "alter Wert"
@@ -360,7 +384,7 @@ Die Stückliste selbst bestätigt fast das komplette `STUECKLISTEN`-Schema:
 | Änd./Datum | `STUECKLISTEN.ANLAGE` (`dbeaenddat`) | **wiederverwendet** – Feld heißt fachlich "Anlage" (Erstellungsdatum), hier als Änderungsdatum gebunden; wieder das etablierte Feld-Wiederverwendungsmuster |
 | Material-Grid (Sort/Artikel/Anzahl/Einheit/BezeichnungA/B/Bemerkung) | `STUECKLISTENARTIKEL` (`NUMMER`/`ARTOID`/`ANZAHL`/`EINHEIT`/`BEZEICHNUNG1`/`BEZEICHNUNG2`/`BEMERKUNG`) | vollständiger 1:1-Treffer – das sind die echten BOM-Zeilen |
 | Zweites ID-Nummer-Panel (neben dem Material-Grid) | vermutlich `STUECKLISTENARTIKEL.IDENTNR1-5`, gebunden an die aktuell markierte Materialzeile | plausibel (im Beispiel leer, während das Kopf-Feld links befüllt ist), aber keine direkte Steuerelement-Bindung gefunden – nicht bewiesen |
-| "22094" / "110376" (Kopfbereich, mit @-/Personen-Icon) | unbekannt | keine Feldbindung gefunden – ungeklärt |
+| "22094" / "110376" (Kopfbereich, mit @-/Personen-Icon) | `STUECKLISTEN.OID` (`dbeoid`) / `STUECKLISTEN.ARTOID` (`dbesoid`) | *Geklärt 2026-09-08 über DFM+Live-DB*: zwei nebeneinanderliegende, schreibgeschützte `TDBEdit`-Felder (`dbeoid`/`dbesoid`, direkt neben `dbeNummer`) – reine interne OID-Anzeigen (Stückliste selbst / verknüpfter Artikel), keine fachlichen Werte. Live-DB bestätigt den Wertebereich: `STUECKLISTEN.OID` bis 22758, `ARTIKEL.OID` bis 114927 – beide Beispielzahlen liegen exakt in diesen Bereichen |
 | "keine Splittung" (Checkbox, an anderer Stelle desselben Tabs) | `STUECKLISTEN.NOSPLITT` (`BOOLEAN`) | *Bestätigt 2026-09-09*, exakter Namenstreffer |
 | Rechtes Baum-Panel | — | zeigt ein Expand-Symbol ("+") vor dem obersten Eintrag – bestätigt eine echte Hierarchie (mehrstufige Baugruppen), keine Flachliste; vergleichbar mit verschachtelten `mrp.bom`-Strukturen in Odoo |
 
@@ -391,7 +415,7 @@ F2 aus dem Artikelkontext aufrufbar, mit einem "Artikel"-Eingabefeld +
 | Verbrauch 12/24/36 Monate | Fertigung/Lieferschein/Lager/Reparatur | rollierende Verbrauchsstatistik nach denselben vier Belegkategorien, die auch sonst im System wiederkehren |
 | Kupferzuschlag / m | `ARTIKEL.KUPFERZAHL`/`KUPFERFAKTOR` | bestätigt über `Select Kupferzahl, Gewicht from Artikel where OID = :parOID` und Prozedur `TGetKupferZuschlag` – Rohstoff-Preisgleitklausel für kupferhaltige Bauteile, in Odoo kein natives Äquivalent |
 | Reiter Buchungen/Teileverwendung/Einkauf/Vertrieb/Reservierung/Kommission/Inventurwerte | Grids für zugehörige Belege | erklärt über benachbarte Double-Click-Handler im selben Formular (`dbgBestellungenDblClick`, `dbgRepDblClick`, `dbgAngeboteDblClick`, `dbgAuftragDblClick`, `dbgLieferscheinTSPDblClick`, `dbgRechnungenDblClick`, `dbgRahmenbestellungDblClick`, `dbg8dLDblClick`) – jeder Tab zeigt vermutlich alle Belege des jeweiligen Typs, in denen dieser Artikel vorkommt |
-| ID-Nummer/Zeichnung-Panels (rechts) | dieselben `IDENTNR`/`ZEICHNUNGSNR`-Felder wie im Artikelstamm | **Auffälligkeit:** Zeichnung-Spalte zeigt für LH und FY denselben Wert `200060000` – entweder echte Mehrfachnutzung derselben Zeichnung oder Anzeige-Artefakt des scrollbaren Mini-Grids, nicht geklärt |
+| ID-Nummer/Zeichnung-Panels (rechts) | dieselben `IDENTNR`/`ZEICHNUNGSNR`-Felder wie im Artikelstamm | **Geklärt 2026-09-09 über echte DFM-Extraktion: echter Programmierfehler, kein Datenartefakt.** Die Zeichnung-Spalte bindet zeilenweise an `Zeichnung`(BT)/`ZeichnungsNr2`(LH)/`ZeichnungsNr3`(FY, erwartet)/`ZeichnungsNr4`(NK)/… – aber `DBEdit10` (FY-Zeile, `Top=67`) ist fälschlich **ebenfalls** an `DataField = 'ZeichnungsNr2'` gebunden statt an `ZeichnungsNr3` (`DBEdit9`, LH-Zeile, `Top=43`, dieselbe Bindung). Klassischer Copy-Paste-Fehler im Originalformular: `DBEdit10` wurde offenbar aus `DBEdit9` dupliziert, das `DataField` aber nie angepasst. Beide Felder sind `ReadOnly`, der Fehler ist also rein anzeigeseitig (keine Datenkorruption), macht aber `ZeichnungsNr3` in diesem Dialog dauerhaft unsichtbar – selbst falls dort echte Daten stehen, zeigt die FY-Zeile immer den LH-Wert |
 
 #### Reiter "Buchungen": Lagerbewegungsjournal, vollständig aufgeklärt
 
@@ -548,25 +572,29 @@ hier nativen KW/Jahr-Granularität.
 
 #### Reiter "Kommision": offener Kommissionierbedarf je Baugruppe
 
-Validiert 2026-09-09, aber **nur über Feldnamen aus verwandten Queries
-plausibilisiert, nicht über eine direkte Grid-Spaltendefinition bewiesen**.
-Grid-Spalten: KW/Jahr/Restmenge/SOLLMEN(GE)/Baugruppe/Bezeichnung/
-Prodmenge/Fertig. Passende Quelle: `V_ProdMaterial`, dieselbe View-Familie
-wie beim EngpassCockpit und bei "Reservierung (Auftrag)":
+**Korrigiert 2026-09-09 durch echte DFM-Extraktion** (siehe
+[dfm-tool/](legacy-schema/dfm-tool/README.md) – ein selbstgebauter Decoder
+für das binäre Delphi-DFM-Format, direkt aus `Herrmann.exe` extrahiert).
+Die vorherige Version dieser Zeile stützte sich nur auf plausibilisierte
+Feldnamen aus verwandten Queries; jetzt liegt die exakte Grid-Spaltendefinition
+vor (`dbgKomm: TDBGrid`, `DataSource = dsKomm`, Tab `tshKomm`):
 
-```sql
-Select * from V_ProdMaterial where Artoid = :parOID
-  And (Sollmenge - Buchmenge) > 0 and (Status <> -1 or Status is NULL) and (Einheitmenge > 0)
-```
-
-| UI-Spalte | Vermutete Herkunft | Sicherheit |
+| UI-Spalte | Reales `FieldName` | Anmerkung |
 |---|---|---|
-| KW / Jahr | `V_ProdMaterial.Kw`/`.Jahr` | plausibel (an anderer Stelle mit `V_ProdMaterial` kombiniert referenziert) |
-| Restmenge | berechnet als `Sollmenge - Buchmenge` (Formel mehrfach im Code so verwendet) | plausibel |
-| SOLLMEN(GE) | `V_ProdMaterial.Sollmenge` | plausibel |
-| Baugruppe / Bezeichnung | vermutlich `STUECKLISTEN.NUMMER`/`.BEZEICHNUNG1` des bedarfsauslösenden Fertigungsauftrags | unbestätigt |
-| Prodmenge | vermutlich `PRODUKTION.MENGE` | unbestätigt |
-| Fertig | vermutlich `PRODUKTION.FERTIG` oder aus `Status` abgeleitet | unbestätigt |
+| KW | `Kw` | |
+| Jahr | `Jahr` | |
+| Restmenge | **`Anzahl`** | kein berechnetes `Sollmenge-Buchmenge`, sondern ein eigenes, so benanntes Datensatzfeld – frühere Vermutung war falsch |
+| SOLLMEN(GE) | `Sollmenge` | |
+| Baugruppe | **`Stuecknummer`** | ein eigener Alias, nicht direkt `STUECKLISTEN.NUMMER` – frühere Vermutung falsch |
+| Bezeichnung | **`stbez`** | eigener Alias (vermutlich "Stückliste Bezeichnung"), nicht `STUECKLISTEN.BEZEICHNUNG1` direkt |
+| Prodmenge | `Prodmenge` | |
+| Fertig | `Fertig` | |
+| *(im Grid ausgeblendet, aber im Dataset vorhanden)* | `Auftragnummer`, `Kunde` | `Visible = False` – zwei weitere Felder, die das Dataset mitführt, aber nicht anzeigt |
+
+Die zugrundeliegende SQL-Quelle (`V_ProdMaterial` o. Ä.) bleibt weiterhin
+nicht im Klartext auffindbar – Aliase wie `Anzahl`/`Stuecknummer`/`stbez`
+werden vermutlich dynamisch im Pascal-Code gesetzt (siehe Grenzen der
+DFM-Methode im Tool-README).
 
 **Funktionsweise:** zeigt, für welche Baugruppen/Fertigungsaufträge dieser
 Artikel noch offen ist (`Sollmenge - Buchmenge > 0`, also noch nicht
@@ -675,6 +703,19 @@ Modell für Rahmenbestellungen hat in Odoo Community keine Entsprechung, und
 (2) die Rechnungsprüfung hängt hier an einzelnen Bestellzeilen-Flags statt an
 einem eigenständigen 3-way-match-Prozess wie in Odoo.
 
+### Pascal-Quellcode (FBestellungTSP.pas): Wareneingangsbuchung löst 8D-Belastung aus
+
+Validiert 2026-09-10 durch Lesen von `HMS/Module/Bestellung/FBestellungTSP.pas`
+(1960 Zeilen, Klasse `TfrmBestellungTSP`, Stand 2018). Klärt den bisher nur
+über Formularnamen vermuteten Zusammenhang zwischen "8D Lieferant" und
+"Belastungsanzeige" (siehe Artikelinfo-Abschnitt) mit konkretem Code:
+
+- **`btnBuchenClick`** (Wareneingang buchen) ist mit Qualitäts-Gates verriegelt: ist der Artikel `ISPruefeArtikel`/`ISZeugnisArtikel`-pflichtig, blockiert die Buchung, bis `BELEGPOS.GEPRUEFT='T'` bzw. ein neu gefundenes Feld `BELEGPOS.ZEUGNIS='T'` gesetzt ist.
+- **Bestätigt: Kanban-Buchungsmechanismus.** `TBucheKanbanArtikel.Execute(...)` bucht den Artikelbestand normalerweise; ist `BELEGPOS.REPLAGER='T'`, läuft stattdessen `TBucheKanbanArtikel.ExecuteReplager(...)` – ein separater Buchungspfad fürs Reparatur-Lager, bestätigt die schon gefundene Sonderrolle von `REPLAGER`.
+- **Der Auslöser für "8D Lieferant"/"Belastungsanzeige" ist jetzt bewiesen:** Ist beim Buchen eine Ausschussmenge (`dbeAusschuss`) > 0 eingetragen, ruft `btnBuchenClick` automatisch `CreateBelastungsAnzeige` auf. Diese Prozedur legt einen neuen `BELEG` mit `fidBelastungValue` an, mit dem Bezeichnungstext **"8D Lieferant"** wörtlich im Code (`TCreateBeleg.Execute(fidBelastungValue, ..., 'G_NrBelastung', '', '8D Lieferant', ...)`) – endgültige Bestätigung, dass Belastungsanzeige und 8D-Lieferant-Reklamation ein und derselbe Vorgang sind, ausgelöst durch Ausschuss bei der Wareneingangsprüfung.
+- **Erklärt die `*_FM.xls`-Dateien im Herrmann_Work-Ordner:** `CreateBelastungsAnzeige` ruft am Ende `TCreateExcel8D.Execute(...)` auf und schreibt die Datei nach `CurrentEnvirement.Pfade.AchtDLPath` – automatisch generierte Excel-Exporte je 8D-Vorgang. Das sind exakt die zu Sitzungsbeginn gefundenen `*_FM.xls`-Dateien im Wurzelverzeichnis.
+- Feldbestätigungen aus den `TSetBelegField`/`TSetBelegPosField`-Aufrufen: `Bearbeiter`, `Bestelltermin`, `BestellNr`, `Liefname3` (befüllt mit der **Nummer der ursprünglichen Bestellung** – erneute Feld-Zweckentfremdung), `Bearbeiterfon`, `Achtdnrlieferant`, `Bestellmenge`, `Ausschussmenge`.
+
 ## Detailvergleich: Produktion
 
 Wie beim Einkauf: reines Reverse Engineering ohne Screenshot-Vorlage, direkt
@@ -731,6 +772,22 @@ jeder Anzeige neu abgefragt (nicht in Odoo-typischer Reporting-Manier live
 aggregiert) werden – eine Migration müsste diese Vorberechnung entweder als
 computed fields auf `mrp.production` nachbauen oder durch eine
 Standard-Odoo-Reporting-Ansicht ersetzen.
+
+### Pascal-Quellcode (FProduktion.pas): "In Fertigung nehmen"-Workflow
+
+Validiert 2026-09-10 durch Lesen von `HMS/Module/Produktion/FProduktion.pas`
+(2521 Zeilen, Klasse `TfrmProduktion`). `actInFertigungExecute` ist der
+Übergang von `PRODUKTIONBEREIT` (Bereitstellungs-Vormerkung) zu einer
+tatsächlich terminierten `PRODUKTION`-Zeile:
+
+1. Prüft Artikelsperre (`TGetArtikelsperre.GetSperrebyStueckOID`) – bricht mit Fehlermeldung ab, wenn der Artikel gesperrt ist.
+2. Prüft Auftragsstatus (`TGetProdAuftragStatus`).
+3. Bietet eine **Splitt-Entscheidung** an (`TfrmVorlaufDlg`): nicht splitten (`nichtSplitten`, ganze Menge in einem Fertigungslauf) oder nach Baugruppen aufteilen (`inBaugruppensplitten`).
+4. **Terminierung rückwärts vom Bedarfstermin:** `TGetWorkDays.Execute(AProdDatum, AVorlauf, Zurueck)` zieht die Vorlaufzeit in **Werktagen** (nicht Kalendertagen) vom Bedarfsdatum ab, um den Produktionsstart zu bestimmen – daraus werden `KW`/`Jahr` für die neue `PRODUKTION`-Zeile abgeleitet (`WeekOf`/`YearOf`).
+5. `TSetFertigung.Create(...)` legt den eigentlichen Fertigungsauftrag an.
+
+Bestätigt damit, dass die überall auftauchenden `KW`/`Jahr`-Felder aus einer
+echten Werktage-Rückwärtsterminierung stammen, nicht aus freier Eingabe.
 
 ## Detailvergleich: Vertrieb
 
@@ -791,6 +848,59 @@ und einer strukturellen Eigenheit: Der gesamte Belegfluss hängt an der
 Belegnummer als lose Klammer (`HAUPTAUFTRAG`), nicht an Fremdschlüsseln – bei
 einer Migration nach Odoo würde das durch echte FK-Referenzen ersetzt und
 dadurch tendenziell robuster.
+
+### Pascal-Quellcode (FAuftragTSP.pas): HAUPTAUFTRAG-Ursprung, Beleg-Kette, tote Menüpunkte
+
+Validiert 2026-09-10 durch Lesen von `HMS/Module/Belege/FAuftragTSP.pas`
+(1222 Zeilen, Klasse `TfrmAuftragTSP`):
+
+- **`HAUPTAUFTRAG` entsteht als Selbstreferenz bei Neuanlage:** `btnInsertClick` setzt beim Anlegen eines neuen Auftrags `BELEG.HAUPTAUFTRAG := BELEG.NUMMER` (die eigene Nummer) – das ist die "Wurzel" der später von Lieferschein/Rechnung übernommenen Belegkette, jetzt mit Code belegt statt nur vermutet.
+- **Auftrag → Lieferschein bestätigt:** `pmiLieferscheinClick` ruft `DataModul.CopyChangeBelegAuftragLieferschein(...)` auf (eine Beleg-Kopier-Prozedur), danach `DataModul.SetFullGeliefert(...)`.
+- **Vier Menüpunkte sind tote Hüllen:** `pmiBestellungClick`, `pmiSammellieferscheinClick`, `pmiRechnungClick`, `pmiSammelrechnungClick`, `Abschlagrechnung1Click` und `Schlussrechnung1Click` enthalten **keinen Code** (nur ein Kommentarzeichen) – diese Menüpunkte existieren in der UI, tun aber nichts. Rechnungserzeugung läuft vermutlich ausschließlich vom Lieferschein aus, nicht direkt vom Auftrag.
+- **Stillgelegte Versionierung gefunden:** `btnSaveClick` enthält einen komplett auskommentierten Block, der bei Änderung eines bereits gespeicherten Belegs einen neuen Änderungsindex angelegt hätte (`TCloneBeleg.Execute`, `BELEG.AendIndex` über `TGetNextIndex`) – eine Revisionsverwaltung, die im Code vorbereitet, aber deaktiviert ist.
+- **Produktionswarnung:** Wird eine Position geändert (Menge/Termin/Artikel), die bereits `FIsInProd` (in Fertigung) ist, erzeugt `btnSaveClick` automatisch eine `TSetProdWarning` – ein Cross-Modul-Sicherheitsnetz zwischen Vertrieb und Produktion.
+- **Speichern räumt automatisch auf:** leere Positionszeilen (`TEXT=''`) werden beim Speichern gelöscht, Positionsnummern (`POSNR`) werden aus der Sortierspalte (`POS`) neu vergeben.
+
+### Pascal-Quellcode (FLieferscheinTSP.pas/FRechnungTSP.pas): der echte Rechnungsweg + Gutschrift
+
+Validiert 2026-09-10. Bestätigt die im Auftrag-Formular vermutete Lücke:
+Rechnungserzeugung läuft nicht vom Auftrag, sondern **ausschließlich vom
+Lieferschein aus**.
+
+- **Lieferschein → Rechnung** (`FLieferscheinTSP.pas`, `pmiRechnungClick`): zwei Gates müssen erfüllt sein – der Beleg darf nicht bereits `ABGESCHLOSSEN='T'` sein, und **`DataModul.AllPreisGeprueft` muss `True` sein** ("Übernahme nicht möglich, nicht alle Preise geprüft."). Erst dann `DataModul.CopyChangeBelegLieferschein(...)`, mit automatisch generiertem Referenztext `'Liefer-/Leistungsdatum: ' + Belegdatum + ' Lieferschein: ' + Nummer` – erklärt die entsprechende Textzeile auf gedruckten Rechnungen.
+- **Gutschrift-Mechanismus bestätigt** (`FRechnungTSP.pas`, `RechnungnachGutschriftkopieren1Click`): `DataModul.CopyChangeBelegGutschrift(...)` erzeugt aus einer Rechnung eine Gutschrift, unter Rückbezug auf `HAUPTAUFTRAG` und die ursprüngliche Rechnungsnummer. Es gibt zusätzlich eine Variante "mit Rückbuchung" (`RechnungnachGutschriftkopierenmitRckbuchung1Click`). Strukturell einer der saubersten Fälle in diesem Vergleich – entspricht ziemlich genau Odoos `account.move`-Typ `out_refund` (Gutschrift mit Bezug auf die Ursprungsrechnung).
+- **Einfaches Rechnungs-Kopieren** (`Rechnungkopieren1Click`) existiert separat von der Gutschrift-Funktion – legt eine neue, unabhängige Rechnung aus derselben Vorlage an.
+- **"Vertreterprovision1Click" ist ein Label/Code-Mismatch, keine Provisionsfunktion.** Der Methodenname suggeriert Provisionslogik, aber die tatsächliche DFM-`Caption` des Menüpunkts lautet **"Belege zeigen"**. Der Handler ruft `TFrmlieferscheinDlg.Execute(..., cdsBelegPosRefOID)` auf – denselben generischen "zeig mir die verknüpften Lieferscheine zu dieser Position"-Dialog, der auch von `FAuftragTSP.pas`/`FAuftragH.pas` verwendet wird. Vermutlich wurde ein Menüpunkt aus einem anderen Formular kopiert/umbenannt, dabei nur die Caption angepasst, nicht der Delphi-Komponentenname – reiht sich damit in dasselbe Muster ein wie `tsh8dl`/"Belastungsanzeige" (UI-Label geändert, Code-Identifier nicht). *Aufgeklärt 2026-09-08 über Live-DB-Zugriff/DFM, siehe Beleg in `aktuelle-exe-validierung.md`.*
+
+### Pascal-Quellcode (FMitarbeiterZeiterfassung.pas): Monatsauswertung, Zuschlagsberechnung geklärt
+
+Kurz gegengeprüft (`HMS/Module/Zeiterfassung/FMitarbeiterZeiterfassung.pas`,
+1790 Zeilen). `WriteMonatNew` bestätigt eine echte Monatsabschluss-Berechnung:
+`TGetTagesSumme`/`TFQZeitform.ExecuteNoPrint` aggregieren die Tageszeiten,
+`WerktageImMonat(..., 5)` zählt die Werktage (Fünf-Tage-Woche) im Monat, und
+`TGrundValues.GetValues` lädt die Grunddaten (`ZEITGRUND` je Mitarbeiter,
+`PID`-bezogen) für den Soll-Zeit-Vergleich.
+
+**Zuschlagsformel abschließend geklärt (2026-09-08, über `UZeitenWork.pas` +
+Live-DB):** Das Altsystem berechnet selbst **keinen** Zuschlags-Prozentsatz
+oder -Betrag. `TWorkTimeObject` (`UZeitenWork.pas`) zählt ausschließlich die
+**Minutenanteile**, die in feste Zeitfenster fallen –
+Nacht 22:00–06:00 (`ZeitNachtBeginn`/`ZeitNachtEnde` in `UConstsZeit.pas`),
+Sonntag (`GetSonntagszeit`, per Wochentag-Prüfung) und Feiertag
+(`GetFeiertagszeit`, inkl. eigener Übernacht-Fallunterscheidung: Beginn an
+einem Werktag, Ende an einem Feiertag zählt anteilig). Die Tabelle
+`ZEITGRUND` hat zwar eigene, augenscheinlich dafür vorgesehene Spalten
+`SONNZUSCHLAG`/`FEIERZUSCHLAG`/`NACHTZUSCHLAG` (`D_DOUBLE`, je Mitarbeiter) –
+**in der Live-DB (Stand 2026-09-08) sind diese bei allen 99 Zeilen NULL**,
+während andere Konfigurationsfelder derselben Tabelle (`WAZ`=40,
+`URLAUB`=30) normal befüllt sind. Die eigentliche
+Sonn-/Feiertags-/Nachtzuschlagsberechnung (Prozentsatz → Euro) findet damit
+nachweislich **außerhalb des ERP** statt (externe Lohn-/Payroll-Verarbeitung);
+das System liefert nur die rohen Minutenwerte als Exportgrundlage. Die
+Vermutung "täglich unterschiedliche Zuschlags-/Pausenregelung" aus der
+Kernbeobachtung bezieht sich entsprechend auf die Arbeitszeit-/Pausenfelder
+(`MOAZ`/`MOPAUSE` … `SOAZ`/`SOPAUSE`, je Wochentag) in `ZEITGRUND`, nicht auf
+einen dort tatsächlich hinterlegten Zuschlagssatz.
 
 ## Detailvergleich: System & Firmendaten
 
@@ -906,8 +1016,8 @@ schon auf Ebene einzelner Reparaturpositionen, nicht nur am Belegkopf).
   **Semantik von GID/IdentNr/Seriennr geklärt (Vergleich zweier Belege, 2026-09-09):** Ein zweiter Beleg zeigt GID `18866`, gleiche Gruppe "TKL AC3", gleiche Bezeichnung und **gleiche IdentNr `3EGM064970R0001`**, aber andere Seriennr `1023/2022`. Damit: `IDENTNR` ist die Hersteller-Typ-/Modellnummer (modellweit gleich über alle Exemplare), `GID` (`REPARTIKEL.OID`) ist die interne ID des einzelnen physischen Exemplars, `SERIENNR` (`REPAUFTRAG.SERIENNR`) die Herstellerseriennummer genau dieses Exemplars. `REPARTIKEL` ist damit ein Hybrid aus Typ- und Instanzdaten in einer Zeile – Odoo trennt das sauberer in `product.template`(≈IdentNr)/`product.product` und `stock.lot`(≈GID+Seriennr) |
 | Kopftext / Fusstext | kein 1:1-Feld | am ehesten `quotation_notes`/interne Notizen, aber kein separates Kopf-/Fußtext-Konzept |
 | Material | Reparaturzeilen (`repair.order.line`) | nativ abgedeckt. **Funktionsweise (validiert 2026-09-09):** jede Grid-Zeile ist ein `BELEGPOS`-Datensatz mit `SOID` = dieser Reparaturbeleg; Spalten Pos./Artikel/Menge/Einheit/Text/E-Preis/Rabatt/G-Preis = `POSNR`/`ARTNR`(`ARTOID`)/`STCK`/`EINHEIT`/`TEXT`/`EPREIS`/`RABATT`/`GPREIS`. Für Druck-/Übersichtszwecke werden `BELEGPOS` **und** eine zweite, im 2011-Schema noch nicht vorhandene Tabelle `REPBUCHARTIKEL` per `UNION` zusammengeführt (`... union select ... from REPBUCHARTIKEL K2 where K2.soid = :parOID2`) – vermutlich tatsächlich aus dem Lager gebuchtes Verbrauchsmaterial getrennt von kalkulierten Positionen |
-| *(Positionszeile, per Screenshot 2026-09-09 neu entdeckt)* Snr Alt/Neu, "nicht drucken"/"nicht buchen", FAM-Button, BGS-Button, "L"/"K"-Buttons, DruckID-Nr. | `lot_id` (Serie) deckt Snr; für Druck-/Buchungsflags und FAM/BGS kein Pendant | Snr Alt/Neu bestätigt `BELEGPOS.SNRALT`/`SNRNEU` – Seriennummer des aus-/eingebauten Teils **je Materialzeile**, nicht nur am Gerät. "nicht drucken"/"nicht buchen" bestätigt `BELEGPOS.DRUCKEN`/`BUCHEN` (invertiert dargestellt), belegt durch Live-Query mit `coalesce(Drucken, 'F') = 'F'`-Filter. FAM/BGS bestätigen `BELEG.FAMID`/`BEGLEITSCHEIN` schon auf Positions-, nicht nur Belegebene erreichbar. **"L"/"K"-Buttons und die genaue Funktion von "DruckID-Nr." bleiben ungeklärt** – keine Treffer in den extrahierten EXE-Strings, reine Spekulation wäre nicht belastbar |
-| Versand Eingang / Versand Ausgang | kein Feld | Wareneingang/-ausgang des Reparaturgeräts explizit als eigener Vorgang – in Odoo nur implizit über Lagerbewegungen, nicht als Belegfeld. *Vollständig validiert 2026-09-09 (eigener Tab, nicht nur ein Datumsfeld): `REPKOPF.KDLSNR` (Kundenlieferschein-Nr.), `SPEDITION`/`SPEDNR` (Spediteur/Frachtbrief-Nr.), `VEDATUM` (Datum), `TRANSPORT` (Transportkosten), `SENDNUMMER`/`SENDORT` (Sendungsnr./Ort) – alle über DFM-Steuerelementbindung bestätigt. Die Checkboxen "frei"/"unfrei" binden beide auf dasselbe Feld `FREI` (Frei-Haus vs. Empfänger zahlt), keine zwei getrennten Felder. Für "Versand Ausgang" weiterhin kein eigener Tab-Inhalt geprüft – vermutlich spiegelbildlich mit denselben Feldern, aber nicht bestätigt* |
+| *(Positionszeile, per Screenshot 2026-09-09 neu entdeckt)* Snr Alt/Neu, "nicht drucken"/"nicht buchen", FAM-Button, BGS-Button, "K"-Button, DruckID-Nr. | `lot_id` (Serie) deckt Snr; für Druck-/Buchungsflags und FAM/BGS kein Pendant | Snr Alt/Neu bestätigt `BELEGPOS.SNRALT`/`SNRNEU` – Seriennummer des aus-/eingebauten Teils **je Materialzeile**, nicht nur am Gerät. "nicht drucken"/"nicht buchen" bestätigt `BELEGPOS.DRUCKEN`/`BUCHEN` (invertiert dargestellt), belegt durch Live-Query mit `coalesce(Drucken, 'F') = 'F'`-Filter. FAM/BGS bestätigen `BELEG.FAMID`/`BEGLEITSCHEIN` schon auf Positions-, nicht nur Belegebene erreichbar. **Korrigiert 2026-09-09 über echte DFM-Extraktion**: Auf dem Material-Tab (`TFRM8D`, `DataSource=dsBelegPos`) existiert nur ein **"K"-Button** (`pnlKalkulation`, `OnClick=pnlKalkulationClick`). Ein "L"-Button existiert auf diesem Tab **nicht** – das einzige "L" im ganzen Formular sitzt auf dem separaten Kostenvoranschlag-Grid (`Panel1`). **Beide jetzt über den Pascal-Quellcode (`F8D.pas`) zweifelsfrei geklärt**: `pnlKalkulationClick` ruft `TfrmKalkulation.Execute(...)` auf – **"K" = Kalkulation**, öffnet den Preiskalkulationsdialog für diese Position. `Panel1Click` (das "L" auf dem Kostenvoranschlag-Grid) ruft `TfrmLangtext.Execute(...)` auf – **"L" = Langtext**, ein Editor für einen längeren Freitext zur Position. **"DruckID-Nr." korrigiert**: bindet an `BELEGPOS.INDENTNRDRUCK`, Dropdown mit Voll/Halb/Ohne – *nicht* eine MwSt-Übersteuerung wie zunächst vermutet (diese Vermutung ist durch den Quellcode widerlegt: `pnlFamClick` liest `cdsBelegPosIndentNrDruck.AsString` direkt als `AFam.IDENTNR` – ein Mehrwertsteuer-Kürzel würde dort keinen Sinn ergeben). Plausibler: steuert, in welchem Umfang die Ident-/Teilenummer der Position **auf dem Druck erscheint** (vollständig/gekürzt/gar nicht) – z. B. aus Wettbewerbsschutz-Gründen gegenüber Kunden. Nebenfund: ein weiterer Button `pnlArtersetz` ("<-", Artikel ersetzen) |
+| Versand Eingang / Versand Ausgang | kein Feld | Wareneingang/-ausgang des Reparaturgeräts explizit als eigener Vorgang – in Odoo nur implizit über Lagerbewegungen, nicht als Belegfeld. *Vollständig validiert 2026-09-09 (eigener Tab, nicht nur ein Datumsfeld): `REPKOPF.KDLSNR` (Kundenlieferschein-Nr.), `SPEDITION`/`SPEDNR` (Spediteur/Frachtbrief-Nr.), `VEDATUM` (Datum), `TRANSPORT` (Transportkosten), `SENDNUMMER`/`SENDORT` (Sendungsnr./Ort) – alle über DFM-Steuerelementbindung bestätigt. Die Checkboxen "frei"/"unfrei" binden beide auf dasselbe Feld `FREI` (Frei-Haus vs. Empfänger zahlt), keine zwei getrennten Felder. **"Versand Ausgang" korrigiert 2026-09-09**: **kein Spiegel-Tab**, sondern eigenständig mit deutlich reicherem Feldsatz – eigener Lieferadress-Block (`Name1`/`Name2`/`NAME3`/`Strasse`/`Plz`/`Ort`/`KUNDENUMMER`, alle auf `dsRepKopf`), sieben freie Verwendungsfelder `VFELD1`–`VFELD7`, zwei Preisfelder `BETRAG1`/`BETRAG2`, ein `ABWICKLUNG`-Feld, sowie zwei komplette Kosten-Rechenblöcke fürs Ausgangsversand: **`RKM`/`RKMFAKTOR`/`RKMWERT`** (kilometerbasiert: km × Faktor = Wert) und **`RSTD`/`RSTDFAKTOR`/`RSTDWERT`** (stundenbasiert) – strukturell dasselbe Std./Faktor/Wert-Muster wie die Kostenvoranschlag-Kalkulationszeilen, hier für die Versandkostenberechnung* |
 | Reparatur-Beschr. | Beschreibungs-/Diagnosefeld | größtenteils nativ abbildbar. *Vollständig validiert 2026-09-09 (eigener Tab mit drei Textfeldern für drei Erzählperspektiven, nicht nur ein Feld): `REPKOPF.AUSFALL` (Kundenmeldung, Box "Fehlerbeschreibung aus Meldung"), `REPKOPF.FEHLER` (eigene technische Fehleranalyse, zweite Box), `REPKOPF.REPBESCHREIB` (eigentliche Reparaturbeschreibung) – alle über DFM-`TDBMemo`-Bindung bestätigt. Dazu Meldungskontext-Felder: `TECHNIKER` (wiederverwendet als "Meldungs-Nr./Ausfall-Nr."), `FAMNR`, `AUSBAUDATM`/`EINSATZZEIT`, `SCHLAGWORT`, `ANREDE` (wiederverwendet als "Herkunft-Ort"), `RARTIKELNR` (wiederverwendet als "Herkunft-Einheit"), `USTIDENT` (wiederverwendet als "Bezugsnummer"), `KNAME` – siehe eigener Unterabschnitt unten* |
 | Anlagen | `ir.attachment` | nativ |
 | Bemerkungen | interne Notizen | nativ |
@@ -956,8 +1066,10 @@ Das Positionsgrid darunter ist strukturell identisch zum Material-Tab
 
 | Feld | DB-Bezug | Anmerkung |
 |---|---|---|
-| "Rep. Lager" | `BELEGPOS.REPLAGER` | bestätigt (Feldname `replager`, mehrfach in DFM-Bindungen); im 2011-Schema noch nicht vorhanden – spätere Ergänzung |
-| "Übern." | vermutlich `REPAUFTRAG.UEBERNOMMEN` | kein direktes `BELEGPOS`-Feld gefunden; `REPAUFTRAG.UEBERNOMMEN` existiert und wird aktiv abgefragt. Plausibelste Deutung: ob diese Kostenvoranschlag-Position in den tatsächlichen Auftrag übernommen wurde – aber nur auf Ebene des Reparaturauftrags nachgewiesen, nicht zweifelsfrei auf Positionsebene |
+| "Rep. Lager" | `REPKPOS.REPLAGER` | **korrigiert 2026-09-09** über echte DFM-Extraktion: `DBCheckBox2`, `DataField = replager`, `DataSource = dsrepkpos` – auf **diesem** (Kostenvoranschlag-)Grid ist die Quelle `REPKPOS`, nicht `BELEGPOS` (das Material-Tab hat sein eigenes, separates `BELEGPOS.REPLAGER`) |
+| "Übern." | **`REPKPOS.UEBERNAHME`** | **korrigiert 2026-09-09**: `DBCheckBox6`, `DataField = uebernahme`, `DataSource = dsrepkpos`. Die frühere Vermutung (`REPAUFTRAG.UEBERNOMMEN`) war falsch – reales Feld ist `UEBERNAHME` auf `REPKPOS`, derselben Positionstabelle wie "Rep. Lager" |
+| "nicht drucken"/"nicht buchen" (auf diesem Grid) | `REPKPOS.DRUCKEN`/`BUCHEN` | ebenfalls `DataSource = dsrepkpos` – eigene Instanz dieser Flags, getrennt von `BELEGPOS.DRUCKEN`/`BUCHEN` im Material-Tab |
+| "L"-Button neben dem Positionsgrid | bestätigt als echter Action-Button | `TPanel` mit `Caption = 'L'`, `OnClick = Panel1Click` – Komponentenname generisch/nie umbenannt (Panel1), passt zum bereits mehrfach beobachteten Muster nachträglich hinzugefügter Funktionen. Was der Klick genau auslöst, bleibt ohne Pascal-Quellcode zu diesem Formular offen |
 
 Odoo hat für dieses phasenweise Stunden×Faktor-Kalkulationsmodell kein
 natives Äquivalent – `repair.order.line` kennt Menge×Einzelpreis, aber keine
@@ -1009,7 +1121,7 @@ sind drei an inhaltlich fachfremde `REPKOPF`-Spalten gebunden.
 | K-Name (Einzeilenfeld) | `REPKOPF.KNAME` | `DBEdit19` → `DataField KName` | direkt |
 | Fehlerbeschreibung aus Meldung (Memo, befüllt) | `REPKOPF.AUSFALL` | `dbmAUSFALL` → `DataField AUSFALL` | Kundenmeldungstext |
 | zweite Memo-Box (leer im Beispiel) | `REPKOPF.FEHLER` | `dbmFEHLER` → `DataField FEHLER` | eigene technische Fehleranalyse |
-| *(im Screenshot nicht sicher zuordenbar, vermutlich die große Fläche rechts)* | `REPKOPF.REPBESCHREIB` | `dbmREPBESCHREIB` → `DataField REPBESCHREIB` | eigentliche Reparaturbeschreibung, namensgebend für den Tab |
+| große Fläche rechts – **bestätigt 2026-09-09 über DFM-Größenangabe** (343×197px, `Align=alClient`, füllt seinen Container vollständig aus) | `REPKOPF.REPBESCHREIB` | `dbmREPBESCHREIB` → `DataField REPBESCHREIB` | eigentliche Reparaturbeschreibung, namensgebend für den Tab |
 
 Funktional trennt der Tab drei Erzählperspektiven auf denselben Vorgang:
 was der Kunde gemeldet hat (`AUSFALL`), was die eigene Diagnose ergibt
@@ -1055,6 +1167,71 @@ Fälle in diesem gesamten Vergleich, wo das Altsystem bereits **näher an
 Odoos Architektur liegt als umgekehrt** – vergleichbar mit `ir.attachment`
 (`res_model`+`res_id`), nicht mit einer Odoo-Lücke.
 
+### Pascal-Quellcode (F8D.pas): Geschäftslogik hinter der Reparaturmaske
+
+Validiert 2026-09-10 durch Lesen des tatsächlichen Formular-Quellcodes
+(`HMS/Module/Belege/8D/F8D.pas`, 1880 Zeilen, Delphi-Klasse `Tfrm8D` –
+identisch mit dem über DFM bereits gefundenen `TFRM8D`). Klärt mehrere
+zuvor nur aus Feldnamen erschlossene Mechanismen mit echtem Code:
+
+- **FAM- und BGS-Button sind dieselbe Objektklasse, nur unterschiedlich "getypt".** `pnlFamClick` und `pnlBGSClick` sind fast identischer Code: beide legen ein `TFAMObject` an (`AFam.New(famFam)` bzw. `AFam.New(famBGS)`), befüllen es aus denselben Quellfeldern und verknüpfen es über `BELEGPOS.RefOID` (FAM) bzw. `RefOID2` (BGS) mit der Position. `BEGLEITSCHEIN` ist damit vermutlich keine eigenständige fachliche Tabelle, sondern derselbe `TFAMObject`-Mechanismus mit einem anderen Typ-Flag.
+  - Konkrete Feldherkunft beim Anlegen: `AFam.STANDORT := dbeHerkunft.Text` (bestätigt erneut `ANREDE`-Wiederverwendung als Standort), `AFam.AUSFALLNR := dbeFamnr.Text` (bestätigt `TECHNIKER`-Wiederverwendung), `AFam.ARTIKELNR := AArtObj.HauptLiefer` (Hauptlieferant wird zu einem lesbaren Code aufgelöst), `AFam.IDENTNR := cdsBelegPosIndentNrDruck.AsString` – **das widerlegt die zuvischenzeitliche MwSt-Übersteuerungs-Theorie für "DruckID-Nr."** (siehe Korrektur oben).
+- **"F"/"B"-Mini-Labels sind Statusanzeigen, keine reinen Präfixe:** `dbcgPosPaintPanel` färbt `lblFam`/`lblBgs` grün, wenn `BELEGPOS.RefOID`/`RefOID2` > 0 ist (FAM/BGS bereits angelegt), sonst weiß.
+- **Rahmen-Button 100 % bestätigt:** `btnRahmenClick` setzt `BELEG.ABSCHLAGAUFTRAG := <gewählter Rahmen-Beleg>.Nummer` – exakt wie aus der SQL-Query abgeleitet.
+- **Endprüfung-Button 100 % bestätigt:** öffnet eine Benutzersuche, setzt danach `BELEG.ENDPRUEFUSER`/`ENDPRUEFDATUM` auf den gewählten Namen bzw. heutiges Datum.
+- **Kostenvoranschlag-Kalkulation bestätigt als echte Multiplikation:** `dbeefExit` ruft `TChangeThreeFieldsDB.ExecuteDB(dbees, dbeef, dbeew, ChangeFieldThree, MathMultiplikation, 1)` – Std. × Faktor = Wert wird bei Änderung eines der drei Felder automatisch neu berechnet, nicht nur Anzeige dreier unabhängiger Werte.
+- **Neuer Fund: zwei parallele Kostenvoranschläge (KVA1/KVA2).** `btnAktiv1Click`/`btnAktiv2Click` (Groupboxen `grpkva1`/`grpkva2`) schreiben `BELEG.FROMBELEGART := 2` bzw. `1` und markieren die aktive Gruppe farbig – das System unterstützt also zwei alternative Kostenvoranschlagsversionen pro Reparaturbeleg, von denen eine als Quelle für den Folgebeleg (Lieferschein/Auftrag) markiert wird. Eine Guard-Prüfung (`BELEG.PUFFERLAGER = 'T'`) verhindert die erneute Aktivierung, wenn schon ein Lieferschein erzeugt wurde.
+- **Neuer Fund: `ADRESSEN.ABWUST`.** `btnSearchAdrClick` überschreibt `BELEG.MWSTSATZ` mit `AAdressObject.AbwUst` beim Kundenwechsel – ein kundenspezifischer, abweichender MwSt-Satz auf Adressebene, bisher nicht dokumentiert.
+- **Werkstattstufen-Frage endgültig verneint:** keine einzige Fundstelle für "Werkstatt"/"Reinigung"/"Eingangsprüfung"/"Verpacken" im gesamten Formular-Quellcode – bestätigt zusätzlich zur bereits fehlenden DB-Spalte, dass es dafür im Altsystem keinerlei Persistenz gibt.
+- **UX-Detail:** Das große `REPBESCHREIB`-Textfeld ändert beim Fokussieren dynamisch Position/Breite (`Left`/`Width` wechseln zwischen 415/350 unfokussiert und 19/650 fokussiert) – erklärt, warum die Feldgröße in Screenshots unterschiedlich wirken kann.
+
+## Validierung gegen die aktuelle Live-Datenbank (Option C, Stand 2026-09-08)
+
+Vollständige Belege in
+[`legacy-schema/aktuelle-exe-validierung.md`](legacy-schema/aktuelle-exe-validierung.md#option-c-zugriff-auf-die-aktuelle-live-datenbank-stand-2026-09-08).
+Die tagesaktuelle Produktiv-Datenbank (`MAX(BELEGDATUM) = 8-SEP-2026`, 161.183
+Belege) lag bereits als lokale 2-GB-Kopie vor, kein Netzwerkzugriff auf den im
+Firmennetz gefundenen Firebird-Server (`192.100.0.116`) nötig.
+
+**Schema-Wachstum 2011 → 2026: 194 → 437 Tabellen (+243), 0 entfernt.** Reines
+additives Wachstum – bestätigt Architekturmuster 3 unten (Alt+Neu-Koexistenz)
+nicht mehr nur an Einzelbeispielen, sondern mit vollständigen Zahlen. Die 243
+neuen Tabellen bilden mehrere seit 2011 komplett neu entstandene Subsysteme:
+
+- **Prozess-/Arbeitsplan-Modul** (`PROZESSMAIN` u. a.) – zusätzlicher
+  Workflow-Layer neben der alten `PRODUKTION`/`PRODSCHRITTE`-Kette.
+- **AOI-Testintegration** (`PMESSAOI`, `PFEHLERAOI`, `PRODFEHLERTESTER`,
+  `SNRFEHLER`) – automatische optische Inspektion/Tester an die Fertigung
+  angebunden, kein Odoo-Standardpendant (am ehesten `quality` + Custom).
+- **Aufgaben-/Terminverwaltung** (`TODO`, `CHECKLISTENKOPF`, `TERMINE`) –
+  deckt sich mit Odoos `project`/`calendar`, aktuell ohne Odoo-Anbindung.
+- **Zertifikate/Regulatorik** (`ZERTIFIKATE`, `NORMROHS`) – bestätigt erneut,
+  dass regulatorische Anforderungen (wie schon bei XRechnung/Gelangens­bestätigung
+  festgestellt) erst nach 2011 in die DB kamen.
+- **Historisierung** (`BELEGHISTORY`, `BELEGPOSHISTORY`, `DATUMHISTORY`) –
+  Korrektur einer früheren Annahme: es gibt inzwischen doch einen
+  Änderungs-Audit-Trail, nur eben erst nach 2011 eingeführt.
+- **Multi-Währung/Zahlung** (`WECHSELKURSE`, `BANKEN`, `TEILZAHLUNG`).
+- **Jahres-Schnappschusstabellen** (`INVENTUR02...`, `PROD02...`,
+  `LAGERPAH_.../LAGERPIR_.../LAGERPSZ_...`) statt echter Historisierung –
+  jede Jahresinventur bekommt eine eigene, im Namen datierte Tabelle.
+
+**Zentrale Bestandslogik jetzt vollständig statt fragmentarisch bekannt.**
+Der `isql -a`-Schemaexport lieferte für alle 111 Stored Procedures nur Stubs
+(`BEGIN SUSPEND; END`) – über direkten Zugriff auf
+`rdb$procedures.rdb$procedure_source` liegen jetzt alle echten Quelltexte vor
+([`all_procedure_sources.sql`](legacy-schema/all_procedure_sources.sql)).
+Damit bestätigt: **Bestand ist rein buchungsbasiert** (`P_BESTANDV` summiert
+`LAGERBUCHUNG.MENGE`, Schrott-/Sperrlager ausgenommen – kein direkt
+editierbares Bestandsfeld, passt strukturell zu Odoos Stock-Move-Ledger-Prinzip
+statt zu einem simplen Mengenfeld), und **"Bedarf" ist eigentlich eine
+Nettoverfügbarkeit** (`P_BEDARF` = offene Bestellmenge + Bestand − offener
+Produktionsbedarf, kann negativ werden = echter Fehlbedarf). Die Views
+`V_ProdMaterial`/`V_BereitMaterial` bestätigen 1:1 die aus `strings` bereits
+vermuteten Join-Ketten `Produktion→Beleg→Stücklisten→Prodartikel`; zusätzlich
+neu: "bereite Menge" rechnet sich als `Menge − Uebernommen`, nicht als reine
+Planmenge.
+
 ## Kernbeobachtung
 
 Stand 2026-09-08: Der komplette ursprüngliche Menübaum (System, Firmendaten,
@@ -1086,24 +1263,37 @@ Mehrfach bestätigt: `BESTELLKOPF`/`BESTELLPOS` (2011, kaum noch genutzt) neben
 dem eigentlich aktiven `BELEG`/`BELEGPOS`; die breiten Berechtigungs-Flags auf
 `BENUTZER` neben der jüngeren, tatsächlich abgefragten `BERECHTIGUNG`-Tabelle;
 vermutlich auch `PERSONAL`/`PERSALLG` neben den `MA*`-Feldern direkt auf
-`BENUTZER`. Das System ist über Jahrzehnte gewachsen, ohne aufzuräumen – eine
-Migration wäre hier eher eine Chance zur Vereinfachung als ein Verlust.
+`BENUTZER`. **Mit dem Live-DB-Zugriff 2026-09-08 jetzt auch quantitativ
+belegt:** 194 → 437 Tabellen zwischen 2011 und 2026, keine einzige entfernt
+(siehe Abschnitt "Validierung gegen die aktuelle Live-Datenbank" oben). Das
+System ist über Jahrzehnte gewachsen, ohne aufzuräumen – eine Migration wäre
+hier eher eine Chance zur Vereinfachung als ein Verlust.
 
 **4. Die Datenlage ist newer als angenommen, wo es auf Regulatorik ankommt.**
 Sowohl die 2011-DB als auch der 2018er-Quellcode fehlen bei XRechnung/Peppol
 und Gelangensbestätigung komplett – beides nur über die aktuelle EXE (Stand
-06.09.2026) nachweisbar. Wer künftig mit diesen Quellen arbeitet, muss diesen
-Altersunterschied im Kopf behalten, statt Abwesenheit in der DB als
-Abwesenheit im Live-System misszuverstehen (wie es mir bei der
-Adressen-Prüfung anfangs selbst passiert ist).
+06.09.2026) nachweisbar, inzwischen auch direkt in der Live-DB bestätigt
+(u. a. eigene `NORMROHS`-Tabelle für RoHS-Konformität). Wer künftig mit den
+älteren Quellen arbeitet, muss diesen Altersunterschied im Kopf behalten,
+statt Abwesenheit in der DB als Abwesenheit im Live-System misszuverstehen
+(wie es mir bei der Adressen-Prüfung anfangs selbst passiert ist) – und auch
+umgekehrt: die frühere Annahme "kein Audit-Trail vorhanden" war ebenfalls nur
+ein Artefakt der veralteten Quelle, `BELEGHISTORY`/`BELEGPOSHISTORY` existieren
+in der aktuellen DB.
 
 **Bestätigte Lücken ohne Odoo-Standardentsprechung** (mit konkretem Feldbezug
 statt Vermutung): Geräte-Stammdaten (GID/Gruppe/IdentNr, durchgängig über
 Reparatur *und* Produktion), das Abruf-gegen-Rahmen-Modell der
 Rahmenbestellung (Belegart 74), die Vertreterabrechnung/Provisionsberechnung
-(`V_Vertreter`-View), Mehrfach-Zweck-E-Mail-Felder mit CC/BCC, und die
-täglich unterschiedliche Zuschlags-/Pausenregelung der Mitarbeiterzeit
-(`ZEITGRUND`).
+(`V_Vertreter`-View), Mehrfach-Zweck-E-Mail-Felder mit CC/BCC, die täglich
+unterschiedliche Arbeitszeit-/Pausenregelung der Mitarbeiterzeit (`ZEITGRUND`,
+je Wochentag eigene Soll-Arbeitszeit-/Pausenfelder – die dort ebenfalls
+vorgesehenen `*ZUSCHLAG`-Spalten sind dagegen in der Live-DB durchgängig leer,
+siehe Zeiterfassungs-Abschnitt oben), sowie zwei erst über die Live-DB
+gefundene Bereiche: die **AOI-Testintegration**
+(automatische optische Inspektion in der Fertigung, `PMESSAOI`/`PFEHLERAOI`/
+`SNRFEHLER`) und das separate **Prozess-/Arbeitsplan-Modul** (`PROZESSMAIN`
+u. a.) neben der klassischen `PRODUKTION`/`PRODSCHRITTE`-Kette.
 
 **Bessere Passung als ursprünglich angenommen:** "Abschlussrechnung" stellte
 sich als Fehllesung heraus – real ist es "Abschlagrechnung" (Anzahlung), wofür

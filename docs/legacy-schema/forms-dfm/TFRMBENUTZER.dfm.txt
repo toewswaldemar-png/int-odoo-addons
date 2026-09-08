@@ -1,0 +1,244 @@
+object frmBenutzer: TfrmBenutzer
+  Left = 522
+  Top = 194
+  Width = 1017
+  Height = 802
+  Caption = 'Benutzerverwaltung'
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  FormStyle = 'fsMDIChild'
+  OldCreateOrder = False
+  Position = 'poScreenCenter'
+  Visible = True
+  WindowState = 'wsMaximized'
+  OnActivate = 'FormActivate'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  OnDestroy = 'FormDestroy'
+  OnShow = 'FormShow'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object splTree: TAdvSplitter
+    Left = 753
+    Top = 34
+    Height = 730
+    Align = 'alRight'
+    OnMoved = 'splTreeMoved'
+    Appearance.BorderColor = 'clNone'
+    Appearance.BorderColorHot = 'clNone'
+    Appearance.Color = 'clWhite'
+    Appearance.ColorTo = 'clSilver'
+    Appearance.ColorHot = 'clWhite'
+    Appearance.ColorHotTo = 'clGray'
+    GripStyle = 'sgDots'
+  end
+  object pgcBenutzer: TPageControl
+    Left = 0
+    Top = 34
+    Width = 753
+    Height = 730
+    ActivePage = 'tshBenutzer'
+    Align = 'alClient'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    Style = 'tsFlatButtons'
+    TabOrder = 0
+    TabWidth = 200
+    object tshBenutzer: TTabSheet
+      Caption = 'allgemeine Personaldaten'
+      object pnlBenutzer: TPanel
+        Left = 0
+        Top = 0
+        Width = 745
+        Height = 699
+        Align = 'alClient'
+        TabOrder = 0
+        object gbxBenutzer: TGroupBox
+          Left = 32
+          Top = 32
+          Width = 529
+          Height = 177
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 0
+          object lblLogin: TLabel
+            Left = 31
+            Top = 109
+            Width = 80
+            Height = 13
+            Caption = 'Login / Passwort'
+          end
+          object lblNummer: TLabel
+            Left = 31
+            Top = 47
+            Width = 99
+            Height = 13
+            Caption = 'Personal-Nr. / Status'
+          end
+          object lblName: TLabel
+            Left = 31
+            Top = 79
+            Width = 81
+            Height = 13
+            Caption = 'Vorname / Name'
+          end
+          object dbeLogin: TDBEdit
+            Left = 167
+            Top = 108
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'LOGIN'
+            DataSource = 'dsBenutzer'
+            TabOrder = 3
+          end
+          object dbePasswort: TDBEdit
+            Left = 314
+            Top = 108
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'PW'
+            DataSource = 'dsBenutzer'
+            MaxLength = 20
+            PasswordChar = '*'
+            TabOrder = 4
+          end
+          object dbeName: TDBEdit
+            Left = 314
+            Top = 76
+            Width = 146
+            Height = 21
+            Color = 'clBtnFace'
+            DataField = 'Name'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            ReadOnly = True
+            TabOrder = 2
+          end
+          object dbeVorname: TDBEdit
+            Left = 167
+            Top = 76
+            Width = 146
+            Height = 21
+            Color = 'clBtnFace'
+            DataField = 'Vorname'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            ReadOnly = True
+            TabOrder = 1
+          end
+          object dbeNummer: TDBEdit
+            Left = 167
+            Top = 44
+            Width = 146
+            Height = 21
+            Color = 'clBtnFace'
+            DataField = 'NUMMER'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            ReadOnly = True
+            TabOrder = 0
+          end
+        end
+      end
+    end
+    object tshBerechtigung: TTabSheet
+      Caption = 'Berechtigung'
+      ImageIndex = 1
+      object pnlBerechtigung: TPanel
+        Left = 0
+        Top = 0
+        Width = 745
+        Height = 699
+        Align = 'alClient'
+        TabOrder = 0
+      end
+    end
+  end
+  object fraBtn: TfraBtn
+    Left = 0
+    Top = 0
+    Width = 1001
+    Height = 34
+    Align = 'alTop'
+    AutoScroll = False
+    TabOrder = 1
+    object tlbFunktionen: TAdvToolBar
+      object btnInsert: TAdvGlowButton
+        OnClick = 'btnInsertClick'
+        Enabled = False
+      end
+      object btnEdit: TAdvGlowButton
+        OnClick = 'btnEditClick'
+      end
+      object btnSave: TAdvGlowButton
+        OnClick = 'btnSaveClick'
+      end
+      object btnCancel: TAdvGlowButton
+        OnClick = 'btnCancelClick'
+      end
+      object btnDelete: TAdvGlowButton
+        OnClick = 'btnDeleteClick'
+        Enabled = False
+      end
+      object btnSearch: TAdvGlowButton
+        Enabled = False
+      end
+      object btnFkt: TAdvGlowMenuButton
+        Enabled = False
+      end
+    end
+    object pmFunktionen: TPopupMenu
+      object pmiNummernkreis: TMenuItem
+        Visible = False
+      end
+    end
+  end
+  object fraTree1: TfraTreeList
+    Left = 756
+    Top = 34
+    Width = 245
+    Height = 730
+    Align = 'alRight'
+    AutoScroll = False
+    Color = 15329769
+    ParentColor = False
+    TabOrder = 2
+    object trlNav: TTreeList
+      Width = 245
+      Height = 714
+      OnClick = 'fraTree1tvwNavClick'
+      OnKeyDown = 'fraTree1tvwNavKeyDown'
+    end
+  end
+  object dsBenutzer: TDataSource
+    DataSet = 'dmBenutzer.cdsBenutzer'
+    Left = 524
+    Top = 112
+  end
+  object dsAbteilungen: TDataSource
+    Left = 524
+    Top = 152
+  end
+  object dsBenutzerstatus: TDataSource
+    Left = 524
+    Top = 192
+  end
+  object dsAnrede: TDataSource
+    Left = 524
+    Top = 229
+  end
+end

@@ -1,0 +1,251 @@
+object frmVorlaufDlg: TfrmVorlaufDlg
+  Left = 468
+  Top = 229
+  Width = 799
+  Height = 519
+  Caption = 'Fertigung'
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = True
+  DesignSize = (783 481)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object lblNutzen: TLabel
+    Left = 128
+    Top = 168
+    Width = 34
+    Height = 13
+    Caption = 'Nutzen'
+  end
+  object Label1: TLabel
+    Left = 24
+    Top = 264
+    Width = 32
+    Height = 13
+    Caption = 'Anzahl'
+  end
+  object lblBez1: TLabel
+    Left = 128
+    Top = 312
+    Width = 34
+    Height = 13
+    Caption = 'lblBez1'
+  end
+  object lblBez2: TLabel
+    Left = 128
+    Top = 328
+    Width = 34
+    Height = 13
+    Caption = 'lblBez2'
+  end
+  object OKBtn: TButton
+    Left = 654
+    Top = 440
+    Width = 99
+    Height = 25
+    Hint = 'gesamte Baugruppen auflösen'
+    Caption = 'Auflösen'
+    ModalResult = 6
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 0
+    Visible = False
+  end
+  object CancelBtn: TButton
+    Left = 190
+    Top = 432
+    Width = 99
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object HelpBtn: TButton
+    Left = 25
+    Top = 432
+    Width = 136
+    Height = 25
+    Hint = 'Unterbaugruppen nicht auflösen'
+    Anchors = [akRight, akBottom]
+    Caption = 'in Fertigung setzen'
+    ModalResult = 6
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 2
+  end
+  object rbgVorlauf: TRadioGroup
+    Left = 24
+    Top = 16
+    Width = 89
+    Height = 201
+    Caption = 'Tage vorlauf'
+    ItemIndex = 3
+    Items.Strings = ('2' '5' '7' '10' '12' '15' '20' '30')
+    TabOrder = 3
+    OnClick = 'rbgVorlaufClick'
+  end
+  object edtMenge: TEdit
+    Left = 24
+    Top = 282
+    Width = 81
+    Height = 21
+    TabOrder = 4
+    OnExit = 'edtMengeExit'
+  end
+  object AdvGlowButton1: TAdvGlowButton
+    Left = 26
+    Top = 310
+    Width = 73
+    Height = 25
+    Caption = 'Berechnen'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 5
+    OnClick = 'AdvGlowButton1Click'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object dbgBaugruppen: TCheckDBGrid
+    Left = 128
+    Top = 16
+    Width = 633
+    Height = 289
+    DataSource = 'dsBaugruppen'
+    PopupMenu = 'popSplitt'
+    TabOrder = 6
+    TitleFont.Charset = 'DEFAULT_CHARSET'
+    TitleFont.Color = 'clWindowText'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = []
+    Visible = False
+    AllowAppend = False
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'Bemerkung'
+        Title.Caption = 'Nummer'
+        Width = 65
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'Menge'
+        Title.Caption = 'Menge '
+        Width = 55
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'kw'
+        Title.Caption = 'KW '
+        Width = 40
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item3 = {
+        Expanded = False
+        FieldName = 'jahr'
+        Title.Caption = 'Jahr '
+        Width = 40
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item4 = {
+        Expanded = False
+        FieldName = 'Beginndatum'
+        Title.Caption = 'Beginndatum '
+        Width = 65
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item5 = {
+        Expanded = False
+        FieldName = 'EndeDatum'
+        Title.Caption = 'Auftragdatum'
+        Width = 65
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item6 = {
+        Expanded = False
+        FieldName = 'Bezeichnung1'
+        Title.Caption = 'Bezeichnung1 '
+        Width = 150
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item7 = {
+        Expanded = False
+        FieldName = 'noSplit'
+        Title.Caption = 'in PPS'
+        Width = 55
+        Visible = True
+        Check = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item8 = {
+        Expanded = False
+        FieldName = 'noMat'
+        Title.Caption = 'Mat. anm.'
+        Width = 65
+        Visible = True
+        Check = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item9 = {
+        Expanded = False
+        FieldName = 'ArtOID'
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+    >
+  end
+  object dsBaugruppen: TDataSource
+    OnDataChange = 'dsBaugruppenDataChange'
+    Left = 24
+    Top = 224
+  end
+  object popSplitt: TPopupMenu
+    Left = 96
+    Top = 368
+    object Splittungbearbeiten1: TMenuItem
+      Caption = 'Splittung bearbeiten'
+      OnClick = 'Splittungbearbeiten1Click'
+    end
+  end
+end

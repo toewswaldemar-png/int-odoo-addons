@@ -1,0 +1,592 @@
+object frmWartung: TfrmWartung
+  Left = 201
+  Top = 331
+  Width = 1461
+  Height = 788
+  Caption = 'Wartung'
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  FormStyle = 'fsMDIChild'
+  OldCreateOrder = True
+  Position = 'poDefault'
+  Visible = True
+  WindowState = 'wsMaximized'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object fraBtn1: TfraBtn
+    Left = 0
+    Top = 0
+    Width = 1453
+    Height = 26
+    Align = 'alTop'
+    AutoScroll = False
+    TabOrder = 0
+    object tlbFunktionen: TAdvToolBar
+      object btnInsert: TAdvGlowButton
+        OnClick = 'fraBtn1btnInsertClick'
+      end
+      object btnEdit: TAdvGlowButton
+        OnClick = 'fraBtn1btnEditClick'
+      end
+      object btnSave: TAdvGlowButton
+        OnClick = 'fraBtn1btnSaveClick'
+      end
+      object btnCancel: TAdvGlowButton
+        OnClick = 'fraBtn1btnCancelClick'
+      end
+      object btnPrint: TAdvGlowMenuButton
+        OnClick = 'fraBtn1btnPrintClick'
+      end
+    end
+  end
+  object pnlKopf: TAdvPanel
+    Left = 0
+    Top = 26
+    Width = 1453
+    Height = 231
+    Align = 'alTop'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+    UseDockManager = True
+    Version = '2.1.0.4'
+    CanSize = True
+    Caption.Color = 'clHighlight'
+    Caption.ColorTo = 'clNone'
+    Caption.Font.Charset = 'DEFAULT_CHARSET'
+    Caption.Font.Color = 'clWindowText'
+    Caption.Font.Height = -11
+    Caption.Font.Name = 'MS Sans Serif'
+    Caption.Font.Style = []
+    ShowMoveCursor = True
+    StatusBar.Font.Charset = 'DEFAULT_CHARSET'
+    StatusBar.Font.Color = 'clWindowText'
+    StatusBar.Font.Height = -11
+    StatusBar.Font.Name = 'Tahoma'
+    StatusBar.Font.Style = []
+    StatusBar.Visible = True
+    FullHeight = 200
+    object AdvReflectionLabel1: TAdvReflectionLabel
+      Left = 48
+      Top = 24
+      Width = 193
+      Height = 33
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWindowText'
+      Font.Height = -16
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      HTMLText.Strings = ('Wartung / Prüfmittel')
+      ParentFont = False
+      ReflectionSize = 0
+      URLColor = 'clBlue'
+      Version = '1.5.1.0'
+    end
+    object Label1: TLabel
+      Left = 48
+      Top = 56
+      Width = 50
+      Height = 13
+      Caption = 'Legende'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWindowText'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label2: TLabel
+      Left = 48
+      Top = 80
+      Width = 78
+      Height = 13
+      Caption = 'Nächster Termin'
+    end
+    object Label3: TLabel
+      Left = 134
+      Top = 80
+      Width = 36
+      Height = 13
+      Caption = 'größer :'
+    end
+    object Label4: TLabel
+      Left = 230
+      Top = 80
+      Width = 25
+      Height = 13
+      Caption = 'Tage'
+    end
+    object Label5: TLabel
+      Left = 48
+      Top = 104
+      Width = 78
+      Height = 13
+      Caption = 'Nächster Termin'
+    end
+    object Label6: TLabel
+      Left = 134
+      Top = 104
+      Width = 36
+      Height = 13
+      Caption = 'größer :'
+    end
+    object Label7: TLabel
+      Left = 230
+      Top = 104
+      Width = 25
+      Height = 13
+      Caption = 'Tage'
+    end
+    object Label8: TLabel
+      Left = 48
+      Top = 128
+      Width = 78
+      Height = 13
+      Caption = 'Nächster Termin'
+    end
+    object Label9: TLabel
+      Left = 134
+      Top = 128
+      Width = 34
+      Height = 13
+      Caption = 'gleich :'
+    end
+    object Label10: TLabel
+      Left = 230
+      Top = 128
+      Width = 31
+      Height = 13
+      Caption = 'Tag(e)'
+    end
+    object Label11: TLabel
+      Left = 288
+      Top = 80
+      Width = 32
+      Height = 13
+      Caption = 'Anzahl'
+    end
+    object Label12: TLabel
+      Left = 288
+      Top = 104
+      Width = 32
+      Height = 13
+      Caption = 'Anzahl'
+    end
+    object Label13: TLabel
+      Left = 288
+      Top = 128
+      Width = 32
+      Height = 13
+      Caption = 'Anzahl'
+    end
+    object Label14: TLabel
+      Left = 232
+      Top = 32
+      Width = 92
+      Height = 13
+      Caption = 'aktuelles Datum'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWindowText'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object shSummio: TShader
+      Left = 328
+      Top = 79
+      Width = 49
+      Height = 17
+      Caption = '0'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWhite'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 0
+      FromColor = 'clLime'
+      Direction = False
+      Version = '1.4.0.0'
+    end
+    object shSummFaellig: TShader
+      Left = 328
+      Top = 103
+      Width = 49
+      Height = 17
+      Caption = '0'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 1
+      FromColor = 8511998
+      ToColor = 8511998
+      FromColorMirror = 10866170
+      ToColorMirror = 10866170
+      Direction = False
+      Version = '1.4.0.0'
+    end
+    object shSummUeberf: TShader
+      Left = 328
+      Top = 127
+      Width = 49
+      Height = 17
+      Caption = '0'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWhite'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 2
+      FromColor = 9402104
+      ToColor = 'clRed'
+      FromColorMirror = 'clRed'
+      Direction = False
+      Version = '1.4.0.0'
+    end
+    object edtTageIO: TAdvEdit
+      Left = 176
+      Top = 78
+      Width = 43
+      Height = 21
+      EmptyTextStyle = []
+      LabelFont.Charset = 'DEFAULT_CHARSET'
+      LabelFont.Color = 'clWindowText'
+      LabelFont.Height = -11
+      LabelFont.Name = 'MS Sans Serif'
+      LabelFont.Style = []
+      Lookup.Separator = ';'
+      Color = 'clWindow'
+      ReadOnly = True
+      TabOrder = 3
+      Text = '0'
+      Visible = True
+      Version = '2.9.4.0'
+    end
+    object edtTageFaellig: TAdvEdit
+      Left = 176
+      Top = 102
+      Width = 43
+      Height = 21
+      EmptyTextStyle = []
+      LabelFont.Charset = 'DEFAULT_CHARSET'
+      LabelFont.Color = 'clWindowText'
+      LabelFont.Height = -11
+      LabelFont.Name = 'MS Sans Serif'
+      LabelFont.Style = []
+      Lookup.Separator = ';'
+      Color = 'clWindow'
+      ReadOnly = True
+      TabOrder = 4
+      Text = '0'
+      Visible = True
+      Version = '2.9.4.0'
+    end
+    object edtTageUeberf: TAdvEdit
+      Left = 176
+      Top = 126
+      Width = 43
+      Height = 21
+      EmptyTextStyle = []
+      LabelFont.Charset = 'DEFAULT_CHARSET'
+      LabelFont.Color = 'clWindowText'
+      LabelFont.Height = -11
+      LabelFont.Name = 'MS Sans Serif'
+      LabelFont.Style = []
+      Lookup.Separator = ';'
+      Color = 'clWindow'
+      ReadOnly = True
+      TabOrder = 5
+      Text = '0'
+      Visible = True
+      Version = '2.9.4.0'
+    end
+    object edtAtkWartung: TEdit
+      Left = 48
+      Top = 152
+      Width = 25
+      Height = 21
+      TabOrder = 6
+      Visible = False
+      OnChange = 'edtAtkWartungChange'
+    end
+    object fraTodo1: TfraTodo
+      Left = 512
+      Top = 18
+      Width = 911
+      Height = 205
+      TabOrder = 7
+      object btnNewTodo: TAdvGlowButton
+        OnClick = 'fraTodo1btnNewTodoClick'
+      end
+      object btnSaveToDo: TAdvGlowButton
+        OnClick = 'fraTodo1btnSaveToDoClick'
+      end
+      object grdInfo: TAdvStringGrid
+        OnDblClick = 'fraTodo1grdInfoDblClick'
+        OnSelectCell = 'fraTodo1grdInfoSelectCell'
+      end
+      object btnInfoNew: TAdvGlowButton
+        OnClick = 'fraTodo1btnInfoNewClick'
+      end
+      object btnInfoChange: TAdvGlowButton
+        OnClick = 'fraTodo1btnInfoChangeClick'
+      end
+      object btnInfoSave: TAdvGlowButton
+        OnClick = 'fraTodo1btnInfoSaveClick'
+      end
+      object btnInfoDelete: TAdvGlowButton
+        OnClick = 'fraTodo1btnInfoDeleteClick'
+      end
+      object dsToDo: TDataSource
+        Top = 0
+      end
+    end
+    object dbetdodoid: TDBEdit
+      Left = 80
+      Top = 152
+      Width = 25
+      Height = 21
+      DataField = 'OID'
+      DataSource = 'fraTodo1.dsToDo'
+      TabOrder = 8
+      Visible = False
+      OnChange = 'dbetdodoidChange'
+    end
+  end
+  object pnlMain: TAdvPanel
+    Left = 0
+    Top = 257
+    Width = 1453
+    Height = 500
+    Align = 'alClient'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 2
+    UseDockManager = True
+    Version = '2.1.0.4'
+    CanSize = True
+    Caption.Color = 'clHighlight'
+    Caption.ColorTo = 'clNone'
+    Caption.Font.Charset = 'DEFAULT_CHARSET'
+    Caption.Font.Color = 'clWindowText'
+    Caption.Font.Height = -11
+    Caption.Font.Name = 'MS Sans Serif'
+    Caption.Font.Style = []
+    ShowMoveCursor = True
+    StatusBar.Font.Charset = 'DEFAULT_CHARSET'
+    StatusBar.Font.Color = 'clWindowText'
+    StatusBar.Font.Height = -11
+    StatusBar.Font.Name = 'Tahoma'
+    StatusBar.Font.Style = []
+    StatusBar.Visible = True
+    FullHeight = 200
+    object AdvSplitter1: TAdvSplitter
+      Left = 1
+      Top = 1
+      Width = 1451
+      Height = 3
+      Cursor = 'crVSplit'
+      Align = 'alTop'
+      Appearance.BorderColor = 'clNone'
+      Appearance.BorderColorHot = 'clNone'
+      Appearance.Color = 'clWhite'
+      Appearance.ColorTo = 'clSilver'
+      Appearance.ColorHot = 'clWhite'
+      Appearance.ColorHotTo = 'clGray'
+      GripStyle = 'sgDots'
+    end
+    object glbWartung: TAdvGridLookupBar
+      Left = 1421
+      Top = 4
+      Width = 31
+      Height = 514
+      Version = '1.0.0.0'
+      Numeric = True
+      ActiveFont.Charset = 'DEFAULT_CHARSET'
+      ActiveFont.Color = 'clWindowText'
+      ActiveFont.Height = -11
+      ActiveFont.Name = 'MS Sans Serif'
+      ActiveFont.Style = []
+      InActiveFont.Charset = 'DEFAULT_CHARSET'
+      InActiveFont.Color = 'clSilver'
+      InActiveFont.Height = -11
+      InActiveFont.Name = 'MS Sans Serif'
+      InActiveFont.Style = []
+      SelectedFont.Charset = 'DEFAULT_CHARSET'
+      SelectedFont.Color = 'clHighlight'
+      SelectedFont.Height = -11
+      SelectedFont.Name = 'MS Sans Serif'
+      SelectedFont.Style = [fsBold]
+      ScrollFont.Charset = 'DEFAULT_CHARSET'
+      ScrollFont.Color = 'clWindowText'
+      ScrollFont.Height = -16
+      ScrollFont.Name = 'MS Sans Serif'
+      ScrollFont.Style = [fsBold]
+      Categories = <
+      >
+      Align = 'alRight'
+      TabOrder = 0
+      TabStop = False
+      DoubleBuffered = True
+      Grid = 'grdWartung'
+    end
+    object grdWartung: TAdvStringGrid
+      Left = 1
+      Top = 4
+      Width = 1420
+      Height = 477
+      Cursor = 'crDefault'
+      Align = 'alClient'
+      ColCount = 12
+      FixedCols = 0
+      RowCount = 2
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWindowText'
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing]
+      ParentFont = False
+      ParentShowHint = False
+      ScrollBars = 'ssBoth'
+      ShowHint = True
+      TabOrder = 1
+      ActiveRowShow = True
+      ActiveRowColor = 14024161
+      OnClickCell = 'grdWartungClickCell'
+      OnCanEditCell = 'grdWartungCanEditCell'
+      OnGetEditorType = 'grdWartungGetEditorType'
+      OnEditCellDone = 'grdWartungEditCellDone'
+      ActiveCellShow = True
+      ActiveCellFont.Charset = 'DEFAULT_CHARSET'
+      ActiveCellFont.Color = 'clWindowText'
+      ActiveCellFont.Height = -11
+      ActiveCellFont.Name = 'Tahoma'
+      ActiveCellFont.Style = [fsBold]
+      ActiveCellColor = 15387318
+      Balloon.Enable = True
+      ControlLook.FixedGradientFrom = 'clWhite'
+      ControlLook.FixedGradientTo = 'clSilver'
+      ControlLook.FixedGradientHoverFrom = 13619409
+      ControlLook.FixedGradientHoverTo = 12502728
+      ControlLook.FixedGradientHoverMirrorFrom = 12502728
+      ControlLook.FixedGradientHoverMirrorTo = 11254975
+      ControlLook.FixedGradientDownFrom = 8816520
+      ControlLook.FixedGradientDownTo = 7568510
+      ControlLook.FixedGradientDownMirrorFrom = 7568510
+      ControlLook.FixedGradientDownMirrorTo = 6452086
+      ControlLook.DropDownHeader.Font.Charset = 'DEFAULT_CHARSET'
+      ControlLook.DropDownHeader.Font.Color = 'clWindowText'
+      ControlLook.DropDownHeader.Font.Height = -11
+      ControlLook.DropDownHeader.Font.Name = 'Tahoma'
+      ControlLook.DropDownHeader.Font.Style = []
+      ControlLook.DropDownHeader.Visible = True
+      ControlLook.DropDownHeader.Buttons = <
+      >
+      ControlLook.DropDownFooter.Font.Charset = 'DEFAULT_CHARSET'
+      ControlLook.DropDownFooter.Font.Color = 'clWindowText'
+      ControlLook.DropDownFooter.Font.Height = -11
+      ControlLook.DropDownFooter.Font.Name = 'MS Sans Serif'
+      ControlLook.DropDownFooter.Font.Style = []
+      ControlLook.DropDownFooter.Visible = True
+      ControlLook.DropDownFooter.Buttons = <
+      >
+      Filter = <
+      >
+      FilterActive = True
+      FilterDropDown.AutoSize = True
+      FilterDropDown.Font.Charset = 'DEFAULT_CHARSET'
+      FilterDropDown.Font.Color = 'clWindowText'
+      FilterDropDown.Font.Height = -11
+      FilterDropDown.Font.Name = 'MS Sans Serif'
+      FilterDropDown.Font.Style = []
+      FilterDropDownAuto = True
+      FilterDropDownClear = '(All)'
+      FixedRowHeight = 22
+      FixedFont.Charset = 'DEFAULT_CHARSET'
+      FixedFont.Color = 'clWindowText'
+      FixedFont.Height = -11
+      FixedFont.Name = 'Tahoma'
+      FixedFont.Style = [fsBold]
+      FloatFormat = '%.2f'
+      Look = 'glTMS'
+      Lookup = True
+      Navigation.AlwaysEdit = True
+      PrintSettings.DateFormat = 'dd/mm/yyyy'
+      PrintSettings.Font.Charset = 'DEFAULT_CHARSET'
+      PrintSettings.Font.Color = 'clWindowText'
+      PrintSettings.Font.Height = -11
+      PrintSettings.Font.Name = 'MS Sans Serif'
+      PrintSettings.Font.Style = []
+      PrintSettings.FixedFont.Charset = 'DEFAULT_CHARSET'
+      PrintSettings.FixedFont.Color = 'clWindowText'
+      PrintSettings.FixedFont.Height = -11
+      PrintSettings.FixedFont.Name = 'MS Sans Serif'
+      PrintSettings.FixedFont.Style = []
+      PrintSettings.HeaderFont.Charset = 'DEFAULT_CHARSET'
+      PrintSettings.HeaderFont.Color = 'clWindowText'
+      PrintSettings.HeaderFont.Height = -11
+      PrintSettings.HeaderFont.Name = 'MS Sans Serif'
+      PrintSettings.HeaderFont.Style = []
+      PrintSettings.FooterFont.Charset = 'DEFAULT_CHARSET'
+      PrintSettings.FooterFont.Color = 'clWindowText'
+      PrintSettings.FooterFont.Height = -11
+      PrintSettings.FooterFont.Name = 'MS Sans Serif'
+      PrintSettings.FooterFont.Style = []
+      PrintSettings.PageNumSep = '/'
+      SearchFooter.ColorTo = 15790320
+      SearchFooter.FindNextCaption = 'Find &next'
+      SearchFooter.FindPrevCaption = 'Find &previous'
+      SearchFooter.Font.Charset = 'DEFAULT_CHARSET'
+      SearchFooter.Font.Color = 'clWindowText'
+      SearchFooter.Font.Height = -11
+      SearchFooter.Font.Name = 'MS Sans Serif'
+      SearchFooter.Font.Style = []
+      SearchFooter.HighLightCaption = 'Highlight'
+      SearchFooter.HintClose = 'Close'
+      SearchFooter.HintFindNext = 'Find next occurrence'
+      SearchFooter.HintFindPrev = 'Find previous occurrence'
+      SearchFooter.HintHighlight = 'Highlight occurrences'
+      SearchFooter.MatchCaseCaption = 'Match case'
+      SortSettings.Show = True
+      Version = '6.0.5.0'
+    end
+  end
+  object exlIO: TAdvGridExcelIO
+    AdvStringGrid = 'grdWartung'
+    Options.ExportOverwriteMessage = 'File %s already exists\rOk to overwrite ?'
+    Options.ExportRawRTF = False
+    Options.ExportShowInExcel = True
+    Options.ExportHardBorders = True
+    UseUnicode = False
+    GridStartRow = 0
+    GridStartCol = 0
+    Version = '3.4.1'
+    Left = 8
+    Top = 26
+  end
+  object svdWartung: TSaveDialog
+    DefaultExt = 'xls'
+    Left = 8
+    Top = 58
+  end
+end

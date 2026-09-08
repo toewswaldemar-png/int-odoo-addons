@@ -1,0 +1,113 @@
+object FHerstellerdlg: TFHerstellerdlg
+  Left = 390
+  Top = 72
+  BorderStyle = 'bsDialog'
+  Caption = 'Hersteller'
+  ClientHeight = 369
+  ClientWidth = 441
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (441 369)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object dbtname2: TDBText
+    Left = 30
+    Top = 248
+    Width = 273
+    Height = 17
+    Anchors = [akRight, akBottom]
+    DataField = 'Name2'
+    DataSource = 'dshersteller'
+  end
+  object dbtName3: TDBText
+    Left = 30
+    Top = 274
+    Width = 273
+    Height = 17
+    Anchors = [akRight, akBottom]
+    DataField = 'Name3'
+    DataSource = 'dshersteller'
+  end
+  object Label1: TLabel
+    Left = 32
+    Top = 220
+    Width = 22
+    Height = 13
+    Caption = 'Filter'
+  end
+  object OKBtn: TButton
+    Left = 263
+    Top = 335
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 343
+    Top = 335
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object dbgHersteller: TDBGrid
+    Left = 32
+    Top = 8
+    Width = 377
+    Height = 201
+    DataSource = 'dshersteller'
+    Options = [dgColumnResize, dgColLines, dgRowLines, dgTabs, dgConfirmDelete, dgCancelOnExit]
+    TabOrder = 2
+    TitleFont.Charset = 'DEFAULT_CHARSET'
+    TitleFont.Color = 'clWindowText'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = []
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'Name1'
+        Visible = True
+      }
+    >
+  end
+  object edtFilter: TEdit
+    Left = 64
+    Top = 216
+    Width = 121
+    Height = 21
+    TabOrder = 3
+    OnChange = 'edtFilterChange'
+  end
+  object BitBtn1: TBitBtn
+    Left = 200
+    Top = 216
+    Width = 75
+    Height = 25
+    Caption = 'setzen'
+    TabOrder = 4
+    OnClick = 'BitBtn1Click'
+  end
+  object BitBtn2: TBitBtn
+    Left = 296
+    Top = 216
+    Width = 75
+    Height = 25
+    Caption = 'aufheben'
+    TabOrder = 5
+    OnClick = 'BitBtn2Click'
+  end
+  object dshersteller: TDataSource
+    Left = 320
+    Top = 120
+  end
+end

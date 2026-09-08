@@ -1,0 +1,73 @@
+object frmAbschlag: TfrmAbschlag
+  Left = 489
+  Top = 367
+  Width = 338
+  Height = 192
+  BorderIcons = [biSystemMenu]
+  Caption = 'Abschlag '
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = 'poScreenCenter'
+  OnClose = 'FormClose'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object pnlAbschlag: TPanel
+    Left = 0
+    Top = 0
+    Width = 330
+    Height = 165
+    Align = 'alClient'
+    TabOrder = 0
+    object lblBetrag: TLabel
+      Left = 40
+      Top = 24
+      Width = 103
+      Height = 13
+      Caption = 'Netto Abschlagbetrag'
+    end
+    object lblProzent: TLabel
+      Left = 40
+      Top = 56
+      Width = 124
+      Height = 13
+      Caption = '%-Satz vom Gesamtbetrag'
+    end
+    object edtBetrag: TEdit
+      Left = 184
+      Top = 20
+      Width = 105
+      Height = 21
+      TabOrder = 0
+    end
+    object btnOk: TButton
+      Left = 80
+      Top = 120
+      Width = 75
+      Height = 25
+      Caption = 'Ok'
+      ModalResult = 1
+      TabOrder = 1
+    end
+    object btnCancel: TButton
+      Left = 168
+      Top = 120
+      Width = 75
+      Height = 25
+      Caption = 'Abbrechen'
+      ModalResult = 2
+      TabOrder = 2
+    end
+    object edtProzent: TEdit
+      Left = 184
+      Top = 52
+      Width = 105
+      Height = 21
+      TabOrder = 3
+    end
+  end
+end

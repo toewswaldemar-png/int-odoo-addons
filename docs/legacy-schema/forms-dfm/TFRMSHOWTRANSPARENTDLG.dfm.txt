@@ -1,0 +1,40 @@
+object frmShowTransparentDlg: TfrmShowTransparentDlg
+  Left = 983
+  Top = 79
+  BorderStyle = 'bsNone'
+  Caption = 'Dialog'
+  ClientHeight = 108
+  ClientWidth = 251
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clBlack'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = [fsBold]
+  OldCreateOrder = True
+  OnCreate = 'FormCreate'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object btn1: TPanel
+    Left = 0
+    Top = 0
+    Width = 251
+    Height = 108
+    Align = 'alClient'
+    BevelOuter = 'bvNone'
+    Caption = 'btn1'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clNavy'
+    Font.Height = -16
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 0
+  end
+  object tim1: TTimer
+    Interval = 2000
+    OnTimer = 'tim1Timer'
+    Left = 256
+    Top = 8
+  end
+end

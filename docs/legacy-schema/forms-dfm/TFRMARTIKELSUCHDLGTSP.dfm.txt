@@ -1,0 +1,1284 @@
+object frmArtikelSuchDlgTSP: TfrmArtikelSuchDlgTSP
+  Left = 421
+  Top = 278
+  Width = 1193
+  Height = 658
+  ActiveControl = 'edtBezeichnung1'
+  Caption = 'ArtikelSuche'
+  ScreenSnap = True
+  ShowHint = True
+  PixelsPerInch = 96
+  TextHeight = 13
+  object btnGruppen_: TSpeedButton
+    OnClick = None
+  end
+  object lblAnschrift: TLabel
+    Top = 57
+    Width = 17
+    Height = 16
+    Hint = 'Bei Semikolonsuche schliesendes ; nötig'
+    AutoSize = False
+    Caption = ''
+    ParentShowHint = False
+    ShowHint = True
+    Visible = False
+    WordWrap = True
+  end
+  object lblGruppe: TLabel
+    Top = 215
+  end
+  object lblArt: TLabel
+    Left = 7
+    Top = 283
+    Width = 73
+    Caption = 'Bestellnr, Zeich'
+  end
+  object lblRefer: TLabel
+    Left = 9
+    Top = 245
+    Width = 43
+    Height = 13
+    Caption = 'Referenz'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Top = 544
+  end
+  object Label3: TLabel
+    Left = 9
+    Top = 321
+    Width = 71
+    Height = 13
+    Caption = 'Stueckl. Artikel'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label4: TLabel
+    Left = 168
+    Top = 402
+    Width = 89
+    Height = 13
+    Caption = 'Bestellgruppe / Nr.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblliefer: TLabel
+    Left = 168
+    Top = 429
+    Width = 53
+    Height = 13
+    Caption = 'Lieferanten'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label5: TLabel
+    Left = 169
+    Top = 456
+    Width = 44
+    Height = 13
+    Caption = 'Hersteller'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object W7ActiveLabel1: TW7ActiveLabel
+    Left = 6
+    Top = 29
+    Width = 81
+    Height = 33
+    Cursor = 'crHandPoint'
+    Hint = 'Bei Semikolonsuche schliesendes ; nötig'
+    MouseInColor = 15026695
+    MouseOutColor = 5577749
+    MouseInCursor = 'crHandPoint'
+    MouseOutCursor = 'crDefault'
+    AutoSize = False
+    Caption = 'Bezeichnung Identnummer'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 15026695
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsUnderline]
+    ParentFont = False
+    WordWrap = True
+  end
+  object Label6: TLabel
+    Left = 384
+    Top = 12
+    Width = 45
+    Height = 13
+    Caption = 'nur Ident.'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label7: TLabel
+    Left = 9
+    Top = 353
+    Width = 49
+    Height = 13
+    Caption = 'Lagerplatz'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+  end
+  object gbxSort_: TGroupBox
+    Width = 25
+    TabOrder = 27
+  end
+  object edtBezeichnung1: TEdit
+    Hint = 'Bei Semikolonsuche schliesendes ; nötig'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 0
+    OnEnter = 'edtBezeichnung1Enter'
+    OnKeyUp = 'FormKeyDown'
+  end
+  object edtKurzbezeichnung: TEdit
+    TabOrder = 1
+    OnEnter = 'edtKurzbezeichnungEnter'
+    OnKeyUp = 'FormKeyDown'
+  end
+  object edtNummer: TEdit
+    CharCase = 'ecLowerCase'
+    TabOrder = 2
+    OnEnter = 'edtNummerEnter'
+    OnKeyUp = 'FormKeyDown'
+  end
+  object edtGruppe: TEdit
+    Top = 211
+    TabOrder = 4
+  end
+  object cbxFilter_: TCheckBox
+    Left = 144
+    Top = 497
+    TabOrder = 11
+  end
+  object edtArttext: TEdit
+    TabOrder = 3
+    OnEnter = 'edtArttextEnter'
+    OnKeyUp = 'FormKeyDown'
+  end
+  object edtGruppeBez: TMaskEdit
+    Top = 211
+    TabOrder = 5
+  end
+  object rgpAppend_: TRadioGroup
+    Top = 489
+    TabOrder = 12
+    TabStop = True
+  end
+  object dbgTreffer: TDBGrid
+    Left = 648
+    Top = 136
+    Width = 845
+    Height = 530
+    Align = 'alNone'
+    PopupMenu = 'popExcel'
+    TabOrder = 18
+    Visible = False
+    OnTitleClick = 'dbgTrefferTitleClick'
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'ARTNR'
+        Title.Caption = 'Nummer »'
+        Width = 100
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'BEZEICHNUNG1'
+        Title.Caption = 'Bezeichnung 1 »'
+        Width = 150
+        Visible = True
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'Bezeichnung2'
+        Title.Caption = 'Bezeichnung 2 »'
+        Width = 150
+        Visible = True
+      }
+      item3 = {
+        Expanded = False
+        FieldName = 'Identnr1'
+        Title.Caption = 'Identnr 1'
+        Width = 150
+        Visible = True
+      }
+      item4 = {
+        Expanded = False
+        FieldName = 'Identnr2'
+        Title.Caption = 'Identnr 2'
+        Width = 120
+        Visible = True
+      }
+      item5 = {
+        Expanded = False
+        FieldName = 'KURZBEZEICHNUNG'
+        Title.Caption = 'Kurzbezeichnung »'
+        Width = 100
+        Visible = True
+      }
+    >
+  end
+  object cbxArt: TComboBox
+    Left = 360
+    Top = 288
+    Width = 25
+    TabOrder = 9
+    Visible = False
+    OnKeyUp = 'FormKeyDown'
+  end
+  object edtMenge: TMaskEdit
+    Top = 540
+    TabOrder = 17
+  end
+  object btnSuche: TAdvGlowButton
+    Top = 540
+    TabOrder = 13
+  end
+  object edSonstige: TEdit
+    Left = 88
+    Top = 278
+    Width = 249
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 7
+    OnEnter = 'edtArttextEnter'
+    OnKeyDown = 'FormKeyDown'
+    OnKeyUp = 'FormKeyDown'
+  end
+  object edReferenz: TEdit
+    Left = 89
+    Top = 241
+    Width = 249
+    Height = 21
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 6
+    OnEnter = 'edtArttextEnter'
+    OnKeyDown = 'FormKeyDown'
+    OnKeyUp = 'FormKeyDown'
+  end
+  object btnOk: TAdvGlowButton
+    Top = 540
+    TabOrder = 14
+    OnClick = 'btnOKClick'
+  end
+  object btnCancel: TAdvGlowButton
+    Top = 540
+    ModalResult = 0
+    TabOrder = 15
+    OnClick = 'btnCancelClick'
+  end
+  object edtBauform: TEdit
+    Left = 89
+    Top = 317
+    Width = 248
+    Height = 21
+    Hint = 'Bezeichnung 1-3'
+    AutoSize = False
+    CharCase = 'ecLowerCase'
+    Color = 16120304
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 8
+    OnEnter = 'edtArttextEnter'
+    OnKeyDown = 'FormKeyDown'
+    OnKeyUp = 'FormKeyDown'
+  end
+  object edtbestgruppe: TEdit
+    Left = 272
+    Top = 397
+    Width = 65
+    Height = 21
+    TabStop = False
+    AutoSize = False
+    Color = 'clSilver'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 20
+  end
+  object cbxGesperrt: TCheckBox
+    Left = 11
+    Top = 401
+    Width = 89
+    Height = 17
+    Caption = 'ohne gesperrte'
+    Checked = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    State = 'cbChecked'
+    TabOrder = 21
+  end
+  object cdxbaugruppen: TCheckBox
+    Left = 11
+    Top = 425
+    Width = 118
+    Height = 17
+    Caption = 'ohne Baugruppen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 22
+  end
+  object edtLiefer: TEdit
+    Left = 272
+    Top = 425
+    Width = 65
+    Height = 21
+    TabStop = False
+    AutoSize = False
+    Color = 'clSilver'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 10
+  end
+  object dbgTrefferneu: TCheckDBGrid
+    Left = 447
+    Top = 0
+    Width = 730
+    Height = 619
+    Align = 'alRight'
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    DataSource = 'dsSuchen'
+    PopupMenu = 'popExcel'
+    TabOrder = 23
+    TitleFont.Charset = 'DEFAULT_CHARSET'
+    TitleFont.Color = 'clWindowText'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = []
+    OnDblClick = 'dbgTrefferDblClick'
+    OnTitleClick = 'dbgTrefferTitleClick'
+    AllowAppend = False
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'Auswahl'
+        Title.Caption = 'ü'
+        Title.Font.Charset = 'SYMBOL_CHARSET'
+        Title.Font.Color = 'clWindowText'
+        Title.Font.Height = -13
+        Title.Font.Name = 'Wingdings'
+        Title.Font.Style = [fsBold]
+        Width = 25
+        Visible = True
+        Check = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item1 = {
+        Color = 15263976
+        Expanded = False
+        FieldName = 'Artnr'
+        ReadOnly = True
+        Title.Caption = 'Artnr '
+        Width = 100
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item2 = {
+        Color = 15263976
+        Expanded = False
+        FieldName = 'Bezeichnung1'
+        ReadOnly = True
+        Title.Caption = 'Bezeichnung1 '
+        Width = 150
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item3 = {
+        Color = 15263976
+        Expanded = False
+        FieldName = 'Bezeichnung2'
+        ReadOnly = True
+        Title.Caption = 'Bezeichnung2 '
+        Width = 150
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item4 = {
+        Color = 15263976
+        Expanded = False
+        FieldName = 'Kurzbezeichnung'
+        ReadOnly = True
+        Title.Caption = 'Kurzbezeichnung  '
+        Width = 85
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item5 = {
+        Color = 15263976
+        Expanded = False
+        FieldName = 'Bestellnr'
+        Title.Caption = 'Bestellnr '
+        Width = 75
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item6 = {
+        Color = 15263976
+        Expanded = False
+        FieldName = 'Identnr1'
+        ReadOnly = True
+        Title.Caption = 'Identnr1 '
+        Width = 150
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item7 = {
+        Color = 15263976
+        Expanded = False
+        FieldName = 'Identnr2'
+        ReadOnly = True
+        Title.Caption = 'Identnr2 '
+        Width = 150
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+      item8 = {
+        Color = 15263976
+        Expanded = False
+        FieldName = 'identnr3'
+        Title.Caption = 'Identnr3'
+        Width = 150
+        Visible = True
+        ValueChecked = 'T'
+        ValueUnchecked = 'F'
+      }
+    >
+  end
+  object btnLastSearch: TAdvGlowButton
+    Left = 344
+    Top = 316
+    Width = 96
+    TabOrder = 19
+  end
+  object btnMark: TAdvSmoothSlider
+    Left = 344
+    Top = 272
+    Width = 97
+    Height = 38
+    AnimationFactor = 5
+    AppearanceOn.Fill.Color = 'clGray'
+    AppearanceOn.Fill.ColorTo = 'clSilver'
+    AppearanceOn.Fill.ColorMirror = 'clSilver'
+    AppearanceOn.Fill.ColorMirrorTo = 'clGray'
+    AppearanceOn.Fill.GradientType = 'gtVertical'
+    AppearanceOn.Fill.GradientMirrorType = 'gtVertical'
+    AppearanceOn.Fill.BackGroundPictureMode = 'pmInsideFill'
+    AppearanceOn.Fill.BackGroundPicturePosition = 'ppStretched'
+    AppearanceOn.Fill.Picture.Data = <binary 26694 bytes>
+    AppearanceOn.Fill.PicturePosition = 'ppCenterCenter'
+    AppearanceOn.Fill.PictureSize = 'psCustom'
+    AppearanceOn.Fill.PictureWidth = 20
+    AppearanceOn.Fill.PictureHeight = 20
+    AppearanceOn.Fill.BorderColor = 'clNone'
+    AppearanceOn.Fill.Rounding = 4
+    AppearanceOn.Fill.RoundingType = 'rtLeft'
+    AppearanceOn.Fill.ShadowOffset = 0
+    AppearanceOn.Fill.Glow = 'gmNone'
+    AppearanceOn.FillDisabled.ColorMirror = 'clNone'
+    AppearanceOn.FillDisabled.ColorMirrorTo = 'clNone'
+    AppearanceOn.FillDisabled.GradientType = 'gtVertical'
+    AppearanceOn.FillDisabled.GradientMirrorType = 'gtSolid'
+    AppearanceOn.FillDisabled.BorderColor = 'clNone'
+    AppearanceOn.FillDisabled.Rounding = 0
+    AppearanceOn.FillDisabled.ShadowOffset = 0
+    AppearanceOn.FillDisabled.Glow = 'gmNone'
+    AppearanceOn.Caption = 'Alle markieren'
+    AppearanceOn.Font.Charset = 'DEFAULT_CHARSET'
+    AppearanceOn.Font.Color = 'clBlack'
+    AppearanceOn.Font.Height = -9
+    AppearanceOn.Font.Name = 'Tahoma'
+    AppearanceOn.Font.Style = []
+    AppearanceOn.CaptionPosition = 'cpBottomCenter'
+    AppearanceOff.Fill.ColorMirror = 'clGray'
+    AppearanceOff.Fill.ColorMirrorTo = 'clSilver'
+    AppearanceOff.Fill.GradientType = 'gtVertical'
+    AppearanceOff.Fill.GradientMirrorType = 'gtVertical'
+    AppearanceOff.Fill.HatchStyle = 'HatchStyleVertical'
+    AppearanceOff.Fill.HatchStyleMirror = 'HatchStyleVertical'
+    AppearanceOff.Fill.BackGroundPicturePosition = 'ppTopCenter'
+    AppearanceOff.Fill.Picture.Data = <binary 119668 bytes>
+    AppearanceOff.Fill.PicturePosition = 'ppCenterCenter'
+    AppearanceOff.Fill.PictureSize = 'psCustom'
+    AppearanceOff.Fill.PictureWidth = 25
+    AppearanceOff.Fill.PictureHeight = 25
+    AppearanceOff.Fill.BorderColor = 'clNone'
+    AppearanceOff.Fill.Rounding = 4
+    AppearanceOff.Fill.RoundingType = 'rtRight'
+    AppearanceOff.Fill.ShadowOffset = 0
+    AppearanceOff.Fill.Glow = 'gmNone'
+    AppearanceOff.FillDisabled.ColorMirror = 'clNone'
+    AppearanceOff.FillDisabled.ColorMirrorTo = 'clNone'
+    AppearanceOff.FillDisabled.GradientType = 'gtVertical'
+    AppearanceOff.FillDisabled.GradientMirrorType = 'gtSolid'
+    AppearanceOff.FillDisabled.BorderColor = 'clNone'
+    AppearanceOff.FillDisabled.Rounding = 0
+    AppearanceOff.FillDisabled.ShadowOffset = 0
+    AppearanceOff.FillDisabled.Glow = 'gmNone'
+    AppearanceOff.Caption = 'Alle aufheben'
+    AppearanceOff.Font.Charset = 'DEFAULT_CHARSET'
+    AppearanceOff.Font.Color = 'clWindowText'
+    AppearanceOff.Font.Height = -9
+    AppearanceOff.Font.Name = 'Tahoma'
+    AppearanceOff.Font.Style = []
+    AppearanceOff.CaptionPosition = 'cpTopCenter'
+    ButtonAppearance.Fill.Color = 'clGray'
+    ButtonAppearance.Fill.ColorTo = 'clSilver'
+    ButtonAppearance.Fill.ColorMirror = 'clNone'
+    ButtonAppearance.Fill.ColorMirrorTo = 'clNone'
+    ButtonAppearance.Fill.GradientType = 'gtVertical'
+    ButtonAppearance.Fill.GradientMirrorType = 'gtSolid'
+    ButtonAppearance.Fill.BorderColor = 'clNone'
+    ButtonAppearance.Fill.Rounding = 2
+    ButtonAppearance.Fill.ShadowColor = 'clNone'
+    ButtonAppearance.Fill.ShadowOffset = 0
+    ButtonAppearance.Fill.Glow = 'gmNone'
+    ButtonAppearance.FillDisabled.ColorMirror = 'clNone'
+    ButtonAppearance.FillDisabled.ColorMirrorTo = 'clNone'
+    ButtonAppearance.FillDisabled.GradientType = 'gtVertical'
+    ButtonAppearance.FillDisabled.GradientMirrorType = 'gtSolid'
+    ButtonAppearance.FillDisabled.BorderColor = 'clNone'
+    ButtonAppearance.FillDisabled.Rounding = 0
+    ButtonAppearance.FillDisabled.ShadowOffset = 0
+    ButtonAppearance.FillDisabled.Glow = 'gmNone'
+    ButtonAppearance.Size = 16
+    ValueOn = '<extended:0000000000000080ff3f>'
+    Fill.ColorMirror = 'clNone'
+    Fill.ColorMirrorTo = 'clNone'
+    Fill.GradientType = 'gtVertical'
+    Fill.GradientMirrorType = 'gtSolid'
+    Fill.BorderColor = 'clNone'
+    Fill.Rounding = 4
+    Fill.ShadowOffset = 0
+    Fill.Glow = 'gmNone'
+    FillDisabled.ColorMirror = 'clNone'
+    FillDisabled.ColorMirrorTo = 'clNone'
+    FillDisabled.GradientType = 'gtVertical'
+    FillDisabled.GradientMirrorType = 'gtSolid'
+    FillDisabled.BorderColor = 'clNone'
+    FillDisabled.Rounding = 0
+    FillDisabled.ShadowOffset = 0
+    FillDisabled.Glow = 'gmNone'
+    TabOrder = 24
+    OnClick = 'btnalleClick'
+  end
+  object edtsm: TEdit
+    Left = 8
+    Top = 577
+    Width = 377
+    Height = 21
+    TabOrder = 25
+  end
+  object btnSm: TAdvGlowButton
+    Left = 392
+    Top = 578
+    Width = 49
+    Height = 20
+    Caption = '1'
+    ImageIndex = 27
+    Images = 'Imgform'
+    HotImages = 'Imgform'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 26
+    OnClick = 'btnSmClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+    DropDownButton = True
+    DropDownMenu = 'popAbgrenz'
+  end
+  object gbxSort: TAdvGroupBox
+    Left = 344
+    Width = 33
+    TabStop = True
+    object rbtBezeichnung1: TAdvOfficeRadioButton
+      TabStop = False
+      Checked = False
+    end
+    object rbtNummer: TAdvOfficeRadioButton
+      TabStop = True
+      Checked = True
+    end
+  end
+  object rgpAppend: TAdvOfficeRadioGroup
+    Left = 144
+    Top = 481
+    TabOrder = 28
+    Visible = False
+  end
+  object cbxFilter: TAdvOfficeCheckBox
+    Left = 96
+    Top = 513
+    TabOrder = 29
+    Visible = False
+  end
+  object btnGruppen: TAdvGlowButton
+    Top = 207
+    TabOrder = 30
+  end
+  object btnbestgruppe: TAdvGlowButton
+    Left = 352
+    Top = 393
+    Width = 25
+    Height = 25
+    ImageIndex = 6
+    Images = 'Imgform'
+    HotImages = 'Imgform'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 31
+    OnClick = 'btnBestgruppeClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object btnLiefsuch: TAdvGlowButton
+    Left = 352
+    Top = 421
+    Width = 25
+    Height = 25
+    ImageIndex = 6
+    Images = 'Imgform'
+    HotImages = 'Imgform'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 32
+    OnClick = 'btnLiefsuchClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object btnsspeichern: TAdvGlowButton
+    Left = 8
+    Top = 499
+    Width = 73
+    Height = 25
+    Caption = 'speichern'
+    ImageIndex = 3
+    Images = 'Imgform'
+    DisabledImages = 'Imgform'
+    HotImages = 'Imgform'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 33
+    OnClick = 'btnsspeichernClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object btnsladen: TAdvGlowButton
+    Left = 88
+    Top = 499
+    Width = 73
+    Height = 25
+    Caption = 'laden'
+    ImageIndex = 29
+    Images = 'Imgform'
+    DisabledImages = 'Imgform'
+    HotImages = 'Imgform'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 34
+    OnClick = 'btnsladenClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object edtHersteller: TEdit
+    Left = 272
+    Top = 452
+    Width = 65
+    Height = 21
+    TabStop = False
+    AutoSize = False
+    Color = 'clSilver'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 35
+  end
+  object btnHerst: TAdvGlowButton
+    Left = 352
+    Top = 452
+    Width = 25
+    Height = 25
+    ImageIndex = 6
+    Images = 'Imgform'
+    HotImages = 'Imgform'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 36
+    OnClick = 'btnHerstClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object cbxonlyBG: TCheckBox
+    Left = 11
+    Top = 449
+    Width = 118
+    Height = 17
+    Caption = 'nur Baugruppen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 37
+  end
+  object pnlAuswahl: TAdvPanel
+    Left = 0
+    Top = 0
+    Width = 337
+    Height = 33
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 38
+    UseDockManager = True
+    Visible = False
+    Version = '2.1.0.4'
+    CanSize = True
+    Caption.Color = 'clHighlight'
+    Caption.ColorTo = 'clNone'
+    Caption.Font.Charset = 'DEFAULT_CHARSET'
+    Caption.Font.Color = 'clWindowText'
+    Caption.Font.Height = -11
+    Caption.Font.Name = 'MS Sans Serif'
+    Caption.Font.Style = []
+    StatusBar.BorderStyle = 'bsSingle'
+    StatusBar.Font.Charset = 'DEFAULT_CHARSET'
+    StatusBar.Font.Color = 'clWindowText'
+    StatusBar.Font.Height = -11
+    StatusBar.Font.Name = 'Tahoma'
+    StatusBar.Font.Style = []
+    StatusBar.Visible = True
+    FullHeight = 200
+    object hntAuswahl: THintList
+      Left = 1
+      Top = 1
+      Width = 335
+      Height = 13
+      Align = 'alClient'
+      Columns = 2
+      ItemHeight = 13
+      Sorted = True
+      TabOrder = 0
+      HintColor = 'clWhite'
+      Version = '1.4.0.0'
+    end
+  end
+  object rdbIdentnr: TAdvOfficeRadioGroup
+    Left = 386
+    Top = 28
+    Width = 47
+    Height = 231
+    Version = '1.3.4.1'
+    ParentBackground = False
+    TabOrder = 39
+    ItemIndex = 0
+    Items.Strings = ('all' 'BT' 'LH' 'FY' 'NK' 'KO' 'VK' 'BE' 'TK' 'DB' 'HO' 'WE' 'SI')
+    Ellipsis = False
+  end
+  object cbxnegativ: TCheckBox
+    Left = 12
+    Top = 473
+    Width = 118
+    Height = 17
+    Caption = 'negativer Bestand'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 40
+  end
+  object edtlagerplatz: TAdvComboBox
+    Left = 88
+    Top = 352
+    Width = 249
+    Height = 21
+    Color = 16120304
+    Version = '1.4.0.0'
+    Visible = True
+    DropWidth = 0
+    Enabled = True
+    ItemIndex = -1
+    ItemHeight = 13
+    LabelFont.Charset = 'DEFAULT_CHARSET'
+    LabelFont.Color = 'clWindowText'
+    LabelFont.Height = -11
+    LabelFont.Name = 'MS Sans Serif'
+    LabelFont.Style = []
+    TabOrder = 41
+  end
+  object dsSuchen: TDataSource
+    Left = 472
+    Top = 112
+  end
+  object aclSuchen: TActionList
+    Top = 537
+    object HITMenueAction1: THITMenueAction
+      Category = 'HIT'
+      Caption = 'HITMenueAction1'
+      ShortCut = 113
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'HITMenueAction1Execute'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object HITMenueAction2: THITMenueAction
+      Caption = 'HITMenueAction2'
+      ShortCut = 123
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'HITMenueAction2Execute'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+  end
+  object Imgform: TImageList
+    Left = 8
+    Top = 514
+  end
+  object Timer1: TTimer
+    Top = 449
+  end
+  object popExcel: TPopupMenu
+    Left = 472
+    Top = 72
+    object Excel1: TMenuItem
+      Caption = '-> Excel'
+      OnClick = 'Excel1Click'
+    end
+    object Suchen2: TMenuItem
+      Caption = '-> Excel Vorlage'
+      OnClick = 'Suchen2Click'
+    end
+    object CSV1: TMenuItem
+      Caption = '-> CSV'
+      OnClick = 'CSV1Click'
+    end
+    object Artikelinfo1: TMenuItem
+      Caption = 'Artikelinfo'
+      OnClick = 'Artikelinfo1Click'
+    end
+    object aktuellerBedarf1: TMenuItem
+      Caption = 'aktueller Bedarf'
+      OnClick = 'aktuellerBedarf1Click'
+    end
+    object Artikellisten1: TMenuItem
+      Caption = 'Artikellisten'
+      OnClick = 'Artikellisten1Click'
+    end
+    object Baugruppenartikel1: TMenuItem
+      Caption = 'Baugruppenartikel'
+      OnClick = 'Baugruppenartikel1Click'
+    end
+    object AlternativeArtikel1: TMenuItem
+      Caption = 'Alternative Artikel'
+      OnClick = 'AlternativeArtikel1Click'
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object PreisInfo1: TMenuItem
+      Caption = 'PreisInfo'
+      OnClick = 'PreisInfo1Click'
+    end
+    object Suchen1: TMenuItem
+      Caption = 'Preisinfo Auswahl'
+      OnClick = 'Suchen1Click'
+    end
+    object Fehlmengenberechnen1: TMenuItem
+      Caption = 'Fehlmengen berechnen'
+      OnClick = 'Fehlmengenberechnen1Click'
+    end
+    object Anfragenerzeugen1: TMenuItem
+      Caption = 'Anfragen erzeugen'
+      Enabled = False
+      OnClick = 'Anfragenerzeugen1Click'
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object Gruppenpreiseeintragen1: TMenuItem
+      Caption = 'Gruppenpreise eintragen'
+      OnClick = 'Gruppenpreiseeintragen1Click'
+    end
+    object Gruppenpreisebernehmen1: TMenuItem
+      Caption = 'Gruppenpreise übernehmen'
+      OnClick = 'Gruppenpreisebernehmen1Click'
+    end
+    object zuGruppehinzufgen1: TMenuItem
+      Caption = 'zu Gruppe hinzufügen'
+      OnClick = 'zuGruppehinzufgen1Click'
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object Schnelledit1: TMenuItem
+      Caption = 'Schnelledit'
+      OnClick = 'Schnelledit1Click'
+    end
+    object inAuswahlbernehmen1: TMenuItem
+      Caption = 'in Auswahl übernehmen'
+      OnClick = 'inAuswahlbernehmen1Click'
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
+    object Abfrageladen1: TMenuItem
+      Caption = 'Artikel laden'
+      OnClick = 'Abfrageladen1Click'
+    end
+    object Bestandanzeigen1: TMenuItem
+      Caption = 'Bestand anzeigen'
+      OnClick = 'Bestandanzeigen1Click'
+    end
+    object BestandaufNullsetzen1: TMenuItem
+      Caption = 'Bestand auf Null setzen'
+      OnClick = 'BestandaufNullsetzen1Click'
+    end
+    object N5: TMenuItem
+      Caption = '-'
+    end
+    object LagerpltzeExcel1: TMenuItem
+      Caption = 'Lagerplätze -> Excel'
+      Visible = False
+      OnClick = 'LagerpltzeExcel1Click'
+    end
+    object LagerpltzeEdit1: TMenuItem
+      Caption = 'Lagerplätze -> Edit'
+      OnClick = 'LagerpltzeEdit1Click'
+    end
+  end
+  object SvDlg1: TSaveDialog
+    Left = 360
+    Top = 537
+  end
+  object AdvMenuFantasyStyler1: TAdvMenuFantasyStyler
+    AntiAlias = 'aaNone'
+    Style = 'fsSilverFox'
+    Background.Position = 'bpCenter'
+    Background.Color = 13748680
+    Background.ColorTo = 13748680
+    ButtonAppearance.CaptionFont.Charset = 'DEFAULT_CHARSET'
+    ButtonAppearance.CaptionFont.Color = 'clWindowText'
+    ButtonAppearance.CaptionFont.Height = -11
+    ButtonAppearance.CaptionFont.Name = 'Segoe UI'
+    ButtonAppearance.CaptionFont.Style = []
+    IconBar.Color = 'clWhite'
+    IconBar.ColorTo = 14998746
+    IconBar.CheckColor = 'clNone'
+    IconBar.CheckBorder = 'clNone'
+    IconBar.RadioColor = 'clNone'
+    IconBar.RadioBorder = 'clNone'
+    SelectedItem.Color = 13811125
+    SelectedItem.BorderColor = 6956042
+    SelectedItem.Font.Charset = 'DEFAULT_CHARSET'
+    SelectedItem.Font.Color = 176
+    SelectedItem.Font.Height = -12
+    SelectedItem.Font.Name = 'Segoe UI'
+    SelectedItem.Font.Style = []
+    SelectedItem.NotesFont.Charset = 'DEFAULT_CHARSET'
+    SelectedItem.NotesFont.Color = 'clWindowText'
+    SelectedItem.NotesFont.Height = -9
+    SelectedItem.NotesFont.Name = 'Segoe UI'
+    SelectedItem.NotesFont.Style = []
+    SelectedItem.UseSystemFont = False
+    SelectedItem.CheckColor = 'clNone'
+    SelectedItem.CheckBorder = 'clNone'
+    SelectedItem.RadioColor = 'clNone'
+    SelectedItem.RadioBorder = 'clNone'
+    RootItem.Color = 'clWhite'
+    RootItem.ColorTo = 12958391
+    RootItem.GradientDirection = 'gdVertical'
+    RootItem.Font.Charset = 'DEFAULT_CHARSET'
+    RootItem.Font.Color = 'clBlack'
+    RootItem.Font.Height = -11
+    RootItem.Font.Name = 'Segoe UI'
+    RootItem.Font.Style = []
+    RootItem.UseSystemFont = False
+    RootItem.SelectedColor = 15856628
+    RootItem.SelectedColorTo = 'clNone'
+    RootItem.SelectedBorderColor = 6710886
+    RootItem.SelectedTextColor = 'clBlack'
+    RootItem.HoverColor = 13811125
+    RootItem.HoverColorTo = 'clNone'
+    RootItem.HoverBorderColor = 6956042
+    RootItem.HoverTextColor = 176
+    Glyphs.SubMenu.Data = <binary 94 bytes>
+    Glyphs.Check.Data = <binary 130 bytes>
+    Glyphs.Radio.Data = <binary 130 bytes>
+    SideBar.Font.Charset = 'DEFAULT_CHARSET'
+    SideBar.Font.Color = 'clWhite'
+    SideBar.Font.Height = -19
+    SideBar.Font.Name = 'Tahoma'
+    SideBar.Font.Style = [fsBold, fsItalic]
+    SideBar.Image.Position = 'bpCenter'
+    SideBar.Background.Position = 'bpCenter'
+    SideBar.SplitterColorTo = 'clBlack'
+    Separator.Color = 10921638
+    Separator.GradientType = 'gtBoth'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clGray'
+    NotesFont.Height = -9
+    NotesFont.Name = 'Segoe UI'
+    NotesFont.Style = []
+    UseSystemFont = False
+    MenuBorderColor = 6710886
+    Left = 416
+    Top = 497
+  end
+  object popAbgrenz: TAdvPopupMenu
+    MenuStyler = 'AdvMenuFantasyStyler1'
+    Version = '2.5.4.0'
+    Left = 416
+    Top = 529
+    object mindestenseinebereinstimmung1: TMenuItem
+      Caption = 'mindestens eine Übereinstimmung'
+      GroupIndex = 1
+      RadioItem = True
+      OnClick = 'mindestenseinebereinstimmung1Click'
+    end
+    object mindestenseinebereinstimmung2: TMenuItem
+      Caption = 'mindestens zwei Übereinstimmungen'
+      GroupIndex = 1
+      RadioItem = True
+      OnClick = 'mindestenseinebereinstimmung2Click'
+    end
+    object mindestenseinebereinstimmung3: TMenuItem
+      Caption = 'mindestens drei Übereinstimmungen'
+      GroupIndex = 1
+      RadioItem = True
+      OnClick = 'mindestenseinebereinstimmung3Click'
+    end
+    object mindestenseinebereinstimmung4: TMenuItem
+      Caption = 'mindestens vier Übereinstimmungen'
+      GroupIndex = 1
+      RadioItem = True
+      OnClick = 'mindestenseinebereinstimmung4Click'
+    end
+    object mindestenseinebereinstimmung5: TMenuItem
+      Caption = 'mindestens fünf Übereinstimmungen'
+      GroupIndex = 1
+      RadioItem = True
+      OnClick = 'mindestenseinebereinstimmung5Click'
+    end
+  end
+  object opdlg: TOpenDialog
+    Left = 360
+    Top = 513
+  end
+end

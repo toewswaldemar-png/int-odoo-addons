@@ -1,0 +1,127 @@
+object dmArtikelDruckTSP: TdmArtikelDruckTSP
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 598
+  Top = 245
+  Height = 197
+  Width = 320
+  object cdsArtikelDruck: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'dsp'
+    AfterOpen = 'cdsArtikelDruckAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 48
+    Top = 24
+  end
+  object cdsArtikelBestand: TClientDataSetHit
+    Tag = 1
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'OID'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 136
+    Top = 24
+  end
+  object cdsArtikelKartei: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 240
+    Top = 24
+    object cdsArtikelKarteiNUMMER: TIntegerField
+      FieldName = 'NUMMER'
+    end
+    object cdsArtikelKarteiGRUPPE: TIntegerField
+      FieldName = 'GRUPPE'
+    end
+    object cdsArtikelKarteiBEZEICHNUNG1: TStringField
+      FieldName = 'BEZEICHNUNG1'
+      Size = 60
+    end
+    object cdsArtikelKarteiVKNETTO: TFMTBCDField
+      FieldName = 'VKNETTO'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsArtikelKarteiBESTAND: TFMTBCDField
+      FieldName = 'BESTAND'
+      Precision = 15
+      Size = 2
+    end
+    object cdsArtikelKarteiOID: TIntegerField
+      FieldName = 'OID'
+      Required = True
+    end
+    object cdsArtikelKarteiBEZEICHNUNG: TStringField
+      FieldName = 'BEZEICHNUNG'
+      Size = 60
+    end
+  end
+  object cdsArtikelUmsatz: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 48
+    Top = 96
+  end
+  object cdsSLUmsatz: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 136
+    Top = 96
+  end
+  object FlxArtikel: TFlexCelReport
+    AutoClose = False
+    Adapter = 'OLEArtikel'
+    DataModule = 'Owner'
+    Left = 200
+    Top = 96
+  end
+  object OLEArtikel: TOLEAdapter
+    BlockSize = 250
+    SaveFormatExtended = []
+    Left = 248
+    Top = 96
+  end
+end

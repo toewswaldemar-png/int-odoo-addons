@@ -1,0 +1,160 @@
+object frmLieferBewertungDlg: TfrmLieferBewertungDlg
+  Left = 407
+  Top = 253
+  Caption = 'Bewertung'
+  ClientHeight = 561
+  ClientWidth = 1015
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label2: TLabel
+    Left = 600
+    Top = 32
+    Width = 54
+    Height = 13
+    Caption = 'Bemerkung'
+  end
+  object lblAdresse: TLabel
+    Left = 600
+    Top = 8
+    Width = 59
+    Height = 16
+    Caption = 'Adresse'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -13
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object lblBewertet: TLabel
+    Left = 168
+    Top = 472
+    Width = 321
+    Height = 81
+    AutoSize = False
+    WordWrap = True
+  end
+  object ofihelpStd: TAdvOfficeImage
+    Left = 981
+    Top = 516
+  end
+  object btnOk: TAdvGlowButton
+    Left = 824
+    Top = 521
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 904
+    Top = 521
+  end
+  object slbBereiche: TSectionListBox
+    Left = 16
+    Top = 16
+    Width = 521
+    Height = 441
+    Sections = <
+    >
+    TabPositions = <
+    >
+    TabPosMove = False
+    WordWrap = False
+    OneExpanded = False
+    FullFocus = True
+    ImageSpacing = 0
+    SubItemHeight = 13
+    TabOrder = 2
+    OnSubItemClick = 'slbBereicheSubItemClick'
+    Flat = False
+    SectionFont.Charset = 'DEFAULT_CHARSET'
+    SectionFont.Color = 'clWindowText'
+    SectionFont.Height = -11
+    SectionFont.Name = 'MS Sans Serif'
+    SectionFont.Style = [fsBold]
+    SectionIndent = 14
+    SubItemIndent = 14
+    URLSettings.URLAware = False
+    URLSettings.URLColor = 'clBlue'
+    URLSettings.URLFull = False
+    ExpandDisable = False
+    ContractDisable = False
+    SectionColor = 'clSilver'
+    ActiveSection = 'asFull'
+    NodeType = 'ln3D'
+    SectionFocus = 'sfDash'
+    ScrollStyle = 'slsNormal'
+    ScrollColor = 'clNone'
+    ScrollWidth = 17
+    SelectionColor = 'clHighlight'
+    SelectionTextColor = 'clHighlightText'
+    Version = '1.9.2.4'
+  end
+  object rdgPunkte: TAdvOfficeRadioGroup
+    Left = 544
+    Top = 8
+    Width = 49
+    Height = 233
+    Version = '1.3.4.1'
+    Caption = 'Punkte'
+    ParentBackground = False
+    TabOrder = 3
+    Items.Strings = ('10' '9' '8' '7' '6' '5' '4' '2' '0')
+    Ellipsis = False
+  end
+  object memBWBemerkung: TMemo
+    Left = 600
+    Top = 48
+    Width = 369
+    Height = 193
+    TabOrder = 4
+  end
+  object grdBewertungen: TDBGrid
+    Left = 544
+    Top = 264
+    Width = 425
+    Height = 241
+    DataSource = 'dsBewertungen'
+    TabOrder = 5
+    TitleFont.Charset = 'DEFAULT_CHARSET'
+    TitleFont.Color = 'clWindowText'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = []
+  end
+  object btnBWspeichern: TAdvGlowButton
+    Left = 16
+    Top = 472
+    Width = 129
+    Height = 33
+    Caption = 'Bewerten'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    OfficeHint.Title = 'Bewertung eines Kunden/Lieferanten'
+    OfficeHint.Notes.Strings = ('Bewertung zu einem Kunden / Lieferanten abgeben.' 'Kriterium in Liste auswählen - Punktzahl angeben.' 'Es kann optional eine Bemerkung zur Bewertung' 'abgegeben werden.' 'Die Summe der Bewertungen werden in den Kennzahlen' 'ausgewertet.')
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 6
+    OnClick = 'btnBWspeichernClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object dsBewertungen: TDataSource
+    Left = 676
+    Top = 11
+  end
+end

@@ -1,0 +1,60 @@
+object dmBegleit: TdmBegleit
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 581
+  Top = 265
+  Height = 175
+  Width = 211
+  object cdsAusfall: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdMaster'
+    WriteLastSQL = False
+    Left = 16
+    Top = 8
+  end
+  object cdsTree: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 72
+    Top = 8
+  end
+  object cdsGruppe: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 136
+    Top = 8
+  end
+  object OLEAdapter1: TOLEAdapter
+    SaveFormatExtended = []
+    Left = 128
+    Top = 64
+  end
+  object FlexCelReport1: TFlexCelReport
+    AutoClose = False
+    Adapter = 'OLEAdapter1'
+    DataModule = 'Owner'
+    Left = 40
+    Top = 64
+  end
+end

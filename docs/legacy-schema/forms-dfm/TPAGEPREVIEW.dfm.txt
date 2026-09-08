@@ -1,0 +1,38 @@
+object PagePreview: TPagePreview
+  Left = 771
+  Top = 177
+  Width = 699
+  Height = 553
+  Caption = 'Print preview'
+  Color = 'clWhite'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  Menu = 'MainMenu1'
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object PaintBox1: TPaintBox
+    Left = 0
+    Top = 0
+    Width = 683
+    Height = 495
+    Align = 'alClient'
+    OnPaint = 'PaintBox1Paint'
+  end
+  object MainMenu1: TMainMenu
+    Left = 8
+    Top = 24
+    object Drucken1: TMenuItem
+      Caption = 'Drucken'
+      OnClick = 'Drucken1Click'
+    end
+    object Schliessen1: TMenuItem
+      Caption = 'Schliessen'
+      OnClick = 'Schliessen1Click'
+    end
+  end
+end

@@ -1,0 +1,49 @@
+object dmArtikelSucheTSP: TdmArtikelSucheTSP
+  OldCreateOrder = True
+  Height = 168
+  Width = 423
+  object cdsSuchen: TClientDataSetHit
+    Left = 120
+    Top = 24
+  end
+  object cdsEdit: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    BeforePost = 'cdsEditBeforePost'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 48
+    Top = 24
+  end
+  object cdsInfo: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 176
+    Top = 24
+  end
+  object flxArtikel: TFlexCelReport
+    AutoClose = False
+    Adapter = 'oleArtikel'
+    DataModule = 'Owner'
+    Left = 232
+    Top = 24
+  end
+  object oleArtikel: TOLEAdapter
+    BlockSize = 250
+    SaveFormatExtended = []
+    Left = 288
+    Top = 24
+  end
+end

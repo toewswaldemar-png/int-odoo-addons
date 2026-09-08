@@ -1,0 +1,82 @@
+object OKBottomDlg: TOKBottomDlg
+  Left = 404
+  Top = 198
+  BorderStyle = 'bsDialog'
+  Caption = 'Dialog'
+  ClientHeight = 293
+  ClientWidth = 533
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (533 293)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel
+    Left = 24
+    Top = 24
+    Width = 105
+    Height = 13
+    Caption = 'Artikel'
+  end
+  object Label2: TLabel
+    Left = 24
+    Top = 56
+    Width = 33
+    Height = 13
+    Caption = 'Menge'
+  end
+  object Label3: TLabel
+    Left = 29
+    Top = 114
+    Width = 31
+    Height = 13
+    Caption = 'Kunde'
+  end
+  object OKBtn: TButton
+    Left = 299
+    Top = 259
+    Width = 75
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 379
+    Top = 259
+    Width = 75
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object Button1: TButton
+    Left = 384
+    Top = 24
+    Width = 121
+    Height = 25
+    Caption = 'Artikel suchen'
+    TabOrder = 2
+  end
+  object Edit1: TEdit
+    Left = 24
+    Top = 72
+    Width = 121
+    Height = 21
+    TabOrder = 3
+    Text = 'Edit1'
+  end
+  object Button2: TButton
+    Left = 384
+    Top = 112
+    Width = 121
+    Height = 25
+    Caption = 'Kunde suchen'
+    TabOrder = 4
+  end
+end

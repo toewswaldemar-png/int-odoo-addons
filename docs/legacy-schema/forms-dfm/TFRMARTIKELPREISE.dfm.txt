@@ -1,0 +1,131 @@
+object frmArtikelPreise: TfrmArtikelPreise
+  Left = 461
+  Top = 159
+  Width = 746
+  Height = 542
+  BorderIcons = []
+  Caption = 'Artikel - Lieferinfos'
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = 'poScreenCenter'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object dbgArtikelPreise: TDBGrid
+    Left = 0
+    Top = 0
+    Width = 738
+    Height = 465
+    Color = 16120304
+    DataSource = 'dsArtikelPreise'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 0
+    TitleFont.Charset = 'ANSI_CHARSET'
+    TitleFont.Color = 'clBlack'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Pitch = 'fpVariable'
+    TitleFont.Style = []
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'LIEFERNAME'
+        Title.Caption = 'Lieferant'
+        Width = 175
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'MENGEVON'
+        Title.Caption = 'Menge von'
+        Width = 58
+        Visible = True
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'MENGEBIS'
+        Title.Caption = 'Menge bis'
+        Width = 58
+        Visible = True
+      }
+      item3 = {
+        Expanded = False
+        FieldName = 'EKBRUTTO'
+        Title.Caption = 'Ek. Preis'
+        Width = 55
+        Visible = True
+      }
+      item4 = {
+        Expanded = False
+        FieldName = 'RABATT'
+        Title.Caption = 'Rabatt'
+        Width = 45
+        Visible = True
+      }
+      item5 = {
+        Expanded = False
+        FieldName = 'BESTELLNR'
+        Title.Caption = 'Bestell-Nr.'
+        Width = 80
+        Visible = True
+      }
+      item6 = {
+        Expanded = False
+        FieldName = 'BEZEICHNUNG'
+        Title.Caption = 'Bezeichnung'
+        Width = 225
+        Visible = True
+      }
+    >
+  end
+  object btnOK: TButton
+    Left = 296
+    Top = 475
+    Width = 75
+    Height = 25
+    Caption = 'OK'
+    Default = True
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ModalResult = 1
+    ParentFont = False
+    TabOrder = 1
+  end
+  object btnCancel: TButton
+    Left = 381
+    Top = 475
+    Width = 75
+    Height = 25
+    Cancel = True
+    Caption = 'Abbrechen'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ModalResult = 2
+    ParentFont = False
+    TabOrder = 2
+  end
+  object dsArtikelPreise: TDataSource
+    DataSet = 'dmArtikelSuche.cdsSuchen'
+    Left = 88
+    Top = 184
+  end
+end

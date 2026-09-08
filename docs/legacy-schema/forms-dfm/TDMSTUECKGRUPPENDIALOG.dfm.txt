@@ -1,0 +1,26 @@
+object dmStueckGruppenDialog: TdmStueckGruppenDialog
+  OldCreateOrder = False
+  OnDestroy = 'DataModuleDestroy'
+  Left = 365
+  Top = 293
+  Height = 173
+  Width = 152
+  object cdsGruppe: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdMaster'
+    WriteLastSQL = False
+    Left = 48
+    Top = 24
+  end
+  object dsGruppe: TDataSource
+    DataSet = 'cdsGruppe'
+    Left = 48
+    Top = 80
+  end
+end

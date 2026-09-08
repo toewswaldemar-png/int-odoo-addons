@@ -1,0 +1,101 @@
+object frmShowProdDlg: TfrmShowProdDlg
+  Left = 525
+  Top = 170
+  BorderStyle = 'bsDialog'
+  Caption = 'Produktionen'
+  ClientHeight = 268
+  ClientWidth = 589
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (589 268)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 419
+    Top = 234
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 499
+    Top = 234
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object dbgProduktionen: TDBGrid
+    Left = 8
+    Top = 8
+    Width = 561
+    Height = 209
+    DataSource = 'dsProduktionen'
+    TabOrder = 2
+    TitleFont.Charset = 'DEFAULT_CHARSET'
+    TitleFont.Color = 'clWindowText'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = []
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'Kw'
+        Width = 35
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'Jahr'
+        Width = 50
+        Visible = True
+      }
+      item2 = {
+        Expanded = False
+        FieldName = 'Prodmenge'
+        Title.Caption = 'Prodmge.'
+        Width = 55
+        Visible = True
+      }
+      item3 = {
+        Expanded = False
+        FieldName = 'Fertig'
+        Title.Caption = 'Fertig '
+        Width = 50
+        Visible = True
+      }
+      item4 = {
+        Expanded = False
+        FieldName = 'Status'
+        Title.Caption = 'Status '
+        Width = 85
+        Visible = True
+      }
+      item5 = {
+        Expanded = False
+        FieldName = 'Stuecknummer'
+        Title.Caption = 'Baugruppe'
+        Width = 60
+        Visible = True
+      }
+      item6 = {
+        Expanded = False
+        FieldName = 'Bezeichnung1'
+        Visible = True
+      }
+    >
+  end
+  object dsProduktionen: TDataSource
+    Left = 8
+    Top = 240
+  end
+end

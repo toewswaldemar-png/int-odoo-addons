@@ -1,0 +1,578 @@
+object frmEingangsBelege: TfrmEingangsBelege
+  Left = 370
+  Top = 386
+  ActiveControl = None
+  Caption = 'Eingangsbelege'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object pnlBeleg: TPanel
+    object pnlBelegKopf: TPanel
+      object gbxAnschrift: TGroupBox
+        object lblDatum: TLabel
+          Width = 31
+          Caption = 'Datum'
+        end
+        object lblProjekt: TLabel
+          Top = 93
+          Width = 76
+          Caption = 'L.Rechnungsnr.'
+        end
+        object Label4: TLabel
+          Left = 355
+          Top = 106
+          Width = 68
+          Height = 13
+          Caption = '(Hauptauftrag)'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dblcbProjekt: TDBLookupComboBox
+          Left = 592
+          Width = 28
+        end
+        object dbeNummer: TDBEdit
+          DataField = 'OID'
+        end
+        object dblcbSparte: TDBLookupComboBox
+          Visible = False
+        end
+        object dbcbxAbgeschlossen: TDBCheckBox
+          Caption = 'in Fibu'
+          ReadOnly = True
+        end
+        object dbeHauptauftrag: TDBEdit
+          Width = 185
+          DataField = 'rahmennr'
+        end
+        object dbcbGedruckt: TDBCheckBox
+          Visible = False
+        end
+      end
+    end
+    object pgcBeleg: TPageControl
+      object tshKopftext: TTabSheet
+        TabVisible = False
+      end
+      object tshPositionen: TTabSheet
+        object lblPos: TLabel
+          Visible = False
+        end
+        object lblArtikel: TLabel
+          Visible = False
+        end
+        object lblMenge: TLabel
+          Visible = False
+        end
+        object lblEinheit: TLabel
+          Visible = False
+        end
+        object lblText: TLabel
+          Visible = False
+        end
+        object lblEP: TLabel
+          Visible = False
+        end
+        object lblRabatt: TLabel
+          Visible = False
+        end
+        object lblGpreis: TLabel
+          Visible = False
+        end
+        object gbxSumme: TGroupBox
+          Top = 216
+          Width = 639
+          Height = 161
+          object lblNetto: TLabel
+            Left = 480
+            Top = 33
+            Visible = False
+          end
+          object lblMwst1: TLabel
+            Left = 440
+            Top = 33
+            Visible = False
+          end
+          object lblMwst2: TLabel
+            Left = 408
+            Top = 33
+            Visible = False
+          end
+          object lblBrutto: TLabel
+            Top = 25
+          end
+          object lblZKondi: TLabel
+            Visible = False
+          end
+          object Label1: TLabel
+            Left = 8
+            Top = 57
+            Width = 58
+            Height = 13
+            Caption = 'Verpackung'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+          end
+          object Label2: TLabel
+            Left = 8
+            Top = 89
+            Width = 39
+            Height = 13
+            Caption = 'Versand'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+          end
+          object Label3: TLabel
+            Left = 8
+            Top = 121
+            Width = 48
+            Height = 13
+            Caption = 'Edelmetall'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+          end
+          object Label5: TLabel
+            Left = 208
+            Top = 25
+            Width = 100
+            Height = 13
+            Caption = 'abweichendes Konto'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+          end
+          object Label6: TLabel
+            Left = 208
+            Top = 57
+            Width = 45
+            Height = 13
+            Caption = 'Gutschrift'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+          end
+          object dbeNetto: TDBEdit
+            Left = 520
+            Top = 28
+            Visible = False
+          end
+          object dbeMwStHalb: TDBEdit
+            Left = 504
+            Top = 28
+            Visible = False
+          end
+          object dbeMwStVoll: TDBEdit
+            Left = 472
+            Top = 28
+            Visible = False
+          end
+          object dbeBrutto: TDBEdit
+            Left = 88
+            Top = 20
+          end
+          object dblcbZkondi: TDBLookupComboBox
+            Visible = False
+          end
+          object dbeMwstSatzHalb: TDBEdit
+            Left = 480
+            Top = 28
+            Visible = False
+          end
+          object dbeMwstSatzVoll: TDBEdit
+            Left = 448
+            Top = 28
+            Visible = False
+          end
+          object dbeVerpack: TDBEdit
+            Left = 88
+            Top = 52
+            Width = 93
+            Height = 22
+            Hint = 'Land'
+            AutoSelect = False
+            AutoSize = False
+            Color = 16120304
+            DataField = 'VERpackung'
+            DataSource = 'dsBeleg'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 7
+          end
+          object dbeVersand: TDBEdit
+            Left = 88
+            Top = 84
+            Width = 93
+            Height = 22
+            Hint = 'Land'
+            AutoSelect = False
+            AutoSize = False
+            Color = 16120304
+            DataField = 'VERSAND'
+            DataSource = 'dsBeleg'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 8
+          end
+          object dbeEdel: TDBEdit
+            Left = 88
+            Top = 116
+            Width = 93
+            Height = 22
+            Hint = 'Land'
+            AutoSelect = False
+            AutoSize = False
+            Color = 16120304
+            DataField = 'NETTOHALB'
+            DataSource = 'dsBeleg'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 9
+          end
+          object DBEdit1: TDBEdit
+            Left = 312
+            Top = 20
+            Width = 93
+            Height = 22
+            Hint = 'Land'
+            AutoSelect = False
+            AutoSize = False
+            Color = 16120304
+            DataField = 'ERLOESKONTO'
+            DataSource = 'dsBeleg'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 10
+          end
+          object DBEdit2: TDBEdit
+            Left = 312
+            Top = 52
+            Width = 93
+            Height = 22
+            Hint = 'Land'
+            AutoSelect = False
+            AutoSize = False
+            Color = 16120304
+            DataField = 'vsonst'
+            DataSource = 'dsBeleg'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 11
+          end
+        end
+        object dbcgPos: TDBCtrlGrid
+          Left = 10
+          Top = 0
+          Height = 57
+          PanelHeight = 8
+          Visible = False
+        end
+        object dbgPos: TDBAdvGrid
+          Left = 0
+          Top = 0
+          Width = 641
+          Height = 209
+          Cursor = 'crDefault'
+          ColCount = 5
+          FixedCols = 0
+          RowCount = 2
+          FixedRows = 1
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+          ScrollBars = 'ssBoth'
+          TabOrder = 2
+          ActiveCellFont.Charset = 'DEFAULT_CHARSET'
+          ActiveCellFont.Color = 'clWindowText'
+          ActiveCellFont.Height = -11
+          ActiveCellFont.Name = 'Tahoma'
+          ActiveCellFont.Style = [fsBold]
+          ControlLook.FixedGradientHoverFrom = 'clGray'
+          ControlLook.FixedGradientHoverTo = 'clWhite'
+          ControlLook.FixedGradientDownFrom = 'clGray'
+          ControlLook.FixedGradientDownTo = 'clSilver'
+          ControlLook.DropDownHeader.Font.Charset = 'DEFAULT_CHARSET'
+          ControlLook.DropDownHeader.Font.Color = 'clWindowText'
+          ControlLook.DropDownHeader.Font.Height = -11
+          ControlLook.DropDownHeader.Font.Name = 'Tahoma'
+          ControlLook.DropDownHeader.Font.Style = []
+          ControlLook.DropDownHeader.Visible = True
+          ControlLook.DropDownHeader.Buttons = <
+          >
+          ControlLook.DropDownFooter.Font.Charset = 'DEFAULT_CHARSET'
+          ControlLook.DropDownFooter.Font.Color = 'clWindowText'
+          ControlLook.DropDownFooter.Font.Height = -11
+          ControlLook.DropDownFooter.Font.Name = 'MS Sans Serif'
+          ControlLook.DropDownFooter.Font.Style = []
+          ControlLook.DropDownFooter.Visible = True
+          ControlLook.DropDownFooter.Buttons = <
+          >
+          Filter = <
+          >
+          FilterDropDown.Font.Charset = 'DEFAULT_CHARSET'
+          FilterDropDown.Font.Color = 'clWindowText'
+          FilterDropDown.Font.Height = -11
+          FilterDropDown.Font.Name = 'MS Sans Serif'
+          FilterDropDown.Font.Style = []
+          FilterDropDownClear = '(All)'
+          FixedColWidth = 84
+          FixedRowHeight = 22
+          FixedFont.Charset = 'DEFAULT_CHARSET'
+          FixedFont.Color = 'clWindowText'
+          FixedFont.Height = -11
+          FixedFont.Name = 'Tahoma'
+          FixedFont.Style = [fsBold]
+          FloatFormat = '%.2f'
+          PrintSettings.DateFormat = 'dd/mm/yyyy'
+          PrintSettings.Font.Charset = 'DEFAULT_CHARSET'
+          PrintSettings.Font.Color = 'clWindowText'
+          PrintSettings.Font.Height = -11
+          PrintSettings.Font.Name = 'MS Sans Serif'
+          PrintSettings.Font.Style = []
+          PrintSettings.FixedFont.Charset = 'DEFAULT_CHARSET'
+          PrintSettings.FixedFont.Color = 'clWindowText'
+          PrintSettings.FixedFont.Height = -11
+          PrintSettings.FixedFont.Name = 'MS Sans Serif'
+          PrintSettings.FixedFont.Style = []
+          PrintSettings.HeaderFont.Charset = 'DEFAULT_CHARSET'
+          PrintSettings.HeaderFont.Color = 'clWindowText'
+          PrintSettings.HeaderFont.Height = -11
+          PrintSettings.HeaderFont.Name = 'MS Sans Serif'
+          PrintSettings.HeaderFont.Style = []
+          PrintSettings.FooterFont.Charset = 'DEFAULT_CHARSET'
+          PrintSettings.FooterFont.Color = 'clWindowText'
+          PrintSettings.FooterFont.Height = -11
+          PrintSettings.FooterFont.Name = 'MS Sans Serif'
+          PrintSettings.FooterFont.Style = []
+          PrintSettings.PageNumSep = '/'
+          SearchFooter.FindNextCaption = 'Find &next'
+          SearchFooter.FindPrevCaption = 'Find &previous'
+          SearchFooter.Font.Charset = 'DEFAULT_CHARSET'
+          SearchFooter.Font.Color = 'clWindowText'
+          SearchFooter.Font.Height = -11
+          SearchFooter.Font.Name = 'MS Sans Serif'
+          SearchFooter.Font.Style = []
+          SearchFooter.HighLightCaption = 'Highlight'
+          SearchFooter.HintClose = 'Close'
+          SearchFooter.HintFindNext = 'Find next occurrence'
+          SearchFooter.HintFindPrev = 'Find previous occurrence'
+          SearchFooter.HintHighlight = 'Highlight occurrences'
+          SearchFooter.MatchCaseCaption = 'Match case'
+          SelectionColorMixer = True
+          Version = '2.3.3.0'
+          AutoCreateColumns = True
+          AutoRemoveColumns = True
+          Columns = <
+            item0 = {
+              Borders = []
+              BorderPen.Color = 'clSilver'
+              CheckFalse = 'N'
+              CheckTrue = 'Y'
+              Color = 'clWindow'
+              FieldName = 'ARTNR'
+              Font.Charset = 'DEFAULT_CHARSET'
+              Font.Color = 'clWindowText'
+              Font.Height = -11
+              Font.Name = 'MS Sans Serif'
+              Font.Style = []
+              Header = 'Artikel'
+              HeaderFont.Charset = 'DEFAULT_CHARSET'
+              HeaderFont.Color = 'clWindowText'
+              HeaderFont.Height = -11
+              HeaderFont.Name = 'MS Sans Serif'
+              HeaderFont.Style = []
+              PrintBorders = [cbTop, cbLeft, cbRight, cbBottom]
+              PrintFont.Charset = 'DEFAULT_CHARSET'
+              PrintFont.Color = 'clWindowText'
+              PrintFont.Height = -11
+              PrintFont.Name = 'MS Sans Serif'
+              PrintFont.Style = []
+              Width = 84
+            }
+            item1 = {
+              Alignment = 'taRightJustify'
+              Borders = []
+              BorderPen.Color = 'clSilver'
+              CheckFalse = 'N'
+              CheckTrue = 'Y'
+              Color = 'clWindow'
+              Editor = 'edFloat'
+              FieldName = 'STCK'
+              Font.Charset = 'DEFAULT_CHARSET'
+              Font.Color = 'clWindowText'
+              Font.Height = -11
+              Font.Name = 'MS Sans Serif'
+              Font.Style = []
+              Header = 'Menge'
+              HeaderFont.Charset = 'DEFAULT_CHARSET'
+              HeaderFont.Color = 'clWindowText'
+              HeaderFont.Height = -11
+              HeaderFont.Name = 'MS Sans Serif'
+              HeaderFont.Style = []
+              PrintBorders = [cbTop, cbLeft, cbRight, cbBottom]
+              PrintFont.Charset = 'DEFAULT_CHARSET'
+              PrintFont.Color = 'clWindowText'
+              PrintFont.Height = -11
+              PrintFont.Name = 'MS Sans Serif'
+              PrintFont.Style = []
+              Width = 80
+            }
+            item2 = {
+              Borders = []
+              BorderPen.Color = 'clSilver'
+              CheckFalse = 'N'
+              CheckTrue = 'Y'
+              Color = 'clWindow'
+              FieldName = 'TEXT'
+              Font.Charset = 'DEFAULT_CHARSET'
+              Font.Color = 'clBlack'
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              Header = 'Text'
+              HeaderFont.Charset = 'DEFAULT_CHARSET'
+              HeaderFont.Color = 'clBlack'
+              HeaderFont.Height = -11
+              HeaderFont.Name = 'Tahoma'
+              HeaderFont.Style = []
+              PrintBorders = [cbTop, cbLeft, cbRight, cbBottom]
+              PrintFont.Charset = 'DEFAULT_CHARSET'
+              PrintFont.Color = 'clBlack'
+              PrintFont.Height = -11
+              PrintFont.Name = 'Tahoma'
+              PrintFont.Style = []
+              Width = 262
+            }
+            item3 = {
+              Alignment = 'taRightJustify'
+              Borders = []
+              BorderPen.Color = 'clSilver'
+              CheckFalse = 'N'
+              CheckTrue = 'Y'
+              Color = 'clWindow'
+              Editor = 'edNumeric'
+              FieldName = 'GPREIS'
+              Font.Charset = 'DEFAULT_CHARSET'
+              Font.Color = 'clBlack'
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              Header = 'Bestellpreis'
+              HeaderFont.Charset = 'DEFAULT_CHARSET'
+              HeaderFont.Color = 'clBlack'
+              HeaderFont.Height = -11
+              HeaderFont.Name = 'Tahoma'
+              HeaderFont.Style = []
+              PrintBorders = [cbTop, cbLeft, cbRight, cbBottom]
+              PrintFont.Charset = 'DEFAULT_CHARSET'
+              PrintFont.Color = 'clBlack'
+              PrintFont.Height = -11
+              PrintFont.Name = 'Tahoma'
+              PrintFont.Style = []
+              Width = 82
+            }
+            item4 = {
+              Alignment = 'taRightJustify'
+              Borders = []
+              BorderPen.Color = 'clSilver'
+              CheckFalse = 'N'
+              CheckTrue = 'Y'
+              Color = 'clWindow'
+              Editor = 'edNumeric'
+              FieldName = 'LieferPREIS'
+              Font.Charset = 'DEFAULT_CHARSET'
+              Font.Color = 'clBlack'
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              Header = 'Rechnungspreis'
+              HeaderFont.Charset = 'DEFAULT_CHARSET'
+              HeaderFont.Color = 'clBlack'
+              HeaderFont.Height = -11
+              HeaderFont.Name = 'Tahoma'
+              HeaderFont.Style = []
+              PrintBorders = [cbTop, cbLeft, cbRight, cbBottom]
+              PrintFont.Charset = 'DEFAULT_CHARSET'
+              PrintFont.Color = 'clBlack'
+              PrintFont.Height = -11
+              PrintFont.Name = 'Tahoma'
+              PrintFont.Style = []
+              Width = 93
+            }
+          >
+          DataSource = 'dsBelegPos'
+          InvalidPicture.Data = <binary 772 bytes>
+          ShowUnicode = False
+          ColWidths = (84 80 262 82 93)
+        end
+      end
+      object tshFusstext: TTabSheet
+        TabVisible = False
+      end
+    end
+  end
+  object fraBtn: TfraBtn
+    object tlbFunktionen: TAdvToolBar
+      object btnDelete: TAdvGlowButton
+        Tag = -2
+      end
+      object btnSearch: TAdvGlowButton
+        PopupMenu = 'popBelegDirekt'
+      end
+    end
+  end
+end

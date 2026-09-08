@@ -1,0 +1,34 @@
+object frmBestellzusatzdlg: TfrmBestellzusatzdlg
+  Left = 547
+  Top = 260
+  Width = 489
+  Height = 351
+  Caption = 'Bestellzusatz'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object btnOk: TButton
+    Left = 314
+    Top = 283
+  end
+  object btnCancel: TButton
+    Left = 394
+    Top = 283
+  end
+  object dbmZusatz: TDBMemo
+    Left = 8
+    Top = 10
+    Width = 449
+    Height = 263
+    Color = 16120304
+    DataField = 'Bestellzusatz'
+    DataSource = 'dsDataDialog'
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -13
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    ScrollBars = 'ssVertical'
+    TabOrder = 2
+  end
+end

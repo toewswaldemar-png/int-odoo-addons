@@ -1,0 +1,57 @@
+object frmAbrufMengeBestnr: TfrmAbrufMengeBestnr
+  Left = 443
+  Top = 139
+  Caption = ''
+  ClientHeight = 271
+  ClientWidth = 302
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 132
+    Top = 237
+  end
+  object CancelBtn: TButton
+    Left = 212
+    Top = 237
+  end
+  object lbeBestellnr: TLabeledEdit
+    Left = 24
+    Top = 80
+    Width = 241
+    Height = 21
+    EditLabel.Width = 68
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Bestellnummer'
+    TabOrder = 3
+  end
+  object lbeTermin: TLabeledEdit
+    Left = 24
+    Top = 120
+    Width = 89
+    Height = 21
+    EditLabel.Width = 32
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Termin'
+    TabOrder = 4
+  end
+  object lbeVon: TLabeledEdit
+    Left = 24
+    Top = 160
+    Width = 241
+    Height = 21
+    EditLabel.Width = 72
+    EditLabel.Height = 13
+    EditLabel.Caption = 'abgerufen von:'
+    TabOrder = 5
+  end
+  object lbeAm: TLabeledEdit
+    Left = 24
+    Top = 200
+    Width = 97
+    Height = 21
+    EditLabel.Width = 68
+    EditLabel.Height = 13
+    EditLabel.Caption = 'abgerufen am:'
+    TabOrder = 6
+  end
+end

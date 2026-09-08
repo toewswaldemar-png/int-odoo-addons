@@ -1,0 +1,2512 @@
+object frmMainHerrmann: TfrmMainHerrmann
+  Left = 303
+  Top = 255
+  Width = 1176
+  Height = 832
+  HorzScrollBar.Position = 2
+  AlphaBlendValue = 250
+  Caption = 'T E S - Herrmann GmbH'
+  Color = 15569784
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  FormStyle = 'fsMDIForm'
+  Icon.Data = <binary 2962 bytes>
+  Menu = 'mmMain'
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  WindowState = 'wsMaximized'
+  WindowMenu = 'mmiFenster1'
+  OnActivate = 'FormActivate'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  OnDestroy = 'FormDestroy'
+  OnShow = 'FormShow'
+  DesignSize = (1143 756)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object lblStart: TLabel
+    Left = 374
+    Top = 21
+    Width = 8
+    Height = 35
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = 35
+    Font.Name = 'Arial'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    Transparent = True
+  end
+  object lblScroll: TLabel
+    Left = 1558
+    Top = 830
+    Width = 21
+    Height = 13
+    Caption = '      .'
+    Transparent = True
+  end
+  object imgMain: TImage
+    Left = 1061
+    Top = 8
+    Width = 150
+    Height = 53
+    Anchors = [akTop, akRight]
+    AutoSize = True
+    Picture.Data = <binary 5556 bytes>
+    Stretch = True
+    Transparent = True
+  end
+  object toolNav: TAdvToolPanelTab
+    Left = -2
+    Top = 0
+    Width = 250
+    Height = 843
+    AutoOpenCloseSpeed = 'aocVeryFast'
+    Color = 4393475
+    ColorTo = 2644274
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWhite'
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    Position = 'ppLeft'
+    SlideSpeed = 'ssInstant'
+    Style = 'esCustom'
+    TabBorderColor = 4393475
+    TabColor = 4393475
+    TabColorTo = 2644274
+    TabHoverColor = 4227327
+    TabHoverColorTo = 33023
+    Version = '1.5.5.3'
+    object navTool: TAdvToolPanel
+      Left = 23
+      Top = 0
+      Width = 227
+      Height = 843
+      Align = 'alLeft'
+      AutoLock = True
+      BackgroundTransparent = True
+      BackGroundPosition = 'bpTopLeft'
+      BevelOuter = 'bvNone'
+      Button3D = False
+      HoverButtonColor = 943040
+      HoverButtonColorTo = 1011931
+      DownButtonColor = 5545971
+      DownButtonColorTo = 15066597
+      CaptionButton = False
+      Color = 7061637
+      ColorTo = 4393475
+      GradientDirection = 'gdVertical'
+      DockDots = True
+      Caption = 'Navigation'
+      CaptionGradientDirection = 'gdVertical'
+      FocusCaptionFontColor = 9126421
+      FocusCaptionColor = 5545971
+      FocusCaptionColorTo = 4227327
+      NoFocusCaptionFontColor = 'clSilver'
+      NoFocusCaptionColor = 4393475
+      NoFocusCaptionColorTo = 2656070
+      CloseHint = 'Close panel'
+      LockHint = 'Lock panel'
+      UnlockHint = 'Unlock panel'
+      Sections = <
+      >
+      SectionLayout.CaptionColor = 16772834
+      SectionLayout.CaptionColorTo = 16772834
+      SectionLayout.CaptionFontColor = 9126421
+      SectionLayout.CaptionRounded = False
+      SectionLayout.Corners = 'scRectangle'
+      SectionLayout.BackGroundColor = 'clWhite'
+      SectionLayout.BackGroundColorTo = 'clWhite'
+      SectionLayout.BorderColor = 16765357
+      SectionLayout.BorderWidth = 1
+      SectionLayout.CaptionGradientDir = 'gdVertical'
+      SectionLayout.BackGroundGradientDir = 'gdVertical'
+      SectionLayout.Indent = 4
+      SectionLayout.Spacing = 4
+      SectionLayout.ItemFontColor = 9126421
+      SectionLayout.ItemHoverTextColor = 9126421
+      SectionLayout.ItemHoverUnderline = True
+      SectionLayout.UnderLineCaption = False
+      ShowCaptionBorder = False
+      ShowClose = False
+      ShowLock = False
+      Style = 'esCustom'
+      Version = '1.5.5.3'
+    end
+    object AdvToolPanel1: TAdvToolPanel
+      Left = 23
+      Top = 0
+      Width = 0
+      Height = 0
+      BackgroundTransparent = False
+      BackGroundPosition = 'bpTopLeft'
+      BevelOuter = 'bvNone'
+      Button3D = False
+      HoverButtonColor = 14483455
+      HoverButtonColorTo = 6013175
+      DownButtonColor = 557032
+      DownButtonColorTo = 8182519
+      CaptionButton = False
+      Color = 13889496
+      ColorTo = 10403508
+      GradientDirection = 'gdVertical'
+      DockDots = True
+      Caption = 'Aufgaben'
+      CaptionGradientDirection = 'gdVertical'
+      FocusCaptionFontColor = 'clBlack'
+      FocusCaptionColor = 9758459
+      FocusCaptionColorTo = 1414638
+      NoFocusCaptionFontColor = 13889496
+      NoFocusCaptionColor = 4393475
+      NoFocusCaptionColorTo = 16571313
+      CloseHint = 'Close panel'
+      LockHint = 'Lock panel'
+      UnlockHint = 'Unlock panel'
+      Sections = <
+      >
+      SectionLayout.CaptionColor = 16244422
+      SectionLayout.CaptionColorTo = 14060643
+      SectionLayout.CaptionFontColor = 8661248
+      SectionLayout.CaptionRounded = False
+      SectionLayout.Corners = 'scRectangle'
+      SectionLayout.BackGroundColor = 16248798
+      SectionLayout.BackGroundColorTo = 16242365
+      SectionLayout.BorderColor = 'clWhite'
+      SectionLayout.BorderWidth = 1
+      SectionLayout.BackGroundGradientDir = 'gdVertical'
+      SectionLayout.Indent = 4
+      SectionLayout.Spacing = 4
+      SectionLayout.ItemFontColor = 11876608
+      SectionLayout.ItemHoverTextColor = 11876608
+      SectionLayout.ItemHoverUnderline = True
+      SectionLayout.UnderLineCaption = False
+      ShowCaptionBorder = False
+      Style = 'esCustom'
+      Version = '1.5.5.3'
+      object cdlMain: TAdvCardList
+        Left = 0
+        Top = 23
+        Width = 0
+        Height = 820
+        Align = 'alClient'
+        TabOrder = 0
+        DockOrientation = 'doNoOrient'
+        BorderColor = 12164479
+        CardEditingAppearance.BevelOuter = 'bvNone'
+        CardEditingAppearance.BorderColor = 13603685
+        CardEditingAppearance.CaptionColor.Color = 9758459
+        CardEditingAppearance.CaptionColor.ColorTo = 1414638
+        CardEditingAppearance.CaptionColor.Direction = 'gdVertical'
+        CardEditingAppearance.CaptionBorderColor = 13603685
+        CardEditingAppearance.CaptionBorderWidth = 0
+        CardEditingAppearance.CaptionFont.Charset = 'DEFAULT_CHARSET'
+        CardEditingAppearance.CaptionFont.Color = 'clBlack'
+        CardEditingAppearance.CaptionFont.Height = -11
+        CardEditingAppearance.CaptionFont.Name = 'MS Sans Serif'
+        CardEditingAppearance.CaptionFont.Style = [fsBold]
+        CardEditingAppearance.Color.Color = 'clInfoBk'
+        CardEditingAppearance.Color.ColorTo = 16381425
+        CardEditingAppearance.Color.Direction = 'gdVertical'
+        CardEditingAppearance.ItemLabelFont.Charset = 'DEFAULT_CHARSET'
+        CardEditingAppearance.ItemLabelFont.Color = 'clBlack'
+        CardEditingAppearance.ItemLabelFont.Height = -11
+        CardEditingAppearance.ItemLabelFont.Name = 'MS Sans Serif'
+        CardEditingAppearance.ItemLabelFont.Style = []
+        CardEditingAppearance.ItemEditFont.Charset = 'DEFAULT_CHARSET'
+        CardEditingAppearance.ItemEditFont.Color = 'clBlack'
+        CardEditingAppearance.ItemEditFont.Height = -11
+        CardEditingAppearance.ItemEditFont.Name = 'MS Sans Serif'
+        CardEditingAppearance.ItemEditFont.Style = []
+        CardEditingAppearance.ReplaceLabelFont = True
+        CardEditingAppearance.ReplaceEditFont = True
+        CardNormalAppearance.BevelOuter = 'bvNone'
+        CardNormalAppearance.BorderColor = 7630959
+        CardNormalAppearance.CaptionColor.Color = 16182247
+        CardNormalAppearance.CaptionColor.ColorTo = 13879751
+        CardNormalAppearance.CaptionColor.Direction = 'gdVertical'
+        CardNormalAppearance.CaptionBorderColor = 12697534
+        CardNormalAppearance.CaptionBorderWidth = 0
+        CardNormalAppearance.CaptionFont.Charset = 'DEFAULT_CHARSET'
+        CardNormalAppearance.CaptionFont.Color = 6050636
+        CardNormalAppearance.CaptionFont.Height = -11
+        CardNormalAppearance.CaptionFont.Name = 'MS Sans Serif'
+        CardNormalAppearance.CaptionFont.Style = [fsBold]
+        CardNormalAppearance.Color.Color = 'clWhite'
+        CardNormalAppearance.Color.ColorTo = 16381425
+        CardNormalAppearance.Color.Direction = 'gdVertical'
+        CardNormalAppearance.ItemLabelFont.Charset = 'DEFAULT_CHARSET'
+        CardNormalAppearance.ItemLabelFont.Color = 'clBlack'
+        CardNormalAppearance.ItemLabelFont.Height = -11
+        CardNormalAppearance.ItemLabelFont.Name = 'MS Sans Serif'
+        CardNormalAppearance.ItemLabelFont.Style = []
+        CardNormalAppearance.ItemEditFont.Charset = 'DEFAULT_CHARSET'
+        CardNormalAppearance.ItemEditFont.Color = 'clBlack'
+        CardNormalAppearance.ItemEditFont.Height = -11
+        CardNormalAppearance.ItemEditFont.Name = 'MS Sans Serif'
+        CardNormalAppearance.ItemEditFont.Style = []
+        CardNormalAppearance.ReplaceLabelFont = True
+        CardNormalAppearance.ReplaceEditFont = True
+        CardSelectedAppearance.BevelOuter = 'bvNone'
+        CardSelectedAppearance.BorderColor = 13603685
+        CardSelectedAppearance.CaptionColor.Color = 9758459
+        CardSelectedAppearance.CaptionColor.ColorTo = 1414638
+        CardSelectedAppearance.CaptionColor.Direction = 'gdVertical'
+        CardSelectedAppearance.CaptionBorderColor = 13603685
+        CardSelectedAppearance.CaptionBorderWidth = 0
+        CardSelectedAppearance.CaptionFont.Charset = 'DEFAULT_CHARSET'
+        CardSelectedAppearance.CaptionFont.Color = 'clBlack'
+        CardSelectedAppearance.CaptionFont.Height = -11
+        CardSelectedAppearance.CaptionFont.Name = 'MS Sans Serif'
+        CardSelectedAppearance.CaptionFont.Style = [fsBold]
+        CardSelectedAppearance.Color.Color = 'clInfoBk'
+        CardSelectedAppearance.Color.ColorTo = 16381425
+        CardSelectedAppearance.Color.Direction = 'gdVertical'
+        CardSelectedAppearance.ItemLabelFont.Charset = 'DEFAULT_CHARSET'
+        CardSelectedAppearance.ItemLabelFont.Color = 'clBlack'
+        CardSelectedAppearance.ItemLabelFont.Height = -11
+        CardSelectedAppearance.ItemLabelFont.Name = 'MS Sans Serif'
+        CardSelectedAppearance.ItemLabelFont.Style = []
+        CardSelectedAppearance.ItemEditFont.Charset = 'DEFAULT_CHARSET'
+        CardSelectedAppearance.ItemEditFont.Color = 'clBlack'
+        CardSelectedAppearance.ItemEditFont.Height = -11
+        CardSelectedAppearance.ItemEditFont.Name = 'MS Sans Serif'
+        CardSelectedAppearance.ItemEditFont.Style = []
+        CardSelectedAppearance.ReplaceLabelFont = True
+        CardSelectedAppearance.ReplaceEditFont = True
+        CardHoverAppearance.BevelOuter = 'bvNone'
+        CardHoverAppearance.BorderColor = 7630959
+        CardHoverAppearance.CaptionColor.Color = 16182247
+        CardHoverAppearance.CaptionColor.ColorTo = 13879751
+        CardHoverAppearance.CaptionColor.Direction = 'gdVertical'
+        CardHoverAppearance.CaptionBorderColor = 12697534
+        CardHoverAppearance.CaptionBorderWidth = 0
+        CardHoverAppearance.CaptionFont.Charset = 'DEFAULT_CHARSET'
+        CardHoverAppearance.CaptionFont.Color = 6050636
+        CardHoverAppearance.CaptionFont.Height = -11
+        CardHoverAppearance.CaptionFont.Name = 'MS Sans Serif'
+        CardHoverAppearance.CaptionFont.Style = [fsBold]
+        CardHoverAppearance.Color.Color = 'clWhite'
+        CardHoverAppearance.Color.ColorTo = 16381425
+        CardHoverAppearance.Color.Direction = 'gdVertical'
+        CardHoverAppearance.ItemLabelFont.Charset = 'DEFAULT_CHARSET'
+        CardHoverAppearance.ItemLabelFont.Color = 'clBlack'
+        CardHoverAppearance.ItemLabelFont.Height = -11
+        CardHoverAppearance.ItemLabelFont.Name = 'MS Sans Serif'
+        CardHoverAppearance.ItemLabelFont.Style = []
+        CardHoverAppearance.ItemEditFont.Charset = 'DEFAULT_CHARSET'
+        CardHoverAppearance.ItemEditFont.Color = 'clBlack'
+        CardHoverAppearance.ItemEditFont.Height = -11
+        CardHoverAppearance.ItemEditFont.Name = 'MS Sans Serif'
+        CardHoverAppearance.ItemEditFont.Style = []
+        CardHoverAppearance.ReplaceLabelFont = True
+        CardHoverAppearance.ReplaceEditFont = True
+        CardTemplate.DefaultItem.Caption = 'AdvCardTemplateItem0'
+        CardTemplate.DefaultItem.CaptionFont.Charset = 'DEFAULT_CHARSET'
+        CardTemplate.DefaultItem.CaptionFont.Color = 'clWindowText'
+        CardTemplate.DefaultItem.CaptionFont.Height = -11
+        CardTemplate.DefaultItem.CaptionFont.Name = 'MS Sans Serif'
+        CardTemplate.DefaultItem.CaptionFont.Style = []
+        CardTemplate.DefaultItem.EditColor = 'clNone'
+        CardTemplate.DefaultItem.ItemEditor = 'ieText'
+        CardTemplate.DefaultItem.Name = 'AdvCardTemplateItem0'
+        CardTemplate.DefaultItem.Tag = 0
+        CardTemplate.DefaultItem.ValueFont.Charset = 'DEFAULT_CHARSET'
+        CardTemplate.DefaultItem.ValueFont.Color = 'clWindowText'
+        CardTemplate.DefaultItem.ValueFont.Height = -11
+        CardTemplate.DefaultItem.ValueFont.Name = 'MS Sans Serif'
+        CardTemplate.DefaultItem.ValueFont.Style = []
+        CardTemplate.Items = <
+          item0 = {
+            Caption = 'Datum'
+            CaptionFont.Charset = 'DEFAULT_CHARSET'
+            CaptionFont.Color = 'clWindowText'
+            CaptionFont.Height = -11
+            CaptionFont.Name = 'MS Sans Serif'
+            CaptionFont.Style = []
+            EditColor = 'clNone'
+            ItemEditor = 'ieText'
+            Name = 'ctpDatum'
+            Tag = 0
+            ValueFont.Charset = 'DEFAULT_CHARSET'
+            ValueFont.Color = 'clWindowText'
+            ValueFont.Height = -11
+            ValueFont.Name = 'MS Sans Serif'
+            ValueFont.Style = []
+          }
+          item1 = {
+            Caption = 'Endtermin'
+            CaptionFont.Charset = 'DEFAULT_CHARSET'
+            CaptionFont.Color = 'clWindowText'
+            CaptionFont.Height = -11
+            CaptionFont.Name = 'MS Sans Serif'
+            CaptionFont.Style = []
+            EditColor = 'clNone'
+            ItemEditor = 'ieText'
+            Name = 'ctpErledigt'
+            Tag = 0
+            ValueFont.Charset = 'DEFAULT_CHARSET'
+            ValueFont.Color = 'clWindowText'
+            ValueFont.Height = -11
+            ValueFont.Name = 'MS Sans Serif'
+            ValueFont.Style = []
+          }
+          item2 = {
+            Caption = 'Aufgabe'
+            CaptionFont.Charset = 'DEFAULT_CHARSET'
+            CaptionFont.Color = 'clWindowText'
+            CaptionFont.Height = -11
+            CaptionFont.Name = 'MS Sans Serif'
+            CaptionFont.Style = []
+            EditColor = 'clNone'
+            ItemEditor = 'ieText'
+            Name = 'ctpAufgabe'
+            Tag = 0
+            ValueFont.Charset = 'DEFAULT_CHARSET'
+            ValueFont.Color = 'clWindowText'
+            ValueFont.Height = -11
+            ValueFont.Name = 'MS Sans Serif'
+            ValueFont.Style = []
+          }
+        >
+        Color.Color = 15921648
+        Color.ColorTo = 15921648
+        Color.Direction = 'gdVertical'
+        DelayedCardLoad = False
+        DelayedCardLoadInterval = 100
+        GridLineWidth = 2
+        SortSettings.SortType = 'stItem'
+        Version = '2.0.2.1'
+      end
+    end
+    object AdvToolPanel2: TAdvToolPanel
+      Left = 228
+      Top = 1
+      Width = 0
+      Height = 841
+      Align = 'alLeft'
+      BackgroundTransparent = False
+      BackGroundPosition = 'bpTopLeft'
+      Button3D = False
+      HoverButtonColor = 4393475
+      HoverButtonColorTo = 2656070
+      DownButtonColor = 7061637
+      DownButtonColorTo = 4393475
+      CaptionButton = False
+      Color = 7061637
+      ColorTo = 2656070
+      GradientDirection = 'gdVertical'
+      DockDots = True
+      Caption = 'Menü'
+      CaptionGradientDirection = 'gdVertical'
+      FocusCaptionFontColor = 'clBlack'
+      FocusCaptionColor = 4393475
+      FocusCaptionColorTo = 2656070
+      NoFocusCaptionFontColor = 'clWhite'
+      NoFocusCaptionColor = 4393475
+      NoFocusCaptionColorTo = 2644274
+      OpenWidth = 200
+      CloseHint = 'Close panel'
+      LockHint = 'Lock panel'
+      UnlockHint = 'Unlock panel'
+      Sections = <
+      >
+      SectionLayout.CaptionColor = 16244422
+      SectionLayout.CaptionColorTo = 14060643
+      SectionLayout.CaptionFontColor = 8661248
+      SectionLayout.CaptionRounded = False
+      SectionLayout.Corners = 'scRectangle'
+      SectionLayout.BackGroundColor = 16248798
+      SectionLayout.BackGroundColorTo = 16242365
+      SectionLayout.BorderColor = 'clWhite'
+      SectionLayout.BorderWidth = 1
+      SectionLayout.BackGroundGradientDir = 'gdVertical'
+      SectionLayout.Indent = 4
+      SectionLayout.Spacing = 4
+      SectionLayout.ItemFontColor = 11876608
+      SectionLayout.ItemHoverTextColor = 11876608
+      SectionLayout.ItemHoverUnderline = True
+      SectionLayout.UnderLineCaption = False
+      ShowCaptionBorder = False
+      ShowClose = False
+      Version = '1.5.5.3'
+      object trvMenu: TTreeList
+        Left = 1
+        Top = 24
+        Width = 225
+        Height = 816
+        Align = 'alClient'
+        Color = 2294273
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 15066597
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Indent = 20
+        ParentFont = False
+        ReadOnly = True
+        TabOrder = 0
+        Visible = True
+        OnAdvancedCustomDrawItem = 'trvMenuAdvancedCustomDrawItem'
+        OnClick = 'trvMenuClick'
+        Columns = <
+          item0 = {
+            Font.Charset = 'DEFAULT_CHARSET'
+            Font.Color = 15066597
+            Font.Height = -11
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            Width = 150
+          }
+        >
+        ColumnLines = True
+        Separator = ';'
+        ItemHeight = 24
+        HeaderSettings.Color = 'clBtnFace'
+        HeaderSettings.Font.Charset = 'DEFAULT_CHARSET'
+        HeaderSettings.Font.Color = 'clWindowText'
+        HeaderSettings.Font.Height = -11
+        HeaderSettings.Font.Name = 'MS Sans Serif'
+        HeaderSettings.Font.Style = []
+        HeaderSettings.Height = 18
+        HeaderSettings.Visible = False
+        Version = '1.1.0.2'
+      end
+    end
+    object pnlFav: TAdvToolPanel
+      Left = 228
+      Top = 1
+      Width = 0
+      Height = 841
+      Align = 'alLeft'
+      BackgroundTransparent = False
+      BackGroundPosition = 'bpTopLeft'
+      Button3D = False
+      HoverButtonColor = 'clBlack'
+      HoverButtonColorTo = 6013175
+      DownButtonColor = 557032
+      DownButtonColorTo = 8182519
+      CaptionButton = False
+      Color = 16571313
+      ColorTo = 7500402
+      GradientDirection = 'gdVertical'
+      DockDots = True
+      Caption = 'Favoriten'
+      Font.Charset = 'ANSI_CHARSET'
+      Font.Color = 'clBlack'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      CaptionGradientDirection = 'gdVertical'
+      FocusCaptionFontColor = 'clBlack'
+      FocusCaptionColor = 9758459
+      FocusCaptionColorTo = 1414638
+      NoFocusCaptionFontColor = 'clBlack'
+      NoFocusCaptionColor = 4393475
+      NoFocusCaptionColorTo = 16571313
+      CloseHint = 'Close panel'
+      LockHint = 'Lock panel'
+      UnlockHint = 'Unlock panel'
+      Sections = <
+      >
+      SectionLayout.CaptionColor = 16244422
+      SectionLayout.CaptionColorTo = 14060643
+      SectionLayout.CaptionFontColor = 8661248
+      SectionLayout.CaptionRounded = False
+      SectionLayout.Corners = 'scRectangle'
+      SectionLayout.BackGroundColor = 16248798
+      SectionLayout.BackGroundColorTo = 16242365
+      SectionLayout.BorderColor = 'clWhite'
+      SectionLayout.BorderWidth = 1
+      SectionLayout.BackGroundGradientDir = 'gdVertical'
+      SectionLayout.Indent = 4
+      SectionLayout.Spacing = 4
+      SectionLayout.ItemFontColor = 11876608
+      SectionLayout.ItemHoverTextColor = 11876608
+      SectionLayout.ItemHoverUnderline = True
+      SectionLayout.UnderLineCaption = False
+      ShowCaptionBorder = False
+      ShowClose = False
+      ShowHint = True
+      Style = 'esCustom'
+      Version = '1.5.5.3'
+      object acbFavWin: TActionToolBar
+        Left = 1
+        Top = 24
+        Width = 225
+        Height = 816
+        ActionManager = 'actManagerMain'
+        Align = 'alClient'
+        Caption = 'acbFavWin'
+        ColorMap.HighlightColor = 'clWhite'
+        ColorMap.BtnSelectedColor = 'clBtnFace'
+        ColorMap.UnusedColor = 'clWhite'
+        EdgeBorders = [ebLeft, ebTop, ebRight, ebBottom]
+        Font.Charset = 'ANSI_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        HorzMargin = 3
+        Orientation = 'boTopToBottom'
+        ParentFont = False
+        Spacing = 0
+      end
+    end
+  end
+  object aclStamm: TActionList
+    Images = 'ImgApplic'
+    Left = 32
+    Top = 8
+    object actAdressen: THITMenueAction
+      Caption = 'Adressen'
+      HelpKeyword = '0'
+      Hint = 'Adressen'
+      ImageIndex = 0
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actAdressenExecute'
+      MenueName = 'Adressen'
+      ScreenName = 'Adressen'
+      LabelColor = 1415574
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 20
+    end
+    object actAdressGruppen: THITMenueAction
+      Tag = -1
+      Caption = 'Adressgruppen'
+      HelpKeyword = '1000'
+      Hint = 'Adressgruppen'
+      ImageIndex = 1
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actAdressGruppenExecute'
+      MenueName = 'Adressgruppen'
+      ScreenName = 'Adressgruppen'
+      LabelColor = 1415574
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 10005
+    end
+    object actArtikel: THITMenueAction
+      Caption = 'Artikel'
+      HelpKeyword = '10'
+      Hint = 'Artikel'
+      ImageIndex = 5
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actArtikelExecute'
+      MenueName = 'Artikel'
+      ScreenName = 'Artikel'
+      LabelColor = 1415574
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 10
+    end
+    object actArtikelGruppen: THITMenueAction
+      Tag = -1
+      Caption = 'Artikelgruppen'
+      HelpKeyword = '1001'
+      Hint = 'Artikelgruppen'
+      ImageIndex = 5
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actArtikelGruppenExecute'
+      MenueName = 'Artikelgruppen'
+      ScreenName = 'Artikelgruppen'
+      LabelColor = 1415574
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 10006
+    end
+    object actStueckliste: THITMenueAction
+      Caption = 'Stückliste'
+      HelpKeyword = '15'
+      Hint = 'Stueckliste'
+      ImageIndex = 9
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actStuecklisteExecute'
+      MenueName = 'Stückliste'
+      ScreenName = 'Stückliste'
+      LabelColor = 1415574
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 15
+    end
+    object actStuecklistenGruppen: THITMenueAction
+      Tag = -1
+      Caption = 'Stücklistengruppen'
+      HelpKeyword = '1002'
+      Hint = 'Stuecklistengruppen'
+      ImageIndex = 10
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actStuecklistenGruppenExecute'
+      MenueName = 'Stücklistengruppen'
+      ScreenName = 'Stücklistengruppen'
+      LabelColor = 1415574
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 100070
+    end
+    object actGeraete: THITMenueAction
+      Caption = 'Geräte'
+      Hint = 'Geräte'
+      ImageIndex = 31
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actGeraeteExecute'
+      MenueName = 'Geräte'
+      ScreenName = 'Geräte'
+      LabelColor = 1415574
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormIDName = 'Geraete'
+      FormID = 162
+    end
+    object actRepbestell: THITMenueAction
+      Caption = 'Rep-Bestellung'
+      Hint = 'RepBestell'
+      ImageIndex = 28
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actRepbestellExecute'
+      MenueName = 'Rep-Bestellung'
+      ScreenName = 'Rep-Bestellung'
+      LabelColor = 1415574
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormIDName = 'RepBestell'
+      FormID = 163
+    end
+    object actrepstatus: THITMenueAction
+      Caption = 'Status Reparaturen'
+      Hint = 'StatusRep'
+      ImageIndex = 104
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actrepstatusExecute'
+      MenueName = 'Status Reparaturen'
+      ScreenName = 'Status Reparaturen'
+      LabelColor = 'clBlack'
+      InMenue = True
+      InPanel = True
+      OnScreen = False
+      FormID = 10044
+    end
+  end
+  object aclVertrieb: TActionList
+    Tag = 5
+    Images = 'ImgApplic'
+    Left = 32
+    Top = 216
+    object actAngebot: THITMenueAction
+      Caption = 'Angebot'
+      HelpKeyword = '100'
+      Hint = 'Angebot'
+      ImageIndex = 4
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actAngebotExecute'
+      MenueName = 'Angebot'
+      ScreenName = 'Angebot'
+      LabelColor = 4227072
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actAbrufauftrag: THITMenueAction
+      Caption = 'Hauptauftrag/Bestellung'
+      HelpKeyword = '72'
+      Hint = 'Abrufauftrag'
+      ImageIndex = 16
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actAbrufAuftragExecute'
+      MenueName = 'Hauptauftrag/Bestellung'
+      ScreenName = 'Hauptauftrag/Bestellung'
+      LabelColor = 4227072
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actAuftrag: THITMenueAction
+      Tag = -2
+      Caption = 'Auftrag'
+      HelpKeyword = '101'
+      Hint = 'Auftrag'
+      ImageIndex = 5
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actAuftragExecute'
+      MenueName = 'Auftrag'
+      ScreenName = 'Auftrag'
+      LabelColor = 4227072
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actLieferschein: THITMenueAction
+      Caption = 'Lieferschein'
+      HelpKeyword = '102'
+      Hint = 'Lieferschein'
+      ImageIndex = 19
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actLieferscheinExecute'
+      MenueName = 'Lieferschein'
+      ScreenName = 'Lieferschein'
+      LabelColor = 4227072
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actRechnung: THITMenueAction
+      Caption = 'Rechnung'
+      HelpKeyword = '103'
+      Hint = 'Rechnung'
+      ImageIndex = 20
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actRechnungExecute'
+      MenueName = 'Rechnung'
+      ScreenName = 'Rechnung'
+      LabelColor = 4227072
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actRechnungabschlag: THITMenueAction
+      Caption = 'Abschlagrechnung'
+      HelpKeyword = '108'
+      Hint = 'Rechnungabschlag'
+      ImageIndex = 17
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actRechnungabschlagExecute'
+      MenueName = 'Abschlagrechnung'
+      ScreenName = 'Abschlagrechnung'
+      LabelColor = 4227072
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actMahnung: THITMenueAction
+      Caption = 'Mahnung'
+      HelpKeyword = '104'
+      Hint = 'Mahnung'
+      ImageIndex = 21
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actMahnungExecute'
+      MenueName = 'Mahnung'
+      ScreenName = 'Mahnung'
+      LabelColor = 4227072
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actVertreter: THITMenueAction
+      Caption = 'Vertreterabrechnung'
+      Hint = 'Vertreter'
+      ImageIndex = 7
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actVertreterExecute'
+      MenueName = 'Vertreterabrechnung'
+      ScreenName = 'Vertreterabrechnung'
+      LabelColor = 4227072
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormIDName = 'fidVertreterRech'
+      FormID = 115
+    end
+    object actAchtD: THITMenueAction
+      Caption = 'Reparatur'
+      Hint = 'AchtD'
+      ImageIndex = 24
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actAchtDExecute'
+      MenueName = 'Reparatur'
+      ScreenName = 'Reparatur'
+      LabelColor = 4227072
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 153
+    end
+    object actRahmenauftrag: THITMenueAction
+      Tag = -2
+      Caption = 'Rahmenauftrag'
+      Hint = 'AbrufAuftragStd'
+      ImageIndex = 22
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actRahmenauftragExecute'
+      MenueName = 'Rahmenauftrag'
+      ScreenName = 'Rahmenauftrag'
+      LabelColor = 4227072
+      InMenue = True
+      InPanel = True
+      OnScreen = False
+      FormID = 10030
+    end
+    object actAuftragH: THITMenueAction
+      Caption = 'Prodauftrag'
+      Hint = 'Produktionsauftrag'
+      ImageIndex = 15
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actAuftragHExecute'
+      MenueName = 'Prodauftrag'
+      ScreenName = 'Prodauftrag'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+  end
+  object ilMain: TImageList
+    Height = 38
+    Width = 38
+    Left = 104
+    Top = 104
+    Bitmap = <binary 214942 bytes>
+  end
+  object aclFirmendaten: TActionList
+    Tag = 4
+    Images = 'ImgApplic'
+    Left = 32
+    Top = 160
+    object actMitarbeiter: THITMenueAction
+      Caption = 'Mitarbeiter'
+      HelpKeyword = '41'
+      Hint = 'Mitarbeiter'
+      ImageIndex = 22
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actMitarbeiterExecute'
+      MenueName = 'Mitarbeiter'
+      ScreenName = 'Mitarbeiter'
+      LabelColor = 11171749
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 41
+    end
+    object actBenutzer: THITMenueAction
+      Caption = 'Benutzer'
+      HelpKeyword = '40'
+      Hint = 'Benutzer'
+      ImageIndex = 6
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actBenutzerExecute'
+      MenueName = 'Benutzer'
+      ScreenName = 'Benutzer'
+      LabelColor = 11171749
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 40
+    end
+    object actTextbausteine: THITMenueAction
+      Caption = 'Textbausteine'
+      HelpKeyword = '30'
+      Hint = 'Textbausteine'
+      ImageIndex = 7
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actTextbausteineExecute'
+      MenueName = 'Textbausteine'
+      ScreenName = 'Textbausteine'
+      LabelColor = 11171749
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actFuhrpark: THITMenueAction
+      Tag = -2
+      Caption = 'Fuhrpark'
+      HelpKeyword = '60'
+      Hint = 'Fuhrpark'
+      ImageIndex = 19
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actFuhrparkExecute'
+      MenueName = 'Fuhrpark'
+      ScreenName = 'Fuhrpark'
+      LabelColor = 11171749
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 61
+    end
+    object actLager: THITMenueAction
+      Caption = 'Wareneingang'
+      HelpKeyword = '107'
+      Hint = 'Lager'
+      ImageIndex = 5
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actLagerExecute'
+      MenueName = 'Wareneingang'
+      ScreenName = 'Wareneingang'
+      LabelColor = 11171749
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actWA: THITMenueAction
+      Caption = 'Warenausgang'
+      Hint = 'Warenausgang'
+      ImageIndex = 8
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actWAExecute'
+      MenueName = 'Warenausgang'
+      ScreenName = 'Warenausgang'
+      LabelColor = 11171749
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormID = 0
+    end
+    object actMitarbeiterzeit: THITMenueAction
+      Caption = 'Mitarbeiter Zeit'
+      HelpKeyword = '71'
+      Hint = 'Mitarbeiterzeit'
+      ImageIndex = 19
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actMitarbeiterzeitExecute'
+      MenueName = 'Zeit'
+      ScreenName = 'Mitarbeiter Zeit'
+      LabelColor = 11171749
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 10015
+    end
+    object actAuswertung: THITMenueAction
+      Caption = 'Auswertungen'
+      Hint = 'Auswertungen'
+      ImageIndex = 16
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actAuswertungExecute'
+      MenueName = 'Auswertungen'
+      ScreenName = 'Auswertungen'
+      LabelColor = 11171749
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 0
+    end
+    object acthelp: TAction
+      Tag = -2
+      Caption = 'acthelp'
+      OnExecute = 'acthelpExecute'
+    end
+    object actWarenausgang: THITMenueAction
+      Caption = 'Auslieferung'
+      Hint = 'Warenausgang'
+      ImageIndex = 24
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actWarenausgangExecute'
+      MenueName = 'Auslieferung'
+      ScreenName = 'Auslieferung'
+      LabelColor = 11171749
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 10020
+    end
+    object actGelangen: THITMenueAction
+      Caption = 'Gelangensbestätigung'
+      Hint = 'Gelangensbestätigung'
+      ImageIndex = 17
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actGelangenExecute'
+      MenueName = 'Gelangensbestätigung'
+      ScreenName = 'Gelangensbestätigung'
+      LabelColor = 11171749
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormID = 10041
+    end
+  end
+  object aclSystem: TActionList
+    Tag = 1
+    Images = 'ImgApplic'
+    Left = 32
+    Top = 48
+    object actTextkonstanten: THITMenueAction
+      Caption = 'Textkonstanten'
+      HelpKeyword = '1005'
+      Hint = 'Textkonstanten'
+      ImageIndex = 20
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actTextkonstantenExecute'
+      MenueName = 'Textkonstanten'
+      ScreenName = 'Textkonstanten'
+      LabelColor = 5414853
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 10004
+    end
+    object actGrundlagen: THITMenueAction
+      Caption = 'Grundlagen'
+      HelpKeyword = '1006'
+      Hint = 'Grundlagen'
+      ImageIndex = 14
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actGrundlagenExecute'
+      MenueName = 'Grundlagen'
+      ScreenName = 'Grundlagen'
+      LabelColor = 5414853
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 10003
+    end
+    object actDbAdmin: THITMenueAction
+      Caption = 'Db-Administration'
+      HelpKeyword = '1010'
+      Hint = 'DbAdmin'
+      ImageIndex = 21
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actDbAdminExecute'
+      MenueName = 'Db-Administration'
+      ScreenName = 'Db-Administration'
+      LabelColor = 5414853
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 10014
+    end
+    object actFormulareinstellungen: THITMenueAction
+      Caption = 'Formulareinstellungen'
+      HelpKeyword = '1007'
+      Hint = 'Formular'
+      ImageIndex = 23
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actFormulareinstellungenExecute'
+      MenueName = 'Formulareinstellungen'
+      ScreenName = 'Formulareinstellungen'
+      LabelColor = 5414853
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 10002
+    end
+    object actDrucker: THITMenueAction
+      Caption = 'Druckereinstellungen'
+      HelpKeyword = '1008'
+      Hint = 'Drucker'
+      ImageIndex = 17
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actDruckerExecute'
+      MenueName = 'Druckereinstellungen'
+      ScreenName = 'Druckereinstellungen'
+      LabelColor = 5414853
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 10017
+    end
+    object actExport: THITMenueAction
+      Caption = 'Export'
+      HelpKeyword = '1009'
+      Hint = 'Export'
+      ImageIndex = 22
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actExportExecute'
+      MenueName = 'Export'
+      ScreenName = 'Export'
+      LabelColor = 5414853
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actProjekte: THITMenueAction
+      Caption = 'Projekte'
+      Hint = 'Projekte'
+      ImageIndex = 16
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actProjekteExecute'
+      MenueName = 'Projekte'
+      ScreenName = 'Projekte'
+      LabelColor = 5414853
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormID = 0
+    end
+    object WindowClose1: TWindowClose
+      Tag = -2
+      Category = 'Fenster'
+      Caption = 'S&chließen'
+      Enabled = False
+      Hint = 'Schließen'
+      OnExecute = 'WindowClose1Execute'
+    end
+    object WindowCascade1: TWindowCascade
+      Tag = -2
+      Category = 'Fenster'
+      Caption = 'Ü&berlappend'
+      Enabled = False
+      Hint = 'Überlappend'
+      OnExecute = 'WindowCascade1Execute'
+    end
+    object WindowArrange1: TWindowArrange
+      Tag = -2
+      Category = 'Fenster'
+      Caption = 'An&ordnen'
+      Enabled = False
+      OnExecute = 'WindowArrange1Execute'
+    end
+    object WindowTileHorizontal1: TWindowTileHorizontal
+      Tag = -2
+      Category = 'Fenster'
+      Caption = 'Hori&zontal anordnen'
+      Enabled = False
+      Hint = 'Horizontal anordnen'
+      OnExecute = 'WindowTileHorizontal1Execute'
+    end
+    object actfurhpark: THITMenueAction
+      Tag = -2
+      Caption = 'Furhpark'
+      Hint = 'Fuhrpark'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actfurhparkExecute'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object WindowMinimizeAll1: TWindowMinimizeAll
+      Tag = -2
+      Category = 'Fenster'
+      Caption = '&Alle verkleinern'
+      Enabled = False
+      Hint = 'Alle verkleinern'
+      OnExecute = 'WindowMinimizeAll1Execute'
+    end
+  end
+  object psdDrucker: TPrinterSetupDialog
+    Left = 104
+    Top = 296
+  end
+  object aeApplication: TApplicationEvents
+    OnException = 'aeApplicationException'
+    Left = 104
+    Top = 248
+  end
+  object aclProduktion: TActionList
+    Tag = 2
+    Images = 'ImgApplic'
+    Left = 32
+    Top = 80
+    object actProduktion: THITMenueAction
+      Caption = 'Produktion'
+      HelpKeyword = '71'
+      Hint = 'Produktion'
+      ImageIndex = 19
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actProduktionExecute'
+      MenueName = 'Produktion'
+      ScreenName = 'Produktion'
+      LabelColor = 7622812
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actProduktionsarten: THITMenueAction
+      Caption = 'Produktionsarten'
+      Hint = 'Produktionsarten'
+      ImageIndex = 16
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actProdarten2Execute'
+      MenueName = 'Produktionsarten'
+      ScreenName = 'Produktionsarten'
+      LabelColor = 7622812
+      InMenue = False
+      InPanel = True
+      OnScreen = True
+      FormIDName = 'Produktionsarten'
+      FormID = 0
+    end
+    object actProduktionzelle: THITMenueAction
+      Caption = 'Laufkarten'
+      Hint = 'Produktionzelle'
+      ImageIndex = 13
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actProduktionzelleExecute'
+      MenueName = 'Laufkarten'
+      ScreenName = 'Laufkarten'
+      LabelColor = 7622812
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 151
+    end
+    object actProtokoll: THITMenueAction
+      Tag = 2
+      Caption = 'Protokoll'
+      Hint = 'Protokoll'
+      ImageIndex = 24
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actProtokollExecute'
+      ScreenName = 'Protokoll'
+      LabelColor = 7622812
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 0
+    end
+    object act8DIntern: THITMenueAction
+      Caption = '8DIntern'
+      Hint = 'AchtDIntern'
+      ImageIndex = 28
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'act8DInternExecute'
+      MenueName = '8DIntern'
+      ScreenName = '8DIntern'
+      LabelColor = 7622812
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 156
+    end
+    object actFam: THITMenueAction
+      Caption = 'FAM'
+      Hint = 'FAM'
+      ImageIndex = 31
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actFamExecute'
+      ScreenName = 'FAM'
+      LabelColor = 7622812
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 0
+    end
+    object act8Dnew: THITMenueAction
+      Caption = '8D-Kunde'
+      Hint = '8Dneu'
+      ImageIndex = 6
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'act8DnewExecute'
+      MenueName = '8D-Kunde'
+      ScreenName = '8D-Kunde'
+      LabelColor = 7622812
+      InMenue = True
+      InPanel = True
+      OnScreen = False
+      FormID = 0
+    end
+    object actEngpass: THITMenueAction
+      Caption = 'EngpassCockpit'
+      Hint = 'EngpassCockpit'
+      ImageIndex = 20
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actEngpassExecute'
+      MenueName = 'EngpassCockpit'
+      ScreenName = 'EngpassCockpit'
+      LabelColor = 7622812
+      InMenue = True
+      InPanel = True
+      OnScreen = False
+      FormIDName = 'EngpassCockpit'
+      FormID = 166
+    end
+    object actCockpit: THITMenueAction
+      Caption = 'Cockpit'
+      Hint = 'ProdCockpit'
+      ImageIndex = 15
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actCockpitExecute'
+      MenueName = 'Cockpit'
+      ScreenName = 'Cockpit'
+      LabelColor = 7622812
+      InMenue = True
+      InPanel = True
+      OnScreen = False
+      FormID = 10033
+    end
+    object actBegleit: THITMenueAction
+      Caption = 'Begleitschein'
+      Hint = 'Begleitschein'
+      ImageIndex = 11
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actBegleitExecute'
+      MenueName = 'Begleitschein'
+      ScreenName = 'Begleitschein'
+      LabelColor = 7622812
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormIDName = 'fidBegleit'
+      FormID = 0
+    end
+    object actengpassrep: THITMenueAction
+      Caption = 'Engpass Reparatur'
+      ImageIndex = 3
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actengpassrepExecute'
+      MenueName = 'Engpass Reparaturen'
+      ScreenName = 'Engpass Reparaturen'
+      LabelColor = 'clBlack'
+      InMenue = True
+      InPanel = True
+      OnScreen = False
+      FormID = 185
+    end
+    object actstueber: TAction
+      Caption = 'Übersicht Stücklisten'
+      OnExecute = 'actstueberExecute'
+    end
+  end
+  object actManagerMain: TActionManager
+    ActionBars = <
+      item0 = {
+      }
+      item1 = {
+        ActionBar = 'acbFavWin'
+      }
+    >
+    LinkedActionLists = <
+      item0 = {
+        ActionList = 'aclSystem'
+        Caption = 'System'
+      }
+      item1 = {
+        ActionList = 'aclFirmendaten'
+        Caption = 'Firmendaten'
+      }
+      item2 = {
+        ActionList = 'aclStamm'
+        Caption = 'Stammdaten'
+      }
+      item3 = {
+        ActionList = 'aclEinkauf'
+        Caption = 'Einkauf'
+      }
+      item4 = {
+        ActionList = 'aclProduktion'
+        Caption = 'Produktion'
+      }
+      item5 = {
+        ActionList = 'aclVertrieb'
+        Caption = 'Vertrieb'
+      }
+    >
+    Images = 'ImgApplic'
+    State = 'asSuspendedEnabled'
+    Left = 104
+    Top = 8
+    StyleName = 'XP Style'
+  end
+  object aclEinkauf: TActionList
+    Tag = 3
+    Images = 'ImgApplic'
+    Left = 32
+    Top = 112
+    object actAnfragen: THITMenueAction
+      Caption = 'Anfragen'
+      HelpKeyword = '118'
+      Hint = 'Anfragen'
+      ImageIndex = 7
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actAnfragenExecute'
+      ScreenName = 'Anfragen'
+      LabelColor = 6968141
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormID = 118
+    end
+    object sctBlockbestellung: THITMenueAction
+      Caption = 'Rahmenbestellung'
+      Hint = 'Blockbestellung'
+      ImageIndex = 18
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'aclBlockBestellungExecute'
+      MenueName = 'Rahmenbestellung'
+      ScreenName = 'Rahmenbestellung'
+      LabelColor = 6968141
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormID = 0
+    end
+    object actBestellung: THITMenueAction
+      Caption = 'Bestellung'
+      HelpKeyword = '105'
+      Hint = 'Bestellung'
+      ImageIndex = 21
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actBestellungExecute'
+      MenueName = 'Bestellung'
+      ScreenName = 'Bestellung'
+      LabelColor = 6968141
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actBestellungstorno: THITMenueAction
+      Caption = 'Rechnungsprüfung'
+      HelpKeyword = '109'
+      Hint = 'Bestellungsstorno'
+      ImageIndex = 23
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actBestellungstornoExecute'
+      MenueName = 'Bestellungsstorno'
+      ScreenName = 'Rechnungsprüfung'
+      LabelColor = 6968141
+      InMenue = True
+      InPanel = False
+      OnScreen = True
+      FormID = 109
+    end
+    object actBestellListe: THITMenueAction
+      Caption = 'Bestelliste'
+      HelpKeyword = '111'
+      Hint = 'Bestellliste'
+      ImageIndex = 8
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actBestellListeExecute'
+      MenueName = 'Bestellliste'
+      ScreenName = 'Bestellliste'
+      LabelColor = 6968141
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormIDName = 'Bestellliste'
+      FormID = 111
+    end
+    object actBelastung: THITMenueAction
+      Tag = 2
+      Caption = '8D Lieferant'
+      Hint = 'Belastung'
+      ImageIndex = 13
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      OnExecute = 'actBelastungExecute'
+      MenueName = '8D Lieferant'
+      ScreenName = '8D Lieferant'
+      LabelColor = 6968141
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 153
+    end
+    object actBlockRep: THITMenueAction
+      Caption = 'Rahmen Reparatur'
+      Hint = 'Rahmen Reparatur'
+      ImageIndex = 19
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actBlockRepExecute'
+      MenueName = 'Rahmen Reparatur'
+      ScreenName = 'Rahmen Reparatur'
+      LabelColor = 6968141
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormID = 0
+    end
+    object actEingangRech: THITMenueAction
+      Caption = 'Eingangsbelege'
+      Hint = 'Eingangsbelege'
+      ImageIndex = 5
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actEingangRechExecute'
+      MenueName = 'Eingangsbelege'
+      ScreenName = 'Eingangsrechnungen'
+      LabelColor = 6968141
+      InMenue = False
+      InPanel = False
+      OnScreen = True
+      FormID = 0
+    end
+    object actSammelBeleg: THITMenueAction
+      Caption = 'SammelBeleg'
+      Hint = 'SammelBeleg'
+      ImageIndex = 11
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actSammelBelegExecute'
+      MenueName = 'SammelBeleg'
+      ScreenName = 'SammelBeleg'
+      LabelColor = 6968141
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormID = 10043
+    end
+    object actBeistellung: THITMenueAction
+      Caption = 'Beustellung'
+      ImageIndex = 33
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actBeistellungExecute'
+      MenueName = 'Beistellung'
+      ScreenName = 'Beistellung'
+      LabelColor = 'clBlack'
+      InMenue = True
+      InPanel = True
+      OnScreen = True
+      FormID = 174
+    end
+  end
+  object timVueDaemon: TTimer
+    Interval = 30000
+    Left = 104
+    Top = 152
+  end
+  object opdTSP: TOpenDialog
+    Left = 104
+    Top = 200
+  end
+  object AdvOfficeHint1: TAdvOfficeHint
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    HintHelpText = 'ERP'
+    ImageList = 'ilMain'
+    Version = '1.5.0.0'
+    Left = 31
+    Top = 296
+  end
+  object mmMain: TAdvMainMenu
+    Images = 'ImgApplic'
+    MenuStyler = 'AdvMenuOfficeStyler1'
+    Version = '2.5.4.0'
+    Left = 160
+    Top = 8
+    object mmiDatei1: TMenuItem
+      Caption = '&Datei'
+      object Passwortndern2: TMenuItem
+        Caption = 'Passwort ändern'
+        OnClick = 'Passwortndern1Click'
+      end
+      object N11: TMenuItem
+        Caption = '-'
+      end
+      object Auflsung1280x1: TMenuItem
+        Caption = 'Auflösung 1280x1024'
+        Visible = False
+      end
+      object Auflsung1024x1: TMenuItem
+        Caption = 'Auflösung 1024x768'
+        Visible = False
+      end
+      object N12: TMenuItem
+        Caption = '-'
+      end
+      object Navigatoran2: TMenuItem
+        Caption = 'Navigator an'
+        OnClick = 'Navigatoran1Click'
+      end
+      object Navigatoraus2: TMenuItem
+        Caption = 'Navigator aus'
+        OnClick = 'Navigatoraus1Click'
+      end
+      object Favoriten1: TMenuItem
+        Caption = 'Favoriten'
+        object unten1: TMenuItem
+          Caption = 'unten'
+          OnClick = 'unten1Click'
+        end
+        object oben1: TMenuItem
+          Caption = 'oben'
+          OnClick = 'oben1Click'
+        end
+        object rechts1: TMenuItem
+          Caption = 'rechts'
+          OnClick = 'rechts1Click'
+        end
+        object inLeiste1: TMenuItem
+          Caption = 'in Leiste'
+          OnClick = 'inLeiste1Click'
+        end
+      end
+      object N13: TMenuItem
+        Caption = '-'
+      end
+      object ScreeninZwischenablagekopieren2: TMenuItem
+        Caption = 'Screen in Zwischenablage kopieren'
+        Visible = False
+      end
+      object Netlaufwerk2: TMenuItem
+        Caption = 'Artikelpreise aus RP'
+        Visible = False
+        OnClick = 'Netlaufwerk2Click'
+      end
+      object LagerpltzeausInventur1: TMenuItem
+        Caption = 'Lagerplätze aus Inventur'
+        Visible = False
+        OnClick = 'LagerpltzeausInventur1Click'
+      end
+      object est1: TMenuItem
+        Caption = 'BestellListe'
+        OnClick = 'est1Click'
+      end
+      object NummernkreisProjekteanlegen1: TMenuItem
+        Caption = 'Nummernkreis Projekte anlegen'
+        OnClick = 'NummernkreisProjekteanlegen1Click'
+      end
+      object Repstatus1: TMenuItem
+        Caption = 'Rep-Übersicht'
+        OnClick = 'Repstatus1Click'
+      end
+      object RepStatus2: TMenuItem
+        Caption = 'Rep-Status'
+        OnClick = 'RepStatus2Click'
+      end
+      object N14: TMenuItem
+        Caption = '-'
+      end
+      object mmiBeenden1: TMenuItem
+        Caption = '&Beenden'
+        OnClick = 'mmiBeenden1Click'
+      end
+    end
+    object System2: TMenuItem
+      Caption = 'System'
+      object extkonstanten2: TMenuItem
+        Action = 'actTextkonstanten'
+      end
+      object Grundlagen2: TMenuItem
+        Action = 'actGrundlagen'
+      end
+      object Formulareinstellungen2: TMenuItem
+        Action = 'actFormulareinstellungen'
+      end
+      object Druckereinstellungen2: TMenuItem
+        Action = 'actDrucker'
+      end
+      object Export2: TMenuItem
+        Action = 'actExport'
+      end
+      object mnuDbAdministration1: TMenuItem
+        Action = 'actDbAdmin'
+      end
+      object Farbeinstellungen1: TMenuItem
+        Caption = 'Farbeinstellungen'
+        ImageIndex = 106
+        OnClick = 'Farbeinstellungen1Click'
+      end
+    end
+    object Firmendaten2: TMenuItem
+      Caption = 'Firmendaten'
+      object mmiMitarbeiter1: TMenuItem
+        Action = 'actMitarbeiter'
+      end
+      object MitarbeiterZeit2: TMenuItem
+        Action = 'actMitarbeiterzeit'
+      end
+      object Benutzerverwaltung2: TMenuItem
+        Action = 'actBenutzer'
+      end
+      object extbausteine2: TMenuItem
+        Action = 'actTextbausteine'
+      end
+      object miFuhrpark1: TMenuItem
+        Action = 'actFuhrpark'
+      end
+      object Lager2: TMenuItem
+        Action = 'actLager'
+      end
+      object Auslieferung2: TMenuItem
+        Action = 'actWarenausgang'
+      end
+      object Gelangenbesttigung1: TMenuItem
+        Action = 'actGelangen'
+      end
+    end
+    object mmiStammdaten1: TMenuItem
+      Caption = '&Stammdaten'
+      object mmiAdressen1: TMenuItem
+        Action = 'actAdressen'
+      end
+      object mmiKunden1: TMenuItem
+        Action = 'actAdressGruppen'
+      end
+      object mmiArtikel1: TMenuItem
+        Action = 'actArtikel'
+      end
+      object mmiLieferanten1: TMenuItem
+        Action = 'actArtikelGruppen'
+      end
+      object mmiBestand1: TMenuItem
+        Action = 'actStueckliste'
+      end
+      object Stcklistengruppen2: TMenuItem
+        Action = 'actStuecklistenGruppen'
+      end
+      object Gerte2: TMenuItem
+        Action = 'actGeraete'
+      end
+      object RepBestellung1: TMenuItem
+        Action = 'actRepbestell'
+      end
+      object N15: TMenuItem
+        Caption = '-'
+      end
+      object ermine2: TMenuItem
+        Caption = 'Termine'
+      end
+    end
+    object mmiFormulare1: TMenuItem
+      Caption = '&Formulare'
+      object Einkauf1: TMenuItem
+        Caption = 'Einkauf'
+        object Anfragen2: TMenuItem
+          Action = 'actAnfragen'
+        end
+        object Rahmenbestellung2: TMenuItem
+          Action = 'sctBlockbestellung'
+        end
+        object Bestellung2: TMenuItem
+          Caption = 'Bestellung'
+          Hint = 'Bestellung'
+          ImageIndex = 22
+        end
+        object Rechnungsprfung1: TMenuItem
+          Action = 'actBestellungstorno'
+        end
+        object N8DLieferant2: TMenuItem
+          Action = 'actBelastung'
+        end
+        object RahmenReparatur1: TMenuItem
+          Action = 'actBlockRep'
+        end
+        object Eingangsbelege1: TMenuItem
+          Action = 'actEingangRech'
+        end
+        object Beistellung1: TMenuItem
+          Caption = 'Beistellung'
+        end
+        object Volumenanalyse1: TMenuItem
+          Caption = 'Volumenanalyse'
+          Visible = False
+          OnClick = 'Volumenanalyse1Click'
+        end
+      end
+      object Vertrieb1: TMenuItem
+        Caption = 'Vertrieb'
+        object HauptauftragBestellung2: TMenuItem
+          Action = 'actAbrufauftrag'
+        end
+        object Rahmenauftrag2: TMenuItem
+          Action = 'actRahmenauftrag'
+        end
+        object mmiAngebot1: TMenuItem
+          Action = 'actAngebot'
+        end
+        object mmiAuftrag1: TMenuItem
+          Action = 'actAuftrag'
+        end
+        object N16: TMenuItem
+          Action = 'actAchtD'
+        end
+        object Lieferschein2: TMenuItem
+          Action = 'actLieferschein'
+        end
+        object Rechnung2: TMenuItem
+          Action = 'actRechnung'
+        end
+        object Anzahlungsrechnung2: TMenuItem
+          Action = 'actRechnungabschlag'
+        end
+        object Mahnung2: TMenuItem
+          Action = 'actMahnung'
+        end
+        object Vertreterabrechnung1: TMenuItem
+          Action = 'actVertreter'
+        end
+        object Auftragbersicht1: TMenuItem
+          Caption = 'Auftragübersicht'
+          OnClick = 'Auftragbersicht1Click'
+        end
+      end
+      object N17: TMenuItem
+        Caption = '-'
+      end
+    end
+    object N8DIntern3: TMenuItem
+      Caption = 'Produktion'
+      object Produktion2: TMenuItem
+        Action = 'actProduktion'
+      end
+      object Produktionsarten2: TMenuItem
+        Action = 'actProduktionsarten'
+      end
+      object ProduktionZelle2: TMenuItem
+        Action = 'actProduktionzelle'
+      end
+      object N8DIntern4: TMenuItem
+        Action = 'act8DIntern'
+      end
+      object FAM2: TMenuItem
+        Action = 'actFam'
+      end
+      object N8DKunde2: TMenuItem
+        Action = 'act8Dnew'
+      end
+      object EngpassCockpit2: TMenuItem
+        Action = 'actEngpass'
+      end
+      object Cockpit1: TMenuItem
+        Action = 'actCockpit'
+      end
+      object Gertebersicht1: TMenuItem
+        Caption = 'Geräteübersicht'
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object Wartung1: TMenuItem
+        Caption = 'Wartung'
+        OnClick = 'Wartung1Click'
+      end
+    end
+    object Zeiterfassung1: TMenuItem
+      Caption = 'Zeiterfassung'
+      OnClick = 'Zeiterfassung1Click'
+    end
+    object Direktsuche1: TMenuItem
+      Caption = 'Direktsuche'
+      OnClick = 'Direktsuche1Click'
+    end
+    object bersichtsfenster1: TMenuItem
+      Caption = 'Übersichtsfenster'
+      object Bestellbersicht1: TMenuItem
+        Caption = 'Bestellübersicht'
+        OnClick = 'Bestellbersicht1Click'
+      end
+      object Auftragbersicht2: TMenuItem
+        Caption = 'Auftragübersicht'
+        OnClick = 'Auftragbersicht2Click'
+      end
+    end
+    object mmiFenster1: TMenuItem
+      Caption = 'F&enster'
+      GroupIndex = 8
+      object N18: TMenuItem
+        Caption = '-'
+      end
+      object Anordnen1: TMenuItem
+        Action = 'WindowArrange1'
+      end
+      object Alleverkleinern1: TMenuItem
+        Action = 'WindowMinimizeAll1'
+      end
+      object Horizontalanordnen1: TMenuItem
+        Action = 'WindowTileHorizontal1'
+      end
+      object berlappend1: TMenuItem
+        Action = 'WindowCascade1'
+      end
+      object Schlieen1: TMenuItem
+        Action = 'WindowClose1'
+      end
+    end
+    object mnuUebersichten: TMenuItem
+      AutoLineReduction = 'maAutomatic'
+      Caption = 'Übersichten'
+      GroupIndex = 8
+    end
+    object mnuHilfe1: TMenuItem
+      Caption = 'Hilfe'
+      GroupIndex = 9
+      object mnuFehlerlog1: TMenuItem
+        Caption = 'Fehler anzeigen'
+        OnClick = 'mnuFehlerlogClick'
+      end
+      object mnuFehlermail1: TMenuItem
+        Caption = 'Fehler mailen'
+        OnClick = 'mnuFehlermailClick'
+      end
+      object N19: TMenuItem
+        Caption = '-'
+      end
+      object Info2: TMenuItem
+        Caption = 'Info'
+        OnClick = 'Info1Click'
+      end
+      object N20: TMenuItem
+        Caption = '-'
+      end
+    end
+  end
+  object AdvMenuOfficeStyler1: TAdvMenuOfficeStyler
+    AntiAlias = 'aaNone'
+    AutoThemeAdapt = False
+    Style = 'osWindows7'
+    Background.Position = 'bpCenter'
+    Background.Color = 15658734
+    ButtonAppearance.DownColor = 13421257
+    ButtonAppearance.DownColorTo = 15395047
+    ButtonAppearance.HoverColor = 14737117
+    ButtonAppearance.HoverColorTo = 16052977
+    ButtonAppearance.DownBorderColor = 11906984
+    ButtonAppearance.HoverBorderColor = 11906984
+    ButtonAppearance.CaptionFont.Charset = 'DEFAULT_CHARSET'
+    ButtonAppearance.CaptionFont.Color = 'clWindowText'
+    ButtonAppearance.CaptionFont.Height = -11
+    ButtonAppearance.CaptionFont.Name = 'Segoe UI'
+    ButtonAppearance.CaptionFont.Style = []
+    IconBar.Color = 15658734
+    IconBar.ColorTo = 'clNone'
+    IconBar.CheckColor = 16052198
+    IconBar.CheckBorder = 15127501
+    IconBar.RadioColor = 16052198
+    IconBar.RadioBorder = 15127501
+    IconBar.SeparatorColor = 12961221
+    IconBar.Size = 40
+    SelectedItem.Color = 16575452
+    SelectedItem.ColorTo = 16571329
+    SelectedItem.BorderColor = 13542013
+    SelectedItem.Font.Charset = 'DEFAULT_CHARSET'
+    SelectedItem.Font.Color = 'clWindowText'
+    SelectedItem.Font.Height = -12
+    SelectedItem.Font.Name = 'Segoe UI'
+    SelectedItem.Font.Style = []
+    SelectedItem.NotesFont.Charset = 'DEFAULT_CHARSET'
+    SelectedItem.NotesFont.Color = 'clWindowText'
+    SelectedItem.NotesFont.Height = -9
+    SelectedItem.NotesFont.Name = 'Segoe UI'
+    SelectedItem.NotesFont.Style = []
+    SelectedItem.CheckColor = 16575452
+    SelectedItem.CheckBorder = 15127501
+    SelectedItem.RadioColor = 16575452
+    SelectedItem.RadioBorder = 13542013
+    RootItem.Color = 'clWhite'
+    RootItem.ColorTo = 15653844
+    RootItem.GradientDirection = 'gdVertical'
+    RootItem.Font.Charset = 'DEFAULT_CHARSET'
+    RootItem.Font.Color = 'clMenuText'
+    RootItem.Font.Height = -12
+    RootItem.Font.Name = 'Segoe UI'
+    RootItem.Font.Style = []
+    RootItem.SelectedColor = 16575452
+    RootItem.SelectedColorTo = 16571329
+    RootItem.SelectedColorMirror = 16571329
+    RootItem.SelectedColorMirrorTo = 16575452
+    RootItem.SelectedBorderColor = 13542013
+    RootItem.HoverColor = 'clWhite'
+    RootItem.HoverColorTo = 15194579
+    RootItem.HoverColorMirror = 15194579
+    RootItem.HoverColorMirrorTo = 16380399
+    RootItem.HoverBorderColor = 10984085
+    Glyphs.SubMenu.Data = <binary 94 bytes>
+    Glyphs.Check.Data = <binary 130 bytes>
+    Glyphs.Radio.Data = <binary 130 bytes>
+    SideBar.Font.Charset = 'DEFAULT_CHARSET'
+    SideBar.Font.Color = 'clWhite'
+    SideBar.Font.Height = -19
+    SideBar.Font.Name = 'Tahoma'
+    SideBar.Font.Style = [fsBold, fsItalic]
+    SideBar.Image.Position = 'bpCenter'
+    SideBar.Background.Position = 'bpCenter'
+    SideBar.SplitterColorTo = 'clBlack'
+    Separator.Color = 14737632
+    Separator.ColorTo = 'clWhite'
+    Separator.GradientType = 'gtBoth'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clMenuText'
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clGray'
+    NotesFont.Height = -9
+    NotesFont.Name = 'Segoe UI'
+    NotesFont.Style = []
+    MenuBorderColor = 9934743
+    Left = 159
+    Top = 56
+  end
+  object WinXP1: TWinXP
+    Left = 103
+    Top = 56
+  end
+  object ImgApplic: TImageList
+    Height = 24
+    Width = 24
+    Left = 272
+    Top = 16
+    Bitmap = <binary 465862 bytes>
+  end
+  object aclServices: TActionList
+    Images = 'ImgApplic'
+    Left = 272
+    Top = 56
+    object actUrlaubsplan: THITMenueAction
+      Tag = -2
+      Caption = 'actUrlaubsplan'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = True
+      InPanel = False
+      OnScreen = False
+      FormID = 10173
+    end
+    object actFehlall: THITMenueAction
+      Tag = -2
+      Caption = 'actFehlall'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 10174
+    end
+    object actWartungsListe: THITMenueAction
+      Caption = 'WartungsListe'
+      Hint = 'Wartungsliste'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 101003
+    end
+    object actAus1: THITMenueAction
+      Caption = 'Kundenspezifische Artikel'
+      ImageIndex = 188
+      UserRight.CanRead = True
+      UserRight.CanWrite = True
+      UserRight.ActionName = 'mnuAuswertung1'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900001
+    end
+    object actAus2: THITMenueAction
+      Caption = 'actAus2'
+      ImageIndex = 187
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900002
+    end
+    object actauswert3: THITMenueAction
+      Caption = 'noAuftrag5'
+      ImageIndex = 189
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900003
+    end
+    object actAus4: THITMenueAction
+      Caption = 'actAus4'
+      ImageIndex = 184
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900004
+    end
+    object actaus5: THITMenueAction
+      Caption = 'actaus5'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900005
+    end
+    object actAus6: THITMenueAction
+      Caption = 'actAus6'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900006
+    end
+    object actAus7: THITMenueAction
+      Caption = 'actAus7'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900007
+    end
+    object actAus8: THITMenueAction
+      Caption = 'actAus8'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900008
+    end
+    object actaus9: THITMenueAction
+      Caption = 'actaus9'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actaus10: THITMenueAction
+      Caption = 'actaus10'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900010
+    end
+    object actaus11: THITMenueAction
+      Caption = 'actaus11'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900011
+    end
+    object actueber1: THITMenueAction
+      Caption = 'actueber1'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900013
+    end
+    object actueber2: THITMenueAction
+      Caption = 'actueber2'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900014
+    end
+    object actAus15: THITMenueAction
+      Caption = 'actAus15'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900015
+    end
+    object actaus12: THITMenueAction
+      Caption = 'actaus12'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900012
+    end
+    object actaus16: THITMenueAction
+      Caption = 'actaus16'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900016
+    end
+    object actaus17: THITMenueAction
+      Caption = 'actaus17'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900017
+    end
+    object actaus18: THITMenueAction
+      Caption = 'actaus18'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900018
+    end
+    object actaus19: THITMenueAction
+      Caption = 'actaus19'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900019
+    end
+    object actAus20: THITMenueAction
+      Caption = 'actAus20'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900020
+    end
+    object actaus21: THITMenueAction
+      Caption = 'actaus21'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900021
+    end
+    object actaus22: THITMenueAction
+      Caption = 'actaus22'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900022
+    end
+    object actaus23: THITMenueAction
+      Caption = 'actaus23'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900023
+    end
+    object actaus25: THITMenueAction
+      Caption = 'actaus25'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900025
+    end
+    object actaus27: THITMenueAction
+      Caption = 'actaus26'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900027
+    end
+    object actaus26: THITMenueAction
+      Caption = 'actaus26'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900026
+    end
+    object actaus32: THITMenueAction
+      Caption = 'actauswert32'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900032
+    end
+    object actAus29: THITMenueAction
+      Caption = 'actaus28'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900029
+    end
+    object actaus28: THITMenueAction
+      Caption = 'actaus28'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900028
+    end
+    object actArtikelinfo: THITMenueAction
+      Caption = 'actauswert32'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900037
+    end
+    object actaus30: THITMenueAction
+      Caption = 'actaus30'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900030
+    end
+    object actaus31: THITMenueAction
+      Caption = 'actauswert31'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900031
+    end
+    object actaus33: THITMenueAction
+      Caption = 'actauswert32'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900033
+    end
+    object actaus36: THITMenueAction
+      Caption = 'actauswert32'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900036
+    end
+    object actaus38: THITMenueAction
+      Caption = 'actaus38'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actaus38Execute'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 900038
+    end
+    object actBestellstatus: THITMenueAction
+      Caption = 'Bestellstatus'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actBestellstatusExecute'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = True
+      OnScreen = False
+      FormID = 900056
+    end
+  end
+end

@@ -1,0 +1,279 @@
+object frmRechnung: TfrmRechnung
+  Left = 460
+  Top = 213
+  Height = 738
+  Caption = 'Rechnung'
+  OldCreateOrder = True
+  OnActivate = 'FormActivate'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object splTree: TAdvSplitter
+    Height = 674
+    OnMoved = 'splTreeMoved'
+  end
+  object pnlBeleg: TPanel
+    Height = 674
+    object pnlBelegKopf: TPanel
+      Height = 168
+      object gbxAnschrift: TGroupBox
+        Height = 161
+        object lblErloes: TLabel
+          Left = 352
+          Top = 122
+          Width = 50
+          Height = 13
+          Caption = 'Erlöskonto'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dblcbProjekt: TDBLookupComboBox
+          TabOrder = 15
+        end
+        object dbcBelegart: TDBComboBox
+          Items.Strings = ('Rechnung' 'Teilrechnung')
+        end
+        object dbcbxAbgeschlossen: TDBCheckBox
+          Top = 141
+          TabOrder = 19
+        end
+        object dbcbGedruckt: TDBCheckBox
+          Top = 141
+        end
+        object dblcbErloes: TDBLookupComboBox
+          Left = 432
+          Top = 118
+          Width = 187
+          Height = 21
+          Color = 16120304
+          DataField = 'ERLOESKONTO'
+          DataSource = 'dsBeleg'
+          DropDownRows = 10
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          KeyField = 'NUMMER'
+          ListField = 'NAME'
+          ListSource = 'dsErloes'
+          ParentFont = False
+          ParentShowHint = False
+          ShowHint = False
+          TabOrder = 14
+        end
+      end
+    end
+    object pgcBeleg: TPageControl
+      Top = 169
+      Height = 504
+      TabWidth = 110
+      object tshPositionen: TTabSheet
+        object gbxSumme: TGroupBox
+          object lblZKondi: TLabel
+            Top = 29
+          end
+          object dblcbZkondi: TDBLookupComboBox
+            Left = 368
+            Width = 249
+          end
+        end
+      end
+      object tshZahlungen: TTabSheet
+        Caption = 'Zahlungen'
+        ImageIndex = 3
+        object lblOffen: TLabel
+          Left = 488
+          Top = 361
+          Width = 26
+          Height = 13
+          Caption = 'Offen'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbgZahlungen: TDBGrid
+          Left = 8
+          Top = 18
+          Width = 609
+          Height = 311
+          Color = 16120304
+          DataSource = 'dsZahlung'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          PopupMenu = 'pmPos'
+          TabOrder = 0
+          TitleFont.Charset = 'ANSI_CHARSET'
+          TitleFont.Color = 'clBlack'
+          TitleFont.Height = -11
+          TitleFont.Name = 'MS Sans Serif'
+          TitleFont.Pitch = 'fpVariable'
+          TitleFont.Style = []
+          Columns = <
+            item0 = {
+              Expanded = False
+              FieldName = 'BESCHREIBUNG'
+              Title.Caption = 'Beschreibung'
+              Width = 200
+              Visible = True
+            }
+            item1 = {
+              Expanded = False
+              FieldName = 'DATUM'
+              Title.Caption = 'Datum'
+              Width = 100
+              Visible = True
+            }
+            item2 = {
+              Expanded = False
+              FieldName = 'SKONTO'
+              Title.Caption = 'Skonto'
+              Width = 85
+              Visible = True
+            }
+            item3 = {
+              Expanded = False
+              FieldName = 'NACHLASS'
+              Title.Caption = 'Nachlass'
+              Width = 85
+              Visible = True
+            }
+            item4 = {
+              Expanded = False
+              FieldName = 'BETRAG'
+              Title.Caption = 'Betrag'
+              Width = 85
+              Visible = True
+            }
+          >
+        end
+        object dbeOffen: TDBEdit
+          Left = 524
+          Top = 356
+          Width = 93
+          Height = 22
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'OFFEN'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 1
+        end
+        object dbrBewertung: TDBRadioGroup
+          Left = 8
+          Top = 344
+          Width = 449
+          Height = 49
+          BiDiMode = 'bdLeftToRight'
+          Caption = 'Bewertung'
+          Columns = 3
+          DataField = 'BEWERTUNG'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          Items.Strings = ('Normal einbringlich' 'Schwer einbringlich' 'Uneinbringlich')
+          ParentBiDiMode = False
+          ParentFont = False
+          TabOrder = 2
+          Values.Strings = ('0' '1' '2')
+        end
+      end
+    end
+  end
+  object fraBtn: TfraBtn
+    object pmCopy: TPopupMenu
+      object Rechnungkopieren1: TMenuItem
+        Caption = 'Rechnung kopieren'
+        OnClick = 'Rechnungkopieren1Click'
+      end
+    end
+    object pmFunktionen: TPopupMenu
+      object pmiNummernkreis: TMenuItem
+        OnClick = 'fraBtnpmiNummernkreisClick'
+      end
+    end
+    object pmDrucken: TPopupMenu
+      object inPDFdrucken1: TMenuItem
+        Caption = 'in e@mail-PDF drucken'
+        OnClick = 'inWorddrucken1Click'
+      end
+      object XRechnung1: TMenuItem
+        Caption = 'X-Rechnung'
+        OnClick = 'XRechnung1Click'
+      end
+      object Rechnungsbuch1: TMenuItem
+        Caption = 'Rechnungsbuch / OP-Liste'
+        OnClick = 'Rechnungsbuch1Click'
+      end
+    end
+  end
+  object fraTree1: TfraTreeList
+    Height = 674
+    object trlNav: TTreeList
+      Height = 658
+    end
+  end
+  object pmPos: TPopupMenu
+    Top = 56
+  end
+  object dsBelegPos: TDataSource
+    Left = 637
+  end
+  object dsBeleg: TDataSource
+    Left = 637
+  end
+  object dsProjekte: TDataSource
+    Left = 637
+  end
+  object dsZKondi: TDataSource
+    Left = 637
+  end
+  object dsSparte: TDataSource
+    Left = 641
+  end
+  object dsAnlagen: TDataSource
+    Left = 640
+  end
+  object WordDocument: TWordDocument
+    Left = 693
+    Top = 101
+  end
+  object WordApplication: TWordApplication
+    Left = 645
+    Top = 301
+  end
+  object dsZahlung: TDataSource
+    Left = 648
+    Top = 264
+  end
+  object dsErloes: TDataSource
+    Left = 645
+    Top = 229
+  end
+end

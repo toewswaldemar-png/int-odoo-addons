@@ -1,0 +1,157 @@
+object dmAdressenDruck: TdmAdressenDruck
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 583
+  Top = 248
+  Height = 244
+  Width = 206
+  object cdsAdressenDruck: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'parVonNr'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+      item1 = {
+        DataType = 'ftInteger'
+        Name = 'parBisNr'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    UpdateMode = 'upWhereAll'
+    MasterDetail = 'mdInfo'
+    Left = 72
+    Top = 40
+    object IntegerField1: TIntegerField
+      FieldName = 'NUMMER'
+    end
+    object cdsAdressenDruckDATUM: TSQLTimeStampField
+      FieldName = 'DATUM'
+    end
+    object cdsAdressenDruckANREDE: TStringField
+      FieldName = 'ANREDE'
+      Size = 30
+    end
+    object cdsAdressenDruckNAME1: TStringField
+      FieldName = 'NAME1'
+      Size = 60
+    end
+    object cdsAdressenDruckNAME2: TStringField
+      FieldName = 'NAME2'
+      Size = 60
+    end
+    object cdsAdressenDruckNAME3: TStringField
+      FieldName = 'NAME3'
+      Size = 60
+    end
+    object cdsAdressenDruckKURZNAME: TStringField
+      FieldName = 'KURZNAME'
+      Size = 30
+    end
+    object cdsAdressenDruckSTRASSE: TStringField
+      FieldName = 'STRASSE'
+      Size = 60
+    end
+    object cdsAdressenDruckPOSTFACH: TStringField
+      FieldName = 'POSTFACH'
+      Size = 10
+    end
+    object cdsAdressenDruckLAND: TStringField
+      FieldName = 'LAND'
+      Size = 5
+    end
+    object cdsAdressenDruckPLZ: TStringField
+      FieldName = 'PLZ'
+      Size = 10
+    end
+    object cdsAdressenDruckORT: TStringField
+      FieldName = 'ORT'
+      Size = 60
+    end
+    object cdsAdressenDruckFON1: TStringField
+      FieldName = 'FON1'
+      Size = 30
+    end
+    object cdsAdressenDruckFON2: TStringField
+      FieldName = 'FON2'
+      Size = 30
+    end
+    object cdsAdressenDruckFAX1: TStringField
+      FieldName = 'FAX1'
+      Size = 30
+    end
+    object cdsAdressenDruckMOBIL: TStringField
+      FieldName = 'MOBIL'
+      Size = 30
+    end
+    object cdsAdressenDruckEMAIL: TStringField
+      FieldName = 'EMAIL'
+      Size = 60
+    end
+    object cdsAdressenDruckHPAGE: TStringField
+      FieldName = 'HPAGE'
+      Size = 60
+    end
+    object cdsAdressenDruckBEWUMS: TStringField
+      FieldName = 'BEWUMS'
+      FixedChar = True
+      Size = 1
+    end
+    object cdsAdressenDruckBEWZAHL: TStringField
+      FieldName = 'BEWZAHL'
+      FixedChar = True
+      Size = 1
+    end
+    object cdsAdressenDruckBEWUMG: TStringField
+      FieldName = 'BEWUMG'
+      FixedChar = True
+      Size = 1
+    end
+    object cdsAdressenDruckUMSATZJAHR: TFMTBCDField
+      FieldName = 'UMSATZJAHR'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsAdressenDruckUMSATZ: TFMTBCDField
+      FieldName = 'UMSATZ'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsAdressenDruckUMSATZVORJAHR: TFMTBCDField
+      DisplayWidth = 16
+      FieldName = 'UMSATZVORJAHR'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsAdressenDruckFUNKTION: TIntegerField
+      FieldName = 'FUNKTION'
+    end
+    object cdsAdressenDruckOPSTAND: TFMTBCDField
+      FieldName = 'OPSTAND'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object cdsAdressenDruckOID: TIntegerField
+      FieldName = 'OID'
+    end
+  end
+  object cdsAdressEtiketten: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    MasterDetail = 'mdInfo'
+    Left = 72
+    Top = 112
+  end
+end

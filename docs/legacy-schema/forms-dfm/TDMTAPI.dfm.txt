@@ -1,0 +1,7 @@
+object dmTAPI: TdmTAPI
+  OldCreateOrder = False
+  Left = 480
+  Top = 175
+  Height = 150
+  Width = 215
+end

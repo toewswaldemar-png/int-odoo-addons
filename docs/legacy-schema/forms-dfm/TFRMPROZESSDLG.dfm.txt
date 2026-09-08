@@ -1,0 +1,136 @@
+object frmProzessDlg: TfrmProzessDlg
+  Left = 523
+  Top = 212
+  Caption = 'Prozesse'
+  ClientHeight = 543
+  ClientWidth = 574
+  PixelsPerInch = 96
+  TextHeight = 13
+  object ofihelpStd: TAdvOfficeImage
+    Left = 539
+    Top = 504
+    Width = 30
+    Height = 25
+  end
+  object btnOk: TAdvGlowButton
+    Left = 383
+    Top = 503
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 463
+    Top = 503
+  end
+  object lvwProzesse: TDBAdvListView
+    Left = 37
+    Top = 7
+    Width = 492
+    Height = 473
+    Columns = <
+      item0 = {
+        Caption = 'Bezeichnung'
+        Width = 150
+      }
+      item1 = {
+        Caption = 'Beschreibung'
+        Width = 337
+      }
+    >
+    GridLines = True
+    HideSelection = False
+    RowSelect = True
+    TabOrder = 2
+    ViewStyle = 'vsReport'
+    ColumnSize.Stretch = True
+    PrintSettings.DateFormat = 'dd/mm/yyyy'
+    PrintSettings.Font.Charset = 'DEFAULT_CHARSET'
+    PrintSettings.Font.Color = 'clWindowText'
+    PrintSettings.Font.Height = -11
+    PrintSettings.Font.Name = 'MS Sans Serif'
+    PrintSettings.Font.Style = []
+    PrintSettings.HeaderFont.Charset = 'DEFAULT_CHARSET'
+    PrintSettings.HeaderFont.Color = 'clWindowText'
+    PrintSettings.HeaderFont.Height = -11
+    PrintSettings.HeaderFont.Name = 'MS Sans Serif'
+    PrintSettings.HeaderFont.Style = []
+    PrintSettings.FooterFont.Charset = 'DEFAULT_CHARSET'
+    PrintSettings.FooterFont.Color = 'clWindowText'
+    PrintSettings.FooterFont.Height = -11
+    PrintSettings.FooterFont.Name = 'MS Sans Serif'
+    PrintSettings.FooterFont.Style = []
+    PrintSettings.PageNumSep = '/'
+    HeaderFont.Charset = 'DEFAULT_CHARSET'
+    HeaderFont.Color = 'clWindowText'
+    HeaderFont.Height = -11
+    HeaderFont.Name = 'MS Sans Serif'
+    HeaderFont.Style = []
+    ProgressSettings.ValueFormat = '%d%%'
+    StretchColumn = True
+    DetailView.Font.Charset = 'DEFAULT_CHARSET'
+    DetailView.Font.Color = 'clBlue'
+    DetailView.Font.Height = -11
+    DetailView.Font.Name = 'MS Sans Serif'
+    DetailView.Font.Style = []
+    Version = '1.6.7.2'
+    Datasource = 'dsProzess'
+    DataScroll = True
+    Fields = <
+      item0 = {
+        FieldName = 'Bezeichnung'
+        Title = 'Bezeichnung'
+        Color = 13889496
+        HighLight = 'clHighlightText'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+      }
+      item1 = {
+        FieldName = 'Beschreibung'
+        Title = 'Beschreibung'
+        Color = 14024161
+        HighLight = 'clHighlightText'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+      }
+    >
+  end
+  object btdPZDruck: TAdvGlowButton
+    Left = 36
+    Top = 489
+    Width = 74
+    Height = 21
+    Caption = 'Drucken'
+    ImageIndex = 14
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    TabOrder = 3
+    OnClick = 'btdPZDruckClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object dsProzess: TDataSource
+    Left = 1142
+    Top = 544
+  end
+end

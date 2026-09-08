@@ -1,0 +1,393 @@
+object frmVertreterRech: TfrmVertreterRech
+  Left = 261
+  Top = 242
+  Height = 753
+  Caption = 'Vertreterabrechnung'
+  OldCreateOrder = True
+  PixelsPerInch = 96
+  TextHeight = 13
+  object splTree: TAdvSplitter
+    Height = 690
+  end
+  object pnlBeleg: TPanel
+    Height = 690
+    object pnlBelegKopf: TPanel
+      object gbxAnschrift: TGroupBox
+        object lblProjekt: TLabel
+          Top = 94
+          Width = 41
+          Caption = 'Zeitraum'
+        end
+        object lblbis: TLabel
+          Left = 522
+          Top = 96
+          Width = 4
+          Height = 13
+          Caption = '-'
+        end
+        object dblcbProjekt: TDBLookupComboBox
+          Left = 330
+          Top = 118
+        end
+        object dbeAdrNr: TDBEdit
+          OnDblClick = 'dbeAdrNrDblClick'
+        end
+        object dbcBelegart: TDBComboBox
+          Items.Strings = ('Provisionsabrechnung')
+        end
+        object dbeHauptauftrag: TDBEdit
+          Left = 320
+          Top = 118
+          DataField = 'FAELLIG'
+          Visible = False
+        end
+        object btnAdresseNeuanlage: TAdvGlowButton
+          TabOrder = 19
+          Visible = False
+        end
+        object dbeVom: TDBEdit
+          Left = 432
+          Top = 91
+          Width = 81
+          Height = 21
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'Bestelltermin'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 17
+        end
+        object dbeBis: TDBEdit
+          Left = 536
+          Top = 91
+          Width = 81
+          Height = 21
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'LIEFERTERMIN'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 18
+        end
+      end
+    end
+    object pgcBeleg: TPageControl
+      Height = 534
+      object tshPositionen: TTabSheet
+        object dbcgPos: TDBCtrlGrid
+          Left = 216
+          Top = 56
+          Width = 89
+          Height = 140
+          DataSource = None
+          PanelHeight = 20
+          PanelWidth = 72
+          Visible = False
+          object dbePos: TDBEdit
+            DataSource = None
+          end
+          object dbeArtNr: TDBEdit
+            DataSource = None
+          end
+          object dbeStck: TDBEdit
+            DataSource = None
+          end
+          object dbeEinheit: TDBEdit
+            DataSource = None
+          end
+          object dbeText: TDBEdit
+            DataSource = None
+          end
+          object dbeEPreis: TDBEdit
+            DataSource = None
+          end
+          object dbeRabatt: TDBEdit
+            DataSource = None
+          end
+          object dbeGPreis: TDBEdit
+            DataSource = None
+          end
+          object dbmLangtext: TDBMemo
+            DataSource = None
+          end
+          object dbeMwStPos: TDBEdit
+            DataSource = None
+          end
+          object dbePosKz: TDBEdit
+            DataSource = None
+          end
+          object dblcbMwst: TDBComboBox
+            DataSource = None
+          end
+        end
+        object gbxSumme: TGroupBox
+          Width = 631
+          object lblZKondi: TLabel
+            Visible = False
+          end
+          object dblcbZkondi: TDBLookupComboBox
+            Visible = False
+          end
+        end
+        object gbxPos: TGroupBox
+          Left = 0
+          Top = 0
+          Width = 633
+          Height = 409
+          TabOrder = 2
+          object lblRechnung: TLabel
+            Left = 16
+            Top = 14
+            Width = 50
+            Height = 13
+            Caption = 'Rechnung'
+          end
+          object lblDatumPos: TLabel
+            Left = 108
+            Top = 14
+            Width = 31
+            Height = 13
+            Caption = 'Datum'
+          end
+          object lblNettoPos: TLabel
+            Left = 432
+            Top = 14
+            Width = 26
+            Height = 13
+            Caption = 'Netto'
+          end
+          object lblmwstpos: TLabel
+            Left = 488
+            Top = 14
+            Width = 25
+            Height = 13
+            Caption = 'Mwst'
+          end
+          object lblBruttoPos: TLabel
+            Left = 568
+            Top = 14
+            Width = 28
+            Height = 13
+            Caption = 'Brutto'
+          end
+          object dbcProvRechnungen: TDBCtrlGrid
+            Left = 8
+            Top = 32
+            Width = 621
+            Height = 350
+            DataSource = 'dsBelegPos'
+            PanelHeight = 35
+            PanelWidth = 604
+            PopupMenu = 'pmRechnungen'
+            TabOrder = 0
+            RowCount = 10
+            SelectedColor = 'clGray'
+            object dbeRechnr: TDBEdit
+              Left = 8
+              Top = 8
+              Width = 81
+              Height = 21
+              DataField = 'Rechnr'
+              DataSource = 'dsBelegPos'
+              PopupMenu = 'pmRechnungen'
+              ReadOnly = True
+              TabOrder = 0
+              OnDblClick = 'dbeRechnrDblClick'
+            end
+            object dbeBelegdatum: TDBEdit
+              Left = 96
+              Top = 8
+              Width = 81
+              Height = 21
+              DataField = 'Belegdatum'
+              DataSource = 'dsBelegPos'
+              ReadOnly = True
+              TabOrder = 1
+            end
+            object dbmPostext: TDBMemo
+              Left = 184
+              Top = 8
+              Width = 185
+              Height = 21
+              DataField = 'Postext'
+              DataSource = 'dsBelegPos'
+              ReadOnly = True
+              TabOrder = 2
+            end
+            object dbeNettoPos: TDBEdit
+              Left = 376
+              Top = 8
+              Width = 81
+              Height = 21
+              DataField = 'netto'
+              DataSource = 'dsBelegPos'
+              ReadOnly = True
+              TabOrder = 3
+            end
+            object dbeMwstpos2: TDBEdit
+              Left = 464
+              Top = 8
+              Width = 49
+              Height = 21
+              DataField = 'mwst'
+              DataSource = 'dsBelegPos'
+              ReadOnly = True
+              TabOrder = 4
+            end
+            object dbebruttopos: TDBEdit
+              Left = 520
+              Top = 8
+              Width = 73
+              Height = 21
+              DataField = 'brutto'
+              DataSource = 'dsBelegPos'
+              ReadOnly = True
+              TabOrder = 5
+            end
+          end
+        end
+      end
+    end
+  end
+  object fraBtn: TfraBtn
+    object tlbFunktionen: TAdvToolBar
+      object btnSearch: TAdvGlowButton
+        PopupMenu = 'popBelegDirekt'
+      end
+      object btnPrint: TAdvGlowMenuButton
+        PopupMenu = 'fraBtn.pmDrucken'
+      end
+    end
+    object ilFunktionen: TImageList
+      Left = 632
+    end
+    object pmCopy: TPopupMenu
+      Left = 664
+    end
+    object pmFunktionen: TPopupMenu
+      Left = 696
+      object NeueAbrechnung1: TMenuItem
+        Action = 'actNewBeleg'
+      end
+      object N3: TMenuItem
+        Caption = '-'
+      end
+      object RechnungausProvisionentfernen1: TMenuItem
+        Action = 'actRechProvDelete'
+      end
+      object N5: TMenuItem
+        Caption = '-'
+      end
+      object pmiNummernkreis: TMenuItem
+        OnClick = 'fraBtnpmiNummernkreisClick'
+      end
+    end
+    object pmDrucken: TPopupMenu
+      object ListeDrucken1: TMenuItem
+        Action = 'actPrintVertreterListe'
+      end
+      object mnuVertreterExcel: TMenuItem
+        Caption = '-> Excel'
+        OnClick = 'mnuVertreterExcelClick'
+      end
+      object RechnungDrucken1: TMenuItem
+        Action = 'actRechDruck'
+      end
+      object RechnungundListeDrucken1: TMenuItem
+        Caption = 'Rechnung und Liste Drucken'
+        OnClick = 'RechnungundListeDrucken1Click'
+      end
+      object N4: TMenuItem
+        Caption = '-'
+        Visible = False
+      end
+    end
+  end
+  object fraTree1: TfraTreeList
+    Height = 690
+    object trlNav: TTreeList
+      Height = 674
+    end
+  end
+  object pmPos: TPopupMenu
+    object AllePositionenohneMwSt1: TMenuItem
+      Enabled = False
+      Visible = False
+    end
+  end
+  object aclVertreter: TActionList
+    Left = 653
+    Top = 317
+    object actNewBeleg: THITMenueAction
+      Category = 'Neu'
+      Caption = 'Neue Abrechnung'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actNewBelegExecute'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actPrintVertreterListe: THITMenueAction
+      Category = 'List'
+      Caption = 'Liste Drucken'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actPrintVertreterListeExecute'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actRechDruck: THITMenueAction
+      Category = 'List'
+      Caption = 'Rechnung Drucken'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actRechDruckExecute'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+    object actRechProvDelete: THITMenueAction
+      Category = 'Neu'
+      Caption = 'Rechnung aus Provision entfernen'
+      UserRight.CanRead = False
+      UserRight.CanWrite = False
+      OnExecute = 'actRechProvDeleteExecute'
+      LabelColor = 'clBlack'
+      InMenue = False
+      InPanel = False
+      OnScreen = False
+      FormID = 0
+    end
+  end
+  object pmRechnungen: TPopupMenu
+    Left = 313
+    Top = 83
+    object mnuRechProvDelete: TMenuItem
+      Action = 'actRechProvDelete'
+    end
+  end
+end

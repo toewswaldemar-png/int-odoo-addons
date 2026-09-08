@@ -1,0 +1,71 @@
+object dmAdressBelege: TdmAdressBelege
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 1265
+  Top = 335
+  Height = 223
+  Width = 215
+  object cdsAdressBelege: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftInteger'
+        Name = 'belegart'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+      item1 = {
+        DataType = 'ftInteger'
+        Name = 'oid'
+        ParamType = 'ptUnknown'
+        Value = 0
+      }
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 40
+    Top = 32
+  end
+  object dsAdressBelege: TDataSource
+    DataSet = 'cdsAdressBelege'
+    Left = 128
+    Top = 32
+  end
+  object cdsBelegPos: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+      item0 = {
+        DataType = 'ftString'
+        Name = 'oid'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+      item1 = {
+        DataType = 'ftString'
+        Name = 'soid'
+        ParamType = 'ptUnknown'
+        Value = '0'
+      }
+    >
+    ProviderName = 'DataSetProvider1'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 40
+    Top = 104
+  end
+  object dsBelegPos: TDataSource
+    DataSet = 'cdsBelegPos'
+    Left = 128
+    Top = 104
+  end
+end

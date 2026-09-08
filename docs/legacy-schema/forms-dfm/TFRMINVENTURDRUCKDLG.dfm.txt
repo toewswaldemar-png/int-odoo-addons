@@ -1,0 +1,56 @@
+object frmInventurDruckDlg: TfrmInventurDruckDlg
+  Left = 592
+  Top = 359
+  BorderStyle = 'bsDialog'
+  Caption = 'Inventur'
+  ClientHeight = 401
+  ClientWidth = 345
+  Color = 'clSilver'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (345 401)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 177
+    Top = 366
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 257
+    Top = 366
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object rgpListe: TRadioGroup
+    Left = 32
+    Top = 24
+    Width = 281
+    Height = 313
+    Caption = 'Liste'
+    ItemIndex = 0
+    Items.Strings = ('Inventurliste' 'Inventur -> Excel ( nur Bestand )' 'Inventur -> CSV' 'Inventur -> Excel komplett' 'Teilfertige -> Excel' 'Inventurliste Wertige ab' 'Halbfertige Geräte -> Excel')
+    TabOrder = 2
+  end
+  object edtWert: TEdit
+    Left = 183
+    Top = 260
+    Width = 73
+    Height = 21
+    TabOrder = 3
+    Text = '0'
+    OnChange = 'edtWertChange'
+  end
+end

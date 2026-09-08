@@ -1,0 +1,200 @@
+object frmInfo: TfrmInfo
+  Left = 646
+  Top = 190
+  BorderIcons = []
+  BorderStyle = 'bsSingle'
+  Caption = 'Info'
+  ClientHeight = 227
+  ClientWidth = 312
+  Color = 2656070
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  OnCreate = 'FormCreate'
+  DesignSize = (312 227)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object lblApplicName: TLabel
+    Left = 24
+    Top = 61
+    Width = 257
+    Height = 13
+    Alignment = 'taCenter'
+    AutoSize = False
+    Caption = 'lblApplicName'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clNavy'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    Transparent = True
+    Layout = 'tlCenter'
+    WordWrap = True
+  end
+  object lblVersion: TLabel
+    Left = 24
+    Top = 87
+    Width = 257
+    Height = 13
+    Alignment = 'taCenter'
+    AutoSize = False
+    Caption = 'lblApplicName'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clNavy'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    Transparent = True
+    Layout = 'tlCenter'
+    WordWrap = True
+  end
+  object lblVdatum: TLabel
+    Left = 24
+    Top = 111
+    Width = 257
+    Height = 13
+    Alignment = 'taCenter'
+    AutoSize = False
+    Caption = 'lblApplicName'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clNavy'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    Transparent = True
+    Layout = 'tlCenter'
+    WordWrap = True
+  end
+  object lblCopyr: TLabel
+    Left = 27
+    Top = 130
+    Width = 11
+    Height = 20
+    Caption = '©'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -16
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    Transparent = True
+  end
+  object lblJahr: TLabel
+    Left = 41
+    Top = 134
+    Width = 33
+    Height = 13
+    Caption = '2002 - '
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    Transparent = True
+  end
+  object lbladr1: TLabel
+    Left = 113
+    Top = 134
+    Width = 137
+    Height = 13
+    Caption = 'TSP software GmbH & Co. KG'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -8
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    Transparent = True
+    WordWrap = True
+  end
+  object btnOK: TSpeedButton
+    Left = 116
+    Top = 197
+    Width = 89
+    Height = 22
+    Anchors = [akRight, akBottom]
+    Caption = 'Ok'
+    Flat = True
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    OnClick = 'btnOKClick'
+  end
+  object lbladr2: TLabel
+    Left = 113
+    Top = 153
+    Width = 126
+    Height = 13
+    Caption = 'Johann-Philipp-Reiss-Str. 8'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    Transparent = True
+  end
+  object lbladr3: TLabel
+    Left = 114
+    Top = 173
+    Width = 73
+    Height = 13
+    Caption = '55469 Simmern'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    Transparent = True
+  end
+  object lblwww: TLabel
+    Left = 25
+    Top = 200
+    Width = 74
+    Height = 13
+    Cursor = 'crHandPoint'
+    Caption = 'www.erp-tsp.de'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clNavy'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsUnderline]
+    ParentFont = False
+    Transparent = True
+    OnClick = 'lblwwwClick'
+  end
+  object lblemail: TLabel
+    Left = 215
+    Top = 200
+    Width = 92
+    Height = 13
+    Cursor = 'crHandPoint'
+    Caption = 'service@erp-tsp.de'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clNavy'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsUnderline]
+    ParentFont = False
+    Transparent = True
+    OnClick = 'lblemailClick'
+  end
+  object imglogo: TImage
+    Left = 60
+    Top = 3
+    Width = 183
+    Height = 53
+    Center = True
+    Picture.Data = <binary 8489 bytes>
+    Stretch = True
+    Transparent = True
+  end
+end

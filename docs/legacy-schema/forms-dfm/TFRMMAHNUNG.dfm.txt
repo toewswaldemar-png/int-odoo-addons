@@ -1,0 +1,352 @@
+object frmMahnung: TfrmMahnung
+  Left = 339
+  Top = 498
+  Caption = 'Mahnung'
+  Icon.Data = <binary 76730 bytes>
+  OldCreateOrder = True
+  PixelsPerInch = 96
+  TextHeight = 13
+  object pnlBeleg: TPanel
+    object pnlBelegKopf: TPanel
+      Height = 200
+      object gbxAnschrift: TGroupBox
+        Height = 193
+        object lblProjekt: TLabel
+          Width = 60
+          Caption = 'Zahlungsfrist'
+        end
+        object btnBenutzersuchen: TSpeedButton
+          Left = 592
+          Top = 67
+          Width = 23
+          Height = 22
+          OnClick = 'btnBenutzersuchenClick'
+        end
+        object lblkdzeichen: TLabel
+          Left = 12
+          Top = 155
+          Width = 78
+          Height = 13
+          Caption = 'Ansprechpartner'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object Label1: TLabel
+          Left = 352
+          Top = 146
+          Width = 72
+          Height = 13
+          Caption = 'Bezugsnummer'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object Label2: TLabel
+          Left = 352
+          Top = 170
+          Width = 46
+          Height = 13
+          Caption = 'Ihr Datum'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbeAdrNr: TDBEdit
+          OnDblClick = 'dbeAdrNrDblClick'
+        end
+        object dbcBelegart: TDBComboBox
+          Items.Strings = ('Mahnung' 'Zahlungserinnerung' '1. Mahnung' '2. Mahnung' '3. Mahnung')
+        end
+        object dbeBearbeiter: TDBEdit
+          Width = 153
+        end
+        object dbeHauptauftrag: TDBEdit
+          DataField = 'FAELLIG'
+        end
+        object btnAdresseNeuanlage: TAdvGlowButton
+          TabOrder = 20
+        end
+        object btndial: TAdvMetroButton
+          TabOrder = 21
+        end
+        object dbeAnspre: TDBEdit
+          Left = 96
+          Top = 150
+          Width = 191
+          Height = 20
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'Bemerkung'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 17
+        end
+        object dbeBestellnr: TDBEdit
+          Left = 432
+          Top = 145
+          Width = 185
+          Height = 21
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'Bestellnr'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 18
+        end
+        object dbeBestelltermin: TDBEdit
+          Left = 432
+          Top = 168
+          Width = 65
+          Height = 21
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'Bestelltermin'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 19
+        end
+      end
+    end
+    object pgcBeleg: TPageControl
+      Top = 201
+      Height = 454
+      object tshPositionen: TTabSheet
+        object dbcgPos: TDBCtrlGrid
+          Left = 216
+          Top = 56
+          Width = 89
+          Height = 140
+          DataSource = None
+          PanelHeight = 20
+          PanelWidth = 72
+          Visible = False
+          object dbePos: TDBEdit
+            DataSource = None
+          end
+          object dbeArtNr: TDBEdit
+            DataSource = None
+          end
+          object dbeStck: TDBEdit
+            DataSource = None
+          end
+          object dbeEinheit: TDBEdit
+            DataSource = None
+          end
+          object dbeText: TDBEdit
+            DataSource = None
+          end
+          object dbeEPreis: TDBEdit
+            DataSource = None
+          end
+          object dbeRabatt: TDBEdit
+            DataSource = None
+          end
+          object dbeGPreis: TDBEdit
+            DataSource = None
+          end
+          object dbmLangtext: TDBMemo
+            DataSource = None
+          end
+          object dbeMwStPos: TDBEdit
+            DataSource = None
+          end
+          object dbePosKz: TDBEdit
+            DataSource = None
+          end
+          object dblcbMwst: TDBComboBox
+            DataSource = None
+          end
+        end
+        object gbxSumme: TGroupBox
+          Width = 631
+          object lblMwst1: TLabel
+            Visible = False
+          end
+          object lblZKondi: TLabel
+            Top = 37
+            Visible = False
+          end
+          object dbeMwStHalb: TDBEdit
+            Visible = False
+          end
+          object dblcbZkondi: TDBLookupComboBox
+            Top = 33
+            Visible = False
+          end
+          object dbeMwstSatzHalb: TDBEdit
+            Visible = False
+          end
+        end
+        object gbxPos: TGroupBox
+          Left = 0
+          Top = 0
+          Width = 633
+          Height = 409
+          TabOrder = 2
+          object dbgMahnPos: TDBGrid
+            Left = 8
+            Top = 12
+            Width = 617
+            Height = 381
+            Color = 16120304
+            DataSource = 'dsBelegPos'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+            PopupMenu = 'pmPos'
+            TabOrder = 0
+            TitleFont.Charset = 'ANSI_CHARSET'
+            TitleFont.Color = 'clBlack'
+            TitleFont.Height = -11
+            TitleFont.Name = 'MS Sans Serif'
+            TitleFont.Pitch = 'fpVariable'
+            TitleFont.Style = []
+            OnDblClick = 'dbgMahnPosDblClick'
+            Columns = <
+              item0 = {
+                Expanded = False
+                FieldName = 'RECHNR'
+                Title.Caption = 'Rechnung'
+                Width = 80
+                Visible = True
+              }
+              item1 = {
+                Expanded = False
+                FieldName = 'BELEGDATUM'
+                Title.Caption = 'Datum'
+                Width = 80
+                Visible = True
+              }
+              item2 = {
+                Expanded = False
+                FieldName = 'FAELLIG'
+                Title.Caption = 'Fällig'
+                Width = 85
+                Visible = True
+              }
+              item3 = {
+                Expanded = False
+                FieldName = 'NETTO'
+                Title.Caption = 'Netto'
+                Width = 82
+                Visible = True
+              }
+              item4 = {
+                Expanded = False
+                FieldName = 'MWST'
+                Title.Caption = 'MwSt. Voll'
+                Width = 82
+                Visible = True
+              }
+              item5 = {
+                Expanded = False
+                FieldName = 'MWSTHALB'
+                Title.Caption = 'MwSt. Halb'
+                Width = 82
+                Visible = True
+              }
+              item6 = {
+                Expanded = False
+                FieldName = 'BRUTTO'
+                Title.Caption = 'Brutto'
+                Width = 82
+                Visible = True
+              }
+            >
+          end
+        end
+      end
+    end
+  end
+  object fraBtn: TfraBtn
+    Color = 12684923
+    ParentColor = False
+    object tlbFunktionen: TAdvToolBar
+      object btnSearch: TAdvGlowButton
+        PopupMenu = 'popBelegDirekt'
+      end
+      object btnMahnung: TAdvGlowButton
+        OnClick = 'fraBtnbtnMahnungClick'
+      end
+    end
+    object ilFunktionen: TImageList
+      Left = 776
+    end
+    object pmCopy: TPopupMenu
+      Left = 760
+      object Rechnung1: TMenuItem
+        Caption = 'Rechnung ->'
+        Visible = False
+      end
+    end
+    object pmFunktionen: TPopupMenu
+      Left = 776
+      Top = 9
+      object pmiNummernkreis: TMenuItem
+        OnClick = 'fraBtnpmiNummernkreisClick'
+      end
+    end
+    object pmDrucken: TPopupMenu
+      object inemailPDFdrucken1: TMenuItem
+        Caption = 'in e@mail-PDF drucken'
+        OnClick = 'inemailPDFdrucken1Click'
+      end
+      object N3: TMenuItem
+        Caption = '-'
+      end
+      object Mahnungsliste1: TMenuItem
+        Caption = 'Mahnungsliste'
+        OnClick = 'Mahnungsliste1Click'
+      end
+    end
+    object actbuttons: TActionList
+      Left = 808
+    end
+  end
+  object pmPos: TPopupMenu
+    Top = 56
+    object AllePositionenohneMwSt1: TMenuItem
+      Enabled = False
+      Visible = False
+    end
+  end
+end

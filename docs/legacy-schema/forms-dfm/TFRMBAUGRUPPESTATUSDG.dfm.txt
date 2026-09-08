@@ -1,0 +1,215 @@
+object frmBaugruppestatusDg: TfrmBaugruppestatusDg
+  Left = 298
+  Top = 334
+  Width = 1382
+  Height = 612
+  BorderStyle = 'bsSizeable'
+  Caption = 'Geräteübersicht'
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object ofihelpStd: TAdvOfficeImage
+    Left = 1330
+    Top = 532
+  end
+  object btnOk: TAdvGlowButton
+    Left = 1175
+    Top = 534
+  end
+  object grdAuftraege: TAdvStringGrid
+    Left = 40
+    Top = 8
+    Width = 1297
+    Height = 505
+    Cursor = 'crDefault'
+    ColCount = 12
+    FixedCols = 0
+    RowCount = 2
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing]
+    ParentFont = False
+    ScrollBars = 'ssBoth'
+    TabOrder = 2
+    OnClick = 'grdAuftraegeClick'
+    OnDblClick = 'grdAuftraegeDblClick'
+    OnSelectCell = 'grdAuftraegeSelectCell'
+    OnCellBalloon = 'grdAuftraegeCellBalloon'
+    ActiveCellFont.Charset = 'DEFAULT_CHARSET'
+    ActiveCellFont.Color = 'clWindowText'
+    ActiveCellFont.Height = -11
+    ActiveCellFont.Name = 'Tahoma'
+    ActiveCellFont.Style = [fsBold]
+    ActiveCellColor = 15387318
+    Balloon.Enable = True
+    ControlLook.CommentColor = 'clTeal'
+    ControlLook.FixedGradientFrom = 'clWhite'
+    ControlLook.FixedGradientTo = 'clSilver'
+    ControlLook.FixedGradientHoverFrom = 13619409
+    ControlLook.FixedGradientHoverTo = 12502728
+    ControlLook.FixedGradientHoverMirrorFrom = 12502728
+    ControlLook.FixedGradientHoverMirrorTo = 11254975
+    ControlLook.FixedGradientDownFrom = 8816520
+    ControlLook.FixedGradientDownTo = 7568510
+    ControlLook.FixedGradientDownMirrorFrom = 7568510
+    ControlLook.FixedGradientDownMirrorTo = 6452086
+    ControlLook.FixedGradientDownBorder = 14007466
+    ControlLook.DropDownHeader.Font.Charset = 'DEFAULT_CHARSET'
+    ControlLook.DropDownHeader.Font.Color = 'clWindowText'
+    ControlLook.DropDownHeader.Font.Height = -11
+    ControlLook.DropDownHeader.Font.Name = 'Tahoma'
+    ControlLook.DropDownHeader.Font.Style = []
+    ControlLook.DropDownHeader.Visible = True
+    ControlLook.DropDownHeader.Buttons = <
+    >
+    ControlLook.DropDownFooter.Font.Charset = 'DEFAULT_CHARSET'
+    ControlLook.DropDownFooter.Font.Color = 'clWindowText'
+    ControlLook.DropDownFooter.Font.Height = -11
+    ControlLook.DropDownFooter.Font.Name = 'MS Sans Serif'
+    ControlLook.DropDownFooter.Font.Style = []
+    ControlLook.DropDownFooter.Visible = True
+    ControlLook.DropDownFooter.Buttons = <
+    >
+    Filter = <
+    >
+    FilterActive = True
+    FilterDropDown.Font.Charset = 'DEFAULT_CHARSET'
+    FilterDropDown.Font.Color = 'clWindowText'
+    FilterDropDown.Font.Height = -11
+    FilterDropDown.Font.Name = 'MS Sans Serif'
+    FilterDropDown.Font.Style = []
+    FilterDropDown.GlyphActive.Data = <binary 1658 bytes>
+    FilterDropDownAuto = True
+    FilterDropDownClear = '(All)'
+    FilterDropDownCheck = True
+    FixedColWidth = 25
+    FixedRowHeight = 35
+    FixedFont.Charset = 'DEFAULT_CHARSET'
+    FixedFont.Color = 'clWindowText'
+    FixedFont.Height = -11
+    FixedFont.Name = 'Tahoma'
+    FixedFont.Style = [fsBold]
+    FloatFormat = '%.2f'
+    Look = 'glTMS'
+    PrintSettings.DateFormat = 'dd/mm/yyyy'
+    PrintSettings.Font.Charset = 'DEFAULT_CHARSET'
+    PrintSettings.Font.Color = 'clWindowText'
+    PrintSettings.Font.Height = -11
+    PrintSettings.Font.Name = 'MS Sans Serif'
+    PrintSettings.Font.Style = []
+    PrintSettings.FixedFont.Charset = 'DEFAULT_CHARSET'
+    PrintSettings.FixedFont.Color = 'clWindowText'
+    PrintSettings.FixedFont.Height = -11
+    PrintSettings.FixedFont.Name = 'MS Sans Serif'
+    PrintSettings.FixedFont.Style = []
+    PrintSettings.HeaderFont.Charset = 'DEFAULT_CHARSET'
+    PrintSettings.HeaderFont.Color = 'clWindowText'
+    PrintSettings.HeaderFont.Height = -11
+    PrintSettings.HeaderFont.Name = 'MS Sans Serif'
+    PrintSettings.HeaderFont.Style = []
+    PrintSettings.FooterFont.Charset = 'DEFAULT_CHARSET'
+    PrintSettings.FooterFont.Color = 'clWindowText'
+    PrintSettings.FooterFont.Height = -11
+    PrintSettings.FooterFont.Name = 'MS Sans Serif'
+    PrintSettings.FooterFont.Style = []
+    PrintSettings.PageNumSep = '/'
+    SearchFooter.AutoSearch = False
+    SearchFooter.ColorTo = 15790320
+    SearchFooter.FindNextCaption = 'Find &next'
+    SearchFooter.FindPrevCaption = 'Find &previous'
+    SearchFooter.Font.Charset = 'DEFAULT_CHARSET'
+    SearchFooter.Font.Color = 'clWindowText'
+    SearchFooter.Font.Height = -11
+    SearchFooter.Font.Name = 'MS Sans Serif'
+    SearchFooter.Font.Style = []
+    SearchFooter.HighLightCaption = 'Highlight'
+    SearchFooter.HintClose = 'Close'
+    SearchFooter.HintFindNext = 'Find next occurrence'
+    SearchFooter.HintFindPrev = 'Find previous occurrence'
+    SearchFooter.HintHighlight = 'Highlight occurrences'
+    SearchFooter.MatchCaseCaption = 'Match case'
+    SearchFooter.SearchColumn = 2
+    SortSettings.Column = 0
+    SortSettings.Show = True
+    SortSettings.HeaderColorTo = 16579058
+    SortSettings.HeaderMirrorColor = 16380385
+    SortSettings.HeaderMirrorColorTo = 16182488
+    Version = '6.0.5.0'
+    ColWidths = (25 88 202 88 88 88 88 88 89 88 87 88)
+    RowHeights = (35 22)
+  end
+  object btExcel: TAdvGlowButton
+    Left = 42
+    Top = 520
+    Width = 100
+    Height = 33
+    Caption = '-> Excel'
+    ImageIndex = 31
+    Images = 'imlVI'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    OfficeHint.Title = 'Export nach Excel'
+    OfficeHint.Notes.Strings = ('aktuelle Ansicht nach Excel exportieren')
+    OfficeHint.ShowHelp = True
+    Picture.Data = <binary 1078 bytes>
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 3
+    OnClick = 'btExcelClick'
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 16117985
+    Appearance.ColorHotTo = 16372402
+    Appearance.ColorMirrorHot = 16107693
+    Appearance.ColorMirrorHotTo = 16775412
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 1255
+    Top = 534
+  end
+  object svdExcel: TSaveDialog
+    DefaultExt = 'xls'
+    Left = 1160
+    Top = 112
+  end
+  object imlVI: TImageList
+    Left = 1160
+    Top = 48
+    Bitmap = <binary 42406 bytes>
+  end
+  object dsAuftrag: TDataSource
+    Left = 1160
+    Top = 16
+  end
+  object AdvGridExcelIO1: TAdvGridExcelIO
+    AdvStringGrid = 'grdAuftraege'
+    Options.ExportOverwrite = 'omAlways'
+    Options.ExportOverwriteMessage = 'File %s already exists\rOk to overwrite ?'
+    Options.ExportWordWrapped = True
+    Options.ExportRawRTF = False
+    Options.ExportHardBorders = True
+    Options.ExportCellMargins = True
+    UseUnicode = False
+    GridStartRow = 0
+    GridStartCol = 0
+    Version = '3.4.1'
+    Left = 1160
+    Top = 80
+  end
+end

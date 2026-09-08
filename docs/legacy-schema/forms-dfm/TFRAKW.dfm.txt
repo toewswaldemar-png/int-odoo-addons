@@ -1,0 +1,30 @@
+object fraKW: TfraKW
+  Left = 0
+  Top = 0
+  Width = 1017
+  Height = 218
+  TabOrder = 0
+  object stgWochen: TStringGrid
+    Left = 16
+    Top = 4
+    Width = 985
+    Height = 43
+    ColCount = 53
+    DefaultColWidth = 25
+    FixedCols = 0
+    RowCount = 1
+    FixedRows = 0
+    TabOrder = 0
+  end
+  object mcalKW: TMonthCalendar
+    Left = 360
+    Top = 56
+    Width = 223
+    Height = 154
+    Date = '<extended:822f2872d165bd9c0e40>'
+    TabOrder = 1
+    WeekNumbers = True
+    OnClick = 'mcalKWClick'
+    OnGetMonthInfo = 'mcalKWGetMonthInfo'
+  end
+end

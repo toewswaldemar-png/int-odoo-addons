@@ -1,0 +1,41 @@
+object dmFuhrparkDruck: TdmFuhrparkDruck
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 450
+  Top = 323
+  Height = 201
+  Width = 300
+  object cdsFuhrparkWartung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    MasterDetail = 'mdInfo'
+    Left = 176
+    Top = 40
+  end
+  object cdsFuhrparkKm: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    ProviderName = 'dsp'
+    UpdateMode = 'upWhereAll'
+    MasterDetail = 'mdInfo'
+    Left = 56
+    Top = 40
+  end
+  object cdsKosten: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    MasterDetail = 'mdInfo'
+    Left = 176
+    Top = 104
+  end
+end

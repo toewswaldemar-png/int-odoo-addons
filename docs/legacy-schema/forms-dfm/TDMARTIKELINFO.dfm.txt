@@ -1,0 +1,480 @@
+object dmArtikelInfo: TdmArtikelInfo
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 561
+  Top = 274
+  Height = 458
+  Width = 831
+  object cdsAuftrag: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 52
+    Top = 66
+  end
+  object cdsBestellung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 128
+    Top = 144
+  end
+  object cdsBestellliste: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 56
+    Top = 144
+  end
+  object cdsFertigung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 168
+    Top = 8
+  end
+  object cdsBestand: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 296
+    Top = 8
+  end
+  object cdsBuchungen: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 216
+    Top = 145
+  end
+  object cdsInfo: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 112
+    Top = 12
+  end
+  object cdsKomm: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 232
+    Top = 12
+  end
+  object cdsRahmen: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 48
+    Top = 8
+  end
+  object cdsAllgemein: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 115
+    Top = 66
+  end
+  object cdsZusatz: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 179
+    Top = 66
+  end
+  object cdsVerwendung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 248
+    Top = 68
+  end
+  object cdsRahmenbestellt: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 304
+    Top = 144
+  end
+  object cdsExcel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 312
+    Top = 64
+  end
+  object cdsAngebote: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 240
+    Top = 200
+    object IntegerField35: TIntegerField
+      FieldName = 'NUMMER'
+      Required = True
+    end
+    object IntegerField36: TIntegerField
+      FieldName = 'Auftrag'
+    end
+    object SQLTimeStampField8: TSQLTimeStampField
+      FieldName = 'BELEGDATUM'
+    end
+    object IntegerField37: TIntegerField
+      FieldName = 'ADRNR'
+    end
+    object StringField49: TStringField
+      FieldName = 'NAME1'
+      Size = 60
+    end
+    object FMTBCDField19: TFMTBCDField
+      FieldName = 'NETTO'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object FloatField23: TFloatField
+      FieldName = 'STCK'
+    end
+    object StringField50: TStringField
+      FieldName = 'TEXT'
+      Size = 60
+    end
+    object IntegerField38: TIntegerField
+      FieldName = 'OID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object IntegerField39: TIntegerField
+      FieldName = 'SOID'
+    end
+    object cdsAngeboteendpruefdatum: TSQLTimeStampField
+      FieldName = 'endpruefdatum'
+    end
+    object cdsAngeboteepreis: TFloatField
+      FieldName = 'epreis'
+      DisplayFormat = '###0.,00'
+    end
+    object cdsAngeboteRabatt: TFMTBCDField
+      FieldName = 'Rabatt'
+      DisplayFormat = '###0.,00'
+    end
+    object cdsAngeboteErabattPreis: TFloatField
+      FieldName = 'ErabattPreis'
+      DisplayFormat = '###0.,00'
+    end
+    object cdsAngeboteGPreis: TFMTBCDField
+      FieldName = 'GPreis'
+    end
+  end
+  object cdsRechnungen: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 104
+    Top = 200
+    object IntegerField5: TIntegerField
+      FieldName = 'NUMMER'
+      Required = True
+    end
+    object cdsRechnungenAuftrag: TIntegerField
+      FieldName = 'Auftrag'
+    end
+    object SQLTimeStampField3: TSQLTimeStampField
+      FieldName = 'BELEGDATUM'
+    end
+    object IntegerField6: TIntegerField
+      FieldName = 'ADRNR'
+    end
+    object cdsRechnungenName1: TStringField
+      FieldName = 'NAME1'
+      Size = 60
+    end
+    object FMTBCDField3: TFMTBCDField
+      FieldName = 'NETTO'
+      DisplayFormat = '###0.,00'
+      Precision = 15
+      Size = 2
+    end
+    object FloatField3: TFloatField
+      FieldName = 'STCK'
+    end
+    object StringField6: TStringField
+      FieldName = 'TEXT'
+      Size = 60
+    end
+    object cdsRechnungenOID: TIntegerField
+      FieldName = 'OID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object cdsRechnungenSOID: TIntegerField
+      FieldName = 'SOID'
+    end
+    object cdsRechnungenBelegoid: TIntegerField
+      FieldName = 'Belegoid'
+    end
+    object cdsRechnungenEpreis: TFloatField
+      FieldName = 'Epreis'
+    end
+  end
+  object cdsRep: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 176
+    Top = 200
+  end
+  object cdsLieferscheine: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 32
+    Top = 200
+    object IntegerField8: TIntegerField
+      FieldName = 'NUMMER'
+      Required = True
+    end
+    object cdsLieferscheineAuftrag: TIntegerField
+      FieldName = 'Auftrag'
+    end
+    object SQLTimeStampField2: TSQLTimeStampField
+      FieldName = 'BELEGDATUM'
+    end
+    object IntegerField9: TIntegerField
+      FieldName = 'ADRNR'
+    end
+    object StringField3: TStringField
+      FieldName = 'NAME1'
+      Size = 60
+    end
+    object FloatField4: TFloatField
+      FieldName = 'STCK'
+    end
+    object StringField4: TStringField
+      FieldName = 'TEXT'
+      Size = 60
+    end
+    object IntegerField10: TIntegerField
+      FieldName = 'OID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object IntegerField11: TIntegerField
+      FieldName = 'SOID'
+    end
+    object FloatField5: TFloatField
+      FieldName = 'EPREIS'
+      DisplayFormat = '##0.,0000'
+    end
+    object FMTBCDField4: TFMTBCDField
+      FieldName = 'NETTO'
+      DisplayFormat = '##0.,00'
+    end
+    object IntegerField12: TIntegerField
+      FieldName = 'belegoid'
+    end
+  end
+  object cdsAnfrage: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 304
+    Top = 200
+  end
+  object cds8dl: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 360
+    Top = 200
+  end
+  object cdsBuchungenhist: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 48
+    Top = 257
+  end
+  object cdsArtikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 128
+    Top = 260
+  end
+  object cdsInvnetur: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 360
+    Top = 16
+  end
+  object cdsInventurTables: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    AfterOpen = 'cdsBestellungAfterOpen'
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 424
+    Top = 16
+  end
+end

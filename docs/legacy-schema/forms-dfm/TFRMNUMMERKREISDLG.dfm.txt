@@ -1,0 +1,367 @@
+object frmNummerkreisDlg: TfrmNummerkreisDlg
+  Left = 325
+  Top = 305
+  Caption = 'Nummernkreise'
+  ClientHeight = 660
+  ClientWidth = 801
+  PixelsPerInch = 96
+  TextHeight = 13
+  object ofihelpStd: TAdvOfficeImage
+    Left = 766
+    Top = 620
+  end
+  object btnOk: TAdvGlowButton
+    Left = 610
+    Top = 620
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 690
+    Top = 620
+  end
+  object GroupBox1: TGroupBox
+    Left = 24
+    Top = 8
+    Width = 745
+    Height = 193
+    TabOrder = 2
+    object lblCaption: TLabel
+      Left = 24
+      Top = 24
+      Width = 68
+      Height = 16
+      Caption = 'Angebote'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWindowText'
+      Font.Height = -13
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object lblNr: TLabel
+      Left = 180
+      Top = 27
+      Width = 137
+      Height = 13
+      Caption = 'aktuellen Nummernkreis von '
+    end
+    object Label1: TLabel
+      Left = 444
+      Top = 27
+      Width = 18
+      Height = 13
+      Caption = 'auf '
+    end
+    object Label2: TLabel
+      Left = 21
+      Top = 108
+      Width = 105
+      Height = 16
+      Caption = 'Nummeraufbau'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWindowText'
+      Font.Height = -13
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object lblvorschau: TLabel
+      Left = 585
+      Top = 108
+      Width = 33
+      Height = 16
+      Caption = '0001'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWindowText'
+      Font.Height = -13
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object edtOldNUmber: TAdvSpinEdit
+      Left = 322
+      Top = 23
+      Width = 113
+      Height = 22
+      Value = 1
+      FloatValue = '<extended:0000000000000080ff3f>'
+      TimeValue = '<extended:fba2aaaaaaaaaaaafa3f>'
+      HexValue = 0
+      Color = 13040091
+      IncrementFloat = '<extended:cdccccccccccccccfb3f>'
+      IncrementFloatPage = '<extended:0000000000000080ff3f>'
+      LabelFont.Charset = 'DEFAULT_CHARSET'
+      LabelFont.Color = 'clWindowText'
+      LabelFont.Height = -11
+      LabelFont.Name = 'MS Sans Serif'
+      LabelFont.Style = []
+      MaxValue = 99999999
+      ReadOnly = True
+      TabOrder = 0
+      Visible = True
+      Version = '1.5.1.2'
+    end
+    object edtNr: TAdvSpinEdit
+      Left = 467
+      Top = 23
+      Width = 105
+      Height = 22
+      Value = 1
+      FloatValue = '<extended:0000000000000080ff3f>'
+      TimeValue = '<extended:fba2aaaaaaaaaaaafa3f>'
+      HexValue = 0
+      IncrementFloat = '<extended:cdccccccccccccccfb3f>'
+      IncrementFloatPage = '<extended:0000000000000080ff3f>'
+      LabelFont.Charset = 'DEFAULT_CHARSET'
+      LabelFont.Color = 'clWindowText'
+      LabelFont.Height = -11
+      LabelFont.Name = 'MS Sans Serif'
+      LabelFont.Style = []
+      MaxValue = 99999999
+      TabOrder = 1
+      Visible = True
+      Version = '1.5.1.2'
+    end
+    object btnAend: TAdvGlowButton
+      Left = 585
+      Top = 19
+      Width = 73
+      Height = 25
+      Caption = 'ändern'
+      FocusType = 'ftHot'
+      NotesFont.Charset = 'DEFAULT_CHARSET'
+      NotesFont.Color = 'clWindowText'
+      NotesFont.Height = -11
+      NotesFont.Name = 'Tahoma'
+      NotesFont.Style = []
+      OfficeHint.Title = 'Abbruch'
+      OfficeHint.Notes.Strings = ('Beenden ohne Aktion auszuführen')
+      OfficeHint.Picture.Data = <binary 3942 bytes>
+      OfficeHint.ShowHelp = True
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 2
+      OnClick = 'btnAendClick'
+      Appearance.BorderColorHot = 'clPurple'
+      Appearance.BorderColorChecked = 4194432
+      Appearance.ColorChecked = 16111818
+      Appearance.ColorCheckedTo = 16367008
+      Appearance.ColorDisabled = 15921906
+      Appearance.ColorDisabledTo = 15921906
+      Appearance.ColorDown = 16111818
+      Appearance.ColorDownTo = 16367008
+      Appearance.ColorHot = 8388863
+      Appearance.ColorHotTo = 'clPurple'
+      Appearance.ColorMirrorHot = 4210816
+      Appearance.ColorMirrorHotTo = 'clPurple'
+      Appearance.ColorMirrorDown = 16102556
+      Appearance.ColorMirrorDownTo = 16768988
+      Appearance.ColorMirrorChecked = 16102556
+      Appearance.ColorMirrorCheckedTo = 16768988
+      Appearance.ColorMirrorDisabled = 11974326
+      Appearance.ColorMirrorDisabledTo = 15921906
+    end
+    object edKenn: TAdvEdit
+      Left = 180
+      Top = 108
+      Width = 81
+      Height = 21
+      EmptyTextStyle = []
+      LabelCaption = 'Kennung'
+      LabelPosition = 'lpTopCenter'
+      LabelFont.Charset = 'DEFAULT_CHARSET'
+      LabelFont.Color = 'clWindowText'
+      LabelFont.Height = -11
+      LabelFont.Name = 'MS Sans Serif'
+      LabelFont.Style = []
+      Lookup.Separator = ';'
+      Color = 'clWindow'
+      TabOrder = 3
+      Visible = True
+      OnChange = 'edKennChange'
+      Version = '2.9.4.0'
+    end
+    object gbxJahr: TAdvOfficeRadioGroup
+      Left = 268
+      Top = 64
+      Width = 89
+      Height = 105
+      CaptionPosition = 'cpTopCenter'
+      Version = '1.3.4.1'
+      Caption = 'Jahr'
+      ParentBackground = False
+      TabOrder = 4
+      OnClick = 'gbxJahrClick'
+      ItemIndex = 0
+      Items.Strings = ('nichts' '4 - Stellig' '2 - Stellig')
+      Ellipsis = False
+    end
+    object gbxMonPer: TAdvOfficeRadioGroup
+      Left = 364
+      Top = 64
+      Width = 89
+      Height = 105
+      CaptionPosition = 'cpTopCenter'
+      Version = '1.3.4.1'
+      Caption = 'Monat / Periode'
+      ParentBackground = False
+      TabOrder = 5
+      OnClick = 'gbxMonPerClick'
+      ItemIndex = 0
+      Items.Strings = ('nichts' 'Monat' 'Periode')
+      Ellipsis = False
+    end
+    object gbxStellen: TAdvOfficeRadioGroup
+      Left = 460
+      Top = 64
+      Width = 89
+      Height = 105
+      CaptionPosition = 'cpTopCenter'
+      Version = '1.3.4.1'
+      Caption = 'Stellen'
+      ParentBackground = False
+      TabOrder = 6
+      OnClick = 'gbxStellenClick'
+      ItemIndex = 0
+      Items.Strings = ('5 - Stellig' '4 - Stellig' '3 - Stellig')
+      Ellipsis = False
+    end
+  end
+  object outLKreise: TAdvOutlookList
+    Left = 24
+    Top = 216
+    Width = 425
+    Height = 417
+    Columns = <
+      item0 = {
+        Caption = 'Group Column'
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        HeaderFont.Charset = 'DEFAULT_CHARSET'
+        HeaderFont.Color = 'clWindowText'
+        HeaderFont.Height = -11
+        HeaderFont.Name = 'MS Sans Serif'
+        HeaderFont.Style = []
+      }
+      item1 = {
+        Caption = 'Art'
+        Width = 200
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        HeaderFont.Charset = 'DEFAULT_CHARSET'
+        HeaderFont.Color = 'clWindowText'
+        HeaderFont.Height = -11
+        HeaderFont.Name = 'MS Sans Serif'
+        HeaderFont.Style = []
+      }
+      item2 = {
+        Caption = 'akt. Wert'
+        Width = 75
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        HeaderFont.Charset = 'DEFAULT_CHARSET'
+        HeaderFont.Color = 'clWindowText'
+        HeaderFont.Height = -11
+        HeaderFont.Name = 'MS Sans Serif'
+        HeaderFont.Style = []
+      }
+      item3 = {
+        Caption = 'column 3'
+        Width = 5
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        HeaderFont.Charset = 'DEFAULT_CHARSET'
+        HeaderFont.Color = 'clWindowText'
+        HeaderFont.Height = -11
+        HeaderFont.Name = 'MS Sans Serif'
+        HeaderFont.Style = []
+        Visible = False
+      }
+    >
+    Color = 'clWhite'
+    DragDropSetting = 'ddDisabled'
+    GroupItemHeight = 34
+    GroupShowCount = True
+    HeaderHeight = 25
+    HideSelection = True
+    LookUp.Method = 'lmDirect'
+    GroupColumnDisplay = 'gdHidden'
+    PreviewSettings.Font.Charset = 'DEFAULT_CHARSET'
+    PreviewSettings.Font.Color = 'clBlue'
+    PreviewSettings.Font.Height = -11
+    PreviewSettings.Font.Name = 'MS Sans Serif'
+    PreviewSettings.Font.Style = []
+    SelectionOptions = [soRightClickSelect]
+    GroupFont.Charset = 'DEFAULT_CHARSET'
+    GroupFont.Color = 12150839
+    GroupFont.Height = -11
+    GroupFont.Name = 'MS Sans Serif'
+    GroupFont.Style = [fsBold]
+    GroupCountFont.Charset = 'DEFAULT_CHARSET'
+    GroupCountFont.Color = 'clBlack'
+    GroupCountFont.Height = -11
+    GroupCountFont.Name = 'MS Sans Serif'
+    GroupCountFont.Style = []
+    ShowHint = True
+    ShowNodes = True
+    SortSettings.SortGroups = False
+    TabOrder = 3
+    URLSettings.FontStyle = [fsUnderline]
+    Version = '1.7.3.2'
+    OnItemClick = 'outLKreiseItemClick'
+  end
+  object btnsave: TAdvGlowButton
+    Left = 465
+    Top = 219
+    Width = 104
+    Height = 30
+    Caption = 'speichern'
+    FocusType = 'ftHot'
+    NotesFont.Charset = 'DEFAULT_CHARSET'
+    NotesFont.Color = 'clWindowText'
+    NotesFont.Height = -11
+    NotesFont.Name = 'Tahoma'
+    NotesFont.Style = []
+    OfficeHint.Title = 'Abbruch'
+    OfficeHint.Notes.Strings = ('Beenden ohne Aktion auszuführen')
+    OfficeHint.Picture.Data = <binary 3942 bytes>
+    OfficeHint.ShowHelp = True
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 4
+    OnClick = 'btnsaveClick'
+    Appearance.BorderColorHot = 'clPurple'
+    Appearance.BorderColorChecked = 4194432
+    Appearance.ColorChecked = 16111818
+    Appearance.ColorCheckedTo = 16367008
+    Appearance.ColorDisabled = 15921906
+    Appearance.ColorDisabledTo = 15921906
+    Appearance.ColorDown = 16111818
+    Appearance.ColorDownTo = 16367008
+    Appearance.ColorHot = 8388863
+    Appearance.ColorHotTo = 'clPurple'
+    Appearance.ColorMirrorHot = 4210816
+    Appearance.ColorMirrorHotTo = 'clPurple'
+    Appearance.ColorMirrorDown = 16102556
+    Appearance.ColorMirrorDownTo = 16768988
+    Appearance.ColorMirrorChecked = 16102556
+    Appearance.ColorMirrorCheckedTo = 16768988
+    Appearance.ColorMirrorDisabled = 11974326
+    Appearance.ColorMirrorDisabledTo = 15921906
+  end
+  object tmrSelfClose: TTimer
+    Left = 576
+    Top = 616
+  end
+end

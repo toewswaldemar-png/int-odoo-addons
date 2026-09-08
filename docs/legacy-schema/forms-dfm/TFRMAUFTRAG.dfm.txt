@@ -1,0 +1,173 @@
+object frmAuftrag: TfrmAuftrag
+  Left = 248
+  Top = 184
+  Width = 1100
+  Height = 716
+  Caption = 'Auftrag'
+  OldCreateOrder = True
+  OnActivate = 'FormActivate'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object splTree: TAdvSplitter
+    Left = 844
+    Height = 660
+    OnMoved = 'splTreeMoved'
+  end
+  object pnlBeleg: TPanel
+    Width = 844
+    Height = 660
+    object pnlBelegKopf: TPanel
+      Width = 842
+      Height = 176
+      object gbxAnschrift: TGroupBox
+        Height = 170
+        object lblLiefertermin: TLabel
+          Left = 352
+          Top = 125
+          Width = 54
+          Height = 13
+          Caption = 'Liefertermin'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+        end
+        object dbcBelegart: TDBComboBox
+          Items.Strings = ('Auftrag' 'Auftragsbestätigung')
+        end
+        object dbcbxAbgeschlossen: TDBCheckBox
+          Top = 146
+        end
+        object dbcbGedruckt: TDBCheckBox
+          Top = 146
+        end
+        object btnAdresseNeuanlage: TAdvGlowButton
+          TabOrder = 19
+        end
+        object dbeLiefertermin: TDBEdit
+          Left = 432
+          Top = 120
+          Width = 65
+          Height = 21
+          Hint = 'Land'
+          AutoSelect = False
+          AutoSize = False
+          Color = 16120304
+          DataField = 'LIEFERTERMIN'
+          DataSource = 'dsBeleg'
+          Font.Charset = 'ANSI_CHARSET'
+          Font.Color = 'clBlack'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Pitch = 'fpVariable'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 17
+        end
+      end
+    end
+    object pgcBeleg: TPageControl
+      Top = 177
+      Width = 842
+      Height = 482
+      object tshPositionen: TTabSheet
+        object dbcgPos: TDBCtrlGrid
+          object dbmLangtext: TDBMemo
+            TabOrder = 11
+          end
+          object pnlLangtext: TPanel
+            TabOrder = 8
+          end
+          object dbePosKz: TDBEdit
+            TabOrder = 13
+          end
+          object pnlKalkulation: TPanel
+            Left = 29
+            Top = 28
+            Width = 21
+            Height = 19
+            Caption = 'K'
+            TabOrder = 9
+            OnClick = 'pnlKalkulationClick'
+          end
+        end
+      end
+    end
+  end
+  object fraBtn: TfraBtn
+    Width = 1092
+    object tlbFunktionen: TAdvToolBar
+      object btnCopyBeleg: TAdvGlowMenuButton
+        Hint = 'Auftrag umwandeln'
+      end
+    end
+    object pmCopy: TPopupMenu
+      object pmiBestellung: TMenuItem
+        Caption = '-> Bestellung'
+        OnClick = 'pmiBestellungClick'
+      end
+      object pmiLieferschein: TMenuItem
+        Caption = '-> Lieferschein'
+        OnClick = 'pmiLieferscheinClick'
+      end
+      object pmiSammellieferschein: TMenuItem
+        Caption = '-> Sammellieferschein'
+        OnClick = 'pmiSammellieferscheinClick'
+      end
+      object pmiRechnung: TMenuItem
+        Caption = '-> Rechnung'
+        OnClick = 'pmiRechnungClick'
+      end
+      object pmiSammelrechnung: TMenuItem
+        Caption = '-> Sammelrechnung'
+        OnClick = 'pmiSammelrechnungClick'
+      end
+      object N3: TMenuItem
+        Caption = '-'
+      end
+      object Abschlagrechnung1: TMenuItem
+        Caption = '-> Abschlagrechnung'
+        OnClick = 'Abschlagrechnung1Click'
+      end
+      object Schlussrechnung1: TMenuItem
+        Caption = '-> Schlussrechnung'
+        OnClick = 'Schlussrechnung1Click'
+      end
+      object N4: TMenuItem
+        Caption = '-'
+      end
+      object Auftragkopieren1: TMenuItem
+        Caption = 'Auftrag kopieren'
+        OnClick = 'Auftragkopieren1Click'
+      end
+    end
+    object pmFunktionen: TPopupMenu
+      object pmiNummernkreis: TMenuItem
+        OnClick = 'fraBtnpmiNummernkreisClick'
+      end
+    end
+    object pmDrucken: TPopupMenu
+      object Auftragsbuch1: TMenuItem
+        Caption = 'Auftragsbuch'
+        OnClick = 'Auftragsbuch1Click'
+      end
+    end
+  end
+  object fraTree1: TfraTreeList
+    Left = 847
+    Height = 660
+    object trlNav: TTreeList
+      Height = 644
+    end
+  end
+  object pmPos: TPopupMenu
+    Top = 280
+  end
+  object WordDocument: TWordDocument
+    Left = 693
+    Top = 85
+  end
+end

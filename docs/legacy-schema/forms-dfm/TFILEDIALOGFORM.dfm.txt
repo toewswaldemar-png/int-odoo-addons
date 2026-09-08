@@ -1,0 +1,497 @@
+object FileDialogForm: TFileDialogForm
+  HelpType = 'htContext'
+  Left = 420
+  Top = 415
+  Width = 496
+  Height = 352
+  HorzScrollBar.Range = 203
+  Action = 'FormAction'
+  ActiveControl = 'FileEdit'
+  Caption = 'Öffnen'
+  Color = 'clBackground'
+  Constraints.MinHeight = 175
+  Constraints.MinWidth = 350
+  KeyPreview = True
+  Position = 'poScreenCenter'
+  OnActivate = 'FormActivate'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  OnKeyDown = 'FormKeyDown'
+  OnLoaded = 'FormLoaded'
+  OnShow = 'FormShow'
+  object Splitter: TSplitter
+    Left = 293
+    Top = 0
+    Height = 352
+    Align = 'alRight'
+  end
+  object MainPanel: TPanel
+    Left = 0
+    Top = 0
+    Width = 295
+    Height = 354
+    Align = 'alClient'
+    BevelOuter = 'bvNone'
+    TabOrder = 0
+    object BottomPanel: TPanel
+      Left = 0
+      Top = 249
+      Width = 293
+      Height = 71
+      Align = 'alBottom'
+      BevelOuter = 'bvNone'
+      TabOrder = 1
+      object Label2: TLabel
+        Left = 29
+        Top = 12
+        Width = 60
+        Height = 15
+        Alignment = 'taRightJustify'
+        Caption = 'Dateiname:'
+      end
+      object Label3: TLabel
+        Left = 33
+        Top = 44
+        Width = 56
+        Height = 15
+        Alignment = 'taRightJustify'
+        Caption = 'Dateityp:'
+      end
+      object OpenButton: TButton
+        Left = 212
+        Top = 8
+        Width = 75
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = 'Ö&ffnen'
+        Default = True
+        Enabled = False
+        TabOrder = 3
+        OnClick = 'FileEditReturnPressed'
+      end
+      object CancelButton: TButton
+        Left = 212
+        Top = 40
+        Width = 75
+        Height = 25
+        Anchors = [akTop, akRight]
+        Cancel = True
+        Caption = 'Abbrechen'
+        ModalResult = 2
+        TabOrder = 5
+      end
+      object FileEdit: TFileEdit
+        Left = 93
+        Top = 9
+        Width = 107
+        Height = 23
+        Anchors = [akLeft, akTop, akRight]
+        Directory.IncludeParentDir = False
+        Directory.FileMask = '*'
+        TabOrder = 0
+        OnDirectoryChange = 'FileEditDirectoryChange'
+        OnMaskChange = 'FileEditMaskChange'
+        OnReturnPressed = 'FileEditReturnPressed'
+      end
+      object FilterCombo: TFilterComboBox
+        Left = 93
+        Top = 41
+        Width = 106
+        Height = 23
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 1
+        OnClick = 'FilterComboClick'
+      end
+    end
+    object FileIcons: TFileIconView
+      Left = 0
+      Top = 33
+      Width = 289
+      Height = 216
+      Align = 'alClient'
+      Directory.IncludeParentDir = False
+      Directory.FileMask = '*'
+      IconOptions.Arrangement = 'iaTop'
+      IconOptions.WrapText = False
+      IconSize = 'isSmall'
+      ReadOnly = False
+      TabOrder = 0
+      TextPosition = 'itpRight'
+      Visible = False
+      OnContextPopup = 'FileIconsContextPopup'
+      OnDblClick = 'FileIconsDblClick'
+      OnDirectoryChange = 'FileIconsDirectoryChange'
+      OnFileFound = 'FileListFileFound'
+      OnKeyUp = 'FileIconsKeyUp'
+      OnMouseUp = 'FileIconsMouseUp'
+      OnSelectItem = 'FileIconsSelectItem'
+    end
+    object Panel2: TPanel
+      Left = 0
+      Top = 0
+      Width = 293
+      Height = 33
+      Align = 'alTop'
+      BevelOuter = 'bvNone'
+      TabOrder = 3
+      object ToolBar1: TToolBar
+        Left = 99
+        Top = 0
+        Width = 201
+        Height = 31
+        Align = 'alNone'
+        Anchors = [akTop, akRight]
+        BorderWidth = 3
+        ButtonHeight = 23
+        Caption = 'ToolBar1'
+        EdgeBorders = []
+        Flat = True
+        Images = 'ImageList1'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 0
+        Wrapable = False
+        object ListButton: TToolButton
+          Left = 150
+          Top = 5
+          Height = 23
+          Hint = 'Ansicht ändern'
+          Style = 'tbsDropDown'
+          Caption = 'ListButton'
+          DropDownMenu = 'ViewPopup'
+          ImageIndex = 2
+        end
+        object ToolButton3: TToolButton
+          Left = 96
+          Top = 5
+          Width = 8
+          Height = 23
+          Style = 'tbsDivider'
+          Caption = 'ToolButton3'
+          ImageIndex = 1
+        end
+        object NewDirButton: TToolButton
+          HelpType = 'htContext'
+          Left = 104
+          Top = 5
+          Height = 23
+          Action = 'NewDirAction'
+          Caption = 'Neues &Verzeichnis'
+        end
+        object UpButton: TToolButton
+          HelpType = 'htContext'
+          Left = 4
+          Top = 5
+          Height = 23
+          Action = 'UpAction'
+          Caption = 'Ein Verzeichnis nach &oben'
+        end
+        object ToolButton1: TToolButton
+          HelpType = 'htContext'
+          Left = 27
+          Top = 5
+          Height = 23
+          Action = 'BackAction'
+          Caption = '&Zurück'
+        end
+        object ToolButton2: TToolButton
+          HelpType = 'htContext'
+          Left = 50
+          Top = 5
+          Height = 23
+          Action = 'ForwardAction'
+          Caption = '&Weiter'
+        end
+        object ToolButton4: TToolButton
+          HelpType = 'htContext'
+          Left = 73
+          Top = 5
+          Height = 23
+          Action = 'HomeAction'
+          Caption = '&Start'
+        end
+        object ToolButton5: TToolButton
+          HelpType = 'htContext'
+          Left = 127
+          Top = 5
+          Height = 23
+          Action = 'ReloadAction'
+          Caption = 'Neu &laden'
+        end
+      end
+      object Label1: TLabel
+        Left = 13
+        Top = 7
+        Width = 44
+        Height = 15
+        Alignment = 'taRightJustify'
+        Caption = '&Suchen in:'
+      end
+      object FileHistoryCombo: TFileHistoryComboBox
+        Left = 64
+        Top = 5
+        Width = 32
+        Height = 23
+        Anchors = [akLeft, akRight]
+        ItemHeight = 17
+        MaxItems = 16
+        TabOrder = 2
+        OnClick = 'FileHistoryComboClick'
+      end
+    end
+    object HelpROPanel: TPanel
+      Left = 0
+      Top = 320
+      Width = 293
+      Height = 32
+      Align = 'alBottom'
+      BevelOuter = 'bvNone'
+      TabOrder = 2
+      object ReadOnlyCheckbox: TCheckBox
+        Left = 92
+        Top = -8
+        Width = 189
+        Height = 36
+        Caption = 'Nur zum &Lesen öffnen'
+        TabOrder = 0
+      end
+      object HelpButton: TButton
+        HelpType = 'htContext'
+        Left = 212
+        Top = 1
+        Width = 75
+        Height = 25
+        Action = 'HelpAction'
+        Anchors = [akTop, akRight]
+        Caption = '&Hilfe'
+        TabOrder = 1
+      end
+    end
+    object Panel3: TPanel
+      Left = 289
+      Top = 33
+      Width = 4
+      Height = 216
+      Align = 'alRight'
+      BevelOuter = 'bvNone'
+      TabOrder = 4
+    end
+  end
+  object PreviewPanel: TPanel
+    Left = 296
+    Top = 0
+    Width = 200
+    Height = 352
+    Align = 'alRight'
+    BevelOuter = 'bvNone'
+    Constraints.MinWidth = 200
+    TabOrder = 1
+    OnResize = 'PreviewPanelResize'
+    object PreviewProgress: TProgressBar
+      Left = 2
+      Top = 260
+      Width = 195
+      Height = 18
+      Anchors = [akLeft, akRight, akBottom]
+    end
+    object AutoPreviewCheckbox: TCheckBox
+      Left = 5
+      Top = 0
+      Width = 101
+      Height = 31
+      Caption = 'Schnellvorschau'
+      TabOrder = 0
+      OnClick = 'AutoPreviewCheckboxClick'
+    end
+    object PreviewButton: TButton
+      Left = 120
+      Top = 3
+      Width = 75
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Vorschau'
+      TabOrder = 1
+      OnClick = 'PreviewButtonClick'
+    end
+    object PreviewLabel: TLabel
+      Left = 3
+      Top = 285
+      Width = 76
+      Height = 15
+      Anchors = [akLeft, akBottom]
+      Caption = 'Labelvorschau'
+    end
+  end
+  object ActionList1: TActionList
+    Images = 'ImageList1'
+    Left = 80
+    Top = 96
+    object FormAction: TAction
+      Caption = 'Öffnen'
+      OnUpdate = 'FormActionUpdate'
+    end
+    object UpAction: TAction
+      Caption = 'Ein Verzeichnis nach &oben'
+      Hint = 'Ein Verzeichnis nach oben'
+      ImageIndex = 0
+      OnExecute = 'UpActionExecute'
+      OnUpdate = 'UpActionUpdate'
+    end
+    object BackAction: TAction
+      Caption = '&Zurück'
+      Hint = 'Zurück'
+      ImageIndex = 3
+      OnExecute = 'BackActionExecute'
+      OnUpdate = 'BackActionUpdate'
+    end
+    object ForwardAction: TAction
+      Caption = '&Weiter'
+      Hint = 'Weiter'
+      ImageIndex = 4
+      OnExecute = 'ForwardActionExecute'
+      OnUpdate = 'ForwardActionUpdate'
+    end
+    object HomeAction: TAction
+      Caption = '&Start'
+      Hint = 'Startverzeichnis'
+      ImageIndex = 5
+      OnExecute = 'HomeActionExecute'
+    end
+    object ReloadAction: TAction
+      Caption = 'Neu &laden'
+      Hint = 'Neu laden'
+      ImageIndex = 6
+      OnExecute = 'ReloadActionExecute'
+    end
+    object ViewIconAction: TAction
+      Caption = '&Große Symbole'
+      Hint = 'Große Symbole anzeigen'
+      OnExecute = 'ViewIconActionExecute'
+    end
+    object ViewSmallIconAction: TAction
+      Tag = 1
+      Caption = '&Kleine Symbole'
+      Hint = 'Kleine Symoble anzeigen'
+      OnExecute = 'ViewIconActionExecute'
+    end
+    object ViewListAction: TAction
+      Tag = 2
+      Caption = '&Liste'
+      Hint = 'Listenansicht'
+      OnExecute = 'ViewIconActionExecute'
+    end
+    object ViewDetailAction: TAction
+      Tag = 3
+      Caption = '&Details'
+      Hint = 'Detailansicht'
+      OnExecute = 'ViewIconActionExecute'
+    end
+    object HelpAction: TAction
+      Caption = '&Hilfe'
+      OnExecute = 'HelpActionExecute'
+      OnUpdate = 'HelpActionUpdate'
+    end
+    object NewDirAction: TAction
+      Caption = 'Neues &Verzeichnis'
+      Hint = 'Neues Verzeichnis erstellen'
+      ImageIndex = 1
+      OnExecute = 'NewDirActionExecute'
+      OnUpdate = 'NewDirActionUpdate'
+    end
+    object DeleteAction: TAction
+      Caption = 'Löschen'
+      ShortCut = 4103
+      OnExecute = 'DeleteActionExecute'
+      OnUpdate = 'DeleteActionUpdate'
+    end
+    object RenameAction: TAction
+      Caption = 'U&mbenennen'
+      OnExecute = 'RenameActionExecute'
+      OnUpdate = 'DeleteActionUpdate'
+    end
+    object OpenAction: TAction
+      Caption = 'Ö&ffnen'
+      OnExecute = 'FileEditReturnPressed'
+      OnUpdate = 'OpenActionUpdate'
+    end
+    object HiddenAction: TAction
+      Caption = 'Verborgene Dateien an&zeigen'
+      OnExecute = 'HiddenActionExecute'
+    end
+  end
+  object ImageList1: TImageList
+    Left = 120
+    Top = 96
+    Bitmap = <binary 7432 bytes>
+  end
+  object ViewPopup: TPopupMenu
+    Left = 152
+    Top = 96
+    object LargeIcons1: TMenuItem
+      Action = 'ViewIconAction'
+      RadioItem = True
+    end
+    object SmallIcons1: TMenuItem
+      Tag = 1
+      Action = 'ViewSmallIconAction'
+      RadioItem = True
+    end
+    object List1: TMenuItem
+      Tag = 2
+      Action = 'ViewListAction'
+      RadioItem = True
+    end
+    object Details1: TMenuItem
+      Tag = 3
+      Action = 'ViewDetailAction'
+      RadioItem = True
+    end
+  end
+  object ItemPopup: TPopupMenu
+    Left = 184
+    Top = 96
+    object Open1: TMenuItem
+      Action = 'OpenAction'
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object Rename1: TMenuItem
+      Action = 'RenameAction'
+    end
+    object DeleteAction1: TMenuItem
+      Action = 'DeleteAction'
+    end
+  end
+  object ListPopup: TPopupMenu
+    Left = 216
+    Top = 96
+    object Uponedirectory1: TMenuItem
+      Action = 'UpAction'
+    end
+    object Back1: TMenuItem
+      Action = 'BackAction'
+    end
+    object Forward1: TMenuItem
+      Action = 'ForwardAction'
+    end
+    object Home1: TMenuItem
+      Action = 'HomeAction'
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object Reload1: TMenuItem
+      Action = 'ReloadAction'
+    end
+    object NewDirectory1: TMenuItem
+      Action = 'NewDirAction'
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object ShowHiddenFiles1: TMenuItem
+      Action = 'HiddenAction'
+    end
+  end
+end

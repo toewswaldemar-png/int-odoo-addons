@@ -1,0 +1,688 @@
+object frmMitarbeiter: TfrmMitarbeiter
+  Left = 259
+  Top = 374
+  Width = 1157
+  Height = 665
+  Caption = 'Mitarbeiterverwaltung'
+  Color = 'clBtnFace'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  FormStyle = 'fsMDIChild'
+  OldCreateOrder = False
+  Position = 'poScreenCenter'
+  Visible = True
+  WindowState = 'wsMaximized'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object splTree: TAdvSplitter
+    Left = 893
+    Top = 34
+    Height = 592
+    Align = 'alRight'
+    Appearance.BorderColor = 'clNone'
+    Appearance.BorderColorHot = 'clNone'
+    Appearance.Color = 'clWhite'
+    Appearance.ColorTo = 'clSilver'
+    Appearance.ColorHot = 4194432
+    Appearance.ColorHotTo = 8421631
+    GripStyle = 'sgDots'
+  end
+  object pgcBenutzer: TPageControl
+    Left = 0
+    Top = 34
+    Width = 893
+    Height = 592
+    ActivePage = 'tshAllgemein'
+    Align = 'alClient'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    Style = 'tsFlatButtons'
+    TabOrder = 0
+    TabWidth = 150
+    object tshAllgemein: TTabSheet
+      Caption = 'allgemeine Daten'
+      object pnlBenutzer: TPanel
+        Left = 0
+        Top = 0
+        Width = 885
+        Height = 561
+        Align = 'alClient'
+        TabOrder = 0
+        object gbxAllgemien: TGroupBox
+          Left = 32
+          Top = 32
+          Width = 529
+          Height = 449
+          Font.Charset = 'DEFAULT_CHARSET'
+          Font.Color = 'clWindowText'
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 0
+          object lblNummer: TLabel
+            Left = 16
+            Top = 23
+            Width = 99
+            Height = 13
+            Caption = 'Personal-Nr. / Status'
+          end
+          object lblFon: TLabel
+            Left = 16
+            Top = 159
+            Width = 46
+            Height = 13
+            Caption = 'Fon / Fax'
+          end
+          object Label32: TLabel
+            Left = 16
+            Top = 189
+            Width = 34
+            Height = 13
+            Caption = 'E-M@il'
+          end
+          object lblAbteilung: TLabel
+            Left = 16
+            Top = 254
+            Width = 44
+            Height = 13
+            Caption = 'Abteilung'
+          end
+          object lblBemerkung: TLabel
+            Left = 16
+            Top = 342
+            Width = 57
+            Height = 13
+            Caption = 'Bemerkung '
+          end
+          object lblName: TLabel
+            Left = 16
+            Top = 127
+            Width = 81
+            Height = 13
+            Caption = 'Vorname / Name'
+          end
+          object lblAnrede: TLabel
+            Left = 16
+            Top = 95
+            Width = 68
+            Height = 13
+            Caption = 'Anrede / Titel '
+          end
+          object lblBenutzer: TLabel
+            Left = 16
+            Top = 61
+            Width = 42
+            Height = 13
+            Caption = 'Benutzer'
+          end
+          object lblFunktion: TLabel
+            Left = 16
+            Top = 221
+            Width = 25
+            Height = 13
+            Caption = 'Mobil'
+          end
+          object lblUrlaubDaten: TLabel
+            Left = 16
+            Top = 304
+            Width = 134
+            Height = 13
+            Caption = 'Gesamt / Genommen / Rest'
+          end
+          object lblUrlaub: TLabel
+            Left = 16
+            Top = 287
+            Width = 31
+            Height = 13
+            Caption = 'Urlaub'
+          end
+          object dbeName: TDBEdit
+            Left = 314
+            Top = 124
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'Name'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            TabOrder = 5
+          end
+          object dbeVorname: TDBEdit
+            Left = 167
+            Top = 124
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'Vorname'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            TabOrder = 4
+          end
+          object dbeFon: TDBEdit
+            Left = 167
+            Top = 156
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'FON'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            TabOrder = 6
+          end
+          object dbeFax: TDBEdit
+            Left = 314
+            Top = 156
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'FAX'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            TabOrder = 7
+          end
+          object dbeMail: TDBEdit
+            Left = 167
+            Top = 186
+            Width = 294
+            Height = 21
+            Color = 16120304
+            DataField = 'MAIL'
+            DataSource = 'dsBenutzer'
+            TabOrder = 8
+          end
+          object dbeNummer: TDBEdit
+            Left = 167
+            Top = 20
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'NUMMER'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            TabOrder = 0
+          end
+          object dbeBemerkung: TDBMemo
+            Left = 167
+            Top = 342
+            Width = 290
+            Height = 89
+            Color = 16120304
+            DataField = 'BEMERKUNG'
+            DataSource = 'dsBenutzer'
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            ParentFont = False
+            ScrollBars = 'ssVertical'
+            TabOrder = 15
+          end
+          object dblcbAbteilung: TDBLookupComboBox
+            Left = 167
+            Top = 251
+            Width = 294
+            Height = 21
+            Color = 16120304
+            DataField = 'ABTEILUNG'
+            DataSource = 'dsBenutzer'
+            DropDownRows = 10
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            KeyField = 'OID'
+            ListField = 'ABTEILUNG'
+            ListSource = 'dsAbteilungen'
+            ParentFont = False
+            ParentShowHint = False
+            ShowHint = False
+            TabOrder = 9
+          end
+          object dblcbStatus: TDBLookupComboBox
+            Left = 314
+            Top = 20
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'STATUS'
+            DataSource = 'dsBenutzer'
+            DropDownRows = 10
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            KeyField = 'OID'
+            ListField = 'STATUS'
+            ListSource = 'dsBenutzerstatus'
+            ParentFont = False
+            ParentShowHint = False
+            ShowHint = False
+            TabOrder = 1
+          end
+          object dbeTitel: TDBEdit
+            Left = 314
+            Top = 92
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'TITEL'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            TabOrder = 3
+          end
+          object dblcbAnrede: TDBLookupComboBox
+            Left = 167
+            Top = 92
+            Width = 146
+            Height = 21
+            Color = 16120304
+            DataField = 'ANREDE'
+            DataSource = 'dsBenutzer'
+            DropDownRows = 10
+            Font.Charset = 'ANSI_CHARSET'
+            Font.Color = 'clBlack'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Pitch = 'fpVariable'
+            Font.Style = []
+            KeyField = 'OID'
+            ListField = 'ANREDE'
+            ListSource = 'dsAnrede'
+            ParentFont = False
+            ParentShowHint = False
+            ShowHint = False
+            TabOrder = 2
+          end
+          object dbrgBenutzer: TDBRadioGroup
+            Left = 168
+            Top = 48
+            Width = 294
+            Height = 33
+            Columns = 2
+            DataField = 'MABENUTZER'
+            DataSource = 'dsBenutzer'
+            Items.Strings = ('Ja ' 'Nein')
+            TabOrder = 11
+            Values.Strings = ('T' 'F')
+          end
+          object dbeFunktion: TDBEdit
+            Left = 167
+            Top = 218
+            Width = 294
+            Height = 21
+            Color = 16120304
+            DataField = 'MAFUNKTION'
+            DataSource = 'dsBenutzer'
+            TabOrder = 10
+          end
+          object dbeUrlGes: TDBEdit
+            Left = 167
+            Top = 300
+            Width = 90
+            Height = 21
+            Color = 16120304
+            DataField = 'URLAUBGES'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            TabOrder = 12
+          end
+          object dbeUrlGen: TDBEdit
+            Left = 266
+            Top = 300
+            Width = 90
+            Height = 21
+            Color = 16120304
+            DataField = 'URLAUBGEN'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            TabOrder = 13
+          end
+          object dbeUrlRest: TDBEdit
+            Left = 370
+            Top = 300
+            Width = 90
+            Height = 21
+            Color = 'clSilver'
+            DataField = 'calcUrlaubRest'
+            DataSource = 'dsBenutzer'
+            MaxLength = 40
+            ReadOnly = True
+            TabOrder = 14
+          end
+        end
+      end
+    end
+    object tshPersoenlich: TTabSheet
+      Caption = 'persönliche Daten'
+      ImageIndex = 1
+      object gbxPersoenlich: TGroupBox
+        Left = 32
+        Top = 32
+        Width = 529
+        Height = 449
+        Font.Charset = 'DEFAULT_CHARSET'
+        Font.Color = 'clWindowText'
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 0
+        object lblStrasse: TLabel
+          Left = 31
+          Top = 23
+          Width = 35
+          Height = 13
+          Caption = 'Strasse'
+        end
+        object lblStaat: TLabel
+          Left = 31
+          Top = 127
+          Width = 94
+          Height = 13
+          Caption = 'Staatsangehörigkeit'
+        end
+        object lblGeschlecht: TLabel
+          Left = 31
+          Top = 159
+          Width = 54
+          Height = 13
+          Caption = 'Geschlecht'
+        end
+        object lblFamStand: TLabel
+          Left = 31
+          Top = 191
+          Width = 64
+          Height = 13
+          Caption = 'Familienstand'
+        end
+        object lblSteuer: TLabel
+          Left = 31
+          Top = 262
+          Width = 61
+          Height = 13
+          Caption = 'Steuerklasse'
+        end
+        object lblGeburt: TLabel
+          Left = 31
+          Top = 87
+          Width = 108
+          Height = 13
+          Caption = 'Geb.-Datum / Geb.-Ort'
+        end
+        object lblPlz: TLabel
+          Left = 31
+          Top = 47
+          Width = 45
+          Height = 13
+          Caption = 'PLZ / Ort'
+        end
+        object lblKinder: TLabel
+          Left = 335
+          Top = 191
+          Width = 30
+          Height = 13
+          Caption = 'Kinder'
+        end
+        object lblKonfession: TLabel
+          Left = 31
+          Top = 223
+          Width = 52
+          Height = 13
+          Caption = 'Konfession'
+        end
+        object lblBank: TLabel
+          Left = 31
+          Top = 311
+          Width = 25
+          Height = 13
+          Caption = 'Bank'
+        end
+        object lblBlz: TLabel
+          Left = 31
+          Top = 335
+          Width = 96
+          Height = 13
+          Caption = 'BLZ / Kontonummer'
+        end
+        object dbeGebDatum: TDBEdit
+          Left = 167
+          Top = 84
+          Width = 58
+          Height = 21
+          Color = 16120304
+          DataField = 'MAGEBDAT'
+          DataSource = 'dsBenutzer'
+          MaxLength = 40
+          TabOrder = 3
+        end
+        object dbeOrt: TDBEdit
+          Left = 226
+          Top = 44
+          Width = 239
+          Height = 21
+          Color = 16120304
+          DataField = 'MAORT'
+          DataSource = 'dsBenutzer'
+          MaxLength = 40
+          TabOrder = 2
+        end
+        object dbeGebOrt: TDBEdit
+          Left = 226
+          Top = 84
+          Width = 239
+          Height = 21
+          Color = 16120304
+          DataField = 'MAGEBORT'
+          DataSource = 'dsBenutzer'
+          MaxLength = 40
+          TabOrder = 4
+        end
+        object dbeStaat: TDBEdit
+          Left = 167
+          Top = 124
+          Width = 146
+          Height = 21
+          Color = 16120304
+          DataField = 'MASTAAT'
+          DataSource = 'dsBenutzer'
+          MaxLength = 40
+          TabOrder = 5
+        end
+        object dbeKinder: TDBEdit
+          Left = 384
+          Top = 188
+          Width = 77
+          Height = 21
+          Color = 16120304
+          DataField = 'MAKINDER'
+          DataSource = 'dsBenutzer'
+          TabOrder = 8
+        end
+        object dbeStarsse: TDBEdit
+          Left = 167
+          Top = 20
+          Width = 298
+          Height = 21
+          Color = 16120304
+          DataField = 'MASTRASSE'
+          DataSource = 'dsBenutzer'
+          MaxLength = 40
+          TabOrder = 0
+        end
+        object dbePLZ: TDBEdit
+          Left = 167
+          Top = 44
+          Width = 58
+          Height = 21
+          Color = 16120304
+          DataField = 'MAPLZ'
+          DataSource = 'dsBenutzer'
+          MaxLength = 40
+          TabOrder = 1
+        end
+        object dbeSteuer: TDBEdit
+          Left = 167
+          Top = 258
+          Width = 58
+          Height = 21
+          Color = 16120304
+          DataField = 'MASTEUER'
+          DataSource = 'dsBenutzer'
+          TabOrder = 10
+        end
+        object dbcbGeschlecht: TDBComboBox
+          Left = 168
+          Top = 156
+          Width = 145
+          Height = 21
+          Color = 16120304
+          DataField = 'MAGESCHLECHT'
+          DataSource = 'dsBenutzer'
+          ItemHeight = 13
+          Items.Strings = ('weiblich' 'männlich')
+          TabOrder = 6
+        end
+        object dbcbFamStand: TDBComboBox
+          Left = 168
+          Top = 188
+          Width = 145
+          Height = 21
+          Color = 16120304
+          DataField = 'MAFAMSTAND'
+          DataSource = 'dsBenutzer'
+          ItemHeight = 13
+          Items.Strings = ('geschieden' 'ledig' 'verheiratet' 'verwitwet')
+          TabOrder = 7
+        end
+        object dbcbKonfession: TDBComboBox
+          Left = 168
+          Top = 220
+          Width = 145
+          Height = 21
+          Color = 16120304
+          DataField = 'MAKONFESSION'
+          DataSource = 'dsBenutzer'
+          ItemHeight = 13
+          Items.Strings = ('evangelisch' 'katholisch' 'ohne')
+          TabOrder = 9
+        end
+        object dbeBank: TDBEdit
+          Left = 167
+          Top = 308
+          Width = 298
+          Height = 21
+          Color = 16120304
+          DataField = 'MABANK'
+          DataSource = 'dsBenutzer'
+          MaxLength = 40
+          TabOrder = 11
+        end
+        object dbeBlz: TDBEdit
+          Left = 167
+          Top = 332
+          Width = 130
+          Height = 21
+          Color = 16120304
+          DataField = 'MABLZ'
+          DataSource = 'dsBenutzer'
+          MaxLength = 40
+          TabOrder = 12
+        end
+        object dbeKonto: TDBEdit
+          Left = 296
+          Top = 332
+          Width = 169
+          Height = 21
+          Color = 16120304
+          DataField = 'MAKONTO'
+          DataSource = 'dsBenutzer'
+          MaxLength = 40
+          TabOrder = 13
+        end
+      end
+    end
+  end
+  object fraBtn: TfraBtn
+    Left = 0
+    Top = 0
+    Width = 1141
+    Height = 34
+    Align = 'alTop'
+    AutoScroll = False
+    TabOrder = 1
+    object tlbFunktionen: TAdvToolBar
+      object btnInsert: TAdvGlowButton
+        OnClick = 'btnInsertClick'
+      end
+      object btnEdit: TAdvGlowButton
+        OnClick = 'btnEditClick'
+      end
+      object btnSave: TAdvGlowButton
+        OnClick = 'btnSaveClick'
+      end
+      object btnCancel: TAdvGlowButton
+        OnClick = 'btnCancelClick'
+      end
+      object btnDelete: TAdvGlowButton
+        OnClick = 'btnDeleteClick'
+      end
+      object btnFkt: TAdvGlowMenuButton
+        Enabled = False
+      end
+    end
+    object pmFunktionen: TPopupMenu
+      object pmiNummernkreis: TMenuItem
+        Visible = False
+      end
+    end
+  end
+  object fraTree1: TfraTreeList
+    Left = 896
+    Top = 34
+    Width = 245
+    Height = 592
+    Align = 'alRight'
+    AutoScroll = False
+    Color = 15329769
+    ParentColor = False
+    TabOrder = 2
+    object trlNav: TTreeList
+      Width = 245
+      Height = 576
+      OnClick = 'fraTree1tvwNavClick'
+    end
+  end
+  object dsBenutzer: TDataSource
+    DataSet = 'dmBenutzer.cdsBenutzer'
+    Left = 524
+    Top = 112
+  end
+  object dsAbteilungen: TDataSource
+    Left = 524
+    Top = 152
+  end
+  object dsBenutzerstatus: TDataSource
+    Left = 524
+    Top = 192
+  end
+  object dsAnrede: TDataSource
+    Left = 524
+    Top = 229
+  end
+end

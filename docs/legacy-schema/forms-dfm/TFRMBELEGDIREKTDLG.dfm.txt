@@ -1,0 +1,52 @@
+object frmBelegDirektDlg: TfrmBelegDirektDlg
+  Left = 664
+  Top = 327
+  ActiveControl = 'edtNummer'
+  Caption = 'Belege direkt über Nummer suchen'
+  ClientHeight = 120
+  ClientWidth = 223
+  DesignSize = (223 120)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object ofihelp: TAdvOfficeImage
+    Left = 188
+    Top = 77
+    Width = 33
+    Height = 29
+    Picture.Data = <binary 3126 bytes>
+    ShowHint = True
+    Stretch = True
+    OfficeHint.Title = 'direkt Suchen'
+    OfficeHint.Notes.Strings = ('einen Beleg direkt über die Nummer ' 'suchen und anzeigen.' 'Nummer eintragen und mit ' 'OK ( Enter ) bestätigen')
+    OfficeHint.ShowHelp = True
+    Version = '1.1.0.0'
+  end
+  object edtNummer: TAdvEdit
+    Left = 48
+    Top = 40
+    Width = 121
+    Height = 21
+    EmptyTextStyle = []
+    LabelCaption = 'Nummer'
+    LabelPosition = 'lpTopCenter'
+    LabelFont.Charset = 'DEFAULT_CHARSET'
+    LabelFont.Color = 'clWindowText'
+    LabelFont.Height = -11
+    LabelFont.Name = 'MS Sans Serif'
+    LabelFont.Style = []
+    Lookup.Separator = ';'
+    Color = 'clWindow'
+    TabOrder = 2
+    Visible = True
+    OnKeyDown = 'edtNummerKeyDown'
+    Version = '2.9.4.0'
+  end
+  object btnOk: TAdvGlowButton
+    Left = 32
+    Top = 80
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 112
+    Top = 80
+  end
+end

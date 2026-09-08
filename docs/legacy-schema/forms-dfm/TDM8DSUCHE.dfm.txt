@@ -1,0 +1,3 @@
+object dm8DSuche: Tdm8DSuche
+  OldCreateOrder = True
+end

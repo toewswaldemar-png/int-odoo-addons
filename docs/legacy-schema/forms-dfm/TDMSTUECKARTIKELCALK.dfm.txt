@@ -1,0 +1,158 @@
+object dmStueckArtikelCalk: TdmStueckArtikelCalk
+  OldCreateOrder = False
+  OnCreate = 'DataModuleCreate'
+  OnDestroy = 'DataModuleDestroy'
+  Left = 1024
+  Top = 480
+  Height = 226
+  Width = 445
+  object cdsArtikelAll: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 120
+    Top = 8
+  end
+  object cdsArtikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 32
+    Top = 64
+  end
+  object cdsExecute: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 120
+    Top = 64
+  end
+  object fcrStueckArtikel: TFlexCelReport
+    AutoClose = False
+    Adapter = 'oleStueckArtikel'
+    DataModule = 'Owner'
+    Left = 200
+    Top = 8
+  end
+  object oleStueckArtikel: TOLEAdapter
+    BlockSize = 250
+    SaveFormatExtended = []
+    Left = 200
+    Top = 64
+  end
+  object cdsDruckStueckArtikel: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 296
+    Top = 8
+  end
+  object cdsStuecklisten: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'AutoInc'
+    AutoIncFieldName = 'OID'
+    AutoIncValue = 100000
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 32
+    Top = 8
+  end
+  object cdsArtikelPreis: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 296
+    Top = 64
+  end
+  object cdsRechnung: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 376
+    Top = 64
+  end
+  object cdsAuftrag: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 376
+    Top = 8
+  end
+  object flxImport: TFlexCelImport
+    Adapter = 'oleStueckArtikel'
+    Left = 48
+    Top = 120
+  end
+  object cdsDruckLEKMEK: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 120
+    Top = 128
+  end
+  object cdsInfo: TClientDataSetHit
+    Aggregates = <
+    >
+    Params = <
+    >
+    UpdateMode = 'upWhereAll'
+    AutoIncrement = 'noAutoInc'
+    AutoIncValue = 0
+    MasterDetail = 'mdInfo'
+    WriteLastSQL = False
+    Left = 208
+    Top = 120
+  end
+end

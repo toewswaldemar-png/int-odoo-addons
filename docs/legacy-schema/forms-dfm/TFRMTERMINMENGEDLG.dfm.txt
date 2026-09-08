@@ -1,0 +1,139 @@
+object frmTerminMengeDlg: TfrmTerminMengeDlg
+  Left = 600
+  Top = 239
+  Caption = 'Termin / Mengenänderung'
+  ClientHeight = 249
+  ClientWidth = 398
+  PixelsPerInch = 96
+  TextHeight = 13
+  object lblVon: TLabel
+    Left = 16
+    Top = 36
+  end
+  object lblBis: TLabel
+    Left = 19
+    Top = 90
+  end
+  object lblvonmenge: TLabel
+    Left = 288
+    Top = 24
+    Width = 54
+    Height = 13
+    Caption = 'von Menge'
+  end
+  object lblzumenge: TLabel
+    Left = 288
+    Top = 72
+    Width = 47
+    Height = 13
+    Caption = 'zu Menge'
+  end
+  object OKBtn: TButton
+    Left = 220
+    Top = 215
+  end
+  object CancelBtn: TButton
+    Left = 300
+    Top = 215
+  end
+  object dtpvon: TDateTimePicker
+    Left = 80
+    Top = 36
+    Width = 170
+    Enabled = False
+  end
+  object dtpBis: TDateTimePicker
+    Left = 80
+    Top = 85
+    Width = 169
+  end
+  object edvonmenge: TEdit
+    Left = 288
+    Top = 40
+    Width = 65
+    Height = 21
+    Enabled = False
+    ReadOnly = True
+    TabOrder = 4
+    Text = '0'
+  end
+  object edzumenge: TEdit
+    Left = 288
+    Top = 88
+    Width = 65
+    Height = 21
+    TabOrder = 5
+    Text = '0'
+  end
+  object edmBemerkung: TAdvMemo
+    Left = 21
+    Top = 120
+    Width = 329
+    Height = 73
+    Cursor = 'crIBeam'
+    ActiveLineSettings.ShowActiveLine = False
+    ActiveLineSettings.ShowActiveLineIndicator = False
+    AutoCompletion.Font.Charset = 'DEFAULT_CHARSET'
+    AutoCompletion.Font.Color = 'clWindowText'
+    AutoCompletion.Font.Height = -11
+    AutoCompletion.Font.Name = 'MS Sans Serif'
+    AutoCompletion.Font.Style = []
+    AutoCompletion.StartToken = '(.'
+    AutoCorrect.Active = True
+    AutoHintParameterPosition = 'hpBelowCode'
+    BookmarkGlyph.Data = <binary 1338 bytes>
+    BorderStyle = 'bsSingle'
+    ClipboardFormats = [cfText]
+    CodeFolding.Enabled = False
+    CodeFolding.LineColor = 'clGray'
+    Ctl3D = False
+    DelErase = True
+    EnhancedHomeKey = False
+    Gutter.DigitCount = 4
+    Gutter.Font.Charset = 'DEFAULT_CHARSET'
+    Gutter.Font.Color = 'clWindowText'
+    Gutter.Font.Height = -13
+    Gutter.Font.Name = 'Courier New'
+    Gutter.Font.Style = []
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -13
+    Font.Name = 'COURIER NEW'
+    Font.Style = []
+    HiddenCaret = False
+    Lines.Strings = ('')
+    MarkerList.UseDefaultMarkerImageIndex = False
+    MarkerList.DefaultMarkerImageIndex = -1
+    MarkerList.ImageTransparentColor = 33554432
+    PrintOptions.MarginLeft = 0
+    PrintOptions.MarginRight = 0
+    PrintOptions.MarginTop = 0
+    PrintOptions.MarginBottom = 0
+    PrintOptions.PageNr = False
+    PrintOptions.PrintLineNumbers = False
+    RightMarginColor = 14869218
+    ScrollHint = False
+    SelColor = 'clWhite'
+    SelBkColor = 'clNavy'
+    ShowRightMargin = True
+    SmartTabs = False
+    TabOrder = 6
+    TabSize = 4
+    TabStop = True
+    TrimTrailingSpaces = False
+    UILanguage.ScrollHint = 'Row'
+    UILanguage.Undo = 'Undo'
+    UILanguage.Redo = 'Redo'
+    UILanguage.Copy = 'Copy'
+    UILanguage.Cut = 'Cut'
+    UILanguage.Paste = 'Paste'
+    UILanguage.Delete = 'Delete'
+    UILanguage.SelectAll = 'Select All'
+    UrlStyle.TextColor = 'clBlue'
+    UrlStyle.BkColor = 'clWhite'
+    UrlStyle.Style = [fsUnderline]
+    UseStyler = True
+    Version = '3.0.0.0'
+    WordWrap = 'wwNone'
+  end
+end

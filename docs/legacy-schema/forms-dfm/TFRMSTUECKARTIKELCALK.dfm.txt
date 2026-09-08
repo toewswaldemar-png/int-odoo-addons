@@ -1,0 +1,157 @@
+object frmStueckArtikelCalk: TfrmStueckArtikelCalk
+  Left = 466
+  Top = 244
+  BorderStyle = 'bsDialog'
+  Caption = 'Stücklisten'
+  ClientHeight = 351
+  ClientWidth = 360
+  Color = 'clBtnFace'
+  ParentFont = True
+  FormStyle = 'fsStayOnTop'
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  Visible = True
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  OnDestroy = 'FormDestroy'
+  DesignSize = (360 351)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 134
+    Top = 277
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'Kalk-Liste'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+    OnClick = 'OKBtnClick'
+  end
+  object CancelBtn: TButton
+    Left = 278
+    Top = 317
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+    OnClick = 'CancelBtnClick'
+  end
+  object grdStuecklisten: TDBGrid
+    Left = 8
+    Top = 24
+    Width = 337
+    Height = 249
+    DataSource = 'dsStuecklisten'
+    TabOrder = 2
+    TitleFont.Charset = 'DEFAULT_CHARSET'
+    TitleFont.Color = 'clWindowText'
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = []
+    OnDragDrop = 'grdStuecklistenDragDrop'
+    OnDragOver = 'grdStuecklistenDragOver'
+    Columns = <
+      item0 = {
+        Expanded = False
+        FieldName = 'Nummer'
+        Title.Caption = 'Nummer '
+        Width = 230
+        Visible = True
+      }
+      item1 = {
+        Expanded = False
+        FieldName = 'Anzahl'
+        Title.Caption = 'Anzahl '
+        Width = 55
+        Visible = True
+      }
+    >
+  end
+  object btnLiefer: TButton
+    Left = 296
+    Top = 88
+    Width = 9
+    Height = 25
+    Caption = 'aus Lieferschein Detail'
+    TabOrder = 3
+    Visible = False
+    OnClick = 'btnLieferClick'
+  end
+  object btnLieferSumme: TButton
+    Left = 304
+    Top = 104
+    Width = 9
+    Height = 25
+    Caption = 'aus Lieferschein Summen'
+    TabOrder = 4
+    Visible = False
+    OnClick = 'btnLieferSummeClick'
+  end
+  object Button1: TButton
+    Left = 22
+    Top = 277
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'Einkauf-Liste'
+    Default = True
+    ModalResult = 1
+    TabOrder = 5
+    OnClick = 'Button1Click'
+  end
+  object Button2: TButton
+    Left = 206
+    Top = 317
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'Anfragen'
+    Default = True
+    ModalResult = 1
+    TabOrder = 6
+    Visible = False
+    OnClick = 'Button2Click'
+  end
+  object btnKundartikel: TButton
+    Left = 135
+    Top = 317
+    Width = 75
+    Height = 23
+    Caption = 'Kunden Artikel'
+    TabOrder = 7
+    Visible = False
+    OnClick = 'btnKundartikelClick'
+  end
+  object Button3: TButton
+    Left = 118
+    Top = 309
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'Bestell-Liste'
+    Default = True
+    ModalResult = 1
+    TabOrder = 8
+    Visible = False
+    OnClick = 'Button3Click'
+  end
+  object btnPlan: TButton
+    Left = 245
+    Top = 279
+    Width = 75
+    Height = 23
+    Caption = 'Planung'
+    ModalResult = 1
+    TabOrder = 9
+    OnClick = 'btnPlanClick'
+  end
+  object dsStuecklisten: TDataSource
+    Left = 296
+    Top = 160
+  end
+end

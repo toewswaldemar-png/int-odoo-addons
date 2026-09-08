@@ -1,0 +1,37 @@
+object frmJahrDlg: TfrmJahrDlg
+  Left = 672
+  Top = 223
+  Caption = 'Jahr'
+  ClientHeight = 110
+  ClientWidth = 281
+  DesignSize = (281 110)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel
+    Left = 48
+    Top = 24
+    Width = 20
+    Height = 13
+    Caption = 'Jahr'
+  end
+  object ofihelpStd: TAdvOfficeImage
+    Left = 245
+    Top = 69
+  end
+  object btnOk: TAdvGlowButton
+    Left = 90
+    Top = 70
+  end
+  object edtJahr: TEdit
+    Left = 80
+    Top = 22
+    Width = 121
+    Height = 21
+    TabOrder = 2
+    Text = '2012'
+  end
+  object btnCancel: TAdvGlowButton
+    Left = 170
+    Top = 70
+  end
+end

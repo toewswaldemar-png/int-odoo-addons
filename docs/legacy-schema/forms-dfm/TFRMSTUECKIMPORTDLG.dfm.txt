@@ -1,0 +1,60 @@
+object frmStueckImportDlg: TfrmStueckImportDlg
+  Left = 444
+  Top = 191
+  BorderStyle = 'bsDialog'
+  Caption = 'Excelimport Stücklisten Artikel'
+  ClientHeight = 111
+  ClientWidth = 633
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  DesignSize = (633 111)
+  PixelsPerInch = 96
+  TextHeight = 13
+  object OKBtn: TButton
+    Left = 463
+    Top = 77
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object CancelBtn: TButton
+    Left = 543
+    Top = 77
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object btnStep1: TButton
+    Left = 72
+    Top = 8
+    Width = 497
+    Height = 25
+    Caption = 'Step 1: Anlegen Artikel + Stückliste'
+    TabOrder = 2
+    OnClick = 'btnStep1Click'
+  end
+  object Button1: TButton
+    Left = 64
+    Top = 48
+    Width = 497
+    Height = 25
+    Caption = 'Step 2: Zuordnen Artikel + Stücklisten'
+    TabOrder = 3
+    Visible = False
+    OnClick = 'Button1Click'
+  end
+  object opdExcel: TOpenDialog
+    Left = 576
+    Top = 8
+  end
+end
