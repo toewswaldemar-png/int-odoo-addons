@@ -1,0 +1,358 @@
+object QRStandardPreview: TQRStandardPreview
+  Left = 355
+  Top = 205
+  Width = 784
+  Height = 563
+  BiDiMode = 'bdLeftToRight'
+  Caption = 'Druckvorschau'
+  Color = 'clBtnFace'
+  ParentFont = True
+  FormStyle = 'fsStayOnTop'
+  KeyPreview = True
+  OldCreateOrder = True
+  ParentBiDiMode = False
+  Position = 'poScreenCenter'
+  ShowHint = True
+  WindowState = 'wsMaximized'
+  OnActivate = 'FormActivate'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  OnKeyDown = 'FormKeyDown'
+  OnResize = 'FormResize'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Splitter1: TSplitter
+    Left = 0
+    Top = 510
+    Width = 776
+    Height = 3
+    Cursor = 'crVSplit'
+    Align = 'alBottom'
+  end
+  object Splitter2: TSplitter
+    Left = 193
+    Top = 32
+    Width = 4
+    Height = 478
+  end
+  object StatusBar: TStatusBar
+    Left = 0
+    Top = 513
+    Width = 776
+    Height = 19
+    Panels = <
+      item0 = {
+        Alignment = 'taRightJustify'
+        Text = '0%'
+        Width = 40
+      }
+      item1 = {
+        Text = 'Page'
+        Width = 120
+      }
+      item2 = {
+        Text = ' '
+        Width = 50
+      }
+    >
+  end
+  object ToolBar1: TToolBar
+    Left = 0
+    Top = 0
+    Width = 776
+    AutoSize = True
+    BorderWidth = 2
+    ButtonWidth = 33
+    EdgeInner = 'esNone'
+    EdgeOuter = 'esNone'
+    Images = 'Images'
+    TabOrder = 1
+    Transparent = False
+    object ZoomFit: TToolButton
+      Left = 0
+      Top = 2
+      Hint = 'Zoom to fit'
+      Caption = 'ZoomFit'
+      Grouped = True
+      ImageIndex = 0
+      Style = 'tbsCheck'
+      OnClick = 'ZoomToFitClick'
+    end
+    object ZoomToWidth: TToolButton
+      Left = 33
+      Top = 2
+      Hint = 'Zoom auf Breite'
+      Caption = 'ZoomToWidth'
+      Grouped = True
+      ImageIndex = 2
+      Style = 'tbsCheck'
+      OnClick = 'ZoomToWidthClick'
+    end
+    object Zoom100: TToolButton
+      Left = 66
+      Top = 2
+      Hint = '100%'
+      Caption = 'Zoom100'
+      Grouped = True
+      ImageIndex = 1
+      Style = 'tbsCheck'
+      OnClick = 'ZoomTo100Click'
+    end
+    object Spacer3: TToolButton
+      Left = 99
+      Top = 2
+      Width = 26
+      Caption = 'Spacer3'
+      Enabled = False
+      ImageIndex = 13
+      ParentShowHint = False
+      ShowHint = False
+      Style = 'tbsSeparator'
+    end
+    object FirstPage: TToolButton
+      Left = 125
+      Top = 2
+      Hint = 'erste Seite'
+      Caption = 'FirstPage'
+      ImageIndex = 3
+      OnClick = 'FirstPageClick'
+    end
+    object PreviousPage: TToolButton
+      Left = 158
+      Top = 2
+      Hint = 'Vorherige Seite'
+      Caption = 'PreviousPage'
+      ImageIndex = 4
+      OnClick = 'PrevPageClick'
+    end
+    object nextPage: TToolButton
+      Left = 191
+      Top = 2
+      Hint = 'nächste Seite'
+      Caption = 'NextPage'
+      ImageIndex = 5
+      OnClick = 'NextPageClick'
+    end
+    object LastPage: TToolButton
+      Left = 224
+      Top = 2
+      Hint = 'letzte Seite'
+      Caption = 'LastPage'
+      ImageIndex = 6
+      OnClick = 'LastPageClick'
+    end
+    object Spacer2: TToolButton
+      Left = 257
+      Top = 2
+      Width = 26
+      Hint = 'Find'
+      Caption = 'Spacer2'
+      Enabled = False
+      ImageIndex = 13
+      ParentShowHint = False
+      ShowHint = False
+      Style = 'tbsSeparator'
+    end
+    object GotoPageButton: TToolButton
+      Left = 283
+      Top = 2
+      Hint = 'Gehe zu ...'
+      Caption = 'Goto Page'
+      ImageIndex = 12
+      OnClick = 'GotoPageButtonClick'
+    end
+    object FindButton: TToolButton
+      Left = 316
+      Top = 2
+      Hint = 'Textsuche'
+      Caption = 'FindButton'
+      ImageIndex = 11
+      OnClick = 'FindButtonClick'
+    end
+    object Spacer1: TToolButton
+      Left = 349
+      Top = 2
+      Width = 26
+      Caption = 'Spacer1'
+      ImageIndex = 13
+      Style = 'tbsSeparator'
+    end
+    object copybutton: TToolButton
+      Left = 375
+      Top = 2
+      Hint = 'Copy in Zwischenablage'
+      Caption = 'copybutton'
+      ImageIndex = 14
+      OnClick = 'copybuttonClick'
+    end
+    object PrintSetup: TToolButton
+      Left = 408
+      Top = 2
+      Hint = 'Printer setup'
+      Caption = 'PrintSetup'
+      ImageIndex = 7
+      OnClick = 'PrintSetupClick'
+    end
+    object Print: TToolButton
+      Left = 441
+      Top = 2
+      Hint = 'Drucken'
+      Caption = 'Print'
+      ImageIndex = 8
+      OnClick = 'PrintClick'
+    end
+    object LoadReport: TToolButton
+      Left = 474
+      Top = 2
+      Hint = 'Laden'
+      Caption = 'Print'
+      ImageIndex = 9
+      OnClick = 'LoadClick'
+    end
+    object SaveReport: TToolButton
+      Left = 507
+      Top = 2
+      Hint = 'Speichern'
+      Caption = 'PrintSetup'
+      ImageIndex = 10
+      OnClick = 'SaveClick'
+    end
+    object btnMail: TToolButton
+      Left = 540
+      Top = 2
+      Hint = 'Mail'
+      Caption = 'Mail'
+      ImageIndex = 14
+      OnClick = 'btnMailClick'
+    end
+    object Spacer5: TToolButton
+      Left = 573
+      Top = 2
+      Width = 26
+      Caption = 'Spacer5'
+      ImageIndex = 13
+      ParentShowHint = False
+      ShowHint = False
+      Style = 'tbsSeparator'
+    end
+    object CancelButton: TToolButton
+      Left = 599
+      Top = 2
+      Hint = 'Abbrechen'
+      Caption = 'Cancel'
+      ImageIndex = 13
+      OnClick = 'CancelButtonClick'
+    end
+    object ExitButton: TSpeedButton
+      Left = 632
+      Top = 2
+      Width = 67
+      Height = 22
+      Hint = 'Close preview'
+      Caption = 'S&chliessen'
+      Flat = True
+      Transparent = False
+      OnClick = 'ExitClick'
+    end
+  end
+  object QRPreview: TQRPreview
+    Left = 197
+    Top = 32
+    Width = 579
+    Height = 478
+    HorzScrollBar.Increment = 52
+    HorzScrollBar.Tracking = True
+    VertScrollBar.Increment = 43
+    VertScrollBar.Tracking = True
+    Align = 'alClient'
+    TabOrder = 2
+    OnMouseWheelUp = 'QRPreviewMouseWheelUp'
+    OnPageAvailable = 'QRPreviewPageAvailable'
+    OnProgressUpdate = 'QRPreviewProgressUpdate'
+    PageNumber = 1
+    Zoom = 70
+  end
+  object Tabs: TPageControl
+    Left = 0
+    Top = 32
+    Width = 193
+    Height = 478
+    ActivePage = 'TabThumbs'
+    Align = 'alLeft'
+    TabOrder = 3
+    object TabThumbs: TTabSheet
+      Caption = 'Thumbnails'
+      ImageIndex = 1
+      object ThumbGrid: TDrawGrid
+        Left = 0
+        Top = 0
+        Width = 185
+        Height = 450
+        Align = 'alClient'
+        Color = 'clBtnFace'
+        ColCount = 1
+        DefaultColWidth = 90
+        DefaultRowHeight = 90
+        FixedCols = 0
+        FixedRows = 0
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goDrawFocusSelected, goRowSelect]
+        ScrollBars = 'ssVertical'
+        TabOrder = 0
+        OnDrawCell = 'ThumbGridDrawCell'
+        OnSelectCell = 'ThumbGridSelectCell'
+      end
+    end
+    object TabSearchResult: TTabSheet
+      Caption = 'Suchergebnisse'
+      ImageIndex = 2
+      object GroupBox1: TGroupBox
+        Left = 0
+        Top = 0
+        Width = 185
+        Height = 41
+        Align = 'alTop'
+        Caption = 'Suchen'
+        TabOrder = 0
+        object SearchTextLabel: TLabel
+          Left = 10
+          Top = 18
+          Width = 169
+          Height = 13
+          AutoSize = False
+        end
+      end
+      object SearchResultBox: TListBox
+        Left = 0
+        Top = 41
+        Width = 185
+        Height = 413
+        Align = 'alClient'
+        Enabled = False
+        ItemHeight = 13
+        TabOrder = 1
+        OnClick = 'SearchResultBoxClick'
+      end
+    end
+  end
+  object Images: TImageList
+    Left = 793
+    Top = 72
+    Bitmap = <binary 21286 bytes>
+  end
+  object PrintDialog1: TPrintDialog
+    FromPage = 1
+    Options = [poPageNums]
+    ToPage = 1
+    Left = 253
+    Top = 84
+  end
+  object QRPDFFilter1: TQRPDFFilter
+    CompressionOn = True
+    Left = 253
+    Top = 192
+  end
+  object QRXMLSFilter1: TQRXMLSFilter
+    Left = 253
+    Top = 136
+  end
+end

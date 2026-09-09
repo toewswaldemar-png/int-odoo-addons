@@ -1,0 +1,121 @@
+object ReconcileErrorForm: TReconcileErrorForm
+  Left = 282
+  Top = 151
+  BorderStyle = 'bsDialog'
+  Caption = 'Fehler bei Aktualisierung'
+  ClientHeight = 311
+  ClientWidth = 527
+  Color = 'clBtnFace'
+  ParentFont = True
+  OldCreateOrder = False
+  Position = 'poScreenCenter'
+  OnCreate = 'FormCreate'
+  OnDestroy = 'FormDestroy'
+  OnShow = 'DisplayFieldValues'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel
+    Left = 57
+    Top = 13
+    Width = 65
+    Height = 13
+    Caption = 'Aktualisierungstyp:'
+  end
+  object UpdateType: TLabel
+    Left = 134
+    Top = 13
+    Width = 49
+    Height = 13
+    Caption = 'Geändert'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'Vorgabe'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object Label3: TLabel
+    Left = 57
+    Top = 33
+    Width = 71
+    Height = 13
+    Caption = 'Fehlermeldung:'
+  end
+  object IconImage: TImage
+    Left = 12
+    Top = 12
+    Width = 34
+    Height = 34
+    Picture.Data = <binary 1092 bytes>
+  end
+  object UpdateData: TStringGrid
+    Left = 9
+    Top = 140
+    Width = 504
+    Height = 131
+    ColCount = 4
+    DefaultColWidth = 119
+    RowCount = 2
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goThumbTracking]
+    TabOrder = 1
+    OnSelectCell = 'UpdateDataSelectCell'
+    OnSetEditText = 'UpdateDataSetEditText'
+  end
+  object ActionGroup: TRadioGroup
+    Left = 410
+    Top = 10
+    Width = 102
+    Height = 113
+    Caption = ' Behebung '
+    TabOrder = 0
+    OnClick = 'DisplayFieldValues'
+  end
+  object CancelBtn: TButton
+    Left = 438
+    Top = 281
+    Width = 75
+    Height = 25
+    Cancel = True
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 5
+  end
+  object OKBtn: TButton
+    Left = 350
+    Top = 281
+    Width = 75
+    Height = 25
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 4
+  end
+  object ConflictsOnly: TCheckBox
+    Left = 11
+    Top = 282
+    Width = 153
+    Height = 17
+    Caption = 'Nur Konfliktfelder'
+    TabOrder = 2
+    OnClick = 'DisplayFieldValues'
+  end
+  object ErrorMsg: TMemo
+    Left = 56
+    Top = 52
+    Width = 342
+    Height = 71
+    TabStop = False
+    Color = 'clBtnFace'
+    ReadOnly = True
+    TabOrder = 6
+  end
+  object ChangedOnly: TCheckBox
+    Left = 185
+    Top = 282
+    Width = 141
+    Height = 17
+    Caption = 'Nur geänderte Felder'
+    TabOrder = 3
+    OnClick = 'DisplayFieldValues'
+  end
+end

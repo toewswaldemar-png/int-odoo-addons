@@ -1210,7 +1210,12 @@ neuen Tabellen bilden mehrere seit 2011 komplett neu entstandene Subsysteme:
   (`OBJEKTART=154` = derselbe `BELEGART`-Code wie bei Reparatur, 133.636
   Buchungen) – de facto eine feingranulare Ergänzung zur klassischen
   Zeiterfassung, nicht das ursprünglich vorgesehene Prozessmodell. Details
-  und Beleg in `aktuelle-exe-validierung.md`.
+  und Beleg in `aktuelle-exe-validierung.md`. Gestempelt wird über eine vom
+  Hauptprogramm getrennte Anwendung, `ProjektzeitenHM.exe` (Hersteller
+  HIT-Software, kein Hardware-Terminal, Stempelzeit über Netzwerk-Zeitserver
+  statt lokaler PC-Uhr) – siehe
+  [`aktuelle-exe-validierung.md`](legacy-schema/aktuelle-exe-validierung.md#projektzeitenhmexe-eigenständige-stempel-anwendung-schreibt-prozesszeiten-2026-09-09)
+  für Feldlisten (`PROZESSZEITEN`, `ZeitPerso`, `Mitarbeiterqualicross`).
 - **AOI-Testintegration** (`PMESSAOI`, `PFEHLERAOI`, `PRODFEHLERTESTER`,
   `SNRFEHLER`) – automatische optische Inspektion/Tester an die Fertigung
   angebunden, kein Odoo-Standardpendant (am ehesten `quality` + Custom).

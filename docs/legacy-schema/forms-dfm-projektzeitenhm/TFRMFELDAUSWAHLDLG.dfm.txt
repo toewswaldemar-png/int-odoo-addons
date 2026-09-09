@@ -1,0 +1,7 @@
+object frmFeldAuswahlDlg: TfrmFeldAuswahlDlg
+  Left = 403
+  Top = 482
+  Caption = 'Feld Auswahl'
+  PixelsPerInch = 96
+  TextHeight = 13
+end

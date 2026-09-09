@@ -1,0 +1,44 @@
+object fraTree: TfraTree
+  Left = 0
+  Top = 0
+  Width = 245
+  Height = 266
+  Align = 'alRight'
+  Color = 15329769
+  ParentColor = False
+  TabOrder = 0
+  object tvwNav: TTreeView
+    Left = 0
+    Top = 0
+    Width = 245
+    Height = 266
+    Align = 'alClient'
+    BevelInner = 'bvNone'
+    BevelOuter = 'bvNone'
+    Color = 13358804
+    Font.Charset = 'ANSI_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -11
+    Font.Name = 'Courier New'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    Images = 'ilTree'
+    Indent = 19
+    ParentFont = False
+    PopupMenu = 'pmFilter'
+    TabOrder = 0
+    OnGetImageIndex = 'tvwNavGetImageIndex'
+  end
+  object pmFilter: TPopupMenu
+    Left = 8
+    Top = 11
+    object pmiFilteraufheben: TMenuItem
+      Caption = 'Filter aufheben'
+    end
+  end
+  object ilTree: TImageList
+    Left = 8
+    Top = 46
+    Bitmap = <binary 17062 bytes>
+  end
+end

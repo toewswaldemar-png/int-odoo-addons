@@ -1,0 +1,182 @@
+object frmSplash: TfrmSplash
+  Left = 348
+  Top = 225
+  Width = 472
+  Height = 401
+  VertScrollBar.Range = 18
+  AlphaBlend = True
+  AlphaBlendValue = 235
+  BorderIcons = []
+  BorderStyle = 'bsSingle'
+  Caption = 'HIT Software - 1.0 wird geladen  ...'
+  Color = 'clSilver'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = True
+  Position = 'poScreenCenter'
+  OnActivate = 'FormActivate'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  OnDestroy = 'FormDestroy'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object panSplash: TPanel
+    Left = 0
+    Top = 0
+    Width = 456
+    Height = 345
+    Align = 'alClient'
+    Color = 'clWhite'
+    TabOrder = 0
+    object imgSplash: TImage
+      Left = 1
+      Top = 1
+      Width = 454
+      Height = 343
+      Align = 'alClient'
+      Picture.Data = <binary 11868 bytes>
+      Stretch = True
+    end
+    object lblStart: TLabel
+      Left = 146
+      Top = 13
+      Width = 188
+      Height = 35
+      Caption = 'HIT - Software'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clWindowText'
+      Font.Height = 35
+      Font.Name = 'Arial'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      Transparent = True
+    end
+    object lblLogin: TLabel
+      Left = 80
+      Top = 144
+      Width = 47
+      Height = 16
+      Caption = 'Login :'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clNavy'
+      Font.Height = -15
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      Transparent = True
+      Visible = False
+    end
+    object lblPW: TLabel
+      Left = 80
+      Top = 176
+      Width = 72
+      Height = 16
+      Caption = 'Passwort :'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clNavy'
+      Font.Height = -15
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      Transparent = True
+      Visible = False
+    end
+    object lblVersion: TLabel
+      Left = 191
+      Top = 45
+      Width = 81
+      Height = 15
+      Alignment = 'taCenter'
+      Caption = 'Version 1.0.3.8'
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clGray'
+      Font.Height = -12
+      Font.Name = 'Arial'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      Transparent = True
+      Layout = 'tlCenter'
+    end
+    object lblFileDate: TLabel
+      Left = 199
+      Top = 61
+      Width = 65
+      Height = 15
+      Alignment = 'taCenter'
+      Caption = '01.01.2008 '
+      Font.Charset = 'DEFAULT_CHARSET'
+      Font.Color = 'clGray'
+      Font.Height = -12
+      Font.Name = 'Arial'
+      Font.Pitch = 'fpVariable'
+      Font.Style = []
+      ParentFont = False
+      Transparent = True
+      Layout = 'tlCenter'
+    end
+    object btnOK: TBitBtn
+      Left = 163
+      Top = 216
+      Width = 65
+      Height = 25
+      Caption = 'OK'
+      Default = True
+      TabOrder = 0
+      Visible = False
+      OnClick = 'btnOKClick'
+      Glyph.Data = <binary 482 bytes>
+      NumGlyphs = 2
+    end
+    object btnCancel: TBitBtn
+      Left = 235
+      Top = 216
+      Width = 65
+      Height = 25
+      Caption = 'Cancel'
+      TabOrder = 1
+      Visible = False
+      OnClick = 'btnCancelClick'
+      Kind = 'bkCancel'
+    end
+    object edtLogin: TEdit
+      Left = 163
+      Top = 144
+      Width = 137
+      Height = 21
+      BevelInner = 'bvLowered'
+      BevelKind = 'bkTile'
+      BevelOuter = 'bvSpace'
+      BorderStyle = 'bsNone'
+      TabOrder = 2
+      Visible = False
+    end
+    object edtPW: TEdit
+      Left = 163
+      Top = 176
+      Width = 137
+      Height = 21
+      BevelInner = 'bvLowered'
+      BevelKind = 'bkTile'
+      BevelOuter = 'bvSpace'
+      BorderStyle = 'bsNone'
+      PasswordChar = '*'
+      TabOrder = 3
+      Visible = False
+    end
+  end
+  object pgbSplash: TProgressBar
+    Left = 0
+    Top = 345
+    Width = 456
+    Height = 18
+    Align = 'alBottom'
+    Enabled = False
+    TabOrder = 1
+    Visible = False
+  end
+end

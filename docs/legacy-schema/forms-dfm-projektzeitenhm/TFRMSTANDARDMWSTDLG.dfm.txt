@@ -1,0 +1,20 @@
+object frmStandardMWSTDlg: TfrmStandardMWSTDlg
+  Left = 583
+  Top = 273
+  Caption = 'Hinweis'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel
+    Left = 72
+    Top = 72
+    Width = 48
+    Height = 24
+    Caption = 'Mwst'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clBlack'
+    Font.Height = -19
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+end

@@ -247,7 +247,11 @@ Quelldokumenten.
 | `PROZESSMAIN`/`-GRUPPEN`/`-STRUKTUR`/`-ABTEILUNGEN`/`-OBJEKTE` | Tabellen | Verknüpfung (theoretisch) | als generisches BPM-System konzipiert, **aber 0 Zeilen in der Live-DB** – Verknüpfungsrolle nie tatsächlich genutzt |
 | `PROZESSOBJEKTE.ModulID`+`ObjektID` | Felder | Verknüpfung | generischer polymorpher Link zu jedem Modul-Objekt (Konzept, ungenutzt) |
 | `PROZESSZEITEN.OBJEKTART` | Feld | Logik | **codebestätigt aktiv**: `0`=Projekt (156.257 Buchungen), `154`=Reparatur-Zeitbuchung (133.636 Buchungen, identischer Code wie `BELEGART`) |
+| `PROZESSZEITEN.ProzessID = 999` | Feld/Wert | Logik | **codebestätigt aktiv**: reservierter Marker, in `ProjektzeitenHM.exe` als Live-Filter (`prozessid <> 999`) genutzt, nicht nur historisch in der Migrationsroutine |
+| `PROZESSZEITEN.FirstID`/`Zeit`/`Zeit2` | Felder | Logik | **codebestätigt**: `FirstID` gruppiert eine Stempel-Session (als Ganzes löschbar), `Zeit`/`Zeit2` sind Beginn/Ende desselben Stempel-Paars (`Zeit2` per nachträglichem `UPDATE`) |
 | `PROZESSZEITENK`/`-S` | Tabellen | Info | Migrationsartefakte (Sicherung/Korrektur einer einmaligen Datenreparatur), kein eigenständiges Konzept |
+| `Mitarbeiterqualicross.Ablaufdatum`/`IsEntry` | Felder | Logik | **codebestätigt**: dieselbe Kreuztabelle verknüpft Mitarbeiter↔Produktionsschritt UND Mitarbeiter↔Qualifikation mit Verfallsdatum – zwei Beziehungen, nur über die Zieltabelle im Join unterschieden |
+| `ZeitPerso.beginn`/`beginnori`, `ende`/`endeori` | Felder | Logik | **codebestätigt**: Original- und Korrekturwert werden parallel gehalten – echter Audit-Trail für nachträgliche Zeitkorrekturen |
 | `WARTUNG.KALIBINTERVALL`/`FAELLIGKEIT`/`NEXTTERMIN` | Felder | Logik (theoretisch) | Kalibrierungs-Fälligkeitslogik mit Mail-Dämon vorhanden, aber nur 1 Zeile live – praktisch ungenutzt |
 | `TDBLaufkartenObject` → `TDBProzessLinkObject` | Codeverknüpfung | Verknüpfung | **codebestätigt**: Laufkarten sind technisch eine `PROZESSLINK`-Instanz |
 

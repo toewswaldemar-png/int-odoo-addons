@@ -1638,6 +1638,103 @@ heute) passen zu diesem Bild: Momentaufnahmen zum Reparaturzeitpunkt,
 Laufkarten sind technisch also selbst eine `PROZESSLINK`-Instanz, nicht ein
 eigenständiger Mechanismus.
 
+## ProjektzeitenHM.exe: eigenständige Stempel-Anwendung schreibt PROZESSZEITEN (2026-09-09)
+
+Quelle: `ProjektzeitenHM.exe` (5,3 MB, Stand 2021-04-13, liegt neben
+`Herrmann.exe` in `Herrmann_Work`) – eine vom Hauptprogramm **getrennte**
+Delphi-Anwendung, eigene 59 DFM-Forms (per `dfm-tool` extrahiert), eigenes
+Icon/Verknüpfung auf dem Desktop. Anders als `Herrmann.exe` löst dieses Exe
+SQL nicht serverseitig auf, sondern hat es hart im Client-Code verdrahtet –
+dadurch liegt hier zusätzliche, aus Herrmann.exe selbst nicht extrahierbare
+Logik offen.
+
+**"HIT" ist der Hersteller, keine Hardware.** `DbConfig.ini` im selben
+Ordner referenziert `D:\HIT-Software\Warenwirtschaft\V3.0\Herrmann\DB\IBDB.FDB`
+und die Splash-Meldung im Exe lautet `"HIT Software - 1.0 wird geladen..."`
+– HIT-Software ist der Hersteller der gesamten Warenwirtschaft, "Herrmann"
+der kundenspezifische Instanzname. `TClientDataSetHit` (in allen DFMs dieses
+und des Hauptprogramms) ist folglich eine herstellereigene Delphi-Komponente.
+Gezielt nach Hardware-Terminal-Anbindung gesucht (COM-Port/Barcode/RFID/
+Kartenleser-Strings) – keine Treffer. Gestempelt wird ausschließlich über
+UI-Buttons in `TFRMZEITPROJEKTDLG` ("Projektzeiten"): *1. Beginn eintragen →
+2. Ende eintragen → 3. Rep./Fert.-Nummer eintippen (→|-Taste) oder Projekt
+suchen → 4. Speichern*.
+
+**Manipulationsschutz über Netzwerk-Zeitserver.** Die Form enthält
+`IdTime1: TIdTime, Host = '192.100.0.38'` – die Stempelzeit wird von einem
+dedizierten internen Zeitserver geholt statt von der lokalen PC-Uhr,
+verhindert also Zeitstempel-Manipulation über die Systemuhr.
+
+**Vollständige Spaltenliste für `PROZESSZEITEN`-Inserts, aus dem Exe-Code:**
+
+```sql
+Insert into PROZESSZEITEN (OID, FirstID, USERID, ProzessID, ProjektID, ObjektArt,
+  Tag, Monat, Jahr, Zeit, Zeit2, Bemerkung, Taetigkeit, Projekt)
+  Values (...)
+Update Prozesszeiten Set Zeit2 = '...' Where OID = :parOID
+Select * from ProzessZeiten where UserID = :parOID and Tag = :parTag
+  and Monat = :parMOnat and Jahr = :parJahr and prozessid <> 999
+  order by Zeit, prozessID
+Delete from ProzessZeiten where FIRSTID = ...
+```
+
+`Zeit`/`Zeit2` sind Beginn/Ende desselben Stempel-Paars (Ende wird per
+`UPDATE` nachgetragen), `FirstID` gruppiert alle Zeilen einer
+Stempel-Session (löschbar als Ganzes). Der Filter `prozessid <> 999`
+bestätigt **unabhängig** den bereits oben dokumentierten Fund aus
+`DTextkonstanten.pas` ("Marker ProzessID=999" bei der
+Stempel-Paar-Korrektur) – hier taucht derselbe Sonderwert in einer
+komplett anderen, weiterhin aktiv benutzten Anwendung als Live-Filter auf,
+nicht nur in einer einmaligen historischen Reparaturroutine.
+
+**`Mitarbeiterqualicross` – Doppelverwendung, eine davon mit
+Ablauflogik:**
+
+```sql
+Select S.* from Benutzer B, Konstprodschritte S, Mitarbeiterqualicross C
+  where B.OID = C.Masteroid and S.oid = C.clientoid and C.MasterOID = :parUserOID
+select S.*, C.Ablaufdatum, C.IsEntry from Benutzer B, Qualifikationen S,
+  Mitarbeiterqualicross C where B.OID = :parUserOID and S.oid = C.MasterOID
+  and C.clientoid = B.OID
+```
+
+Dieselbe Kreuztabelle verknüpft (a) Mitarbeiter↔Produktionsschritt
+(`Konstprodschritte`) und (b) Mitarbeiter↔Qualifikation
+(`Qualifikationen`) **mit Verfallsdatum** (`Ablaufdatum`, `IsEntry`) – zwei
+fachlich unterschiedliche Beziehungen über dieselbe generische Tabelle,
+nur über die Zieltabelle im Join unterschieden. Codebestätigte Logik, kein
+reiner Verknüpfungs-Zufallsfund.
+
+**`ZeitPerso` – vollständige Feldliste über `cdsKommt`
+(`TDMBENUTZERZEITERFASSUNG.dfm`):** `PID, Tag, monat, jahr, datum,
+beginn/beginnori, ende/endeori, art, waz, pause, wotag, tagstd, tagmin,
+gesmin, Bemerkung, apm, Feiertag, Fehleintrag, Schicht, Schichtsoll` plus
+berechnetes `calcPause`. Damit ist der Tabellenname für die klassische
+Kommt/Geht-Zeiterfassung jetzt sicher `ZeitPerso` (oben im Prozess-Modul-
+Abschnitt noch als "`ZEITEN`" vermutet). Bemerkenswert:
+**Original- und Korrekturwert werden parallel gehalten**
+(`beginn`/`beginnori`, `ende`/`endeori`) – ein echter Audit-Trail für
+nachträgliche Korrekturen, unabhängig von den in `ZEITGRUND` bereits
+dokumentierten Zuschlagsfeldern.
+
+**`BENUTZER` als Login-Konto und Personalakte in einem Datensatz.**
+`cdsBenutzer` (`TDMBENUTZERZEITERFASSUNG.dfm`) deklariert neben den
+bereits als "vermutlich Altlast" eingestuften ~35 Ein-Zeichen-Modul-Flags
+(`ADRESSEN`, `ARTIKEL`, `RECHNUNG`, `DBADMIN`, …) auch vollständige
+Personaldaten direkt auf demselben Datensatz: `MAGEBDAT`/`MAGEBORT`
+(Geburt), `MASTAAT`, `MAFAMSTAND`, `MAKINDER`, `MAKONFESSION`,
+`MABANK`/`MABLZ`/`MAKONTO`/`mabic`/`maiban`, `URLAUBGES`/`URLAUBGEN` plus
+berechneter Resturlaub (`calcUrlaubRest`). Ergänzt den bereits
+dokumentierten Befund "Berechtigung ist der aktive Mechanismus, nicht die
+BENUTZER-Flags" (System/Firmendaten-Abschnitt oben) um einen Datenpunkt:
+die Modul-Flags sind zumindest strukturell auch in dieser zweiten,
+unabhängigen Anwendung noch vollständig verdrahtet, nicht nur im
+Hauptprogramm mitgeschleppt.
+
+**Sicherheitsrelevanter Nebenbefund:** Login-Prüfung erfolgt als
+Klartextvergleich, kein Hash: `Select OID from Benutzer where Login =
+:parLogin and Pw = :parPW and Coalesce(Aktiv, 'F') = 'T'`.
+
 ## Stückliste: Kopf-Zahlenfelder "22094"/"110376" sind interne OIDs (2026-09-08)
 
 DFM-Ausschnitt aus `TFRMSTUECKLISTENTSP.dfm.txt`, direkt neben dem

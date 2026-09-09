@@ -1,0 +1,72 @@
+object frmMenue: TfrmMenue
+  Left = 215
+  Top = 164
+  Width = 696
+  Height = 480
+  HorzScrollBar.Range = 553
+  VertScrollBar.Range = 81
+  BorderStyle = 'bsNone'
+  Caption = 'Menue'
+  Color = 'clWhite'
+  Font.Charset = 'DEFAULT_CHARSET'
+  Font.Color = 'clWindowText'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  FormStyle = 'fsMDIChild'
+  OldCreateOrder = True
+  Position = 'poDesktopCenter'
+  Visible = True
+  WindowState = 'wsMaximized'
+  OnClose = 'FormClose'
+  OnCreate = 'FormCreate'
+  OnDestroy = 'FormDestroy'
+  OnShow = 'FormShow'
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Bevel1: TBevel
+    Left = 0
+    Top = 79
+    Width = 680
+    Height = 2
+    Align = 'alTop'
+    Shape = 'bsBottomLine'
+  end
+  object ImgStart: TImage
+    Left = 0
+    Top = 81
+    Width = 680
+    Height = 361
+    Align = 'alClient'
+    AutoSize = True
+    Center = True
+    Picture.Data = <binary 18495 bytes>
+    Stretch = True
+    Transparent = True
+  end
+  object imgTop: TImage
+    Left = 0
+    Top = 0
+    Width = 680
+    Height = 79
+    Align = 'alTop'
+    AutoSize = True
+    Picture.Data = <binary 2381 bytes>
+    Stretch = True
+  end
+  object lblStart: TLabel
+    Left = 32
+    Top = 21
+    Width = 344
+    Height = 35
+    Caption = 'Startseite    HIT - Software'
+    Font.Charset = 'DEFAULT_CHARSET'
+    Font.Color = 'clWindowText'
+    Font.Height = 35
+    Font.Name = 'Arial'
+    Font.Pitch = 'fpVariable'
+    Font.Style = []
+    ParentFont = False
+    Transparent = True
+  end
+end

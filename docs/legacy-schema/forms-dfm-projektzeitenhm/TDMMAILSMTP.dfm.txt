@@ -1,0 +1,117 @@
+object dmMailSMTP: TdmMailSMTP
+  OldCreateOrder = False
+  Left = 805
+  Top = 162
+  Height = 174
+  Width = 498
+  object SMTP: TIdSMTP
+    SASLMechanisms = <
+      item0 = {
+        SASL = 'IdSASLLogin1'
+      }
+      item1 = {
+        SASL = 'IdSASLCRAMMD51'
+      }
+      item2 = {
+        SASL = 'IdSASLCRAMSHA11'
+      }
+      item3 = {
+        SASL = 'IdSASLSKey1'
+      }
+      item4 = {
+        SASL = 'IdSASLPlain1'
+      }
+      item5 = {
+        SASL = 'IdSASLAnonymous1'
+      }
+      item6 = {
+        SASL = 'IdSASLDigest1'
+      }
+      item7 = {
+        SASL = 'IdSASLExternal1'
+      }
+      item8 = {
+        SASL = 'IdSASLOTP1'
+      }
+    >
+    Left = 80
+    Top = 16
+  end
+  object IdMsgSend: TIdMessage
+    AttachmentEncoding = 'MIME'
+    BccList = <
+    >
+    CCList = <
+    >
+    Encoding = 'meMIME'
+    FromList = <
+      item0 = {
+      }
+    >
+    Recipients = <
+    >
+    ReplyTo = <
+    >
+    ConvertPreamble = True
+    Left = 32
+    Top = 16
+  end
+  object IdSASLAnonymous1: TIdSASLAnonymous
+    Left = 176
+    Top = 16
+  end
+  object IdSASLCRAMMD51: TIdSASLCRAMMD5
+    UserPassProvider = 'IdUserPassProvider1'
+    Left = 224
+    Top = 16
+  end
+  object IdSASLCRAMSHA11: TIdSASLCRAMSHA1
+    UserPassProvider = 'IdUserPassProvider1'
+    Left = 264
+    Top = 16
+  end
+  object IdSASLLogin1: TIdSASLLogin
+    UserPassProvider = 'IdUserPassProvider1'
+    Left = 312
+    Top = 16
+  end
+  object IdUserPassProvider1: TIdUserPassProvider
+    Left = 368
+    Top = 16
+  end
+  object IdSASLSKey1: TIdSASLSKey
+    UserPassProvider = 'IdUserPassProvider1'
+    Left = 176
+    Top = 64
+  end
+  object IdSASLPlain1: TIdSASLPlain
+    UserPassProvider = 'IdUserPassProvider1'
+    Left = 232
+    Top = 64
+  end
+  object IdSASLDigest1: TIdSASLDigest
+    UserPassProvider = 'IdUserPassProvider1'
+    Left = 272
+    Top = 64
+  end
+  object IdSASLExternal1: TIdSASLExternal
+    Left = 320
+    Top = 64
+  end
+  object IdSASLOTP1: TIdSASLOTP
+    UserPassProvider = 'IdUserPassProvider1'
+    Left = 376
+    Top = 64
+  end
+  object IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL
+    Destination = ':25'
+    MaxLineAction = 'maException'
+    Port = 25
+    DefaultPort = 0
+    SSLOptions.Mode = 'sslmUnassigned'
+    SSLOptions.VerifyMode = []
+    SSLOptions.VerifyDepth = 0
+    Left = 80
+    Top = 64
+  end
+end

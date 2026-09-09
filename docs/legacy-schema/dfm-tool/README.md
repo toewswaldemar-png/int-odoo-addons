@@ -56,3 +56,15 @@ Die dekodierten Formulare liegen unter [`../forms-dfm/`](../forms-dfm/)
 (471 Dateien, ca. 13 MB), benannt nach der Delphi-Klasse (z. B.
 `TFRMARTIKELINFO2.dfm.txt`). Formularliste mit Größen:
 [`forms_inventory.txt`](forms_inventory.txt).
+
+## Zweite EXE: ProjektzeitenHM.exe
+
+`extract_projektzeitenhm.py` wendet dasselbe Verfahren auf die vom
+Hauptprogramm getrennte Stempel-Anwendung `ProjektzeitenHM.exe` an
+(59 Formulare, keine Parserfehler). Ergebnis unter
+[`../forms-dfm-projektzeitenhm/`](../forms-dfm-projektzeitenhm/). Diese
+EXE löst SQL nicht serverseitig auf, sondern verdrahtet es als Klartext im
+Client-Code — dadurch liegt hier zusätzliche Geschäftslogik offen, die aus
+`Herrmann.exe` allein (DFM oder `strings`) nicht extrahierbar war. Details
+und Befunde:
+[`aktuelle-exe-validierung.md`](../aktuelle-exe-validierung.md#projektzeitenhmexe-eigenständige-stempel-anwendung-schreibt-prozesszeiten-2026-09-09).
