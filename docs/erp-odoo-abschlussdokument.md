@@ -38,7 +38,7 @@ Quelldokumenten.
 | Feld | DB-Feld | Kategorie | Anmerkung |
 |---|---|---|---|
 | Name 1/2/3, Kurzname, Strasse, Plz, Ort | `ADRESSEN.NAME1-3`/`STRASSE`/`PLZ`/`ORT` | Info | |
-| Debit.-Nr. / Kredit.-Nr. | `ADRESSEN.DEBNR`/`KREDNR` | Info | vermutlich UI-Ableitung für "Art" (?), nicht codebestätigt |
+| Debit.-Nr. / Kredit.-Nr. | `ADRESSEN.DEBNR`/`KREDNR` + `DEBINAKTIV`/`KREDINAKTIV` | Logik | **schemabestätigt (2026-09-09)**: kein eigenes Typ-Feld – beide unabhängig voneinander setzbar, eine Adresse kann Kunde UND Lieferant gleichzeitig sein (nah an Odoos `customer_rank`/`supplier_rank`-Modell, keine feste Typspalte) |
 | Gruppe / Nr. | `ADRESSEN.GRUPPE`-Referenz | Verknüpfung | ReadOnly, nur über Auswahl-Button befüllbar |
 | Ansprechpartner | eigene Tabelle je Adresse | Verknüpfung | 1:n |
 | "Adressen Filtern" (Checkbox) | kein Datenfeld | Logik | reine Sucheinstellung |
@@ -52,7 +52,8 @@ Quelldokumenten.
 | Nummer | interne ID | Verknüpfung | |
 | Anlage/Änderung | Systemdatum | Info | |
 | Anrede Firma/Person | `ADRESSEN.ANREDE`-Typ | Info | |
-| Art: Kunde/Lieferant | kein eigenes Feld gefunden | Logik (?) | vermutlich aus `DEBNR`/`KREDNR`-Belegung UI-seitig abgeleitet, nicht im Datenmodell erzwungen |
+| Art: Kunde/Lieferant | kein eigenes Feld – siehe `DEBNR`/`KREDNR` in Suchmaske | Logik | siehe oben, jetzt schemabestätigt statt nur vermutet |
+| Rechnungsadresse (Name/Strasse/Plz/Ort) | `ADRESSEN.RECHNAME1-3`/`RECHSTRASSE`/`RECHPLZ`/`RECHORT` | Info | komplett separater zweiter Adresssatz, unabhängig von der Hauptadresse pflegbar |
 | Postfach/PostfachPlz | `ADRESSEN.POSTFACH`/`POSTFACHPLZ` | Info | |
 | Ansprechpartner-Funktion | `ADRESSENANSPRECH.NOTIZ` (wiederverwendet) | Info | Dropdown aus `Select distinct Notiz` |
 | Lkz | `ADRESSEN.LKZ`-Feld | Verknüpfung | Ländercode-Referenz |
@@ -77,9 +78,29 @@ Quelldokumenten.
 | Bemerkung | `ADRESSEN.BEMERKUNG` | Info | |
 | Bedingungen Lieferant/Kunde | `ADRESSEN.ZKONDI`/`VERSAND` | Verknüpfung | Referenz auf Konditionswerte |
 | Bedingungen Herrmann | `ADRESSEN.ZKONDIL`/`VERSANDL` | Verknüpfung | eigene, zweite Konditionsreferenz |
+| Bedingungen (dritte Referenz) | `ADRESSEN.ZKONDIE`/`VERSANDE` | Verknüpfung | **schemabestätigt (2026-09-09)**, aber Zweck nicht codebestätigt – drei statt zwei parallele Konditions-/Versandreferenzen, dritter Geschäftskontext unklar |
 | Liefertage (7 Checkboxen) | `ADRESSEN.LIEFERTAGE` | Info | ein positionscodierter String |
 | Lieferadressen-Grid | `ADRESSENLIEFER` | Verknüpfung | 1:n |
 | Kartei (Preis-/Bestellhistorie) | Live-Join `BELEG`+`BELEGPOS` | Verknüpfung | nicht gespeichert, jedes Mal neu berechnet |
+
+### Kindtabellen (2026-09-09, aus dem echten Schema)
+
+| Feld | DB-Feld | Kategorie | Anmerkung |
+|---|---|---|---|
+| Ansprechpartner-Stammdaten | `ADRESSENANSPRECH.NAME`/`VORNAME`/`TELE1`/`MOBIL`/`FAX1`/`EMAIL`/`ANREDE` | Info | 1:n über `SOID`→`ADRESSEN.OID` |
+| Ansprechpartner-eigenes Mailrouting | `ADRESSENANSPRECH.STANDARDEMAIL`/`STANDARDCC`/`STANDARDBCC` | Logik | eigenes Mail-Routing je Ansprechpartner, nicht nur auf Adressebene wie die `EMAIL*`-Felder oben |
+| Projekt-Zuordnung | `ADRESSENPROJEKT.PROJEKT`/`NUMMER` | Verknüpfung | verknüpft eine Adresse mit einem Projekt-Freitext + Nummer – vermutlich dieselbe Nummernwelt wie `KonstProjekte`/`KonstSMT.BAUGRUPPE` (siehe Nummernkreise-Abschnitt in `aktuelle-exe-validierung.md`), hier adressseitig, nicht codebestätigt |
+| Artikelspezifischer Rabatt je Adresse | `ADRESSENARTRABATT.ARTID`/`RABATT` | Verknüpfung | 1:n, Adresse↔Artikel mit eigenem Rabattsatz |
+
+### SEPA/Buchhaltung, Zertifikate, Liefertreue (2026-09-09, aus dem echten Schema)
+
+| Feld | DB-Feld | Kategorie | Anmerkung |
+|---|---|---|---|
+| IBAN/SWIFT | `ADRESSEN.IBAN`/`SWIFT` | Info | modern, koexistiert mit dem alten `BANK`/`BLZ`/`KONTONR`-Trio – erneut Alt+Neu-Nebeneinander |
+| DATEV-Konto | `ADRESSEN.DATEVKONTO` | Verknüpfung | Referenz in die externe Buchhaltungssoftware DATEV |
+| SEPA-Mandatsdaten | `ADRESSEN.GLAEUBIGERID`/`MANDANTENID`/`VERSNUMMER` | Info | Gläubiger-ID + Mandatsreferenz direkt auf der Adresse |
+| Zertifikate (7 Slots) | `ADRESSEN.ZERTI1-7`/`ZERTIBEM1-7`/`ZERTIPFAD1-7` | Info | bis zu 7 Zertifikate (Name/Bemerkung/Dateipfad) je Adresse – dieselbe Regulatorik-Thematik wie das `ZERTIFIKATE`/`NORMROHS`-Subsystem aus den 243 neuen Tabellen, hier aber als Adress-Spalten statt eigener Tabelle |
+| Liefertreue-Kennzahl | `ADRESSEN.KUNDLIEFERTREUE01-05` + `LIEFERABWEICHUNGPLUS`/`-MINUS` | Logik (?) | historische Liefertreue über 5 Perioden mit Toleranzband – plausibles KPI-System, tatsächliche Berechnung/Nutzung nicht codebestätigt |
 
 ---
 
