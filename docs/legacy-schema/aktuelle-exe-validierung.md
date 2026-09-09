@@ -1264,6 +1264,49 @@ Auffällig: `159` endet auf `9`. Ob die `9` im Nummernformat tatsächlich
 diesen Code widerspiegelt oder rein zufällig gleich ist, ist nicht geklärt –
 reine Beobachtung, kein Codebeleg für einen Zusammenhang gefunden.
 
+### Dritter Nummernkreis: "Projekt"-Nummern (`KonstProjekte`/`KonstSMT.BAUGRUPPE`) sind reiner Freitext
+
+Der Suchdialog `TFRMPROJEKTSUCHENDLG` in `ProjektzeitenHM.exe` ("Projekte -
+Suchen", aufgerufen über den "Projekt suchen"-Pfad im Stempel-Dialog)
+zeigt eine dritte, von Beleg-Nummernkreisen und `G_Nr8D` komplett getrennte
+Nummernwelt. Live-Screenshot-Beispiele: `12001`–`12012` (lückenlos
+durchgehend), `11005`/`11008`/`11013`/`11016`/`11019`/`11020`/`11024`
+(Lücken durch den "aktive"-Filter erklärbar), `10027`/`10045`, `09032`,
+`08031`, `04040`, `00101`. Das Muster passt auf `YY` (2-stelliges Jahr) +
+`NNN` (3-stellige laufende Nummer je Jahr), mit `00` vermutlich als
+Sammel-Pseudojahr für "kein spezifisches Projekt" (`00101` = "Vorrat
+allgemein"/"INTERN").
+
+**Codegegenprobe in `HMS/Module/ProjektZeit/UProjekteTSP.pas` zeigt: das
+Muster ist eine Anwender-Konvention, kein Systemmechanismus:**
+
+```pascal
+procedure TCustomProjektObject.doNew;
+begin
+  Load(FCDS, TSQLGetTSPOneProjekt.Create(-564654654));
+  FCDS.Append;
+  FOID := dmServer.GetNewID('G_KonstProjekte');  // nur die interne OID wird generiert
+  FCDS.Edit;
+  FCDS.FieldByName('OID').AsInteger := FOID;
+end;
+
+procedure TCustomProjektObject.doSaveData;
+begin
+  FCDS.Edit;
+  ...
+  FCDS.FieldByName('Baugruppe').AsString := FBaugruppe;  // reiner Freitext, keine Formatierung
+  ...
+end;
+```
+
+`KONSTPROJEKTE.BAUGRUPPE`/`KONSTSMT.BAUGRUPPE` sind `D_VARCHAR10` ohne
+jede Format-Validierung – anders als bei Belegen (`NUMMERNPARAM` +
+Firebird-Generator) oder Reparatur (`G_Nr8D`) gibt es hier keinen
+Nummernkreis-Mechanismus. Das YY-NNN-Muster in den Live-Daten ist eine von
+den Konstrukteuren/Anwendern selbst eingehaltene Namenskonvention, kein
+codeseitig erzwungenes Format. Nur die interne `OID` wird automatisch
+vergeben (`G_KonstProjekte`), für den Anwender unsichtbar.
+
 ## Einkauf/Bestellung: Belegart-Zuordnung
 
 Aus `HMS/Module/UConsts.pas` (Formular-ID-Konstanten) plus Live-SQL-Gegenprobe
@@ -1595,6 +1638,23 @@ Unterprozesse erlaubt) → `PROZESSABTEILUNGEN` (Abteilungszuordnung) →
 `ModulID`/`ObjektID`, plus `TodoID`) → `PROZESSLINK` (verbindet Prozess +
 Objektart + Datum, sortierbar) → `PROZESSZEITEN` (die eigentlichen
 Zeitstempel).
+
+**`PROZESSZEITEN.ProjektID` ist ein echter FK auf `KonstSMT.OID`,
+bestätigt über eine Report-Query in den Herrmann.exe-Strings:**
+
+```sql
+Select Z.Tag, Z.Monat, Z.Jahr, Z.zeit, P.Bezeichnung as Prozess, J.Projektname,
+  J.Baugruppe as ProjektNummer
+from ProzessZeiten Z
+left join ProzessMain P on P.OID = Z.ProzessID
+left join KonstSMT J on J.OID = Z.ProjektID
+where Z.UserID = :parOID order by Zeit
+```
+
+Bemerkenswert: dieselbe Query joint auch `ProzessMain` – obwohl diese
+Tabelle laut Live-Datenprüfung oben 0 Zeilen hat. Entweder ist auch dieser
+Report-Query-Pfad tot, oder er läuft nur ins Leere (liefert `NULL` für
+`Prozess`), ohne zu scheitern. Nicht weiter verfolgt.
 
 Der Typkatalog zeigt den beabsichtigten Umfang – praktisch jede Tätigkeit im
 Betrieb sollte als "Prozess" stempelbar sein:
