@@ -1221,6 +1221,49 @@ Verpacken) gefunden – nur UI-Elemente (`btnEndpruefung`, statische Label-
 Captions). `x_werkstattstufe` im Addon ist vermutlich eine Odoo-seitige
 Neukonzeption.
 
+## Nummernkreise: Beleg-Nummernformat und Reparatur-Präfix "RB9" (2026-09-09)
+
+**Mechanismus (codebestätigt):** Jede Belegart hat einen eigenen, admin-
+konfigurierbaren Nummernkreis. Der Dialog `TFRMNUMMERKREISDLG`
+("Nummernkreise") zeigt pro Gruppe vier Einstellungen – `Kennung` (freier
+Text-Präfix, `NUMMERNPARAM.KENNUNG D_VARCHAR10`), `Jahr`
+(nichts/4-stellig/2-stellig), `Monat/Periode` (nichts/Monat/Periode) und
+`Stellen` (5/4/3-stellig für die laufende Nummer). Backing-Tabelle:
+`NUMMERNPARAM (OID, NAME, KENNUNG, JAHR, MONATPER, STELLENOFFSET, MODULID)`.
+Der eigentliche Zähler ist kein Tabellenfeld, sondern ein Firebird-
+Generator: `Select GEN_ID(..., 1) from ID` zieht atomar die nächste Nummer,
+`Set Generator ... to ...` setzt ihn im Dialog manuell zurück (mit Guard
+"Neue Nummer liegt nicht im gültigen Bereich!" gegen Rückwärtssprünge unter
+bereits vergebene Nummern).
+
+**Reparatur hat einen eigenen, dedizierten Generator**, bestätigt direkt in
+`HMS/Module/Belege/8D/F8D.pas`:
+
+```pascal
+DataModul.GetNewNummer('G_Nr8D');
+```
+
+`G_Nr8D` ist vollständig getrennt von z.B. `G_NrAngebot` – Reparatur-Nummern
+und Angebots-/Kostenvoranschlag-Nummern laufen über unterschiedliche Zähler,
+nicht nur unterschiedliche Präfixe auf demselben Zähler.
+
+**Zurückgezogene Fehlannahme:** eine frühere Deutung dieser Session hielt
+eine Ziffer im Nummernformat (Beispiel `RB926xxxx`) für einen Monatscode.
+**Falsch** – nach Nutzerauskunft (Domänenwissen, nicht Code-Beleg) dient die
+`9` ausschließlich dazu, Reparatur-Nummern von anderen Belegen zu
+unterscheiden, die nur `26xxxx` (Jahr + laufende Nummer, ohne Zusatzziffer)
+zeigen, z.B. Kostenvoranschlag. Plausibelste technische Erklärung: die `9`
+ist vermutlich Teil der konfigurierten `Kennung` selbst (`Kennung = "RB9"`
+als ganzer String), nicht separat berechnet – frei admin-vergeben,
+unabhängig vom internen Pascal-Namen `G_Nr8D`.
+
+**Offene Beobachtung, nicht bestätigt:** `UConsts.pas` definiert eine ganze
+Familie verwandter Belegart-Codes um Reparatur/8D herum – `fid8DValue = 154`,
+`fid8DInternValue = 156`, `fidReparaturValue = 159`, `fid8DNeuValue = 165`.
+Auffällig: `159` endet auf `9`. Ob die `9` im Nummernformat tatsächlich
+diesen Code widerspiegelt oder rein zufällig gleich ist, ist nicht geklärt –
+reine Beobachtung, kein Codebeleg für einen Zusammenhang gefunden.
+
 ## Einkauf/Bestellung: Belegart-Zuordnung
 
 Aus `HMS/Module/UConsts.pas` (Formular-ID-Konstanten) plus Live-SQL-Gegenprobe
