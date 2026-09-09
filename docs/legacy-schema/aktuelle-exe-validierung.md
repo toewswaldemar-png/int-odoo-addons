@@ -1257,12 +1257,56 @@ ist vermutlich Teil der konfigurierten `Kennung` selbst (`Kennung = "RB9"`
 als ganzer String), nicht separat berechnet – frei admin-vergeben,
 unabhängig vom internen Pascal-Namen `G_Nr8D`.
 
-**Offene Beobachtung, nicht bestätigt:** `UConsts.pas` definiert eine ganze
-Familie verwandter Belegart-Codes um Reparatur/8D herum – `fid8DValue = 154`,
-`fid8DInternValue = 156`, `fidReparaturValue = 159`, `fid8DNeuValue = 165`.
-Auffällig: `159` endet auf `9`. Ob die `9` im Nummernformat tatsächlich
-diesen Code widerspiegelt oder rein zufällig gleich ist, ist nicht geklärt –
-reine Beobachtung, kein Codebeleg für einen Zusammenhang gefunden.
+**Endgültig geklärt, jetzt mit Code-Beleg statt Vermutung:** die frühere
+Beobachtung, dass `fidReparaturValue = 159` zufällig auf `9` endet (neben
+`fid8DValue = 154`, `fid8DInternValue = 156`, `fid8DNeuValue = 165` aus
+`UConsts.pas`), wird durch die tatsächliche Nummer-Bau-Funktion
+`TBuildNummer.doBuildNumer` (`HMS/Module/UDBWorkObjects.pas`) widerlegt:
+
+```pascal
+function TBuildNummer.doBuildNumer(AKenn: string; AJahr, AMonPer,
+  AOffset: TNummernParams; ANumer: Integer; NoKenn: Boolean): string;
+begin
+  if NoKenn = False then Result := AKenn;
+  case AJahr of
+    npJahrZwei: Result := Result + copy(IntToStr(YearOf(Date)), 3, 2);
+    npJahrVier: Result := Result + IntToStr(YearOf(Date));
+  end;
+  case AMonPer of
+    npMonat: Result := Result + SetStellen(MonthOf(Date), 1);   // IMMER 2-stellig (z.B. "09")
+    npPeriode: ... '01'/'02'/'03'/'04' ...                       // IMMER 2-stellig
+  end;
+  case AOffset of
+    npOffset4: Result := Result + SetStellen(ANumer, 3);         // 4-stellige laufende Nummer
+  end;
+end;
+```
+
+Jeder der drei Bausteine nach `Kennung` (Jahr/Monat-Periode/laufende
+Nummer) liefert entweder nichts oder einen Block von mindestens zwei
+Zeichen – Monat wäre zwingend zweistellig (`"09"`, nicht `"9"`). Eine
+einzelne, nackte Ziffer wie die `9` in `RB926xxxx` kann aus keinem dieser
+Bausteine stammen. Sie muss also Teil des `Kennung`-Strings selbst sein:
+`Kennung = "RB9"` (drei Zeichen, frei im Nummernkreis-Dialog eingetragen).
+
+Bestätigt außerdem, wie die richtige Kennung pro Belegart gefunden wird
+(`TGetBelegKennung.doGetKennung`):
+
+```pascal
+function TGetBelegKennung.doGetKennung(AModulID: Integer): string;
+begin
+  Result := '';
+  Load(FCDS, TSQLGetNummerKeisByModulID.Create(AModulID));
+  if not FCDS.IsEmpty then Result := FCDS.FieldByName('Kennung').AsString;
+end;
+```
+
+Pro `MODULID` (z.B. `fid8DValue = 154`) existiert genau eine
+`NUMMERNPARAM`-Zeile mit eigener `Kennung` – die Auswahl läuft über
+`MODULID`, der `Kennung`-**Inhalt** ist aber reiner Admin-Freitext, ohne
+jede algorithmische Verbindung zum Belegart-Code. Die
+`fidReparaturValue=159`-Beobachtung war damit eine reine Zahlenkoinzidenz,
+kein Mechanismus.
 
 ### Dritter Nummernkreis: "Projekt"-Nummern (`KonstProjekte`/`KonstSMT.BAUGRUPPE`) sind reiner Freitext
 
