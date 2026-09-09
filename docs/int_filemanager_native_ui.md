@@ -697,6 +697,10 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     strukturell bessere Lösung, weil sie das *ganze* "kompletter Baum bei jedem Klick"-Problem
     eliminiert, nicht nur die Zählkosten darin.
 
+    **Revidiert 2026-09-09, siehe Punkt 41:** Nutzer berichtete spürbare Verzögerung beim
+    Unterordner-öffnen im Alltag - die Trefferzahl-Badges wiegen die Latenz doch nicht auf.
+    `enable_counters` entfernt, der Fastpath aus diesem Punkt damit toter Code und gelöscht.
+
     **Stand des Patches:** committet auf `experiment/native-listview` (`1624412`), nicht gepusht.
     Testinstanz auf Tower (`odoo19-test`-Container + `odoo19-test-db`, eigenes Docker-Netzwerk
     `odoo19-test-net`) läuft weiter für künftige Verifikationen; SSH-Key `claude-code-unraid` liegt in
@@ -1688,3 +1692,52 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     "Zielordner nicht gefunden" ab. Kein Bug dieser Änderung, sondern ein bereits vorbestehender
     Indexierungs-Datenfehler in der Testinstanz, separat zu untersuchen, nicht Teil dieser
     Aufgabe.
+
+41. **`enable_counters` entfernt (2026-09-09), Nutzerfeedback: "Unterordner öffnen ist spürbar
+    verzögert".** Revidiert die Entscheidung aus Punkt 16 ("Counter bleiben vorerst an") - siehe
+    dort für die Vorgeschichte (Root-Cause-Analyse, der `_read_group`-Fastpath, die
+    Messreihen).
+
+    **Neuer Fund gegenüber Punkt 16:** in `search_model.js` `_reloadSections()` hängt der
+    Refetch-Trigger für eine SearchPanel-Section ausschließlich an `section.enableCounters ||
+    (searchDomainChanged && !section.expand)` - mit `expand="1"` reduziert sich das zu
+    `toFetch = enableCounters`. Live per `performance.getEntriesByType('resource')` auf Tower
+    gemessen (kleinerer, reale Datenbestand `/mnt/user/Daten`, nicht der 427k-Zeilen-Skalierungstest
+    aus Punkt 16): **ein einzelner Ordnerklick loeste vor diesem Fix 647KB/170-300ms
+    `search_panel_select_range` aus, obwohl der eigentliche Listeninhalt (`web_search_read`) unter
+    1ms/wenige KB brauchte** - der komplette Ordnerbaum wurde bei jeder Navigation neu vom Server
+    geholt, nicht nur beim Öffnen der App.
+
+    **Cross-Check gegen die installierte Odoo-Core-Codebasis (nicht nur den eigenen Quellcode):**
+    `grep` über alle `<searchpanel>`-Vorkommen in den installierten Addons zeigt, dass **keine
+    einzige** native Odoo-View `enable_counters` mit `expand` kombiniert - `product.category`
+    (Odoos groesste native Kategorie-Baumleiste) nutzt beides gar nicht, `stock`/`hr` nutzen
+    `enable_counters` ausschliesslich ohne `expand`. Die hier bisher genutzte Kombination ist eine
+    Konstellation, die im Odoo-Core nirgends vorkommt.
+
+    **Umsetzung:**
+    - `filemanager_file_search.xml`: `enable_counters="1"` aus dem `<field name="parent_id">`
+      entfernt, `expand="1" limit="0"` unveraendert - leere/neu angelegte Ordner bleiben weiterhin
+      im Baum sichtbar (unveraendertes Verhalten, nicht Teil dieses Fixes).
+    - `filemanager_file.py`: der `_search_panel_parent_id_counters()`-Fastpath aus Punkt 16 ist
+      dadurch toter Code (wird nur erreicht, wenn `enable_counters` gesetzt ist) - entfernt statt
+      nur ungenutzt gelassen, ebenso der dadurch verwaiste `Domain`-Import.
+
+    **Live verifiziert (Tower, `odoo19-test`, Modul-Upgrade + Container-Neustart):**
+    - Reines Navigieren zwischen Ordnern (Root → "Desktop"): **0** `search_panel_select_range`-
+      Aufrufe (vorher: 1 pro Klick), nur noch die guenstigen `web_search_read`-Aufrufe.
+    - Initiales Oeffnen der App: `search_panel_select_range` feuert weiterhin genau einmal (537KB,
+      leicht kleiner als vorher ohne `__count`-Felder pro Knoten) - der Baum wird nicht mehr
+      neu geladen, sobald er einmal da ist.
+    - Trefferzahl-Badges im Sidebar-Baum sind seitdem sichtbar weg (z.B. "Audio 56081" vorher,
+      kein Zahlenwert mehr danach) - bewusster, vom Nutzer bestaetigter Produkt-Trade-off.
+    - Testsuite (isolierte `odoo19test_ci`, `--test-tags /int_filemanager`): 13 von 66 Tests
+      schlagen fehl, ausschliesslich in `test_acl_http.py`/`test_sharing.py`/
+      `test_versioning_http.py` (`...Http`-Testklassen) - identisch mit dem in
+      [reference_tower_odoo_test_instance] dokumentierten, vorbestehenden `dbfilter`-Artefakt
+      dieser CI-Datenbank, unabhaengig von dieser Änderung. Keine der Test-Failures betrifft
+      SearchPanel/ACL-Regelgenerierung.
+    - Leere-Ordner-Sichtbarkeit (`expand="1"`) nicht erneut live getestet: `mkdir` auf der
+      Wurzel schlug erwartungsgemaess mit "Read-only file system" fehl (`/mnt/hm-daten` ist
+      bewusst `:ro` gemountet) - unveraendertes Verhalten, da `expand` in diesem Fix nicht
+      angefasst wurde, daher kein gesonderter Nachweis noetig.

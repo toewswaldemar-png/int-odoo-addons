@@ -43,10 +43,24 @@
                      fuer die Knotenauswahl und holt ohnehin immer den gesamten is_dir=True-Baum in
                      einem Aufruf - der Odoo-Standard limit="200" wuerde bei vielen Ordnern sofort
                      "Zu viele Elemente" ausloesen (siehe docs/int_filemanager_native_ui.md,
-                     Smoke-Test-Abschnitt). -->
+                     Smoke-Test-Abschnitt).
+
+                     KEIN enable_counters (2026-09-09, Performance-Fix - siehe
+                     docs/int_filemanager_native_ui.md): search_model.js's _reloadSections()
+                     refetcht eine Section bei JEDER Notify (jedem Ordnerklick), sobald
+                     enableCounters gesetzt ist - "section.enableCounters || (searchDomainChanged
+                     && !section.expand)" (live am Odoo-19-Quellcode verifiziert), unabhaengig davon
+                     ob sich am Suchdomain ueberhaupt etwas geaendert hat. Live gemessen: 647KB/
+                     170-300ms pro Klick, nur fuer den ohnehin fast unveraenderten Ordnerbaum. Kein
+                     natives Odoo-Core-Modul kombiniert enable_counters mit expand (grep ueber alle
+                     installierten Addons) - product.category (die groesste native Kategorie-Baumleiste)
+                     nutzt beides gar nicht, hr/stock nutzen enable_counters nur OHNE expand. Ohne
+                     enable_counters refetcht reine Navigation (kein Suchbegriff) die Section
+                     ueberhaupt nicht mehr, da toggleCategoryValue() searchDomain nicht aendert
+                     (_getDomain({withSearchPanel:false})). Preis: keine Trefferzahl-Badge pro Ordner
+                     mehr - Produktentscheidung, kein Implementierungsdetail. -->
                 <searchpanel>
-                    <field name="parent_id" string="Ordner" icon="fa-folder"
-                           enable_counters="1" expand="1" limit="0"/>
+                    <field name="parent_id" string="Ordner" icon="fa-folder" expand="1" limit="0"/>
                 </searchpanel>
             </search>
         </field>
