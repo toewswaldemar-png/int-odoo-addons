@@ -8,6 +8,7 @@ import gevent
 import odoo
 from odoo.api import Environment, SUPERUSER_ID
 from odoo.modules.registry import Registry
+from odoo.service.db import list_dbs
 from odoo.tools import config
 
 from .index_utils import index_move_tree, index_remove_tree, index_upsert
@@ -166,6 +167,29 @@ def _watcher_enabled(env):
     return str(value).strip().lower() not in ("false", "0", "no", "off")
 
 
+def _resolve_dbname():
+    # config["db_name"] is only populated when Odoo was started with an
+    # explicit -d/--database (or db_name= in the config file). A deployment
+    # that instead relies on Odoo's normal single/multi-tenant DB discovery
+    # (our production setup: db_name unset, exactly one real database on the
+    # Postgres server) would otherwise IndexError here on every single
+    # startup - list_dbs() is the same discovery Odoo itself uses for the
+    # database-selector page; force=True bypasses the list_db config gate,
+    # which only matters for that public HTTP page, not this internal check.
+    names = config["db_name"]
+    if names:
+        return names[0]
+    candidates = list_dbs(force=True)
+    if len(candidates) != 1:
+        _logger.error(
+            "int_filemanager: watcher could not determine a single database to watch "
+            "(db_name unset in config, candidates=%s), not starting",
+            candidates,
+        )
+        return None
+    return candidates[0]
+
+
 def _run_watcher():
     # post_load fires while Registry.new(dbname) for this very database is
     # still on the call stack - reentering Registry(dbname) here immediately
@@ -174,7 +198,9 @@ def _run_watcher():
     # int_filemanager.watcher_enabled check has to live here rather than in
     # start_watcher() for the same reason: no cursor is available yet at
     # post_load time, only once this retry loop gets a working registry.
-    dbname = config["db_name"][0]
+    dbname = _resolve_dbname()
+    if dbname is None:
+        return
     root = None
     for _attempt in range(30):
         try:
