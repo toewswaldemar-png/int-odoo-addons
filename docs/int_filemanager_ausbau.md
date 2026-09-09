@@ -28,6 +28,8 @@
 
 ## Context
 
+**Hinweis zu Servernamen (2026-09-09):** "HM-SRV" und "Tower" (siehe Verifikation & Rollout unten) sind schlicht Hostnamen zweier separater Unraid-Server an unterschiedlichen Standorten - der Nutzer betreibt insgesamt mindestens drei verschiedene Unraid+Odoo-Instanzen. Der Name allein sagt nichts über die Rolle aus (Produktiv vs. Test); das ist pro Instanz ein eigenständig zu prüfender/erfragender Fakt, keine aus dem Namen ableitbare Eigenschaft. Die konkreten, unten dokumentierten Fakten zu HM-SRV (läuft produktiv für echte Kollegen) und Tower (Wegwerf-Testinstanz für dieses Addon, aber mit eigenen echten, nicht wegwerfbaren Daten auf demselben Server) bleiben davon unberührt - nur die Namens-Verallgemeinerung war falsch.
+
 Auf HM-SRV läuft produktiv das Odoo-Addon `int_filemanager` (Verzeichnis auf der Platte als Quelle der Wahrheit, Indexierung + Live-Watcher). Ziel: `int_filemanager` direkt ausbauen, Odoos eigene Stärken nutzen statt sie neu zu bauen.
 
 Dieser Plan hat **vier** Review-Runden durchlaufen, Runden 2–4 jeweils direkt gegen den echten Odoo-19-Quellcode geprüft (der auf HM-SRV laufende Code, nicht nur die generische GitHub-Quelle). Jede Runde fand weitere, empirisch bestätigte Blocker. Diese vierte Fassung behebt:
