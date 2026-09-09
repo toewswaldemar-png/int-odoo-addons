@@ -975,10 +975,42 @@ order by coalesce(HauptLieferant, 'F') Desc, Name1
 `IDENTNR`-Slots (Hersteller-/Ident-Referenzen) sind in der aktuellen EXE auf
 12 Positionen gewachsen (2011-DB: nur 5) – siehe z. B.
 `Select A.OID, A.ArtNr, A.Identnr1, ..., A.Identnr12, ... from Artikel A`.
-Welche Position welchem Hersteller-Code (BT/LH/FY/…) entspricht, ließ sich aus
-dem 2018er-Pascal-Code nicht ableiten (nur toter Code mit
-`Z:\dokument\Liebherr\...`-Pfaden gefunden – Zeichnungsablage, keine
-Feldbindung). Offener Punkt für eine spätere Prüfung.
+
+**Positions-Zuordnung jetzt vollständig geklärt (2026-09-09), doppelt
+codebestätigt und per Live-Screenshot bestätigt.** Die Labels neben den
+`IdentNr1-12`-Feldern wurden über die Top-Koordinaten in zwei unabhängigen
+DFM-Formularen (`TFRMARTIKELINFO2.dfm.txt` zeigt Position 1-9,
+`TFRMARTIKELTSP.dfm.txt` alle 12) den Edit-Feldern zugeordnet
+(Label-`Top` ≈ Feld-`Top` + 4px, in beiden Formularen identisch und
+durchgängig konsistent):
+
+| IdentNr | Code |
+|---|---|
+| 1 | BT |
+| 2 | LH |
+| 3 | FY |
+| 4 | NK |
+| 5 | KO |
+| 6 | VK |
+| 7 | BE |
+| 8 | TK |
+| 9 | DB |
+| 10 | HO |
+| 11 | WE |
+| 12 | SI |
+
+Vom Nutzer live per Screenshot bestätigt (`ID-Nummer`-Panel zeigt exakt
+diese 12 Labels in dieser Reihenfolge). Klarnamen bekannt nur für BT
+(Bombardier), LH (Liebherr), NK (Noske Käser) – für FY/KO/VK/BE/TK/DB/HO/WE/SI
+kein Legendentext, kein Tooltip, kein Pascal-Kommentar gefunden, der sie
+auflöst; nur toter Code mit `Z:\dokument\Liebherr\...`-Pfaden (Zeichnungsablage,
+keine Feldbindung) und ein separater, unabhängiger Mechanismus
+(`btnInsertHerstellerClick`/`TInsertHerstellerArtikel`, echte n:m-Zuordnung
+Artikel↔`HERSTELLER`-Stammdatentabelle mit Klarnamen, aber ohne Bezug zu
+den 12 festen `IdentNr`-Kürzelfeldern) wurden dabei gefunden. Auflösung der
+restlichen Klarnamen bräuchte Live-Zugriff auf die `HERSTELLER`-Tabelle
+(x86-Firebird-Zugriffskette, in dieser Session nicht verfügbar) oder
+Werkswissen.
 
 ## Reparatur: Belegstruktur (Belegart 154)
 

@@ -92,7 +92,7 @@ Quelldokumenten.
 | Artikelnummer, Kurzbezeichnung, Bestellnummer, Einheit | `ARTNR`/`KURZBEZEICHNUNG`/`BESTELLNR`/`EINHEIT` | Info | |
 | Hauptlieferant | `ARTIKEL.HAUPTLIEFERANT` | Verknüpfung | FK auf `ADRESSEN.OID` – im `int_legacy_erp_import`-Addon fälschlich als `Char` statt `Many2one` modelliert |
 | Gruppe | `ARTIKEL.GRUPPE` | Verknüpfung | FK auf `ARTIKELGRUPPEN.GID` – gleicher Addon-Fehler |
-| Hersteller-Ident-Codes BT/LH/FY/…/SI | `ARTIKEL.IDENTNR1-12` | Info | reine Kennzeichnungswerte |
+| Hersteller-Ident-Codes BT/LH/FY/NK/KO/VK/BE/TK/DB/HO/WE/SI | `ARTIKEL.IDENTNR1-12` | Info | reine Kennzeichnungswerte; Positions-Zuordnung codebestätigt (DFM-Labels, zwei Formulare) und per Live-Screenshot bestätigt, siehe `aktuelle-exe-validierung.md`. Klarnamen nur für BT/LH/NK bekannt |
 
 ### Weitere Tabs
 

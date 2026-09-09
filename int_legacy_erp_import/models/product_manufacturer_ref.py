@@ -21,6 +21,7 @@ class ProductLegacyManufacturerRef(models.Model):
             ("DB", "DB"),
             ("HO", "HO"),
             ("WE", "WE"),
+            ("SI", "SI"),
         ],
         string="Hersteller",
         required=True,
