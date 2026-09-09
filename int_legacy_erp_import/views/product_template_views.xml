@@ -13,8 +13,8 @@
                 </group>
                 <group string="Beschaffung">
                     <field name="x_alt_bestellnr" invisible="not x_alt_bestellnr"/>
-                    <field name="x_alt_hauptlieferant" invisible="not x_alt_hauptlieferant"/>
-                    <field name="x_alt_gruppe" invisible="not x_alt_gruppe"/>
+                    <field name="x_alt_hauptlieferant_id" invisible="not x_alt_hauptlieferant_id"/>
+                    <field name="x_alt_gruppe_id" invisible="not x_alt_gruppe_id"/>
                     <field name="x_alt_einheit" invisible="not x_alt_einheit"/>
                 </group>
                 <separator string="Hersteller-/Ident-Referenzen"/>
