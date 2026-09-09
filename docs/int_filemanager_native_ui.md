@@ -1061,6 +1061,12 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     unabhängig von Baustein 2 und eigenständige Product-/Migrationsentscheidung: DB-Spaltentyp-
     Änderung an einer Tabelle mit ~87k Zeilen).
 
+    **Behoben (2026-09-09):** `hash_size` auf `fields.Float(digits=(0, 0))` umgestellt, exakt
+    dasselbe Muster wie `size`. Odoo konvertiert die Spalte beim Modul-Update automatisch
+    (`int4` → `double precision`), ohne eigenes Migrationsskript - wie bereits beim `size`-Fix
+    beobachtet. `meta_source_size` trägt theoretisch dasselbe Risiko, ist aber weiterhin
+    bewusst nicht Teil dieses Fixes (kein gemeldeter Fehlerfall dafür).
+
 24. **Baustein 4 umgesetzt (2026-09-06): Ampel-Freigabe über `state_selection`**
     ([int_filemanager_paperoffice_recherche.md](int_filemanager_paperoffice_recherche.md)). Neues
     Feld `state` auf `int_filemanager.file` (`fields.Selection`, Werte `normal`/`blocked`/`done` -

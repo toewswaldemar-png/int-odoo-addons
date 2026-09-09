@@ -268,13 +268,9 @@ zurückgestellt - bei zukünftigem Bedarf müsste neu evaluiert werden, ob sich 
 offenen Voraussetzungen (Odoo Sign-Lizenzierung, GoBD-Anforderung, fetchmail.server auf HM-SRV)
 geändert hat, nicht einfach hier weitermachen.
 
-Separat noch offen, unabhängig von diesem Ausbau: der Hash-Cron-Bug bei Dateien >2GB (siehe
-[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 23, letzter Absatz) - als
-Hintergrund-Task geflaggt (`task_8eab8523`).
-
-**Separat geflaggter, unabhängiger Bug (noch offen):** Hash-Cron schlägt bei Dateien >2GB fehl
-(`hash_size` int4-Overflow) - siehe [int_filemanager_native_ui.md](int_filemanager_native_ui.md),
-Punkt 23, letzter Absatz.
+**Behoben (2026-09-09):** der Hash-Cron-Bug bei Dateien >2GB (`hash_size` int4-Overflow) ist
+gefixt - siehe [int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 23, letzter
+Absatz.
 
 **Bevor an einem der offenen Bausteine weitergearbeitet wird, unbedingt zuerst lesen:**
 [int_filemanager_native_ui.md](int_filemanager_native_ui.md) (Punkte 15-22) - dort steht die

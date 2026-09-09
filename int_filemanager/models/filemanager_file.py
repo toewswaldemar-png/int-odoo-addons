@@ -212,7 +212,11 @@ class IntFilemanagerFile(models.Model):
         "ein asynchroner Cron berechnet). Grundlage fuer die Identitaetserkennung "
         "bei einer Umbenennung/Verschiebung, die stattfand, waehrend Odoo nicht lief.",
     )
-    hash_size = fields.Integer(copy=False, help="Groesse zum Zeitpunkt der Hash-Berechnung.")
+    hash_size = fields.Float(
+        copy=False, digits=(0, 0),
+        help="Groesse zum Zeitpunkt der Hash-Berechnung. Float statt Integer wie bei size: "
+        "int4 kappt bei ~2,1 GB, reale Dateien werden bis 15 GB gross.",
+    )
     hash_source_mtime_ns = fields.Char(
         copy=False, help="mtime_ns zum Zeitpunkt der Hash-Berechnung, verlustfrei als Text."
     )
