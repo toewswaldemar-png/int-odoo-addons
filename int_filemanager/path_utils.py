@@ -1,9 +1,26 @@
 import os
+import secrets
 import unicodedata
+from datetime import datetime
 
 from odoo.exceptions import ValidationError
 
+from .mediameta import AUDIO_EXTENSIONS, IMAGE_EXTENSIONS, PDF_EXTENSIONS
+
 DEFAULT_ROOT = "/mnt/hm-daten"
+
+# Nur fuer friendly_fallback_name() - mediameta.py hat bewusst kein Video (Phase 4 hat Video
+# explizit ausgeklammert), aber fuer die Wortwahl beim Umbenennen reicht die Dateiendung, keine
+# echte Metadatenextraktion noetig. Dieselben drei Endungen wie
+# filemanager_controller_mixin.js's VIDEO_EXTENSIONS (Browser-abspielbar ohne Zusatz-Codec).
+_VIDEO_EXTENSIONS = {"mp4", "webm", "ogv"}
+
+_TYPE_WORDS = {
+    **{ext: "Foto" for ext in IMAGE_EXTENSIONS},
+    **{ext: "Scan" for ext in PDF_EXTENSIONS},
+    **{ext: "Audio" for ext in AUDIO_EXTENSIONS},
+    **{ext: "Video" for ext in _VIDEO_EXTENSIONS},
+}
 
 
 def get_root(env):
@@ -44,6 +61,24 @@ def safe_name(name):
     if not name or name in (".", "..") or "/" in name or "\\" in name:
         raise ValidationError("Ungültiger Name.")
     return name
+
+
+def friendly_fallback_name(name):
+    """Ersetzt Uploads mit erkennbar bedeutungslosem Namen (kein einziger Buchstabe
+    irgendwo im Namen - z.B. rein numerische IDs von Handy-/Cloud-Uploads wie
+    "17890421015741792308593513700259.jpg") durch ein sprechendes Schema
+    Typ_JJJJMMTT_HHMMSS_xxxx.<ext>, Typ anhand der Endung aus _TYPE_WORDS (Default
+    "Dokument"). Enthaelt der Name mindestens einen Buchstaben, gilt er als bereits
+    sinnvoll benannt und bleibt unveraendert - kein Ersatz fuer z.B. "Rechnung_2026.pdf"."""
+    stem, ext = os.path.splitext(name)
+    if any(ch.isalpha() for ch in stem):
+        return name
+    ext = ext.lstrip(".").lower()
+    word = _TYPE_WORDS.get(ext, "Dokument")
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    suffix = secrets.token_hex(2)
+    base = f"{word}_{stamp}_{suffix}"
+    return f"{base}.{ext}" if ext else base
 
 
 def make_shareable(abs_path, is_dir):

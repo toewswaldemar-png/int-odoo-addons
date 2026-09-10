@@ -11,7 +11,14 @@ from odoo.http import request
 
 from .. import authz, write_service
 from ..index_utils import index_move_tree, index_remove_tree, index_upsert, rename_entry
-from ..path_utils import get_root, make_shareable, resolve_path, safe_name, to_relative
+from ..path_utils import (
+    friendly_fallback_name,
+    get_root,
+    make_shareable,
+    resolve_path,
+    safe_name,
+    to_relative,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -218,7 +225,10 @@ class IntFilemanagerController(http.Controller):
 
         saved = []
         for f in request.httprequest.files.getlist("ufile"):
-            name = safe_name(f.filename)
+            # friendly_fallback_name() greift nur bei erkennbar bedeutungslosen Namen
+            # (kein Buchstabe irgendwo drin, z.B. rein numerische Handy-/Cloud-Upload-IDs) -
+            # sinnvoll benannte Uploads bleiben unveraendert.
+            name = friendly_fallback_name(safe_name(f.filename))
             target = os.path.join(abs_dir, name)
             target_rel = to_relative(request.env, target)
             existing = None
