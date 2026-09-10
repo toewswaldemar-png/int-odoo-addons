@@ -242,7 +242,15 @@ class IntFilemanagerController(http.Controller):
                 with open(target, "wb") as dst:
                     f.save(dst)
                 make_shareable(target, is_dir=False)
-                index_upsert(request.env, target)
+                # Kein eigener index_upsert() hier - open() oben loest bereits ein
+                # inotify-CREATE aus, das der Watcher in einer eigenen Transaktion
+                # verarbeitet. Ein zweiter, gleichzeitiger index_upsert() aus dieser
+                # Request-Transaktion race't dagegen: beide sehen noch keinen Datensatz,
+                # beide versuchen create(), der zweite committete Versuch verletzt
+                # _path_uniq (UNIQUE(path)) - live als 422 "existiert bereits ein
+                # Metadaten-Eintrag" beobachtet. Gleiche Lehre wie beim ONLYOFFICE-Sync
+                # und dem WebDAV-PUT-Handler: der Watcher sieht den Diskschreibvorgang
+                # ohnehin, nur einer von beiden darf den Index schreiben.
             saved.append(name)
         return self._json_response({"ok": True, "saved": saved})
 
