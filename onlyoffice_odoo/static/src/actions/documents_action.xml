@@ -12,7 +12,13 @@
              nachvollzogen: .o_action_manager.scrollHeight=640 vs. clientHeight=594 bei 640px
              Viewport, exakt die 46px Navbar-Differenz). -->
         <div class="o-onlyoffice-documents d-flex flex-column h-100 overflow-hidden">
-            <div class="o_control_panel_breadcrumbs d-flex align-items-center px-3 py-2 border-bottom flex-shrink-0">
+            <!-- bg-white: Odoos echtes Control-Panel setzt Weiss auf dem AEUSSEREN .o_control_panel-
+                 Wrapper (voll ueber die ganze Zeile), das hier nur namentlich uebernommene innere
+                 .o_control_panel_breadcrumbs ist selbst transparent - ohne bg-white blieb nur das
+                 kleine <ol class="breadcrumb"> (Bootstraps eigenes Weiss nur um den Pfad-Text)
+                 weiss, der Rest der Zeile zeigte grau durch - sah "fleckig" aus statt wie eine
+                 durchgehende weisse Leiste (live so beschrieben und nachvollzogen). -->
+            <div class="o_control_panel_breadcrumbs d-flex align-items-center px-3 py-2 border-bottom flex-shrink-0 bg-white">
                 <Breadcrumbs breadcrumbs="env.config.breadcrumbs"/>
             </div>
             <!-- Stabiler Wrapper um #doceditor, siehe documents_action.scss: ONLYOFFICEs eigenes
