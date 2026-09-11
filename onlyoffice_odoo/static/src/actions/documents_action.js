@@ -47,6 +47,17 @@ export class DocumentsAction extends Component {
       }
     })
   }
+  get backLabel() {
+    // Statt fest "Zurück zum Auftrag" (nur fuer den urspruenglichen Reparaturauftrags-
+    // Anwendungsfall geschrieben): Name des vorherigen Breadcrumb-Eintrags nehmen, damit die
+    // Beschriftung passt, egal von wo aus der Editor geoeffnet wurde (Auftrag, Dateimanager,
+    // ...). env.config.breadcrumbs traegt die aktuelle Aktion selbst als letzten Eintrag -
+    // der vorletzte ist das Ziel von goBackToRecord() (window.history.back()). Kein Eintrag
+    // vorhanden (z.B. Direktaufruf) -> generischer Fallback statt eines falschen Namens.
+    const breadcrumbs = this.env.config?.breadcrumbs || []
+    const previous = breadcrumbs.length > 1 ? breadcrumbs[breadcrumbs.length - 2] : null
+    return previous && previous.name ? `Zurück zu ${previous.name}` : "Zurück"
+  }
   goBackToRecord() {
     window.history.back()
   }

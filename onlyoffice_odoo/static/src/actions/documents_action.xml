@@ -27,7 +27,7 @@
       <body class="o-onlyoffice-documents">
         <div class="o-onlyoffice-back-bar">
           <button class="btn btn-link p-0" t-on-click="goBackToRecord">
-            <i class="fa fa-arrow-left me-1"/> Zurück zum Auftrag
+            <i class="fa fa-arrow-left me-1"/><t t-esc="backLabel"/>
           </button>
         </div>
         <div id="doceditor" />
