@@ -56,6 +56,115 @@ patch(ListRenderer.prototype, {
         };
         onMounted(() => document.addEventListener("click", onDocumentClick, true));
         onWillUnmount(() => document.removeEventListener("click", onDocumentClick, true));
+
+        // Rubberband-Auswahl (Ziehen ueber leeren Platz spannt ein Auswahlrechteck auf,
+        // markiert alle geschnittenen Zeilen) - Nutzerwunsch, Datei-Explorer-Semantik.
+        // Zeilen-Positionen werden einmal bei Drag-Start eingesammelt (this.tableRef.el, siehe
+        // list_renderer.js: this.tableRef = useRef("table")), nicht bei jedem mousemove neu
+        // vermessen - bei vielen Dateien waere wiederholtes getBoundingClientRect() pro Zeile
+        // und Mausbewegung spuerbar langsam. this.props.list.records und die gerenderten
+        // tr.o_data_row-Zeilen haben dieselbe Reihenfolge (kein Grouping in dieser Ansicht),
+        // deshalb per Index gezippt statt ueber ein DOM-Attribut aufgeloest.
+        const onMouseDown = (ev) => {
+            if (ev.button !== 0 || !this.canSelectRecord) {
+                return;
+            }
+            // Start auf einer Datenzeile bleibt dem bestehenden Drag&Drop-Verschieben
+            // vorbehalten (eigener Event-Pfad, draggable="true"/dragstart, siehe
+            // filemanager_controller_mixin.js) - Rubberband startet nur auf echt leerem Platz.
+            // Ebenso ausgenommen: Checkbox-Spalte, Tabellenkopf (Sortier-Klicks), Control-Panel,
+            // SearchPanel-Seitenleiste, und jedes offene Modal/Dialog (live beobachtet: ohne
+            // diese Ausnahme loeste ein Rubberband-Versuch INNERHALB eines Dialogs - z.B. dem
+            // Odoo-Fehler-Modal selbst - einen echten Absturz aus: der Browser startet bei
+            // Ziehen ueber Text einen nativen Text-Selektions-Drag, der global ein "dragstart"-
+            // Ereignis feuert, das wiederum onWindowDragStartRecord() in
+            // filemanager_controller_mixin.js trifft - dort wird ev.target als Element
+            // angenommen (ev.target.closest("[data-id]")), bei einem Text-Selektions-Drag ist
+            // ev.target aber oft ein reiner Textknoten ohne .closest -> TypeError, Absturz der
+            // ganzen Ansicht. document.querySelector() statt closest(), da document.activeElement
+            // bei einem Dialog nicht zuverlaessig innerhalb des Modal-DOM liegt.
+            if (
+                ev.target.closest("tr.o_data_row") ||
+                ev.target.closest(".o_list_record_selector") ||
+                ev.target.closest("thead") ||
+                ev.target.closest(".o_control_panel") ||
+                ev.target.closest(".o_search_panel") ||
+                ev.target.closest(".modal, .o_dialog") ||
+                document.querySelector(".modal.show, .o_dialog")
+            ) {
+                return;
+            }
+            if (!this.tableRef.el) {
+                return;
+            }
+            const records = this.props.list.records;
+            const rowEls = [...this.tableRef.el.querySelectorAll("tr.o_data_row")];
+            if (rowEls.length !== records.length) {
+                return;
+            }
+            // preventDefault auf dem mousedown selbst (nicht erst im mousemove, siehe unten):
+            // verhindert, dass der Browser ueberhaupt erst eine native Text-Selektion/einen
+            // nativen Drag startet, falls der Mausdown zufaellig auf/neben selektierbarem Text
+            // in der Leerflaeche liegt - derselbe Fehlerklasse wie oben, nur vorbeugend statt
+            // nur reaktiv per Modal-Ausschluss.
+            ev.preventDefault();
+            const rowRects = rowEls.map((el, i) => ({ record: records[i], rect: el.getBoundingClientRect() }));
+            const additive = ev.ctrlKey || ev.metaKey;
+            const initiallySelected = additive ? new Set(records.filter((r) => r.selected)) : new Set();
+            const startX = ev.clientX;
+            const startY = ev.clientY;
+            let dragging = false;
+            let overlay = null;
+
+            const onMouseMove = (moveEv) => {
+                const dx = moveEv.clientX - startX;
+                const dy = moveEv.clientY - startY;
+                if (!dragging) {
+                    // Schwelle von 4px: ein einfacher Klick ohne Bewegung soll nicht als
+                    // (Mikro-)Rubberband zaehlen, sondern normal ueber onCellClicked laufen.
+                    if (Math.hypot(dx, dy) < 4) {
+                        return;
+                    }
+                    dragging = true;
+                    overlay = document.createElement("div");
+                    overlay.className = "o_int_filemanager_rubberband";
+                    document.body.appendChild(overlay);
+                }
+                moveEv.preventDefault();
+                const x1 = Math.min(startX, moveEv.clientX);
+                const x2 = Math.max(startX, moveEv.clientX);
+                const y1 = Math.min(startY, moveEv.clientY);
+                const y2 = Math.max(startY, moveEv.clientY);
+                overlay.style.left = x1 + "px";
+                overlay.style.top = y1 + "px";
+                overlay.style.width = x2 - x1 + "px";
+                overlay.style.height = y2 - y1 + "px";
+                for (const { record, rect } of rowRects) {
+                    const intersects = rect.left < x2 && rect.right > x1 && rect.top < y2 && rect.bottom > y1;
+                    const shouldSelect = intersects || initiallySelected.has(record);
+                    if (record.selected !== shouldSelect) {
+                        record.toggleSelection(shouldSelect);
+                    }
+                }
+                // record.toggleSelection() aendert record.selected korrekt (per Debug-Log
+                // bestaetigt), aber Owl rendert die Checkboxen/das "N ausgewaehlt"-Badge nicht
+                // automatisch neu - anders als bei einem normalen Odoo-eigenen Event-Handler
+                // (t-on-click), wo Owls Scheduler den Flush ohnehin an den Klick-Callback
+                // haengt, laeuft dieser Handler hier ueber einen rohen document-Listener,
+                // ausserhalb von Owls eigenem Render-Zyklus. this.render() stoesst den Flush
+                // manuell an.
+                this.render();
+            };
+            const onMouseUp = () => {
+                document.removeEventListener("mousemove", onMouseMove);
+                document.removeEventListener("mouseup", onMouseUp);
+                overlay?.remove();
+            };
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
+        };
+        onMounted(() => document.addEventListener("mousedown", onMouseDown));
+        onWillUnmount(() => document.removeEventListener("mousedown", onMouseDown));
     },
     async onCellClicked(record, column, ev, newWindow) {
         if (this.props.list.resModel !== "int_filemanager.file" || ev.detail === 0) {
