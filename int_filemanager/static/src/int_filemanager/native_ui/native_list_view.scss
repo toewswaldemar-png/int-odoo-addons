@@ -68,6 +68,15 @@
         height: 20px;
         flex: none;
     }
+
+    // fa-folder ist ein Font-Icon ohne eigene Pixelgroesse (erbt sonst die Zeilen-Schriftgroesse,
+    // ~13px) - explizit auf dieselbe 20px-Groesse wie .o_image oben gebracht, sonst wirkt der
+    // Ordner neben Dateien sichtbar kleiner (Nutzerreport 2026-09-11).
+    .fa-folder {
+        width: 20px;
+        font-size: 20px;
+        text-align: center;
+    }
 }
 
 // Drag&Drop-Upload-Overlay (native_list_view.js/.xml) - position:fixed statt relativ zum Root-Div,
