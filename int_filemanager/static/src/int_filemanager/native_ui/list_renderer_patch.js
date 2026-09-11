@@ -26,6 +26,14 @@ patch(ListRenderer.prototype, {
         if (this.props.list.resModel !== "int_filemanager.file") {
             return;
         }
+        // Wird von der Rubberband-Logik unten (nach dem Zeilenausschluss) auf true gesetzt,
+        // sobald ein echter Zieh-Vorgang (nicht nur ein Klick) endet - der Browser feuert nach
+        // mouseup naemlich trotzdem noch ein normales "click"-Ereignis an der Loslass-Position,
+        // die bei einem Rubberband fast immer auf leerem Platz liegt. Ohne diese Sperre hat
+        // genau dieser nachgelagerte Klick die gerade gezogene Auswahl sofort wieder aufgehoben
+        // (live so beobachtet: Rechteck verschwindet beim Loslassen, Auswahl leer).
+        let rubberbandJustEnded = false;
+
         // Klick ausserhalb der Liste (leerer Platz unterhalb der Zeilen, Seitenleiste, Navbar
         // oben, aber auch Suchleiste/Pager/"Neu"-Button im Control-Panel) deselektiert alles -
         // Nutzerwunsch, Datei-Explorer-Semantik. Bewusst NICHT deselektiert: Klicks auf eine
@@ -34,9 +42,18 @@ patch(ListRenderer.prototype, {
         // "Aktionen"-Dropdown-Button/o_cp_action_menus daneben - live per DOM-Chain verifiziert,
         // der Button liegt NICHT innerhalb von o_selection_box selbst; ein zu enger Selektor
         // deselektierte die Auswahl schon beim Klick auf "Aktionen", bevor die Aktion greifen
-        // konnte) und auf offene Dropdowns/Dialoge (Aktionen-Menuepunkte werden teils
-        // ausserhalb des Control-Panels in den body portiert).
+        // konnte), auf offene Dropdowns/Dialoge (Aktionen-Menuepunkte werden teils ausserhalb
+        // des Control-Panels in den body portiert) und auf den Tabellenkopf (thead) - dort
+        // sitzt Odoos native "Alle auswaehlen"-Kopfzeilen-Checkbox (list_renderer.xml:
+        // t-on-click.stop="toggleSelection"). Diese Sperre laeuft in der Capture-Phase VOR
+        // Odoos eigenem Klick-Handler: ohne die thead-Ausnahme deselektierte sie zuerst alles,
+        // und Odoos toggleSelection() sah danach immer "0 ausgewaehlt" -> waehlte alles wieder
+        // aus, statt abzuwaehlen - live so beobachtet ("Auswaehlen geht, Abwaehlen nicht").
         const onDocumentClick = (ev) => {
+            if (rubberbandJustEnded) {
+                rubberbandJustEnded = false;
+                return;
+            }
             if (!this.props.list.selection.length) {
                 return;
             }
@@ -44,7 +61,8 @@ patch(ListRenderer.prototype, {
                 ev.target.closest("tr.o_data_row") ||
                 ev.target.closest(".o_selection_container") ||
                 ev.target.closest(".dropdown-menu, .o-dropdown--menu") ||
-                ev.target.closest(".modal, .o_dialog")
+                ev.target.closest(".modal, .o_dialog") ||
+                ev.target.closest("thead")
             ) {
                 return;
             }
@@ -116,6 +134,41 @@ patch(ListRenderer.prototype, {
             let dragging = false;
             let overlay = null;
 
+            // record.toggleSelection() ist asynchron (this.model.mutex.exec(), siehe
+            // relational_model/record.js) - Owl rendert danach auch nicht automatisch neu
+            // (dieser Handler laeuft ueber einen rohen document-Listener, ausserhalb von Owls
+            // eigenem Render-Zyklus, siehe applySelection unten). Bei schnellen
+            // Mausbewegungen feuern mehrere mousemove-Ereignisse, bevor die vorherige Mutation
+            // durch den Mutex durch ist - ein synchrones render() direkt nach dem (nicht
+            // awaited) toggleSelection() zeigte deshalb live einen veralteten Zwischenstand,
+            // teils blieb am Ende nur eine einzelne Zeile ausgewaehlt statt aller geschnittenen
+            // (beobachtet: zwei rasch aufeinanderfolgende mousemove-Ereignisse ueberschnitten
+            // sich, das Ergebnis der ersten Mutation ging verloren). isSelecting verhindert
+            // ueberlappende Durchlaeufe waehrend des Ziehens (rein visuelles Overlay bleibt
+            // trotzdem bei jeder Bewegung aktuell); der finale, garantiert korrekte Durchlauf
+            // passiert erst in onMouseUp per await.
+            let isSelecting = false;
+            let lastRect = null;
+            const applySelection = async (x1, x2, y1, y2) => {
+                if (isSelecting) {
+                    return;
+                }
+                isSelecting = true;
+                try {
+                    const promises = [];
+                    for (const { record, rect } of rowRects) {
+                        const intersects = rect.left < x2 && rect.right > x1 && rect.top < y2 && rect.bottom > y1;
+                        const shouldSelect = intersects || initiallySelected.has(record);
+                        if (record.selected !== shouldSelect) {
+                            promises.push(record.toggleSelection(shouldSelect));
+                        }
+                    }
+                    await Promise.all(promises);
+                    this.render();
+                } finally {
+                    isSelecting = false;
+                }
+            };
             const onMouseMove = (moveEv) => {
                 const dx = moveEv.clientX - startX;
                 const dy = moveEv.clientY - startY;
@@ -139,26 +192,41 @@ patch(ListRenderer.prototype, {
                 overlay.style.top = y1 + "px";
                 overlay.style.width = x2 - x1 + "px";
                 overlay.style.height = y2 - y1 + "px";
-                for (const { record, rect } of rowRects) {
-                    const intersects = rect.left < x2 && rect.right > x1 && rect.top < y2 && rect.bottom > y1;
-                    const shouldSelect = intersects || initiallySelected.has(record);
-                    if (record.selected !== shouldSelect) {
-                        record.toggleSelection(shouldSelect);
-                    }
-                }
-                // record.toggleSelection() aendert record.selected korrekt (per Debug-Log
-                // bestaetigt), aber Owl rendert die Checkboxen/das "N ausgewaehlt"-Badge nicht
-                // automatisch neu - anders als bei einem normalen Odoo-eigenen Event-Handler
-                // (t-on-click), wo Owls Scheduler den Flush ohnehin an den Klick-Callback
-                // haengt, laeuft dieser Handler hier ueber einen rohen document-Listener,
-                // ausserhalb von Owls eigenem Render-Zyklus. this.render() stoesst den Flush
-                // manuell an.
-                this.render();
+                lastRect = { x1, x2, y1, y2 };
+                applySelection(x1, x2, y1, y2);
             };
-            const onMouseUp = () => {
+            const onMouseUp = async () => {
                 document.removeEventListener("mousemove", onMouseMove);
                 document.removeEventListener("mouseup", onMouseUp);
                 overlay?.remove();
+                // Synchron VOR jedem await setzen: der Browser feuert nach mouseup so gut wie
+                // sofort noch ein "click"-Ereignis (derselbe Kontext-Wechsel, keine eigene
+                // Task-Warteschlange) - wuerde diese Zeile erst NACH einem await stehen, liefe
+                // onDocumentClick fuer diesen Klick bereits durch, bevor rubberbandJustEnded
+                // ueberhaupt auf true gesetzt ist (live als Bug beobachtet: mit await davor
+                // blieb die Sperre wirkungslos, die Auswahl verschwand beim Loslassen trotzdem).
+                rubberbandJustEnded = dragging;
+                if (dragging) {
+                    setTimeout(() => {
+                        rubberbandJustEnded = false;
+                    }, 300);
+                }
+                // Finaler, autoritativer Durchlauf (bewusst OHNE isSelecting-Guard, direkt
+                // awaited) - garantiert den korrekten Endzustand, selbst wenn waehrend des
+                // Ziehens Zwischenschritte uebersprungen wurden.
+                if (dragging && lastRect) {
+                    const { x1, x2, y1, y2 } = lastRect;
+                    const promises = [];
+                    for (const { record, rect } of rowRects) {
+                        const intersects = rect.left < x2 && rect.right > x1 && rect.top < y2 && rect.bottom > y1;
+                        const shouldSelect = intersects || initiallySelected.has(record);
+                        if (record.selected !== shouldSelect) {
+                            promises.push(record.toggleSelection(shouldSelect));
+                        }
+                    }
+                    await Promise.all(promises);
+                    this.render();
+                }
             };
             document.addEventListener("mousemove", onMouseMove);
             document.addEventListener("mouseup", onMouseUp);
