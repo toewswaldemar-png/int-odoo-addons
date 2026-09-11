@@ -32,6 +32,7 @@ import { ListController } from "@web/views/list/list_controller";
 import { Chatter } from "@mail/chatter/web_portal/chatter";
 import { filemanagerControllerMixin } from "./filemanager_controller_mixin";
 import { IntFilemanagerListRenderer } from "./native_list_renderer";
+import { IntFilemanagerSearchModel } from "./native_search_model";
 
 export class IntFilemanagerListController extends filemanagerControllerMixin(ListController) {
     static template = "int_filemanager.ListView";
@@ -60,4 +61,9 @@ registry.category("views").add("int_filemanager_list", {
     // separater list_renderer_patch.js mit manuellen resModel-Laufzeitchecks, 2026-09-11
     // hierher umgezogen fuer dieselbe Kapselung wie beim Controller.
     Renderer: IntFilemanagerListRenderer,
+    // Ordner-Baum-Domain-Logik (parent_id-Navigation) - siehe native_search_model.js fuer die
+    // ausfuehrliche Begruendung. Derselbe Registry-Umzug wie Renderer oben, vormals
+    // search_model_patch.js (patch(SearchModel.prototype, ...)). Braucht denselben Eintrag
+    // auch in native_kanban_view.js - beide Ansichten teilen sich dieselbe Ordner-Navigation.
+    SearchModel: IntFilemanagerSearchModel,
 });

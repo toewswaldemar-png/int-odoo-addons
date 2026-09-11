@@ -50,18 +50,19 @@
 // this scoped to actions that explicitly opt in, rather than recursing for every domain-restricted
 // use of this view.
 //
-// Scoped to int_filemanager.file via this.resModel so every other SearchPanel category in
-// the instance (product categories, stock reports, ...) keeps Odoo's default behaviour
-// untouched - same scoping pattern int_web_tweaks already uses in list_column_reorder.js
-// (there via this.props.list.resModel).
-import { patch } from "@web/core/utils/patch";
+// Echte Unterklasse statt patch(SearchModel.prototype, ...) - view.js reicht "SearchModel" aus dem
+// View-Deskriptor genauso durch wie "Controller"/"Renderer" (descr.SearchModel), und with_search.js
+// nutzt es als expliziten Fallback-Slot ("this.props.SearchModel || SearchModel") - live gegen
+// Odoos eigenen Quellcode verifiziert, derselbe austauschbare Registry-Schluessel wie beim
+// Renderer-Umzug (siehe native_list_renderer.js). Registriert in BEIDEN Views
+// (native_list_view.js UND native_kanban_view.js, siehe SearchModel: IntFilemanagerSearchModel
+// dort) - anders als beim Renderer (nur die Liste hat eine eigene Klick-Semantik) braucht die
+// Ordner-Navigation dieselbe Domain-Logik in beiden Ansichten. Kapselung kommt damit aus der
+// Registrierung, kein resModel-Laufzeit-Check mehr noetig.
 import { SearchModel } from "@web/search/search_model";
 
-patch(SearchModel.prototype, {
+export class IntFilemanagerSearchModel extends SearchModel {
     _getCategoryDomain(excludedCategoryId) {
-        if (this.resModel !== "int_filemanager.file") {
-            return super._getCategoryDomain(excludedCategoryId);
-        }
         const recursive = this.query.length > 0 || Boolean(this.globalContext.int_filemanager_recursive);
         const domain = [];
         for (const category of this.categories) {
@@ -88,5 +89,5 @@ patch(SearchModel.prototype, {
             domain.push([category.fieldName, operator, category.activeValueId]);
         }
         return domain;
-    },
-});
+    }
+}
