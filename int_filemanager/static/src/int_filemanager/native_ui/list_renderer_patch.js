@@ -29,19 +29,20 @@ patch(ListRenderer.prototype, {
         // Klick ausserhalb der Liste (leerer Platz unterhalb der Zeilen, Seitenleiste, Navbar
         // oben, aber auch Suchleiste/Pager/"Neu"-Button im Control-Panel) deselektiert alles -
         // Nutzerwunsch, Datei-Explorer-Semantik. Bewusst NICHT deselektiert: Klicks auf eine
-        // Datenzeile selbst (eigene Logik in onCellClicked unten), auf die "N ausgewaehlt"/
-        // Aktionen-Box selbst (sonst waere die Aktionen-Schaltflaeche der Auswahl nie klickbar,
-        // da der Klick darauf schon deselektieren wuerde, bevor die Aktion greift) und auf
-        // offene Dropdowns/Dialoge (Aktionen-Menuepunkte werden teils ausserhalb des
-        // Control-Panels in den body portiert). Bewusst NUR .o_selection_box ausgenommen, nicht
-        // das gesamte .o_control_panel - Suchleiste/Pager/View-Umschalter sollen deselektieren.
+        // Datenzeile selbst (eigene Logik in onCellClicked unten), auf .o_selection_container
+        // (umfasst sowohl das "N ausgewaehlt"-Badge/o_selection_box ALS AUCH den separaten
+        // "Aktionen"-Dropdown-Button/o_cp_action_menus daneben - live per DOM-Chain verifiziert,
+        // der Button liegt NICHT innerhalb von o_selection_box selbst; ein zu enger Selektor
+        // deselektierte die Auswahl schon beim Klick auf "Aktionen", bevor die Aktion greifen
+        // konnte) und auf offene Dropdowns/Dialoge (Aktionen-Menuepunkte werden teils
+        // ausserhalb des Control-Panels in den body portiert).
         const onDocumentClick = (ev) => {
             if (!this.props.list.selection.length) {
                 return;
             }
             if (
                 ev.target.closest("tr.o_data_row") ||
-                ev.target.closest(".o_selection_box") ||
+                ev.target.closest(".o_selection_container") ||
                 ev.target.closest(".dropdown-menu, .o-dropdown--menu") ||
                 ev.target.closest(".modal, .o_dialog")
             ) {
