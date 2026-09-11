@@ -1,0 +1,16 @@
+// ONLYOFFICEs eigenes api.js ersetzt #doceditor per replaceChild() durch ein rohes <iframe> mit
+// nur width/height als HTML-Attributen, keinen CSS-Klassen (siehe documents_action.xml). Dieser
+// Selektor greift deshalb ueber den stabilen Wrapper, nicht ueber das Iframe selbst - normale
+// CSS-Deklarationen haben ohnehin Vorrang vor den praesentativen width/height-Attributen, kein
+// !important noetig.
+.o-onlyoffice-editor-container {
+    position: relative;
+
+    iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+}

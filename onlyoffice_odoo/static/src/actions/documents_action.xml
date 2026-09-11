@@ -1,43 +1,37 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
     <t t-name="onlyoffice_odoo.Editor" owl="1">
-    <html>
-      <head>
-        <meta charset="UTF-8" />
-        <title> ONLYOFFICE </title>
-        <style>
-          html, body {
-            height: 100%;
-          }
-          .o-onlyoffice-back-bar {
-            padding: 6px 12px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            font-size: 0.9rem;
-          }
-          .o-onlyoffice-back-bar button {
-            color: #714B67;
-            text-decoration: none;
-          }
-          .o-onlyoffice-back-bar button:hover {
-            text-decoration: underline;
-          }
-        </style>
-      </head>
-      <body class="o-onlyoffice-documents">
-        <div class="o-onlyoffice-back-bar">
-          <button class="btn btn-link p-0" t-on-click="goBackToRecord">
-            <i class="fa fa-arrow-left me-1"/><t t-esc="backLabel"/>
-          </button>
+        <!-- h-100, NICHT vh-100: Odoos eigener .o_action_manager (direktes Elternelement bei
+             Ausfuehrung als Client-Action) hat eine FESTE Pixel-Hoehe (Viewport minus Navbar,
+             live vermessen), keine vh-100-Skalierung noetig oder gewuenscht - vh-100 zaehlt die
+             Navbar-Hoehe mit und macht uns dadurch systematisch zu hoch. Live beobachtet: das
+             liess .o_action_manager intern scrollen (scrollHeight > clientHeight), und sobald
+             ONLYOFFICEs iframe nach dem Laden den Fokus zieht, scrollt der Browser automatisch
+             ein Stueck herunter (scrollTop sprang auf ~14px) - genau das kappte die Breadcrumb-
+             Zeile oben ("verschiebt sich nach oben, abgeschnitten", live per DevTools-JS
+             nachvollzogen: .o_action_manager.scrollHeight=640 vs. clientHeight=594 bei 640px
+             Viewport, exakt die 46px Navbar-Differenz). -->
+        <div class="o-onlyoffice-documents d-flex flex-column h-100 overflow-hidden">
+            <div class="o_control_panel_breadcrumbs d-flex align-items-center px-3 py-2 border-bottom flex-shrink-0">
+                <Breadcrumbs breadcrumbs="env.config.breadcrumbs"/>
+            </div>
+            <!-- Stabiler Wrapper um #doceditor, siehe documents_action.scss: ONLYOFFICEs eigenes
+                 api.js (createIframe()/DocEditor-Konstruktor) ersetzt das #doceditor-Div per
+                 target.parentNode.replaceChild(iframe, target) durch ein rohes <iframe> -
+                 jede Klasse/jedes Style, das direkt auf #doceditor sitzt, geht dabei verloren
+                 (live im geladenen api.js verifiziert, Zeile ~606). Deshalb sitzen
+                 flex-grow-1/overflow-hidden/min-height hier auf DIESEM Wrapper (der die
+                 Ersetzung uebersteht, da nur sein Kind ausgetauscht wird), das SCSS greift
+                 das neu eingefuegte iframe generisch per Selektor ab, nicht per ID. -->
+            <div class="o-onlyoffice-editor-container flex-grow-1 overflow-hidden" style="min-height: 0;">
+                <div id="doceditor" />
+            </div>
+            <div id="error" class="w-25 m-auto my-5 py-5 d-flex flex-column d-none">
+                <img src="/onlyoffice_odoo/static/svg/onlyoffice_logo.svg" alt="ONLYOFFICE logo" />
+                <div class="my-3 alert alert-danger">
+                    <p> ONLYOFFICE cannot be reached. Please contact admin. </p>
+                </div>
+            </div>
         </div>
-        <div id="doceditor" />
-        <div id="error" class="w-25 m-auto my-5 py-5 d-flex flex-column d-none">
-          <img src="/onlyoffice_odoo/static/svg/onlyoffice_logo.svg" alt="ONLYOFFICE logo" />
-          <div class="my-3 alert alert-danger">
-            <p> ONLYOFFICE cannot be reached. Please contact admin. </p>
-          </div>
-        </div>
-      </body>
-    </html>
-  </t>
+    </t>
 </templates>

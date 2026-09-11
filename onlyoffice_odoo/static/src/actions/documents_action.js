@@ -4,6 +4,7 @@ import { router } from "@web/core/browser/router"
 import { rpc } from "@web/core/network/rpc"
 import { registry } from "@web/core/registry"
 import { useService } from "@web/core/utils/hooks"
+import { Breadcrumbs } from "@web/search/breadcrumbs/breadcrumbs"
 const { Component, onMounted } = owl
 export class DocumentsAction extends Component {
   setup() {
@@ -47,20 +48,6 @@ export class DocumentsAction extends Component {
       }
     })
   }
-  get backLabel() {
-    // Statt fest "Zurück zum Auftrag" (nur fuer den urspruenglichen Reparaturauftrags-
-    // Anwendungsfall geschrieben): Name des vorherigen Breadcrumb-Eintrags nehmen, damit die
-    // Beschriftung passt, egal von wo aus der Editor geoeffnet wurde (Auftrag, Dateimanager,
-    // ...). env.config.breadcrumbs traegt die aktuelle Aktion selbst als letzten Eintrag -
-    // der vorletzte ist das Ziel von goBackToRecord() (window.history.back()). Kein Eintrag
-    // vorhanden (z.B. Direktaufruf) -> generischer Fallback statt eines falschen Namens.
-    const breadcrumbs = this.env.config?.breadcrumbs || []
-    const previous = breadcrumbs.length > 1 ? breadcrumbs[breadcrumbs.length - 2] : null
-    return previous && previous.name ? `Zurück zu ${previous.name}` : "Zurück"
-  }
-  goBackToRecord() {
-    window.history.back()
-  }
   async loadDocsAPI(DocsAPI) {
     return new Promise((resolve, reject) => {
       const script = document.createElement("script")
@@ -73,4 +60,11 @@ export class DocumentsAction extends Component {
   }
 }
 DocumentsAction.template = "onlyoffice_odoo.Editor"
+// Odoos eigene Breadcrumbs-Komponente (web/static/src/search/breadcrumbs/breadcrumbs.js) statt
+// einer selbstgebauten Zurueck-Leiste: braucht nur env.config.breadcrumbs, das der ActionService
+// fuer JEDE Aktion sowieso schon pflegt - liefert Klick-Navigation (per echtem
+// actionService-Restore, nicht nur window.history.back()), "Zurueck zu ..."-Tooltip und
+// automatisches Einklappen langer Pfade, alles ohne eigenen Code. Kein Layout/ControlPanel
+// noetig (das haette Pager/Suchleiste/Embedded-Actions mitgebracht, hier fehl am Platz).
+DocumentsAction.components = { Breadcrumbs }
 registry.category("actions").add("onlyoffice_editor", DocumentsAction, { force: true })

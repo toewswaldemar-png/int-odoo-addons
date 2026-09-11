@@ -58,6 +58,7 @@ patch(AttachmentList.prototype, {
     const { same_tab } = JSON.parse(await this.orm.call("onlyoffice.odoo", "get_same_tab"))
     if (same_tab) {
       const action = {
+        name: attachment.name,
         params: { attachment_id: attachment.id },
         tag: "onlyoffice_editor",
         target: "current",
