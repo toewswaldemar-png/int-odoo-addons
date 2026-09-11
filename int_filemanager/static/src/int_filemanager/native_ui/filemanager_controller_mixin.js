@@ -706,7 +706,13 @@ export function filemanagerControllerMixin(Base) {
             if (!this.rootRef.el?.contains(ev.target)) {
                 return;
             }
-            const rowEl = ev.target.closest("[data-id]");
+            // ev.target ist bei einem NATIVEN Text-Selektions-Drag oft ein reiner Textknoten
+            // ohne .closest() (nur Element.prototype hat das) - z.B. wenn der Browser ueber
+            // selektierbarem Text (statt einer echten Zeile) von sich aus einen Drag startet.
+            // Live als Absturz beobachtet: TypeError "ev.target.closest is not a function".
+            // parentElement als Fallback normalisiert auf ein echtes Element.
+            const targetEl = ev.target.nodeType === Node.ELEMENT_NODE ? ev.target : ev.target.parentElement;
+            const rowEl = targetEl?.closest("[data-id]");
             const record = rowEl && this._recordForLocalId(rowEl.dataset.id);
             if (!record) {
                 return;
