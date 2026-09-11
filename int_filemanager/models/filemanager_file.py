@@ -599,6 +599,7 @@ class IntFilemanagerFile(models.Model):
         Model = self.env["int_filemanager.file"].sudo()
         ScanLog = self.env["int_filemanager.scan_log"].sudo()
         batch = []
+        total_walked = 0
         new_candidates = []
 
         # parent_id-Pflege (SearchPanel-Ordnerbaum, siehe docs/int_filemanager_native_ui.md):
@@ -674,6 +675,7 @@ class IntFilemanagerFile(models.Model):
                 except OSError:
                     continue
                 rel = f"{rel_dir}/{name}" if rel_dir else name
+                total_walked += 1
                 batch.append(
                     {
                         "name": name,
@@ -690,6 +692,27 @@ class IntFilemanagerFile(models.Model):
                 if len(batch) >= batch_size:
                     flush()
         flush()
+
+        # Sicherheitsnetz gegen einen Voll-Wipe des Index (live erlebt, 2026-09-11):
+        # os.walk(root) fand bei diesem Lauf ueberhaupt nichts, obwohl der Index bereits
+        # Eintraege hat - das ist auf dieser Instanz NIE ein legitimer Zustand (das
+        # Stammverzeichnis kann ueber die UI nicht geloescht werden, siehe delete()-Route
+        # in controllers/main.py), sondern praktisch immer ein voruebergehendes
+        # Mount-/Zugriffsproblem (z.B. HM-Daten/fuse.shfs kurz nach einem Odoo-Neustart noch
+        # nicht bereit). Ohne diese Bremse wuerde die Stale-Erkennung unten JEDEN
+        # bestehenden Datensatz als verwaist behandeln und komplett loeschen - reale
+        # Dateien blieben unangetastet, aber Tags/Status/Freigaben/Versionen/OCR-Text waeren
+        # unwiederbringlich weg. Root-Ursache des beobachteten Vorfalls blieb ungeklaert
+        # (kein Fehler im Log, os.walk lieferte einfach 0 Eintraege trotz vorhandener
+        # Dateien) - dieser Guard verhindert den Schaden unabhaengig von der genauen Ursache.
+        if total_walked == 0 and Model.search_count([]) > 0:
+            _logger.error(
+                "int_filemanager: scan fand 0 Eintraege unter %s, obwohl der Index nicht "
+                "leer ist - ueberspringe die Stale-Bereinigung (vermutlich ein "
+                "voruebergehendes Mount-/Zugriffsproblem, kein echter Voll-Wipe).",
+                root,
+            )
+            return
 
         stale = Model.search([("scan_run_id", "!=", scan_run_id)])
         merged_stale_ids = set()
