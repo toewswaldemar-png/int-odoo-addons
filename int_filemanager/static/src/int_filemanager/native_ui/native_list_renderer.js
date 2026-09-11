@@ -3,8 +3,17 @@
 // Datei-Explorer-Klickverhalten (Einzelklick = nur auswaehlen, Doppelklick = oeffnen/
 // navigieren) statt Odoos Standard (Einzelklick oeffnet immer, ausser eine Checkbox ist
 // bereits aktiv - siehe onCellClicked in web/static/src/views/list/list_renderer.js).
-// Nutzerwunsch 2026-09-11, bewusste Abweichung vom Odoo-Standard (der Rest von Odoo bleibt
-// unveraendert, siehe resModel-Scope unten).
+// Nutzerwunsch 2026-09-11, bewusste Abweichung vom Odoo-Standard.
+//
+// Echte Unterklasse statt patch(ListRenderer.prototype, ...) - list_view.js registriert
+// "Renderer" als genauso austauschbaren Schluessel wie "Controller" (siehe
+// native_list_view.js: Controller: IntFilemanagerListController), live gegen Odoos eigenes
+// web/static/src/views/list/list_view.js verifiziert. Kapselung kommt damit automatisch aus
+// der Registrierung (registry.category("views").add("int_filemanager_list", {...,
+// Renderer: IntFilemanagerListRenderer})) - jede andere Odoo-Liste im System bleibt
+// unangetastet, ohne dass diese Klasse selbst noch pruefen muesste, ob sie gerade fuer
+// int_filemanager.file laeuft (der fruehere patch()-Ansatz brauchte dafuer manuelle
+// resModel-Checks an jeder Methode).
 //
 // MouseEvent.detail (1 = Einzelklick, 2 = Doppelklick, 0 = programmatisch/Tastatur ausgeloest
 // z.B. per Enter) unterscheidet beides ueber denselben t-on-click-Handler, den Odoo bereits
@@ -12,20 +21,12 @@
 // Erben noetig. detail===0 faellt bewusst auf das Original-Verhalten (oeffnen) zurueck, sonst
 // waere die Liste per Tastatur/Screenreader nicht mehr bedienbar (dort gibt es kein
 // Doppelklick-Konzept).
-//
-// Scoped auf this.props.list.resModel, exakt dasselbe Muster wie search_model_patch.js fuer
-// SearchModel.prototype._getCategoryDomain - jede andere Odoo-Liste im System (Kanban-Klicks
-// sind ohnehin ein anderer Code-Pfad) bleibt unangetastet.
 import { onMounted, onWillUnmount } from "@odoo/owl";
-import { patch } from "@web/core/utils/patch";
 import { ListRenderer } from "@web/views/list/list_renderer";
 
-patch(ListRenderer.prototype, {
+export class IntFilemanagerListRenderer extends ListRenderer {
     setup() {
         super.setup();
-        if (this.props.list.resModel !== "int_filemanager.file") {
-            return;
-        }
         // Wird von der Rubberband-Logik unten (nach dem Zeilenausschluss) auf true gesetzt,
         // sobald ein echter Zieh-Vorgang (nicht nur ein Klick) endet - der Browser feuert nach
         // mouseup naemlich trotzdem noch ein normales "click"-Ereignis an der Loslass-Position,
@@ -233,9 +234,10 @@ patch(ListRenderer.prototype, {
         };
         onMounted(() => document.addEventListener("mousedown", onMouseDown));
         onWillUnmount(() => document.removeEventListener("mousedown", onMouseDown));
-    },
+    }
+
     async onCellClicked(record, column, ev, newWindow) {
-        if (this.props.list.resModel !== "int_filemanager.file" || ev.detail === 0) {
+        if (ev.detail === 0) {
             return super.onCellClicked(record, column, ev, newWindow);
         }
         if (ev.detail >= 2) {
@@ -270,5 +272,5 @@ patch(ListRenderer.prototype, {
         }
         record.toggleSelection(true);
         this.lastCheckedRecord = record;
-    },
-});
+    }
+}

@@ -31,6 +31,7 @@ import { ListController } from "@web/views/list/list_controller";
 // Form-View, siehe docs/int_filemanager_native_ui.md Punkt 23).
 import { Chatter } from "@mail/chatter/web_portal/chatter";
 import { filemanagerControllerMixin } from "./filemanager_controller_mixin";
+import { IntFilemanagerListRenderer } from "./native_list_renderer";
 
 export class IntFilemanagerListController extends filemanagerControllerMixin(ListController) {
     static template = "int_filemanager.ListView";
@@ -52,4 +53,11 @@ export class IntFilemanagerListController extends filemanagerControllerMixin(Lis
 registry.category("views").add("int_filemanager_list", {
     ...listView,
     Controller: IntFilemanagerListController,
+    // Datei-Explorer-Klickverhalten (Einzelklick=auswaehlen, Doppelklick=oeffnen,
+    // Rubberband-Auswahl) - siehe native_list_renderer.js. Genauso ein austauschbarer
+    // Registry-Schluessel wie Controller oben (list_view.js: "Renderer: ListRenderer"),
+    // deshalb echte Unterklasse statt patch(ListRenderer.prototype, ...) - vormals ein
+    // separater list_renderer_patch.js mit manuellen resModel-Laufzeitchecks, 2026-09-11
+    // hierher umgezogen fuer dieselbe Kapselung wie beim Controller.
+    Renderer: IntFilemanagerListRenderer,
 });
