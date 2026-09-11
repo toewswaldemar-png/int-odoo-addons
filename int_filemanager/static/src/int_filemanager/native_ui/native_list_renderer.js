@@ -44,7 +44,11 @@ export class IntFilemanagerListRenderer extends ListRenderer {
         // der Button liegt NICHT innerhalb von o_selection_box selbst; ein zu enger Selektor
         // deselektierte die Auswahl schon beim Klick auf "Aktionen", bevor die Aktion greifen
         // konnte), auf offene Dropdowns/Dialoge (Aktionen-Menuepunkte werden teils ausserhalb
-        // des Control-Panels in den body portiert) und auf den Tabellenkopf (thead) - dort
+        // des Control-Panels in den body portiert), auf das Chatter-Seitenpanel (chatterRecord
+        // liest model.root.selection[0] - ohne diese Ausnahme riss ein Klick auf einen
+        // Chatter-Button/das Nachrichtenfeld die Auswahl weg, WAEHREND der Klick noch lief, und
+        // der Chatter brach mitten im eigenen Klick ab, Nutzerreport 2026-09-11) und auf den
+        // Tabellenkopf (thead) - dort
         // sitzt Odoos native "Alle auswaehlen"-Kopfzeilen-Checkbox (list_renderer.xml:
         // t-on-click.stop="toggleSelection"). Diese Sperre laeuft in der Capture-Phase VOR
         // Odoos eigenem Klick-Handler: ohne die thead-Ausnahme deselektierte sie zuerst alles,
@@ -63,6 +67,7 @@ export class IntFilemanagerListRenderer extends ListRenderer {
                 ev.target.closest(".o_selection_container") ||
                 ev.target.closest(".dropdown-menu, .o-dropdown--menu") ||
                 ev.target.closest(".modal, .o_dialog") ||
+                ev.target.closest(".o_int_filemanager_chatter_panel") ||
                 ev.target.closest("thead")
             ) {
                 return;
@@ -109,6 +114,7 @@ export class IntFilemanagerListRenderer extends ListRenderer {
                 ev.target.closest(".o_control_panel") ||
                 ev.target.closest(".o_search_panel") ||
                 ev.target.closest(".modal, .o_dialog") ||
+                ev.target.closest(".o_int_filemanager_chatter_panel") ||
                 document.querySelector(".modal.show, .o_dialog")
             ) {
                 return;
