@@ -36,8 +36,25 @@ patch(ListRenderer.prototype, {
             }
             return;
         }
-        if (this.canSelectRecord) {
-            this.toggleRecordSelection(record);
+        if (!this.canSelectRecord) {
+            return;
         }
+        // Datei-Explorer-Semantik: einfacher Klick (ohne Modifier) ersetzt die Auswahl durch
+        // genau diese eine Zeile, statt additiv umzuschalten - live so gemeldet (mehrere Klicks
+        // nacheinander sammelten Zeilen an, statt immer nur eine auszuwaehlen). Ctrl/Cmd- bzw.
+        // Shift-Klick bleiben additiv/Bereichsauswahl (this.shiftKeyMode wird von der Basisklasse
+        // bereits per keydown/keyup gepflegt, siehe list_renderer.js) - toggleRecordSelection()
+        // deckt beide Faelle unveraendert ab, nur der Plain-Click-Fall ist hier neu.
+        if (ev.ctrlKey || ev.metaKey || this.shiftKeyMode) {
+            this.toggleRecordSelection(record);
+            return;
+        }
+        for (const other of this.props.list.records) {
+            if (other !== record && other.selected) {
+                other.toggleSelection(false);
+            }
+        }
+        record.toggleSelection(true);
+        this.lastCheckedRecord = record;
     },
 });
