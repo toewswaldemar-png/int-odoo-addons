@@ -329,6 +329,7 @@ export function filemanagerControllerMixin(Base) {
                 this.actionService.doAction({
                     type: "ir.actions.client",
                     tag: "onlyoffice_editor",
+                    name: record.data.name,
                     params: { attachment_id: res.attachment_id },
                 });
             } catch (e) {
@@ -369,6 +370,20 @@ export function filemanagerControllerMixin(Base) {
             // searchModel.domain uebernommene Domain bei (_getNextConfig merged nur fehlende
             // Parameter) - ein Refresh nach Mutation aendert also nichts am aktuellen Ordner.
             await this.model.load();
+            // model.load() aktualisiert nur die Inhaltsliste - der SearchPanel-Ordnerbaum hat
+            // einen eigenen Cache (searchModel.sections), den das nicht anstoesst. Odoos eigene
+            // SearchModel._reloadSections() (web/static/src/search/search_model.js) refetcht eine
+            // Kategorie nur bei enableCounters (hier bewusst deaktiviert, siehe
+            // filemanager_file.py: search_panel_select_range) oder geaenderter Such-Domain -
+            // reines mkdir/move/rename/delete aendert die Domain nicht, der Baum bliebe sonst auf
+            // dem Stand des letzten vollen Seitenladens stehen (live beobachtet: neu erstellte/
+            // verschobene Unterordner fehlten im Baum bzw. hingen faelschlich auf Wurzelebene,
+            // bis ein Hard-Reload den ungated Erstlade-Pfad erneut durchlief). Fix: denselben
+            // ungated Fetch+Notify-Aufruf, den SearchModel.load() beim Erstladen macht, hier
+            // direkt nachstellen.
+            const searchModel = this.env.searchModel;
+            await searchModel._fetchSections(searchModel.categories, searchModel.filters);
+            searchModel.trigger("update");
         }
 
         // Baut env.config.breadcrumbs UND this.currentPath aus der Vorfahrenkette des aktuell
