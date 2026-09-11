@@ -1,0 +1,55 @@
+<odoo>
+    <!-- Erweitert die leere base.res_config_settings_view_form um einen eigenen <app>-Block
+         (dasselbe Muster wie base_setup fuer "General Settings", live in
+         base/views/res_config_settings_views.xml verifiziert) - erscheint damit automatisch auch
+         in Odoos globaler Einstellungen-Uebersicht, nicht nur ueber das eigene Menue unten. -->
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.int.filemanager</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="30"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Dateimanager" string="Dateimanager" name="int_filemanager"
+                     groups="int_filemanager.group_filemanager_admin">
+                    <block title="Speicherort" name="int_filemanager_root_path_setting">
+                        <setting id="int_filemanager_root_path_setting"
+                                 help="Absoluter Pfad auf dem Server, den der Dateimanager anzeigt.">
+                            <field name="int_filemanager_root_path" placeholder="/mnt/hm-daten"/>
+                            <div class="content-group">
+                                <div class="mt16 text-warning" role="alert">
+                                    <strong>Achtung:</strong> Aendern wirkt sofort nach dem Speichern,
+                                    es laeuft aber KEIN automatischer Re-Scan. Bestehende Ordner-/
+                                    Dateieintraege beziehen sich bis zum naechsten manuellen Scan
+                                    weiter auf den alten Pfad.
+                                </div>
+                            </div>
+                        </setting>
+                        <setting id="int_filemanager_scan_now_setting" string="Index-Abgleich"
+                                 help="Gleicht den Odoo-Index manuell mit dem Dateisystem ab - derselbe Lauf wie der taegliche 03:00-Uhr-Cron.">
+                            <button name="action_scan_now" type="object" string="Jetzt scannen"
+                                    class="btn-primary"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_int_filemanager_config_settings" model="ir.actions.act_window">
+        <field name="name">Einstellungen</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'int_filemanager', 'bin_size': False}</field>
+    </record>
+
+    <!-- Eigener Menuepunkt unter der bestehenden "Konfiguration"-Sammelstelle (menu.xml) - selbe
+         Ansicht/Action wie oben, nur direkt aus dem Dateimanager-Menue statt ueber Odoos globale
+         Einstellungen erreichbar. Sequence 5, vor "Geschuetzte Ordner" (10). -->
+    <menuitem id="menu_int_filemanager_config_settings"
+              name="Einstellungen"
+              parent="menu_int_filemanager_configuration"
+              action="action_int_filemanager_config_settings"
+              groups="int_filemanager.group_filemanager_admin"
+              sequence="5"/>
+</odoo>

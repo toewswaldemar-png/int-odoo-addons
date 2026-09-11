@@ -10,3 +10,4 @@ from . import filemanager_write_journal
 from . import filemanager_share_log
 from . import ir_attachment
 from . import res_partner
+from . import res_config_settings
