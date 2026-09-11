@@ -11,6 +11,16 @@
         text-align: left !important;
     }
 
+    // Feste Mindesthoehe fuer die Toolbar-Zeile (Suchleiste im Normalzustand vs. "N
+    // ausgewaehlt"/Aktionen-Badge bei aktiver Auswahl) - beide Inhalte sind unterschiedlich
+    // hoch, ohne min-height schrumpft/waechst die Zeile sichtbar beim Auswaehlen/Abwaehlen
+    // (Nutzerreport 2026-09-11, per Screenshot bestaetigt). Nativer Odoo-Effekt (dieselbe
+    // Suchleiste-vs-Badge-Umschaltung passiert in jeder Odoo-Liste), hier bewusst nur fuer
+    // diese Ansicht stabilisiert statt global fuer jede Odoo-Liste im System.
+    .o_control_panel_actions {
+        min-height: 2.5rem;
+    }
+
     // Hervorhebung des Drop-Ziels beim Verschieben per Drag&Drop (2026-09-07) -
     // filemanager_controller_mixin.js setzt/entfernt diese Klasse direkt am nativen
     // <tr data-id="...">-Zeilenelement, siehe onWindowDragOverRecord(). !important aus
