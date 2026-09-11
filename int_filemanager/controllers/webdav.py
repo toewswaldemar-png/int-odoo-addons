@@ -7,8 +7,8 @@ from odoo import http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 
-from .. import webdav_tokens
-from ..path_utils import resolve_path
+from .. import authz, webdav_tokens
+from ..path_utils import resolve_path, to_relative
 
 _logger = logging.getLogger(__name__)
 
@@ -35,12 +35,25 @@ class IntFilemanagerWebdavController(http.Controller):
 
     @http.route("/int_filemanager/webdav_token", type="jsonrpc", auth="user", methods=["POST"])
     def webdav_token(self, path=""):
+        # Muss hier geprueft werden, nicht erst in webdav()/webdav_collection(): jene Routen
+        # sind bewusst auth="public" (WebDAV-Clients wie Word/Excel koennen keine Odoo-Session/
+        # kein CSRF-Token mittragen), haben zur Anfragezeit also keinen sinnvollen Nutzerkontext
+        # mehr - derselbe Grund, aus dem share_download() in main.py ebenfalls bewusst ohne
+        # authz.require() auskommt. Das Token selbst ist die Bearer-Berechtigung danach, genau
+        # wie ein share_token; ohne diese Pruefung konnte jeder Nutzer mit blosser
+        # Basis-Gruppenmitgliedschaft ein Token fuer JEDEN Pfad im Root anfordern und damit
+        # Schutzordner-Dateien lesen/ueberschreiben, die ihm ueber jede andere Route (Liste,
+        # Download, "Bearbeiten oeffnen") verwehrt sind. "write", nicht nur "read": das Token
+        # erlaubt PUT (siehe onOpenLocal() im Frontend - lokal in Word/Excel geoeffnete Dateien
+        # schreiben darueber zurueck), analog zu open_editor()'s eigener "write"-Pruefung fuer
+        # denselben Anwendungsfall (ONLYOFFICE statt lokalem Office).
         if not request.env.user.has_group("int_filemanager.group_filemanager_user"):
             raise AccessError("Kein Zugriff auf den Dateimanager.")
         abs_path = resolve_path(request.env, path)
+        rel_path = to_relative(request.env, abs_path)
+        authz.require(request.env, rel_path, "write")
         if not os.path.isfile(abs_path):
             raise UserError("Datei nicht gefunden.")
-        rel_path = path
         token = webdav_tokens.issue(rel_path)
         filename = os.path.basename(abs_path)
         url = "%sint_filemanager/webdav/%s/%s" % (request.httprequest.host_url, token, filename)

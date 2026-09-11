@@ -4,6 +4,7 @@ from datetime import datetime
 
 from odoo import _, fields
 from odoo.exceptions import UserError
+from odoo.tools.sql import escape_psql
 
 from . import authz
 from .fulltext import fulltext_type_of
@@ -85,7 +86,11 @@ def index_upsert(env, abs_path):
 def index_remove_tree(env, rel_path):
     """Remove the index record for rel_path and, if it was a folder, all descendants."""
     Model = env["int_filemanager.file"].sudo()
-    Model.search(["|", ("path", "=", rel_path), ("path", "=like", rel_path + "/%")]).unlink()
+    # escape_psql(): rel_path kommt aus einem echten Datei-/Ordnernamen, der "%"/"_" enthalten
+    # kann - beides SQL-LIKE-Wildcards. Ungeschaetzt wuerde z.B. "Plan_2026" auch Zeilen eines
+    # unbeteiligten Nachbarn wie "PlanX2026" treffen ("_" matcht ein beliebiges Zeichen). Gleiche
+    # Absicherung wie bereits in acl_rules.py/authz.py fuer denselben "=like"-Praefix-Aufbau.
+    Model.search(["|", ("path", "=", rel_path), ("path", "=like", escape_psql(rel_path) + "/%")]).unlink()
     _notify_change(env)
 
 
@@ -112,7 +117,8 @@ def index_move_tree(env, old_rel, new_rel):
         })
 
     prefix = old_rel + "/"
-    for rec in Model.search([("path", "=like", prefix + "%")]):
+    # escape_psql(): dieselbe Wildcard-Absicherung wie in index_remove_tree() oben.
+    for rec in Model.search([("path", "=like", escape_psql(prefix) + "%")]):
         suffix = rec.path[len(old_rel):]
         new_child_path = new_rel + suffix
         new_child_parent = os.path.dirname(new_child_path)
