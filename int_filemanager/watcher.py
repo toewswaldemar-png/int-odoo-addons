@@ -38,7 +38,9 @@ def _run(fn):
     """Open a fresh cursor/env for one event, run fn(env), commit, close.
     There's no request.env outside an HTTP request, and event handling must
     not share a single long-lived cursor across the watcher's lifetime."""
-    dbname = config["db_name"][0]
+    dbname = _resolve_dbname()
+    if dbname is None:
+        return
     reg = Registry(dbname)
     with reg.cursor() as cr:
         env = Environment(cr, SUPERUSER_ID, {})
