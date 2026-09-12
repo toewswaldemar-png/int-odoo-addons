@@ -25,6 +25,7 @@ import { IntTextInputDialog } from "../shared/text_input_dialog";
 import { IntLinkRecordDialog } from "../shared/link_record_dialog";
 import { IntTextEditorDialog } from "./text_editor_dialog";
 import { IntDocumentReviewDialog } from "./document_review_dialog";
+import { IntZipContentsDialog } from "./zip_contents_dialog";
 
 // Video ist nativ im FileViewer verdrahtet (file_viewer.js/.xml: state.file.isVideo -> echtes
 // <video controls>) - hier nur an dessen bereits vorhandene Faehigkeit angeschlossen, nichts
@@ -67,6 +68,11 @@ const OFFICE_EDIT_EXTENSIONS = new Set([
     "xls", "xlsx", "ods",
     "ppt", "pptx", "odp",
 ]);
+
+// Archivinhalt ansehen (Nutzerwunsch 2026-09-12) - eigener Dialog statt Download, siehe
+// zip_contents_dialog.js. Nur "zip" (das einzige Format, das Pythons stdlib-zipfile ohne
+// Zusatzpaket liest) - rar/7z/tar bewusst nicht, waeren zusaetzliche Abhaengigkeiten.
+const ZIP_EXTENSIONS = new Set(["zip"]);
 
 // Only Word/Excel/PowerPoint have an "ofe" protocol handler on Windows for launching the
 // desktop app straight from a URL - odt/rtf/ods/odp have no equivalent, they stay editable
@@ -310,6 +316,10 @@ export function filemanagerControllerMixin(Base) {
                 this.onEdit(record);
                 return;
             }
+            if (ZIP_EXTENSIONS.has(extOf(record.data.name))) {
+                this.onOpenZip(record);
+                return;
+            }
             if (isPreviewable(record.data.name)) {
                 this.onPreview(record);
                 return;
@@ -352,6 +362,13 @@ export function filemanagerControllerMixin(Base) {
             } catch (e) {
                 this.notification.add(e.data?.message || e.message, { type: "danger" });
             }
+        }
+
+        onOpenZip(record) {
+            this.dialog.add(IntZipContentsDialog, {
+                fileName: record.data.name,
+                path: record.data.path,
+            });
         }
 
         async onEditText(record) {

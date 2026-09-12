@@ -4,12 +4,13 @@ import logging
 import mimetypes
 import os
 import shutil
+import zipfile
 
 from odoo import _, fields, http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 
-from .. import authz, write_service
+from .. import authz, write_service, zip_utils
 from ..index_utils import index_move_tree, index_remove_tree, index_upsert, rename_entry
 from ..path_utils import (
     friendly_fallback_name,
@@ -125,6 +126,47 @@ class IntFilemanagerController(http.Controller):
             ("Content-Type", "image/jpeg"),
             ("Content-Length", str(len(data))),
             ("Cache-Control", "private, max-age=3600"),
+        ]
+        return request.make_response(data, headers=headers)
+
+    @http.route("/int_filemanager/zip_list", type="jsonrpc", auth="user", methods=["POST"])
+    def zip_list(self, path=""):
+        """Liest das Inhaltsverzeichnis einer ZIP-Datei fuer den Anzeige-Dialog
+        (zip_contents_dialog.js) - zustandslos, kein Pending-State/Cron wie bei OCR/Thumbnails,
+        da infolist() kein Dekomprimieren braucht (siehe zip_utils.py)."""
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        rel = to_relative(request.env, abs_path)
+        authz.require(request.env, rel, "read")
+        if not os.path.isfile(abs_path):
+            raise UserError(_("Datei nicht gefunden."))
+        try:
+            return {"entries": zip_utils.list_entries(request.env, abs_path)}
+        except zip_utils.ZipTooLarge as exc:
+            raise UserError(str(exc)) from exc
+        except zipfile.BadZipFile as exc:
+            raise UserError(_("Keine gültige ZIP-Datei.")) from exc
+
+    @http.route("/int_filemanager/zip_extract_entry", type="http", auth="user")
+    def zip_extract_entry(self, path="", entry=""):
+        """Streamt genau eine Datei aus dem Archiv - bewusst kein Entpacken aufs Dateisystem
+        (Nutzerentscheidung 2026-09-12), siehe zip_utils.extract_entry()."""
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        rel = to_relative(request.env, abs_path)
+        authz.require(request.env, rel, "read")
+        if not os.path.isfile(abs_path):
+            raise UserError(_("Datei nicht gefunden."))
+        try:
+            data = zip_utils.extract_entry(request.env, abs_path, entry)
+        except zip_utils.ZipTooLarge as exc:
+            raise UserError(str(exc)) from exc
+        except KeyError as exc:
+            raise UserError(_("Eintrag nicht im Archiv gefunden.")) from exc
+        headers = [
+            ("Content-Type", mimetypes.guess_type(entry)[0] or "application/octet-stream"),
+            ("Content-Length", str(len(data))),
+            ("Content-Disposition", f'attachment; filename="{os.path.basename(entry)}"'),
         ]
         return request.make_response(data, headers=headers)
 

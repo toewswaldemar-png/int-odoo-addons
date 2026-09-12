@@ -13,7 +13,7 @@ import { _t } from "@web/core/l10n/translation";
 // siehe Kommentar in filemanager_file.py), keine Binary-Spalte - deshalb hier dieselbe
 // kleine, sonst nicht exportierte Logik 1:1 nachgebaut statt eines nicht moeglichen Imports.
 // humanNumber() selbst ist ein oeffentlicher Core-Baustein (web/core/utils/numbers.js).
-function humanFileSize(value) {
+export function humanFileSize(value) {
     if (!value) {
         return "";
     }

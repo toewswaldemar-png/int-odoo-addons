@@ -1,0 +1,37 @@
+<templates xml:space="preserve">
+    <t t-name="int_filemanager.ZipContentsDialog" owl="1">
+        <Dialog title="'Archivinhalt: ' + props.fileName" size="'md'">
+            <div t-if="state.error" class="alert alert-danger mb-0" t-esc="state.error"/>
+            <div t-elif="!state.entries" class="text-muted p-2">Lädt…</div>
+            <div t-elif="!state.entries.length" class="text-muted p-2">Archiv ist leer.</div>
+            <table t-else="" class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th class="text-end">Größe</th>
+                        <th/>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="state.entries" t-as="entry" t-key="entry.name">
+                        <td class="text-truncate" style="max-width: 320px;">
+                            <i t-if="entry.is_dir" class="fa fa-folder fa-fw text-warning me-1"/>
+                            <i t-else="" class="fa fa-file-o fa-fw me-1"/>
+                            <t t-esc="entry.name"/>
+                        </td>
+                        <td class="text-end text-nowrap" t-esc="entry.is_dir ? '' : humanSize(entry.size)"/>
+                        <td class="text-end">
+                            <button t-if="!entry.is_dir" type="button" class="btn btn-link p-0"
+                                    data-tooltip="Herunterladen" t-on-click="() => this.downloadEntry(entry.name)">
+                                <i class="fa fa-download"/>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <t t-set-slot="footer">
+                <button class="btn btn-secondary" t-on-click="() => props.close()">Schließen</button>
+            </t>
+        </Dialog>
+    </t>
+</templates>
