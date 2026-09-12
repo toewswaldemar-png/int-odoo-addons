@@ -77,6 +77,31 @@
         font-size: 20px;
         text-align: center;
     }
+
+    // Das Icon ist jetzt ein <button> (Klick oeffnet das Formular, name_icon_field.js). Zwei
+    // Effekte, live als Bug gefunden (2026-09-11):
+    // 1) display:inline-flex statt Bootstraps Default inline-block ist PFLICHT, nicht nur
+    //    Kosmetik: .o_image/.fa-folder waren bisher direkte Flex-Items von .d-flex oben und
+    //    wurden dadurch automatisch "geblockt" (CSS-Spec: Flex-Items ignorieren display:inline
+    //    ihrer eigenen Angabe, sie werden immer block-artig). Durch den Button dazwischen sind
+    //    sie das nicht mehr - eine native, sehr spezifische Odoo-Regel
+    //    (".o_list_char .o_field_widget span{display:inline}", fuer Text-Spans in Zeichenketten-
+    //    Zellen gedacht) gewinnt dann ungehindert, und ein leerer inline-Span ohne Text hat keine
+    //    Flaeche -> unsichtbar, obwohl width/height/background-image korrekt gesetzt sind. Indem
+    //    der Button selbst zum Flex-Container wird, werden seine Icon-Kinder wieder geblockt,
+    //    exakt wie vorher.
+    // 2) Kein eigener Hover-Hinweis: Bootstraps btn-link bringt sonst Unterstreichung/Linkfarbe
+    //    mit, die hier nicht passt (drunter sitzt ein Icon, kein Text).
+    .o_int_filemanager_open_form_icon {
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+        border-radius: 0.25rem;
+
+        &:hover, &:focus-visible {
+            background-color: var(--o-webclient-hover-bg, rgba(0, 0, 0, 0.06));
+        }
+    }
 }
 
 // Drag&Drop-Upload-Overlay (native_list_view.js/.xml) - position:fixed statt relativ zum Root-Div,

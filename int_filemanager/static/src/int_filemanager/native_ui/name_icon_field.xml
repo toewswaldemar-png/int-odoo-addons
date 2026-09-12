@@ -1,8 +1,11 @@
 <templates xml:space="preserve">
     <t t-name="int_filemanager.NameField">
         <div class="d-flex align-items-center gap-1 o_int_filemanager_name_cell">
-            <i t-if="isDir" class="fa fa-folder fa-fw text-warning" role="img" aria-label="Ordner"/>
-            <span t-else="" class="o_image" role="img" t-att-data-mimetype="pseudoMimetype"/>
+            <button type="button" class="btn btn-link p-0 border-0 o_int_filemanager_open_form_icon"
+                    t-on-click="onIconClick" data-tooltip="Details öffnen">
+                <i t-if="isDir" class="fa fa-folder fa-fw text-warning" role="img" aria-label="Ordner"/>
+                <span t-else="" class="o_image" role="img" t-att-data-mimetype="pseudoMimetype"/>
+            </button>
             <span class="text-truncate" t-esc="value"/>
         </div>
     </t>

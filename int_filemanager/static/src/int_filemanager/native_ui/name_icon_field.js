@@ -3,6 +3,7 @@
 import { Component } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
+import { useService } from "@web/core/utils/hooks";
 
 // Odoos eigenes Mimetype-Icon-Set (web/static/img/mimetypes/*.svg, ausgeliefert mit dem
 // web-Modul) wird rein ueber CSS-Attribut-Selektoren auf data-mimetype angesprochen
@@ -64,6 +65,31 @@ function pseudoMimetypeFor(name) {
 export class IntFilemanagerNameField extends Component {
     static template = "int_filemanager.NameField";
     static props = { ...standardFieldProps };
+
+    setup() {
+        this.orm = useService("orm");
+        this.actionService = useService("action");
+    }
+
+    // Ersetzt die vorherige eigene "Details öffnen"-Spalte (Pfeil-Button, action_open_form) -
+    // Klick auf das Icon selbst oeffnet jetzt das Formular (Nutzerwunsch 2026-09-11). Kein
+    // <button type="object"> moeglich, das braucht ein direktes Arch-Element der View (siehe
+    // Begruendung in analyze_button_widget.js) - stattdessen von Hand per orm.call() +
+    // actionService nachgebaut, exakt das, was Odoos Button-Compiler bei type="object"
+    // automatisch erledigt. ev.stopPropagation() noetig fuer die Kanban-Ansicht (kein
+    // automatisches oe_kanban_action-Exempt fuer ein <button> innerhalb eines Feld-Widgets
+    // statt eines direkten Arch-Buttons, siehe wieder analyze_button_widget.js) - fuer die
+    // Liste reicht das rohe <button>-Element im Template bereits allein
+    // (list_renderer.js prueft ev.target.closest("button")). orm.call()-Argumente: das erste
+    // Positionsargument einer Modellmethode ist die ids-LISTE, nicht die nackte ID - live als
+    // Bug gefunden (TypeError serverseitig ohne die Klammer).
+    async onIconClick(ev) {
+        ev.stopPropagation();
+        const action = await this.orm.call("int_filemanager.file", "action_open_form", [
+            [this.props.record.resId],
+        ]);
+        this.actionService.doAction(action);
+    }
 
     get isDir() {
         return this.props.record.data.is_dir;

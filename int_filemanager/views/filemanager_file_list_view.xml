@@ -7,19 +7,6 @@
                 <field name="is_dir" column_invisible="1"/>
                 <field name="path" column_invisible="1"/>
                 <field name="folder_path" column_invisible="1"/>
-                <!-- type="object"-Button in einer Listenzeile loest nie den Zeilenklick
-                     (openRecord/Navigation) aus - list_renderer.js prueft bei Klick, ob das
-                     Ziel ein <button> ist, und reicht nur bei Fehltreffer an die normale
-                     Zeilenlogik weiter. Deshalb reicht die reine Arch-Deklaration hier, kein
-                     JS-Klick-Abfang in native_list_view.js noetig. -->
-                <!-- width="40px" fixiert min=max in Odoos Spaltenbreiten-Algorithmus
-                     (column_width_hook.js: column.attrs.width -> minWidth=maxWidth) - ohne das
-                     wird ein <button>-Spalte (kein eigener column.type-Zweig dort, faellt auf
-                     canShrink=false + kein maxWidth zurueck) beim "Tabelle schmaler als Platz"-
-                     Fall wie eine normale Datenspalte mitgestreckt, live als breite Leerflaeche
-                     um den Pfeil beobachtet. -->
-                <button name="action_open_form" type="object" icon="fa-arrow-right"
-                        title="Details öffnen" string="" width="40px"/>
                 <!-- Direkter "Werte erkennen"-Button (2026-09-07, Nutzerfeedback) statt nur ueber
                      das Aktionsmenue erreichbar - eigenes <widget> statt <button type="object">,
                      siehe analyze_button_widget.js fuer die Begruendung. Zeigt sich selbst nur
@@ -45,7 +32,10 @@
                 <!-- Ordner-/Datei-Typ-Icon vor dem Namen - eigenes kleines Feld-Widget
                      (name_icon_field.js/.xml), nach dem Muster von Odoos eigenem
                      many2one_avatar-Widget (Icon + Feldwert in einer Zelle). Rein clientseitig
-                     aus is_dir/Dateiendung abgeleitet, kein neues Backend-Feld. -->
+                     aus is_dir/Dateiendung abgeleitet, kein neues Backend-Feld. Klick auf das
+                     Icon selbst oeffnet das Formular (action_open_form) - ersetzt die vorherige
+                     eigene Pfeil-Button-Spalte (Nutzerwunsch 2026-09-11), siehe
+                     name_icon_field.js fuer die Handverdrahtung. -->
                 <field name="name" widget="int_filemanager_name"/>
                 <!-- Menschlich lesbar (z.B. "12.34Mb"/"700Mb"/"512 Bytes") statt roher Byte-
                      Zahl - dieselbe Formatierung, die Odoo intern fuer jede Binary-Feld-Groesse
