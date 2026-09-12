@@ -31,6 +31,17 @@
         outline: 2px dashed var(--ButtonPrimary-bg, #714b67);
         outline-offset: -2px;
     }
+
+    // Rotes Gegenstueck zu o_int_filemanager_drop_target - der native "nicht erlaubt"-Cursor
+    // allein war live zu unauffaellig (Nutzerreport 2026-09-12, Datei-Rechteck ohne jeden Hinweis
+    // ausser dem kleinen Cursor-Symbol). Wird nur auf ein tatsaechlich unter dem Cursor liegendes,
+    // aber ungueltiges Ziel gesetzt (onWindowDragOverRecord in filemanager_controller_mixin.js),
+    // nie auf leere Flaeche.
+    .o_int_filemanager_drop_invalid {
+        background-color: rgba(220, 53, 69, 0.15) !important;
+        outline: 2px dashed #dc3545;
+        outline-offset: -2px;
+    }
 }
 
 // Dieselbe Drop-Ziel-Hervorhebung wie oben, aber fuer den Seitenleisten-Ordnerbaum
@@ -43,6 +54,14 @@
 .o_search_panel_category_value > header.o_int_filemanager_drop_target {
     background-color: rgba(var(--ButtonPrimary-bg-rgb, 113, 75, 103), 0.25) !important;
     outline: 2px dashed var(--ButtonPrimary-bg, #714b67);
+    outline-offset: -2px;
+}
+
+// Rotes Gegenstueck fuer den Seitenleisten-Ordnerbaum, analog zu o_int_filemanager_drop_invalid
+// oben (z.B. eigenen Unterordner per Baum als Ziel gewaehlt).
+.o_search_panel_category_value > header.o_int_filemanager_drop_invalid {
+    background-color: rgba(220, 53, 69, 0.15) !important;
+    outline: 2px dashed #dc3545;
     outline-offset: -2px;
 }
 

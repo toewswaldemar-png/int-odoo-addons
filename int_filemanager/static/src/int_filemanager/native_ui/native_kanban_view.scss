@@ -105,4 +105,12 @@
         outline-offset: -2px;
         background-color: rgba(var(--ButtonPrimary-bg-rgb, 113, 75, 103), 0.15);
     }
+
+    // Rotes Gegenstueck, analog zu native_list_view.scss - Nutzerreport 2026-09-12: der native
+    // "nicht erlaubt"-Cursor allein war zu unauffaellig.
+    .o_int_filemanager_drop_invalid {
+        outline: 2px dashed #dc3545;
+        outline-offset: -2px;
+        background-color: rgba(220, 53, 69, 0.15);
+    }
 }

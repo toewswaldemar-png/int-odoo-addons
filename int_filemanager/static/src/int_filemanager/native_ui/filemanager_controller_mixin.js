@@ -754,7 +754,20 @@ export function filemanagerControllerMixin(Base) {
                 this._dropTargetEl.classList.remove("o_int_filemanager_drop_target");
                 this._dropTargetEl = null;
             }
+            // Der native "nicht erlaubt"-Cursor (siehe unten) allein war live als zu unauffaellig
+            // gemeldet (Nutzerreport 2026-09-12) - zusaetzlich ein rotes Gegenstueck zum gruenen
+            // o_int_filemanager_drop_target, gesetzt auf jedes tatsaechlich unter dem Cursor
+            // liegende, aber ungueltige Ziel (Datei statt Ordner, das gezogene Element selbst,
+            // eigener Unterordner) - nicht auf leere Flaeche ohne jedes Ziel (target === null).
+            if (this._invalidDropTargetEl && this._invalidDropTargetEl !== targetEl) {
+                this._invalidDropTargetEl.classList.remove("o_int_filemanager_drop_invalid");
+                this._invalidDropTargetEl = null;
+            }
             if (!valid) {
+                if (target && this._invalidDropTargetEl !== targetEl) {
+                    targetEl.classList.add("o_int_filemanager_drop_invalid");
+                    this._invalidDropTargetEl = targetEl;
+                }
                 return;
             }
             // preventDefault() ist bei HTML5-Drag&Drop zwingend, um dragover ueberhaupt als
@@ -779,6 +792,10 @@ export function filemanagerControllerMixin(Base) {
             if (this._dropTargetEl) {
                 this._dropTargetEl.classList.remove("o_int_filemanager_drop_target");
                 this._dropTargetEl = null;
+            }
+            if (this._invalidDropTargetEl) {
+                this._invalidDropTargetEl.classList.remove("o_int_filemanager_drop_invalid");
+                this._invalidDropTargetEl = null;
             }
             const target = this._dropTargetFromEvent(ev);
             if (!target || !this._isValidDropTarget(records, target)) {
@@ -807,6 +824,10 @@ export function filemanagerControllerMixin(Base) {
             if (this._dropTargetEl) {
                 this._dropTargetEl.classList.remove("o_int_filemanager_drop_target");
                 this._dropTargetEl = null;
+            }
+            if (this._invalidDropTargetEl) {
+                this._invalidDropTargetEl.classList.remove("o_int_filemanager_drop_invalid");
+                this._invalidDropTargetEl = null;
             }
         }
 
