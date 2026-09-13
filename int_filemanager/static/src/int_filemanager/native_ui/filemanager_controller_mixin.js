@@ -15,7 +15,7 @@
 // /int_filemanager/* JSON-RPC-Routen auf statt native type="object"-Buttons - Begruendung
 // unveraendert siehe docs/int_filemanager_native_ui.md, Abschnitt "Sicherheitsrelevanter
 // Stolperstein".
-import { onMounted, onPatched, onWillUnmount, useExternalListener, useRef, useState } from "@odoo/owl";
+import { onMounted, onPatched, onWillUnmount, useEffect, useExternalListener, useRef, useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { useBus, useService } from "@web/core/utils/hooks";
@@ -135,6 +135,50 @@ export function filemanagerControllerMixin(Base) {
             this.dropState = useState({ dragging: false });
             this._dragDepth = 0;
             useExternalListener(window, "dragenter", this.onWindowDragEnter);
+
+            // Inline-Umbenennen per F2 (Nutzerwunsch 2026-09-12, Explorer-Muster) - bewusst NICHT
+            // ueber Odoos natives Listen-Inline-Editing (list.enterEditMode()): das committet ueber
+            // ein rohes ORM write() auf das Feld, wuerde also nur den DB-Namen aendern, nicht die
+            // echte Datei umbenennen/authz pruefen - derselbe "Sicherheitsrelevanter Stolperstein"
+            // wie bei jeder anderen Mutation (docs/int_filemanager_native_ui.md), deshalb ein
+            // eigenes, ueberlagerndes <input> statt Odoos Feld-Edit-Mode, das am Ende exakt denselben
+            // authz-geprueften /int_filemanager/rename-Aufruf ausloest wie der bestehende
+            // onRename()-Dialog. renameState.rect kommt aus getBoundingClientRect() auf dem
+            // [name="name"]-Feld-Wrapper der ausgewaehlten Zeile/Karte (position:fixed, Viewport-
+            // Koordinaten passen direkt, gleiches Muster wie chatterState.topPx oben).
+            this.renameState = useState({ record: null, rect: null, value: "" });
+            this.renameInputRef = useRef("renameInput");
+            useEffect(
+                (record) => {
+                    if (record && this.renameInputRef.el) {
+                        this.renameInputRef.el.focus();
+                        this.renameInputRef.el.select();
+                    }
+                },
+                () => [this.renameState.record]
+            );
+            // useHotkey("f2", ...) wuerde hart crashen: Odoos Hotkey-Service whitelisted nur
+            // a-z/0-9/Navigationstasten/escape, F-Tasten sind dort in Odoo 18 UND 19
+            // kategorisch ausgeschlossen (registerHotkey() wirft synchron beim useHotkey-Aufruf
+            // selbst, kein Options-Flag umgeht das - am Odoo-Quellcode geprueft, siehe
+            // core/hotkeys/hotkey_service.js: AUTHORIZED_KEYS). Live-Fehler auf Produktiv am
+            // 2026-09-13 ("hotkey ('f2') ... not whitelisted"). Deshalb roher keydown-Listener
+            // statt useHotkey, mit derselben Editable-Schutzlogik, die der Hotkey-Service sonst
+            // automatisch mitbringt (sonst wuerde F2 auch beim Tippen im Suchfeld/eigenen
+            // Umbenennen-Input feuern).
+            useExternalListener(window, "keydown", (ev) => {
+                if (ev.key !== "F2") {
+                    return;
+                }
+                const active = document.activeElement;
+                const isEditable =
+                    active &&
+                    (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable);
+                if (isEditable) {
+                    return;
+                }
+                this.onF2Rename();
+            });
             useExternalListener(window, "dragleave", this.onWindowDragLeave);
             useExternalListener(window, "dragover", (ev) => ev.preventDefault());
             useExternalListener(window, "drop", this.onWindowDrop);
@@ -831,24 +875,72 @@ export function filemanagerControllerMixin(Base) {
             }
         }
 
+        // Gemeinsamer Commit-Pfad fuer Dialog- UND Inline-Umbenennen (onF2Rename unten) - immer
+        // derselbe authz-geprueften /int_filemanager/rename-Aufruf, nie ein ORM write() auf name
+        // (siehe Kommentar bei renameState in setup()).
+        async _performRename(record, name) {
+            if (!name || name === record.data.name) {
+                return;
+            }
+            try {
+                await rpc("/int_filemanager/rename", { path: record.data.path, new_name: name });
+                await this.reload();
+            } catch (e) {
+                this.notification.add(e.data?.message || e.message, { type: "danger" });
+            }
+        }
+
         onRename(record) {
             this.dialog.add(IntTextInputDialog, {
                 title: _t("Umbenennen"),
                 label: _t("Neuer Name"),
                 value: record.data.name,
                 confirmLabel: _t("Umbenennen"),
-                confirm: async (name) => {
-                    if (name === record.data.name) {
-                        return;
-                    }
-                    try {
-                        await rpc("/int_filemanager/rename", { path: record.data.path, new_name: name });
-                        await this.reload();
-                    } catch (e) {
-                        this.notification.add(e.data?.message || e.message, { type: "danger" });
-                    }
-                },
+                confirm: (name) => this._performRename(record, name),
             });
+        }
+
+        // F2 auf genau einer ausgewaehlten Zeile/Karte - mehrere/keine Auswahl ignoriert den
+        // Tastendruck absichtlich (kein sinnvolles "Umbenennen" fuer 0 oder >1 Datensaetze). Das
+        // [name="name"]-Attribut ist Odoos eigene Kennzeichnung des generierten Feld-Wrapper-Divs
+        // (live am DOM verifiziert, Nutzerreport 2026-09-12) - selbes Attribut in Liste UND Kanban,
+        // kein eigener Marker noetig.
+        onF2Rename() {
+            const selection = this.model.root.selection;
+            if (selection.length !== 1) {
+                return;
+            }
+            const record = selection[0];
+            const nameEl = this.rootRef.el?.querySelector(`[data-id="${record.id}"] [name="name"]`);
+            if (!nameEl) {
+                return;
+            }
+            const rect = nameEl.getBoundingClientRect();
+            this.renameState.rect = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+            this.renameState.value = record.data.name;
+            this.renameState.record = record;
+        }
+
+        onRenameInputKeydown(ev) {
+            if (ev.key === "Enter") {
+                ev.preventDefault();
+                this.renameInputRef.el.blur();
+            } else if (ev.key === "Escape") {
+                ev.preventDefault();
+                this.renameState.record = null;
+            }
+        }
+
+        // Blur committet (Explorer-Verhalten: Wegklicken uebernimmt den Namen, nicht verwirft ihn)
+        // - Escape oben leert renameState.record VOR dem Blur, der dadurch ausgeloeste Aufruf hier
+        // findet dann kein record mehr vor und tut nichts.
+        async onRenameInputBlur() {
+            const record = this.renameState.record;
+            const name = this.renameState.value;
+            this.renameState.record = null;
+            if (record) {
+                await this._performRename(record, name);
+            }
         }
 
         onLinkRecord(record) {
