@@ -905,18 +905,45 @@ export function filemanagerControllerMixin(Base) {
         // [name="name"]-Attribut ist Odoos eigene Kennzeichnung des generierten Feld-Wrapper-Divs
         // (live am DOM verifiziert, Nutzerreport 2026-09-12) - selbes Attribut in Liste UND Kanban,
         // kein eigener Marker noetig.
+        //
+        // Positionierung (Nutzerfeedback 2026-09-13, Screenshot): die Box soll NICHT die ganze
+        // Namensspalte inkl. Ordner-/Datei-Icon ueberdecken, sondern nur den Textbereich - das
+        // Icon (name_icon_field.xml: .o_int_filemanager_name_cell > button, dann
+        // span.text-truncate) bleibt sichtbar. left/top/height kommen deshalb vom Text-Span
+        // selbst, width geht aber bis zum rechten Rand der Zelle (nicht nur bis zur aktuellen,
+        // ggf. kurzen Textbreite) - sonst waere beim Umbenennen in einen laengeren Namen kein
+        // Platz zum Tippen.
+        //
+        // Kanban rendert "name" als ZWEI <field>-Knoten (filemanager_file_kanban_view.xml:
+        // invisible="thumbnail" mit dem Icon-Widget vs. invisible="not thumbnail" als schlichtes
+        // Textfeld ohne Icon) - beide tragen [name="name"], invisible entfernt sie nicht aus dem
+        // DOM, nur per CSS. Deshalb zuerst ueber alle [name="name"]-Treffer filtern und den
+        // tatsaechlich sichtbaren nehmen (offsetParent !== null - Standardtest fuer "per CSS
+        // ausgeblendet"), erst DANN innerhalb davon nach dem Text-Span suchen. Gibt es dort
+        // keinen eigenen Text-Span (Thumbnail-Karten: die Zelle IST bereits der Text, kein
+        // Icon davor), faellt textEl auf die Zelle selbst zurueck - dort ist "ganze Zelle
+        // ueberdecken" korrekt, weil kein Icon zu erhalten ist.
         onF2Rename() {
             const selection = this.model.root.selection;
             if (selection.length !== 1) {
                 return;
             }
             const record = selection[0];
-            const nameEl = this.rootRef.el?.querySelector(`[data-id="${record.id}"] [name="name"]`);
-            if (!nameEl) {
+            const cellEl = Array.from(
+                this.rootRef.el?.querySelectorAll(`[data-id="${record.id}"] [name="name"]`) ?? []
+            ).find((el) => el.offsetParent !== null);
+            if (!cellEl) {
                 return;
             }
-            const rect = nameEl.getBoundingClientRect();
-            this.renameState.rect = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+            const textEl = cellEl.querySelector(".text-truncate") ?? cellEl;
+            const cellRect = cellEl.getBoundingClientRect();
+            const textRect = textEl.getBoundingClientRect();
+            this.renameState.rect = {
+                top: textRect.top,
+                left: textRect.left,
+                width: cellRect.right - textRect.left,
+                height: textRect.height,
+            };
             this.renameState.value = record.data.name;
             this.renameState.record = record;
         }

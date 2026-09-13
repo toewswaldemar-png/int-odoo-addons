@@ -71,9 +71,11 @@
                          isChatterAside="true" isInFormSheetBg="false"/>
             </div>
             <!-- Inline-Umbenennen per F2 (filemanager_controller_mixin.js: onF2Rename) - eigenes
-                 ueberlagerndes <input> statt Odoos nativem Listen-Edit-Mode, Begruendung dort. -->
+                 ueberlagerndes <input> statt Odoos nativem Listen-Edit-Mode, Begruendung dort.
+                 o_input = Odoos eigene Eingabefeld-Klasse fuer die native Optik (Rahmen/Fokus),
+                 o_int_filemanager_rename_input liefert nur noch die Positionierung. -->
             <input t-if="renameState.record" t-ref="renameInput"
-                   class="o_int_filemanager_rename_input"
+                   class="o_input o_int_filemanager_rename_input"
                    t-attf-style="top: {{renameState.rect.top}}px; left: {{renameState.rect.left}}px; width: {{renameState.rect.width}}px; height: {{renameState.rect.height}}px;"
                    t-model="renameState.value"
                    t-on-keydown="onRenameInputKeydown"

@@ -66,20 +66,20 @@
 }
 
 // Inline-Umbenennen per F2 (filemanager_controller_mixin.js: onF2Rename) - position:fixed direkt
-// ueber dem [name="name"]-Feld-Wrapper der ausgewaehlten Zeile/Karte platziert (Viewport-
-// Koordinaten aus getBoundingClientRect passen direkt, gleiches Muster wie das
-// Rubberband-Rechteck unten und der Chatter-Panel-Top). Geteilte Regel statt in
-// .o_int_filemanager_list/_kanban verschachtelt, da native_list_view.xml UND
-// native_kanban_view.xml dasselbe Element rendern.
+// ueber dem Text-Bereich der ausgewaehlten Zeile/Karte platziert (Viewport-Koordinaten aus
+// getBoundingClientRect passen direkt, gleiches Muster wie das Rubberband-Rechteck unten und
+// der Chatter-Panel-Top). Geteilte Regel statt in .o_int_filemanager_list/_kanban verschachtelt,
+// da native_list_view.xml UND native_kanban_view.xml dasselbe Element rendern.
+//
+// Bewusst KEIN eigener Rahmen/Hintergrund mehr (Nutzerfeedback 2026-09-13: wirkte wie ein
+// separat aufgesetztes Element statt "nur der Text wird editierbar"). Odoos eigene .o_input-
+// Klasse (im Template gesetzt) uebernimmt die native Eingabefeld-Optik (Rahmen/Fokus-Zustand
+// aus Odoos Core-CSS) - hier nur noch reine Positionierung, keine visuellen Overrides.
 .o_int_filemanager_rename_input {
     position: fixed;
     z-index: 1500;
     box-sizing: border-box;
-    padding: 0 0.25rem;
     font-size: 0.8125rem;
-    border: 2px solid var(--ButtonPrimary-bg, #714b67);
-    border-radius: 0.2rem;
-    outline: none;
 }
 
 // Rubberband-Auswahlrechteck (list_renderer_patch.js) - wird per JS direkt an document.body
