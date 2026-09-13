@@ -938,10 +938,18 @@ export function filemanagerControllerMixin(Base) {
             const textEl = cellEl.querySelector(".text-truncate") ?? cellEl;
             const cellRect = cellEl.getBoundingClientRect();
             const textRect = textEl.getBoundingClientRect();
+            // .text-truncate schneidet lange Namen mit Ellipsis ab (overflow:hidden) - dessen
+            // getBoundingClientRect().width ist deshalb nur die SICHTBARE (ggf. abgeschnittene)
+            // Breite, nicht die des vollen Dateinamens. scrollWidth liefert dagegen die volle,
+            // ungekuerzte Inhaltsbreite (Nutzerreport 2026-09-13: Screenshot zeigte die letzten
+            // zwei Zeichen eines langen Namens ausserhalb der Markierung/Box). Breite deshalb
+            // immer mindestens so gross wie der volle Name plus etwas Tipp-Puffer, unabhaengig
+            // davon, wie schmal die Spalte gerade zufaellig gerendert war.
+            const width = Math.max(textEl.scrollWidth + 24, cellRect.right - textRect.left);
             this.renameState.rect = {
                 top: textRect.top,
                 left: textRect.left,
-                width: cellRect.right - textRect.left,
+                width,
                 height: textRect.height,
             };
             this.renameState.value = record.data.name;
