@@ -179,6 +179,12 @@ export function filemanagerControllerMixin(Base) {
                 }
                 this.onF2Rename();
             });
+            // Positions-Nachfuehrung waehrend des Umbenennens (Nutzerreport 2026-09-13,
+            // Screenshot: Box blieb beim Scrollen an der alten Bildschirmposition stehen,
+            // siehe Kommentar bei _computeRenameRect/onWindowScrollWhileRenaming weiter unten).
+            // capture:true noetig: "scroll" bubblet nicht, nur die Capturing-Phase am window
+            // faengt auch das Scrollen eines inneren Listen-Containers ab.
+            useExternalListener(window, "scroll", () => this.onWindowScrollWhileRenaming(), { capture: true });
             useExternalListener(window, "dragleave", this.onWindowDragLeave);
             useExternalListener(window, "dragover", (ev) => ev.preventDefault());
             useExternalListener(window, "drop", this.onWindowDrop);
@@ -923,17 +929,18 @@ export function filemanagerControllerMixin(Base) {
         // keinen eigenen Text-Span (Thumbnail-Karten: die Zelle IST bereits der Text, kein
         // Icon davor), faellt textEl auf die Zelle selbst zurueck - dort ist "ganze Zelle
         // ueberdecken" korrekt, weil kein Icon zu erhalten ist.
-        onF2Rename() {
-            const selection = this.model.root.selection;
-            if (selection.length !== 1) {
-                return;
-            }
-            const record = selection[0];
+        // Liefert das Positionsrechteck fuer die renameState-Box oder null, wenn die Zeile/Karte
+        // gerade nicht (mehr) sichtbar im DOM steht. Ausgelagert aus onF2Rename(), weil dieselbe
+        // Berechnung bei jedem Scroll-Event neu laufen muss (siehe useExternalListener("scroll")
+        // in setup() - position:fixed haelt die Bildschirmkoordinaten sonst fest, waehrend die
+        // Liste darunter wegscrollt, die Box driftet dann sichtbar von ihrer Zeile weg,
+        // Nutzerreport 2026-09-13 per Screenshot).
+        _computeRenameRect(record) {
             const cellEl = Array.from(
                 this.rootRef.el?.querySelectorAll(`[data-id="${record.id}"] [name="name"]`) ?? []
             ).find((el) => el.offsetParent !== null);
             if (!cellEl) {
-                return;
+                return null;
             }
             const textEl = cellEl.querySelector(".text-truncate") ?? cellEl;
             const cellRect = cellEl.getBoundingClientRect();
@@ -946,14 +953,35 @@ export function filemanagerControllerMixin(Base) {
             // immer mindestens so gross wie der volle Name plus etwas Tipp-Puffer, unabhaengig
             // davon, wie schmal die Spalte gerade zufaellig gerendert war.
             const width = Math.max(textEl.scrollWidth + 24, cellRect.right - textRect.left);
-            this.renameState.rect = {
-                top: textRect.top,
-                left: textRect.left,
-                width,
-                height: textRect.height,
-            };
+            return { top: textRect.top, left: textRect.left, width, height: textRect.height };
+        }
+
+        onF2Rename() {
+            const selection = this.model.root.selection;
+            if (selection.length !== 1) {
+                return;
+            }
+            const record = selection[0];
+            const rect = this._computeRenameRect(record);
+            if (!rect) {
+                return;
+            }
+            this.renameState.rect = rect;
             this.renameState.value = record.data.name;
             this.renameState.record = record;
+        }
+
+        // Nachfuehren waehrend des Scrollens (siehe Kommentar bei _computeRenameRect). "scroll"
+        // bubblet nicht, deshalb capture:true auf window - faengt so auch das Scrollen des
+        // inneren Listen-Containers ab, nicht nur ein Scrollen der ganzen Seite.
+        onWindowScrollWhileRenaming() {
+            if (!this.renameState.record) {
+                return;
+            }
+            const rect = this._computeRenameRect(this.renameState.record);
+            if (rect) {
+                this.renameState.rect = rect;
+            }
         }
 
         onRenameInputKeydown(ev) {
