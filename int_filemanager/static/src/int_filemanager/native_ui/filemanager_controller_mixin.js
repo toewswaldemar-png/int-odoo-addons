@@ -15,7 +15,7 @@
 // /int_filemanager/* JSON-RPC-Routen auf statt native type="object"-Buttons - Begruendung
 // unveraendert siehe docs/int_filemanager_native_ui.md, Abschnitt "Sicherheitsrelevanter
 // Stolperstein".
-import { onMounted, onPatched, onWillUnmount, useEffect, useExternalListener, useRef, useState } from "@odoo/owl";
+import { onMounted, onPatched, onWillUnmount, useExternalListener, useRef, useState, useSubEnv } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { useBus, useService } from "@web/core/utils/hooks";
@@ -140,23 +140,35 @@ export function filemanagerControllerMixin(Base) {
             // ueber Odoos natives Listen-Inline-Editing (list.enterEditMode()): das committet ueber
             // ein rohes ORM write() auf das Feld, wuerde also nur den DB-Namen aendern, nicht die
             // echte Datei umbenennen/authz pruefen - derselbe "Sicherheitsrelevanter Stolperstein"
-            // wie bei jeder anderen Mutation (docs/int_filemanager_native_ui.md), deshalb ein
-            // eigenes, ueberlagerndes <input> statt Odoos Feld-Edit-Mode, das am Ende exakt denselben
-            // authz-geprueften /int_filemanager/rename-Aufruf ausloest wie der bestehende
-            // onRename()-Dialog. renameState.rect kommt aus getBoundingClientRect() auf dem
-            // [name="name"]-Feld-Wrapper der ausgewaehlten Zeile/Karte (position:fixed, Viewport-
-            // Koordinaten passen direkt, gleiches Muster wie chatterState.topPx oben).
-            this.renameState = useState({ record: null, rect: null, value: "" });
-            this.renameInputRef = useRef("renameInput");
-            useEffect(
-                (record) => {
-                    if (record && this.renameInputRef.el) {
-                        this.renameInputRef.el.focus();
-                        this.renameInputRef.el.select();
-                    }
+            // wie bei jeder anderen Mutation (docs/int_filemanager_native_ui.md). Committet deshalb
+            // ueber denselben authz-geprueften /int_filemanager/rename-Aufruf wie der bestehende
+            // onRename()-Dialog (_performRename unten).
+            //
+            // Das <input> selbst wird NICHT hier im Controller gerendert - es sitzt inline in
+            // name_icon_field.js/.xml, genau an der Stelle, an der sonst der Text-Span steht
+            // (t-if darauf, ob "isRenaming" fuer das jeweilige Feld-Widget-Record zutrifft).
+            // useSubEnv gibt dem Feld-Widget (ein eigenstaendig instanziertes Owl-Kind der Zeile/
+            // Karte, kein direktes Geschwister von Controller-Methoden) Zugriff auf den
+            // reaktiven Zustand plus die commit/cancel-Callbacks.
+            //
+            // Fruehere Version (bis 2026-09-13/14): ein separates, ueberlagerndes <input> mit
+            // position:fixed und Koordinaten aus getBoundingClientRect() - grundsaetzlich fragil,
+            // weil der echte Zellentext dabei die ganze Zeit im DOM sichtbar blieb. Vier
+            // Nutzerreports in Folge (Icon verdeckt, sichtbarer Rahmen trotz .o_input, lange
+            // Namen falsch markiert, Position lief beim Scrollen auseinander) waren alles
+            // Symptome derselben Grundkonstruktion, das letzte (sichtbares Doppelbild bei
+            // Cursor-Bewegung, sobald der Hintergrund transparent war) hat den Ansatz endgueltig
+            // disqualifiziert. Inline-Rendering im Feld-Widget selbst hat zu jedem Zeitpunkt nur
+            // genau ein Text-Element im DOM - keine Positionsberechnung, keine
+            // Scroll-Nachfuehrung, kein Doppelbild moeglich.
+            this.renameState = useState({ recordId: null, value: "" });
+            useSubEnv({
+                filemanagerRename: {
+                    state: this.renameState,
+                    commit: (name) => this._commitRename(name),
+                    cancel: () => { this.renameState.recordId = null; },
                 },
-                () => [this.renameState.record]
-            );
+            });
             // useHotkey("f2", ...) wuerde hart crashen: Odoos Hotkey-Service whitelisted nur
             // a-z/0-9/Navigationstasten/escape, F-Tasten sind dort in Odoo 18 UND 19
             // kategorisch ausgeschlossen (registerHotkey() wirft synchron beim useHotkey-Aufruf
@@ -179,12 +191,6 @@ export function filemanagerControllerMixin(Base) {
                 }
                 this.onF2Rename();
             });
-            // Positions-Nachfuehrung waehrend des Umbenennens (Nutzerreport 2026-09-13,
-            // Screenshot: Box blieb beim Scrollen an der alten Bildschirmposition stehen,
-            // siehe Kommentar bei _computeRenameRect/onWindowScrollWhileRenaming weiter unten).
-            // capture:true noetig: "scroll" bubblet nicht, nur die Capturing-Phase am window
-            // faengt auch das Scrollen eines inneren Listen-Containers ab.
-            useExternalListener(window, "scroll", () => this.onWindowScrollWhileRenaming(), { capture: true });
             useExternalListener(window, "dragleave", this.onWindowDragLeave);
             useExternalListener(window, "dragover", (ev) => ev.preventDefault());
             useExternalListener(window, "drop", this.onWindowDrop);
@@ -908,102 +914,35 @@ export function filemanagerControllerMixin(Base) {
 
         // F2 auf genau einer ausgewaehlten Zeile/Karte - mehrere/keine Auswahl ignoriert den
         // Tastendruck absichtlich (kein sinnvolles "Umbenennen" fuer 0 oder >1 Datensaetze). Das
-        // [name="name"]-Attribut ist Odoos eigene Kennzeichnung des generierten Feld-Wrapper-Divs
-        // (live am DOM verifiziert, Nutzerreport 2026-09-12) - selbes Attribut in Liste UND Kanban,
-        // kein eigener Marker noetig.
-        //
-        // Positionierung (Nutzerfeedback 2026-09-13, Screenshot): die Box soll NICHT die ganze
-        // Namensspalte inkl. Ordner-/Datei-Icon ueberdecken, sondern nur den Textbereich - das
-        // Icon (name_icon_field.xml: .o_int_filemanager_name_cell > button, dann
-        // span.text-truncate) bleibt sichtbar. left/top/height kommen deshalb vom Text-Span
-        // selbst, width geht aber bis zum rechten Rand der Zelle (nicht nur bis zur aktuellen,
-        // ggf. kurzen Textbreite) - sonst waere beim Umbenennen in einen laengeren Namen kein
-        // Platz zum Tippen.
-        //
-        // Kanban rendert "name" als ZWEI <field>-Knoten (filemanager_file_kanban_view.xml:
-        // invisible="thumbnail" mit dem Icon-Widget vs. invisible="not thumbnail" als schlichtes
-        // Textfeld ohne Icon) - beide tragen [name="name"], invisible entfernt sie nicht aus dem
-        // DOM, nur per CSS. Deshalb zuerst ueber alle [name="name"]-Treffer filtern und den
-        // tatsaechlich sichtbaren nehmen (offsetParent !== null - Standardtest fuer "per CSS
-        // ausgeblendet"), erst DANN innerhalb davon nach dem Text-Span suchen. Gibt es dort
-        // keinen eigenen Text-Span (Thumbnail-Karten: die Zelle IST bereits der Text, kein
-        // Icon davor), faellt textEl auf die Zelle selbst zurueck - dort ist "ganze Zelle
-        // ueberdecken" korrekt, weil kein Icon zu erhalten ist.
-        // Liefert das Positionsrechteck fuer die renameState-Box oder null, wenn die Zeile/Karte
-        // gerade nicht (mehr) sichtbar im DOM steht. Ausgelagert aus onF2Rename(), weil dieselbe
-        // Berechnung bei jedem Scroll-Event neu laufen muss (siehe useExternalListener("scroll")
-        // in setup() - position:fixed haelt die Bildschirmkoordinaten sonst fest, waehrend die
-        // Liste darunter wegscrollt, die Box driftet dann sichtbar von ihrer Zeile weg,
-        // Nutzerreport 2026-09-13 per Screenshot).
-        _computeRenameRect(record) {
-            const cellEl = Array.from(
-                this.rootRef.el?.querySelectorAll(`[data-id="${record.id}"] [name="name"]`) ?? []
-            ).find((el) => el.offsetParent !== null);
-            if (!cellEl) {
-                return null;
-            }
-            const textEl = cellEl.querySelector(".text-truncate") ?? cellEl;
-            const cellRect = cellEl.getBoundingClientRect();
-            const textRect = textEl.getBoundingClientRect();
-            // .text-truncate schneidet lange Namen mit Ellipsis ab (overflow:hidden) - dessen
-            // getBoundingClientRect().width ist deshalb nur die SICHTBARE (ggf. abgeschnittene)
-            // Breite, nicht die des vollen Dateinamens. scrollWidth liefert dagegen die volle,
-            // ungekuerzte Inhaltsbreite (Nutzerreport 2026-09-13: Screenshot zeigte die letzten
-            // zwei Zeichen eines langen Namens ausserhalb der Markierung/Box). Breite deshalb
-            // immer mindestens so gross wie der volle Name plus etwas Tipp-Puffer, unabhaengig
-            // davon, wie schmal die Spalte gerade zufaellig gerendert war.
-            const width = Math.max(textEl.scrollWidth + 24, cellRect.right - textRect.left);
-            return { top: textRect.top, left: textRect.left, width, height: textRect.height };
-        }
-
+        // eigentliche <input> lebt in name_icon_field.js (siehe env.filemanagerRename-Kommentar
+        // in setup()) - hier wird nur der Editier-Zustand gesetzt, keine DOM-Arbeit noetig.
         onF2Rename() {
             const selection = this.model.root.selection;
             if (selection.length !== 1) {
                 return;
             }
             const record = selection[0];
-            const rect = this._computeRenameRect(record);
-            if (!rect) {
-                return;
-            }
-            this.renameState.rect = rect;
+            this.renameState.recordId = record.resId;
             this.renameState.value = record.data.name;
-            this.renameState.record = record;
         }
 
-        // Nachfuehren waehrend des Scrollens (siehe Kommentar bei _computeRenameRect). "scroll"
-        // bubblet nicht, deshalb capture:true auf window - faengt so auch das Scrollen des
-        // inneren Listen-Containers ab, nicht nur ein Scrollen der ganzen Seite.
-        onWindowScrollWhileRenaming() {
-            if (!this.renameState.record) {
+        // Von name_icon_field.js ueber env.filemanagerRename.commit() aufgerufen (Blur oder
+        // Enter dort). Sucht den Record ueber resId statt eine Referenz durchzureichen, weil das
+        // Feld-Widget nur die env-Werte kennt, keine Controller-internen Objekte. recordId wird
+        // sofort geleert (nicht erst nach der RPC), damit das Feld sofort zurueck auf die
+        // schreibgeschuetzte Text-Anzeige wechselt, statt bis zum Server-Antwort editierbar zu
+        // bleiben.
+        async _commitRename(name) {
+            const recordId = this.renameState.recordId;
+            this.renameState.recordId = null;
+            if (!recordId) {
                 return;
             }
-            const rect = this._computeRenameRect(this.renameState.record);
-            if (rect) {
-                this.renameState.rect = rect;
+            const record = this.model.root.records.find((r) => r.resId === recordId);
+            if (!record) {
+                return;
             }
-        }
-
-        onRenameInputKeydown(ev) {
-            if (ev.key === "Enter") {
-                ev.preventDefault();
-                this.renameInputRef.el.blur();
-            } else if (ev.key === "Escape") {
-                ev.preventDefault();
-                this.renameState.record = null;
-            }
-        }
-
-        // Blur committet (Explorer-Verhalten: Wegklicken uebernimmt den Namen, nicht verwirft ihn)
-        // - Escape oben leert renameState.record VOR dem Blur, der dadurch ausgeloeste Aufruf hier
-        // findet dann kein record mehr vor und tut nichts.
-        async onRenameInputBlur() {
-            const record = this.renameState.record;
-            const name = this.renameState.value;
-            this.renameState.record = null;
-            if (record) {
-                await this._performRename(record, name);
-            }
+            await this._performRename(record, name);
         }
 
         onLinkRecord(record) {

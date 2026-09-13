@@ -70,17 +70,6 @@
                          threadId="chatterRecord.resId"
                          isChatterAside="true" isInFormSheetBg="false"/>
             </div>
-            <!-- Inline-Umbenennen per F2 (filemanager_controller_mixin.js: onF2Rename) - eigenes
-                 ueberlagerndes <input> statt Odoos nativem Listen-Edit-Mode, Begruendung dort.
-                 Bewusst OHNE Odoos .o_input-Klasse (2026-09-13, zweite Feedback-Runde: auch deren
-                 Rahmen wirkte noch wie eine Box) - alle visuellen Regeln sitzen ausschliesslich
-                 in .o_int_filemanager_rename_input (native_list_view.scss), explizit unsichtbar. -->
-            <input t-if="renameState.record" t-ref="renameInput"
-                   class="o_int_filemanager_rename_input"
-                   t-attf-style="top: {{renameState.rect.top}}px; left: {{renameState.rect.left}}px; width: {{renameState.rect.width}}px; height: {{renameState.rect.height}}px;"
-                   t-model="renameState.value"
-                   t-on-keydown="onRenameInputKeydown"
-                   t-on-blur="onRenameInputBlur"/>
         </xpath>
     </t>
 

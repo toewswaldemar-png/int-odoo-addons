@@ -65,21 +65,17 @@
     outline-offset: -2px;
 }
 
-// Inline-Umbenennen per F2 (filemanager_controller_mixin.js: onF2Rename) - position:fixed direkt
-// ueber dem Text-Bereich der ausgewaehlten Zeile/Karte platziert (Viewport-Koordinaten aus
-// getBoundingClientRect passen direkt, gleiches Muster wie das Rubberband-Rechteck unten und
-// der Chatter-Panel-Top). Geteilte Regel statt in .o_int_filemanager_list/_kanban verschachtelt,
-// da native_list_view.xml UND native_kanban_view.xml dasselbe Element rendern.
-//
-// Bewusst KEIN sichtbarer Rahmen/Hintergrund (Nutzerfeedback 2026-09-13, zweite Runde: schon
-// Odoos eigene .o_input-Klasse zeigt einen sichtbaren Rahmen - das wirkt weiterhin wie ein
-// separat aufgesetztes Element statt "nur der Text wird editierbar"). Deshalb .o_input aus den
-// Templates wieder entfernt und hier alles Visuelle explizit auf "unsichtbar" gesetzt - nur
-// Textcursor/-markierung zeigen noch, dass der Text gerade editierbar ist, sonst nichts.
+// Inline-Umbenennen per F2 (name_icon_field.js/.xml) - seit 2026-09-14 ein ECHTES Kind von
+// .o_int_filemanager_name_cell, an genau der Stelle, an der sonst der Text-Span steht (t-if
+// darauf, nicht mehr ein separates, ueberlagerndes position:fixed-Element mit manuell
+// kopierten Koordinaten - siehe die ausfuehrliche Begruendung/Vorgeschichte im
+// env.filemanagerRename-Kommentar in filemanager_controller_mixin.js: setup(). Deshalb hier
+// nur noch Flex-Item-Verhalten (waechst/schrumpft wie zuvor der Text-Span) und "unsichtbare"
+// Eingabefeld-Optik (kein Rahmen/Hintergrund) - keine Positionierung mehr noetig, das
+// Element liegt ja bereits an der richtigen Stelle im normalen Dokumentfluss.
 .o_int_filemanager_rename_input {
-    position: fixed;
-    z-index: 1500;
-    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: 0.8125rem;
     font-family: inherit;
     color: inherit;

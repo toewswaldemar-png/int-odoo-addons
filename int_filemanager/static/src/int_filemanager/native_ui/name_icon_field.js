@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component } from "@odoo/owl";
+import { Component, useEffect, useRef } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { useService } from "@web/core/utils/hooks";
@@ -69,6 +69,50 @@ export class IntFilemanagerNameField extends Component {
     setup() {
         this.orm = useService("orm");
         this.actionService = useService("action");
+
+        // Inline-Umbenennen per F2 (filemanager_controller_mixin.js: env.filemanagerRename,
+        // siehe dortigen Kommentar in setup() zur Vorgeschichte/Begruendung gegen ein
+        // separates ueberlagerndes <input>). Fokus+Alles-Markieren beim Eintritt in den
+        // Editier-Zustand, analog zum fruehreren renameInputRef-useEffect im Controller.
+        this.renameInputRef = useRef("renameInput");
+        useEffect(
+            () => {
+                if (this.isRenaming && this.renameInputRef.el) {
+                    this.renameInputRef.el.focus();
+                    this.renameInputRef.el.select();
+                }
+            },
+            () => [this.isRenaming]
+        );
+    }
+
+    // Vergleich ueber resId, nicht Objektreferenz: das Feld-Widget bekommt sein eigenes
+    // props.record vom Owl-Renderer, nicht zwingend dasselbe Objekt wie
+    // model.root.selection[0] im Controller, auch wenn beide dieselbe DB-Zeile meinen.
+    get isRenaming() {
+        return this.env.filemanagerRename?.state.recordId === this.props.record.resId;
+    }
+
+    onRenameKeydown(ev) {
+        // Verhindert, dass Odoos eigene Listen-/Kanban-Tastaturnavigation (Pfeiltasten,
+        // Entf fuer Zeilen-Aktionen o.ae.) waehrend des Tippens im Inline-Input mitfeuert -
+        // beim fruehreren, ausserhalb der Zeile ueberlagernden <input> war das kein Thema,
+        // hier sitzt das Feld jetzt aber wirklich innerhalb der Zeile im DOM.
+        ev.stopPropagation();
+        if (ev.key === "Enter") {
+            ev.preventDefault();
+            this.renameInputRef.el.blur();
+        } else if (ev.key === "Escape") {
+            ev.preventDefault();
+            this.env.filemanagerRename.cancel();
+        }
+    }
+
+    // Blur committet (Explorer-Verhalten: Wegklicken uebernimmt den Namen, nicht verwirft
+    // ihn) - Escape oben ruft cancel() VOR dem Blur auf, der dadurch ausgeloeste Aufruf hier
+    // findet dann kein aktives recordId mehr vor (siehe _commitRename im Controller).
+    onRenameBlur() {
+        this.env.filemanagerRename.commit(this.env.filemanagerRename.state.value);
     }
 
     // Ersetzt die vorherige eigene "Details öffnen"-Spalte (Pfeil-Button, action_open_form) -
