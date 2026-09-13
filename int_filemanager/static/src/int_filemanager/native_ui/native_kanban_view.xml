@@ -56,7 +56,7 @@
             </div>
             <!-- Inline-Umbenennen per F2, 1:1 aus native_list_view.xml gespiegelt (siehe dort). -->
             <input t-if="renameState.record" t-ref="renameInput"
-                   class="o_input o_int_filemanager_rename_input"
+                   class="o_int_filemanager_rename_input"
                    t-attf-style="top: {{renameState.rect.top}}px; left: {{renameState.rect.left}}px; width: {{renameState.rect.width}}px; height: {{renameState.rect.height}}px;"
                    t-model="renameState.value"
                    t-on-keydown="onRenameInputKeydown"
