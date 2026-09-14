@@ -100,6 +100,22 @@ function isOfficeEditable(name) {
     return OFFICE_EDIT_EXTENSIONS.has(extOf(name));
 }
 
+// Nur echte Text-Eingabefelder zaehlen als "Tippkontext" - NICHT jedes <input>. Live als Bug
+// gefunden 2026-09-14 (Nutzerreport "ESC deselektiert nicht"): die Auswahl-Checkbox der Zeile
+// ist selbst ein <input type="checkbox">, behielt nach einem Checkbox-Klick den DOM-Fokus, und
+// die vorherige Pruefung (tagName === "INPUT" ohne type-Check) hielt das faelschlich fuer ein
+// Tippfeld - F2/Escape taten dann nichts, weil sie fruehzeitig abbrachen.
+const NON_TEXT_INPUT_TYPES = new Set(["checkbox", "radio", "button", "submit", "reset", "file", "image", "range", "color"]);
+function isTypingContext(el) {
+    if (!el) {
+        return false;
+    }
+    if (el.tagName === "TEXTAREA" || el.isContentEditable) {
+        return true;
+    }
+    return el.tagName === "INPUT" && !NON_TEXT_INPUT_TYPES.has(el.type);
+}
+
 // Muss mit fulltext.py's PLAIN_TEXT_EXTENSIONS/PDF_EXTENSIONS uebereinstimmen (nur zur
 // UI-Verfuegbarkeit des "Werte erkennen"-Menuepunkts - der Server bleibt bei der eigentlichen
 // Analyse die einzige Quelle der Wahrheit, siehe onAnalyzeDocument). TEXT_EDIT_EXTENSIONS oben
@@ -187,11 +203,7 @@ export function filemanagerControllerMixin(Base) {
                     // isEditable verhindert nur das erneute AUSLOESEN von onF2Rename() waehrend des
                     // Tippens, nicht mehr das preventDefault selbst.
                     ev.preventDefault();
-                    const active = document.activeElement;
-                    const isEditable =
-                        active &&
-                        (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable);
-                    if (isEditable) {
+                    if (isTypingContext(document.activeElement)) {
                         return;
                     }
                     this.onF2Rename();
@@ -205,11 +217,7 @@ export function filemanagerControllerMixin(Base) {
                 // die Dialog-Ausnahme laesst offene Modals (z.B. Bestaetigungsdialoge) ihr eigenes
                 // Escape-zum-Schliessen unangetastet, statt zusaetzlich die Auswahl zu leeren.
                 if (ev.key === "Escape") {
-                    const active = document.activeElement;
-                    const isEditable =
-                        active &&
-                        (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable);
-                    if (isEditable || document.querySelector(".modal.show, .o_dialog")) {
+                    if (isTypingContext(document.activeElement) || document.querySelector(".modal.show, .o_dialog")) {
                         return;
                     }
                     for (const record of this.model.root.selection) {
