@@ -909,14 +909,25 @@ class IntFilemanagerFile(models.Model):
             for vals in to_create:
                 depth = vals["folder_path"].count("/") + 1 if vals["folder_path"] else 0
                 by_depth.setdefault(depth, []).append(vals)
+            # Zusaetzlich in batch_size-Haeppchen INNERHALB jeder Ebene - live als Bug
+            # gefunden 2026-09-14 (MemoryError beim Erstimport einer 129GB-Netzwerkfreigabe):
+            # ohne diese Aufteilung entsteht ein einziger unbegrenzt grosser create()-Aufruf,
+            # sobald eine Ebene viele direkte Kinder hat (z.B. ein Ordner mit tausenden
+            # Dateien). Sicher innerhalb einer Ebene, weil Geschwister nie voneinander
+            # abhaengen - nur vom (bereits vollstaendig angelegten) Elternordner einer
+            # flacheren Ebene. Commit pro Haeppchen macht Fortschritt ausserdem live in der
+            # DB sichtbar und rettet bereits gescannte Haeppchen vor einem spaeteren Absturz.
             for depth in sorted(by_depth):
                 level_vals = by_depth[depth]
                 for vals in level_vals:
                     vals["parent_id"] = resolve_parent_id(vals["folder_path"] or False)
-                created = Model.create(level_vals)
-                for rec, vals in zip(created, level_vals):
-                    if vals["is_dir"]:
-                        path_to_id_cache[vals["path"]] = rec.id
+                for i in range(0, len(level_vals), batch_size):
+                    chunk = level_vals[i : i + batch_size]
+                    created = Model.create(chunk)
+                    for rec, vals in zip(created, chunk):
+                        if vals["is_dir"]:
+                            path_to_id_cache[vals["path"]] = rec.id
+                    self.env.cr.commit()
 
         self.env.cr.commit()
 
