@@ -83,6 +83,11 @@
     font-size: inherit;
     font-family: inherit;
     line-height: inherit;
+    // Nutzerreport 2026-09-14 (Folgefund zum font-size-Sprung oben): Browser bringen fuer
+    // <input> einen eigenen UA-Default fuer letter-spacing mit, der leicht vom Zeilentext
+    // abweichen kann, obwohl font-size/-family bereits identisch sind - deshalb auch dieses
+    // Property explizit erben statt dem Browser-Default zu ueberlassen.
+    letter-spacing: inherit;
     color: inherit;
     background: transparent;
     border: none;
