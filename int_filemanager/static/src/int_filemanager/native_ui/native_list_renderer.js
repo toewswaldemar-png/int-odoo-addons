@@ -132,6 +132,20 @@ export class IntFilemanagerListRenderer extends ListRenderer {
             // nativen Drag startet, falls der Mausdown zufaellig auf/neben selektierbarem Text
             // in der Leerflaeche liegt - derselbe Fehlerklasse wie oben, nur vorbeugend statt
             // nur reaktiv per Modal-Ausschluss.
+            //
+            // Nebenwirkung, live gefunden 2026-09-14: preventDefault() auf mousedown unterdrueckt
+            // auch den normalen Browser-Blur des zuvor fokussierten Elements. War das
+            // F2-Umbenennen-Input aktiv, blieb es dadurch bei einem Klick auf leere Flaeche
+            // haengen (onRenameBlur in name_icon_field.js feuerte nie, kein Commit). Deshalb hier
+            // manuell blur() auf ein noch aktives Rename-Input, BEVOR preventDefault greift -
+            // exakt das Explorer-Verhalten "Wegklicken uebernimmt den Namen" aus dem
+            // onRenameBlur-Kommentar dort.
+            const activeRenameInput = document.activeElement?.classList?.contains(
+                "o_int_filemanager_rename_input"
+            )
+                ? document.activeElement
+                : null;
+            activeRenameInput?.blur();
             ev.preventDefault();
             const rowRects = rowEls.map((el, i) => ({ record: records[i], rect: el.getBoundingClientRect() }));
             const additive = ev.ctrlKey || ev.metaKey;
