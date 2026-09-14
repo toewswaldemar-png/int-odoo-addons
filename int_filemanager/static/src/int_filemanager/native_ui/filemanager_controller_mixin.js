@@ -189,6 +189,9 @@ export function filemanagerControllerMixin(Base) {
                 if (isEditable) {
                     return;
                 }
+                // Ohne preventDefault greift zusaetzlich der Browser selbst auf F2 zu (z.B. Edges
+                // eigene Befehlsliste statt unserem Inline-Rename) - live beobachtet 2026-09-14.
+                ev.preventDefault();
                 this.onF2Rename();
             });
             useExternalListener(window, "dragleave", this.onWindowDragLeave);
