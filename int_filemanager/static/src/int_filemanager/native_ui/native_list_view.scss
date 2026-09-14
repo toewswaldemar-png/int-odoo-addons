@@ -76,18 +76,16 @@
 .o_int_filemanager_rename_input {
     flex: 1 1 auto;
     min-width: 0;
-    // inherit statt eines hart codierten Werts - Nutzerreport 2026-09-14: das Eingabefeld war
-    // optisch kleiner/groesser als der Zeilentext, sichtbarer Sprung beim Eintritt in den
-    // Editier-Zustand. inherit garantiert exakte Uebereinstimmung mit der jeweils aktuellen
-    // Listen-Schriftgroesse, unabhaengig von Theme/Zoom, statt eine feste Zahl zu raten.
-    font-size: inherit;
-    font-family: inherit;
-    line-height: inherit;
-    // Nutzerreport 2026-09-14 (Folgefund zum font-size-Sprung oben): Browser bringen fuer
-    // <input> einen eigenen UA-Default fuer letter-spacing mit, der leicht vom Zeilentext
-    // abweichen kann, obwohl font-size/-family bereits identisch sind - deshalb auch dieses
-    // Property explizit erben statt dem Browser-Default zu ueberlassen.
+    // font-Kurzform statt einzelner Properties (font-size/-family/line-height reichten nicht,
+    // Nutzerreport 2026-09-14: Zeichenabstand im Input wirkte weiterhin enger als der
+    // Zeilentext) - deckt zusaetzlich font-weight/-style/-variant/-stretch ab, die <input>
+    // browserseitig ueber ein eigenes UA-Kurzform-Preset (z.B. "-webkit-small-control") setzt
+    // und die font-size/-family allein nicht ueberschreiben. appearance:none nimmt dem Input
+    // zusaetzlich seinen nativen Formularfeld-Renderpfad, der Text bei manchen Browsern leicht
+    // anders (enger/breiter) rastert als normaler CSS-Text, selbst bei identischen Werten.
+    font: inherit;
     letter-spacing: inherit;
+    appearance: none;
     color: inherit;
     background: transparent;
     border: none;
