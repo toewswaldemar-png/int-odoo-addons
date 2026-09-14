@@ -76,8 +76,13 @@
 .o_int_filemanager_rename_input {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 0.8125rem;
+    // inherit statt eines hart codierten Werts - Nutzerreport 2026-09-14: das Eingabefeld war
+    // optisch kleiner/groesser als der Zeilentext, sichtbarer Sprung beim Eintritt in den
+    // Editier-Zustand. inherit garantiert exakte Uebereinstimmung mit der jeweils aktuellen
+    // Listen-Schriftgroesse, unabhaengig von Theme/Zoom, statt eine feste Zahl zu raten.
+    font-size: inherit;
     font-family: inherit;
+    line-height: inherit;
     color: inherit;
     background: transparent;
     border: none;
