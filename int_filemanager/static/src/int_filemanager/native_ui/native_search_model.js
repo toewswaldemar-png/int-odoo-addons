@@ -22,13 +22,24 @@
 // navigation with a search bar term (e.g. a tag) - browsing one level above a matching
 // file returns zero rows even though the file exists further down, because "=" only ever
 // matches direct children. Fix: fall back to Odoo's own native "child_of" (indexed via
-// parent_path, same mechanism product.category uses) whenever a search facet is active
-// (this.query.length > 0 - populated by search bar terms/filters, independent of the
-// category's own activeValueId), so a search recurses into subfolders instead of being
-// silently scoped to the current level. At "Alle" (activeValueId falsy) while searching,
-// no parent_id clause at all is pushed - not "= false" - so the search covers the whole
-// tree instead of only literal root-level rows, matching Odoo's original unselected-
-// category default. Plain navigation (no search facet) keeps "=" exactly as before.
+// parent_path, same mechanism product.category uses) so a search can recurse into
+// subfolders instead of being silently scoped to the current level. At "Alle"
+// (activeValueId falsy) while recursing, no parent_id clause at all is pushed - not
+// "= false" - so the search covers the whole tree instead of only literal root-level rows,
+// matching Odoo's original unselected-category default. Plain navigation (recursion off)
+// keeps "=" exactly as before.
+//
+// Revised 2026-09-14 (Nutzerreport): recursion used to trigger automatically whenever ANY
+// facet was active (this.query.length > 0), which surprised users once filter_hide_lock_files
+// (permanently active by default, see filemanager_file_search.xml) made recursion effectively
+// always-on, and separately felt wrong even for ordinary filters (browsing one folder with
+// e.g. "Nur Ordner" ticked searched the whole tree, not just that folder). Now file-explorer
+// convention instead: recursion is opt-in via one explicit marker filter
+// (filter_search_recursive, no domain of its own - see RECURSIVE_FILTER_NAME below), matching
+// something like a "Search subfolders" checkbox. The original 2026-09-04 zero-rows bug this
+// guarded against only resurfaces if a user filters by tag one folder above a match WITHOUT
+// also ticking that filter - an accepted, understood trade-off (same as Explorer's own
+// unchecked "include subfolders" defaulting to a narrower search), not a regression.
 //
 // A fourth case, found live (2026-09-04): "child_of" on parent_id is self-inclusive when
 // the field is the model's own _parent_name (verified by logging _getCategoryDomain's own
@@ -61,21 +72,18 @@
 // Registrierung, kein resModel-Laufzeit-Check mehr noetig.
 import { SearchModel } from "@web/search/search_model";
 
-// Facet-Namen (aus <filter name="...">), die NICHT als "der Nutzer sucht gerade" zaehlen sollen
-// fuer die recursive-Erkennung unten - live gefunden 2026-09-14: filter_hide_lock_files
-// (filemanager_file_search.xml) ist per search_default_ dauerhaft aktiv, zaehlte also
-// permanent als aktives Facet und schaltete die Ordnernavigation faelschlich global-rekursiv
-// (Root zeigte Ordner aus dem GESAMTEN Baum statt nur echte Wurzelordner). Node.name kommt
-// 1:1 aus dem <filter>-XML-Attribut durch (search_arch_parser.js: preSearchItem.name =
-// node.getAttribute("name"), am Odoo-Quellcode verifiziert).
-const NON_SEARCH_FACET_NAMES = new Set(["filter_hide_lock_files"]);
+// Name-Attribut des Marker-Filters aus filemanager_file_search.xml (<filter
+// name="filter_search_recursive">, ohne eigene domain) - node.name kommt 1:1 aus dem XML-
+// Attribut durch (search_arch_parser.js: preSearchItem.name = node.getAttribute("name"), am
+// Odoo-Quellcode verifiziert), das reicht als eindeutiger Erkennungsschluessel.
+const RECURSIVE_FILTER_NAME = "filter_search_recursive";
 
 export class IntFilemanagerSearchModel extends SearchModel {
     _getCategoryDomain(excludedCategoryId) {
-        const hasRealSearchFacet = this.query.some(
-            (queryElem) => !NON_SEARCH_FACET_NAMES.has(this.searchItems[queryElem.searchItemId]?.name)
+        const recursiveFilterActive = this.query.some(
+            (queryElem) => this.searchItems[queryElem.searchItemId]?.name === RECURSIVE_FILTER_NAME
         );
-        const recursive = hasRealSearchFacet || Boolean(this.globalContext.int_filemanager_recursive);
+        const recursive = recursiveFilterActive || Boolean(this.globalContext.int_filemanager_recursive);
         const domain = [];
         for (const category of this.categories) {
             if (category.id === excludedCategoryId) {

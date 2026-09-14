@@ -20,8 +20,20 @@
                      der Action) - Nutzerwunsch 2026-09-14: Word/Excel/PowerPoint-Sperrdateien
                      ("~$Dateiname.docx") sollen die Listenansicht nicht zumuellen, bleiben aber per
                      Abwaehlen dieses Filters weiter auffindbar (z.B. um eine haengende Sperrdatei
-                     zu pruefen). -->
-                <filter name="filter_hide_lock_files" string="Sperrdateien ausblenden" domain="[('is_lock_file','=',False)]"/>
+                     zu pruefen). Kurzer Text ("Ohne Sperrdateien" statt "Sperrdateien ausblenden") -
+                     Nutzerreport 2026-09-14: die laengere Version nahm als staendig aktives Facet
+                     zu viel Platz in der Suchleiste weg. -->
+                <filter name="filter_hide_lock_files" string="Ohne Sperrdateien" domain="[('is_lock_file','=',False)]"/>
+                <separator/>
+                <!-- Reine Marker-Filter ohne eigene domain - wird nicht direkt in eine
+                     Domain-Klausel uebersetzt, sondern nur in native_search_model.js anhand seines
+                     name-Attributs erkannt, um recursive umzuschalten (siehe dort). Nutzerwunsch
+                     2026-09-14: vorher loeste JEDE aktive Facette (auch Tags/Status/Sperrdateien-
+                     Filter) automatisch eine baumweite Rekursion aus - das ueberraschte, weil z.B.
+                     der immer aktive Sperrdateien-Filter dadurch staendig ungewollt rekursiv
+                     durchsuchte. Jetzt Datei-Explorer-Standard: Filter/Suche bleiben auf die
+                     aktuelle Ordnerebene beschraenkt, Unterordner nur mit explizitem Haken. -->
+                <filter name="filter_search_recursive" string="Unterordner einbeziehen"/>
                 <separator/>
                 <filter name="filter_tagged" string="Mit Tags" domain="[('tag_ids','!=',False)]"/>
                 <filter name="filter_untagged" string="Ohne Tags" domain="[('tag_ids','=',False)]"/>
