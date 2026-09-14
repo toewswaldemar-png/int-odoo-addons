@@ -16,6 +16,13 @@
                 <filter name="filter_folders" string="Nur Ordner" domain="[('is_dir','=',True)]"/>
                 <filter name="filter_files" string="Nur Dateien" domain="[('is_dir','=',False)]"/>
                 <separator/>
+                <!-- Standardmaessig aktiv (siehe search_default_filter_hide_lock_files im Context
+                     der Action) - Nutzerwunsch 2026-09-14: Word/Excel/PowerPoint-Sperrdateien
+                     ("~$Dateiname.docx") sollen die Listenansicht nicht zumuellen, bleiben aber per
+                     Abwaehlen dieses Filters weiter auffindbar (z.B. um eine haengende Sperrdatei
+                     zu pruefen). -->
+                <filter name="filter_hide_lock_files" string="Sperrdateien ausblenden" domain="[('is_lock_file','=',False)]"/>
+                <separator/>
                 <filter name="filter_tagged" string="Mit Tags" domain="[('tag_ids','!=',False)]"/>
                 <filter name="filter_untagged" string="Ohne Tags" domain="[('tag_ids','=',False)]"/>
                 <separator/>

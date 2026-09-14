@@ -80,5 +80,6 @@
              wuerde permanent in searchModel.globalDomain landen und mit jeder Kategorie-Auswahl
              ge-ANDet, was Navigation in Unterordner unmoeglich machen wuerde. -->
         <field name="domain">[]</field>
+        <field name="context">{'search_default_filter_hide_lock_files': 1}</field>
     </record>
 </odoo>

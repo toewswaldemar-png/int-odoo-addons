@@ -75,6 +75,21 @@ class IntFilemanagerFile(models.Model):
     _parent_name = "parent_id"
     _parent_store = True
     is_dir = fields.Boolean(string="Ist Ordner", index=True)
+    # Nutzerwunsch 2026-09-14: Word/Excel/PowerPoint legen waehrend eine Datei dort offen ist eine
+    # Sperrdatei "~$<name>" im selben Ordner an - reine Betriebssystem-/Office-Konvention, nicht
+    # konfigurierbar, deshalb hart codiertes Praefix statt eines Einstellungs-Parameters. Stored
+    # Compute (nicht ueber eine reine Python-Property geloest), damit das Feld in der
+    # Suchfilter-Domain unten verwendbar ist - ein Odoo-Domain-Ausdruck kann nur auf echte
+    # Modellfelder zugreifen, nicht auf Methoden.
+    is_lock_file = fields.Boolean(
+        string="Sperrdatei",
+        compute="_compute_is_lock_file",
+        store=True,
+        index=True,
+        help='Temporäre Office-Sperrdatei (Name beginnt mit "~$"), erscheint während ein '
+        "Dokument dort geöffnet ist. Wird ganz normal mitindexiert, ist in der Listenansicht "
+        "aber standardmäßig über den Suchfilter ausgeblendet.",
+    )
     size = fields.Float(
         string="Größe (Bytes)", digits=(0, 0),
         help="Float statt Integer: Bytes sind zwar nie fraktional, aber int4 (Odoos Integer-Feld) "
@@ -128,6 +143,11 @@ class IntFilemanagerFile(models.Model):
         help="Kunde/Lieferant/Kontakt, mit dem diese Datei/dieser Ordner inhaltlich "
         "verknüpft ist.",
     )
+
+    @api.depends("name")
+    def _compute_is_lock_file(self):
+        for record in self:
+            record.is_lock_file = bool(record.name) and record.name.startswith("~$")
 
     def write(self, vals):
         """Direktes Bearbeiten von "name" im Formular (Nutzerwunsch 2026-09-06) - schreibt
