@@ -182,6 +182,13 @@ export function filemanagerControllerMixin(Base) {
                 if (ev.key !== "F2") {
                     return;
                 }
+                // preventDefault() VOR der Editable-Pruefung, nicht danach: sonst bekommt der
+                // Browser beim zweiten F2-Druck (Fokus liegt schon im eigenen Rename-Input) doch
+                // wieder die Taste zu sehen und oeffnet seine eigene Befehlsliste - live so
+                // beobachtet (F2, F2, F2, F2 schaltete abwechselnd Rename/Edge-Fenster um).
+                // isEditable verhindert nur das erneute AUSLOESEN von onF2Rename() waehrend des
+                // Tippens, nicht mehr das preventDefault selbst.
+                ev.preventDefault();
                 const active = document.activeElement;
                 const isEditable =
                     active &&
@@ -189,9 +196,6 @@ export function filemanagerControllerMixin(Base) {
                 if (isEditable) {
                     return;
                 }
-                // Ohne preventDefault greift zusaetzlich der Browser selbst auf F2 zu (z.B. Edges
-                // eigene Befehlsliste statt unserem Inline-Rename) - live beobachtet 2026-09-14.
-                ev.preventDefault();
                 this.onF2Rename();
             });
             useExternalListener(window, "dragleave", this.onWindowDragLeave);
