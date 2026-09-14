@@ -223,6 +223,14 @@ export function filemanagerControllerMixin(Base) {
                     for (const record of this.model.root.selection) {
                         record.toggleSelection(false);
                     }
+                    // Checkbox-Auswahl und Odoos eigener nativer "fokussierte Zelle"-Rahmen
+                    // (Tastaturnavigation, .o_data_cell mit tabindex="-1") sind zwei getrennte
+                    // Dinge - Nutzerreport 2026-09-14: nach dem Deselect blieb der Rahmen sichtbar
+                    // stehen, sah aus wie "ESC tut nichts". blur() nimmt der zuletzt fokussierten
+                    // Zelle den Fokus, der Rahmen verschwindet mit. Kein Ziel-Check noetig -
+                    // blur() auf einem bereits unfokussierten Element (z.B. document.body) ist
+                    // ein No-Op.
+                    document.activeElement?.blur();
                 }
                 // capture:true (nicht der Default/Bubble) ist hier Pflicht, nicht Kosmetik: Escape
                 // ist - anders als F2 - in Odoos Hotkey-Service ausdruecklich WHITELISTED
