@@ -179,24 +179,43 @@ export function filemanagerControllerMixin(Base) {
             // automatisch mitbringt (sonst wuerde F2 auch beim Tippen im Suchfeld/eigenen
             // Umbenennen-Input feuern).
             useExternalListener(window, "keydown", (ev) => {
-                if (ev.key !== "F2") {
+                if (ev.key === "F2") {
+                    // preventDefault() VOR der Editable-Pruefung, nicht danach: sonst bekommt der
+                    // Browser beim zweiten F2-Druck (Fokus liegt schon im eigenen Rename-Input) doch
+                    // wieder die Taste zu sehen und oeffnet seine eigene Befehlsliste - live so
+                    // beobachtet (F2, F2, F2, F2 schaltete abwechselnd Rename/Edge-Fenster um).
+                    // isEditable verhindert nur das erneute AUSLOESEN von onF2Rename() waehrend des
+                    // Tippens, nicht mehr das preventDefault selbst.
+                    ev.preventDefault();
+                    const active = document.activeElement;
+                    const isEditable =
+                        active &&
+                        (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable);
+                    if (isEditable) {
+                        return;
+                    }
+                    this.onF2Rename();
                     return;
                 }
-                // preventDefault() VOR der Editable-Pruefung, nicht danach: sonst bekommt der
-                // Browser beim zweiten F2-Druck (Fokus liegt schon im eigenen Rename-Input) doch
-                // wieder die Taste zu sehen und oeffnet seine eigene Befehlsliste - live so
-                // beobachtet (F2, F2, F2, F2 schaltete abwechselnd Rename/Edge-Fenster um).
-                // isEditable verhindert nur das erneute AUSLOESEN von onF2Rename() waehrend des
-                // Tippens, nicht mehr das preventDefault selbst.
-                ev.preventDefault();
-                const active = document.activeElement;
-                const isEditable =
-                    active &&
-                    (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable);
-                if (isEditable) {
-                    return;
+                // Escape deselektiert die Auswahl (Explorer-/web-filemanager-Konvention, siehe
+                // dortiges useListSelection.ts) - erreicht diesen Listener waehrend eines aktiven
+                // F2-Renames ohnehin nie, weil onRenameKeydown in name_icon_field.js dort
+                // stopPropagation() aufruft (eigene Escape-Behandlung = cancel()). isEditable
+                // schuetzt z.B. das Suchfeld (Odoo soll dessen eigenes Escape-Verhalten behalten),
+                // die Dialog-Ausnahme laesst offene Modals (z.B. Bestaetigungsdialoge) ihr eigenes
+                // Escape-zum-Schliessen unangetastet, statt zusaetzlich die Auswahl zu leeren.
+                if (ev.key === "Escape") {
+                    const active = document.activeElement;
+                    const isEditable =
+                        active &&
+                        (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable);
+                    if (isEditable || document.querySelector(".modal.show, .o_dialog")) {
+                        return;
+                    }
+                    for (const record of this.model.root.selection) {
+                        record.toggleSelection(false);
+                    }
                 }
-                this.onF2Rename();
             });
             useExternalListener(window, "dragleave", this.onWindowDragLeave);
             useExternalListener(window, "dragover", (ev) => ev.preventDefault());
