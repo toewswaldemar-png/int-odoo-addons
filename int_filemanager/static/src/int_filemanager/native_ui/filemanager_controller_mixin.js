@@ -224,7 +224,17 @@ export function filemanagerControllerMixin(Base) {
                         record.toggleSelection(false);
                     }
                 }
-            });
+                // capture:true (nicht der Default/Bubble) ist hier Pflicht, nicht Kosmetik: Escape
+                // ist - anders als F2 - in Odoos Hotkey-Service ausdruecklich WHITELISTED
+                // (AUTHORIZED_KEYS, siehe Kommentar oben). Live gefunden 2026-09-14: ein normaler
+                // Bubble-Listener bekam die Escape-Taste nie zu Gesicht (kein einziges Debug-Log
+                // feuerte) - irgendetwas in Odoos eigener Hotkey-/Listen-Tastaturbehandlung
+                // konsumiert sie vorher. Gleiches Muster/dieselbe Begruendung wie in
+                // web-filemanagers useListSelection.ts (dort explizit gegen Radix' eigenen
+                // Escape-Handler). isTypingContext() oben schuetzt weiterhin zuverlaessig das
+                // eigene Rename-Input: waehrend des Renamens IST activeElement dieses Input,
+                // Capture-Phase aendert daran nichts.
+            }, { capture: true });
             useExternalListener(window, "dragleave", this.onWindowDragLeave);
             useExternalListener(window, "dragover", (ev) => ev.preventDefault());
             useExternalListener(window, "drop", this.onWindowDrop);
