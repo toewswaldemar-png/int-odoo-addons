@@ -209,6 +209,15 @@ export class IntFilemanagerNameField extends Component {
 export const intFilemanagerNameField = {
     component: IntFilemanagerNameField,
     supportedTypes: ["char"],
+    // Odoos "Magic Column Widths" (column_width_hook.js) berechnet Spaltenbreiten per JS und
+    // SCHRUMPFT Feldspalten bei Platzmangel aktiv auf ein hartkodiertes Minimum - ohne eigenen
+    // Eintrag in FIELD_WIDTHS faellt das auf DEFAULT_MIN_WIDTH (80px) zurueck, was jede
+    // CSS-min-width auf der Zelle bei jedem Neuberechnen wieder ueberschreibt (live so
+    // gefunden 2026-09-14, Nutzerreport "Name-Spalte generell zu schmal"). listViewWidth als
+    // Array (nicht einzelne Zahl) setzt NUR minWidth, kein maxWidth - identisches Muster wie
+    // Odoos eigenes "char: [80]" in FIELD_WIDTHS, siehe getWidthSpecs() dort. Spalte darf bei
+    // viel Platz also weiterhin wachsen, wird aber nicht mehr unter 400px zusammengedrueckt.
+    listViewWidth: [400],
 };
 
 registry.category("fields").add("int_filemanager_name", intFilemanagerNameField);
