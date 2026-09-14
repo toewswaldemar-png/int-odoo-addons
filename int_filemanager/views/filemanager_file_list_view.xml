@@ -70,6 +70,13 @@
              (filemanager_file_kanban_view.xml), Odoo waehlt sie automatisch (gleiches Muster
              wie view_mode="list,form" ohne view_id in filemanager_status_views.xml). -->
         <field name="view_mode">list,kanban</field>
+        <!-- Ohne dieses Feld waehlt Odoo auf schmalen Bildschirmen (env.isSmall) intern eine
+             eigene Standardpraeferenz statt der ersten view_mode-Ansicht - live als Bug
+             gefunden 2026-09-14 (Nutzerreport "auf Mobil oeffnet sich Kanban statt Liste"),
+             Ursache in action_service.js: "if (env.isSmall) { view = _findView(views,
+             view.multiRecord, action.mobile_view_mode) || view; }". Explizit auf "list"
+             gesetzt, damit Mobil/Desktop dieselbe Standardansicht zeigen. -->
+        <field name="mobile_view_mode">list</field>
         <field name="view_id" ref="view_filemanager_file_list_native"/>
         <field name="search_view_id" ref="int_filemanager_file_search"/>
         <!-- Explizit [] statt das Feld wegzulassen: ein aus dem XML entferntes <field> wird von
