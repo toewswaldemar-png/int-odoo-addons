@@ -61,9 +61,21 @@
 // Registrierung, kein resModel-Laufzeit-Check mehr noetig.
 import { SearchModel } from "@web/search/search_model";
 
+// Facet-Namen (aus <filter name="...">), die NICHT als "der Nutzer sucht gerade" zaehlen sollen
+// fuer die recursive-Erkennung unten - live gefunden 2026-09-14: filter_hide_lock_files
+// (filemanager_file_search.xml) ist per search_default_ dauerhaft aktiv, zaehlte also
+// permanent als aktives Facet und schaltete die Ordnernavigation faelschlich global-rekursiv
+// (Root zeigte Ordner aus dem GESAMTEN Baum statt nur echte Wurzelordner). Node.name kommt
+// 1:1 aus dem <filter>-XML-Attribut durch (search_arch_parser.js: preSearchItem.name =
+// node.getAttribute("name"), am Odoo-Quellcode verifiziert).
+const NON_SEARCH_FACET_NAMES = new Set(["filter_hide_lock_files"]);
+
 export class IntFilemanagerSearchModel extends SearchModel {
     _getCategoryDomain(excludedCategoryId) {
-        const recursive = this.query.length > 0 || Boolean(this.globalContext.int_filemanager_recursive);
+        const hasRealSearchFacet = this.query.some(
+            (queryElem) => !NON_SEARCH_FACET_NAMES.has(this.searchItems[queryElem.searchItemId]?.name)
+        );
+        const recursive = hasRealSearchFacet || Boolean(this.globalContext.int_filemanager_recursive);
         const domain = [];
         for (const category of this.categories) {
             if (category.id === excludedCategoryId) {
