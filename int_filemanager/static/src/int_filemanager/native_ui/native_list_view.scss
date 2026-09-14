@@ -132,11 +132,18 @@
 // hier nur als kleines Praefix-Icon vor dem Namen, deshalb ueberschrieben statt eine neue
 // eigene Icon-Klasse zu erfinden.
 .o_int_filemanager_name_cell {
-    // Frueherer Versuch war hier ein CSS min-width - wirkungslos, live gefunden 2026-09-14:
-    // Odoos "Magic Column Widths" (column_width_hook.js) berechnet/erzwingt Spaltenbreiten per
-    // JS bei jedem Render neu und ueberschreibt dabei jede CSS-Breite auf der Zelle. Der
-    // eigentliche Fix sitzt jetzt beim Feld-Widget selbst (name_icon_field.js:
-    // intFilemanagerNameField.listViewWidth), das genau dieses JS-System korrekt anspricht.
+    // Nutzerwunsch 2026-09-14: Name-Spalte generell breiter, damit deutlich mehr Zeichen
+    // sichtbar sind statt frueh abgeschnitten zu werden. Der Text-Span traegt "text-truncate"
+    // (name_icon_field.xml), das dem Browser signalisiert "dieser Inhalt braucht keine
+    // Mindestbreite" - ohne Gegenmassnahme zieht sich die Tabellen-Auto-Breitenberechnung die
+    // Name-Spalte dadurch auf Kosten von Status/Groesse/Geaendert/Tags klein, die selbst nicht
+    // schrumpfen. min-width auf diesem Zell-Wrapper erzwingt eine mindestens so breite Spalte,
+    // unabhaengig vom Trunkierungsverhalten des Textes - alles darueber hinaus wird weiterhin
+    // abgeschnitten (mit "..."), aber erst nach deutlich mehr Zeichen. Bleibt bewusst nur
+    // min-width (kein width), damit die Spalte bei viel Platz (breiter Bildschirm) noch weiter
+    // waechst statt starr zu bleiben.
+    min-width: 400px;
+
     .o_image {
         width: 20px;
         height: 20px;
