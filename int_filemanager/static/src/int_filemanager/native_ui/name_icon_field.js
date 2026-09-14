@@ -116,6 +116,15 @@ export class IntFilemanagerNameField extends Component {
         } else if (ev.key === "Escape") {
             ev.preventDefault();
             this.env.filemanagerRename.cancel();
+        } else if (ev.key === "F2") {
+            // stopPropagation() oben verhindert, dass dieses Event je den window-Listener in
+            // filemanager_controller_mixin.js erreicht (der dort sein eigenes preventDefault
+            // haette) - ohne eigenes preventDefault HIER bekommt der Browser also ein
+            // zweites F2 waehrend des Renamens ungehindert zu sehen und oeffnet seine eigene
+            // Befehlsliste (live beobachtet: F2/F2/F2/F2 schaltete Rename/Browserfenster um).
+            // Kein weiterer Effekt noetig - waehrend des Renamens soll ein erneutes F2 einfach
+            // nichts tun, siehe web-filemanager useInlineRename.ts fuer dasselbe Muster.
+            ev.preventDefault();
         }
     }
 
