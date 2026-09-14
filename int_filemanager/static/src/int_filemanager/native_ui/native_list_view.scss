@@ -8,14 +8,20 @@
 // Nutzerreport 2026-09-14 (mobile Ansicht): .o_list_renderer (Odoo-nativ, "flex: 0 1 auto")
 // waechst nicht mit, bleibt exakt so hoch wie sein Inhalt - bei wenigen Zeilen sitzt der
 // horizontale Scrollbalken dadurch direkt unter der letzten Zeile statt am unteren
-// Bildschirmrand, mit ungenutztem Platz im Elternelement darunter. Bewusst nur fuer schmale
-// Breiten (max-width statt global) UND nur innerhalb unserer eigenen Liste
+// Bildschirmrand, mit ungenutztem Platz im Elternelement darunter. ERSTER VERSUCH war
+// "flex: 1 1 auto" - wirkungslos, per DevTools live geprueft: der direkte Elternteil in der
+// schmalen Ansicht (.o_content) hat selbst "display: block", nicht "flex" - eine
+// flex-Eigenschaft auf einem Kind eines Nicht-Flex-Containers hat schlicht keinen Effekt.
+// .o_content hat aber eine echte feste Pixelhoehe (kein "auto"), deshalb funktioniert
+// "height: 100%" hier zuverlaessiger - Prozenthoehen brauchen nur eine definierte
+// (nicht "auto") Hoehe beim Elternteil, unabhaengig von dessen display-Wert. Bewusst nur fuer
+// schmale Breiten (max-width statt global) UND nur innerhalb unserer eigenen Liste
 // (.o_int_filemanager_list) ueberschrieben - eine globale Aenderung an .o_list_renderer wuerde
 // jede Odoo-Liste im System betreffen, auch wo "flex: 0 1 auto" (Hoehe an Inhalt statt
 // Bildschirm angepasst) gewuenscht ist.
 @media (max-width: 767.98px) {
     .o_int_filemanager_list .o_list_renderer {
-        flex: 1 1 auto;
+        height: 100%;
     }
 }
 
