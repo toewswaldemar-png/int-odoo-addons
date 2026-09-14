@@ -87,6 +87,15 @@
              wuerde permanent in searchModel.globalDomain landen und mit jeder Kategorie-Auswahl
              ge-ANDet, was Navigation in Unterordner unmoeglich machen wuerde. -->
         <field name="domain">[]</field>
-        <field name="context">{'search_default_filter_hide_lock_files': 1}</field>
+        <!-- filter_hide_lock_files (filemanager_file_search.xml) war hier per
+             search_default_ standardmaessig aktiv - Nutzerentscheidung 2026-09-14
+             zurueckgenommen: der Filter-Chip belegt permanent Platz im
+             ".o_searchview_input_container" (Odoo-nativ "flex-wrap", ohne Responsive-
+             Ausnahme), was die Suchleiste auf schmalen Bildschirmen schon durch diesen einen
+             Chip auf zwei Zeilen kippen liess, unabhaengig von jeder Auswahl. Filter bleibt
+             im Filter-Menue weiterhin manuell aktivierbar. Explizit {} statt das Feld
+             wegzulassen - siehe Kommentar bei domain oben, derselbe Grund (Odoo setzt einen
+             aus dem XML entfernten Wert beim Modul-Update sonst nicht zurueck). -->
+        <field name="context">{}</field>
     </record>
 </odoo>
