@@ -86,11 +86,18 @@ export class IntFilemanagerNameField extends Component {
         // Aenderung von recordId feuerte fuer KEINE Zeile ein erneuter Render/Effect).
         this.renameState = useState(this.env.filemanagerRename.state);
         this.renameInputRef = useRef("renameInput");
+        // Auswahlbereich-Zyklus fuer wiederholtes F2 (Windows-Explorer-Konvention, Nutzerwunsch
+        // 2026-09-14 - identisches Muster wie web-filemanagers useInlineRename.ts): 0 = voller
+        // Name, 1 = nur Basisname (Startzustand beim Oeffnen), 2 = nur Endung. Reiner
+        // Instanz-Zustand statt useState() - betrifft nur die Textauswahl INNERHALB eines
+        // bereits offenen Rename-Inputs, kein Rendering haengt davon ab.
+        this.selectionMode = 1;
         useEffect(
             () => {
                 if (this.isRenaming && this.renameInputRef.el) {
+                    this.selectionMode = 1;
                     this.renameInputRef.el.focus();
-                    this.renameInputRef.el.select();
+                    this._applySelection();
                 }
             },
             () => [this.isRenaming]
@@ -102,6 +109,35 @@ export class IntFilemanagerNameField extends Component {
     // model.root.selection[0] im Controller, auch wenn beide dieselbe DB-Zeile meinen.
     get isRenaming() {
         return this.renameState.recordId === this.props.record.resId;
+    }
+
+    // Setzt den Auswahlbereich im Input gemaess this.selectionMode. dot > 0 (nicht >= 0), damit
+    // ein fuehrender Punkt (".gitignore") nicht als Endungstrenner zaehlt - ohne Endung (Ordner
+    // oder Datei ohne ".") macht der Modus keinen Unterschied, dann immer voller Name. Richtung
+    // "backward" haelt bei einer bei 0 beginnenden Auswahl den ANFANG des Texts sichtbar (manche
+    // Browser scrollen Inputs sonst zum Selektionsende) - verhindert, dass der Namensanfang bei
+    // langen Dateinamen aus dem sichtbaren Bereich wegscrollt.
+    _applySelection() {
+        const el = this.renameInputRef.el;
+        const name = this.env.filemanagerRename.state.value;
+        const dot = name.lastIndexOf(".");
+        const hasExt = !this.isDir && dot > 0;
+        let start, end, direction;
+        if (!hasExt || this.selectionMode === 0) {
+            start = 0;
+            end = name.length;
+            direction = "backward";
+        } else if (this.selectionMode === 1) {
+            start = 0;
+            end = dot;
+            direction = "backward";
+        } else {
+            start = dot + 1;
+            end = name.length;
+            direction = "forward";
+        }
+        el.setSelectionRange(start, end, direction);
+        el.scrollLeft = 0;
     }
 
     onRenameKeydown(ev) {
@@ -122,9 +158,11 @@ export class IntFilemanagerNameField extends Component {
             // haette) - ohne eigenes preventDefault HIER bekommt der Browser also ein
             // zweites F2 waehrend des Renamens ungehindert zu sehen und oeffnet seine eigene
             // Befehlsliste (live beobachtet: F2/F2/F2/F2 schaltete Rename/Browserfenster um).
-            // Kein weiterer Effekt noetig - waehrend des Renamens soll ein erneutes F2 einfach
-            // nichts tun, siehe web-filemanager useInlineRename.ts fuer dasselbe Muster.
+            // Erneutes F2 verlaesst den Rename-Modus nicht, sondern schaltet nur den
+            // Auswahlbereich weiter (Windows-Explorer-Konvention, siehe _applySelection()).
             ev.preventDefault();
+            this.selectionMode = (this.selectionMode + 1) % 3;
+            this._applySelection();
         }
     }
 
