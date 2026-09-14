@@ -23,6 +23,24 @@
     .o_int_filemanager_list .o_list_renderer {
         height: 100%;
     }
+
+    // Nutzerreport 2026-09-14: .o_control_panel_main (Odoo-nativ, "flex-wrap flex-lg-nowrap")
+    // bricht unterhalb 992px auf zwei Zeilen um, sobald Suchleiste/Filter-Chips/Neu/Breadcrumb/
+    // Pager UND die Auswahl-Box zusammen nicht mehr auf eine Zeile passen - per DevTools
+    // belegt: die Auswahl-Box (".o_selection_container", leer -> "1 ausgewaehlt | Alle") und
+    // das verschwindende Such-Icon sind beides reines Odoo-Kern-Markup, nicht unser Code. Der
+    // Umbruch selbst laesst sich nicht sauber verhindern (ERSTER VERSUCH war flex-nowrap
+    // erzwingen - hat es verschlimmert, weil dann sogar .o_control_panel_actions INTERN
+    // nochmal umbricht: drei statt zwei Zeilen, live beobachtet, sofort zurueckgerollt).
+    // Stattdessen hier die einfachere, robustere Loesung: IMMER die Hoehe fuer zwei Zeilen
+    // reservieren (min-height = gemessene 2-zeilige Hoehe), egal ob Odoo gerade 1 oder 2
+    // Zeilen tatsaechlich braucht - dann aendert sich die Container-Hoehe nie beim Auswaehlen/
+    // Abwaehlen, und die Liste darunter springt nicht mehr. Kostet in der 1-zeiligen
+    // Ausgangslage etwas ungenutzten Platz, das ist der bewusst akzeptierte Kompromiss.
+    .o_int_filemanager_list .o_control_panel_main,
+    .o_int_filemanager_kanban .o_control_panel_main {
+        min-height: 81px;
+    }
 }
 
 .o_int_filemanager_list {
