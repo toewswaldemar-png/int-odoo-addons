@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useEffect, useRef } from "@odoo/owl";
+import { Component, useEffect, useRef, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { useService } from "@web/core/utils/hooks";
@@ -74,6 +74,17 @@ export class IntFilemanagerNameField extends Component {
         // siehe dortigen Kommentar in setup() zur Vorgeschichte/Begruendung gegen ein
         // separates ueberlagerndes <input>). Fokus+Alles-Markieren beim Eintritt in den
         // Editier-Zustand, analog zum fruehreren renameInputRef-useEffect im Controller.
+        //
+        // useState() HIER nochmal auf dem bereits reaktiven state-Objekt aufgerufen (nicht nur
+        // ueber env.filemanagerRename.state gelesen) - Pflicht, nicht Kosmetik: Owls reactive()
+        // bindet Aenderungsbenachrichtigungen fest an die Callback-Funktion, die beim Erzeugen
+        // des Proxys per useState() uebergeben wurde (im Controller: dessen eigenes render()).
+        // Ein bloss lesender Zugriff auf einen fremden reaktiven Proxy - ohne ihn selbst nochmal
+        // durch useState()/reactive() zu schicken - registriert diese Komponente NICHT als
+        // Beobachter; nur der Controller wuerde bei einer Aenderung neu rendern, nie diese
+        // Feld-Zelle. Live als Bug gefunden 2026-09-14 (per Debug-Logging bestaetigt: nach einer
+        // Aenderung von recordId feuerte fuer KEINE Zeile ein erneuter Render/Effect).
+        this.renameState = useState(this.env.filemanagerRename.state);
         this.renameInputRef = useRef("renameInput");
         useEffect(
             () => {
@@ -90,7 +101,7 @@ export class IntFilemanagerNameField extends Component {
     // props.record vom Owl-Renderer, nicht zwingend dasselbe Objekt wie
     // model.root.selection[0] im Controller, auch wenn beide dieselbe DB-Zeile meinen.
     get isRenaming() {
-        return this.env.filemanagerRename?.state.recordId === this.props.record.resId;
+        return this.renameState.recordId === this.props.record.resId;
     }
 
     onRenameKeydown(ev) {
