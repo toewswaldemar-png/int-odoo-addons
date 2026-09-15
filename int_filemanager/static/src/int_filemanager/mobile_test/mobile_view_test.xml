@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="int_filemanager.MobileViewTest">
+        <div class="o_int_filemanager_mobile_test d-flex flex-column h-100">
+            <div class="flex-grow-1 overflow-auto" t-if="state.searchViewId and state.viewId">
+                <!-- Eigener Mobil-Header + SearchPanel-Ausblendung leben im gepatchten
+                     int_filemanager.ListView-Template (native_list_view.xml/.scss), gated auf den
+                     Kontext-Flag int_filemanager_mobile_header - hier nur gesetzt, nirgendwo sonst
+                     (produktive Desktop-Action bleibt unberuehrt).
+
+                     display.searchPanel MUSS true bleiben (Befund 2026-09-15, per Live-Logging
+                     verifiziert): IntFilemanagerSearchModel._getCategoryDomain() berechnet die
+                     Root-Domain zwar auch mit searchPanel:false korrekt, aber der Reload-Trigger
+                     nach dem Settlen der Kategorie haengt am tatsaechlichen Mounten der
+                     SearchPanel-Komponente (layout.xml: <SearchPanel t-if="display.searchPanel"/>).
+                     Mit searchPanel:false bleibt die Liste auf dem allerersten, ungefilterten
+                     Domain-Stand haengen. Die sichtbare Box wird stattdessen per CSS ausgeblendet
+                     (native_list_view.scss, ".o_content:has(.o_int_filemanager_mobile)
+                     .o_search_panel"). -->
+                <View type="'list'" resModel="'int_filemanager.file'"
+                      viewId="state.viewId"
+                      searchViewId="state.searchViewId"
+                      context="{int_filemanager_mobile_header: true}"
+                      display="{controlPanel: false, searchPanel: true}"/>
+            </div>
+        </div>
+    </t>
+</templates>

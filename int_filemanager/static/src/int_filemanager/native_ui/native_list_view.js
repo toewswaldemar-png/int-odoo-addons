@@ -23,6 +23,7 @@
 import { registry } from "@web/core/registry";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
+import { SearchBar } from "@web/search/search_bar/search_bar";
 import { listView } from "@web/views/list/list_view";
 import { ListController } from "@web/views/list/list_controller";
 // Dieselbe Komponente, die Odoo intern in jedem Formular fuer den Chatter nutzt
@@ -40,14 +41,25 @@ export class IntFilemanagerListController extends filemanagerControllerMixin(Lis
     // eine Neuzuweisung ohne Spread wuerde sie durch die statische Feld-Ueberschreibung
     // verdecken und jedes t-component/<Tag>, das das geerbte web.ListView-Template nutzt,
     // bräche.
-    static components = { ...ListController.components, Chatter, Dropdown, DropdownItem };
+    static components = { ...ListController.components, Chatter, Dropdown, DropdownItem, SearchBar };
 
     // Scoping-Klasse fuer native_list_view.scss - rechtsbuendige Zahlenspalten (o_list_number,
     // list_renderer.scss) sind fuer "Groesse" hier bewusst unerwuenscht (User-Wunsch: wie alle
     // anderen Spalten linksbuendig). Ueberschrieben nur innerhalb dieser Klasse, nicht global -
     // jede andere native Odoo-Liste im System behaelt die rechtsbuendige Zahlendarstellung.
     get className() {
-        return [super.className, "o_int_filemanager_list"].filter(Boolean).join(" ");
+        const classes = [super.className, "o_int_filemanager_list"];
+        // Rein additiv fuer die Client-Action-Einbettung (mobile_test/) - siehe
+        // native_list_view.xml/native_list_view.scss fuer Header-Markup bzw. SearchPanel-
+        // Ausblendung, beide an dieselbe Klasse gekoppelt. Bei der produktiven Desktop-Action
+        // ist der Kontext-Flag nie gesetzt, diese Klasse landet dort also nie.
+        if (this.env.searchModel.globalContext.int_filemanager_mobile_header) {
+            classes.push("o_int_filemanager_mobile");
+            if (this.mobileTreeState.open) {
+                classes.push("o_int_filemanager_mobile_tree_open");
+            }
+        }
+        return classes.filter(Boolean).join(" ");
     }
 }
 

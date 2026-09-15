@@ -28,4 +28,22 @@
         </xpath>
     </t>
 
+    <!-- Mobil-Ordnerbaum-Bottom-Sheet (Nutzerwunsch 2026-09-15, filemanager_controller_mixin.js:
+         onToggleMobileTree): web.SearchPanel rendert auf echter Telefonbreite (env.isSmall) immer
+         nur seine kompakte Chip-Form (web.SearchPanel.Small), nie den vollen Baum
+         (Regular/Sidebar) - live am Quellcode verifiziert (search_panel.xml:
+         "<t t-if='env.isSmall'><t t-call='web.SearchPanel.Small'/></t>"). Unser eigenes
+         Bottom-Sheet wuerde dort also nur eine verschachtelte Chip-Box zeigen, kein navigierbarer
+         Baum - genau das Problem, das die Loesung eigentlich beheben soll. env.mobileTreeState
+         (per useSubEnv in filemanager_controller_mixin.js gesetzt, nur innerhalb unserer eigenen
+         Client-Action-Einbettung vorhanden, sonst schlicht undefined) laesst uns env.isSmall hier
+         gezielt umgehen, waehrend unser Sheet offen ist - ausserhalb dieses einen Kontexts (jede
+         andere SearchPanel im System) bleibt env.mobileTreeState undefined, die Bedingung also
+         unveraendert env.isSmall. -->
+    <t t-inherit="web.SearchPanel" t-inherit-mode="extension">
+        <xpath expr="//t[@t-if='env.isSmall']" position="attributes">
+            <attribute name="t-if">env.isSmall and !(env.mobileTreeState and env.mobileTreeState.open)</attribute>
+        </xpath>
+    </t>
+
 </templates>

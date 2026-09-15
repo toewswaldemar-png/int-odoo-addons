@@ -1,0 +1,18 @@
+<odoo>
+    <!-- Spike (2026-09-15): Nachweis, dass eine eigene Client Action per eingebetteter
+         <View display="{controlPanel: false}"/> den nativen ControlPanel abschalten kann,
+         waehrend die native Liste (Daten/Paging/Interaktion) weiterlaeuft. Siehe
+         static/src/int_filemanager/mobile_test/mobile_view_test.js. Admin-only, unter
+         "Konfiguration" - bewusst nicht fuer normale Nutzer sichtbar, reiner Test. -->
+    <record id="action_filemanager_mobile_test" model="ir.actions.client">
+        <field name="name">Dateimanager (Mobil-Test)</field>
+        <field name="tag">int_filemanager_mobile_test</field>
+    </record>
+
+    <menuitem id="menu_int_filemanager_mobile_test"
+              name="Dateimanager (Mobil-Test)"
+              parent="menu_int_filemanager_configuration"
+              action="action_filemanager_mobile_test"
+              groups="int_filemanager.group_filemanager_admin"
+              sequence="90"/>
+</odoo>

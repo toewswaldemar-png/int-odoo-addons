@@ -64,6 +64,97 @@
     }
 }
 
+// SearchPanel bleibt bewusst GEMOUNTET (display.searchPanel:true in mobile_view_test.xml), nur
+// die sichtbare Box wird hier IMMER ausgeblendet: die Kategorie-Reaktivitaet (Reload nach
+// toggleCategoryValue), die die eingebettete <View/> braucht, haengt live nachweislich am Mounten
+// dieser Komponente - display.searchPanel:false wuerde sie komplett abschalten, nicht nur
+// verstecken, und der Reload nach Ordnerwechsel bliebe aus. Live per DOM-Inspektion bestaetigt:
+// .o_search_panel liegt INNERHALB von .o_content, das wiederum innerhalb des
+// Controller-Root-Divs (t-ref="root", traegt o_int_filemanager_mobile) liegt - ein einfacher
+// Nachfahren-Selektor reicht, kein :has() noetig (erster Versuch mit :has() auf .o_content ging
+// von der falschen Verschachtelungsrichtung aus).
+//
+// Standardzustand (Baum geschlossen) auf ALLEN Breiten: unterhalb 768px (Odoo-eigener isSmall-
+// Schwellwert) wuerde SearchPanel sonst ihre kompakte Chip-Zeile zeigen (search_panel.xml:
+// web.SearchPanel.Small) - urspruenglich unangetastet sichtbar gelassen, aber als eigene, dem
+// Mobil-Header redundante Zeile empfunden (Nutzerscreenshot 2026-09-15: "Produktiv-HM-Datenbank ▾
+// ALLE LEEREN" doppelt den bereits im eigenen Header stehenden Ordnernamen).
+.o_int_filemanager_mobile .o_search_panel {
+    display: none !important;
+}
+
+// Ordnerbaum-Bottom-Sheet (Nutzerwunsch 2026-09-15, jetzt auf ALLEN Breiten aktiv - der
+// Home-Button oeffnet ihn, siehe native_list_view.xml/onToggleMobileTree) - dieselbe, bereits
+// gemountete SearchPanel wird bei offenem Zustand (o_int_filemanager_mobile_tree_open, siehe
+// native_list_view.js: className) statt ausgeblendet als Overlay von unten eingeblendet. Kein
+// eigenes Baum-Markup, nur Ein-/Ausblenden + Positionierung der nativen Komponente. Auf echter
+// Telefonbreite sorgt zusaetzlich der web.SearchPanel-Patch (search_panel_patch.xml,
+// env.mobileTreeState) dafuer, dass hier wirklich der volle Baum steckt statt der kompakten
+// Chip-Form.
+.o_int_filemanager_mobile_tree_open .o_search_panel {
+    // !important auf allen Positionierungs-/Groessen-Eigenschaften noetig - .o_search_panel
+    // traegt bereits eigene Bootstrap-Utility-Klassen direkt am Element ("position-relative",
+    // "h-100" - live per getComputedStyle bestaetigt: ohne !important gewannen die weiterhin,
+    // trotz hoeherer Selektor-Spezifitaet hier). Gleiches Prinzip wie beim o_list_number-Override
+    // oben in dieser Datei.
+    display: flex !important;
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    width: auto !important;
+    // max-width statt fest "100%" - auf echten Telefonbreiten (< 420px) ohnehin wirkungslos
+    // (left/right:0 ergibt dort automatisch die volle, schmalere Breite), auf breiten
+    // Testfenstern verhindert es die sonst riesige, fast leere Flaeche (Nutzerscreenshot
+    // 2026-09-15: Baum nur oben links in einem viel zu grossen weissen Rechteck).
+    max-width: 420px !important;
+    // height:auto statt der geerbten "h-100" (die bei position:fixed gegen die Viewport-Hoehe
+    // aufloest, nicht gegen den Inhalt) - Sheet soll sich an den Inhalt anpassen, nicht immer
+    // fast die komplette Bildschirmhoehe fuellen (derselbe Nutzerscreenshot).
+    height: auto !important;
+    max-height: 60vh !important;
+    z-index: 1100;
+    border-radius: 1rem 1rem 0 0;
+    box-shadow: 0 -0.5rem 1.5rem rgba(0, 0, 0, 0.2);
+}
+
+.o_int_filemanager_mobile_tree_backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1099;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+// Dieselbe Hintergrundfarbe wie der native ControlPanel (control_panel.variables.scss:
+// $o-control-panel-background-color: $o-view-background-color !default - kein eigener Farbton,
+// sondern exakt das, was Odoo selbst fuer diese Zeile verwendet), plus dieselbe Trennlinie
+// (border-bottom) statt eines eigenen Farbblocks - Nutzerwunsch 2026-09-15: "nicht lila, sondern
+// konsistent zu Odoo nativer Farbe". Dasselbe var()-Fallback-Muster wie beim Chatter-Panel oben
+// in dieser Datei (--o-view-background-color, #fff).
+.o_int_filemanager_mobile .o_int_filemanager_mobile_header {
+    padding: 0.75rem 1rem;
+    background-color: var(--o-view-background-color, #fff);
+    border-bottom: 1px solid var(--border-color, #dee2e6);
+
+    // Abstand zur Breadcrumb-Zeile darunter (Nutzerwunsch 2026-09-15: Suchleiste zuerst, danach
+    // Home/Baum/Breadcrumb-Zeile) - auf die Zeile selbst, nicht mehr auf .o_cp_searchview (die
+    // Suchleiste steht jetzt an erster Stelle im Header, braucht keinen eigenen Abstand nach
+    // oben mehr).
+    .o_int_filemanager_mobile_breadcrumb_row {
+        margin-top: 0.5rem;
+        min-height: 2rem;
+
+        .o_int_filemanager_mobile_breadcrumb {
+            min-width: 0;
+
+            .btn {
+                white-space: nowrap;
+            }
+        }
+    }
+}
+
 // Dieselbe Drop-Ziel-Hervorhebung wie oben, aber fuer den Seitenleisten-Ordnerbaum
 // (2026-09-07, search_panel_patch.xml) - liegt AUSSERHALB von .o_int_filemanager_list/_kanban
 // (der SearchPanel ist eine eigene, geteilte Komponente neben der eigentlichen View, kein

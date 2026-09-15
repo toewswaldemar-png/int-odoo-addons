@@ -42,6 +42,94 @@
              window-Listener aus setup() (siehe dortigen Kommentar), unabhaengig davon, ob dieses
              Overlay gerade im DOM ist. Deshalb pointer-events: none (native_list_view.scss) -
              es soll nichts abfangen, nur anzeigen. -->
+        <!-- Eigener Mobil-Header fuer die Client-Action-Einbettung (mobile_test/) - komplett
+             additiv, nur sichtbar wenn die einbettende View den Kontext-Flag
+             int_filemanager_mobile_header setzt (mobile_view_test.js). Betrifft die produktive
+             Desktop-Action (action_filemanager_file_list_native) nicht, dort ist der Flag nie
+             gesetzt. Reihenfolge (Nutzerwunsch 2026-09-15): Suchleiste zuerst, danach eine eigene
+             Zeile mit Home-Button, Baum-Toggle und echtem Breadcrumb-Pfad (ersetzt die vorherige
+             "<- Ordnername"-Zeile) - landet damit zwischen Suchleiste und dem nativen
+             Listenkopf (Status/Name/...), der als naechstes im DOM folgt. Nutzt dieselbe
+             Breadcrumb-Kette wie updateBreadcrumbs() (filemanager_controller_mixin.js) ueber den
+             dortigen mobileBreadcrumbs-Helfer - kein zweiter Navigationszustand. -->
+        <xpath expr="//div[@t-ref='root']/*[1]" position="before">
+            <div t-if="env.searchModel.globalContext.int_filemanager_mobile_header"
+                 class="o_int_filemanager_mobile_header">
+                <!-- Eigenstaendige native Komponente (kein ControlPanel-Zwang, nur
+                     env.searchModel noetig) - liefert Textsuche/Facetten/Filtermenue, ohne den
+                     Rest der Toolbar (Neu/Pager/Ansichtsumschalter) zurueckzuholen.
+                     autofocus="false", sonst poppt bei jedem Ordnerwechsel die Tastatur auf. -->
+                <SearchBar autofocus="false"/>
+                <div class="o_int_filemanager_mobile_breadcrumb_row d-flex align-items-center gap-1">
+                    <!-- Oeffnet das Ordnerbaum-Bottom-Sheet (die bereits gemountete native
+                         SearchPanel, siehe onToggleMobileTree/native_list_view.scss). Nutzerwunsch
+                         2026-09-15: "Alle Ordner" im Breadcrumb daneben deckt die Wurzel-Navigation
+                         schon ab (mobileBreadcrumbs[0].onSelected ruft dasselbe onMobileGoHome auf)
+                         - der Home-Button war dadurch redundant und wird stattdessen fuer den Baum
+                         wiederverwendet. Kein Doppelbelegungs-Problem mehr (siehe fruehere
+                         Ueberlegung dazu): der Button hat jetzt genau eine, eindeutige Funktion. -->
+                    <button type="button" class="btn btn-link p-1 flex-shrink-0 o_int_filemanager_mobile_tree_toggle"
+                            aria-label="Ordnerbaum" t-on-click="onToggleMobileTree">
+                        <i class="fa fa-home"/>
+                    </button>
+                    <!-- t-ref hier: _checkMobileBreadcrumbOverflow() (filemanager_controller_mixin.js)
+                         misst scrollWidth/clientWidth genau dieses Elements, um bei zu langem Pfad
+                         auf die kollabierte Darstellung (unten) umzuschalten statt horizontal zu
+                         scrollen. -->
+                    <nav t-ref="mobileBreadcrumbNav" class="o_int_filemanager_mobile_breadcrumb d-flex align-items-center flex-nowrap overflow-auto">
+                        <t t-if="!mobileBreadcrumbState.collapsed or mobileBreadcrumbs.length lt 3">
+                            <!-- flex-shrink-0 + text-nowrap auf JEDEM Segment ist hier Pflicht,
+                                 nicht Kosmetik: mit "text-truncate" (overflow:hidden) haette jedes
+                                 Segment einzeln schrumpfen und sich selbst ellipsieren koennen -
+                                 live als Bug gefunden 2026-09-15 (Nutzerscreenshot: "Alle O... /
+                                 Tra... / Mitar... / ..." - jedes Segment abgeschnitten statt
+                                 kollabiert), dadurch overflowte die Zeile nie wirklich
+                                 (scrollWidth blieb <= clientWidth) und
+                                 _checkMobileBreadcrumbOverflow() loeste nie aus. Jetzt darf die
+                                 Zeile echt ueberlaufen, erst DANN greift die Kollabierung unten. -->
+                            <t t-foreach="mobileBreadcrumbs" t-as="crumb" t-key="crumb.jsId">
+                                <span t-if="!crumb_first" class="text-muted mx-1 flex-shrink-0">/</span>
+                                <span t-if="crumb_last" class="fw-bold text-nowrap flex-shrink-0" t-esc="crumb.name"/>
+                                <button t-else="" type="button" class="btn btn-link p-0 text-nowrap flex-shrink-0"
+                                        t-on-click="() => crumb.onSelected()">
+                                    <t t-esc="crumb.name"/>
+                                </button>
+                            </t>
+                        </t>
+                        <!-- Kollabiert: erstes Segment (meist "Alle Ordner"), Dropdown mit allen
+                             verdeckten Zwischenordnern, letztes Segment (aktueller Ordner, fett,
+                             nicht klickbar - dieselbe Konvention wie bei der vollen Darstellung
+                             oben). Nur ab 3 Segmenten ueberhaupt etwas zu verbergen. -->
+                        <t t-else="">
+                            <button type="button" class="btn btn-link p-0 text-truncate flex-shrink-0"
+                                    t-on-click="() => mobileBreadcrumbs[0].onSelected()">
+                                <t t-esc="mobileBreadcrumbs[0].name"/>
+                            </button>
+                            <span class="text-muted mx-1">/</span>
+                            <Dropdown>
+                                <span class="btn btn-link p-0">…</span>
+                                <t t-set-slot="content">
+                                    <t t-foreach="mobileBreadcrumbs.slice(1, -1)" t-as="hiddenCrumb" t-key="hiddenCrumb.jsId">
+                                        <DropdownItem onSelected="() => hiddenCrumb.onSelected()">
+                                            <t t-esc="hiddenCrumb.name"/>
+                                        </DropdownItem>
+                                    </t>
+                                </t>
+                            </Dropdown>
+                            <span class="text-muted mx-1">/</span>
+                            <span class="fw-bold text-truncate"
+                                  t-esc="mobileBreadcrumbs[mobileBreadcrumbs.length - 1].name"/>
+                        </t>
+                    </nav>
+                </div>
+                <!-- Backdrop zum Schliessen per Antippen ausserhalb des Bottom-Sheets - die
+                     SearchPanel selbst (native Komponente, kein eigenes Markup hier) wird
+                     ausschliesslich per CSS ein-/ausgeblendet (native_list_view.scss), dieser
+                     Backdrop liegt in derselben Overlay-Ebene direkt darunter. -->
+                <div t-if="mobileTreeState.open" class="o_int_filemanager_mobile_tree_backdrop"
+                     t-on-click="onToggleMobileTree"/>
+            </div>
+        </xpath>
         <xpath expr="//div[@t-ref='root']" position="inside">
             <div t-if="dropState.dragging" class="o_int_filemanager_dropzone">
                 <div class="o_int_filemanager_dropzone_label">

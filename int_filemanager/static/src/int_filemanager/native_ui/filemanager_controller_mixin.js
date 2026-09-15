@@ -264,8 +264,14 @@ export function filemanagerControllerMixin(Base) {
             // Zeile/Karte traegt nativ bereits ein data-id-Attribut (list_renderer.xml/
             // kanban_record.xml: t-att-data-id="record.id", am Odoo-19-Quellcode verifiziert),
             // das reicht als Angriffspunkt fuer die Ereignis-Delegation vollstaendig aus.
-            onMounted(() => this._makeRecordsDraggable());
-            onPatched(() => this._makeRecordsDraggable());
+            onMounted(() => {
+                this._makeRecordsDraggable();
+                this._checkMobileBreadcrumbOverflow();
+            });
+            onPatched(() => {
+                this._makeRecordsDraggable();
+                this._checkMobileBreadcrumbOverflow();
+            });
             useExternalListener(window, "dragstart", this.onWindowDragStartRecord);
             useExternalListener(window, "dragover", this.onWindowDragOverRecord);
             useExternalListener(window, "drop", this.onWindowDropRecord);
@@ -283,6 +289,30 @@ export function filemanagerControllerMixin(Base) {
             // der eigenen Toolbar/Breadcrumb-Zeile beginnt statt sie zu verdecken (Pager,
             // Suche etc. bleiben bedienbar), statt eine Navbar-Hoehe zu raten.
             this.chatterState = useState({ open: false, topPx: 0 });
+            // Mobil-Ordnerbaum als Bottom-Sheet (Client-Action-Einbettung, mobile_test/) - die
+            // bereits gemountete native SearchPanel (sonst per CSS versteckt, siehe
+            // native_list_view.scss) wird hierueber ein-/ausgeblendet statt einen eigenen Baum zu
+            // bauen. this.mobileTreeState.open steuert nur eine CSS-Klasse
+            // (o_int_filemanager_mobile_tree_open, siehe native_list_view.js: className), kein
+            // Einfluss auf die Kategorie-/Domain-Logik selbst.
+            this.mobileTreeState = useState({ open: false });
+            // Reaktiv an alle Nachfahren durchgereicht (inkl. der nativen SearchPanel, die als
+            // eigene Komponente denselben Owl-env-Baum erbt) - noetig fuer den
+            // web.SearchPanel-Patch (search_panel_small_patch.xml), der env.isSmall fuer die
+            // Small-Variante gezielt umgeht, waehrend unser eigenes Bottom-Sheet offen ist (sonst
+            // wuerde die Komponente auf echter Telefonbreite nur ihre kompakte Chip-Form
+            // rendern, verschachtelt in unserem eigenen Overlay - Nutzerwunsch 2026-09-15 war ein
+            // echter, direkt navigierbarer Baum, nicht ein doppelt verschachtelter Toggle).
+            useSubEnv({ mobileTreeState: this.mobileTreeState });
+            // Mobil-Breadcrumb-Kollabierung (Nutzerwunsch 2026-09-15): bei zu langem Pfad wird
+            // statt horizontalem Scrollen alles zwischen erstem und letztem Segment zu einem
+            // "…"-Dropdown zusammengefasst (siehe native_list_view.xml). Per echter
+            // Breiten-Messung (scrollWidth > clientWidth) statt eines festen
+            // Segmentanzahl-Schwellwerts, siehe _checkMobileBreadcrumbOverflow() unten -
+            // "collapsed" wird bei jeder Ordner-Navigation in updateBreadcrumbs() zurueckgesetzt
+            // und hier gegen die dann wieder VOLLSTAENDIG gerenderte Liste neu geprueft.
+            this.mobileBreadcrumbState = useState({ collapsed: false });
+            this.mobileBreadcrumbNavRef = useRef("mobileBreadcrumbNav");
             useExternalListener(window, "resize", () => {
                 if (this.chatterState.open) {
                     this._measureChatterPanelTop();
@@ -521,6 +551,17 @@ export function filemanagerControllerMixin(Base) {
         // einfach dessen "name"-Feld (kein name_get-Override auf dem Modell) - Aneinanderreihen der
         // Kette ergibt exakt denselben Pfadstring wie das "path"-Feld selbst.
         updateBreadcrumbs() {
+            // Schliesst das Mobil-Baum-Bottom-Sheet automatisch nach einer Ordnerwahl - diese
+            // Methode haengt bereits an env.searchModel "update" (siehe setup()), genau das
+            // Ereignis, das eine Auswahl im Baum (toggleCategoryValue) auslöst. Kein zweiter Hook
+            // noetig, no-op wenn das Sheet gar nicht offen ist oder die Aktion produktiv laeuft
+            // (state existiert dort zwar auch, betrifft aber nur die - dort unsichtbare -
+            // CSS-Klasse).
+            this.mobileTreeState.open = false;
+            // Neuer Pfad -> immer erst wieder vollstaendig rendern (siehe
+            // _checkMobileBreadcrumbOverflow() unten, das gegen genau diese volle Darstellung
+            // misst und bei Bedarf erneut kollabiert).
+            this.mobileBreadcrumbState.collapsed = false;
             const section = this.getCategorySection();
             const crumbs = this.env.config.breadcrumbs;
             crumbs.length = this.rootBreadcrumbCount;
@@ -548,6 +589,58 @@ export function filemanagerControllerMixin(Base) {
                     onSelected: () => this.env.searchModel.toggleCategoryValue(section.id, value.id),
                 });
             }
+        }
+
+        // -----------------------------------------------------------------
+        // Mobil-Header (Client-Action-Einbettung, siehe static/src/int_filemanager/mobile_test/)
+        // -----------------------------------------------------------------
+
+        // Rein additiv - das Header-Markup selbst lebt in native_list_view.xml, gated auf den
+        // Kontext-Flag int_filemanager_mobile_header (von mobile_view_test.js gesetzt), betrifft
+        // die produktive Desktop-Ansicht also nie. Baut auf derselben Breadcrumb-Kette wie
+        // updateBreadcrumbs() oben auf (env.config.breadcrumbs, ab rootBreadcrumbCount) - keine
+        // zweite, parallele Navigations-Buchhaltung. Eigener synthetischer Wurzel-Eintrag ("Alle
+        // Ordner") davor, mit demselben Reset-Callback wie der Home-Button (onMobileGoHome) -
+        // Nutzerwunsch 2026-09-15: echter klickbarer Breadcrumb-Pfad statt nur des letzten
+        // Ordnernamens.
+        get mobileBreadcrumbs() {
+            const folderCrumbs = this.env.config.breadcrumbs.slice(this.rootBreadcrumbCount);
+            return [
+                { jsId: "int_filemanager_crumb_root", name: _t("Alle Ordner"), onSelected: () => this.onMobileGoHome() },
+                ...folderCrumbs,
+            ];
+        }
+
+        // Springt direkt zur Wurzel - derselbe Aufruf, den auch der native Wurzel-Breadcrumb in
+        // setup() (ownRootCrumb.onSelected) ausloest.
+        onMobileGoHome() {
+            const section = this.getCategorySection();
+            if (section) {
+                this.env.searchModel.toggleCategoryValue(section.id, false);
+            }
+        }
+
+        // Misst, ob die VOLLSTAENDIG gerenderte Breadcrumb-Zeile ihren verfuegbaren Platz
+        // sprengt - nur waehrend !collapsed relevant (sobald kollabiert gerendert wird, passt es
+        // per Definition, erneute Messung wuerde nur faelschlich wieder auf false zuruecksetzen).
+        // Reine Breiten-Messung statt fester Segmentanzahl, damit lange Einzelnamen genauso
+        // erkannt werden wie viele kurze Segmente.
+        _checkMobileBreadcrumbOverflow() {
+            if (this.mobileBreadcrumbState.collapsed) {
+                return;
+            }
+            const el = this.mobileBreadcrumbNavRef.el;
+            if (el && el.scrollWidth > el.clientWidth + 1) {
+                this.mobileBreadcrumbState.collapsed = true;
+            }
+        }
+
+        // Oeffnet/schliesst das Ordnerbaum-Bottom-Sheet (die bereits gemountete native
+        // SearchPanel, siehe native_list_view.scss fuer die Ein-/Ausblend-CSS und
+        // native_list_view.js fuer die dortige Zustandsklasse). Schliesst sich selbst wieder
+        // automatisch nach einer Ordnerwahl, siehe updateBreadcrumbs() oben.
+        onToggleMobileTree() {
+            this.mobileTreeState.open = !this.mobileTreeState.open;
         }
 
         // -----------------------------------------------------------------
