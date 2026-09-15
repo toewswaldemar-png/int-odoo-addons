@@ -45,8 +45,15 @@
          models/filemanager_protected_folder.py - laeuft bei jedem
          Registry-Aufbau (auch reiner Neustart, nicht nur Upgrade) und baut
          die Regeln aus dem aktuellen Schutzordner-Stand neu auf, falls doch
-         einmal etwas den Platzhalter wiederherstellt. -->
-    <record id="rule_file_protected_read" model="ir.rule" noupdate="1">
+         einmal etwas den Platzhalter wiederherstellt.
+
+         noupdate als Attribut direkt auf <record> ist in diesem Odoo-Schema
+         UNGUELTIG (live per RelaxNG-Validierung gegen import_xml.rng
+         nachgewiesen, nicht nur vermutet - "Element odoo has extra content:
+         record"), deshalb hier als <data noupdate="1">-Wrapper um alle
+         sechs Regeln statt als Einzelattribut. -->
+    <data noupdate="1">
+    <record id="rule_file_protected_read" model="ir.rule">
         <field name="name">Filemanager: geschützte Ordner (Lesen)</field>
         <field name="model_id" ref="model_int_filemanager_file"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -56,7 +63,7 @@
         <field name="perm_unlink">False</field>
     </record>
 
-    <record id="rule_file_protected_write" model="ir.rule" noupdate="1">
+    <record id="rule_file_protected_write" model="ir.rule">
         <field name="name">Filemanager: geschützte Ordner (Schreiben)</field>
         <field name="model_id" ref="model_int_filemanager_file"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -66,7 +73,7 @@
         <field name="perm_unlink">False</field>
     </record>
 
-    <record id="rule_file_protected_unlink" model="ir.rule" noupdate="1">
+    <record id="rule_file_protected_unlink" model="ir.rule">
         <field name="name">Filemanager: geschützte Ordner (Löschen)</field>
         <field name="model_id" ref="model_int_filemanager_file"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -80,7 +87,7 @@
          Schutz ihrer zugehörigen Datei (file_id.path), damit niemand ohne
          Leserecht auf die Datei trotzdem alte Versionsinhalte über das
          Versions-Modell/die Versions-Route lesen kann. -->
-    <record id="rule_version_protected_read" model="ir.rule" noupdate="1">
+    <record id="rule_version_protected_read" model="ir.rule">
         <field name="name">Filemanager: geschützte Ordner (Versionen lesen)</field>
         <field name="model_id" ref="model_int_filemanager_version"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -90,7 +97,7 @@
         <field name="perm_unlink">False</field>
     </record>
 
-    <record id="rule_version_protected_write" model="ir.rule" noupdate="1">
+    <record id="rule_version_protected_write" model="ir.rule">
         <field name="name">Filemanager: geschützte Ordner (Versionen schreiben)</field>
         <field name="model_id" ref="model_int_filemanager_version"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -100,7 +107,7 @@
         <field name="perm_unlink">False</field>
     </record>
 
-    <record id="rule_version_protected_unlink" model="ir.rule" noupdate="1">
+    <record id="rule_version_protected_unlink" model="ir.rule">
         <field name="name">Filemanager: geschützte Ordner (Versionen löschen)</field>
         <field name="model_id" ref="model_int_filemanager_version"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -109,4 +116,5 @@
         <field name="perm_create">False</field>
         <field name="perm_unlink">True</field>
     </record>
+    </data>
 </odoo>
