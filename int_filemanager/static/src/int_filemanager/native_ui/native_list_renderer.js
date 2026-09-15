@@ -55,6 +55,24 @@ export class IntFilemanagerListRenderer extends ListRenderer {
         // und Odoos toggleSelection() sah danach immer "0 ausgewaehlt" -> waehlte alles wieder
         // aus, statt abzuwaehlen - live so beobachtet ("Auswaehlen geht, Abwaehlen nicht").
         const onDocumentClick = (ev) => {
+            // Long-Press-Nachlauf-Klick (siehe Long-Press-Handler weiter unten in setup()) muss
+            // hier auf echter document-Capture-Ebene abgefangen werden, VOR Odoos eigenem
+            // zeilengebundenen "t-on-click.capture" (list_renderer.xml, onClickCapture()) - live
+            // am Quellcode nachvollzogen: dieser sitzt direkt auf <tr>, ein reiner
+            // document.addEventListener(..., true) feuert aber immer zuerst (echte Capture-Phase
+            // laeuft von document zum Ziel, unabhaengig von Registrierungsreihenfolge). Ohne
+            // stopPropagation() hier wuerde Odoos eigener Handler denselben Nachlauf-Klick sehen
+            // (list.selection.length ist zu diesem Zeitpunkt schon 1, durch den Long-Press
+            // synchron gesetzt) und die gerade erst ausgewaehlte Zeile prompt wieder abwaehlen -
+            // ein reiner Rueckgabe-Guard in onCellClicked() (bubble-Phase, tiefer im Baum) haette
+            // dagegen keine Chance, weil Odoos Capture-Handler die Weiterleitung dorthin laengst
+            // gestoppt haette.
+            if (this._longPressSuppressClick) {
+                this._longPressSuppressClick = false;
+                ev.stopPropagation();
+                ev.preventDefault();
+                return;
+            }
             if (rubberbandJustEnded) {
                 rubberbandJustEnded = false;
                 return;
@@ -254,11 +272,98 @@ export class IntFilemanagerListRenderer extends ListRenderer {
         };
         onMounted(() => document.addEventListener("mousedown", onMouseDown));
         onWillUnmount(() => document.removeEventListener("mousedown", onMouseDown));
+
+        // Mobile: Einzel-Tap oeffnet direkt statt zu selektieren (Nutzerwunsch 2026-09-15) -
+        // Doppelklick als Oeffnen-Geste ist auf Touch kein verlaessliches Standard-Gesture.
+        // Auswahl fuer Mehrfachaktionen passiert stattdessen per Long-Press auf eine noch nicht
+        // ausgewaehlte Zeile; ist bereits etwas ausgewaehlt, uebernimmt Odoos eigenes natives
+        // Mobil-Verhalten das Umschalten weiterer Zeilen unveraendert (list_renderer.js:
+        // onClickCapture()/ignoreEventInSelectionMode(), Capture-Phase VOR onCellClicked - dieser
+        // Long-Press-Handler muss deshalb nur die allererste Auswahl (0 -> 1) abdecken).
+        // pointerdown/-up/-move/-cancel statt touchstart/-end: deckt Touch UND Maus einheitlich
+        // ab (bewusst nicht auf pointerType==="touch" beschraenkt - eine "Press and hold"-Geste
+        // mit der Maus in einem schmalen/Mobile-Breite-Fenster soll ebenso funktionieren,
+        // schadet auf Desktop-Breite nicht, da env.isSmall dort ohnehin false ist).
+        this._longPressSuppressClick = false;
+        let longPressTimer = null;
+        let longPressStartX = 0;
+        let longPressStartY = 0;
+        const cancelLongPress = () => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        };
+        const onPointerDown = (ev) => {
+            if (!this.env.isSmall || !this.canSelectRecord || this.props.list.selection.length) {
+                return;
+            }
+            const rowEl = ev.target.closest("tr.o_data_row");
+            if (!rowEl || !this.tableRef.el) {
+                return;
+            }
+            const rowEls = [...this.tableRef.el.querySelectorAll("tr.o_data_row")];
+            const record = this.props.list.records[rowEls.indexOf(rowEl)];
+            if (!record) {
+                return;
+            }
+            longPressStartX = ev.clientX;
+            longPressStartY = ev.clientY;
+            longPressTimer = setTimeout(() => {
+                longPressTimer = null;
+                this._longPressSuppressClick = true;
+                record.toggleSelection(true);
+                this.render();
+            }, 500);
+        };
+        const onPointerMove = (ev) => {
+            if (longPressTimer && Math.hypot(ev.clientX - longPressStartX, ev.clientY - longPressStartY) > 10) {
+                cancelLongPress();
+            }
+        };
+        onMounted(() => {
+            document.addEventListener("pointerdown", onPointerDown);
+            document.addEventListener("pointermove", onPointerMove);
+            document.addEventListener("pointerup", cancelLongPress);
+            document.addEventListener("pointercancel", cancelLongPress);
+        });
+        onWillUnmount(() => {
+            cancelLongPress();
+            document.removeEventListener("pointerdown", onPointerDown);
+            document.removeEventListener("pointermove", onPointerMove);
+            document.removeEventListener("pointerup", cancelLongPress);
+            document.removeEventListener("pointercancel", cancelLongPress);
+        });
     }
 
     async onCellClicked(record, column, ev, newWindow) {
         if (ev.detail === 0) {
             return super.onCellClicked(record, column, ev, newWindow);
+        }
+        // Der "click", der nach einem erfolgreichen Long-Press (siehe setup()) beim Loslassen
+        // trotzdem noch feuert, soll die gerade erst gesetzte Auswahl nicht sofort wieder in
+        // ein "Oeffnen" ummuenzen - derselbe Nachlauf-Klick-Kaese wie bei rubberbandJustEnded
+        // oben, nur fuer Long-Press statt Rubberband.
+        if (this._longPressSuppressClick) {
+            this._longPressSuppressClick = false;
+            return;
+        }
+        // Mobile, noch keine Auswahl aktiv: Einzel-Tap oeffnet/navigiert direkt, statt zu
+        // selektieren (siehe Long-Press-Handler in setup()). Modifier-Klicks (Ctrl/Cmd/Shift)
+        // bleiben ausgenommen - die ergeben auf einem Touch-Geraet ohnehin keinen Sinn, sind
+        // aber z.B. bei einer per Maus bedienten schmalen Fensterbreite weiterhin sinnvoll.
+        if (
+            this.env.isSmall &&
+            !this.props.list.selection.length &&
+            ev.detail === 1 &&
+            !ev.ctrlKey &&
+            !ev.metaKey &&
+            !this.shiftKeyMode
+        ) {
+            if (!this.props.archInfo.noOpen) {
+                this.props.openRecord(record, { newWindow });
+            }
+            return;
         }
         if (ev.detail >= 2) {
             // NICHT super.onCellClicked() aufrufen: das Original prueft selbst wieder
