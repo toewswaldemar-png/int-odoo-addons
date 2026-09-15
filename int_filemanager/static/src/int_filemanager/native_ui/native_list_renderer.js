@@ -336,6 +336,17 @@ export class IntFilemanagerListRenderer extends ListRenderer {
         });
     }
 
+    // Checkbox-Spalte zusaetzlich zum Long-Press sichtbar machen (Nutzerwunsch 2026-09-15):
+    // Odoo blendet sie auf Mobile nativ per "t-if" komplett aus (echtes Nicht-Rendern, kein
+    // CSS-Verstecken - list_renderer.js: "return this.props.allowSelectors && !this.env.isSmall").
+    // Ein-Zeilen-Override hier reicht, alle Colspan-/Header-Berechnungen im Original lesen
+    // ohnehin nur "this.hasSelectors" und passen sich automatisch an. Die Checkbox-Zelle traegt
+    // ihren eigenen "t-on-click.stop"-Handler (toggleRecordSelection) direkt in list_renderer.xml
+    // - kein Konflikt mit onCellClicked()/dem Long-Press unten, die auf anderen Zellen sitzen.
+    get hasSelectors() {
+        return this.props.allowSelectors;
+    }
+
     async onCellClicked(record, column, ev, newWindow) {
         if (ev.detail === 0) {
             return super.onCellClicked(record, column, ev, newWindow);
