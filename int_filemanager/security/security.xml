@@ -27,8 +27,26 @@
          ("alles offen", entspricht dem heutigen Verhalten ohne
          Schutzordner) - acl_rules.py überschreibt ihn bei jeder Änderung an
          int_filemanager.protected_folder mit der tatsächlichen,
-         admin-/schutzordner-abhängigen Domain. -->
-    <record id="rule_file_protected_read" model="ir.rule">
+         admin-/schutzordner-abhängigen Domain.
+
+         noupdate="1" auf allen sechs Regeln (2026-09-15, Live-Bug gefunden):
+         ohne dieses Attribut schreibt JEDES Modul-Upgrade (-u, nicht nur
+         -i/Erstinstallation) domain_force wieder auf den Platzhalter oben
+         zurueck - Odoo laedt XML-Daten-Records ohne noupdate bei jedem
+         Upgrade erneut. Das hat den Schutz fuer "Kunden und Angebote"
+         mehrfach still aufgehoben, nachdem er ueber die UI korrekt gesetzt
+         war (jedes der zahlreichen "-u int_filemanager"-Upgrades heute hat
+         ihn zurueckgesetzt, ohne dass das irgendwo sichtbar gemeldet wurde -
+         live an ir_rule.domain_force nachgewiesen, nicht nur vermutet). Mit
+         noupdate="1" fasst ein gewoehnliches Upgrade domain_force gar nicht
+         mehr an; nur eine echte Neuinstallation startet wieder beim
+         Platzhalter (dort gibt es aber noch keine Schutzordner-Eintraege zu
+         verlieren). Zusaetzliche Absicherung siehe _register_hook() in
+         models/filemanager_protected_folder.py - laeuft bei jedem
+         Registry-Aufbau (auch reiner Neustart, nicht nur Upgrade) und baut
+         die Regeln aus dem aktuellen Schutzordner-Stand neu auf, falls doch
+         einmal etwas den Platzhalter wiederherstellt. -->
+    <record id="rule_file_protected_read" model="ir.rule" noupdate="1">
         <field name="name">Filemanager: geschützte Ordner (Lesen)</field>
         <field name="model_id" ref="model_int_filemanager_file"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -38,7 +56,7 @@
         <field name="perm_unlink">False</field>
     </record>
 
-    <record id="rule_file_protected_write" model="ir.rule">
+    <record id="rule_file_protected_write" model="ir.rule" noupdate="1">
         <field name="name">Filemanager: geschützte Ordner (Schreiben)</field>
         <field name="model_id" ref="model_int_filemanager_file"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -48,7 +66,7 @@
         <field name="perm_unlink">False</field>
     </record>
 
-    <record id="rule_file_protected_unlink" model="ir.rule">
+    <record id="rule_file_protected_unlink" model="ir.rule" noupdate="1">
         <field name="name">Filemanager: geschützte Ordner (Löschen)</field>
         <field name="model_id" ref="model_int_filemanager_file"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -62,7 +80,7 @@
          Schutz ihrer zugehörigen Datei (file_id.path), damit niemand ohne
          Leserecht auf die Datei trotzdem alte Versionsinhalte über das
          Versions-Modell/die Versions-Route lesen kann. -->
-    <record id="rule_version_protected_read" model="ir.rule">
+    <record id="rule_version_protected_read" model="ir.rule" noupdate="1">
         <field name="name">Filemanager: geschützte Ordner (Versionen lesen)</field>
         <field name="model_id" ref="model_int_filemanager_version"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -72,7 +90,7 @@
         <field name="perm_unlink">False</field>
     </record>
 
-    <record id="rule_version_protected_write" model="ir.rule">
+    <record id="rule_version_protected_write" model="ir.rule" noupdate="1">
         <field name="name">Filemanager: geschützte Ordner (Versionen schreiben)</field>
         <field name="model_id" ref="model_int_filemanager_version"/>
         <field name="domain_force">[(1,'=',1)]</field>
@@ -82,7 +100,7 @@
         <field name="perm_unlink">False</field>
     </record>
 
-    <record id="rule_version_protected_unlink" model="ir.rule">
+    <record id="rule_version_protected_unlink" model="ir.rule" noupdate="1">
         <field name="name">Filemanager: geschützte Ordner (Versionen löschen)</field>
         <field name="model_id" ref="model_int_filemanager_version"/>
         <field name="domain_force">[(1,'=',1)]</field>

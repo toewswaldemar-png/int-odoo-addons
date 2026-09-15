@@ -66,3 +66,21 @@ class IntFilemanagerProtectedFolder(models.Model):
         from ..acl_rules import rebuild_rules
 
         rebuild_rules(self.env)
+
+    def _register_hook(self):
+        # Selbstheilung, live noetig geworden (2026-09-15): die sechs ir.rule-Datensaetze in
+        # security/security.xml haben ohne noupdate="1" bei jedem Modul-Upgrade ihren
+        # domain_force auf den dortigen "alles offen"-Platzhalter zurueckgesetzt und damit
+        # jeden ueber die UI gesetzten Schutzordner-Eintrag stillschweigend wieder aufgehoben
+        # (live an ir_rule.domain_force nachgewiesen: stand nach mehreren "-u
+        # int_filemanager"-Upgrades wieder auf "[(1,'=',1)]", obwohl "Kunden und Angebote" als
+        # Schutzordner konfiguriert war). noupdate="1" ist jetzt gesetzt und behebt die
+        # Upgrade-Ursache direkt - dieser Hook ist die zusaetzliche Absicherung: _register_hook()
+        # laeuft bei JEDEM Registry-Aufbau (Odoo ruft es nach dem Laden aller Modul-Daten fuer
+        # jedes Modell auf - auch bei einem reinen Server-Neustart ohne Upgrade, live an Odoos
+        # eigenem loading.py verifiziert), nicht nur bei "-u". Baut die Regeln unabhaengig vom
+        # noupdate-Zustand immer aus dem aktuellen Schutzordner-Stand neu auf - ohne
+        # Schutzordner-Eintraege ist das Ergebnis identisch zum Platzhalter, kein Verhaltens-
+        # unterschied fuer Installationen ohne konfigurierte Schutzordner.
+        super()._register_hook()
+        self._rebuild_acl_rules()
