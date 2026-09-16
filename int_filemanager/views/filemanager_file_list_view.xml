@@ -30,17 +30,15 @@
                      Icon selbst oeffnet das Formular (action_open_form) - ersetzt die vorherige
                      eigene Pfeil-Button-Spalte (Nutzerwunsch 2026-09-11), siehe
                      name_icon_field.js fuer die Handverdrahtung. -->
+                <!-- size/mtime nicht mehr als eigene Spalten (Nutzerwunsch 2026-09-16, Desktop):
+                     erscheinen stattdessen als Unterzeile unter dem Namen (name_icon_field.js/.xml,
+                     sizeDateText/showSizeDate) - dieselbe humanFileSize()-Formatierung wie zuvor
+                     die "Größe"-Spalte (size_human_field.js), hier direkt importiert statt
+                     dupliziert. column_invisible statt Entfernen, damit die Felder weiterhin
+                     mitgeladen werden (das Namens-Widget braucht sie). -->
+                <field name="size" column_invisible="1"/>
+                <field name="mtime" column_invisible="1"/>
                 <field name="name" widget="int_filemanager_name"/>
-                <!-- Menschlich lesbar (z.B. "12.34Mb"/"700Mb"/"512 Bytes") statt roher Byte-
-                     Zahl - dieselbe Formatierung, die Odoo intern fuer jede Binary-Feld-Groesse
-                     nutzt (humanSize() in web/static/src/views/fields/formatters.js), hier
-                     nachgebaut, weil size bewusst kein Binary-Feld ist (siehe
-                     size_human_field.js). Nur die Liste - das Formular zeigt weiterhin die
-                     exakte Byte-Zahl (eigenes string="Größe" hier statt "Größe (Bytes)", da
-                     die Werte nicht mehr woertlich Bytes sind). -->
-                <field name="size" invisible="is_dir" optional="show"
-                       widget="int_filemanager_size" string="Größe"/>
-                <field name="mtime" optional="show"/>
                 <field name="tag_ids" widget="many2many_tags" optional="show"/>
                 <field name="partner_id" optional="hide"/>
                 <!-- Baustein 1 (Werte erkennen) - bisher nur im Formular sichtbar, obwohl per

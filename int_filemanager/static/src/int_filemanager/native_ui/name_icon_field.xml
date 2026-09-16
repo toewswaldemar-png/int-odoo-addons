@@ -41,6 +41,11 @@
                      Stellen zielen jetzt auf diese Klasse (bzw. den Icon-Button) statt auf den
                      ganzen Zellen-Container - siehe Kommentare dort. -->
                 <span class="text-truncate o_int_filemanager_name_label" t-esc="value"/>
+                <!-- Ersetzt die "Größe"/"Geändert"-Spalten auf Desktop (Nutzerwunsch 2026-09-16,
+                     siehe showSizeDate/sizeDateText in name_icon_field.js). Vor der Pfad-
+                     Unterzeile: Groesse/Datum sind immer relevant, der Pfad nur bei aktiver
+                     Suche - die haeufigere Information steht damit naeher am Namen. -->
+                <span t-if="showSizeDate" class="text-truncate text-muted small" t-esc="sizeDateText"/>
                 <span t-if="showPath and parentPath" class="text-truncate text-muted small" t-esc="parentPath"/>
             </div>
         </div>
