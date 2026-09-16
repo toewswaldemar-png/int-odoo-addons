@@ -89,8 +89,12 @@
 // Mobil damit bewusst verloren (wie schon im Spike akzeptiert), Suche/Navigation laufen
 // vollstaendig ueber den eigenen Header.
 @media (max-width: 767.98px) {
+    // !important noetig: der native ControlPanel traegt Bootstraps "d-flex"-Utility-Klasse
+    // (display: flex !important) - live geprueft (computedDisplay blieb "flex" trotz greifender
+    // Media Query/Klasse), eine einfache Regel ohne !important verliert gegen Bootstrap-Utilities
+    // unabhaengig von Selektor-Spezifitaet oder Ladereihenfolge.
     .o_int_filemanager_mobile .o_control_panel {
-        display: none;
+        display: none !important;
     }
 }
 
