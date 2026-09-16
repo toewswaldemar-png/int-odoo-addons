@@ -294,15 +294,21 @@ class IntFilemanagerController(http.Controller):
                 with open(target, "wb") as dst:
                     f.save(dst)
                 make_shareable(target, is_dir=False)
-                # Kein eigener index_upsert() hier - open() oben loest bereits ein
-                # inotify-CREATE aus, das der Watcher in einer eigenen Transaktion
-                # verarbeitet. Ein zweiter, gleichzeitiger index_upsert() aus dieser
-                # Request-Transaktion race't dagegen: beide sehen noch keinen Datensatz,
-                # beide versuchen create(), der zweite committete Versuch verletzt
-                # _path_uniq (UNIQUE(path)) - live als 422 "existiert bereits ein
-                # Metadaten-Eintrag" beobachtet. Gleiche Lehre wie beim ONLYOFFICE-Sync
-                # und dem WebDAV-PUT-Handler: der Watcher sieht den Diskschreibvorgang
-                # ohnehin, nur einer von beiden darf den Index schreiben.
+                # index_upsert() direkt hier aufrufen (Kurswechsel 2026-09-16, live als Bug
+                # gefunden: Upload lief fehlerfrei durch, Datei blieb aber dauerhaft
+                # unindexiert). Vorherige Begruendung war, das ausschliesslich dem Watcher zu
+                # ueberlassen (inotify-CREATE durch open() oben) - das setzt aber voraus, dass
+                # der Watcher das Ereignis zuverlaessig bekommt. Laut Linux-Kernel-eigener
+                # CIFS-Dokumentation (kernel.org/doc/html/.../cifs/todo.html) ist inotify auf
+                # CIFS-Mounts nur unvollstaendig implementiert - live bestaetigt: derselbe
+                # Schreibvorgang loeste mal CLOSE_WRITE, mal MODIFY, mal (beim lange
+                # laufenden Watcher-Thread) GAR KEIN Ereignis aus. Die App kennt ihren eigenen
+                # Schreibvorgang bereits - sie muss nicht auf ein bei CIFS unzuverlaessiges
+                # Kernel-Feature warten, um ihn in der eigenen DB zu vermerken. Der
+                # ehemalige Race mit dem Watcher (beide versuchen create() fuer denselben neuen
+                # Pfad) ist jetzt in index_upsert() selbst abgefangen (siehe dort), nicht mehr
+                # hier vermieden.
+                index_upsert(request.env, target)
             saved.append(name)
         return self._json_response({"ok": True, "saved": saved})
 

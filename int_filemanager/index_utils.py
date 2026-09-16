@@ -78,7 +78,25 @@ def index_upsert(env, abs_path):
         # durchlaufen, unabhaengig von Schutzordner-Rechten).
         rec.with_context(int_filemanager_syncing_index=True).write(vals)
     else:
-        rec = Model.create(vals)
+        try:
+            rec = Model.create(vals)
+        except UserError:
+            # Race zwischen zwei gleichzeitigen Schreibern desselben neuen Pfads (2026-09-16:
+            # controllers/main.py's upload()/mkdir() rufen index_upsert() jetzt selbst auf,
+            # statt sich allein auf den Watcher zu verlassen - CIFS-Mounts liefern inotify-
+            # Ereignisse laut Kernel-eigener Doku nur unvollstaendig/unzuverlaessig, siehe
+            # docs/int_filemanager_native_ui.md). Beide Schreiber (dieser Request UND der
+            # Watcher in einer eigenen Transaktion) koennen zwischen der obigen search() und
+            # diesem create() denselben Pfad anlegen wollen - der zweite committete Versuch
+            # verletzt _path_uniq (UNIQUE(path), models.Constraint in filemanager_file.py),
+            # was Odoos ORM als UserError mit der Constraint-Meldung durchreicht. Statt das
+            # als echten Fehler zu behandeln: der Datensatz existiert dann bereits (vom
+            # anderen Schreiber angelegt) - erneut suchen und stattdessen aktualisieren, exakt
+            # das gewuenschte Endergebnis eines Upserts.
+            rec = Model.search([("path", "=", vals["path"])], limit=1)
+            if not rec:
+                raise
+            rec.with_context(int_filemanager_syncing_index=True).write(vals)
     _notify_change(env)
     return rec
 

@@ -86,4 +86,16 @@ def make_shareable(abs_path, is_dir):
     so any Windows user can write to them regardless of SMB user mapping.
     os.makedirs/f.save() create with the container's own uid:gid (100:101)
     and default umask instead, which locks other users out - override it."""
-    os.chmod(abs_path, 0o777 if is_dir else 0o666)
+    try:
+        os.chmod(abs_path, 0o777 if is_dir else 0o666)
+    except PermissionError:
+        # Live als Bug gefunden 2026-09-16: SMB-Mounts mit fixen file_mode/dir_mode-
+        # Optionen (hier file_mode=0777,dir_mode=0777, siehe die drei Unraid-Remote-Share-
+        # Mounts) liefern neu angelegte Dateien/Ordner bereits MIT den gewuenschten 0777/
+        # 0666-Rechten aus - der Server verweigert dort ein nachtraegliches chmod
+        # (PermissionError/EPERM), weil er die Rechte einheitlich ueber die Mount-Option
+        # vorgibt statt sie pro Datei individuell zu verwalten. chmod ist in diesem Fall
+        # ueberfluessig, nicht fehlgeschlagen - ein Upload darf daran nicht scheitern
+        # (500-Fehler trotz bereits erfolgreich geschriebener Datei, siehe controllers/
+        # main.py: upload()).
+        pass

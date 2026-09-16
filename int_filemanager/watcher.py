@@ -24,6 +24,7 @@ _WATCH_FLAGS = (
     inotify_simple.flags.CREATE
     | inotify_simple.flags.DELETE
     | inotify_simple.flags.MODIFY
+    | inotify_simple.flags.CLOSE_WRITE
     | inotify_simple.flags.MOVED_FROM
     | inotify_simple.flags.MOVED_TO
     | inotify_simple.flags.DELETE_SELF
@@ -130,6 +131,21 @@ def _process_batch(events, inotify, wd_to_path):
             else:
                 _upsert(abs_path)
         elif event.mask & flags.MODIFY:
+            if not is_dir:
+                _upsert(abs_path)
+        elif event.mask & flags.CLOSE_WRITE:
+            # Live per inotifywait am Host bestaetigt (2026-09-16): dieser CIFS-Mount liefert
+            # fuer eine neu geschriebene Datei UEBERHAUPT KEIN CREATE, nur CLOSE_WRITE - ein
+            # bekanntes, dateisystemabhaengiges Verhalten bei Netzwerk-Dateisystemen (inotify
+            # ist urspruenglich fuer lokale Dateisysteme entworfen, Unterstuetzung/genaue
+            # Ereignisauswahl bei NFS/CIFS ist unvollstaendig und variiert). Ohne diesen Zweig
+            # bekam der Watcher fuer Uploads auf diese drei SMB-Freigaben gar kein
+            # Indexierungs-Ereignis - live als Bug gefunden: Upload lief fehlerfrei durch, die
+            # Datei blieb aber dauerhaft unindexiert (kein taeglicher Reconciler-Lauf haette das
+            # zeitnah aufgeholt). Auf Dateisystemen, die zusaetzlich auch CREATE/MODIFY liefern,
+            # ist dieser Zweig redundant, aber harmlos - _upsert() ist bereits idempotent
+            # (dasselbe Verhalten wie beim bestehenden CREATE+MODIFY-Doppelaufruf auf lokalen
+            # Dateisystemen).
             if not is_dir:
                 _upsert(abs_path)
         elif event.mask & flags.DELETE:
