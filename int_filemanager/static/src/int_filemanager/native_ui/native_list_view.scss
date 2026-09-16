@@ -96,6 +96,22 @@
     .o_int_filemanager_mobile .o_control_panel {
         display: none !important;
     }
+
+    // Nativer Zurueck-Pfeil im lila App-Navbar (o_main_navbar, ausserhalb dieser Komponente -
+    // Odoo blendet ihn global in JEDER App auf schmalem Viewport ein, sobald der Breadcrumb-Stack
+    // mehr als einen Eintrag hat, hier ausgeloest durch updateBreadcrumbs() in
+    // filemanager_controller_mixin.js). Duplizierte sich mit der eigenen Breadcrumb-Zeile
+    // darunter (Nutzerreport 2026-09-16: "<- Audio" oben, "Alle Ordner / Audio" im eigenen
+    // Header) - die eigene Zeile deckt Zurueck-Navigation per Klick bereits ab, der native Pfeil
+    // ist hier reine Redundanz. :has() statt eines JS-Lifecycle-Hooks, weil
+    // .o_int_filemanager_mobile (Klasse auf dieser Komponente) und .o_main_navbar (Odoos globale,
+    // von dieser Komponente unabhaengige Navbar) keinen naeheren gemeinsamen Vorfahren als <body>
+    // haben - reine CSS-Beziehung, raeumt sich beim Verlassen der Ansicht von selbst auf. Nur der
+    // Pfeil-Button wird ausgeblendet, nicht der gesamte .o_breadcrumb-Block - der Ordnername
+    // daneben (.o_last_breadcrumb_item) bleibt als Kontext-Anzeige sichtbar.
+    body:has(.o_int_filemanager_mobile) .o_main_navbar .o_back_button {
+        display: none !important;
+    }
 }
 
 .o_int_filemanager_mobile .o_int_filemanager_mobile_header {
