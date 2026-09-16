@@ -175,22 +175,6 @@ class IntFilemanagerFile(models.Model):
                 return True
         return super().write(vals)
 
-    @api.model
-    def search_panel_select_range(self, field_name, **kwargs):
-        """Erzwingt is_dir=True fuer den parent_id-Ordnerbaum server-seitig. Noetig, weil das
-        native SearchPanel fuer ein Category-Feld (kein select="multi") das eigene domain-
-        Attribut der Arch clientseitig gar nicht erst an comodel_domain weiterreicht -
-        live verifiziert, siehe docs/int_filemanager_native_ui.md, Smoke-Test-Abschnitt.
-
-        Kein enable_counters mehr in der Arch (2026-09-09, siehe filemanager_file_search.xml) -
-        der vormals hier lebende _search_panel_parent_id_counters()-Fastpath (Ersatz fuer Odoos
-        teuren formatted_read_group-Zaehlpfad) ist damit toter Code und wurde entfernt, nicht nur
-        ungenutzt gelassen."""
-        if field_name != "parent_id":
-            return super().search_panel_select_range(field_name, **kwargs)
-        kwargs["comodel_domain"] = (kwargs.get("comodel_domain") or []) + [("is_dir", "=", True)]
-        return super().search_panel_select_range(field_name, **kwargs)
-
     content_sha256 = fields.Char(
         index=True,
         copy=False,

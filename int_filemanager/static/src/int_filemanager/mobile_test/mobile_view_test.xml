@@ -3,20 +3,22 @@
     <t t-name="int_filemanager.MobileViewTest">
         <div class="o_int_filemanager_mobile_test d-flex flex-column h-100">
             <div class="flex-grow-1 overflow-auto" t-if="state.searchViewId and state.viewId">
-                <!-- Eigener Mobil-Header + SearchPanel-Ausblendung leben im gepatchten
-                     int_filemanager.ListView-Template (native_list_view.xml/.scss), gated auf den
-                     Kontext-Flag int_filemanager_mobile_header - hier nur gesetzt, nirgendwo sonst
-                     (produktive Desktop-Action bleibt unberuehrt).
+                <!-- Eigener Mobil-Header lebt im gepatchten int_filemanager.ListView-Template
+                     (native_list_view.xml/.scss), gated auf den Kontext-Flag
+                     int_filemanager_mobile_header - hier nur gesetzt, nirgendwo sonst (produktive
+                     Desktop-Action bleibt unberuehrt).
 
-                     display.searchPanel MUSS true bleiben (Befund 2026-09-15, per Live-Logging
-                     verifiziert): IntFilemanagerSearchModel._getCategoryDomain() berechnet die
-                     Root-Domain zwar auch mit searchPanel:false korrekt, aber der Reload-Trigger
-                     nach dem Settlen der Kategorie haengt am tatsaechlichen Mounten der
-                     SearchPanel-Komponente (layout.xml: <SearchPanel t-if="display.searchPanel"/>).
-                     Mit searchPanel:false bleibt die Liste auf dem allerersten, ungefilterten
-                     Domain-Stand haengen. Die sichtbare Box wird stattdessen per CSS ausgeblendet
-                     (native_list_view.scss, ".o_content:has(.o_int_filemanager_mobile)
-                     .o_search_panel"). -->
+                     display.searchPanel:true ist seit 2026-09-16 ein No-op (nicht mehr entfernt,
+                     um diesen Prop-Diff klein zu halten): filemanager_file_search.xml hat kein
+                     <searchpanel>-Arch-Element mehr, IntFilemanagerSearchModel.sections bleibt
+                     damit leer, und Odoos eigene _getDisplay()-Berechnung
+                     (this.sections.size && ...) macht searchPanel dadurch IMMER false, unabhaengig
+                     von diesem Prop - Odoos natives <SearchPanel/> (layout.xml) rendert seitdem nie
+                     mehr. Navigation laeuft komplett ueber die eigene FolderTree-Komponente
+                     (folder_tree.js, siehe native_list_view.xml) und
+                     env.searchModel.setIntFilemanagerFolderPath() (native_search_model.js) - deren
+                     "update"-Event triggert denselben nativen WithSearch->useModel-Reload-Pfad wie
+                     zuvor, unabhaengig vom (jetzt inerten) SearchPanel-Mount-Zustand. -->
                 <View type="'list'" resModel="'int_filemanager.file'"
                       viewId="state.viewId"
                       searchViewId="state.searchViewId"

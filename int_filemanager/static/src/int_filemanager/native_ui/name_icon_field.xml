@@ -3,7 +3,13 @@
         <div class="d-flex align-items-center gap-1 o_int_filemanager_name_cell">
             <button type="button" class="btn btn-link p-0 border-0 o_int_filemanager_open_form_icon"
                     t-on-click="onIconClick" data-tooltip="Details öffnen">
-                <i t-if="isDir" class="fa fa-folder fa-fw text-warning" role="img" aria-label="Ordner"/>
+                <!-- text-primary statt text-warning (Nutzerkorrektur 2026-09-16, "nicht Odoo
+                     nativ"): Odoos eigenes search_panel.xml faerbt ein Kategoriefeld-Icon ohne
+                     eigene section.color-Konfiguration mit text-primary
+                     ("!section.color ? 'text-primary' : ''", text-warning ist dort ausschliesslich
+                     fuer type="filter"-Sections reserviert) - unser "Ordner" ist genau so ein
+                     unkonfiguriertes Kategoriefeld, kein Filter. -->
+                <i t-if="isDir" class="fa fa-folder fa-fw text-primary" role="img" aria-label="Ordner"/>
                 <span t-else="" class="o_image" role="img" t-att-data-mimetype="pseudoMimetype"/>
             </button>
             <!-- t-model unterstuetzt beliebig tiefe Pfade (OWL-Compiler spaltet nur am letzten

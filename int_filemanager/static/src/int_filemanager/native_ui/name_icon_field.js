@@ -203,11 +203,10 @@ export class IntFilemanagerNameField extends Component {
 
     // Pfad-Unterzeile nur mobil UND nur bei aktiver Suche (Nutzerwunsch 2026-09-16). Reine
     // Ordnernavigation (Baum/Breadcrumb/Zeilenklick) laeuft ausschliesslich ueber
-    // env.searchModel.toggleCategoryValue() (siehe filemanager_controller_mixin.js) und ruehrt
-    // env.searchModel.query nie an (live am Quellcode verifiziert: toggleCategoryValue() in
-    // Odoos search_model.js setzt nur category.activeValueId, nie this.query) - "query" enthaelt
-    // ausschliesslich echte Sucheintraege/Filter, ist also ein sauberes, von der reinen
-    // Ordnerposition unabhaengiges Signal fuer "Suchergebnis".
+    // env.searchModel.setIntFilemanagerFolderPath() (siehe native_search_model.js) und ruehrt
+    // env.searchModel.query nie an - "query" enthaelt ausschliesslich echte Sucheintraege/Filter,
+    // ist also ein sauberes, von der reinen Ordnerposition unabhaengiges Signal fuer
+    // "Suchergebnis".
     get showPath() {
         return Boolean(
             this.env.searchModel.globalContext.int_filemanager_mobile_header &&

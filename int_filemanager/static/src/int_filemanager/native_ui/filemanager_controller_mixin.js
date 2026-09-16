@@ -26,6 +26,7 @@ import { IntLinkRecordDialog } from "../shared/link_record_dialog";
 import { IntTextEditorDialog } from "./text_editor_dialog";
 import { IntDocumentReviewDialog } from "./document_review_dialog";
 import { IntZipContentsDialog } from "./zip_contents_dialog";
+import { domPathToPath } from "./folder_tree";
 
 // Video ist nativ im FileViewer verdrahtet (file_viewer.js/.xml: state.file.isVideo -> echtes
 // <video controls>) - hier nur an dessen bereits vorhandene Faehigkeit angeschlossen, nichts
@@ -267,10 +268,12 @@ export function filemanagerControllerMixin(Base) {
             onMounted(() => {
                 this._makeRecordsDraggable();
                 this._checkMobileBreadcrumbOverflow();
+                this._measureContentTop();
             });
             onPatched(() => {
                 this._makeRecordsDraggable();
                 this._checkMobileBreadcrumbOverflow();
+                this._measureContentTop();
             });
             useExternalListener(window, "dragstart", this.onWindowDragStartRecord);
             useExternalListener(window, "dragover", this.onWindowDragOverRecord);
@@ -289,21 +292,26 @@ export function filemanagerControllerMixin(Base) {
             // der eigenen Toolbar/Breadcrumb-Zeile beginnt statt sie zu verdecken (Pager,
             // Suche etc. bleiben bedienbar), statt eine Navbar-Hoehe zu raten.
             this.chatterState = useState({ open: false, topPx: 0 });
-            // Mobil-Ordnerbaum als Bottom-Sheet (Client-Action-Einbettung, mobile_test/) - die
-            // bereits gemountete native SearchPanel (sonst per CSS versteckt, siehe
-            // native_list_view.scss) wird hierueber ein-/ausgeblendet statt einen eigenen Baum zu
-            // bauen. this.mobileTreeState.open steuert nur eine CSS-Klasse
-            // (o_int_filemanager_mobile_tree_open, siehe native_list_view.js: className), kein
-            // Einfluss auf die Kategorie-/Domain-Logik selbst.
+            // Mobil-Ordnerbaum als Bottom-Sheet (Client-Action-Einbettung, mobile_test/) - dieselbe
+            // FolderTree-Komponente (folder_tree.js) wie die Desktop-Seitenleiste, nur anders
+            // positioniert/getoggled (siehe native_list_view.xml/.scss). this.mobileTreeState.open
+            // steuert nur eine CSS-Klasse (o_int_filemanager_mobile_tree_open, siehe
+            // native_list_view.js: className), kein Einfluss auf die Domain-Logik selbst.
             this.mobileTreeState = useState({ open: false });
-            // Reaktiv an alle Nachfahren durchgereicht (inkl. der nativen SearchPanel, die als
-            // eigene Komponente denselben Owl-env-Baum erbt) - noetig fuer den
-            // web.SearchPanel-Patch (search_panel_small_patch.xml), der env.isSmall fuer die
-            // Small-Variante gezielt umgeht, waehrend unser eigenes Bottom-Sheet offen ist (sonst
-            // wuerde die Komponente auf echter Telefonbreite nur ihre kompakte Chip-Form
-            // rendern, verschachtelt in unserem eigenen Overlay - Nutzerwunsch 2026-09-15 war ein
-            // echter, direkt navigierbarer Baum, nicht ein doppelt verschachtelter Toggle).
-            useSubEnv({ mobileTreeState: this.mobileTreeState });
+            // Desktop-Ordnerbaum-Seitenleiste (folder_tree.js) - anders als das Mobil-Sheet oben
+            // immer sichtbar (kein eigener open/close-Zustand), aber per position:fixed relativ
+            // zum Viewport statt eines echten Flex-Sibling-Layouts platziert (dieselbe Begruendung
+            // wie beim Chatter-Panel unten: ein Platz verdraengendes Layout bräuchte einen Patch
+            // von Odoos geteiltem "web.Layout"-Template, das jede Listen-/Kanban-Ansicht im System
+            // beträfe). Anders als das Chatter-Panel beginnt der Baum aber am Controller-Root
+            // selbst (this.rootRef.el), nicht an ".o_content" - er soll wie in einem echten
+            // Datei-Explorer die gesamte Hoehe inklusive der eigenen Toolbar-Zeile einnehmen,
+            // siehe _measureContentTop() unten.
+            this.desktopTreeState = useState({ topPx: 0 });
+            // Von folder_tree.js in dessen eigenem onMounted() gesetzt (registerApi-Prop) - erlaubt
+            // reload() unten, gezielt nur den aktuell offenen Ordner im Baum-Cache zu invalidieren,
+            // statt den ganzen Baum neu zu laden.
+            this.folderTreeApi = null;
             // Mobil-Breadcrumb-Kollabierung (Nutzerwunsch 2026-09-15): bei zu langem Pfad wird
             // statt horizontalem Scrollen alles zwischen erstem und letztem Segment zu einem
             // "…"-Dropdown zusammengefasst (siehe native_list_view.xml). Per echter
@@ -313,11 +321,7 @@ export function filemanagerControllerMixin(Base) {
             // und hier gegen die dann wieder VOLLSTAENDIG gerenderte Liste neu geprueft.
             this.mobileBreadcrumbState = useState({ collapsed: false });
             this.mobileBreadcrumbNavRef = useRef("mobileBreadcrumbNav");
-            useExternalListener(window, "resize", () => {
-                if (this.chatterState.open) {
-                    this._measureChatterPanelTop();
-                }
-            });
+            useExternalListener(window, "resize", () => this._measureContentTop());
 
             // Everything already on the stack when this controller was created (normally
             // just the "Dateimanager" action entry itself, or "Verknüpfte Dateien" when opened
@@ -339,10 +343,7 @@ export function filemanagerControllerMixin(Base) {
                 const nativeOnSelected = ownRootCrumb.onSelected;
                 ownRootCrumb.onSelected = () => {
                     nativeOnSelected?.();
-                    const section = this.getCategorySection();
-                    if (section) {
-                        this.env.searchModel.toggleCategoryValue(section.id, false);
-                    }
+                    this.env.searchModel.setIntFilemanagerFolderPath("");
                 };
             }
 
@@ -367,9 +368,10 @@ export function filemanagerControllerMixin(Base) {
                 this.busService.unsubscribe("int_filemanager.change", this._onFilemanagerChange);
             });
 
-            // Navigation (Zeilenklick/Kartenklick, Breadcrumb, SearchPanel-Baum) laeuft ab jetzt
-            // AUSSCHLIESSLICH ueber env.searchModel.toggleCategoryValue() - siehe openRecord()/
-            // updateBreadcrumbs() unten. Kein eigenes this.model.load({domain:[...]}) fuer
+            // Navigation (Zeilenklick/Kartenklick, Breadcrumb, Ordnerbaum) laeuft ab jetzt
+            // AUSSCHLIESSLICH ueber env.searchModel.setIntFilemanagerFolderPath() (siehe
+            // native_search_model.js) - siehe openRecord()/updateBreadcrumbs() unten. Kein eigenes
+            // this.model.load({domain:[...]}) fuer
             // Ordnerwechsel mehr: useModel() (web/static/src/model/model.js) registriert selbst
             // unbedingt onWillUpdateProps((nextProps) => model.load(getSearchParams(nextProps)))
             // auf dieser Komponente - das laesst sich aus einer Subklasse nicht abschalten und
@@ -412,23 +414,28 @@ export function filemanagerControllerMixin(Base) {
             onMounted(() => this.updateBreadcrumbs());
         }
 
-        getCategorySection() {
-            const [section] = this.env.searchModel.getSections(
-                (s) => s.type === "category" && s.fieldName === "parent_id"
-            );
-            return section;
-        }
-
         onToggleChatterPanel() {
             this.chatterState.open = !this.chatterState.open;
-            if (this.chatterState.open) {
-                this._measureChatterPanelTop();
-            }
         }
 
-        _measureChatterPanelTop() {
-            const contentEl = this.rootRef.el?.querySelector(".o_content");
+        // Vermisst die Startpunkte fuer BEIDE ueberlagernden Fixed-Panels (Chatter rechts,
+        // Desktop-Ordnerbaum links, siehe chatterState/desktopTreeState in setup()) - bewusst
+        // ZWEI verschiedene Anker, kein gemeinsamer Wert (Live-Bug 2026-09-16, Nutzerscreenshot:
+        // sichtbare Luecke zwischen Navbar und Baum): der Chatter soll bewusst UNTERHALB der
+        // eigenen Toolbar/Breadcrumb-Zeile beginnen (".o_content", schliesst die Toolbar
+        // ausdruecklich aus - Kommentar bei chatterState in setup()), der Ordnerbaum dagegen soll
+        // wie in einem echten Datei-Explorer die GESAMTE Hoehe inklusive der Toolbar-Zeile
+        // einnehmen, beginnt also am Controller-Root selbst (this.rootRef.el, direkt unterhalb
+        // der Navbar) statt an ".o_content". this.rootRef.el ist dafuer auch der robustere Anker:
+        // seine Position haengt nur von der (stabilen) Navbar-Hoehe ab, waehrend ".o_content"s
+        // Top je nach Toolbar-Zeilenumbruch (z.B. Suchleiste faellt bei aktiven Facetten auf zwei
+        // Zeilen) schwankt und mangels eines dedizierten Re-Measure-Ausloesers dafuer veraltet
+        // bleiben kann.
+        _measureContentTop() {
+            const rootEl = this.rootRef.el;
+            const contentEl = rootEl?.querySelector(".o_content");
             this.chatterState.topPx = contentEl ? Math.round(contentEl.getBoundingClientRect().top) : 0;
+            this.desktopTreeState.topPx = rootEl ? Math.round(rootEl.getBoundingClientRect().top) : 0;
         }
 
         // Zeigt die (Checkbox-/Alt-Klick-)Auswahl der Liste bzw. Karten-Selektion, dieselbe
@@ -442,8 +449,7 @@ export function filemanagerControllerMixin(Base) {
 
         async openRecord(record) {
             if (record.data.is_dir) {
-                const section = this.getCategorySection();
-                this.env.searchModel.toggleCategoryValue(section.id, record.resId);
+                this.env.searchModel.setIntFilemanagerFolderPath(record.data.path);
                 return;
             }
             if (TEXT_EDIT_EXTENSIONS.has(extOf(record.data.name))) {
@@ -525,86 +531,66 @@ export function filemanagerControllerMixin(Base) {
             // searchModel.domain uebernommene Domain bei (_getNextConfig merged nur fehlende
             // Parameter) - ein Refresh nach Mutation aendert also nichts am aktuellen Ordner.
             await this.model.load();
-            // model.load() aktualisiert nur die Inhaltsliste - der SearchPanel-Ordnerbaum hat
-            // einen eigenen Cache (searchModel.sections), den das nicht anstoesst. Odoos eigene
-            // SearchModel._reloadSections() (web/static/src/search/search_model.js) refetcht eine
-            // Kategorie nur bei enableCounters (hier bewusst deaktiviert, siehe
-            // filemanager_file.py: search_panel_select_range) oder geaenderter Such-Domain -
-            // reines mkdir/move/rename/delete aendert die Domain nicht, der Baum bliebe sonst auf
-            // dem Stand des letzten vollen Seitenladens stehen (live beobachtet: neu erstellte/
-            // verschobene Unterordner fehlten im Baum bzw. hingen faelschlich auf Wurzelebene,
-            // bis ein Hard-Reload den ungated Erstlade-Pfad erneut durchlief). Fix: denselben
-            // ungated Fetch+Notify-Aufruf, den SearchModel.load() beim Erstladen macht, hier
-            // direkt nachstellen.
-            const searchModel = this.env.searchModel;
-            await searchModel._fetchSections(searchModel.categories, searchModel.filters);
-            searchModel.trigger("update");
+            // model.load() aktualisiert nur die Inhaltsliste - der Ordnerbaum (folder_tree.js) hat
+            // einen eigenen Cache pro Ebene, den das nicht anstoesst. mkdir/upload/rename/delete
+            // im aktuellen Ordner aendern dessen direkte Kinder, ohne dass sich die Such-Domain
+            // selbst aendert - genau den aktuell offenen Pfad im Baum invalidieren und (falls dort
+            // gerade aufgeklappt) sofort neu laden deckt den ueberwiegenden Fall ab. Ein move() in
+            // einen anderen, gerade nicht sichtbaren Ordner zeigt seine Wirkung dort automatisch
+            // beim naechsten Aufklappen (kein Cache-Eintrag existiert dafuer, bis er tatsaechlich
+            // gebraucht wird).
+            await this.folderTreeApi?.refresh(this.currentPath || "");
         }
 
-        // Baut env.config.breadcrumbs UND this.currentPath aus der Vorfahrenkette des aktuell
-        // gewaehlten SearchPanel-Werts nach - dieselben Daten (values/parentId), die der Baum links
-        // ohnehin schon geladen hat, keine eigene, vom Model unabhaengige Pfad-Buchhaltung mehr.
-        // this.currentPath wird NICHT fuer die Listen-/Kanban-Domain verwendet (die kommt
-        // ausschliesslich aus searchModel.domain via useModel) - einziger Zweck ist der "path"-
-        // Parameter der bestehenden authz-geprueften mkdir/upload-Routen (siehe unten), die den
-        // literalen Dateisystempfad brauchen, nicht die parent_id. display_name je Ordner ist hier
-        // einfach dessen "name"-Feld (kein name_get-Override auf dem Modell) - Aneinanderreihen der
-        // Kette ergibt exakt denselben Pfadstring wie das "path"-Feld selbst.
+        // Baut env.config.breadcrumbs aus this.currentPath nach, dem literalen Pfad-String, den
+        // der Ordnerbaum (folder_tree.js) bzw. env.searchModel.setIntFilemanagerFolderPath()
+        // direkt vorgibt - keine Vorfahrenketten-Rekonstruktion mehr ueber SearchPanel-
+        // Kategoriewerte noetig (siehe native_search_model.js), der Pfad-String traegt die
+        // Hierarchie bereits selbst. this.currentPath wird NICHT fuer die Listen-/Kanban-Domain
+        // verwendet (die kommt ausschliesslich aus searchModel.domain via useModel) - einziger
+        // Zweck ist der "path"-Parameter der bestehenden authz-geprueften mkdir/upload-Routen
+        // unten.
         updateBreadcrumbs() {
-            // Schliesst das Mobil-Baum-Bottom-Sheet nach einer Ordnerwahl NUR, wenn der neu
-            // aktive Wert ein Blattordner ist (keine eigenen Unterordner) - Nutzerwunsch
-            // 2026-09-16, deckt sich mit Odoos eigenem nativen Verhalten in der Small-Chip-
-            // Dropdown-Variante (search_panel.js: toggleCategory() ruft
-            // getDropdownState(...).close() ausschliesslich im "value.childrenIds.length"-losen
-            // Zweig auf - ein Ordner MIT Unterordnern laesst die Dropdown dort offen, man kann
-            // direkt weiterklicken). Vorher schloss unser eigener Code hier IMMER, auch bei
-            // Zwischenordnern mit weiteren Unterordnern (Nutzerreport: "ein Klick auf Knoten
-            // navigiert und schliesst gleich das Sheet"). Die Wurzel (activeValueId===false,
-            // z.B. ueber den "Alle Ordner"-Breadcrumb/-Baumeintrag) hat hier bewusst kein
-            // childrenIds und schliesst deshalb weiterhin wie zuvor - eigener Sonderfall waere
-            // hier unverhaeltnismaessig, dieser Pfad laeuft ohnehin ueberwiegend ueber den
-            // separaten onMobileGoHome()-Breadcrumb-Button, nicht ueber Baum-Klicks.
-            //
-            // Diese Methode haengt bereits an env.searchModel "update" (siehe setup()), genau das
-            // Ereignis, das eine Auswahl im Baum (toggleCategoryValue) ausloest. Kein zweiter Hook
-            // noetig, no-op wenn das Sheet gar nicht offen ist oder die Aktion produktiv laeuft
-            // (state existiert dort zwar auch, betrifft aber nur die - dort unsichtbare -
-            // CSS-Klasse).
             // Neuer Pfad -> immer erst wieder vollstaendig rendern (siehe
             // _checkMobileBreadcrumbOverflow() unten, das gegen genau diese volle Darstellung
             // misst und bei Bedarf erneut kollabiert).
             this.mobileBreadcrumbState.collapsed = false;
-            const section = this.getCategorySection();
+            this.currentPath = this.env.searchModel.intFilemanagerFolderPath || "";
             const crumbs = this.env.config.breadcrumbs;
             crumbs.length = this.rootBreadcrumbCount;
-            if (!section) {
-                this.currentPath = "";
-                this.mobileTreeState.open = false;
+            if (!this.currentPath) {
                 return;
             }
-            const activeValue = section.activeValueId ? section.values.get(section.activeValueId) : null;
-            if (!activeValue || !activeValue.childrenIds.length) {
-                this.mobileTreeState.open = false;
-            }
-            const chain = [];
-            let id = section.activeValueId;
-            while (id) {
-                const value = section.values.get(id);
-                if (!value) {
-                    break;
-                }
-                chain.unshift(value);
-                id = value.parentId;
-            }
-            this.currentPath = chain.map((value) => value.display_name).join("/");
-            for (const value of chain) {
+            const segments = this.currentPath.split("/");
+            let acc = "";
+            for (const segment of segments) {
+                acc = acc ? `${acc}/${segment}` : segment;
+                const segmentPath = acc;
                 crumbs.push({
-                    jsId: `int_filemanager_crumb_${value.id}`,
-                    name: value.display_name,
+                    jsId: `int_filemanager_crumb_${segmentPath}`,
+                    name: segment,
                     isFormView: false,
                     url: "#",
-                    onSelected: () => this.env.searchModel.toggleCategoryValue(section.id, value.id),
+                    onSelected: () => this.env.searchModel.setIntFilemanagerFolderPath(segmentPath),
                 });
+            }
+        }
+
+        // Wird von folder_tree.js (Klick auf einen Knoten) aufgerufen. Schliesst das Mobil-Baum-
+        // Bottom-Sheet nach einer Ordnerwahl NUR, wenn der gewaehlte Ordner ein Blattordner ist
+        // (keine eigenen Unterordner) - Nutzerwunsch 2026-09-16, deckt sich mit Odoos eigenem
+        // nativen Verhalten in der Small-Chip-Dropdown-Variante (search_panel.js: toggleCategory()
+        // ruft getDropdownState(...).close() ausschliesslich im "value.childrenIds.length"-losen
+        // Zweig auf - ein Ordner MIT Unterordnern laesst die Dropdown dort offen, man kann direkt
+        // weiterklicken). Die Wurzel laeuft ueber onMobileGoHome() (schliesst immer), nicht hierueber.
+        onFolderTreeSelect(path, hasChildren) {
+            if (!path) {
+                this.onMobileGoHome();
+                return;
+            }
+            this.env.searchModel.setIntFilemanagerFolderPath(path);
+            if (!hasChildren) {
+                this.mobileTreeState.open = false;
             }
         }
 
@@ -631,10 +617,8 @@ export function filemanagerControllerMixin(Base) {
         // Springt direkt zur Wurzel - derselbe Aufruf, den auch der native Wurzel-Breadcrumb in
         // setup() (ownRootCrumb.onSelected) ausloest.
         onMobileGoHome() {
-            const section = this.getCategorySection();
-            if (section) {
-                this.env.searchModel.toggleCategoryValue(section.id, false);
-            }
+            this.env.searchModel.setIntFilemanagerFolderPath("");
+            this.mobileTreeState.open = false;
         }
 
         // Misst, ob die VOLLSTAENDIG gerenderte Breadcrumb-Zeile ihren verfuegbaren Platz
@@ -652,10 +636,10 @@ export function filemanagerControllerMixin(Base) {
             }
         }
 
-        // Oeffnet/schliesst das Ordnerbaum-Bottom-Sheet (die bereits gemountete native
-        // SearchPanel, siehe native_list_view.scss fuer die Ein-/Ausblend-CSS und
+        // Oeffnet/schliesst das Ordnerbaum-Bottom-Sheet (dieselbe FolderTree-Komponente wie die
+        // Desktop-Seitenleiste, siehe native_list_view.scss fuer die Positionierungs-CSS und
         // native_list_view.js fuer die dortige Zustandsklasse). Schliesst sich selbst wieder
-        // automatisch nach einer Ordnerwahl, siehe updateBreadcrumbs() oben.
+        // automatisch nach einer Blattordner-Wahl, siehe onFolderTreeSelect() oben.
         onToggleMobileTree() {
             this.mobileTreeState.open = !this.mobileTreeState.open;
         }
@@ -855,9 +839,8 @@ export function filemanagerControllerMixin(Base) {
         // main.py's move()-Route, aber die Live-Rueckmeldung beim Ziehen soll nicht erst nach
         // einem fehlgeschlagenen RPC kommen). target hier ist die vereinheitlichte Form aus
         // _dropTargetFromEvent() ({el, resId, path, isDir}), NICHT direkt ein ORM-Record - der
-        // Seitenleisten-Ordnerbaum liefert nie ein echtes Record-Objekt (nur SearchPanel-
-        // Kategoriewerte, siehe dort), deshalb diese gemeinsame, schlankere Form fuer beide
-        // Zielarten.
+        // Seitenleisten-Ordnerbaum liefert nie ein echtes Record-Objekt (nur Pfad-Strings, siehe
+        // folder_tree.js), deshalb diese gemeinsame, schlankere Form fuer beide Zielarten.
         _isValidDropTarget(records, target) {
             if (!target.isDir) {
                 return false;
@@ -876,34 +859,15 @@ export function filemanagerControllerMixin(Base) {
             });
         }
 
-        // Baut den literalen Zielpfad aus der Vorfahrenkette eines SearchPanel-Kategoriewerts -
-        // dieselbe Technik wie updateBreadcrumbs() oben (dort bewusst nicht wiederverwendet, um
-        // die dort bereits live gehaertete Breadcrumb-Logik nicht anzufassen), nur hier fuer
-        // einen BELIEBIGEN Baumeintrag statt zwingend den aktuell aktiven. valueId===false (die
-        // Wurzel/"Alle") liefert korrekt "" (leere Kette), wie an anderer Stelle auch (z.B.
-        // this.currentPath bei geoeffneter Wurzel).
-        _pathForCategoryValue(section, valueId) {
-            const chain = [];
-            let id = valueId;
-            while (id) {
-                const value = section.values.get(id);
-                if (!value) {
-                    break;
-                }
-                chain.unshift(value);
-                id = value.parentId;
-            }
-            return chain.map((value) => value.display_name).join("/");
-        }
-
         // Vereinheitlicht die zwei moeglichen Drop-Ziel-Arten auf dieselbe schlanke Form
         // ({el, resId, path, isDir}): eine Zeile/Karte der aktuell offenen Ansicht (natives
-        // data-id, siehe oben) ODER ein Eintrag im Seitenleisten-Ordnerbaum
-        // (data-int-filemanager-value-id, per search_panel_patch.xml additiv auf das geteilte
-        // web.SearchPanel.Category-Template aufgebracht - der Baum kann JEDEN Ordner im System
-        // zeigen, nicht nur die der aktuell offenen Ansicht, deshalb kein echtes Record-Objekt
-        // dafuer verfuegbar). Gibt null zurueck, wenn unter dem Mauszeiger keins von beidem
-        // liegt oder der Kategoriewert zu keiner unserer eigenen SearchPanel-Sections gehoert.
+        // data-id, siehe oben) ODER ein Knoten im eigenen Ordnerbaum (folder_tree.js/.xml,
+        // data-int-filemanager-tree-path direkt auf dessen Header-Zeile). resId ist fuer einen
+        // Baum-Knoten immer false - der Baum kennt nur Pfade, keine Odoo-Datensatz-IDs (siehe
+        // folder_tree.js) - _isValidDropTarget() unten braucht sie ohnehin nicht: der
+        // Selbst-Drop-Schutz laeuft dort vollstaendig ueber den Pfad-Vergleich, der resId-
+        // Vergleich war fuer Zeilen-Ziele immer nur redundant dazu. Gibt null zurueck, wenn
+        // unter dem Mauszeiger keins von beidem liegt.
         _dropTargetFromEvent(ev) {
             const rowEl = ev.target.closest("[data-id]");
             if (rowEl) {
@@ -912,27 +876,9 @@ export function filemanagerControllerMixin(Base) {
                     return { el: rowEl, resId: record.resId, path: record.data.path, isDir: record.data.is_dir };
                 }
             }
-            const treeEl = ev.target.closest("[data-int-filemanager-value-id]");
+            const treeEl = ev.target.closest("[data-int-filemanager-tree-path]");
             if (treeEl) {
-                const section = this.getCategorySection();
-                const rawId = treeEl.dataset.intFilemanagerValueId;
-                // "root" statt "false": search_panel_patch.xml mappt valueId===false explizit auf
-                // diesen String, weil Owls kompiliertes Template das Attribut fuer den rohen
-                // false-Wert live nachweisbar komplett wegliess (siehe Kommentar dort) - "root"
-                // ist als String garantiert nie leer/falsy und uebersteht das unbeschadet.
-                if (section && rawId === "root") {
-                    // Die Wurzel ("Alle") ist nur ein Sentinel (category.rootIds enthaelt sie,
-                    // category.values als Map aber nicht - live gegen search_model.js geprueft:
-                    // dort wird ausschliesslich ueber echte, aus dem groupby gelesene Datensaetze
-                    // befuellt) - deshalb hier ohne Map-Lookup direkt als gueltiges Ziel mit
-                    // leerem Pfad behandelt, statt wie unten ueber section.values.get() zu gehen.
-                    return { el: treeEl, resId: false, path: "", isDir: true };
-                }
-                const valueId = section ? parseInt(rawId, 10) : null;
-                const value = section && section.values.get(valueId);
-                if (value) {
-                    return { el: treeEl, resId: valueId, path: this._pathForCategoryValue(section, valueId), isDir: true };
-                }
+                return { el: treeEl, resId: false, path: domPathToPath(treeEl.dataset.intFilemanagerTreePath), isDir: true };
             }
             return null;
         }

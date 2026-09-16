@@ -4,16 +4,16 @@
 // started as an experiment on this branch (see docs/int_filemanager_native_ui.md), now the
 // only UI: legacy_ui (the hand-rolled OWL component predating this) was deleted 2026-09-04
 // once this reached feature parity with it. Only override needed for navigation: clicking a
-// folder row selects it in the
-// native parent_id SearchPanel category (env.searchModel.toggleCategoryValue)
-// instead of opening a (non-existent) form view - see ListRenderer's
-// onCellClicked -> this.props.openRecord(record) in list_renderer.js, which
-// comes from ListController.openRecord (list_controller.js). The resulting
-// reload itself is entirely native (searchModel -> WithSearch -> props.domain
+// folder row navigates via env.searchModel.setIntFilemanagerFolderPath() (own FolderTree
+// component, see folder_tree.js, replacing Odoo's native SearchPanel category field since
+// 2026-09-16 - see native_search_model.js for why) instead of opening a (non-existent) form
+// view - see ListRenderer's onCellClicked -> this.props.openRecord(record) in
+// list_renderer.js, which comes from ListController.openRecord (list_controller.js). The
+// resulting reload itself is entirely native (searchModel -> WithSearch -> props.domain
 // -> useModel's own onWillUpdateProps, see filemanager_controller_mixin.js's setup() for why
 // that MUST stay the only writer). Sort, optional columns incl. Properties splitting,
 // pager are untouched native ListView behaviour; breadcrumbs are rebuilt from
-// the SearchPanel category's own value chain (see updateBreadcrumbs()).
+// the active folder path string (see updateBreadcrumbs()).
 //
 // Everything shared with the native Kanban view (native_kanban_view.js) - navigation,
 // mutations, breadcrumbs, chatter panel, action menu - lives in
@@ -32,6 +32,7 @@ import { ListController } from "@web/views/list/list_controller";
 // Form-View, siehe docs/int_filemanager_native_ui.md Punkt 23).
 import { Chatter } from "@mail/chatter/web_portal/chatter";
 import { filemanagerControllerMixin } from "./filemanager_controller_mixin";
+import { FolderTree } from "./folder_tree";
 import { IntFilemanagerListRenderer } from "./native_list_renderer";
 import { IntFilemanagerSearchModel } from "./native_search_model";
 
@@ -41,7 +42,7 @@ export class IntFilemanagerListController extends filemanagerControllerMixin(Lis
     // eine Neuzuweisung ohne Spread wuerde sie durch die statische Feld-Ueberschreibung
     // verdecken und jedes t-component/<Tag>, das das geerbte web.ListView-Template nutzt,
     // bräche.
-    static components = { ...ListController.components, Chatter, Dropdown, DropdownItem, SearchBar };
+    static components = { ...ListController.components, Chatter, Dropdown, DropdownItem, SearchBar, FolderTree };
 
     // Scoping-Klasse fuer native_list_view.scss - rechtsbuendige Zahlenspalten (o_list_number,
     // list_renderer.scss) sind fuer "Groesse" hier bewusst unerwuenscht (User-Wunsch: wie alle
@@ -50,8 +51,8 @@ export class IntFilemanagerListController extends filemanagerControllerMixin(Lis
     get className() {
         const classes = [super.className, "o_int_filemanager_list"];
         // Rein additiv fuer die Client-Action-Einbettung (mobile_test/) - siehe
-        // native_list_view.xml/native_list_view.scss fuer Header-Markup bzw. SearchPanel-
-        // Ausblendung, beide an dieselbe Klasse gekoppelt. Bei der produktiven Desktop-Action
+        // native_list_view.xml/native_list_view.scss fuer Header-Markup bzw. Ordnerbaum-Sheet-
+        // Positionierung, beide an dieselbe Klasse gekoppelt. Bei der produktiven Desktop-Action
         // ist der Kontext-Flag nie gesetzt, diese Klasse landet dort also nie.
         if (this.env.searchModel.globalContext.int_filemanager_mobile_header) {
             classes.push("o_int_filemanager_mobile");
@@ -73,9 +74,9 @@ registry.category("views").add("int_filemanager_list", {
     // separater list_renderer_patch.js mit manuellen resModel-Laufzeitchecks, 2026-09-11
     // hierher umgezogen fuer dieselbe Kapselung wie beim Controller.
     Renderer: IntFilemanagerListRenderer,
-    // Ordner-Baum-Domain-Logik (parent_id-Navigation) - siehe native_search_model.js fuer die
-    // ausfuehrliche Begruendung. Derselbe Registry-Umzug wie Renderer oben, vormals
-    // search_model_patch.js (patch(SearchModel.prototype, ...)). Braucht denselben Eintrag
-    // auch in native_kanban_view.js - beide Ansichten teilen sich dieselbe Ordner-Navigation.
+    // Ordner-Pfad-Domain-Logik - siehe native_search_model.js fuer die ausfuehrliche
+    // Begruendung. Derselbe Registry-Umzug wie Renderer oben, vormals search_model_patch.js
+    // (patch(SearchModel.prototype, ...)). Braucht denselben Eintrag auch in
+    // native_kanban_view.js - beide Ansichten teilen sich dieselbe Ordner-Navigation.
     SearchModel: IntFilemanagerSearchModel,
 });

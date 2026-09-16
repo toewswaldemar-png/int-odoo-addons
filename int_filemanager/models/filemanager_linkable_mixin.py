@@ -34,7 +34,7 @@ class IntFilemanagerLinkableMixin(models.AbstractModel):
         # (action_filemanager_file_list_native), nur mit einer permanenten partner_id-Domain -
         # seit legacy_ui geloescht ist, gibt es keinen eigenen int_filemanager_browser-Client-
         # Action-Tag mehr, der einen Sondermodus dafuer haette anbieten koennen. context setzt
-        # int_filemanager_recursive (siehe search_model_patch.js) - ohne das wuerde die Liste
+        # int_filemanager_recursive (siehe native_search_model.js) - ohne das wuerde die Liste
         # beim Oeffnen nur Wurzel-Datensaetze zeigen (parent_id=False), was bei einer
         # domain-gefilterten Ansicht so gut wie immer leer waere, da verknuepfte Dateien so gut
         # wie nie im Wurzelverzeichnis liegen.

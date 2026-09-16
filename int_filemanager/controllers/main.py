@@ -49,10 +49,17 @@ class IntFilemanagerController(http.Controller):
     # ---------------------------------------------------------------------
 
     # /int_filemanager/list (das eigene Pendant zu web_search_read, mit Pagination/Sortierung/
-    # Breadcrumbs) wurde mit legacy_ui geloescht (2026-09-04) - die native ListView/SearchPanel
-    # deckt Listing/Navigation vollstaendig ab, kein zweiter Endpunkt mehr dafuer noetig. tree_dir
-    # unten bleibt bewusst stehen: eigene ACL-Tests (test_acl_http.py) belegen die
-    # Record-Rule-Durchsetzung auf diesem Pfad, unabhaengig davon, ob ihn noch eine UI aufruft.
+    # Breadcrumbs) wurde mit legacy_ui geloescht (2026-09-04) - die native ListView deckt
+    # Listing vollstaendig ab, kein zweiter Endpunkt mehr dafuer noetig. tree_dir unten war bis
+    # 2026-09-16 nur fuer die eigenen ACL-Tests (test_acl_http.py) relevant, seitdem echte
+    # Datenquelle der eigenen, lazy ladenden Seitenleiste (folder_tree.js) statt Odoos nativem
+    # SearchPanel-Kategoriefeld - siehe project_int_filemanager_searchpanel_perf-Notiz: bei 69k
+    # Ordnern/1,38 Mio. Dateien war JEDER Odoo-Bordmittel-Pfad (expand=1 UND die
+    # Lazy-Loading-Variante ohne expand) live per EXPLAIN ANALYZE als mehrere Sekunden teuer
+    # nachgewiesen, weil beide am Ende praktisch den gesamten Baum laden - diese Route liefert
+    # dagegen ausschliesslich die direkten Kinder EINES Ordners (eine einzelne, per folder_path-
+    # Index gestuetzte Abfrage), Kosten wachsen mit der Groesse der angeklickten Ebene, nicht mit
+    # der Gesamtzahl der Ordner im System.
     @http.route("/int_filemanager/tree", type="jsonrpc", auth="user", methods=["POST"])
     def tree_dir(self, path=""):
         """Baut den Ordnerbaum für die Sidebar über die ORM statt über
@@ -74,8 +81,21 @@ class IntFilemanagerController(http.Controller):
             [("folder_path", "=", rel or False), ("is_dir", "=", True)],
             order="name",
         )
+        # has_children: ob unter diesem Kind selbst wieder Ordner haengen, damit der Baum links
+        # (folder_tree.js) einen Aufklapp-Pfeil nur zeigt, wo tatsaechlich etwas aufzuklappen
+        # ist, ohne dafuer schon jede Ebene vorab laden zu muessen. Eine einzige zusaetzliche,
+        # ueber denselben folder_path-Index gestuetzte Abfrage (IN-Liste der gerade gefundenen
+        # Kind-Pfade) statt einer Abfrage pro Kind.
+        child_paths = records.mapped("path")
+        folders_with_children = set()
+        if child_paths:
+            grandchildren = Model.search([("folder_path", "in", child_paths), ("is_dir", "=", True)])
+            folders_with_children = set(grandchildren.mapped("folder_path"))
         return {
-            "children": [{"name": r.name, "path": r.path} for r in records],
+            "children": [
+                {"name": r.name, "path": r.path, "has_children": r.path in folders_with_children}
+                for r in records
+            ],
         }
 
     @http.route("/int_filemanager/download", type="http", auth="user")

@@ -46,55 +46,16 @@
                      keine technisch garantierten Werte mehr) - Suche ueber das obige Feld
                      (Status) plus Gruppierung reichen. -->
                 <filter name="groupby_status_id" string="Status" context="{'group_by': 'status_id'}"/>
-                <!-- hierarchize bewusst NICHT auf 0 gesetzt (Gegenteil eines frueheren Versuchs
-                     hier, siehe Commit-Historie): hierarchize="0" unterdrueckt serverseitig
-                     komplett das Mitschicken von parent_id pro Baumwert (web/models/models.py,
-                     search_panel_select_range: "if hierarchize and parent_name in Comodel._fields:
-                     field_names.append(parent_name)") - ohne das faellt der Baum optisch flach
-                     zusammen (keine Einrueckung) UND native_list_view.js kann daraus keine
-                     Breadcrumb-Vorfahrenkette mehr rekonstruieren, live so beobachtet. Odoos
-                     Default (hierarchize="1", parent_id wird mitgeschickt) bleibt deshalb aktiv;
-                     den fuer einen Datei-Browser noetigen Operator-Wechsel "child_of" -> "="
-                     (direkte statt rekursive Kinder) und die Wurzel-Sonderbehandlung
-                     (activeValueId=false -> parent_id=false statt "kein Filter") uebernimmt
-                     komplett search_model_patch.js, gescopet auf int_filemanager.file - unabhaengig
-                     vom hierarchize-Wert. domain-Attribut bewusst weggelassen: wird fuer
-                     Category-Felder (kein select="multi") clientseitig ignoriert, live verifiziert
-                     - search_panel_select_range-Override auf dem Modell erzwingt is_dir=True
-                     stattdessen. limit="0" (kein Cap): expand ignoriert den aktuell gebrowsten Pfad
-                     fuer die Knotenauswahl und holt ohnehin immer den gesamten is_dir=True-Baum in
-                     einem Aufruf - der Odoo-Standard limit="200" wuerde bei vielen Ordnern sofort
-                     "Zu viele Elemente" ausloesen (siehe docs/int_filemanager_native_ui.md,
-                     Smoke-Test-Abschnitt).
-
-                     Performance-Untersuchung 2026-09-16 (siehe [[project_int_filemanager_searchpanel_perf]]):
-                     ein Versuch, expand="1" ohne Ersatz zu entfernen, wurde noch am selben Tag per
-                     EXPLAIN ANALYZE live widerlegt und zurueckgenommen - OHNE expand loest Odoos
-                     search_panel_select_range bei leerem Suchfilter (dem Normalfall beim blossen
-                     Oeffnen) stattdessen ein GROUP BY parent_id UEBER DIE GESAMTE Tabelle aus (Web-
-                     Kern, addons/web/models/models.py), live gemessen 6,5s - langsamer als das
-                     bisherige is_dir=True-Read (2,5s). Beide Odoo-Bordmittel-Pfade laden bei dieser
-                     Datenmenge (69k Ordner) praktisch den kompletten Baum, nur unterschiedlich teuer -
-                     ein echter Fix braucht eine eigene, wirklich lazy ladende Baumkomponente statt
-                     Odoos natives SearchPanel-Kategoriefeld, kein Attribut-Tausch hier.
-
-                     KEIN enable_counters (2026-09-09, Performance-Fix - siehe
-                     docs/int_filemanager_native_ui.md): search_model.js's _reloadSections()
-                     refetcht eine Section bei JEDER Notify (jedem Ordnerklick), sobald
-                     enableCounters gesetzt ist - "section.enableCounters || (searchDomainChanged
-                     && !section.expand)" (live am Odoo-19-Quellcode verifiziert), unabhaengig davon
-                     ob sich am Suchdomain ueberhaupt etwas geaendert hat. Live gemessen: 647KB/
-                     170-300ms pro Klick, nur fuer den ohnehin fast unveraenderten Ordnerbaum. Kein
-                     natives Odoo-Core-Modul kombiniert enable_counters mit expand (grep ueber alle
-                     installierten Addons) - product.category (die groesste native Kategorie-Baumleiste)
-                     nutzt beides gar nicht, hr/stock nutzen enable_counters nur OHNE expand. Ohne
-                     enable_counters refetcht reine Navigation (kein Suchbegriff) die Section
-                     ueberhaupt nicht mehr, da toggleCategoryValue() searchDomain nicht aendert
-                     (_getDomain({withSearchPanel:false})). Preis: keine Trefferzahl-Badge pro Ordner
-                     mehr - Produktentscheidung, kein Implementierungsdetail. -->
-                <searchpanel>
-                    <field name="parent_id" string="Ordner" icon="fa-folder" expand="1" limit="0"/>
-                </searchpanel>
+                <!-- Kein <searchpanel>-Kategoriefeld mehr fuer "Ordner" (bis 2026-09-16 hier:
+                     <field name="parent_id" .../>) - ersetzt durch eine eigene, wirklich lazy
+                     ladende Baumkomponente (folder_tree.js/.xml, siehe native_search_model.js
+                     fuer die Navigations-/Domain-Logik). Grund, live per EXPLAIN ANALYZE
+                     nachgewiesen und in [[project_int_filemanager_searchpanel_perf]] festgehalten:
+                     bei 69k Ordnern/1,38 Mio. Dateien war JEDER Odoo-Bordmittel-Pfad
+                     (expand="1" ODER die Lazy-Loading-Variante ohne expand) mehrere Sekunden teuer,
+                     weil beide am Ende praktisch den gesamten Baum laden - hierarchize-basierte
+                     Kategoriefelder sind fuer kleine, begrenzte Klassifikationsbaeume gedacht
+                     (Produktkategorien, Abteilungen), nicht fuer eine dateisystemgrosse Hierarchie. -->
             </search>
         </field>
     </record>

@@ -1,0 +1,71 @@
+// Platzierung der eigenen FolderTree-Komponente (folder_tree.js/.scss) innerhalb der Listen-/
+// Kanban-Ansicht - geteilt zwischen native_list_view.xml und native_kanban_view.xml (beide
+// betten <FolderTree/> identisch ein), deshalb eine eigene Datei statt Duplizierung in
+// native_list_view.scss/native_kanban_view.scss.
+
+// Desktop-Seitenleiste - position:fixed statt eines echten Flex-Sibling-Layouts (siehe
+// desktopTreeState-Kommentar in filemanager_controller_mixin.js: setup() fuer die Begruendung,
+// dasselbe Prinzip wie das bereits bestehende Chatter-Panel). padding-left auf den Ansichten
+// selbst haelt Listen-/Kanban-Inhalt daneben statt darunter.
+.o_int_filemanager_tree_sidebar {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background-color: var(--o-view-background-color, #fff);
+    border-right: 1px solid var(--border-color, #dee2e6);
+    z-index: 10;
+}
+
+.o_int_filemanager_list,
+.o_int_filemanager_kanban {
+    padding-left: 280px;
+}
+
+// Unterhalb 768px (Odoo-eigener isSmall-Schwellwert, siehe native_list_view.scss) gibt es keinen
+// Platz fuer eine permanente Seitenleiste - betrifft in der Praxis nur ein auf Telefonbreite
+// verkleinertes Browserfenster der normalen Desktop-Action (die eigene Mobil-Client-Action-
+// Einbettung rendert die Seitenleiste ohnehin gar nicht erst, siehe den t-if in
+// native_list_view.xml/native_kanban_view.xml, dieser Block ist also reines Sicherheitsnetz
+// fuer den unwahrscheinlichen, aber moeglichen Fall).
+@media (max-width: 767.98px) {
+    .o_int_filemanager_tree_sidebar {
+        display: none;
+    }
+
+    .o_int_filemanager_list,
+    .o_int_filemanager_kanban {
+        padding-left: 0;
+    }
+}
+
+// Mobil-Bottom-Sheet-Variante (nur innerhalb der Client-Action-Einbettung gerendert, siehe
+// mobileTreeState/onToggleMobileTree in filemanager_controller_mixin.js) - standardmaessig
+// unsichtbar, wird bei aktivem o_int_filemanager_mobile_tree_open (native_list_view.js:
+// className) als Sheet von unten eingeblendet. Dieselben Positions-/Groessenwerte wie die
+// vormalige, auf Odoos natives SearchPanel gerichtete Version (search_panel_patch.xml-Aera,
+// 2026-09-16 abgeloest) - hier direkt auf die eigene Komponente statt per !important-Ueberschreibung
+// fremder Bootstrap-Utility-Klassen.
+.o_int_filemanager_tree_sheet {
+    display: none;
+}
+
+.o_int_filemanager_mobile_tree_open .o_int_filemanager_tree_sheet {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-width: 420px;
+    height: auto;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 0.5rem;
+    z-index: 1100;
+    border-radius: 1rem 1rem 0 0;
+    box-shadow: 0 -0.5rem 1.5rem rgba(0, 0, 0, 0.2);
+    background-color: var(--o-view-background-color, #fff);
+}

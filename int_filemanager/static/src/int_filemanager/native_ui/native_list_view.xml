@@ -52,7 +52,22 @@
              Listenkopf (Status/Name/...), der als naechstes im DOM folgt. Nutzt dieselbe
              Breadcrumb-Kette wie updateBreadcrumbs() (filemanager_controller_mixin.js) ueber den
              dortigen mobileBreadcrumbs-Helfer - kein zweiter Navigationszustand. -->
+        <!-- Desktop-Ordnerbaum-Seitenleiste (folder_tree.js, ersetzt seit 2026-09-16 Odoos
+             natives SearchPanel-Kategoriefeld - siehe native_search_model.js/project_
+             int_filemanager_searchpanel_perf-Notiz fuer die Begruendung). position:fixed statt
+             eines echten Flex-Sibling-Layouts (siehe desktopTreeState-Kommentar in
+             filemanager_controller_mixin.js: setup()) - topPx haelt sie direkt unterhalb der
+             Navbar, ueber die volle Hoehe inklusive der eigenen Toolbar-Zeile (wie in einem
+             echten Datei-Explorer). Nur ausserhalb der Mobil-Client-Action-Einbettung gerendert
+             (dort uebernimmt der Ordnerbaum als Bottom-Sheet weiter unten dieselbe Rolle). -->
         <xpath expr="//div[@t-ref='root']/*[1]" position="before">
+            <div t-if="!env.searchModel.globalContext.int_filemanager_mobile_header"
+                 class="o_int_filemanager_tree_sidebar"
+                 t-attf-style="top: {{desktopTreeState.topPx}}px;">
+                <FolderTree activePath="currentPath || ''"
+                            onSelectFolder="(path, hasChildren) => this.onFolderTreeSelect(path, hasChildren)"
+                            registerApi="(api) => this.folderTreeApi = api"/>
+            </div>
             <div t-if="env.searchModel.globalContext.int_filemanager_mobile_header"
                  class="o_int_filemanager_mobile_header">
                 <div class="d-flex align-items-center gap-1">
@@ -99,8 +114,8 @@
                     <input type="file" t-ref="fileInput" multiple="multiple" class="d-none" t-on-change="onFileInputChange"/>
                 </div>
                 <div class="o_int_filemanager_mobile_breadcrumb_row d-flex align-items-center gap-1">
-                    <!-- Oeffnet das Ordnerbaum-Bottom-Sheet (die bereits gemountete native
-                         SearchPanel, siehe onToggleMobileTree/native_list_view.scss). Nutzerwunsch
+                    <!-- Oeffnet das Ordnerbaum-Bottom-Sheet (dieselbe FolderTree-Komponente wie die
+                         Desktop-Seitenleiste, siehe onToggleMobileTree/native_list_view.scss). Nutzerwunsch
                          2026-09-15: "Alle Ordner" im Breadcrumb daneben deckt die Wurzel-Navigation
                          schon ab (mobileBreadcrumbs[0].onSelected ruft dasselbe onMobileGoHome auf)
                          - der Home-Button war dadurch redundant und wird stattdessen fuer den Baum
@@ -173,12 +188,21 @@
                         </t>
                     </nav>
                 </div>
-                <!-- Backdrop zum Schliessen per Antippen ausserhalb des Bottom-Sheets - die
-                     SearchPanel selbst (native Komponente, kein eigenes Markup hier) wird
-                     ausschliesslich per CSS ein-/ausgeblendet (native_list_view.scss), dieser
-                     Backdrop liegt in derselben Overlay-Ebene direkt darunter. -->
+                <!-- Backdrop zum Schliessen per Antippen ausserhalb des Bottom-Sheets - liegt in
+                     derselben Overlay-Ebene direkt unter dem Sheet (native_list_view.scss). -->
                 <div t-if="mobileTreeState.open" class="o_int_filemanager_mobile_tree_backdrop"
                      t-on-click="onToggleMobileTree"/>
+                <!-- Ordnerbaum-Bottom-Sheet - dieselbe FolderTree-Komponente wie die Desktop-
+                     Seitenleiste oben, nur per CSS als Sheet positioniert statt fest links (siehe
+                     native_list_view.scss: .o_int_filemanager_tree_sheet). Immer gemountet (nicht
+                     nur bei open, damit der Baum-Zustand/Cache beim wiederholten Auf-/Zuklappen
+                     erhalten bleibt), Sichtbarkeit ausschliesslich per CSS-Klasse
+                     (o_int_filemanager_mobile_tree_open, siehe native_list_view.js: className). -->
+                <div class="o_int_filemanager_tree_sheet">
+                    <FolderTree activePath="currentPath || ''"
+                                onSelectFolder="(path, hasChildren) => this.onFolderTreeSelect(path, hasChildren)"
+                                registerApi="(api) => this.folderTreeApi = api"/>
+                </div>
             </div>
         </xpath>
         <xpath expr="//div[@t-ref='root']" position="inside">
