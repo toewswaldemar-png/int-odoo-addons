@@ -28,6 +28,22 @@
 // Konstruktion nie mit einschliessen.
 import { Domain } from "@web/core/domain";
 import { SearchModel } from "@web/search/search_model";
+import { router } from "@web/core/browser/router";
+
+// URL-Query-Key fuer den aktuellen Ordnerpfad, damit er einen echten Reload (F5) uebersteht -
+// siehe setup()/setIntFilemanagerFolderPath() unten.
+const FOLDER_PATH_URL_KEY = "int_filemanager_path";
+
+// Odoo selbst ruft bei JEDEM Controller-Mount unbedingt seinen eigenen internen pushState()
+// auf (action_service.js) - der ruft router.pushState(newState, {replace: true}) auf. Bei
+// replace:true baut computeNextState() (router.js) die naechste URL NICHT durch
+// Zusammenfuehren mit dem bisherigen Zustand auf, sondern verwirft alles ausser den per
+// addLockedKey() registrierten Schluesseln (Default nur "debug"/"lang") und setzt dann Odoos
+// eigenen, schmalen State (nur PATH_KEYS: resId/action/active_id/model) neu - ohne diesen
+// Eintrag wuerde int_filemanager_path also aus jeder URL wieder rausfallen, kurz nachdem die
+// Seite geladen hat, unabhaengig von jeder eigenen Navigation. addLockedKey() ist Odoos eigener,
+// dafuer vorgesehener Erweiterungspunkt.
+router.addLockedKey(FOLDER_PATH_URL_KEY);
 
 // Name-Attribut des Marker-Filters aus filemanager_file_search.xml (<filter
 // name="filter_search_recursive">, ohne eigene domain) - node.name kommt 1:1 aus dem XML-
@@ -38,14 +54,28 @@ const RECURSIVE_FILTER_NAME = "filter_search_recursive";
 export class IntFilemanagerSearchModel extends SearchModel {
     setup(services) {
         super.setup(services);
-        this.intFilemanagerFolderPath = "";
+        // Aus der URL vorbelegen statt immer "" (Wurzel) - der Browser laedt bei einem Reload
+        // exakt dieselbe URL neu, das ist die einzige Quelle, die das zuverlaessig uebersteht
+        // (siehe FOLDER_PATH_URL_KEY/addLockedKey() oben).
+        this.intFilemanagerFolderPath = router.current[FOLDER_PATH_URL_KEY] || "";
     }
 
     // Von folder_tree.js (Klick auf einen Knoten) und filemanager_controller_mixin.js
     // (Breadcrumb-/Zeilen-Navigation, "Alle Ordner") aufgerufen - genau ein Schreiber fuer diesen
     // Teil der Domain, analog zum vormaligen toggleCategoryValue().
+    //
+    // router.replaceState() zusaetzlich zu this.intFilemanagerFolderPath: router.js
+    // serialisiert automatisch jeden State-Key, der nicht zu den vier fest verdrahteten
+    // PATH_KEYS (resId/action/active_id/model) gehoert, in die sichtbare Query-String der URL
+    // (stateToUrl()) und liest sie beim naechsten Laden wieder ein (urlToState(), laeuft bereits
+    // bei startRouter() vor jeder Owl-Komponente) - exakt der Mechanismus, den Odoo selbst fuer
+    // alles nutzt, was einen Reload ueberleben soll. replaceState() (nicht pushState()) bewusst
+    // gewaehlt: jeder Ordnerklick soll die URL aktualisieren, aber keinen eigenen Browser-
+    // Verlaufseintrag erzeugen - Zurueck/Vorwaerts durch einzelne Ordnerklicks war nicht Teil
+    // der Anfrage und waere eine ungefragte Verhaltensaenderung.
     setIntFilemanagerFolderPath(path) {
         this.intFilemanagerFolderPath = path || "";
+        router.replaceState({ [FOLDER_PATH_URL_KEY]: this.intFilemanagerFolderPath || undefined });
         this._notify();
     }
 

@@ -57,6 +57,13 @@
 
     <record id="action_filemanager_file_list_native" model="ir.actions.act_window">
         <field name="name">Dateimanager</field>
+        <!-- Sprechender URL-Pfad statt "action-<id>" (Nutzerwunsch 2026-09-16) - ir.actions.actions
+             hat genau dafuer ein eigenes "path"-Feld (base/models/ir_actions.py, DB-weit eindeutig,
+             live per SQL gegen alle bestehenden Werte geprueft: kein Konflikt). router.js baut die
+             URL nur dann aus der numerischen ID ("action-313"), wenn state.action eine Zahl ist
+             oder einen Punkt enthaelt (pathFromActionState()) - ein reiner, punktfreier String wie
+             hier wird 1:1 als Pfadsegment uebernommen. -->
+        <field name="path">filemanager</field>
         <field name="res_model">int_filemanager.file</field>
         <!-- "kanban" zusaetzlich zu "list" (2026-09-07, siehe
              docs/int_filemanager_native_ui.md) - kein view_id-Eintrag fuer den Kanban-Teil

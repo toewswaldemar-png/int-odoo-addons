@@ -201,14 +201,17 @@ export class IntFilemanagerNameField extends Component {
         return this.props.record.data[this.props.name];
     }
 
-    // Pfad-Unterzeile nur mobil UND nur bei aktiver Suche (Nutzerwunsch 2026-09-16). Reine
-    // Ordnernavigation (Baum/Breadcrumb/Zeilenklick) laeuft ausschliesslich ueber
-    // env.searchModel.setIntFilemanagerFolderPath() (siehe native_search_model.js) und ruehrt
-    // env.searchModel.query nie an - "query" enthaelt ausschliesslich echte Sucheintraege/Filter,
-    // ist also ein sauberes, von der reinen Ordnerposition unabhaengiges Signal fuer
-    // "Suchergebnis".
+    // Pfad-Unterzeile bei aktiver Suche (Nutzerwunsch 2026-09-16, auf Desktop erweitert
+    // 2026-09-16). Reine Ordnernavigation (Baum/Breadcrumb/Zeilenklick) laeuft ausschliesslich
+    // ueber env.searchModel.setIntFilemanagerFolderPath() (siehe native_search_model.js) und
+    // ruehrt env.searchModel.query nie an - "query" enthaelt ausschliesslich echte
+    // Sucheintraege/Filter, ist also ein sauberes, von der reinen Ordnerposition unabhaengiges
+    // Signal fuer "Suchergebnis". Urspruenglich auf env.isSmall beschraenkt, weil bei normaler
+    // Ordnernavigation der Pfad redundant zum Breadcrumb ist - das gilt bei aktiver Suche aber
+    // unabhaengig von der Fensterbreite gleichermassen (Suchergebnisse ueber mehrere Ordner
+    // hinweg brauchen die Einordnung auch auf Desktop).
     get showPath() {
-        return Boolean(this.env.isSmall && this.env.searchModel.query.length);
+        return Boolean(this.env.searchModel.query.length);
     }
 
     get parentPath() {

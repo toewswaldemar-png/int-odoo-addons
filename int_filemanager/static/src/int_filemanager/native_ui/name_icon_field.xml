@@ -21,16 +21,26 @@
                    t-on-keydown="onRenameKeydown"
                    t-on-blur="onRenameBlur"
                    t-on-click.stop="() => {}"/>
-            <!-- Pfad-Unterzeile (Nutzerwunsch 2026-09-16): nur mobil UND nur bei aktiver Suche
-                 (env.searchModel.query.length, siehe showPath in name_icon_field.js) - beim
-                 normalen Durchklicken der Ordner ist der Pfad redundant zum Breadcrumb, erst bei
-                 Suchergebnissen ueber mehrere Ordner hinweg hilft er zur Einordnung. Eigener
-                 flex-column-Wrapper statt des vorherigen einzelnen <span>, damit Name und Pfad
-                 untereinander stehen, waehrend das Icon links weiterhin ueber die volle
-                 Zeilenhoehe vertikal zentriert bleibt (align-items-center auf dem
-                 Eltern-Flex-Container oben). -->
+            <!-- Pfad-Unterzeile (Nutzerwunsch 2026-09-16, auf Desktop erweitert 2026-09-16): nur
+                 bei aktiver Suche (env.searchModel.query.length, siehe showPath in
+                 name_icon_field.js) - beim normalen Durchklicken der Ordner ist der Pfad
+                 redundant zum Breadcrumb, erst bei Suchergebnissen ueber mehrere Ordner hinweg
+                 hilft er zur Einordnung. Eigener flex-column-Wrapper statt des vorherigen
+                 einzelnen <span>, damit Name und Pfad untereinander stehen, waehrend das Icon
+                 links weiterhin ueber die volle Zeilenhoehe vertikal zentriert bleibt
+                 (align-items-center auf dem Eltern-Flex-Container oben). -->
             <div t-else="" class="d-flex flex-column o_int_filemanager_name_text">
-                <span class="text-truncate" t-esc="value"/>
+                <!-- o_int_filemanager_name_label: eigene Klasse statt sich auf .text-truncate
+                     allein zu verlassen (Nutzerreport 2026-09-16: Rubberband-Ausschluss/Drag-
+                     Startzone griff faelschlich ueber die GANZE Namensspalte statt nur ueber den
+                     sichtbaren Namen - Ursache war .o_int_filemanager_name_cell als
+                     Ausschluss-Selektor in native_list_renderer.js/filemanager_controller_mixin.js:
+                     der umgebende Flex-Container UND dieser Wrapper hier (flex:1 1 auto, siehe
+                     native_list_view.scss) fuellen die komplette, extra verbreiterte Spalte,
+                     dieser <span> selbst bleibt als Inline-Element aber exakt textgross). Beide
+                     Stellen zielen jetzt auf diese Klasse (bzw. den Icon-Button) statt auf den
+                     ganzen Zellen-Container - siehe Kommentare dort. -->
+                <span class="text-truncate o_int_filemanager_name_label" t-esc="value"/>
                 <span t-if="showPath and parentPath" class="text-truncate text-muted small" t-esc="parentPath"/>
             </div>
         </div>

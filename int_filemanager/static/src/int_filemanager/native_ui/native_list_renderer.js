@@ -111,22 +111,19 @@ export class IntFilemanagerListRenderer extends ListRenderer {
             if (ev.button !== 0 || !this.canSelectRecord) {
                 return;
             }
-            // Start auf einer Datenzeile bleibt dem bestehenden Drag&Drop-Verschieben
-            // vorbehalten (eigener Event-Pfad, draggable="true"/dragstart, siehe
-            // filemanager_controller_mixin.js) - Rubberband startet nur auf echt leerem Platz.
-            // Ebenso ausgenommen: Checkbox-Spalte, Tabellenkopf (Sortier-Klicks), Control-Panel,
-            // SearchPanel-Seitenleiste, und jedes offene Modal/Dialog (live beobachtet: ohne
-            // diese Ausnahme loeste ein Rubberband-Versuch INNERHALB eines Dialogs - z.B. dem
-            // Odoo-Fehler-Modal selbst - einen echten Absturz aus: der Browser startet bei
-            // Ziehen ueber Text einen nativen Text-Selektions-Drag, der global ein "dragstart"-
-            // Ereignis feuert, das wiederum onWindowDragStartRecord() in
-            // filemanager_controller_mixin.js trifft - dort wird ev.target als Element
-            // angenommen (ev.target.closest("[data-id]")), bei einem Text-Selektions-Drag ist
-            // ev.target aber oft ein reiner Textknoten ohne .closest -> TypeError, Absturz der
-            // ganzen Ansicht. document.querySelector() statt closest(), da document.activeElement
-            // bei einem Dialog nicht zuverlaessig innerhalb des Modal-DOM liegt.
+            // Ausgenommen unabhaengig vom Zeileninhalt: Checkbox-Spalte, Tabellenkopf
+            // (Sortier-Klicks), Control-Panel, SearchPanel-Seitenleiste, und jedes offene
+            // Modal/Dialog (live beobachtet: ohne diese Ausnahme loeste ein Rubberband-Versuch
+            // INNERHALB eines Dialogs - z.B. dem Odoo-Fehler-Modal selbst - einen echten Absturz
+            // aus: der Browser startet bei Ziehen ueber Text einen nativen
+            // Text-Selektions-Drag, der global ein "dragstart"-Ereignis feuert, das wiederum
+            // onWindowDragStartRecord() in filemanager_controller_mixin.js trifft - dort wird
+            // ev.target als Element angenommen (ev.target.closest("[data-id]")), bei einem
+            // Text-Selektions-Drag ist ev.target aber oft ein reiner Textknoten ohne .closest ->
+            // TypeError, Absturz der ganzen Ansicht. document.querySelector() statt closest(), da
+            // document.activeElement bei einem Dialog nicht zuverlaessig innerhalb des
+            // Modal-DOM liegt.
             if (
-                ev.target.closest("tr.o_data_row") ||
                 ev.target.closest(".o_list_record_selector") ||
                 ev.target.closest("thead") ||
                 ev.target.closest(".o_control_panel") ||
@@ -154,6 +151,58 @@ export class IntFilemanagerListRenderer extends ListRenderer {
             const rowEls = [...this.tableRef.el.querySelectorAll("tr.o_data_row")];
             if (rowEls.length !== records.length) {
                 return;
+            }
+            // Windows-Explorer-Verhalten (Nutzerwunsch 2026-09-16): bei dicht gefuellten Ordnern
+            // gibt es unterhalb der letzten Zeile oft keinen freien Platz mehr, um ein
+            // Auswahlrechteck aufzuziehen - im Explorer funktioniert Rubberband deshalb ueber die
+            // GESAMTE Zeile/alle Spalten, ausser wenn der Ziehstart genau auf dem Ordner/Datei-
+            // Symbol+Namen selbst liegt - NICHT die ganze Namensspalte (Nutzerreport 2026-09-16:
+            // .o_int_filemanager_name_cell, der erste Versuch hier, ist der flex:1 1 auto-
+            // Container und fuellt die komplette, extra verbreiterte Spalte inkl. Leerraum
+            // rechts vom kurzen Dateinamen).
+            //
+            // Bewusst OHNE record.selected-Ausnahme (verworfen, Nutzerreport 2026-09-16
+            // "rubberband funktioniert, dann nicht, immer wieder DnD ausgeloest" - siehe
+            // ausfuehrliche Begruendung in filemanager_controller_mixin.js's
+            // _makeRecordsDraggable()): echtes Explorer-Verhalten macht Rubberband-vs-Verschieben
+            // NUR am Ziehstart-Ort fest, nicht am Selektionsstatus der Zeile.
+            //
+            // Reine .closest()-Pruefung auf Icon-Button/Name-Label allein (zweiter Versuch,
+            // ebenfalls verworfen, Nutzerreport 2026-09-16 "rubberband greift nur unten/oben in
+            // der Namenszeile, mittig greift DnD") reicht nicht: beide Elemente sind zwar (nach
+            // dem align-self:flex-start-Fix in native_list_view.scss) horizontal exakt so breit
+            // wie ihr sichtbarer Inhalt, aber vertikal nur eine Textzeile/Icon-Hoehe hoch (kein
+            // eigenes flex-grow auf der Hauptachse von .o_int_filemanager_name_text) - deutlich
+            // schmaler als die tatsaechliche Zeilenhoehe. Ein Ziehstart oberhalb/unterhalb dieser
+            // schmalen Box, aber weiterhin ueber der Icon/Name-Spalte, fiel dadurch faelschlich
+            // auf .closest() durch (kein Treffer) und startete Rubberband, obwohl er optisch klar
+            // "auf dem Ordner/Datei" lag - genau umgekehrt zur Beschwerde ("mittig greift DnD"):
+            // nur die schmale Mitte (die tatsaechliche Icon/Text-Box) matchte .closest(), oben/
+            // unten davon (innerhalb derselben, hoeheren Zeile) eben nicht.
+            //
+            // Loesung: horizontale Grenzen aus den echten, gemessenen Rects von Icon+Label bilden
+            // (robust gegenueber genau dieser Boxen-Hoehe/-Breite-Divergenz), vertikale Grenze
+            // ist automatisch die ganze Zeile - ev.target liegt hier per Definition bereits
+            // irgendwo innerhalb von dataRowEl, eine explizite Y-Pruefung ist deshalb unnoetig.
+            // Der native Drag (draggable="true", siehe _makeRecordsDraggable()) bleibt bewusst
+            // auf die schmale Icon/Label-Box selbst beschraenkt (dort volle Zeilenhoehe
+            // nachzuziehen wuerde text-truncate/ellipsis-Interaktionen riskieren, siehe
+            // Kommentar dort) - ein Ziehversuch exakt in der duennen Polsterzone ueber/unter der
+            // Box startet deshalb weder Rubberband noch Verschieben, ein einfacher Klick dort
+            // waehlt die Zeile aber unveraendert per onCellClicked aus.
+            const dataRowEl = ev.target.closest("tr.o_data_row");
+            if (dataRowEl) {
+                const handleEls = dataRowEl.querySelectorAll(
+                    ".o_int_filemanager_open_form_icon, .o_int_filemanager_name_label"
+                );
+                if (handleEls.length) {
+                    const handleRects = [...handleEls].map((el) => el.getBoundingClientRect());
+                    const left = Math.min(...handleRects.map((r) => r.left));
+                    const right = Math.max(...handleRects.map((r) => r.right));
+                    if (ev.clientX >= left && ev.clientX <= right) {
+                        return;
+                    }
+                }
             }
             // preventDefault auf dem mousedown selbst (nicht erst im mousemove, siehe unten):
             // verhindert, dass der Browser ueberhaupt erst eine native Text-Selektion/einen

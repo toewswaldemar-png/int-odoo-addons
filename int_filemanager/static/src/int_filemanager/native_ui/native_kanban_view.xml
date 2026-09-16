@@ -35,7 +35,7 @@
                  wie in native_list_view.xml, siehe dort fuer die ausfuehrliche Begruendung. -->
             <div t-if="!env.isSmall"
                  class="o_int_filemanager_tree_sidebar">
-                <FolderTree activePath="currentPath || ''"
+                <FolderTree activePath="env.searchModel.intFilemanagerFolderPath || ''"
                             onSelectFolder="(path, hasChildren) => this.onFolderTreeSelect(path, hasChildren)"
                             registerApi="(api) => this.folderTreeApi = api"/>
             </div>

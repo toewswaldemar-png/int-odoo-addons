@@ -815,10 +815,60 @@ export function filemanagerControllerMixin(Base) {
         // exakt dasselbe Grundmuster, das Odoo selbst in file_viewer.js fuer eine vergleichbare
         // "nach dem Rendern noch etwas am echten DOM nachjustieren"-Notwendigkeit nutzt
         // (useEffect dort fuer hidePDFJSButtons()), hier per onMounted+onPatched.
+        //
+        // Listenzeilen (<tr>) bekommen seit 2026-09-16 eine feinere Regel als Kanban-Karten
+        // (Nutzerwunsch: Windows-Explorer-Verhalten, siehe native_list_renderer.js fuer die
+        // ausfuehrliche Begruendung) - dort ist bei dicht gefuellten Ordnern sonst nirgends mehr
+        // Platz fuer Rubberband-Auswahl. Draggable ist fuer eine Zeile deshalb NICHT die ganze
+        // Zeile, sondern IMMER NUR Icon-Button + Name-Label (das sind die tatsaechlich
+        // sichtbaren "Gegenstaende", die man im Explorer anfasst) - NICHT die ganze
+        // .o_int_filemanager_name_cell (die als flex:1 1 auto-Container die komplette, extra
+        // verbreiterte Spalte inkl. Leerraum fuellt, siehe Nutzerreport 2026-09-16 und Kommentar
+        // in native_list_renderer.js).
+        //
+        // Frueherer Versuch (verworfen, Nutzerreport 2026-09-16 "rubberband funktioniert, dann
+        // nicht, immer wieder DnD ausgeloest"): die ganze <tr> zusaetzlich draggable machen,
+        // sobald record.selected true ist ("auf einer markierten Zeile soll Ziehen ueberall die
+        // Auswahl verschieben" - so urspruenglich spezifiziert). Echtes Explorer-Verhalten ist
+        // aber genauer: der Selektionsstatus einer Zeile aendert NICHTS daran, ob ein Ziehstart
+        // auf ihrer freien Flaeche ein neues Rubberband oder eine Datei-Verschiebung ausloest -
+        // auch eine bereits markierte Zeile bleibt fuer Rubberband ausserhalb von Icon/Name
+        // anfassbar. Die verworfene Variante machte bei JEDER bereits markierten Zeile die
+        // GANZE Zeile zum Drag-Ziel, wodurch praktisch jeder folgende Zieh-Versuch darauf
+        // (selbst auf freier Flaeche) mit dem nativen Browser-Drag kollidierte, oft schon bei
+        // kleinster Mausbewegung, bevor die eigene 4px-Rubberband-Schwelle in
+        // native_list_renderer.js ueberhaupt greifen konnte - kein Timing-Zufall, strukturell so
+        // angelegt. Mehrfachauswahl-Drag funktioniert trotzdem weiterhin unveraendert: wird ein
+        // BEREITS markierter Datensatz per Icon/Name angefasst, liefert _recordsForDrag() oben
+        // die ganze selection statt nur des einen Records.
+        //
+        // Bewusst NICHT auf volle Zeilenhoehe gestreckt (Nutzerreport 2026-09-16 "rubberband
+        // greift nur unten/oben in der Namenszeile, mittig greift DnD" - die Icon/Label-Box ist
+        // tatsaechlich nur eine Textzeile hoch, deutlich schmaler als die Zeile selbst): die
+        // rubberband-seitige Ausschlusspruefung in native_list_renderer.js kompensiert das
+        // bereits ueber gemessene Rects statt reiner .closest()-Treffer, eine zusaetzliche
+        // CSS-Streckung hier haette das text-truncate/ellipsis-Verhalten des Labels riskiert
+        // (Umbau auf display:flex noetig, siehe Kommentar dort) fuer einen Randfall (Ziehstart
+        // exakt in der duennen Polsterzone ueber/unter der Box), der ohnehin nur bewirkt, dass
+        // dort weder Rubberband noch Verschieben startet - ein einfacher Klick waehlt die Zeile
+        // trotzdem unveraendert aus.
+        //
+        // Kanban-Karten (kein <tr>, keine Spalten, kein Rubberband-Bedarf) bleiben unveraendert
+        // komplett draggable.
         _makeRecordsDraggable() {
             const els = this.rootRef.el?.querySelectorAll("[data-id]") || [];
             for (const el of els) {
-                el.draggable = true;
+                if (el.tagName !== "TR") {
+                    el.draggable = true;
+                    continue;
+                }
+                el.draggable = false;
+                const dragHandles = el.querySelectorAll(
+                    ".o_int_filemanager_open_form_icon, .o_int_filemanager_name_label"
+                );
+                for (const handle of dragHandles) {
+                    handle.draggable = true;
+                }
             }
         }
 
@@ -905,6 +955,24 @@ export function filemanagerControllerMixin(Base) {
             // dient ausschliesslich dazu, dragover/drop unten von einem OS-Datei-Drag (Upload)
             // zu unterscheiden.
             ev.dataTransfer.setData("application/x-int-filemanager-move", "1");
+            // Einheitliches Ghost-Bild unabhaengig davon, ob der Ziehstart auf dem Icon-Button
+            // oder dem Name-Label gefeuert hat (Nutzerreport 2026-09-16 "Icon und Text lassen
+            // sich separat draggen"): beide sind seit dem Rubberband-Fix zwei GETRENNTE
+            // draggable="true"-Elemente (_makeRecordsDraggable() oben, bewusst schmal statt der
+            // ganzen Zeile - siehe Kommentar dort), der Browser rendert das Standard-Ghost aber
+            // per HTML5-Spec immer aus exakt dem Element, auf dem dragstart gefeuert hat - Icon-
+            // Ziehstart zeigte deshalb nur das Icon, Namens-Ziehstart nur den Text.
+            // DataTransfer.setDragImage(element, x, y) ueberschreibt das explizit auf ein drittes,
+            // gemeinsames Element (den Flex-Wrapper, der beide umschliesst) - x/y sind die
+            // Cursor-Position INNERHALB dieses Bilds, nicht absolute Koordinaten, deshalb relativ
+            // zu dessen eigenem getBoundingClientRect() berechnet, damit das Ghost genau dort
+            // "gehalten" wird, wo tatsaechlich gegriffen wurde (Icon-Ende vs. Textmitte fuehlen
+            // sich sonst unnatuerlich an).
+            const nameCellEl = rowEl.querySelector(".o_int_filemanager_name_cell");
+            if (nameCellEl) {
+                const rect = nameCellEl.getBoundingClientRect();
+                ev.dataTransfer.setDragImage(nameCellEl, ev.clientX - rect.left, ev.clientY - rect.top);
+            }
         }
 
         onWindowDragOverRecord(ev) {

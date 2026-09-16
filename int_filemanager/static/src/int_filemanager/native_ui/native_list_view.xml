@@ -63,7 +63,19 @@
         <xpath expr="//div[@t-ref='root']/*[1]" position="before">
             <div t-if="!env.isSmall"
                  class="o_int_filemanager_tree_sidebar">
-                <FolderTree activePath="currentPath || ''"
+                <!-- Direkt env.searchModel.intFilemanagerFolderPath statt this.currentPath
+                     (Nutzerreport 2026-09-16 "nach F5 in einem Unterordner bleibt der Ordnerbaum
+                     zurueckgesetzt"): currentPath wird bewusst erst in onMounted() gesetzt
+                     (siehe der ausfuehrliche Absturz-Kommentar bei updateBreadcrumbs()/setup()
+                     in filemanager_controller_mixin.js), Owl mountet Kind-Komponenten aber VOR
+                     dem eigenen onMounted() der Eltern-Komponente - FolderTree las activePath
+                     beim eigenen ersten Mount deshalb, BEVOR der Controller currentPath ueberhaupt
+                     gesetzt hatte, und blieb dadurch nach einem echten Reload (der URL-Fix in
+                     native_search_model.js macht intFilemanagerFolderPath dort jetzt tatsaechlich
+                     wiederherstellbar) beim leeren Ausgangswert haengen. intFilemanagerFolderPath
+                     selbst ist dagegen schon synchron in WithSearch's onWillStart korrekt gesetzt,
+                     lange bevor irgendeine Kind-Komponente hier ueberhaupt rendert. -->
+                <FolderTree activePath="env.searchModel.intFilemanagerFolderPath || ''"
                             onSelectFolder="(path, hasChildren) => this.onFolderTreeSelect(path, hasChildren)"
                             registerApi="(api) => this.folderTreeApi = api"/>
             </div>
@@ -197,7 +209,7 @@
                      erhalten bleibt), Sichtbarkeit ausschliesslich per CSS-Klasse
                      (o_int_filemanager_mobile_tree_open, siehe native_list_view.js: className). -->
                 <div class="o_int_filemanager_tree_sheet">
-                    <FolderTree activePath="currentPath || ''"
+                    <FolderTree activePath="env.searchModel.intFilemanagerFolderPath || ''"
                                 onSelectFolder="(path, hasChildren) => this.onFolderTreeSelect(path, hasChildren)"
                                 registerApi="(api) => this.folderTreeApi = api"/>
                 </div>

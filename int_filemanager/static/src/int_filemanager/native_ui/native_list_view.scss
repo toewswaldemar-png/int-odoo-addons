@@ -260,6 +260,21 @@
         min-width: 0;
         flex: 1 1 auto;
     }
+
+    // Name-Label darf NICHT die Default-Querachsen-Streckung von .o_int_filemanager_name_text
+    // (flex-direction:column, kein eigenes align-items -> Default "stretch") erben (Nutzerreport
+    // 2026-09-16: Rubberband-Ausschluss/Drag-Startzone griff ueber die GANZE Namensspalte statt
+    // nur ueber den sichtbaren Namen, weil genau dieser Span - trotz eigenem <span>, das als
+    // Flex-Item aber "blockifiziert" wird, siehe CSS-Spec - per Stretch-Default die volle Breite
+    // des flex:1 1 auto-Wrappers annimmt, auch wenn der Name selbst viel kuerzer ist).
+    // align-self:flex-start nimmt den Span aus dem Stretch raus, max-width:100% erlaubt ihm
+    // weiterhin bis zur Spaltenbreite zu wachsen (und damit text-truncate/ellipsis bei
+    // tatsaechlich langen Namen unveraendert greifen zu lassen) - fuer kurze Namen bleibt seine
+    // eigene Breite exakt der sichtbare Text, kein unsichtbarer Leerraum mehr danach.
+    .o_int_filemanager_name_label {
+        align-self: flex-start;
+        max-width: 100%;
+    }
 }
 
 // Drag&Drop-Upload-Overlay (native_list_view.js/.xml) - position:fixed statt relativ zum Root-Div,
