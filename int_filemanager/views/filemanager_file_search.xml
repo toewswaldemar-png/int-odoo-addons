@@ -67,6 +67,17 @@
                      "Zu viele Elemente" ausloesen (siehe docs/int_filemanager_native_ui.md,
                      Smoke-Test-Abschnitt).
 
+                     Performance-Untersuchung 2026-09-16 (siehe [[project_int_filemanager_searchpanel_perf]]):
+                     ein Versuch, expand="1" ohne Ersatz zu entfernen, wurde noch am selben Tag per
+                     EXPLAIN ANALYZE live widerlegt und zurueckgenommen - OHNE expand loest Odoos
+                     search_panel_select_range bei leerem Suchfilter (dem Normalfall beim blossen
+                     Oeffnen) stattdessen ein GROUP BY parent_id UEBER DIE GESAMTE Tabelle aus (Web-
+                     Kern, addons/web/models/models.py), live gemessen 6,5s - langsamer als das
+                     bisherige is_dir=True-Read (2,5s). Beide Odoo-Bordmittel-Pfade laden bei dieser
+                     Datenmenge (69k Ordner) praktisch den kompletten Baum, nur unterschiedlich teuer -
+                     ein echter Fix braucht eine eigene, wirklich lazy ladende Baumkomponente statt
+                     Odoos natives SearchPanel-Kategoriefeld, kein Attribut-Tausch hier.
+
                      KEIN enable_counters (2026-09-09, Performance-Fix - siehe
                      docs/int_filemanager_native_ui.md): search_model.js's _reloadSections()
                      refetcht eine Section bei JEDER Notify (jedem Ordnerklick), sobald
