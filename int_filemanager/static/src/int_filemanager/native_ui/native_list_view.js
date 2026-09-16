@@ -50,11 +50,13 @@ export class IntFilemanagerListController extends filemanagerControllerMixin(Lis
     // jede andere native Odoo-Liste im System behaelt die rechtsbuendige Zahlendarstellung.
     get className() {
         const classes = [super.className, "o_int_filemanager_list"];
-        // Rein additiv fuer die Client-Action-Einbettung (mobile_test/) - siehe
-        // native_list_view.xml/native_list_view.scss fuer Header-Markup bzw. Ordnerbaum-Sheet-
-        // Positionierung, beide an dieselbe Klasse gekoppelt. Bei der produktiven Desktop-Action
-        // ist der Kontext-Flag nie gesetzt, diese Klasse landet dort also nie.
-        if (this.env.searchModel.globalContext.int_filemanager_mobile_header) {
+        // Odoos eigener isSmall-Schwellwert (768px, ui-Service) statt eines separaten Kontext-
+        // Flags - siehe native_list_view.xml/native_list_view.scss fuer Header-Markup bzw.
+        // Ordnerbaum-Sheet-Positionierung, beide an dieselbe Klasse gekoppelt. Damit greift die
+        // mobile Darstellung automatisch in der produktiven Desktop-Action
+        // (action_filemanager_file_list_native), sobald der Viewport schmal genug ist - kein
+        // eigener Menuepunkt/eigene Action mehr noetig.
+        if (this.env.isSmall) {
             classes.push("o_int_filemanager_mobile");
             if (this.mobileTreeState.open) {
                 classes.push("o_int_filemanager_mobile_tree_open");

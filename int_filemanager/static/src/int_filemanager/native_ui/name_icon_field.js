@@ -208,10 +208,7 @@ export class IntFilemanagerNameField extends Component {
     // ist also ein sauberes, von der reinen Ordnerposition unabhaengiges Signal fuer
     // "Suchergebnis".
     get showPath() {
-        return Boolean(
-            this.env.searchModel.globalContext.int_filemanager_mobile_header &&
-            this.env.searchModel.query.length
-        );
+        return Boolean(this.env.isSmall && this.env.searchModel.query.length);
     }
 
     get parentPath() {

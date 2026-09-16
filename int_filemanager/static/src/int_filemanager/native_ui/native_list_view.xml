@@ -42,33 +42,32 @@
              window-Listener aus setup() (siehe dortigen Kommentar), unabhaengig davon, ob dieses
              Overlay gerade im DOM ist. Deshalb pointer-events: none (native_list_view.scss) -
              es soll nichts abfangen, nur anzeigen. -->
-        <!-- Eigener Mobil-Header fuer die Client-Action-Einbettung (mobile_test/) - komplett
-             additiv, nur sichtbar wenn die einbettende View den Kontext-Flag
-             int_filemanager_mobile_header setzt (mobile_view_test.js). Betrifft die produktive
-             Desktop-Action (action_filemanager_file_list_native) nicht, dort ist der Flag nie
-             gesetzt. Reihenfolge (Nutzerwunsch 2026-09-15): Suchleiste zuerst, danach eine eigene
-             Zeile mit Home-Button, Baum-Toggle und echtem Breadcrumb-Pfad (ersetzt die vorherige
-             "<- Ordnername"-Zeile) - landet damit zwischen Suchleiste und dem nativen
-             Listenkopf (Status/Name/...), der als naechstes im DOM folgt. Nutzt dieselbe
+        <!-- Eigener Mobil-Header, gated auf env.isSmall (Odoos ui-Service, 768px-Schwellwert) -
+             komplett additiv. Der native Control Panel wird auf demselben Breakpoint per CSS
+             ausgeblendet (native_list_view.scss), dieser Header uebernimmt seine Rolle auf
+             schmalem Viewport. Reihenfolge (Nutzerwunsch 2026-09-15): Suchleiste zuerst, danach
+             eine eigene Zeile mit Home-Button, Baum-Toggle und echtem Breadcrumb-Pfad (ersetzt
+             die vorherige "<- Ordnername"-Zeile) - landet damit zwischen Suchleiste und dem
+             nativen Listenkopf (Status/Name/...), der als naechstes im DOM folgt. Nutzt dieselbe
              Breadcrumb-Kette wie updateBreadcrumbs() (filemanager_controller_mixin.js) ueber den
              dortigen mobileBreadcrumbs-Helfer - kein zweiter Navigationszustand. -->
         <!-- Desktop-Ordnerbaum-Seitenleiste (folder_tree.js, ersetzt seit 2026-09-16 Odoos
              natives SearchPanel-Kategoriefeld - siehe native_search_model.js/project_
              int_filemanager_searchpanel_perf-Notiz fuer die Begruendung). position:fixed statt
-             eines echten Flex-Sibling-Layouts (siehe desktopTreeState-Kommentar in
-             filemanager_controller_mixin.js: setup()) - topPx haelt sie direkt unterhalb der
-             Navbar, ueber die volle Hoehe inklusive der eigenen Toolbar-Zeile (wie in einem
-             echten Datei-Explorer). Nur ausserhalb der Mobil-Client-Action-Einbettung gerendert
-             (dort uebernimmt der Ordnerbaum als Bottom-Sheet weiter unten dieselbe Rolle). -->
+             eines echten Flex-Sibling-Layouts (siehe Kommentar in filemanager_controller_mixin.js:
+             setup()) - top sitzt als reine CSS-Konstante in folder_tree_layout.scss (Odoos eigene
+             Navbar-Hoehe, kein JS-Messwert mehr), haelt sie direkt unterhalb der Navbar, ueber die
+             volle Hoehe inklusive der eigenen Toolbar-Zeile (wie in einem echten Datei-Explorer).
+             Nur auf breitem Viewport gerendert (dort uebernimmt der Ordnerbaum als Bottom-Sheet
+             weiter unten dieselbe Rolle). -->
         <xpath expr="//div[@t-ref='root']/*[1]" position="before">
-            <div t-if="!env.searchModel.globalContext.int_filemanager_mobile_header"
-                 class="o_int_filemanager_tree_sidebar"
-                 t-attf-style="top: {{desktopTreeState.topPx}}px;">
+            <div t-if="!env.isSmall"
+                 class="o_int_filemanager_tree_sidebar">
                 <FolderTree activePath="currentPath || ''"
                             onSelectFolder="(path, hasChildren) => this.onFolderTreeSelect(path, hasChildren)"
                             registerApi="(api) => this.folderTreeApi = api"/>
             </div>
-            <div t-if="env.searchModel.globalContext.int_filemanager_mobile_header"
+            <div t-if="env.isSmall"
                  class="o_int_filemanager_mobile_header">
                 <div class="d-flex align-items-center gap-1">
                     <!-- "Neu"-Dropdown fuer Mobil (Nutzerwunsch 2026-09-16, Position/Optik
@@ -77,9 +76,8 @@
                          Klassen-Satz wie der originale Desktop-"Neu"-Button oben
                          (control-panel-create-button-Slot), fuer echte Odoo-native Optik statt
                          eines blossen Icon-Links. Der native Control-Panel-Mechanismus, ueber den
-                         dieser Button normalerweise laeuft, existiert hier gar nicht - die
-                         Client-Action-Einbettung (mobile_test/) schaltet den gesamten Control
-                         Panel per display={controlPanel:false} ab, deshalb fehlte
+                         dieser Button normalerweise laeuft, ist auf schmalem Viewport per CSS
+                         ausgeblendet (native_list_view.scss, env.isSmall), deshalb fehlte
                          Hochladen/Neuer-Ordner bislang komplett auf Mobil (Nutzerreport).
                          Dieselben Controller-Methoden (onNewFolder/triggerUpload) wie am Desktop -
                          nur "Neu"-Text weggelassen (kein Platz neben der Suchleiste), das

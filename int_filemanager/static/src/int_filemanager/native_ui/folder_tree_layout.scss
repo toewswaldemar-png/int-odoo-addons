@@ -4,11 +4,18 @@
 // native_list_view.scss/native_kanban_view.scss.
 
 // Desktop-Seitenleiste - position:fixed statt eines echten Flex-Sibling-Layouts (siehe
-// desktopTreeState-Kommentar in filemanager_controller_mixin.js: setup() fuer die Begruendung,
-// dasselbe Prinzip wie das bereits bestehende Chatter-Panel). padding-left auf den Ansichten
-// selbst haelt Listen-/Kanban-Inhalt daneben statt darunter.
+// Kommentar in filemanager_controller_mixin.js: setup() fuer die Begruendung, dasselbe Prinzip
+// wie das bereits bestehende Chatter-Panel). padding-left auf den Ansichten
+// selbst haelt Listen-/Kanban-Inhalt daneben statt darunter. top als reine CSS-Konstante statt
+// per JS gemessen (Live-Bug 2026-09-16: sichtbarer Sprung beim App-Oeffnen, erster Frame bei
+// top:0 vor der ersten Messung) - exakt Odoos eigener $o-navbar-height (verifiziert:
+// odoo/addons/web/static/src/webclient/navbar/navbar.variables.scss,
+// "$o-navbar-height: 46px !default"), genau wie Odoo selbst diesen Wert an mehreren Stellen
+// (dialog.scss/file_viewer.scss) als festen Wert statt einer Laufzeitmessung nutzt - die
+// Navbar-Hoehe ist eine Bau-Konstante, keine Laufzeitgroesse.
 .o_int_filemanager_tree_sidebar {
     position: fixed;
+    top: 46px;
     left: 0;
     bottom: 0;
     width: 280px;

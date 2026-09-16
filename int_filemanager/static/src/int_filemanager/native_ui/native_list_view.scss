@@ -80,6 +80,20 @@
 // (border-bottom) statt eines eigenen Farbblocks - Nutzerwunsch 2026-09-15: "nicht lila, sondern
 // konsistent zu Odoo nativer Farbe". Dasselbe var()-Fallback-Muster wie beim Chatter-Panel oben
 // in dieser Datei (--o-view-background-color, #fff).
+// Ersetzt den nativen ControlPanel komplett durch den eigenen Mobil-Header direkt darunter
+// (o_int_filemanager_mobile_header) - reine CSS-Ausblendung statt des display={controlPanel:
+// false}-Props, den nur eine manuell eingebettete <View/>-Komponente kennt (so urspruenglich im
+// Mobil-Test-Spike erprobt, siehe Commit-Historie dd55882/7bb8f1f). Der reguläre
+// action_filemanager_file_list_native laeuft dagegen ueber Odoos normalen Action-Service, der
+// keinen "display"-Prop auf ir.actions.act_window kennt - Pager/Ansichtsumschalter gehen auf
+// Mobil damit bewusst verloren (wie schon im Spike akzeptiert), Suche/Navigation laufen
+// vollstaendig ueber den eigenen Header.
+@media (max-width: 767.98px) {
+    .o_int_filemanager_mobile .o_control_panel {
+        display: none;
+    }
+}
+
 .o_int_filemanager_mobile .o_int_filemanager_mobile_header {
     padding: 0.75rem 1rem;
     background-color: var(--o-view-background-color, #fff);

@@ -132,10 +132,10 @@ export class IntFilemanagerListRenderer extends ListRenderer {
                 ev.target.closest(".o_control_panel") ||
                 ev.target.closest(".o_search_panel") ||
                 // Mobil-Header (native_list_view.xml: SearchBar + Home/Baum-Toggle +
-                // Breadcrumb-Zeile) ist KEIN .o_control_panel - der wird in der
-                // Client-Action-Einbettung (mobile_test/) bewusst per
-                // display={controlPanel:false} abgeschaltet und durch diesen eigenen Header
-                // ersetzt. Ohne diesen Ausschluss faellt ein Antippen des Suchfelds durch alle
+                // Breadcrumb-Zeile) ist KEIN .o_control_panel - der native Control Panel wird
+                // auf schmalem Viewport (env.isSmall, siehe native_list_view.scss) per CSS
+                // ausgeblendet und durch diesen eigenen Header ersetzt. Ohne diesen Ausschluss
+                // faellt ein Antippen des Suchfelds durch alle
                 // obigen Ausnahmen durch, preventDefault() unten (siehe Kommentar dort)
                 // unterdrueckt dabei denselben normalen Browser-Fokus, den es beim
                 // F2-Rename-Input schon einmal unterdrueckt hat - Nutzerreport 2026-09-16:

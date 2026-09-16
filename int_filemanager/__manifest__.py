@@ -7,7 +7,7 @@
         "über die bestehende ONLYOFFICE-Integration direkt im Browser bearbeiten; Änderungen "
         "werden zurück auf die Originaldatei geschrieben."
     ),
-    "version": "19.0.1.8.29",
+    "version": "19.0.1.8.31",
     "category": "Productivity",
     "license": "LGPL-3",
     "depends": ["base", "bus", "mail", "portal", "onlyoffice_odoo"],
@@ -22,7 +22,6 @@
         "views/filemanager_file_list_view.xml",
         "views/filemanager_file_kanban_view.xml",
         "views/menu.xml",
-        "views/mobile_test_action.xml",
         "views/res_config_settings_views.xml",
         "views/filemanager_protected_folder_views.xml",
         "views/filemanager_status_views.xml",

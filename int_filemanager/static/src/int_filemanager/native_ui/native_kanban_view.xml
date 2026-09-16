@@ -33,9 +33,8 @@
         <xpath expr="//div[@t-ref='root']" position="inside">
             <!-- Desktop-Ordnerbaum-Seitenleiste - dieselbe FolderTree-Komponente/dasselbe Markup
                  wie in native_list_view.xml, siehe dort fuer die ausfuehrliche Begruendung. -->
-            <div t-if="!env.searchModel.globalContext.int_filemanager_mobile_header"
-                 class="o_int_filemanager_tree_sidebar"
-                 t-attf-style="top: {{desktopTreeState.topPx}}px;">
+            <div t-if="!env.isSmall"
+                 class="o_int_filemanager_tree_sidebar">
                 <FolderTree activePath="currentPath || ''"
                             onSelectFolder="(path, hasChildren) => this.onFolderTreeSelect(path, hasChildren)"
                             registerApi="(api) => this.folderTreeApi = api"/>

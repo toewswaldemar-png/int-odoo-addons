@@ -268,12 +268,12 @@ export function filemanagerControllerMixin(Base) {
             onMounted(() => {
                 this._makeRecordsDraggable();
                 this._checkMobileBreadcrumbOverflow();
-                this._measureContentTop();
+                this._measureChatterTop();
             });
             onPatched(() => {
                 this._makeRecordsDraggable();
                 this._checkMobileBreadcrumbOverflow();
-                this._measureContentTop();
+                this._measureChatterTop();
             });
             useExternalListener(window, "dragstart", this.onWindowDragStartRecord);
             useExternalListener(window, "dragover", this.onWindowDragOverRecord);
@@ -292,8 +292,8 @@ export function filemanagerControllerMixin(Base) {
             // der eigenen Toolbar/Breadcrumb-Zeile beginnt statt sie zu verdecken (Pager,
             // Suche etc. bleiben bedienbar), statt eine Navbar-Hoehe zu raten.
             this.chatterState = useState({ open: false, topPx: 0 });
-            // Mobil-Ordnerbaum als Bottom-Sheet (Client-Action-Einbettung, mobile_test/) - dieselbe
-            // FolderTree-Komponente (folder_tree.js) wie die Desktop-Seitenleiste, nur anders
+            // Mobil-Ordnerbaum als Bottom-Sheet (env.isSmall, siehe native_list_view.js:
+            // className) - dieselbe FolderTree-Komponente (folder_tree.js) wie die Desktop-Seitenleiste, nur anders
             // positioniert/getoggled (siehe native_list_view.xml/.scss). this.mobileTreeState.open
             // steuert nur eine CSS-Klasse (o_int_filemanager_mobile_tree_open, siehe
             // native_list_view.js: className), kein Einfluss auf die Domain-Logik selbst.
@@ -304,10 +304,16 @@ export function filemanagerControllerMixin(Base) {
             // wie beim Chatter-Panel unten: ein Platz verdraengendes Layout bräuchte einen Patch
             // von Odoos geteiltem "web.Layout"-Template, das jede Listen-/Kanban-Ansicht im System
             // beträfe). Anders als das Chatter-Panel beginnt der Baum aber am Controller-Root
-            // selbst (this.rootRef.el), nicht an ".o_content" - er soll wie in einem echten
-            // Datei-Explorer die gesamte Hoehe inklusive der eigenen Toolbar-Zeile einnehmen,
-            // siehe _measureContentTop() unten.
-            this.desktopTreeState = useState({ topPx: 0 });
+            // selbst, nicht an ".o_content" - er soll wie in einem echten Datei-Explorer die
+            // gesamte Hoehe inklusive der eigenen Toolbar-Zeile einnehmen. KEIN eigener JS-
+            // gemessener topPx-State mehr (Live-Bug 2026-09-16: sichtbarer Sprung beim App-Oeffnen,
+            // erster Frame bei top:0 bevor onMounted() misst) - top sitzt stattdessen als reine
+            // CSS-Konstante in folder_tree_layout.scss, exakt Odoos eigener $o-navbar-height
+            // (verifiziert: odoo/addons/web/static/src/webclient/navbar/navbar.variables.scss,
+            // "$o-navbar-height: 46px !default", von Odoo selbst genauso als fester Wert genutzt,
+            // z.B. dialog.scss/file_viewer.scss "height: $o-navbar-height" - Odoo misst die
+            // eigene Navbar zur Laufzeit nirgends per JS nach, das ist kein Sonderfall unserer
+            // Seitenleiste, sondern deren ohnehin konstante Bauhoehe).
             // Von folder_tree.js in dessen eigenem onMounted() gesetzt (registerApi-Prop) - erlaubt
             // reload() unten, gezielt nur den aktuell offenen Ordner im Baum-Cache zu invalidieren,
             // statt den ganzen Baum neu zu laden.
@@ -321,7 +327,7 @@ export function filemanagerControllerMixin(Base) {
             // und hier gegen die dann wieder VOLLSTAENDIG gerenderte Liste neu geprueft.
             this.mobileBreadcrumbState = useState({ collapsed: false });
             this.mobileBreadcrumbNavRef = useRef("mobileBreadcrumbNav");
-            useExternalListener(window, "resize", () => this._measureContentTop());
+            useExternalListener(window, "resize", () => this._measureChatterTop());
 
             // Everything already on the stack when this controller was created (normally
             // just the "Dateimanager" action entry itself, or "Verknüpfte Dateien" when opened
@@ -418,24 +424,19 @@ export function filemanagerControllerMixin(Base) {
             this.chatterState.open = !this.chatterState.open;
         }
 
-        // Vermisst die Startpunkte fuer BEIDE ueberlagernden Fixed-Panels (Chatter rechts,
-        // Desktop-Ordnerbaum links, siehe chatterState/desktopTreeState in setup()) - bewusst
-        // ZWEI verschiedene Anker, kein gemeinsamer Wert (Live-Bug 2026-09-16, Nutzerscreenshot:
-        // sichtbare Luecke zwischen Navbar und Baum): der Chatter soll bewusst UNTERHALB der
-        // eigenen Toolbar/Breadcrumb-Zeile beginnen (".o_content", schliesst die Toolbar
-        // ausdruecklich aus - Kommentar bei chatterState in setup()), der Ordnerbaum dagegen soll
-        // wie in einem echten Datei-Explorer die GESAMTE Hoehe inklusive der Toolbar-Zeile
-        // einnehmen, beginnt also am Controller-Root selbst (this.rootRef.el, direkt unterhalb
-        // der Navbar) statt an ".o_content". this.rootRef.el ist dafuer auch der robustere Anker:
-        // seine Position haengt nur von der (stabilen) Navbar-Hoehe ab, waehrend ".o_content"s
-        // Top je nach Toolbar-Zeilenumbruch (z.B. Suchleiste faellt bei aktiven Facetten auf zwei
-        // Zeilen) schwankt und mangels eines dedizierten Re-Measure-Ausloesers dafuer veraltet
-        // bleiben kann.
-        _measureContentTop() {
-            const rootEl = this.rootRef.el;
-            const contentEl = rootEl?.querySelector(".o_content");
+        // Vermisst den Startpunkt des ueberlagernden Chatter-Panels rechts (chatterState in
+        // setup()). Bewusst UNTERHALB der eigenen Toolbar/Breadcrumb-Zeile verankert (".o_content",
+        // schliesst die Toolbar ausdruecklich aus), NICHT an der (stabilen) Navbar-Hoehe wie
+        // frueher der Desktop-Ordnerbaum (der braucht seit dem topPx-Flicker-Fix (2026-09-16) keine
+        // JS-Messung mehr, siehe Kommentar bei der FolderTree-Seitenleiste in setup() - reine
+        // CSS-Konstante statt Laufzeit-Messung, weil seine Position eben NICHT vom
+        // Toolbar-Zeilenumbruch abhaengt).
+        // ".o_content"s Top dagegen schwankt echt (z.B. Suchleiste faellt bei aktiven Facetten auf
+        // zwei Zeilen), braucht deshalb weiterhin eine echte, mangels dediziertem Re-Measure-
+        // Ausloeser bei Bedarf veraltete Messung.
+        _measureChatterTop() {
+            const contentEl = this.rootRef.el?.querySelector(".o_content");
             this.chatterState.topPx = contentEl ? Math.round(contentEl.getBoundingClientRect().top) : 0;
-            this.desktopTreeState.topPx = rootEl ? Math.round(rootEl.getBoundingClientRect().top) : 0;
         }
 
         // Zeigt die (Checkbox-/Alt-Klick-)Auswahl der Liste bzw. Karten-Selektion, dieselbe
@@ -595,12 +596,11 @@ export function filemanagerControllerMixin(Base) {
         }
 
         // -----------------------------------------------------------------
-        // Mobil-Header (Client-Action-Einbettung, siehe static/src/int_filemanager/mobile_test/)
+        // Mobil-Header (env.isSmall, siehe native_list_view.js/.xml/.scss)
         // -----------------------------------------------------------------
 
-        // Rein additiv - das Header-Markup selbst lebt in native_list_view.xml, gated auf den
-        // Kontext-Flag int_filemanager_mobile_header (von mobile_view_test.js gesetzt), betrifft
-        // die produktive Desktop-Ansicht also nie. Baut auf derselben Breadcrumb-Kette wie
+        // Rein additiv - das Header-Markup selbst lebt in native_list_view.xml, gated auf
+        // env.isSmall, betrifft die Desktop-Ansicht also nie. Baut auf derselben Breadcrumb-Kette wie
         // updateBreadcrumbs() oben auf (env.config.breadcrumbs, ab rootBreadcrumbCount) - keine
         // zweite, parallele Navigations-Buchhaltung. Eigener synthetischer Wurzel-Eintrag ("Alle
         // Ordner") davor, mit demselben Reset-Callback wie der Home-Button (onMobileGoHome) -
