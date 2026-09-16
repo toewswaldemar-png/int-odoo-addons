@@ -97,7 +97,17 @@
     // "h-100" - live per getComputedStyle bestaetigt: ohne !important gewannen die weiterhin,
     // trotz hoeherer Selektor-Spezifitaet hier). Gleiches Prinzip wie beim o_list_number-Override
     // oben in dieser Datei.
-    display: flex !important;
+    // display:block statt :flex (Nutzerreport 2026-09-16, Screenshot: viel Leerraum rechts neben
+    // dem Baum, Auswahl-Hervorhebung wirkt "knapp") - der native Odoo-Quelltext
+    // (web.SearchPanelContent) setzt auf .o_search_panel selbst KEIN d-flex, dessen Kind-Element
+    // (die <section> mit dem Kategorie-Baum) fliesst dort normal als Block ueber die volle
+    // Breite. display:flex hier machte dieses Kind stattdessen zum Flex-Item einer (impliziten
+    // Zeilen-)Flexbox, das auf seine Inhaltsbreite schrumpft statt zu stretchen - genau die
+    // Ursache fuer den Leerraum. Bootstraps natives ".list-group-item.active" (fuer die
+    // Auswahl-Hervorhebung) braucht dieselbe volle Blockbreite, um korrekt auszusehen. position:
+    // fixed/Groesse unten funktionieren unabhaengig vom display-Wert, display:flex war also nie
+    // fachlich noetig, nur ein unbedachter Rest aus einer frueheren Version.
+    display: block !important;
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;
@@ -117,6 +127,13 @@
     z-index: 1100;
     border-radius: 1rem 1rem 0 0;
     box-shadow: 0 -0.5rem 1.5rem rgba(0, 0, 0, 0.2);
+    // Explizit statt nur ueber die native "bg-view"-Klasse (web.SearchPanelContent) verlassen -
+    // web.SearchPanel.Small (der Zweig, der ohne den Reactivity-Fix in
+    // mobile_patches.js faelschlich haengen blieb, siehe dort) traegt "bg-view"
+    // gar nicht erst, das Sheet wirkte dadurch transparent/nur als loser Chip vor dem Backdrop.
+    // Selbe CSS-Variable wie beim Chatter-Panel/Mobil-Header in dieser Datei, damit die Farbe
+    // konsistent bleibt, unabhaengig davon, welcher SearchPanel-Unterzweig gerade rendert.
+    background-color: var(--o-view-background-color, #fff);
 }
 
 .o_int_filemanager_mobile_tree_backdrop {
@@ -266,6 +283,17 @@
         &:hover, &:focus-visible {
             background-color: var(--o-webclient-hover-bg, rgba(0, 0, 0, 0.06));
         }
+    }
+
+    // Wrapper um Name + Pfad-Unterzeile (name_icon_field.xml, showPath - nur mobil bei aktiver
+    // Suche). min-width:0 ist hier Pflicht, nicht Kosmetik: ohne das erzwingt Flexbox' Default
+    // "min-width:auto" auf einem Flex-Item die volle Breite des UNGEKUERZTEN Inhalts (Name ODER
+    // Pfad, je nachdem was laenger ist) und "text-truncate" auf den Kind-Spans greift dadurch
+    // nie - dieselbe Grundursache wie das bereits bekannte Flex-Truncate-Problem, hier nur auf
+    // den neuen Spalten-Wrapper statt der Zelle selbst angewendet.
+    .o_int_filemanager_name_text {
+        min-width: 0;
+        flex: 1 1 auto;
     }
 }
 

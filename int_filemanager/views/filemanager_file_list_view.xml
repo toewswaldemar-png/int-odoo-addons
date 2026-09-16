@@ -7,12 +7,6 @@
                 <field name="is_dir" column_invisible="1"/>
                 <field name="path" column_invisible="1"/>
                 <field name="folder_path" column_invisible="1"/>
-                <!-- Direkter "Werte erkennen"-Button (2026-09-07, Nutzerfeedback) statt nur ueber
-                     das Aktionsmenue erreichbar - eigenes <widget> statt <button type="object">,
-                     siehe analyze_button_widget.js fuer die Begruendung. Zeigt sich selbst nur
-                     fuer unterstuetzte Dateitypen (widget.visible), width="40px" aus demselben
-                     Grund wie beim Pfeil-Button oben. -->
-                <widget name="int_filemanager_analyze_button" width="40px"/>
                 <!-- Baustein 1 (Werte erkennen) - ocr_state (pending/running/done/error) war
                      bisher nirgends sichtbar, nur "done" zaehlt praktisch als Normalfall und
                      bleibt deshalb unauffaellig (decoration nur fuer pending/error) -

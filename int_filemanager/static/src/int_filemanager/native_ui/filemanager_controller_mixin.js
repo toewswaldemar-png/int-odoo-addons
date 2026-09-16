@@ -551,13 +551,25 @@ export function filemanagerControllerMixin(Base) {
         // einfach dessen "name"-Feld (kein name_get-Override auf dem Modell) - Aneinanderreihen der
         // Kette ergibt exakt denselben Pfadstring wie das "path"-Feld selbst.
         updateBreadcrumbs() {
-            // Schliesst das Mobil-Baum-Bottom-Sheet automatisch nach einer Ordnerwahl - diese
-            // Methode haengt bereits an env.searchModel "update" (siehe setup()), genau das
-            // Ereignis, das eine Auswahl im Baum (toggleCategoryValue) auslöst. Kein zweiter Hook
+            // Schliesst das Mobil-Baum-Bottom-Sheet nach einer Ordnerwahl NUR, wenn der neu
+            // aktive Wert ein Blattordner ist (keine eigenen Unterordner) - Nutzerwunsch
+            // 2026-09-16, deckt sich mit Odoos eigenem nativen Verhalten in der Small-Chip-
+            // Dropdown-Variante (search_panel.js: toggleCategory() ruft
+            // getDropdownState(...).close() ausschliesslich im "value.childrenIds.length"-losen
+            // Zweig auf - ein Ordner MIT Unterordnern laesst die Dropdown dort offen, man kann
+            // direkt weiterklicken). Vorher schloss unser eigener Code hier IMMER, auch bei
+            // Zwischenordnern mit weiteren Unterordnern (Nutzerreport: "ein Klick auf Knoten
+            // navigiert und schliesst gleich das Sheet"). Die Wurzel (activeValueId===false,
+            // z.B. ueber den "Alle Ordner"-Breadcrumb/-Baumeintrag) hat hier bewusst kein
+            // childrenIds und schliesst deshalb weiterhin wie zuvor - eigener Sonderfall waere
+            // hier unverhaeltnismaessig, dieser Pfad laeuft ohnehin ueberwiegend ueber den
+            // separaten onMobileGoHome()-Breadcrumb-Button, nicht ueber Baum-Klicks.
+            //
+            // Diese Methode haengt bereits an env.searchModel "update" (siehe setup()), genau das
+            // Ereignis, das eine Auswahl im Baum (toggleCategoryValue) ausloest. Kein zweiter Hook
             // noetig, no-op wenn das Sheet gar nicht offen ist oder die Aktion produktiv laeuft
             // (state existiert dort zwar auch, betrifft aber nur die - dort unsichtbare -
             // CSS-Klasse).
-            this.mobileTreeState.open = false;
             // Neuer Pfad -> immer erst wieder vollstaendig rendern (siehe
             // _checkMobileBreadcrumbOverflow() unten, das gegen genau diese volle Darstellung
             // misst und bei Bedarf erneut kollabiert).
@@ -567,7 +579,12 @@ export function filemanagerControllerMixin(Base) {
             crumbs.length = this.rootBreadcrumbCount;
             if (!section) {
                 this.currentPath = "";
+                this.mobileTreeState.open = false;
                 return;
+            }
+            const activeValue = section.activeValueId ? section.values.get(section.activeValueId) : null;
+            if (!activeValue || !activeValue.childrenIds.length) {
+                this.mobileTreeState.open = false;
             }
             const chain = [];
             let id = section.activeValueId;

@@ -201,6 +201,26 @@ export class IntFilemanagerNameField extends Component {
         return this.props.record.data[this.props.name];
     }
 
+    // Pfad-Unterzeile nur mobil UND nur bei aktiver Suche (Nutzerwunsch 2026-09-16). Reine
+    // Ordnernavigation (Baum/Breadcrumb/Zeilenklick) laeuft ausschliesslich ueber
+    // env.searchModel.toggleCategoryValue() (siehe filemanager_controller_mixin.js) und ruehrt
+    // env.searchModel.query nie an (live am Quellcode verifiziert: toggleCategoryValue() in
+    // Odoos search_model.js setzt nur category.activeValueId, nie this.query) - "query" enthaelt
+    // ausschliesslich echte Sucheintraege/Filter, ist also ein sauberes, von der reinen
+    // Ordnerposition unabhaengiges Signal fuer "Suchergebnis".
+    get showPath() {
+        return Boolean(
+            this.env.searchModel.globalContext.int_filemanager_mobile_header &&
+            this.env.searchModel.query.length
+        );
+    }
+
+    get parentPath() {
+        const path = this.props.record.data.path || "";
+        const idx = path.lastIndexOf("/");
+        return idx === -1 ? "" : path.slice(0, idx);
+    }
+
     get pseudoMimetype() {
         return pseudoMimetypeFor(this.value);
     }
@@ -217,7 +237,21 @@ export const intFilemanagerNameField = {
     // Array (nicht einzelne Zahl) setzt NUR minWidth, kein maxWidth - identisches Muster wie
     // Odoos eigenes "char: [80]" in FIELD_WIDTHS, siehe getWidthSpecs() dort. Spalte darf bei
     // viel Platz also weiterhin wachsen, wird aber nicht mehr unter 400px zusammengedrueckt.
-    listViewWidth: [400],
+    //
+    // Als Funktion statt starrem Array (Nutzerwunsch 2026-09-16: Name-Spalte soll auf Mobil
+    // exakt die Displaybreite einnehmen, die anderen Spalten bleiben erhalten statt
+    // ausgeblendet zu werden) - column_width_hook.js:323-327 wertet listViewWidth explizit als
+    // Funktion aus, falls vorhanden ("typeof width === 'function'"), und berechnet laut
+    // eigenem Kommentar im Hook bei jedem Fenster-Resize neu ("forget the computed widths and
+    // start over"). window.innerWidth statt env.isSmall, weil dieser Registry-Eintrag rein
+    // statisch ist (kein Komponenten-this/env verfuegbar) - 768px ist derselbe isSmall-
+    // Schwellwert, den Odoo selbst an anderer Stelle nutzt (siehe native_list_view.scss). Auf
+    // Mobil bekommt die Spalte dadurch mindestens die volle Bildschirmbreite als minWidth und
+    // (kein maxWidth) waechst nicht darueber hinaus - die anderen Spalten bleiben im DOM und
+    // in der Tabelle vorhanden, ruecken aber ausserhalb des sichtbaren Bereichs, erreichbar per
+    // horizontalem Scrollen (native_list_view.scss macht die Liste dafuer bereits mobil
+    // scrollbar).
+    listViewWidth: () => (window.innerWidth < 768 ? [window.innerWidth] : [400]),
 };
 
 registry.category("fields").add("int_filemanager_name", intFilemanagerNameField);

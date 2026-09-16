@@ -55,11 +55,49 @@
         <xpath expr="//div[@t-ref='root']/*[1]" position="before">
             <div t-if="env.searchModel.globalContext.int_filemanager_mobile_header"
                  class="o_int_filemanager_mobile_header">
-                <!-- Eigenstaendige native Komponente (kein ControlPanel-Zwang, nur
-                     env.searchModel noetig) - liefert Textsuche/Facetten/Filtermenue, ohne den
-                     Rest der Toolbar (Neu/Pager/Ansichtsumschalter) zurueckzuholen.
-                     autofocus="false", sonst poppt bei jedem Ordnerwechsel die Tastatur auf. -->
-                <SearchBar autofocus="false"/>
+                <div class="d-flex align-items-center gap-1">
+                    <!-- "Neu"-Dropdown fuer Mobil (Nutzerwunsch 2026-09-16, Position/Optik
+                         2026-09-16 Folgeanpassung: links neben die Suchleiste statt rechts davon,
+                         Optik jetzt btn-primary/o-dropdown-caret statt btn-link-Icon - identischer
+                         Klassen-Satz wie der originale Desktop-"Neu"-Button oben
+                         (control-panel-create-button-Slot), fuer echte Odoo-native Optik statt
+                         eines blossen Icon-Links. Der native Control-Panel-Mechanismus, ueber den
+                         dieser Button normalerweise laeuft, existiert hier gar nicht - die
+                         Client-Action-Einbettung (mobile_test/) schaltet den gesamten Control
+                         Panel per display={controlPanel:false} ab, deshalb fehlte
+                         Hochladen/Neuer-Ordner bislang komplett auf Mobil (Nutzerreport).
+                         Dieselben Controller-Methoden (onNewFolder/triggerUpload) wie am Desktop -
+                         nur "Neu"-Text weggelassen (kein Platz neben der Suchleiste), das
+                         o-dropdown-caret-Kaeppchen bleibt als visueller Hinweis auf das Menue
+                         dahinter erhalten. -->
+                    <Dropdown class="flex-shrink-0">
+                        <button type="button" class="btn btn-primary text-nowrap px-2" aria-label="Neu">
+                            <i class="fa fa-plus"/>
+                        </button>
+                        <t t-set-slot="content">
+                            <DropdownItem onSelected="() => this.onNewFolder()">Neuer Ordner</DropdownItem>
+                            <DropdownItem onSelected="() => this.triggerUpload()">Hochladen</DropdownItem>
+                        </t>
+                    </Dropdown>
+                    <!-- Eigenstaendige native Komponente (kein ControlPanel-Zwang, nur
+                         env.searchModel noetig) - liefert Textsuche/Facetten/Filtermenue, ohne den
+                         Rest der Toolbar (Neu/Pager/Ansichtsumschalter) zurueckzuholen.
+                         autofocus="false", sonst poppt bei jedem Ordnerwechsel die Tastatur auf.
+                         flex-grow-1, damit die Suchleiste den restlichen Platz ausfuellt statt
+                         shrink-to-fit. -->
+                    <div class="flex-grow-1">
+                        <SearchBar autofocus="false"/>
+                    </div>
+                    <!-- Eigenes Datei-Input fuer triggerUpload() (t-ref="fileInput") - das
+                         gleichnamige Input im control-panel-create-button-Slot oben ist auf
+                         Mobil nie im DOM (Slot rendert nur bei aktivem Control Panel), Owls
+                         useRef("fileInput") im Controller loest sich aber ohnehin dynamisch auf
+                         das jeweils aktuell gemountete Element mit diesem Namen auf - beide
+                         Stellen schliessen sich pro Einbettung gegenseitig aus (Desktop-Action
+                         hat nie den Mobil-Header-Kontext, die Mobil-Einbettung nie den Control
+                         Panel), also keine Kollision. -->
+                    <input type="file" t-ref="fileInput" multiple="multiple" class="d-none" t-on-change="onFileInputChange"/>
+                </div>
                 <div class="o_int_filemanager_mobile_breadcrumb_row d-flex align-items-center gap-1">
                     <!-- Oeffnet das Ordnerbaum-Bottom-Sheet (die bereits gemountete native
                          SearchPanel, siehe onToggleMobileTree/native_list_view.scss). Nutzerwunsch
@@ -68,9 +106,22 @@
                          - der Home-Button war dadurch redundant und wird stattdessen fuer den Baum
                          wiederverwendet. Kein Doppelbelegungs-Problem mehr (siehe fruehere
                          Ueberlegung dazu): der Button hat jetzt genau eine, eindeutige Funktion. -->
+                    <!-- Eigentliches Problem war nicht die Button-Optik, sondern das falsche Icon
+                         (Nutzerfeedback 2026-09-16 "sieht nicht odoo nativ aus, gefrickel"):
+                         fa-home suggeriert "zur Wurzel springen" - das erledigt aber schon der
+                         Text-Link "Alle Ordner" direkt daneben (mobileBreadcrumbs[0], ruft
+                         dasselbe onMobileGoHome() auf). Dieser Button tut etwas anderes - er
+                         oeffnet den Ordnerbaum (onToggleMobileTree) - dafuer nutzt Odoo selbst
+                         nativ oi-panel-right (siehe web.SearchPanel.Sidebar UND unser eigener
+                         Chatter-Toggle-Button oben in dieser Datei, identisches Icon fuer
+                         denselben "Seitenpanel ein-/ausklappen"-Zweck). Schlichtes
+                         btn-link (kein Rahmen/Box) statt der vorherigen
+                         btn-light/btn-outline-secondary-Versuche - ein Icon in der Breadcrumb-
+                         Zeile braucht keinen eigenen Button-Koerper, das wirkte neben dem
+                         Fliesstext zusammengestueckelt. -->
                     <button type="button" class="btn btn-link p-1 flex-shrink-0 o_int_filemanager_mobile_tree_toggle"
                             aria-label="Ordnerbaum" t-on-click="onToggleMobileTree">
-                        <i class="fa fa-home"/>
+                        <i class="oi oi-fw oi-panel-right fa-flip-horizontal"/>
                     </button>
                     <!-- t-ref hier: _checkMobileBreadcrumbOverflow() (filemanager_controller_mixin.js)
                          misst scrollWidth/clientWidth genau dieses Elements, um bei zu langem Pfad

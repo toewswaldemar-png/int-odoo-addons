@@ -15,7 +15,18 @@
                    t-on-keydown="onRenameKeydown"
                    t-on-blur="onRenameBlur"
                    t-on-click.stop="() => {}"/>
-            <span t-else="" class="text-truncate" t-esc="value"/>
+            <!-- Pfad-Unterzeile (Nutzerwunsch 2026-09-16): nur mobil UND nur bei aktiver Suche
+                 (env.searchModel.query.length, siehe showPath in name_icon_field.js) - beim
+                 normalen Durchklicken der Ordner ist der Pfad redundant zum Breadcrumb, erst bei
+                 Suchergebnissen ueber mehrere Ordner hinweg hilft er zur Einordnung. Eigener
+                 flex-column-Wrapper statt des vorherigen einzelnen <span>, damit Name und Pfad
+                 untereinander stehen, waehrend das Icon links weiterhin ueber die volle
+                 Zeilenhoehe vertikal zentriert bleibt (align-items-center auf dem
+                 Eltern-Flex-Container oben). -->
+            <div t-else="" class="d-flex flex-column o_int_filemanager_name_text">
+                <span class="text-truncate" t-esc="value"/>
+                <span t-if="showPath and parentPath" class="text-truncate text-muted small" t-esc="parentPath"/>
+            </div>
         </div>
     </t>
 </templates>
