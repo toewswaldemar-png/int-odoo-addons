@@ -106,11 +106,27 @@
     // ist hier reine Redundanz. :has() statt eines JS-Lifecycle-Hooks, weil
     // .o_int_filemanager_mobile (Klasse auf dieser Komponente) und .o_main_navbar (Odoos globale,
     // von dieser Komponente unabhaengige Navbar) keinen naeheren gemeinsamen Vorfahren als <body>
-    // haben - reine CSS-Beziehung, raeumt sich beim Verlassen der Ansicht von selbst auf. Nur der
-    // Pfeil-Button wird ausgeblendet, nicht der gesamte .o_breadcrumb-Block - der Ordnername
-    // daneben (.o_last_breadcrumb_item) bleibt als Kontext-Anzeige sichtbar.
+    // haben - reine CSS-Beziehung, raeumt sich beim Verlassen der Ansicht von selbst auf.
     body:has(.o_int_filemanager_mobile) .o_main_navbar .o_back_button {
         display: none !important;
+    }
+
+    // Ordnername im lila App-Navbar ebenfalls entfernt (Nutzerwunsch 2026-09-16 Folgeanpassung:
+    // "generell soll nur der Appname stehen", "kein Ordnername als Kontext") - dort steht jetzt
+    // immer "Dateimanager", unabhaengig vom aktuellen Ordner. Rein visuell geloest (verstecken +
+    // fester ::before-Text), NICHT durch Aendern von env.config.breadcrumbs/crumb.name: dasselbe
+    // Array speist auch die eigene mobileBreadcrumbs-Zeile (filemanager_controller_mixin.js,
+    // mobileBreadcrumbs-Getter liest direkt davon) und Odoos Routing/Action-Stack - ein
+    // veraendertes .name dort wuerde die eigene Breadcrumb-Zeile (die den echten Pfad zeigen
+    // soll) gleich mit verfaelschen. "Dateimanager" hartkodiert wie jeder andere UI-Text in
+    // diesem Addon (Neu/Alle Ordner/... sind ebenfalls fest Deutsch, keine
+    // Odoo-Uebersetzungsinfrastruktur hier im Einsatz).
+    body:has(.o_int_filemanager_mobile) .o_main_navbar .o_last_breadcrumb_item span {
+        display: none;
+    }
+
+    body:has(.o_int_filemanager_mobile) .o_main_navbar .o_last_breadcrumb_item::before {
+        content: "Dateimanager";
     }
 }
 
