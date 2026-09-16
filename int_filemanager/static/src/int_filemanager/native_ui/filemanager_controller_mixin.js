@@ -130,6 +130,26 @@ export function filemanagerControllerMixin(Base) {
     return class extends Base {
         setup() {
             super.setup();
+            // Unterdrueckt Odoos eigenen, global registrierten "PagerIndicator"-Toast auf Mobil
+            // (position:fixed, top:0, end:0 - ueberlagerte sichtbar den lila App-Navbar,
+            // Nutzerreport 2026-09-16 mit Screenshot: "1-1 / 1"-Box oben rechts). Grund: die
+            // eigentliche <Pager/>-Komponente ist trotz der CSS-Ausblendung des Control Panels
+            // (native_list_view.scss) weiterhin voll aktiv gemountet - ihr eigener useEffect
+            // (web/core/pager/pager.js) feuert bei JEDER Aenderung von offset/limit/total, SOLANGE
+            // env.isSmall true ist, unabhaengig von CSS display:none. Ein reiner CSS-Fix kann einen
+            // laufenden JS-Seiteneffekt nicht stoppen. Sauberer Ansatz statt weiterer CSS-Ausblendung:
+            // usePager() (web/search/pager_hook.js), von ListController/KanbanController in ihrem
+            // eigenen super.setup() bereits aufgerufen, hat env.config.pagerProps gerade erst per
+            // useSubEnv gesetzt - ein zweiter, hier SPAETER aufgerufener useSubEnv() ueberschreibt
+            // das fuer alle Kind-Komponenten dieses Controllers (insbesondere das native
+            // ControlPanel). Mit env.config.pagerProps == undefined bleibt ControlPanel.pagerProps
+            // (control_panel.js: "this.env.config.pagerProps ? useState(...) : undefined") dauerhaft
+            // undefined, <Pager/> mountet dort nie (control_panel.xml: "t-if=\"pagerProps and
+            // pagerProps.total > 0\"") - kein Pager-useEffect, kein PAGER:UPDATED-Event, kein Toast.
+            // Auf Desktop unveraendert (env.config.pagerProps bleibt dort einfach das Original).
+            if (this.env.isSmall) {
+                useSubEnv({ config: { ...this.env.config, pagerProps: undefined } });
+            }
             this.dialog = useService("dialog");
             this.notification = useService("notification");
             this.fileUpload = useService("file_upload");
@@ -318,6 +338,10 @@ export function filemanagerControllerMixin(Base) {
             // reload() unten, gezielt nur den aktuell offenen Ordner im Baum-Cache zu invalidieren,
             // statt den ganzen Baum neu zu laden.
             this.folderTreeApi = null;
+            // Von updateBreadcrumbs() gefuellt, von mobileBreadcrumbs unten gelesen - vor dem
+            // ersten updateBreadcrumbs()-Aufruf (siehe dessen onMounted-Zeitpunkt-Begruendung
+            // unten) leer, nie undefined.
+            this.folderCrumbs = [];
             // Mobil-Breadcrumb-Kollabierung (Nutzerwunsch 2026-09-15): bei zu langem Pfad wird
             // statt horizontalem Scrollen alles zwischen erstem und letztem Segment zu einem
             // "…"-Dropdown zusammengefasst (siehe native_list_view.xml). Per echter
@@ -559,6 +583,10 @@ export function filemanagerControllerMixin(Base) {
             this.currentPath = this.env.searchModel.intFilemanagerFolderPath || "";
             const crumbs = this.env.config.breadcrumbs;
             crumbs.length = this.rootBreadcrumbCount;
+            // Eigene Kopie der Ordner-Krumen (unten von mobileBreadcrumbs gelesen), unabhaengig
+            // davon, ob sie auch in env.config.breadcrumbs landen - siehe Begruendung beim Push
+            // unten.
+            this.folderCrumbs = [];
             if (!this.currentPath) {
                 return;
             }
@@ -567,13 +595,29 @@ export function filemanagerControllerMixin(Base) {
             for (const segment of segments) {
                 acc = acc ? `${acc}/${segment}` : segment;
                 const segmentPath = acc;
-                crumbs.push({
+                const crumb = {
                     jsId: `int_filemanager_crumb_${segmentPath}`,
                     name: segment,
                     isFormView: false,
                     url: "#",
                     onSelected: () => this.env.searchModel.setIntFilemanagerFolderPath(segmentPath),
-                });
+                };
+                this.folderCrumbs.push(crumb);
+                // Nur auf Desktop auch in Odoos eigenes Breadcrumb-Array schreiben (natives
+                // Control-Panel/Navbar). Auf Mobil (env.isSmall) ersetzt der eigene Header diese
+                // Rolle bereits vollstaendig (mobileBreadcrumbs unten, aus this.folderCrumbs) -
+                // ein zusaetzlicher Eintrag hier wuerde im lila App-Navbar nur den Ordnernamen
+                // duplizieren UND (Odoos eigenes Verhalten ab einem zweiten Breadcrumb-Eintrag)
+                // einen Zurueck-Pfeil einblenden, beides auf Mobil unerwuenscht (Nutzerwunsch
+                // 2026-09-16). Vorher per CSS ausgeblendet/mit einem ::before-Text ueberklebt -
+                // das erzeugte einen sichtbaren Stilbruch (kleinere Schrift als im Wurzelzustand),
+                // weil Odoos natives Breadcrumbs-Template fuer einen einzelnen vs. mehrere
+                // Eintraege unterschiedlich rendert. Sauberer, den Navbar-Stack auf Mobil einfach
+                // gar nicht erst wachsen zu lassen - Odoo zeigt dann von selbst exakt den
+                // Wurzelzustand (kein Zurueck-Pfeil, volle Schriftgroesse), kein CSS-Override noetig.
+                if (!this.env.isSmall) {
+                    crumbs.push(crumb);
+                }
             }
         }
 
@@ -600,17 +644,17 @@ export function filemanagerControllerMixin(Base) {
         // -----------------------------------------------------------------
 
         // Rein additiv - das Header-Markup selbst lebt in native_list_view.xml, gated auf
-        // env.isSmall, betrifft die Desktop-Ansicht also nie. Baut auf derselben Breadcrumb-Kette wie
-        // updateBreadcrumbs() oben auf (env.config.breadcrumbs, ab rootBreadcrumbCount) - keine
-        // zweite, parallele Navigations-Buchhaltung. Eigener synthetischer Wurzel-Eintrag ("Alle
-        // Ordner") davor, mit demselben Reset-Callback wie der Home-Button (onMobileGoHome) -
-        // Nutzerwunsch 2026-09-15: echter klickbarer Breadcrumb-Pfad statt nur des letzten
-        // Ordnernamens.
+        // env.isSmall, betrifft die Desktop-Ansicht also nie. this.folderCrumbs (updateBreadcrumbs()
+        // oben) ist auf Mobil die einzige Kopie dieser Krumen - env.config.breadcrumbs bleibt dort
+        // bewusst leer (siehe Begruendung dort), deshalb keine zweite, divergierende
+        // Navigations-Buchhaltung noetig, nur eine andere Quelle als frueher. Eigener synthetischer
+        // Wurzel-Eintrag ("Alle Ordner") davor, mit demselben Reset-Callback wie der Home-Button
+        // (onMobileGoHome) - Nutzerwunsch 2026-09-15: echter klickbarer Breadcrumb-Pfad statt nur
+        // des letzten Ordnernamens.
         get mobileBreadcrumbs() {
-            const folderCrumbs = this.env.config.breadcrumbs.slice(this.rootBreadcrumbCount);
             return [
                 { jsId: "int_filemanager_crumb_root", name: _t("Alle Ordner"), onSelected: () => this.onMobileGoHome() },
-                ...folderCrumbs,
+                ...this.folderCrumbs,
             ];
         }
 
