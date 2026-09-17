@@ -5,7 +5,7 @@
         "Sammelmodul für kleinere Odoo-Web-Client-Anpassungen, die nur von 'web'/'base' abhängen. "
         "Jede Anpassung liegt in einer eigenen, unabhängigen Datei unter static/src/."
     ),
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Productivity",
     "license": "LGPL-3",
     "depends": ["base", "web"],

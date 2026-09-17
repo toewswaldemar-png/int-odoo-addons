@@ -2,6 +2,7 @@
 
 import { browser } from "@web/core/browser/browser";
 import { patch } from "@web/core/utils/patch";
+import { useSortable } from "@web/core/utils/sortable_owl";
 import { ListRenderer } from "@web/views/list/list_renderer";
 
 function storageKey(resModel) {
@@ -60,37 +61,58 @@ patch(ListRenderer.prototype, {
         return columns.map((c) => (c.type === "field" ? ordered[i++] : c));
     },
 
-    onColumnDragStart(ev, column) {
-        if (!column.name || column.type !== "field") {
-            return;
-        }
-        this._draggedColumnName = column.name;
-        ev.dataTransfer.effectAllowed = "move";
-        ev.dataTransfer.setData("text/plain", column.name);
-        ev.currentTarget.classList.add("o_column_dragging");
-    },
-
-    onColumnDragEnd(ev) {
-        ev.currentTarget.classList.remove("o_column_dragging");
-        this._draggedColumnName = null;
-    },
-
-    onColumnDrop(ev, column) {
-        ev.currentTarget.classList.remove("o_column_dragging");
-        const draggedName = this._draggedColumnName;
-        this._draggedColumnName = null;
-        if (!draggedName || column.type !== "field" || draggedName === column.name) {
-            return;
-        }
-        const names = this.columns.filter((c) => c.type === "field").map((c) => c.name);
-        const fromIndex = names.indexOf(draggedName);
-        const toIndex = names.indexOf(column.name);
-        if (fromIndex === -1 || toIndex === -1) {
-            return;
-        }
-        names.splice(fromIndex, 1);
-        names.splice(toIndex, 0, draggedName);
-        saveOrder(this.props.list.resModel, names);
-        this.render();
+    setup() {
+        super.setup();
+        // Odoo's own generic drag system (useSortable, built on pointer events - see
+        // list_renderer.js's own useSortable() call for row resequencing right above this
+        // one in its setup()) instead of raw HTML5 draggable/dragstart. Two independent
+        // benefits over the previous native-drag version: no default browser drag-ghost
+        // screenshot (there's no native drag operation at all, pointer events just move the
+        // real element - Nutzerreport 2026-09-17, Screenshot zeigte den haesslichen
+        // Standard-Browser-Ghost), and it reuses Odoo's own .o_dragged base styling
+        // (draggable_hook_builder.scss) instead of a hand-rolled visual. th[data-name] is
+        // already set natively by list_renderer.xml itself (t-att-data-name="column.name"),
+        // no own attribute needed - only the scoping class below to select field-column
+        // headers specifically (buttons/handle columns have no data-name and are excluded by
+        // the selector automatically).
+        useSortable({
+            ref: this.rootRef,
+            elements: ".o_int_web_tweaks_column_draggable",
+            cursor: "grabbing",
+            // Placeholder must be a real <th> clone (not useSortable's default plain <div>) -
+            // a <div> as a direct child of <tr> would be invalid table markup and break the
+            // header row's column layout while dragging.
+            clone: true,
+            followingElementClasses: ["o_column_dragging"],
+            onDrop: ({ element, previous, next }) => {
+                const draggedName = element.dataset.name;
+                if (!draggedName) {
+                    return;
+                }
+                const names = this.columns.filter((c) => c.type === "field").map((c) => c.name);
+                const fromIndex = names.indexOf(draggedName);
+                if (fromIndex === -1) {
+                    return;
+                }
+                names.splice(fromIndex, 1);
+                // previous/next are the dragged element's new DOM neighbours at drop time
+                // (useSortable never touches the DOM itself here - applyChangeOnDrop is left
+                // at its default false, our own order lives in localStorage + render() below,
+                // not in DOM position). Falls back to index 0 when dropped before every column
+                // (no previous) and to the end when dropped after the last one (neither has a
+                // data-name, e.g. dropped past the last header cell).
+                let toIndex = previous?.dataset.name
+                    ? names.indexOf(previous.dataset.name) + 1
+                    : next?.dataset.name
+                    ? names.indexOf(next.dataset.name)
+                    : 0;
+                if (toIndex === -1) {
+                    toIndex = names.length;
+                }
+                names.splice(toIndex, 0, draggedName);
+                saveOrder(this.props.list.resModel, names);
+                this.render();
+            },
+        });
     },
 });
