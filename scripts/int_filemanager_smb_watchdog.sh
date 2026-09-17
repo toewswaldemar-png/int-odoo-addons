@@ -24,10 +24,19 @@
 # anders als der urspruengliche D-Zustand-Hang).
 #
 # ensure_soft_mount_patch() (siehe unten) haertet zusaetzlich die Unassigned-Devices-eigene
-# Mount-Option selbst (hard -> soft,timeo=30,retrans=2, siehe lib.php:1826) - bei JEDEM Lauf
-# dieses Watchdogs neu, nicht nur einmalig oder beim Boot. Ein reiner Boot-Zeit-Patch (z.B. in
-# /boot/config/go) haette hier tagelang eine Luecke offen gelassen, bis der naechste Reboot
-# faellig ist - ein Plugin-Update koennte in der Zwischenzeit unbemerkt auf "hard" zurueckfallen.
+# Mount-Option selbst (hard -> soft, siehe lib.php:1827) - bei JEDEM Lauf dieses Watchdogs neu,
+# nicht nur einmalig oder beim Boot. Ein reiner Boot-Zeit-Patch (z.B. in /boot/config/go) haette
+# hier tagelang eine Luecke offen gelassen, bis der naechste Reboot faellig ist - ein
+# Plugin-Update koennte in der Zwischenzeit unbemerkt auf "hard" zurueckfallen.
+#
+# Bugfix 2026-09-17: eine fruehere Fassung dieses Patches setzte "soft,timeo=30,retrans=2" statt
+# nur "soft". Live nach einem Reboot beobachtet, dass dadurch KEINE der drei Freigaben mehr
+# mounten konnte ("mount error(22): Invalid argument" / dmesg "cifs: Unknown parameter 'timeo'").
+# Ursache: "timeo=" ist gar keine gueltige cifs.ko-Mount-Option (das ist ein NFS-Parameter, hier
+# faelschlich per Analogie uebernommen), und das zusaetzliche "retrans=2" kollidierte mit Unraids
+# eigenem, versionsabhaengigem $retrans weiter hinten in derselben Optionszeile (lib.php:1826) -
+# ein doppelt angegebenes Mount-Argument lehnt der CIFS-Treiber ebenfalls ab. "soft" alleine
+# reicht fuer den eigentlichen Zweck (I/O-Fehler statt endlosem Haengen bei totem Server).
 
 LOG_DIR="/boot/config/plugins/user.scripts/scripts/int_filemanager_smb_watchdog"
 LOG="$LOG_DIR/watchdog.log"
@@ -60,9 +69,16 @@ ensure_soft_mount_patch() {
     if [ ! -f "$UD_LIB" ]; then
         return
     fi
+    # Korrigiert den fehlerhaften timeo=/retrans=2-Patch einer frueheren Skriptversion (siehe
+    # Kommentar oben) auf allen Instanzen, die ihn noch tragen - macht das Skript nachtraeglich
+    # selbstheilend, ohne dass jede Instanz manuell angefasst werden muss.
+    if grep -q ',soft,timeo=30,retrans=2,relatime,noserverino,nounix,' "$UD_LIB"; then
+        sed -i 's/,soft,timeo=30,retrans=2,relatime,noserverino,nounix,/,soft,relatime,noserverino,nounix,/' "$UD_LIB"
+        log "KORRIGIERT: fehlerhaften timeo=/retrans=2-Patch einer frueheren Skriptversion rueckgaengig gemacht"
+    fi
     if grep -q ',hard,relatime,noserverino,nounix,' "$UD_LIB"; then
-        sed -i 's/,hard,relatime,noserverino,nounix,/,soft,timeo=30,retrans=2,relatime,noserverino,nounix,/' "$UD_LIB"
-        log "PATCH ANGEWENDET: $UD_LIB auf soft,timeo=30,retrans=2 gehaertet (Plugin-Update hatte auf hard zurueckgesetzt, oder Erstlauf)"
+        sed -i 's/,hard,relatime,noserverino,nounix,/,soft,relatime,noserverino,nounix,/' "$UD_LIB"
+        log "PATCH ANGEWENDET: $UD_LIB auf soft gehaertet (Plugin-Update hatte auf hard zurueckgesetzt, oder Erstlauf)"
     fi
 }
 
@@ -72,7 +88,17 @@ check_and_fix() {
     local marker
     marker=$(mktemp -u "/tmp/int_filemanager_smb_check.XXXXXX")
 
-    ( stat "$mountpoint" >/dev/null 2>&1 && touch "$marker.done" ) &
+    # Bugfix 2026-09-17: "stat ... && touch marker.done" (fruehere Fassung) unterschied nicht
+    # zwischen "stat ist schnell mit einem FEHLER zurueckgekommen" (z.B. direkt nach einem
+    # Reboot, bevor Unassigned Devices ueberhaupt versucht hat einzuhaengen - stat auf dem noch
+    # leeren tmpfs-Platzhalter bzw. dem noch fehlenden Pfad schlaegt sofort fehl) und "stat kommt
+    # ueberhaupt nicht zurueck" (der eigentliche, urspruengliche Fall: wedged CIFS-Sitzung im
+    # D-Zustand). Beide Faelle wurden bisher identisch als "HAENGT" geloggt und mit einem
+    # zusaetzlichen, in Fall 1 wirkungslosen "umount -l" behandelt (Log zeigte dort immer "no
+    # mount point specified" - live am 2026-09-17 direkt nach zwei Reboots beobachtet). Jetzt
+    # wird der tatsaechliche stat-Exitcode ueber die Marker-Datei mitgegeben, um beide Faelle
+    # sauber zu unterscheiden.
+    ( stat "$mountpoint" >/dev/null 2>&1; echo $? > "$marker.rc"; touch "$marker.done" ) &
 
     local waited=0
     while [ ! -f "$marker.done" ] && [ "$waited" -lt "$CHECK_TIMEOUT" ]; do
@@ -81,12 +107,25 @@ check_and_fix() {
     done
 
     if [ -f "$marker.done" ]; then
-        rm -f "$marker.done"
-        return 0
+        local rc
+        rc=$(cat "$marker.rc" 2>/dev/null)
+        rm -f "$marker.rc" "$marker.done"
+        if [ "$rc" = "0" ]; then
+            return 0
+        fi
+        # stat kam schnell zurueck, aber mit Fehler - kein haengender Prozess, nur (noch) keine
+        # echte Freigabe an dem Pfad. Kein "umount -l" noetig (nichts zum Aushaengen da, das war
+        # bisher immer ein wirkungsloser "no mount point specified"-Fehlschlag), direkt versuchen
+        # einzuhaengen.
+        log "NICHT GEMOUNTET: $mountpoint antwortet mit Fehler (stat rc=$rc) - versuche einzuhaengen ($share_key)"
+    else
+        # stat ist auch nach CHECK_TIMEOUT Sekunden nicht zurueckgekommen - der eigentliche,
+        # urspruengliche Fall (wedged CIFS-Sitzung im D-Zustand), fuer den dieser Watchdog gebaut
+        # wurde. Hier ist das Lazy-Unmount tatsaechlich noetig, um die haengende IO loszuwerden.
+        log "HAENGT: $mountpoint antwortet nicht innerhalb ${CHECK_TIMEOUT}s - haenge neu ein ($share_key)"
+        umount -l "$mountpoint" 2>>"$LOG"
     fi
 
-    log "HAENGT: $mountpoint antwortet nicht innerhalb ${CHECK_TIMEOUT}s - haenge neu ein ($share_key)"
-    umount -l "$mountpoint" 2>>"$LOG"
     if timeout "$REMOUNT_TIMEOUT" /usr/local/sbin/rc.unassigned mount "$share_key" >>"$LOG" 2>&1; then
         log "OK: $share_key neu eingehaengt"
     else
