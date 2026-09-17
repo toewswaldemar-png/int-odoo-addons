@@ -311,8 +311,21 @@ export function filemanagerControllerMixin(Base) {
             // kein sichtbarer Toggle-Button noetig - IntFilemanagerContextMenu (context_menu.js)
             // rendert den Inhalt mit denselben CSS-Klassen wie Odoos eigenes DropdownItem, ohne
             // dessen Dropdown-Vorfahren-Pflicht (useDropdownCloser() wuerde hier ins Leere laufen).
+            //
+            // arrow:false + popoverClass (Nutzerreport 2026-09-17 "optisch nicht Odoo-nativ"):
+            // Odoos Popover-Komponente legt IMMER die Bootstrap-".popover"-Klasse (eigene
+            // Rundung/Schatten/Padding) plus standardmaessig einen Pfeil um den Inhalt
+            // (popover.js: defaultClassObj = "o_popover popover mw-100 bs-popover-auto",
+            // defaultProps.arrow = true) - eine andere visuelle Identitaet als das echte,
+            // pfeillose ".dropdown-menu" unseres eigenen Inhalts. Odoos <Dropdown> selbst nutzt
+            // diesen Popover-Wrapper gar nicht (dropdown.js setzt "dropdown-menu" direkt auf
+            // sein eigenes Overlay-Element, kein Popover-Pfeil-Feature im Spiel). Die zusaetzliche
+            // Popover-Bootstrap-Optik wird ueber popoverClass gezielt entfernt statt sie nur zu
+            // ueberdecken (context_menu.scss).
             this.contextMenuPopover = usePopover(IntFilemanagerContextMenu, {
                 position: "bottom-start",
+                arrow: false,
+                popoverClass: "o_int_filemanager_context_menu_popover",
                 onClose: () => {
                     this._contextMenuAnchorEl?.remove();
                     this._contextMenuAnchorEl = null;
