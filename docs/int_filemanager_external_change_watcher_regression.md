@@ -21,45 +21,66 @@ grundsätzliche Einschränkung.
 3. **Der Watcher selbst funktioniert** - Testordner **von innerhalb des laufenden Odoo19-Containers** angelegt (`docker exec Odoo19 mkdir /mnt/hm-daten/Daten/_watcher_selftest_...`) wurde **innerhalb weniger Sekunden** indexiert. Der Inotify-Mechanismus im Container ist also grundsätzlich aktiv und funktionsfähig.
 4. **Nicht durch den rshared→rslave-Wechsel verursacht** - sauberer A/B-Test (identische Testdatei einmal mit `bind-propagation=rshared`, einmal mit `rslave` auf dem Docker-Mount) zeigte in **beiden** Fällen identisches Fehlverhalten (keine Indexierung). Die heutige Propagation-Änderung ist also nicht die Ursache.
 5. **Nicht durch die ~822 verwaisten Mount-Duplikate von den heutigen Tests verursacht** - nach einem sauberen Reboot (Mount-Zahl zurück auf 0, dann normal neu gemountet) wurde derselbe externe-Änderung-Test **erneut wiederholt und schlug wieder fehl** - sowohl über die Host-eigene CIFS-Sitzung als auch über den echten Laptop-Client.
+6. **Nicht durch `hard` vs. `soft` verursacht** (ursprünglich fuehrende Hypothese, jetzt widerlegt) -
+   sauberer Test nach Reboot (siehe unten, damit `emhttpd`'s In-Memory-Cache von `lib.php` garantiert
+   umgangen wird): Mount lief nachweislich mit `hard` (`findmnt` zeigte es live), Odoo19 wurde neu
+   gestartet, danach exakt derselbe externe-Aenderung-Test wiederholt - **auch mit `hard` keine
+   Indexierung**. Die heutige SMB-Watchdog-Mount-Options-Korrektur ist damit ebenfalls ausgeschlossen.
+7. **Kein Code-Commit hat `watcher.py`/`models/` kürzlich angefasst** (`git log --since` heute Abend
+   geprüft, keine Treffer) - keine versehentliche Regression durch die vielen UI-Fixes von heute.
 
-## Eingegrenzt, aber NICHT verifiziert (nächster Schritt für die nächste Session)
+## Bekannter Nebenschaden aus dem hard/soft-Test (WICHTIG, zuerst beheben)
 
-**Führende Hypothese:** Die heutige SMB-Watchdog-Korrektur (siehe [[project_hm_odoo_filemanager]] im
-Memory) hat die Unassigned-Devices-Mount-Option von `hard` auf `soft` umgestellt
-(`lib.php:1827`, absichtlich so gefixt wegen wedged-CIFS-Hangs - siehe
-`scripts/int_filemanager_smb_watchdog.sh`). Das ist die **einzige** Mount-Options-Änderung, die
-heute an den produktiven SMB-Freigaben vorgenommen wurde, bevor das Symptom auffiel. Möglich, dass
-`soft` das SMB3-Change-Notify-Verhalten des CIFS-Kernel-Clients anders behandelt als `hard` (z.B.
-weil oplock-/lease-Renewal unter `soft` anders auf Verzögerungen reagiert).
+Der `hard`-Test hat einen Seiteneffekt hinterlassen: **der `Daten`-Mount lief zuletzt live auf
+`hard`** statt dem korrekten `soft` (siehe "Sicherheits-Notiz" unten warum das wichtig ist).
+`lib.php` selbst steht bereits wieder korrekt auf `soft` (Datei-Inhalt verifiziert), aber
+`emhttpd`s In-Memory-Cache hat das nicht übernommen (dasselbe Cache-Problem wie beim Testen selbst,
+siehe unten) - ein Datei-Edit ohne Reboot reicht nicht. **Vor jeder weiteren Arbeit**: entweder
+per Reboot sauber auf `soft` zurückstellen (garantiert wirksam), oder zumindest verifizieren, dass
+der Live-Mount `soft` zeigt (`findmnt /mnt/remotes/HM-FL01.HERRMANN_Daten`) bevor man sich auf die
+Watchdog-Hang-Schutzfunktion verlässt.
 
-**Test angefangen, aber nicht abgeschlossen:** `lib.php` testweise zurück auf `hard` gepatcht -
-Mount hat den neuen Wert aber NICHT übernommen, weil `emhttpd` dauerhaft läuft und `lib.php` schon
-lange vorher eingelesen/im Speicher hat (reines Datei-Edit reicht nicht, ohne dass `emhttpd`
-neu startet). `lib.php` wurde wieder auf `soft` zurückgesetzt (Produktivzustand, nicht
-verändert lassen!).
+## `emhttpd`-Cache-Falle (fuer jeden weiteren Mount-Options-Test wichtig)
 
-**Sauberster nächster Test:** `lib.php` auf `hard` patchen, **Host neu booten** (frischer
-`emhttpd`-Prozess liest die Datei garantiert neu, kein Cache-Risiko mehr), dann denselben
-Testablauf wiederholen:
-1. Ordner über eine externe SMB-Sitzung (Laptop **oder** ersatzweise die Host-eigene
-   `/mnt/remotes/...`-Mount-Sitzung, beide haben sich bisher identisch verhalten) anlegen.
-2. Nach ~30s in der DB prüfen: `docker exec odoo_db psql -U odoouser -d odoodb -t -c "select path, name, write_date from int_filemanager_file where write_date > now() - interval '2 minutes';"`
-3. Wenn es mit `hard` funktioniert: Ursache bestätigt, dann eine Lösung suchen, die BEIDES kann
-   (kein endloses Haengen bei totem Server UND funktionierende Change-Notifies) - z.B. andere
-   Timeout-Kombination statt reinem `hard`/`soft`-Umschalten, oder den SMB-Watchdog so anpassen,
-   dass er nur bei einem BESTÄTIGTEN Hang eingreift statt die Grundoption dauerhaft zu ändern.
-4. Wenn es AUCH mit `hard` nicht funktioniert: Hypothese verworfen, weitersuchen - z.B. Odoo-19-
-   Versionswechsel (`19.0-20260817` → `19.0-20260908`, siehe Log-Zeile
-   "Odoo version 19.0-20260908" von heute vs. frühere Sessions) als möglicher Auslöser prüfen,
-   oder `watcher.py`s tatsächliche Inotify-Maskeneinstellungen am Quellcode gegenlesen (evtl. ist
-   die inotify-Kette selbst unverändert, aber CIFS liefert das zugrunde liegende Kernel-Event für
-   fremde Sessions grundsätzlich nicht - dann bräuchte es einen periodischen Reconciliation-
-   Fallback-Scan zusätzlich zu reinem Inotify, nicht nur eine Mount-Options-Korrektur).
+`emhttpd` läuft dauerhaft und liest `lib.php` offenbar beim ERSTEN tatsächlichen Mount-Vorgang nach
+dem Boot ein, haelt den Inhalt danach im Speicher - ein reines `sed`-Edit auf der Datei plus
+`rc.unassigned mount` reicht NICHT, um eine geänderte Mount-Option live wirksam zu machen, auch
+nicht direkt nach einem Reboot, sobald bereits EIN Mount-Vorgang stattgefunden hat. Einzig
+zuverlässiger Weg, eine `lib.php`-Änderung sauber zu testen: Datei VOR jedem weiteren Mount-Versuch
+nach einem frischen Reboot ändern (vor dem allerersten `rc.unassigned mount`-Aufruf dieser Boot-
+Session) - genau in dieser Reihenfolge wurde der `hard`-Test oben erfolgreich durchgeführt.
+
+## Verbleibende, noch nicht getestete Spur
+
+**Kandidat:** Heute Morgen (im Rahmen der Wrapper/Restart-Policy-Arbeit) wurde `Odoo19` von
+`odoo:latest` (Image-Alter: 18.08., aeltere Odoo-Version) auf das eigene
+`int-filemanager-odoo:19.0-ocr`-Image (basiert auf `odoo:19.0`, Build 10.09., "Odoo version
+19.0-20260908" laut Log) umgestellt - das ist die einzige noch nicht getestete, konkret datierte
+Aenderung von heute. `watcher.py` ist zwar reiner, image-unabhängiger Python-Code (sollte sich
+unter jeder Odoo-Version identisch verhalten), aber die BASIS-OS-Schicht/Python-Umgebung
+zwischen beiden Images wurde nicht verglichen.
+
+**Nutzer konnte den Zeitpunkt "hat zuletzt funktioniert" nicht eingrenzen** - das Regressionsfenster
+ist daher nicht bekannt (koennte heute, koennte aber auch schon laenger her sein und nur jetzt zum
+ersten Mal aufgefallen sein).
+
+**Vorschlag fuer die naechste Session:**
+1. Zuerst den `hard`/`soft`-Nebenschaden beheben (siehe oben).
+2. Testweise `Odoo19` kurzzeitig auf `odoo:latest` zurückstellen (identische Mounts/ExtraParams,
+   nur `--mount ...` durch das alte Image ersetzen), denselben externen-Aenderungs-Test wiederholen.
+   Bei Erfolg: Odoo-Kernversion oder eine OS-Paket-Differenz zwischen den Images ist die Ursache.
+   Bei Fehlschlag: Ursache liegt vermutlich ausserhalb von Odoo/Docker/Unraid ganz (z.B. SMB-Server-
+   seitige Aenderung auf HM-FL01 selbst, ein Windows-Update dort, das Change-Notify betrifft) -
+   dann lohnt ein Blick direkt auf HM-FL01 (Windows-Server/-Freigabe), nicht mehr auf dieser Seite.
+3. Falls beides nichts bringt: `watcher.py`s tatsächliche Inotify-Maskeneinstellungen am Quellcode
+   gegenlesen, und/oder einen periodischen Reconciliation-Fallback-Scan zusätzlich zu reinem
+   Inotify in Erwägung ziehen (robuster gegen genau diese Art von Cross-Session-Blindheit,
+   unabhängig davon, woran es letztlich liegt).
 
 ## Was NICHT angefasst werden sollte, bevor das hier gelöst ist
 
-- `lib.php` steht aktuell korrekt auf `soft` (Produktivzustand) - **nicht** wieder auf `hard`
-  lassen, ohne den SMB-Watchdog-Grund dafür (wedged-CIFS-Hang-Schutz) zu berücksichtigen.
 - `bind-propagation=rslave` auf dem Odoo19-Docker-Mount ist der korrekte, bestätigte Fix für den
   Mount-Leak (siehe rshared-Memo) - nicht zurück auf `rshared` stellen, das ist nachweislich nicht
   die Ursache dieses Watcher-Problems.
+- `lib.php` MUSS auf `soft` stehen (Produktivzustand, Hang-Schutz) - siehe Nebenschaden-Abschnitt
+  oben, aktuell noch nicht garantiert wirksam.
