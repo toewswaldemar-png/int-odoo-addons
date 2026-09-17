@@ -1260,6 +1260,7 @@ export function filemanagerControllerMixin(Base) {
             this.contextMenuPopover.open(anchor, {
                 items,
                 close: () => this.contextMenuPopover.close(),
+                navigator: this.contextMenuNavigation,
             });
         }
 
