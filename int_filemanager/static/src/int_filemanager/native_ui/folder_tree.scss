@@ -59,15 +59,17 @@
 // Drop-Ziel-Hervorhebung fuer den Ordnerbaum (Verschieben per Drag&Drop, siehe
 // filemanager_controller_mixin.js: _dropTargetFromEvent()/onWindowDragOverRecord()) - dieselben
 // zwei Zustaende/Farben wie fuer eine Zeile in der Liste (native_list_view.scss), hier auf den
-// Baumknoten-Header statt eine <tr> angewendet.
+// Baumknoten-Header statt eine <tr> angewendet. --bs-primary/--bs-danger statt der frueheren,
+// selbsterfundenen --ButtonPrimary-bg (siehe ausfuehrliche Begruendung in
+// native_list_view.scss) - dieselben zwei Farben, jetzt an Odoos echtes Theme gebunden.
 .o_int_filemanager_tree_node_header.o_int_filemanager_drop_target {
-    background-color: rgba(var(--ButtonPrimary-bg-rgb, 113, 75, 103), 0.25) !important;
-    outline: 2px dashed var(--ButtonPrimary-bg, #714b67);
+    background-color: rgba(var(--bs-primary-rgb, 113, 75, 103), 0.25) !important;
+    outline: 2px dashed var(--bs-primary, #714b67);
     outline-offset: -2px;
 }
 
 .o_int_filemanager_tree_node_header.o_int_filemanager_drop_invalid {
-    background-color: rgba(220, 53, 69, 0.15) !important;
-    outline: 2px dashed #dc3545;
+    background-color: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.15) !important;
+    outline: 2px dashed var(--bs-danger, #dc3545);
     outline-offset: -2px;
 }

@@ -45,10 +45,15 @@
     // filemanager_controller_mixin.js setzt/entfernt diese Klasse direkt am nativen
     // <tr data-id="...">-Zeilenelement, siehe onWindowDragOverRecord(). !important aus
     // demselben Grund wie oben: eine einfache Regel gewinnt sonst nicht gegen Odoos eigene,
-    // spezifischere Zeilen-Hintergrundregeln (list_renderer.scss).
+    // spezifischere Zeilen-Hintergrundregeln (list_renderer.scss). --bs-primary/--bs-danger
+    // statt der frueheren, im Odoo-Quellcode nirgends existierenden --ButtonPrimary-bg bzw.
+    // einem hartcodierten Hex-Rot (Nutzerwunsch 2026-09-17) - dieselben echten Bootstrap-
+    // Variablen, die Odoos eigene native Dropzone-Komponente nutzt (web/core/dropzone/
+    // dropzone.xml: "border-primary bg-100 text-primary" fuer den Datei-Upload-Bereich),
+    // folgen also automatisch dem tatsaechlichen Odoo-Theme statt einem fest verdrahteten Wert.
     .o_int_filemanager_drop_target {
-        background-color: rgba(var(--ButtonPrimary-bg-rgb, 113, 75, 103), 0.25) !important;
-        outline: 2px dashed var(--ButtonPrimary-bg, #714b67);
+        background-color: rgba(var(--bs-primary-rgb, 113, 75, 103), 0.25) !important;
+        outline: 2px dashed var(--bs-primary, #714b67);
         outline-offset: -2px;
     }
 
@@ -58,8 +63,8 @@
     // aber ungueltiges Ziel gesetzt (onWindowDragOverRecord in filemanager_controller_mixin.js),
     // nie auf leere Flaeche.
     .o_int_filemanager_drop_invalid {
-        background-color: rgba(220, 53, 69, 0.15) !important;
-        outline: 2px dashed #dc3545;
+        background-color: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.15) !important;
+        outline: 2px dashed var(--bs-danger, #dc3545);
         outline-offset: -2px;
     }
 }

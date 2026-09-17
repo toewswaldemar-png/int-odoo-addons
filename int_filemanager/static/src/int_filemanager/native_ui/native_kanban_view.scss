@@ -70,18 +70,20 @@
     // filemanager_controller_mixin.js setzt/entfernt diese Klasse direkt am nativen
     // Kartenwurzelelement (data-id sitzt laut kanban_record.xml auf dem <div
     // class="o_kanban_record ...">, nicht auf unserer eigenen inneren position:relative-Div),
-    // siehe onWindowDragOverRecord().
+    // siehe onWindowDragOverRecord(). --bs-primary/--bs-danger statt der frueheren,
+    // selbsterfundenen --ButtonPrimary-bg (siehe ausfuehrliche Begruendung in
+    // native_list_view.scss) - dieselben zwei Farben, jetzt an Odoos echtes Theme gebunden.
     .o_int_filemanager_drop_target {
-        outline: 2px dashed var(--ButtonPrimary-bg, #714b67);
+        outline: 2px dashed var(--bs-primary, #714b67);
         outline-offset: -2px;
-        background-color: rgba(var(--ButtonPrimary-bg-rgb, 113, 75, 103), 0.15);
+        background-color: rgba(var(--bs-primary-rgb, 113, 75, 103), 0.15);
     }
 
     // Rotes Gegenstueck, analog zu native_list_view.scss - Nutzerreport 2026-09-12: der native
     // "nicht erlaubt"-Cursor allein war zu unauffaellig.
     .o_int_filemanager_drop_invalid {
-        outline: 2px dashed #dc3545;
+        outline: 2px dashed var(--bs-danger, #dc3545);
         outline-offset: -2px;
-        background-color: rgba(220, 53, 69, 0.15);
+        background-color: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.15);
     }
 }
