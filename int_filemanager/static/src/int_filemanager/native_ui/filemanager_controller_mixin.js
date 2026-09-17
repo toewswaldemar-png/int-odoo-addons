@@ -20,12 +20,14 @@ import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
+import { usePopover } from "@web/core/popover/popover_hook";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { IntTextInputDialog } from "../shared/text_input_dialog";
 import { IntLinkRecordDialog } from "../shared/link_record_dialog";
 import { IntTextEditorDialog } from "./text_editor_dialog";
 import { IntDocumentReviewDialog } from "./document_review_dialog";
 import { IntZipContentsDialog } from "./zip_contents_dialog";
+import { IntFilemanagerContextMenu } from "./context_menu";
 import { domPathToPath } from "./folder_tree";
 
 // Video ist nativ im FileViewer verdrahtet (file_viewer.js/.xml: state.file.isVideo -> echtes
@@ -299,6 +301,24 @@ export function filemanagerControllerMixin(Base) {
             useExternalListener(window, "dragover", this.onWindowDragOverRecord);
             useExternalListener(window, "drop", this.onWindowDropRecord);
             useExternalListener(window, "dragend", this.onWindowDragEndRecord);
+
+            // Rechtsklick-Kontextmenue (Nutzerwunsch 2026-09-17) - dieselben Eintraege wie das
+            // bestehende "Aktionen"-Dropdown (getStaticActionMenuItems() unten, Odoos eigener
+            // ListController/KanbanController-Override-Punkt, der normalerweise das native
+            // web.ActionMenus im Control-Panel speist), hier nur zusaetzlich am Cursor geoeffnet.
+            // usePopover() statt eines echten <Dropdown>: dessen Menue wird an einem frei
+            // erzeugten "virtuellen" Anker-Element positioniert (siehe onWindowContextMenu unten),
+            // kein sichtbarer Toggle-Button noetig - IntFilemanagerContextMenu (context_menu.js)
+            // rendert den Inhalt mit denselben CSS-Klassen wie Odoos eigenes DropdownItem, ohne
+            // dessen Dropdown-Vorfahren-Pflicht (useDropdownCloser() wuerde hier ins Leere laufen).
+            this.contextMenuPopover = usePopover(IntFilemanagerContextMenu, {
+                position: "bottom-start",
+                onClose: () => {
+                    this._contextMenuAnchorEl?.remove();
+                    this._contextMenuAnchorEl = null;
+                },
+            });
+            useExternalListener(window, "contextmenu", this.onWindowContextMenu);
 
             // Chatter-Seitenpanel (Baustein 2 Folgearbeit, 2026-09-06): standardmaessig zu,
             // per Toolbar-Toggle oeffenbar - siehe docs/int_filemanager_paperoffice_recherche.md,
@@ -1152,6 +1172,59 @@ export function filemanagerControllerMixin(Base) {
                 this._invalidDropTargetEl.classList.remove("o_int_filemanager_drop_invalid");
                 this._invalidDropTargetEl = null;
             }
+        }
+
+        // Rechtsklick-Kontextmenue (Nutzerwunsch 2026-09-17) - siehe usePopover()-Setup oben.
+        // Nur auf einer echten Datenzeile/-karte aktiv (leere Flaeche zeigt weiterhin das
+        // normale Browser-Menue, wie ueberall sonst in der App auch), damit ev.preventDefault()
+        // nicht versehentlich JEDEN Rechtsklick im Dateimanager abfaengt.
+        async onWindowContextMenu(ev) {
+            if (!this.rootRef.el?.contains(ev.target)) {
+                return;
+            }
+            const targetEl = ev.target.nodeType === Node.ELEMENT_NODE ? ev.target : ev.target.parentElement;
+            const rowEl = targetEl?.closest("[data-id]");
+            const record = rowEl && this._recordForLocalId(rowEl.dataset.id);
+            if (!record) {
+                return;
+            }
+            ev.preventDefault();
+            // Explorer-Konvention: Rechtsklick auf eine BEREITS markierte Zeile innerhalb einer
+            // Mehrfachauswahl laesst die ganze Auswahl unangetastet (Menue wirkt dann auf alle),
+            // Rechtsklick auf eine nicht markierte Zeile waehlt stattdessen nur noch diese eine
+            // aus - identische Logik wie der normale Linksklick in native_list_renderer.js's
+            // onCellClicked() (dort nicht wiederverwendbar: sitzt auf der Renderer-Subklasse,
+            // nicht in diesem zwischen List/Kanban geteilten Mixin).
+            if (!record.selected) {
+                for (const other of this.model.root.records) {
+                    if (other !== record && other.selected) {
+                        other.toggleSelection(false);
+                    }
+                }
+                await record.toggleSelection(true);
+            }
+            const items = Object.values(this.getStaticActionMenuItems())
+                .filter((item) => item.isAvailable())
+                .sort((a, b) => a.sequence - b.sequence);
+            if (!items.length) {
+                return;
+            }
+            // "Virtueller" Anker statt eines echten sichtbaren Elements - usePopover() braucht
+            // trotzdem ein tatsaechliches HTMLElement zum Positionieren (target: HTMLElement laut
+            // popover_service.js), ein 0x0-Element exakt an den Klick-Koordinaten reicht dafuer
+            // vollstaendig aus. Wird erst beim Schliessen entfernt (onClose unten), nicht sofort
+            // nach dem Oeffnen - der Positionierungs-Hook kann waehrend der offenen Popover-Zeit
+            // (z.B. bei Fenstergroessenaenderung) erneut auf das Ziel zugreifen wollen.
+            const anchor = document.createElement("div");
+            anchor.style.position = "fixed";
+            anchor.style.left = `${ev.clientX}px`;
+            anchor.style.top = `${ev.clientY}px`;
+            document.body.appendChild(anchor);
+            this._contextMenuAnchorEl = anchor;
+            this.contextMenuPopover.open(anchor, {
+                items,
+                close: () => this.contextMenuPopover.close(),
+            });
         }
 
         // Gemeinsamer Commit-Pfad fuer Dialog- UND Inline-Umbenennen (onF2Rename unten) - immer
