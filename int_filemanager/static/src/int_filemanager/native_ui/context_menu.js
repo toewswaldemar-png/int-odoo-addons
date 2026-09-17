@@ -1,23 +1,26 @@
 /** @odoo-module **/
 
 import { Component } from "@odoo/owl";
+import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 
 // Popover-Inhalt fuer das Rechtsklick-Kontextmenue (filemanager_controller_mixin.js:
-// onWindowContextMenu()) - bewusst KEIN echtes <Dropdown>/<DropdownItem> (die brauchen einen
-// echten Dropdown-Vorfahren fuer ihren useDropdownCloser()-Kontext, den es hier nicht gibt, ein
-// per usePopover() an einem freien Punkt geoeffnetes Popover ist keiner), sondern dieselben
-// CSS-Klassen, die Odoos eigene DropdownItem-Komponente selbst rendert (dropdown_item.xml:
-// "o-dropdown-item dropdown-item o-navigable" auf dem Item, "o-dropdown--menu dropdown-menu
-// show" fuer den Menue-Container, siehe dropdown.js) - optisch 1:1 identisch, ohne die
-// Komponenten/Hooks selbst zu benoetigen.
+// onWindowContextMenu()) - echte Odoo-Komponente statt eigener Nachbildung: DropdownItem selbst
+// braucht keinen echten <Dropdown>-Vorfahren zwingend (dropdown_item.js: useDropdownCloser()
+// liest env[DROPDOWN_NESTING] nur optional-chained, ohne Dropdown-Kontext bleibt es ein
+// folgenloses No-op statt eines Fehlers) - close() wird hier stattdessen explizit selbst
+// aufgerufen. Die Popover-Einrichtung selbst (useNavigation fuer Hover/Pfeiltasten,
+// usePopover-Optionen: arrow:false, popoverClass "o-dropdown--menu dropdown-menu mx-0", role
+// "menu") ist 1:1 aus Odoos eigenem Dropdown (dropdown.js) uebernommen, siehe
+// filemanager_controller_mixin.js - keine eigens erfundene CSS/Verhalten-Nachbildung mehr.
 export class IntFilemanagerContextMenu extends Component {
     static template = "int_filemanager.ContextMenu";
+    static components = { DropdownItem };
     static props = {
         items: Array,
         close: Function,
     };
 
-    onItemClick(item) {
+    onItemSelected(item) {
         this.props.close();
         item.callback();
     }

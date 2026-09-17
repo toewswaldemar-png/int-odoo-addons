@@ -18,8 +18,9 @@
 import { onMounted, onPatched, onWillUnmount, useExternalListener, useRef, useState, useSubEnv } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
-import { useBus, useService } from "@web/core/utils/hooks";
+import { useBus, useChildRef, useService } from "@web/core/utils/hooks";
 import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
+import { useNavigation } from "@web/core/navigation/navigation";
 import { usePopover } from "@web/core/popover/popover_hook";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { IntTextInputDialog } from "../shared/text_input_dialog";
@@ -306,26 +307,48 @@ export function filemanagerControllerMixin(Base) {
             // bestehende "Aktionen"-Dropdown (getStaticActionMenuItems() unten, Odoos eigener
             // ListController/KanbanController-Override-Punkt, der normalerweise das native
             // web.ActionMenus im Control-Panel speist), hier nur zusaetzlich am Cursor geoeffnet.
-            // usePopover() statt eines echten <Dropdown>: dessen Menue wird an einem frei
-            // erzeugten "virtuellen" Anker-Element positioniert (siehe onWindowContextMenu unten),
-            // kein sichtbarer Toggle-Button noetig - IntFilemanagerContextMenu (context_menu.js)
-            // rendert den Inhalt mit denselben CSS-Klassen wie Odoos eigenes DropdownItem, ohne
-            // dessen Dropdown-Vorfahren-Pflicht (useDropdownCloser() wuerde hier ins Leere laufen).
             //
-            // arrow:false + popoverClass (Nutzerreport 2026-09-17 "optisch nicht Odoo-nativ"):
-            // Odoos Popover-Komponente legt IMMER die Bootstrap-".popover"-Klasse (eigene
-            // Rundung/Schatten/Padding) plus standardmaessig einen Pfeil um den Inhalt
-            // (popover.js: defaultClassObj = "o_popover popover mw-100 bs-popover-auto",
-            // defaultProps.arrow = true) - eine andere visuelle Identitaet als das echte,
-            // pfeillose ".dropdown-menu" unseres eigenen Inhalts. Odoos <Dropdown> selbst nutzt
-            // diesen Popover-Wrapper gar nicht (dropdown.js setzt "dropdown-menu" direkt auf
-            // sein eigenes Overlay-Element, kein Popover-Pfeil-Feature im Spiel). Die zusaetzliche
-            // Popover-Bootstrap-Optik wird ueber popoverClass gezielt entfernt statt sie nur zu
-            // ueberdecken (context_menu.scss).
+            // Nutzerkorrektur 2026-09-17 "sauber nativ, kein CSS-Gebastel": ein erster Versuch
+            // mit eigenen CSS-Klassen + einer eigenen Reset-Regel gegen Popovers Bootstrap-
+            // ".popover"-Kartenoptik sah optisch nicht Odoo-nativ aus (fehlendes Hover-Highlight,
+            // siehe unten). Ersetzt durch Odoos EIGENE interne Rezeptur, 1:1 aus dropdown.js
+            // (setup(), Zeilen ~131-177) uebernommen statt nachgebaut:
+            // - useNavigation(menuRef, {getItems: ".o-navigable"-Kinder}) - das ist der
+            //   tatsaechliche Mechanismus hinter dem Hover-/Pfeiltasten-Highlight. Odoos
+            //   ".o-dropdown--menu"-CSS deaktiviert bewusst den normalen Browser-":hover"-Effekt
+            //   (dropdown.scss: "&:not(.focus) { background-color: transparent; }") - das
+            //   Highlight kommt ausschliesslich von der ".focus"-Klasse, die dieser Hook per
+            //   mousemove/Tastatur verwaltet (navigation.js: "ACTIVE_ELEMENT_CLASS = 'focus'").
+            //   Ohne diesen Hook blieb das Menue optisch stumm (genau der Nutzerreport).
+            // - usePopover(...) mit denselben Optionen wie Dropdown fuer SEIN eigenes internes
+            //   usePopover(DropdownPopover, ...): arrow:false, popoverClass "o-dropdown--menu
+            //   dropdown-menu mx-0" (keine eigene Reset-CSS noetig - Odoos ".dropdown-menu"-Regeln
+            //   gewinnen in der Bootstrap-eigenen Kaskade ohnehin gegen ".popover", genau wie beim
+            //   echten Dropdown), role "menu". IntFilemanagerContextMenu (context_menu.js) statt
+            //   Odoos eigener DropdownPopover-Komponente direkt, nur weil deren eingebautes
+            //   Template keine Icons rendert (nur "t-out=item.label") - rendert aber selbst
+            //   ausschliesslich echte <DropdownItem>-Kindkomponenten, keine eigene Nachbildung.
+            // DropdownItem/useNavigation/usePopover sind damit echte, unveraenderte Odoo-Core-
+            // Bausteine, exakt Dropdowns eigene Konfiguration - context_menu.js/.xml kleben sie
+            // nur fuer den Cursor-Anwendungsfall zusammen, ohne eigenes CSS oder Interaktionslogik.
+            this.contextMenuRef = useChildRef();
+            this.contextMenuNavigation = useNavigation(this.contextMenuRef, {
+                shouldRegisterHotkeys: false,
+                isNavigationAvailable: () => this.contextMenuPopover.isOpen,
+                getItems: () =>
+                    this.contextMenuPopover.isOpen && this.contextMenuRef.el
+                        ? this.contextMenuRef.el.querySelectorAll(":scope .o-navigable")
+                        : [],
+            });
             this.contextMenuPopover = usePopover(IntFilemanagerContextMenu, {
-                position: "bottom-start",
+                animation: false,
                 arrow: false,
-                popoverClass: "o_int_filemanager_context_menu_popover",
+                closeOnEscape: false,
+                popoverClass: "o-dropdown--menu dropdown-menu mx-0",
+                position: "bottom-start",
+                ref: this.contextMenuRef,
+                role: "menu",
+                setActiveElement: false,
                 onClose: () => {
                     this._contextMenuAnchorEl?.remove();
                     this._contextMenuAnchorEl = null;

@@ -1,16 +1,10 @@
 <templates xml:space="preserve">
     <t t-name="int_filemanager.ContextMenu">
-        <div class="o-dropdown--menu dropdown-menu show" role="menu">
-            <t t-foreach="props.items" t-as="item" t-key="item.description">
-                <span class="o-dropdown-item dropdown-item o-navigable"
-                      t-att-class="item.class"
-                      role="menuitem"
-                      tabindex="0"
-                      t-on-click="() => this.onItemClick(item)">
-                    <i t-att-class="item.icon" class="me-2"/>
-                    <t t-esc="item.description"/>
-                </span>
-            </t>
-        </div>
+        <t t-foreach="props.items" t-as="item" t-key="item.description">
+            <DropdownItem class="item.class" onSelected="() => this.onItemSelected(item)">
+                <i t-att-class="item.icon" class="me-2"/>
+                <t t-esc="item.description"/>
+            </DropdownItem>
+        </t>
     </t>
 </templates>
