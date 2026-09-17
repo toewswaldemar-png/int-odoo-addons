@@ -24,6 +24,19 @@ _logger = logging.getLogger(__name__)
 # Lauf bzw. vom asynchronen Hash-Cron erneut versucht.
 SCAN_HASH_BUDGET_BYTES = 500 * 1024 * 1024
 
+# Sicherheitsnetz gegen einen partiellen Voll-Wipe (live erlebt, 2026-09-17): ein
+# einzelner Mount-Unterbaum (z.B. eine der drei CIFS-Freigaben) kann beim Scan-Start
+# noch nicht wirklich eingehaengt sein, waehrend andere Teile des Baums (z.B. die
+# lokale Array-Freigabe) normal vorhanden sind - der bisherige "total_walked == 0"-
+# Schutz greift dann NICHT (die Gesamtzahl ist nicht null), wuerde aber trotzdem
+# alle bestehenden Eintraege unter dem nicht erreichbaren Unterbaum als stale
+# loeschen. Ein Wurzel-Unterordner mit mehr als dieser Zeilenzahl im Index gilt als
+# "zu gross fuer eine plausible echte Loeschung in einem Lauf" - findet ein Scan
+# darunter buchstaeblich 0 Eintraege, wird die Stale-Bereinigung fuer genau diesen
+# Unterbaum uebersprungen (Rest des Baums laeuft normal weiter), statt den ganzen
+# Lauf abzubrechen.
+SCAN_STALE_TOPLEVEL_MIN_ROWS = 50
+
 HASH_CRON_BATCH_SIZE = 200
 
 MEDIA_META_CRON_BATCH_SIZE = 100
@@ -663,6 +676,12 @@ class IntFilemanagerFile(models.Model):
             batch.clear()
             self.env.cr.commit()
 
+        # Fuer das per-Unterbaum-Sicherheitsnetz unten: welcher Wurzel-Unterordner
+        # (erstes Pfadsegment) hatte in diesem Lauf ueberhaupt mindestens einen
+        # tatsaechlich erreichten Eintrag - unabhaengig davon, ob batch_size-Fluesse
+        # dazwischen liegen.
+        walked_top_levels = set()
+
         for dirpath, dirnames, filenames in os.walk(root):
             dirnames[:] = [d for d in dirnames if not d.startswith(".")]
             rel_dir = to_relative(self.env, dirpath)
@@ -680,6 +699,7 @@ class IntFilemanagerFile(models.Model):
                     continue
                 rel = f"{rel_dir}/{name}" if rel_dir else name
                 total_walked += 1
+                walked_top_levels.add(rel.split("/", 1)[0])
                 batch.append(
                     {
                         "name": name,
@@ -719,6 +739,35 @@ class IntFilemanagerFile(models.Model):
             return
 
         stale = Model.search([("scan_run_id", "!=", scan_run_id)])
+
+        # Per-Unterbaum-Sicherheitsnetz (siehe SCAN_STALE_TOPLEVEL_MIN_ROWS oben, live als
+        # Luecke gefunden 2026-09-17): ein Wurzel-Unterordner mit vielen bestehenden
+        # Eintraegen, der in diesem Lauf aber buchstaeblich 0 Eintraege geliefert hat, gilt
+        # als vermutlich nicht erreichbar (z.B. CIFS-Mount beim Scan-Start noch nicht bereit)
+        # statt als echte Loeschung - seine Eintraege werden komplett aus der weiteren
+        # Stale-Verarbeitung (Merge-Erkennung UND Loeschung) herausgenommen, der Rest des
+        # Baums laeuft unveraendert weiter. Ergaenzt den bestehenden total_walked==0-Schutz
+        # oben, der nur den Fall "der GESAMTE Baum liefert nichts" abdeckt.
+        stale_top_level_counts = {}
+        for rec in stale:
+            top = rec.path.split("/", 1)[0]
+            stale_top_level_counts[top] = stale_top_level_counts.get(top, 0) + 1
+        suspicious_top_levels = {
+            top
+            for top, count in stale_top_level_counts.items()
+            if top not in walked_top_levels and count >= SCAN_STALE_TOPLEVEL_MIN_ROWS
+        }
+        if suspicious_top_levels:
+            _logger.error(
+                "int_filemanager: Scan fand 0 Eintraege unter %s (bestehender Index-Bestand "
+                "je Unterbaum: %s) - vermutlich ein nicht erreichbarer Mount, ueberspringe "
+                "die Stale-Bereinigung fuer diese(n) Unterbaum/-baeume statt sie als "
+                "geloescht zu behandeln.",
+                ", ".join(sorted(suspicious_top_levels)),
+                {top: stale_top_level_counts[top] for top in suspicious_top_levels},
+            )
+            stale = stale.filtered(lambda r: r.path.split("/", 1)[0] not in suspicious_top_levels)
+
         merged_stale_ids = set()
         merged_new_indices = set()
         # (old_folder_path, new_folder_path) je erfolgreich gemergter Datei -

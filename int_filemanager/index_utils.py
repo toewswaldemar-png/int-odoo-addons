@@ -2,6 +2,8 @@ import os
 import unicodedata
 from datetime import datetime
 
+import psycopg2
+
 from odoo import _, fields
 from odoo.exceptions import UserError
 from odoo.tools.sql import escape_psql
@@ -79,20 +81,28 @@ def index_upsert(env, abs_path):
         rec.with_context(int_filemanager_syncing_index=True).write(vals)
     else:
         try:
-            rec = Model.create(vals)
-        except UserError:
+            # cr.savepoint(): Model._create() fuehrt das INSERT direkt per cr.execute() aus,
+            # ohne eigenes try/except - eine Verletzung von _path_uniq (UNIQUE(path)) laesst
+            # die rohe psycopg2.errors.UniqueViolation hochlaufen UND die Transaktion in einem
+            # abgebrochenen Zustand zurueck (jede weitere Query wuerde "current transaction is
+            # aborted" werfen) - der Savepoint macht den fehlgeschlagenen Versuch isoliert
+            # rueckrollbar, ohne den Rest der (ggf. groesseren) umgebenden Transaktion (z.B.
+            # des ganzen HTTP-Requests) zu verlieren.
+            with env.cr.savepoint():
+                rec = Model.create(vals)
+        except psycopg2.errors.UniqueViolation:
             # Race zwischen zwei gleichzeitigen Schreibern desselben neuen Pfads (2026-09-16:
             # controllers/main.py's upload()/mkdir() rufen index_upsert() jetzt selbst auf,
-            # statt sich allein auf den Watcher zu verlassen - CIFS-Mounts liefern inotify-
-            # Ereignisse laut Kernel-eigener Doku nur unvollstaendig/unzuverlaessig, siehe
-            # docs/int_filemanager_native_ui.md). Beide Schreiber (dieser Request UND der
-            # Watcher in einer eigenen Transaktion) koennen zwischen der obigen search() und
-            # diesem create() denselben Pfad anlegen wollen - der zweite committete Versuch
-            # verletzt _path_uniq (UNIQUE(path), models.Constraint in filemanager_file.py),
-            # was Odoos ORM als UserError mit der Constraint-Meldung durchreicht. Statt das
-            # als echten Fehler zu behandeln: der Datensatz existiert dann bereits (vom
-            # anderen Schreiber angelegt) - erneut suchen und stattdessen aktualisieren, exakt
-            # das gewuenschte Endergebnis eines Upserts.
+            # statt sich allein auf den Watcher zu verlassen). Beide Schreiber (dieser Request
+            # UND der Watcher in einer eigenen Transaktion) koennen zwischen der obigen
+            # search() und diesem create() denselben Pfad anlegen wollen. Live als Bug
+            # gefunden 2026-09-17: der urspruengliche "except UserError" hier fing NIE etwas
+            # ab - psycopg2.errors.UniqueViolation ist keine UserError-Subklasse, die
+            # freundliche Konstraint-Meldung wird erst spaeter, ausserhalb dieser Funktion, im
+            # JSON-RPC-Fehlerhandler daraus gebaut. Der Nutzer sah die rohe DB-Fehlermeldung,
+            # obwohl der Ordner/die Datei auf der Platte laengst korrekt angelegt war - der
+            # zweite Schreiber (hier) verliert das Wettrennen. Erneut suchen und stattdessen
+            # aktualisieren, exakt das gewuenschte Endergebnis eines Upserts.
             rec = Model.search([("path", "=", vals["path"])], limit=1)
             if not rec:
                 raise
