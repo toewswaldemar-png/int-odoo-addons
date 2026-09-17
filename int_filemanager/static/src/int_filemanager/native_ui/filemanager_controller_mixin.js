@@ -1039,21 +1039,26 @@ export function filemanagerControllerMixin(Base) {
             // (position:fixed ausserhalb des Viewports) ins DOM gehaengt, direkt danach per
             // setTimeout(0) wieder entfernt (die Spezifikation erfasst das Ghost-Bild erst beim
             // naechsten Frame, ein synchrones Entfernen kaeme in manchen Browsern zu frueh).
-            // Explizite width vom Original-Rect: der Klon haengt frei ohne den umgebenden
-            // Flex-Container, dessen Breite das text-truncate/ellipsis-Verhalten der Original-
-            // zelle erst erzwingt - ohne das wuerde der Name im Ghost in voller, nicht
-            // abgeschnittener Laenge gerendert statt wie in der echten Zeile.
+            // Explizite width vom Original-Rect (plus etwas Platz fuer das Badge, siehe unten):
+            // der Klon haengt frei ohne den umgebenden Flex-Container, dessen Breite das
+            // text-truncate/ellipsis-Verhalten der Originalzelle erst erzwingt - ohne das wuerde
+            // der Name im Ghost in voller, nicht abgeschnittener Laenge gerendert statt wie in
+            // der echten Zeile.
+            const BADGE_SPACE = 32;
             const ghost = nameCellEl.cloneNode(true);
             ghost.style.position = "fixed";
             ghost.style.top = "-9999px";
             ghost.style.left = "-9999px";
-            ghost.style.width = `${rect.width}px`;
+            ghost.style.width = `${rect.width + BADGE_SPACE}px`;
             ghost.style.pointerEvents = "none";
+            // Normales, zusaetzliches Flex-Kind statt absolut ueberlappender Positionierung
+            // (erster Versuch, live widerlegt: setDragImage() rastert das uebergebene Element
+            // offenbar exakt auf seine eigene Bounding-Box - ein per negativem top/right
+            // ueberlappend positioniertes Badge lag ausserhalb dieser Box und wurde komplett
+            // abgeschnitten, unsichtbar). Bleibt dadurch garantiert innerhalb der (jetzt
+            // extra verbreiterten) Box, kein Clipping-Risiko mehr.
             const badge = document.createElement("span");
             badge.className = "badge rounded-pill bg-primary";
-            badge.style.position = "absolute";
-            badge.style.top = "-6px";
-            badge.style.right = "-6px";
             badge.textContent = `+${this._draggedRecords.length - 1}`;
             ghost.appendChild(badge);
             document.body.appendChild(ghost);
