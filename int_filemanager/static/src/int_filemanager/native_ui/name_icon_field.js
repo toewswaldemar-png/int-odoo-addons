@@ -4,8 +4,6 @@ import { Component, useEffect, useRef, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { useService } from "@web/core/utils/hooks";
-import { formatDateTime } from "@web/core/l10n/dates";
-import { humanFileSize } from "./size_human_field";
 
 // Odoos eigenes Mimetype-Icon-Set (web/static/img/mimetypes/*.svg, ausgeliefert mit dem
 // web-Modul) wird rein ueber CSS-Attribut-Selektoren auf data-mimetype angesprochen
@@ -220,26 +218,6 @@ export class IntFilemanagerNameField extends Component {
         const path = this.props.record.data.path || "";
         const idx = path.lastIndexOf("/");
         return idx === -1 ? "" : path.slice(0, idx);
-    }
-
-    // Ersetzt die eigenstaendigen "Größe"/"Geändert"-Spalten auf Desktop (Nutzerwunsch
-    // 2026-09-16) - schmalere Liste, Info wandert als Unterzeile unter den Namen, analog zur
-    // Pfad-Unterzeile oben. Bewusst NICHT auf Mobil (env.isSmall): dort ist die Namensspalte
-    // laut listViewWidth oben ohnehin schon auf die volle Displaybreite gesetzt, eine zweite
-    // Zeile zusaetzlich zur ggf. bereits aktiven Pfad-Unterzeile waere dort spuerbar mehr
-    // Zeilenhoehe auf ohnehin knappem Platz - fuer Mobil nicht Teil dieser Anfrage.
-    get showSizeDate() {
-        return !this.env.isSmall;
-    }
-
-    get sizeDateText() {
-        const record = this.props.record;
-        const dateText = record.data.mtime ? formatDateTime(record.data.mtime) : "";
-        if (this.isDir) {
-            return dateText;
-        }
-        const sizeText = humanFileSize(record.data.size);
-        return [sizeText, dateText].filter(Boolean).join(" · ");
     }
 
     get pseudoMimetype() {
