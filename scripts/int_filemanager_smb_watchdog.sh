@@ -111,13 +111,32 @@ check_and_fix() {
         rc=$(cat "$marker.rc" 2>/dev/null)
         rm -f "$marker.rc" "$marker.done"
         if [ "$rc" = "0" ]; then
-            return 0
+            # Bugfix 2026-09-17, zweiter Teil (live nach einem Reboot gefunden: kein einziger
+            # neuer Log-Eintrag trotz drei tmpfs-Platzhaltern statt echter Freigaben): "stat
+            # antwortet ohne Fehler" reicht NICHT als "alles gut" - Unraids eigener
+            # tmpfs-Platzhalter fuer eine noch nicht eingehaengte Unassigned-Devices-Freigabe
+            # antwortet auf stat genauso schnell und fehlerfrei wie ein echtes CIFS-Mount (ist ja
+            # ein ganz normales, existierendes Verzeichnis). Ohne diesen Zusatzcheck haelt der
+            # Watchdog einen dauerhaft leeren Platzhalter faelschlich fuer "in Ordnung" und
+            # unternimmt nie etwas - genau das durch den ersten Bugfix-Teil oben (der stat rc
+            # ueberhaupt erst auswertet) neu entstandene Loch. findmnt statt stat: einzige
+            # zuverlaessige Methode, den tatsaechlichen Dateisystemtyp zu pruefen (dieselbe
+            # Technik wie im Odoo19-Wrapper, wait_for_smb_mounts.sh). "tail -n1" wegen moeglicher
+            # gestapelter Alt-Mounts auf demselben Zielpfad - die zuletzt gemountete, also
+            # tatsaechlich wirksame Zeile zaehlt.
+            local fstype
+            fstype=$(findmnt -no FSTYPE "$mountpoint" 2>/dev/null | tail -n1)
+            if [ "$fstype" = "cifs" ]; then
+                return 0
+            fi
+            log "NICHT GEMOUNTET: $mountpoint antwortet normal, ist aber (noch) kein echtes CIFS (fstype=${fstype:-keins}) - versuche einzuhaengen ($share_key)"
+        else
+            # stat kam schnell zurueck, aber mit Fehler - kein haengender Prozess, nur (noch)
+            # keine echte Freigabe an dem Pfad. Kein "umount -l" noetig (nichts zum Aushaengen da,
+            # das war bisher immer ein wirkungsloser "no mount point specified"-Fehlschlag),
+            # direkt versuchen einzuhaengen.
+            log "NICHT GEMOUNTET: $mountpoint antwortet mit Fehler (stat rc=$rc) - versuche einzuhaengen ($share_key)"
         fi
-        # stat kam schnell zurueck, aber mit Fehler - kein haengender Prozess, nur (noch) keine
-        # echte Freigabe an dem Pfad. Kein "umount -l" noetig (nichts zum Aushaengen da, das war
-        # bisher immer ein wirkungsloser "no mount point specified"-Fehlschlag), direkt versuchen
-        # einzuhaengen.
-        log "NICHT GEMOUNTET: $mountpoint antwortet mit Fehler (stat rc=$rc) - versuche einzuhaengen ($share_key)"
     else
         # stat ist auch nach CHECK_TIMEOUT Sekunden nicht zurueckgekommen - der eigentliche,
         # urspruengliche Fall (wedged CIFS-Sitzung im D-Zustand), fuer den dieser Watchdog gebaut
