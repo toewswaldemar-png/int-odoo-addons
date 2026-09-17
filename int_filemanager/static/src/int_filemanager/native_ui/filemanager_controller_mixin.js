@@ -1013,10 +1013,52 @@ export function filemanagerControllerMixin(Base) {
             // "gehalten" wird, wo tatsaechlich gegriffen wurde (Icon-Ende vs. Textmitte fuehlen
             // sich sonst unnatuerlich an).
             const nameCellEl = rowEl.querySelector(".o_int_filemanager_name_cell");
-            if (nameCellEl) {
-                const rect = nameCellEl.getBoundingClientRect();
-                ev.dataTransfer.setDragImage(nameCellEl, ev.clientX - rect.left, ev.clientY - rect.top);
+            if (!nameCellEl) {
+                return;
             }
+            const rect = nameCellEl.getBoundingClientRect();
+            const offsetX = ev.clientX - rect.left;
+            const offsetY = ev.clientY - rect.top;
+            if (this._draggedRecords.length <= 1) {
+                ev.dataTransfer.setDragImage(nameCellEl, offsetX, offsetY);
+                return;
+            }
+            // Mehrfachauswahl-Ghost mit "+N"-Zaehler (Nutzerwunsch 2026-09-17): der Ghost zeigte
+            // bisher immer nur die eine physisch angefasste Zeile, obwohl _recordsForDrag() oben
+            // (bei Ziehstart auf einem bereits markierten Datensatz) die ganze Selektion
+            // verschiebt - irrefuehrend, man sah dem Ziehen nicht an, dass mehr als eine Datei
+            // bewegt wird. Odoo selbst hat dafuer kein wiederverwendbares Vorbild (recherchiert
+            // 2026-09-17: kanban_renderer.js's eigenes useSortable() hebt die Selektion beim
+            // Drag-Start sogar explizit auf, statt Mehrfachauswahl-Drag ueberhaupt zu
+            // unterstuetzen - kein "+N"/Zaehler-Muster irgendwo im web-Modul gefunden), daher
+            // hier eine eigene Loesung, nur mit Odoos eigener .badge-Bootstrap-Klasse fuer den
+            // Zaehler selbst statt eigenem Badge-Design.
+            //
+            // setDragImage() braucht ein tatsaechlich gerendertes Element (ein reiner, nie
+            // angehaengter Knoten wird nicht gezeichnet) - ein Klon wird deshalb kurz unsichtbar
+            // (position:fixed ausserhalb des Viewports) ins DOM gehaengt, direkt danach per
+            // setTimeout(0) wieder entfernt (die Spezifikation erfasst das Ghost-Bild erst beim
+            // naechsten Frame, ein synchrones Entfernen kaeme in manchen Browsern zu frueh).
+            // Explizite width vom Original-Rect: der Klon haengt frei ohne den umgebenden
+            // Flex-Container, dessen Breite das text-truncate/ellipsis-Verhalten der Original-
+            // zelle erst erzwingt - ohne das wuerde der Name im Ghost in voller, nicht
+            // abgeschnittener Laenge gerendert statt wie in der echten Zeile.
+            const ghost = nameCellEl.cloneNode(true);
+            ghost.style.position = "fixed";
+            ghost.style.top = "-9999px";
+            ghost.style.left = "-9999px";
+            ghost.style.width = `${rect.width}px`;
+            ghost.style.pointerEvents = "none";
+            const badge = document.createElement("span");
+            badge.className = "badge rounded-pill bg-primary";
+            badge.style.position = "absolute";
+            badge.style.top = "-6px";
+            badge.style.right = "-6px";
+            badge.textContent = `+${this._draggedRecords.length - 1}`;
+            ghost.appendChild(badge);
+            document.body.appendChild(ghost);
+            ev.dataTransfer.setDragImage(ghost, offsetX, offsetY);
+            setTimeout(() => ghost.remove(), 0);
         }
 
         onWindowDragOverRecord(ev) {
