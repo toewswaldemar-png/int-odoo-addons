@@ -31,7 +31,13 @@
              Selbes Icon (oi-panel-right) wie der native Ordnerbaum-Ein-/Ausklapp-Button
              links, fuer Wiedererkennbarkeit. -->
         <xpath expr="//t[@t-set-slot='control-panel-navigation-additional']" position="inside">
-            <button type="button" class="btn btn-secondary text-nowrap"
+            <!-- o_int_filemanager_chatter_toggle: eigene Klasse nur zum Wiedererkennen in
+                 native_list_renderer.js' onDocumentClick-Deselektierung (Nutzerreport
+                 2026-09-17: Klick auf diesen Button hob eine bestehende Zeilenauswahl auf,
+                 bevor der Chatter sie ueberhaupt anzeigen konnte - der Button sitzt im
+                 Control-Panel, das per Absicht als "ausserhalb der Liste" gilt, siehe
+                 Kommentar dort). Kein Layout-/Optik-Zweck. -->
+            <button type="button" class="btn btn-secondary text-nowrap o_int_filemanager_chatter_toggle"
                     t-att-class="{ active: chatterState.open }"
                     title="Notizen/Aktivitäten anzeigen"
                     t-on-click="onToggleChatterPanel">

@@ -23,7 +23,13 @@
             </t>
         </xpath>
         <xpath expr="//t[@t-set-slot='control-panel-navigation-additional']" position="inside">
-            <button type="button" class="btn btn-secondary text-nowrap"
+            <!-- o_int_filemanager_chatter_toggle: dieselbe Klasse wie in native_list_view.xml,
+                 aus Konsistenz mitgefuehrt (die Kanban-Ansicht nutzt aktuell noch Odoos
+                 native Selektions-/Deselektierungslogik statt eines eigenen Renderers, siehe
+                 native_kanban_view.js - falls sie kuenftig denselben Klick-ausserhalb-Guard
+                 wie native_list_renderer.js bekommt, greift die Ausnahme dann sofort ohne
+                 Markup-Aenderung). -->
+            <button type="button" class="btn btn-secondary text-nowrap o_int_filemanager_chatter_toggle"
                     t-att-class="{ active: chatterState.open }"
                     title="Notizen/Aktivitäten anzeigen"
                     t-on-click="onToggleChatterPanel">

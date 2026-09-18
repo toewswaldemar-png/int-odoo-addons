@@ -47,8 +47,12 @@ export class IntFilemanagerListRenderer extends ListRenderer {
         // des Control-Panels in den body portiert), auf das Chatter-Seitenpanel (chatterRecord
         // liest model.root.selection[0] - ohne diese Ausnahme riss ein Klick auf einen
         // Chatter-Button/das Nachrichtenfeld die Auswahl weg, WAEHREND der Klick noch lief, und
-        // der Chatter brach mitten im eigenen Klick ab, Nutzerreport 2026-09-11) und auf den
-        // Tabellenkopf (thead) - dort
+        // der Chatter brach mitten im eigenen Klick ab, Nutzerreport 2026-09-11), auf den
+        // Chatter-Toggle-Button selbst (.o_int_filemanager_chatter_toggle, native_list_view.xml -
+        // der Button sitzt im Control-Panel und faellt damit eigentlich unter obige
+        // "Suchleiste/Pager"-Deselektierregel; ohne diese Ausnahme war eine gerade getroffene
+        // Auswahl schon weg, BEVOR der Chatter sie anzeigen konnte, Nutzerreport 2026-09-17)
+        // und auf den Tabellenkopf (thead) - dort
         // sitzt Odoos native "Alle auswaehlen"-Kopfzeilen-Checkbox (list_renderer.xml:
         // t-on-click.stop="toggleSelection"). Diese Sperre laeuft in der Capture-Phase VOR
         // Odoos eigenem Klick-Handler: ohne die thead-Ausnahme deselektierte sie zuerst alles,
@@ -86,6 +90,7 @@ export class IntFilemanagerListRenderer extends ListRenderer {
                 ev.target.closest(".dropdown-menu, .o-dropdown--menu") ||
                 ev.target.closest(".modal, .o_dialog") ||
                 ev.target.closest(".o_int_filemanager_chatter_panel") ||
+                ev.target.closest(".o_int_filemanager_chatter_toggle") ||
                 ev.target.closest("thead")
             ) {
                 return;
