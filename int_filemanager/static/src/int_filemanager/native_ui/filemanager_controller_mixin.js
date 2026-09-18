@@ -634,10 +634,32 @@ export function filemanagerControllerMixin(Base) {
         }
 
         async reload() {
+            // Nutzerwunsch 2026-09-18 (Umbenennen soll die Auswahl behalten): Odoos eigenes
+            // model.load() unten baut bei JEDEM Reload komplett neue Record-Datapoints auf
+            // (relational_model/dynamic_record_list.js: "this.records = data.records.map(...)"
+            // -> record.js-Konstruktor setzt "this.selected = false" fuer jeden neuen
+            // Datenpunkt) - jede bestehende Auswahl geht dadurch architekturbedingt bei JEDEM
+            // reload() verloren, kein eingebauter "ueber Reload hinweg merken"-Mechanismus in
+            // Odoo (am Quellcode geprueft). Bewusst HIER zentral statt nur in _performRename():
+            // eine Umbenennung loest oft ZWEI reload()-Aufrufe aus - den direkten hier
+            // (_performRename) UND, ~800ms spaeter entprellt, einen zweiten ueber den
+            // "int_filemanager.change"-Bus-Kanal (setup() oben), weil der eigene Server-Schreib-
+            // vorgang vom Watcher erkannt und an denselben Tab zurueckgemeldet wird. Eine
+            // Reselektion nur im ersten Aufruf wurde vom zweiten, spaeteren Aufruf wieder
+            // verworfen (live so beobachtet: Auswahl kurz da, nach dem Lade-Toast wieder weg).
+            // Zentral in reload() selbst greift die Wiederherstellung bei BEIDEN Aufrufen gleich.
+            const selectedResIds = new Set(this.model.root.selection.map((r) => r.resId));
             // Kein Domain-Argument: this.model.config behaelt die zuletzt von useModel() aus
             // searchModel.domain uebernommene Domain bei (_getNextConfig merged nur fehlende
             // Parameter) - ein Refresh nach Mutation aendert also nichts am aktuellen Ordner.
             await this.model.load();
+            if (selectedResIds.size) {
+                for (const record of this.model.root.records) {
+                    if (selectedResIds.has(record.resId)) {
+                        record.toggleSelection(true);
+                    }
+                }
+            }
             // model.load() aktualisiert nur die Inhaltsliste - der Ordnerbaum (folder_tree.js) hat
             // einen eigenen Cache pro Ebene, den das nicht anstoesst. mkdir/upload/rename/delete
             // im aktuellen Ordner aendern dessen direkte Kinder, ohne dass sich die Such-Domain
@@ -1306,6 +1328,12 @@ export function filemanagerControllerMixin(Base) {
                 return;
             }
             try {
+                // record ist hier bereits ausgewaehlt (Dialog-Weg nur ueber "Aktionen" bei
+                // aktiver Auswahl erreichbar, F2-Weg per onF2Rename()-Guard "selection.length
+                // === 1") - reload() unten erhaelt eine bestehende Auswahl jetzt selbst
+                // automatisch ueber Reloads (inkl. den spaeteren, vom eigenen Watcher
+                // ausgeloesten Bus-Reload) hinweg, siehe dortiger Kommentar. Kein eigener
+                // Reselektions-Code mehr noetig.
                 await rpc("/int_filemanager/rename", { path: record.data.path, new_name: name });
                 await this.reload();
             } catch (e) {
