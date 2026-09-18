@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="fleet_vehicle_view_kanban_narrow" model="ir.ui.view">
+        <field name="name">fleet.vehicle.kanban.narrow</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="attributes">
+                <attribute name="class">o_int_fleet_kanban_narrow</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

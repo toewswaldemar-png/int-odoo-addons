@@ -1,0 +1,21 @@
+// Odoo's grouped Kanban gives every column a hard min-width of
+// --KanbanGroup-width (~320px record width + 2x padding, see
+// web/static/src/views/kanban/kanban_controller.scss). Once more stages
+// exist than fit at that width, the view scrolls horizontally instead of
+// shrinking. For the Fleet vehicle Kanban (state_id has 5 default stages,
+// often more with custom stages) that means most stages are cut off, as
+// seen with "Herabgestuft" and later columns falling off-screen.
+//
+// --KanbanGroup-width also drives --KanbanGroup-max-width (1.25x it), so
+// lowering it here shrinks both the floor and the ceiling: columns stay
+// narrower even when there's plenty of horizontal room. That's the
+// intended trade-off - fewer/no scrolling at the cost of less breathing
+// room per card - rather than only fixing the overflow case.
+// The class attribute we added to <kanban> ends up on the KanbanView's
+// outer wrapper div (web/kanban_controller.xml), which is an ANCESTOR of
+// the .o_kanban_renderer div (a separate component's own root element,
+// web/kanban_renderer.xml) - hence the descendant combinator below rather
+// than a compound selector.
+.o_int_fleet_kanban_narrow .o_kanban_renderer.o_kanban_grouped {
+    --KanbanGroup-width: 200px;
+}
