@@ -326,7 +326,7 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
    Schreiber):**
    - `search_model_patch.js` (neu): ein `patch(SearchModel.prototype, { _getCategoryDomain ... })`,
      gescopet auf `this.resModel === "int_filemanager.file"` (gleiches Scoping-Muster wie
-     `int_web_tweaks/list_column_reorder.js` über `resModel`) — übernimmt für unsere `parent_id`-
+     `int_generic/list_column_reorder.js` über `resModel`) — übernimmt für unsere `parent_id`-
      Section komplett selbst den Domain-Aufbau: Operator immer `=` (nicht `child_of`) UND
      `activeValueId === false` wird zu `[('parent_id','=',false)]` statt "überspringen". Kein
      Core-Datei-Eingriff, jede andere View/Kategorie in der Instanz bleibt beim

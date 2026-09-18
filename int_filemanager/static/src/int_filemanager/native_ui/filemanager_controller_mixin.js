@@ -42,7 +42,7 @@ const VIDEO_MIME_TYPES = { mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg
 
 // Persistenz der per Drag eingestellten Ordnerbaum-Breite (Nutzerwunsch 2026-09-18) - gleiches
 // Muster wie Discuss' eigene DISCUSS_SIDEBAR_COMPACT_LS (mail/core/public_web/discuss_sidebar.js)
-// und die Spaltenreihenfolge in int_web_tweaks: ein einzelner localStorage-Wert, kein neues
+// und die Spaltenreihenfolge in int_generic: ein einzelner localStorage-Wert, kein neues
 // DB-Modell noetig fuer eine reine UI-Praeferenz ohne Serverbezug.
 const TREE_WIDTH_LS = "int_filemanager.treeWidth";
 const TREE_WIDTH_DEFAULT = 280;

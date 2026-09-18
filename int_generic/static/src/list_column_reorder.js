@@ -6,7 +6,7 @@ import { useSortable } from "@web/core/utils/sortable_owl";
 import { ListRenderer } from "@web/views/list/list_renderer";
 
 function storageKey(resModel) {
-    return `int_web_tweaks.column_order:${resModel}`;
+    return `int_generic.column_order:${resModel}`;
 }
 
 function loadOrder(resModel) {
@@ -77,7 +77,7 @@ patch(ListRenderer.prototype, {
         // the selector automatically).
         useSortable({
             ref: this.rootRef,
-            elements: ".o_int_web_tweaks_column_draggable",
+            elements: ".o_int_generic_column_draggable",
             cursor: "grabbing",
             // Placeholder must be a real <th> clone (not useSortable's default plain <div>) -
             // a <div> as a direct child of <tr> would be invalid table markup and break the

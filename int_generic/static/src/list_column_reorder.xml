@@ -8,7 +8,7 @@
              (t-att-data-name="column.name" a few lines up in Odoo's own template), reused
              as-is instead of adding a duplicate attribute. -->
         <xpath expr="//th[@t-if=&quot;column.type === 'field'&quot;]" position="attributes">
-            <attribute name="t-att-class">getColumnClass(column) + ' opacity-trigger-hover w-print-auto o_int_web_tweaks_column_draggable'</attribute>
+            <attribute name="t-att-class">getColumnClass(column) + ' opacity-trigger-hover w-print-auto o_int_generic_column_draggable'</attribute>
         </xpath>
     </t>
 
