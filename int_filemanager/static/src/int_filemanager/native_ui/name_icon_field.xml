@@ -40,8 +40,24 @@
                      dieser <span> selbst bleibt als Inline-Element aber exakt textgross). Beide
                      Stellen zielen jetzt auf diese Klasse (bzw. den Icon-Button) statt auf den
                      ganzen Zellen-Container - siehe Kommentare dort. -->
-                <span class="text-truncate o_int_filemanager_name_label" t-esc="value"/>
-                <span t-if="showPath and parentPath" class="text-truncate text-muted small" t-esc="parentPath"/>
+                <!-- data-tooltip statt title (Nutzerreport 2026-09-18 "zwei Tooltips in der
+                     Liste"): Odoos eigener list_renderer.xml haengt bereits pro <td> ein
+                     "data-tooltip" mit dem formatierten Feldwert an (getCellTitle(), nur fuer
+                     char/many2one/reference - "name" ist char, live verifiziert) - ein zusaetzliches
+                     natives "title" auf diesem <span> feuerte parallel dazu den Browser-eigenen
+                     Tooltip, sichtbar als zwei uebereinanderliegende Boxen. data-tooltip statt
+                     title vermeidet das strukturell: Odoos Tooltip-Service (tooltip_service.js:
+                     openElementsTooltip) sucht beim Hovern per el.closest() das NAECHSTLIEGENDE
+                     "[data-tooltip]"-Element - trifft die Maus auf diesen Span, gewinnt dessen
+                     eigenes (identisches) data-tooltip, die aeussere <td>-Regel wird gar nicht erst
+                     ausgewertet, kein doppeltes Oeffnen moeglich. In der Kanban-Variante dieses
+                     Widgets (kein <td>, keine eingebaute Cell-Tooltip-Logik) ist dieses
+                     data-tooltip weiterhin der EINZIGE Tooltip - bleibt deshalb bestehen statt
+                     komplett entfernt zu werden. data-tooltip-delay="1000" spiegelt exakt Odoos
+                     eigenen Wert fuer Zellen-Ueberlauf-Tooltips (list_renderer.xml), nicht den
+                     Service-Default von 400ms. -->
+                <span class="text-truncate o_int_filemanager_name_label" t-att-data-tooltip="value" data-tooltip-delay="1000" t-esc="value"/>
+                <span t-if="showPath and parentPath" class="text-truncate text-muted small" t-att-data-tooltip="parentPath" data-tooltip-delay="1000" t-esc="parentPath"/>
             </div>
         </div>
     </t>

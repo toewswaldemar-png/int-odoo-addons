@@ -39,7 +39,7 @@
                  Kommentar dort). Kein Layout-/Optik-Zweck. -->
             <button type="button" class="btn btn-secondary text-nowrap o_int_filemanager_chatter_toggle"
                     t-att-class="{ active: chatterState.open }"
-                    title="Notizen/Aktivitäten anzeigen"
+                    data-tooltip="Notizen/Aktivitäten anzeigen"
                     t-on-click="onToggleChatterPanel">
                 <i class="oi oi-panel-right fa-flip-horizontal"/>
             </button>
@@ -59,32 +59,40 @@
              dortigen mobileBreadcrumbs-Helfer - kein zweiter Navigationszustand. -->
         <!-- Desktop-Ordnerbaum-Seitenleiste (folder_tree.js, ersetzt seit 2026-09-16 Odoos
              natives SearchPanel-Kategoriefeld - siehe native_search_model.js/project_
-             int_filemanager_searchpanel_perf-Notiz fuer die Begruendung). position:fixed statt
-             eines echten Flex-Sibling-Layouts (siehe Kommentar in filemanager_controller_mixin.js:
-             setup()) - top sitzt als reine CSS-Konstante in folder_tree_layout.scss (Odoos eigene
-             Navbar-Hoehe, kein JS-Messwert mehr), haelt sie direkt unterhalb der Navbar, ueber die
-             volle Hoehe inklusive der eigenen Toolbar-Zeile (wie in einem echten Datei-Explorer).
-             Nur auf breitem Viewport gerendert (dort uebernimmt der Ordnerbaum als Bottom-Sheet
-             weiter unten dieselbe Rolle). -->
+             int_filemanager_searchpanel_perf-Notiz fuer die Begruendung). Breite per Drag
+             veraenderbar (Nutzerwunsch 2026-09-18) ueber Odoos eigene ResizablePanel-
+             Kernkomponente (@web/core/resizable_panel - dieselbe, die Discuss fuer seine
+             Sidebar nutzt), Platzierung/Hoehen-Streckung uebernimmt das CSS-Grid in
+             folder_tree_layout.scss (siehe dort fuer die ausfuehrliche Begruendung). class-Prop
+             ("o_int_filemanager_tree_resizable") dient NUR der Grid-Platzierung/Optik-Abgrenzung,
+             damit keine globale ".o_resizable_panel"-Regel entsteht, die z.B. Discuss' eigene
+             Sidebar im selben Backend-Asset-Bundle mittraefe. Nur auf breitem Viewport gerendert
+             (dort uebernimmt der Ordnerbaum als Bottom-Sheet weiter unten dieselbe Rolle). -->
         <xpath expr="//div[@t-ref='root']/*[1]" position="before">
-            <div t-if="!env.isSmall"
-                 class="o_int_filemanager_tree_sidebar">
-                <!-- Direkt env.searchModel.intFilemanagerFolderPath statt this.currentPath
-                     (Nutzerreport 2026-09-16 "nach F5 in einem Unterordner bleibt der Ordnerbaum
-                     zurueckgesetzt"): currentPath wird bewusst erst in onMounted() gesetzt
-                     (siehe der ausfuehrliche Absturz-Kommentar bei updateBreadcrumbs()/setup()
-                     in filemanager_controller_mixin.js), Owl mountet Kind-Komponenten aber VOR
-                     dem eigenen onMounted() der Eltern-Komponente - FolderTree las activePath
-                     beim eigenen ersten Mount deshalb, BEVOR der Controller currentPath ueberhaupt
-                     gesetzt hatte, und blieb dadurch nach einem echten Reload (der URL-Fix in
-                     native_search_model.js macht intFilemanagerFolderPath dort jetzt tatsaechlich
-                     wiederherstellbar) beim leeren Ausgangswert haengen. intFilemanagerFolderPath
-                     selbst ist dagegen schon synchron in WithSearch's onWillStart korrekt gesetzt,
-                     lange bevor irgendeine Kind-Komponente hier ueberhaupt rendert. -->
-                <FolderTree activePath="env.searchModel.intFilemanagerFolderPath || ''"
-                            onSelectFolder="(path, hasChildren) => this.onFolderTreeSelect(path, hasChildren)"
-                            registerApi="(api) => this.folderTreeApi = api"/>
-            </div>
+            <ResizablePanel t-if="!env.isSmall"
+                            class="'o_int_filemanager_tree_resizable'"
+                            handleSide="'end'"
+                            initialWidth="initialTreeWidth"
+                            minWidth="180"
+                            onResize.bind="onResizeTree">
+                <div class="o_int_filemanager_tree_sidebar">
+                    <!-- Direkt env.searchModel.intFilemanagerFolderPath statt this.currentPath
+                         (Nutzerreport 2026-09-16 "nach F5 in einem Unterordner bleibt der Ordnerbaum
+                         zurueckgesetzt"): currentPath wird bewusst erst in onMounted() gesetzt
+                         (siehe der ausfuehrliche Absturz-Kommentar bei updateBreadcrumbs()/setup()
+                         in filemanager_controller_mixin.js), Owl mountet Kind-Komponenten aber VOR
+                         dem eigenen onMounted() der Eltern-Komponente - FolderTree las activePath
+                         beim eigenen ersten Mount deshalb, BEVOR der Controller currentPath ueberhaupt
+                         gesetzt hatte, und blieb dadurch nach einem echten Reload (der URL-Fix in
+                         native_search_model.js macht intFilemanagerFolderPath dort jetzt tatsaechlich
+                         wiederherstellbar) beim leeren Ausgangswert haengen. intFilemanagerFolderPath
+                         selbst ist dagegen schon synchron in WithSearch's onWillStart korrekt gesetzt,
+                         lange bevor irgendeine Kind-Komponente hier ueberhaupt rendert. -->
+                    <FolderTree activePath="env.searchModel.intFilemanagerFolderPath || ''"
+                                onSelectFolder="(path, hasChildren) => this.onFolderTreeSelect(path, hasChildren)"
+                                registerApi="(api) => this.folderTreeApi = api"/>
+                </div>
+            </ResizablePanel>
             <div t-if="env.isSmall"
                  class="o_int_filemanager_mobile_header">
                 <div class="d-flex align-items-center gap-1">
@@ -184,6 +192,7 @@
                              oben). Nur ab 3 Segmenten ueberhaupt etwas zu verbergen. -->
                         <t t-else="">
                             <button type="button" class="btn btn-link p-0 text-truncate flex-shrink-0"
+                                    t-att-data-tooltip="mobileBreadcrumbs[0].name" data-tooltip-delay="1000"
                                     t-on-click="() => mobileBreadcrumbs[0].onSelected()">
                                 <t t-esc="mobileBreadcrumbs[0].name"/>
                             </button>
@@ -200,6 +209,7 @@
                             </Dropdown>
                             <span class="text-muted mx-1">/</span>
                             <span class="fw-bold text-truncate"
+                                  t-att-data-tooltip="mobileBreadcrumbs[mobileBreadcrumbs.length - 1].name" data-tooltip-delay="1000"
                                   t-esc="mobileBreadcrumbs[mobileBreadcrumbs.length - 1].name"/>
                         </t>
                     </nav>
@@ -234,7 +244,9 @@
             <div t-if="chatterState.open" class="o_int_filemanager_chatter_panel"
                  t-attf-style="top: {{chatterState.topPx}}px;">
                 <div class="o_int_filemanager_chatter_panel_header">
-                    <span class="text-truncate fw-bold">
+                    <span class="text-truncate fw-bold"
+                          t-att-data-tooltip="chatterRecord ? chatterRecord.data.name : 'Notizen/Aktivitäten'"
+                          data-tooltip-delay="1000">
                         <t t-if="chatterRecord" t-esc="chatterRecord.data.name"/>
                         <t t-else="">Notizen/Aktivitäten</t>
                     </span>

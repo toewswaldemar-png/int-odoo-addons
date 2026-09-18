@@ -55,7 +55,35 @@
                             <div class="o_int_filemanager_kanban_body p-2">
                                 <field name="name" invisible="thumbnail" widget="int_filemanager_name"
                                        class="o_int_filemanager_kanban_cover_fallback"/>
-                                <field name="name" invisible="not thumbnail" class="text-truncate fw-bold d-block"/>
+                                <!-- Bewusst KEIN reines "<field name="name">"-Kuerzel hier (wie
+                                     das int_filemanager_name-Widget zwei Zeilen darueber): Odoos
+                                     Kanban-Compiler (kanban_compiler.js: compileField) setzt fuer
+                                     Feldknoten OHNE eigenes widget nur ein reines
+                                     "<span t-out=.../>", jeder t-att-*-Zusatz (fuer den Tooltip
+                                     bei abgeschnittenem Namen, siehe folder_tree.xml/
+                                     name_icon_field.xml fuer dieselbe Konvention) wird fuer
+                                     widget-lose Feldknoten komplett ignoriert - live am
+                                     Odoo-19-Quellcode verifiziert. record.name.value ist Odoos
+                                     eigene, in zahlreichen Kern-Kanban-Archs (z.B.
+                                     hr_holidays/views/hr_leave_views.xml) genutzte Konvention fuer
+                                     genau diesen Fall: ein bereits per Geschwister-<field> gefetchtes
+                                     Feld frei innerhalb desselben Kanban-Templates rendern.
+                                     Bewusst "title" statt Odoos eigenem "data-tooltip" (anders als
+                                     ueberall sonst im Modul, siehe name_icon_field.xml/
+                                     folder_tree.xml): DIESE Datei ist eine echte serverseitig
+                                     validierte ir.ui.view-Arch, keine reine Owl-JS-Vorlage wie die
+                                     Dateien unter static/src/ - Odoos eigener Server-Validator
+                                     (ir_ui_view.py, _validate_attrs) blockt "data-tooltip"
+                                     (mit UND ohne t-att-/t-attf-Praefix) dort ausdruecklich als
+                                     "Forbidden attribute" (Sicherheitsgrund: Popover-Inhalt aus
+                                     View-Archs, z.B. von Studio erzeugt, gilt als weniger vertrauens-
+                                     wuerdig als handgeschriebener JS-Code). Live beim Modul-Upgrade
+                                     bestaetigt (Fehler "Forbidden attribute used in arch
+                                     (t-att-data-tooltip)"). "title" ist von dieser Sperre NICHT
+                                     betroffen - einzige verfuegbare Option an dieser Stelle, keine
+                                     eigene Entscheidung. -->
+                                <span invisible="not thumbnail" class="text-truncate fw-bold d-block"
+                                      t-att-title="record.name.value" t-out="record.name.value"/>
                                 <field name="status_id" widget="badge"
                                        options="{'color_field': 'status_color'}"/>
                                 <field name="tag_ids" widget="many2many_tags"/>

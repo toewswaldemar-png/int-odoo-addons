@@ -14,7 +14,8 @@
                 </thead>
                 <tbody>
                     <tr t-foreach="state.entries" t-as="entry" t-key="entry.name">
-                        <td class="text-truncate" style="max-width: 320px;">
+                        <td class="text-truncate" style="max-width: 320px;"
+                            t-att-data-tooltip="entry.name" data-tooltip-delay="1000">
                             <i t-if="entry.is_dir" class="fa fa-folder fa-fw text-warning me-1"/>
                             <i t-else="" class="fa fa-file-o fa-fw me-1"/>
                             <t t-esc="entry.name"/>

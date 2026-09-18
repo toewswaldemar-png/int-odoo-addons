@@ -10,7 +10,7 @@
          Liste/das Kanban von aussen mitgibt. -->
     <t t-name="int_filemanager.AnalyzeButtonWidget">
         <button t-if="visible" type="button" class="btn btn-sm p-0"
-                title="Werte erkennen" t-on-click="onClick">
+                data-tooltip="Werte erkennen" t-on-click="onClick">
             <i class="fa fa-magic"/>
         </button>
     </t>

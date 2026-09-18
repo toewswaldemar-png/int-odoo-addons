@@ -32,7 +32,7 @@
                 </button>
                 <span t-else="" class="o_int_filemanager_tree_caret_spacer"/>
                 <i class="fa fa-folder o_int_filemanager_tree_folder_icon text-primary"/>
-                <span class="text-truncate" t-esc="node.name"/>
+                <span class="text-truncate" t-att-data-tooltip="node.name" data-tooltip-delay="1000" t-esc="node.name"/>
             </header>
             <div t-if="node.expanded" class="o_int_filemanager_tree_children">
                 <t t-foreach="node.children" t-as="childPath" t-key="childPath">

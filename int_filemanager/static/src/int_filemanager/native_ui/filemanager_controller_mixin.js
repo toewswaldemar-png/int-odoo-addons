@@ -18,6 +18,7 @@
 import { onMounted, onPatched, onWillUnmount, useExternalListener, useRef, useState, useSubEnv } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
+import { browser } from "@web/core/browser/browser";
 import { useBus, useChildRef, useService } from "@web/core/utils/hooks";
 import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
 import { useNavigation } from "@web/core/navigation/navigation";
@@ -38,6 +39,13 @@ import { domPathToPath } from "./folder_tree";
 // leeren Player zeigen).
 const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "ogv"]);
 const VIDEO_MIME_TYPES = { mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg" };
+
+// Persistenz der per Drag eingestellten Ordnerbaum-Breite (Nutzerwunsch 2026-09-18) - gleiches
+// Muster wie Discuss' eigene DISCUSS_SIDEBAR_COMPACT_LS (mail/core/public_web/discuss_sidebar.js)
+// und die Spaltenreihenfolge in int_web_tweaks: ein einzelner localStorage-Wert, kein neues
+// DB-Modell noetig fuer eine reine UI-Praeferenz ohne Serverbezug.
+const TREE_WIDTH_LS = "int_filemanager.treeWidth";
+const TREE_WIDTH_DEFAULT = 280;
 
 // Audio ist NICHT nativ im FileViewer verdrahtet - anders als bei Video gibt es dort keinen
 // isAudio-Zweig (am Odoo-19-Quellcode geprueft: web/core/file_viewer/file_viewer.js/.xml kennt
@@ -375,21 +383,39 @@ export function filemanagerControllerMixin(Base) {
             // native_list_view.js: className), kein Einfluss auf die Domain-Logik selbst.
             this.mobileTreeState = useState({ open: false });
             // Desktop-Ordnerbaum-Seitenleiste (folder_tree.js) - anders als das Mobil-Sheet oben
-            // immer sichtbar (kein eigener open/close-Zustand), aber per position:fixed relativ
-            // zum Viewport statt eines echten Flex-Sibling-Layouts platziert (dieselbe Begruendung
-            // wie beim Chatter-Panel unten: ein Platz verdraengendes Layout bräuchte einen Patch
-            // von Odoos geteiltem "web.Layout"-Template, das jede Listen-/Kanban-Ansicht im System
-            // beträfe). Anders als das Chatter-Panel beginnt der Baum aber am Controller-Root
-            // selbst, nicht an ".o_content" - er soll wie in einem echten Datei-Explorer die
-            // gesamte Hoehe inklusive der eigenen Toolbar-Zeile einnehmen. KEIN eigener JS-
-            // gemessener topPx-State mehr (Live-Bug 2026-09-16: sichtbarer Sprung beim App-Oeffnen,
-            // erster Frame bei top:0 bevor onMounted() misst) - top sitzt stattdessen als reine
-            // CSS-Konstante in folder_tree_layout.scss, exakt Odoos eigener $o-navbar-height
-            // (verifiziert: odoo/addons/web/static/src/webclient/navbar/navbar.variables.scss,
-            // "$o-navbar-height: 46px !default", von Odoo selbst genauso als fester Wert genutzt,
-            // z.B. dialog.scss/file_viewer.scss "height: $o-navbar-height" - Odoo misst die
-            // eigene Navbar zur Laufzeit nirgends per JS nach, das ist kein Sonderfall unserer
-            // Seitenleiste, sondern deren ohnehin konstante Bauhoehe).
+            // immer sichtbar (kein eigener open/close-Zustand). Bis 2026-09-17 per position:fixed
+            // relativ zum Viewport platziert; 2026-09-18 (Nutzerwunsch "Breite dragbar", "sauber
+            // odoo nativ") ersetzt durch ein echtes CSS-Grid auf dem Controller-Root (siehe
+            // folder_tree_layout.scss fuer die ausfuehrliche Begruendung, insbesondere warum
+            // Flexbox dafuer NICHT reicht) plus Odoos eigener ResizablePanel-Kernkomponente
+            // (@web/core/resizable_panel, dieselbe wie Discuss' Sidebar) fuer den Drag-Griff -
+            // initialTreeWidth/onResizeTree unten sind die einzigen dafuer noch noetigen
+            // Eigenanteile (Breiten-Persistenz), der Drag-Mechanismus selbst kommt unveraendert
+            // aus Odoo.
+            this.initialTreeWidth = Number(browser.localStorage.getItem(TREE_WIDTH_LS)) || TREE_WIDTH_DEFAULT;
+            // Nutzerreport 2026-09-18 "beim Draggen verschwindet das Icon" = der Maus-Cursor
+            // selbst, nicht ein UI-Icon: ResizablePanels eigener useResizable()-Hook
+            // (resizable_panel.js: onMouseDown) haengt waehrend des Ziehens "pe-none" (=
+            // pointer-events:none) an <body>, damit Text waehrend des Ziehens nicht versehentlich
+            // markiert wird - das bricht nebenbei aber auch das normale Hit-Testing, ueber das der
+            // Browser ermittelt, WESSEN "cursor:col-resize"-CSS gerade gilt (body selbst wird
+            // dadurch fuers Hit-Testing uebersprungen), der Zeiger faellt deshalb zwischendurch auf
+            // den Standardpfeil zurueck. Kein Eingriff in Odoos Kerndatei noetig: eigener,
+            // zusaetzlicher Listener hier erkennt denselben (oeffentlichen, stabilen)
+            // ".o_resizable_panel_handle"-Klassennamen aus resizable_panel.xml per Event-
+            // Delegation und erzwingt den Cursor stattdessen auf <html> (documentElement) - das
+            // liegt AUSSERHALB von Odoos pointer-events:none-Bereich (nur <body> betroffen, siehe
+            // oben), bleibt also waehrend des gesamten Ziehens hit-testbar und zeigt den Cursor
+            // durchgehend, exakt dasselbe Grundmuster (Klasse an-/abhaengen bei mousedown/mouseup),
+            // das Odoo selbst fuer pe-none/user-select-none nutzt.
+            useExternalListener(window, "mousedown", (ev) => {
+                if (ev.target.closest(".o_resizable_panel_handle")) {
+                    document.documentElement.classList.add("o_int_filemanager_resizing_tree");
+                }
+            });
+            useExternalListener(window, "mouseup", () => {
+                document.documentElement.classList.remove("o_int_filemanager_resizing_tree");
+            });
             // Von folder_tree.js in dessen eigenem onMounted() gesetzt (registerApi-Prop) - erlaubt
             // reload() unten, gezielt nur den aktuell offenen Ordner im Baum-Cache zu invalidieren,
             // statt den ganzen Baum neu zu laden.
@@ -742,6 +768,14 @@ export function filemanagerControllerMixin(Base) {
         // automatisch nach einer Blattordner-Wahl, siehe onFolderTreeSelect() oben.
         onToggleMobileTree() {
             this.mobileTreeState.open = !this.mobileTreeState.open;
+        }
+
+        // ResizablePanel (siehe initialTreeWidth oben) ruft dies bei JEDEM Pixel waehrend des
+        // Ziehens auf, nicht nur bei mouseup - kein Debounce noetig, ein simpler
+        // localStorage.setItem ist billig genug fuer diese Frequenz (dasselbe macht Discuss'
+        // eigener onResize-Handler, siehe discuss_sidebar.js).
+        onResizeTree(width) {
+            browser.localStorage.setItem(TREE_WIDTH_LS, String(Math.round(width)));
         }
 
         // -----------------------------------------------------------------

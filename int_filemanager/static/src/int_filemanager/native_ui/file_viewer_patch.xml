@@ -14,7 +14,7 @@
          toViewerFile() befuellt. -->
     <t t-inherit="web.FileViewer" t-inherit-mode="extension">
         <xpath expr="//i[@t-if='state.file.isVideo']" position="after">
-            <i t-if="state.file.isAudio" class="fa fa-volume-up" role="img" title="Audio"/>
+            <i t-if="state.file.isAudio" class="fa fa-volume-up" role="img" data-tooltip="Audio"/>
         </xpath>
         <!-- Statt eines nackten <audio controls> (browsereigene Default-Optik, wirkt auf dem
              sonst leeren dunklen Hintergrund verloren) eine kleine weisse Karte mit Icon und
@@ -26,7 +26,8 @@
         <xpath expr="//video[@t-if='state.file.isVideo']" position="after">
             <div t-if="state.file.isAudio" class="d-flex flex-column align-items-center bg-white rounded-3 p-5 shadow">
                 <i class="fa fa-music fa-4x text-muted mb-4" role="img"/>
-                <div class="h5 mb-4 text-truncate" style="max-width: 60vw;" t-esc="state.file.name"/>
+                <div class="h5 mb-4 text-truncate" style="max-width: 60vw;"
+                     t-att-data-tooltip="state.file.name" data-tooltip-delay="1000" t-esc="state.file.name"/>
                 <audio t-on-click.stop="" controls="controls" style="width: 400px; max-width: 70vw;">
                     <source t-att-data-type="state.file.mimetype" t-att-src="state.file.defaultSource"/>
                 </audio>

@@ -23,6 +23,7 @@
 import { registry } from "@web/core/registry";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
+import { ResizablePanel } from "@web/core/resizable_panel/resizable_panel";
 import { SearchBar } from "@web/search/search_bar/search_bar";
 import { listView } from "@web/views/list/list_view";
 import { ListController } from "@web/views/list/list_controller";
@@ -42,7 +43,7 @@ export class IntFilemanagerListController extends filemanagerControllerMixin(Lis
     // eine Neuzuweisung ohne Spread wuerde sie durch die statische Feld-Ueberschreibung
     // verdecken und jedes t-component/<Tag>, das das geerbte web.ListView-Template nutzt,
     // bräche.
-    static components = { ...ListController.components, Chatter, Dropdown, DropdownItem, SearchBar, FolderTree };
+    static components = { ...ListController.components, Chatter, Dropdown, DropdownItem, ResizablePanel, SearchBar, FolderTree };
 
     // Scoping-Klasse fuer native_list_view.scss - rechtsbuendige Zahlenspalten (o_list_number,
     // list_renderer.scss) sind fuer "Groesse" hier bewusst unerwuenscht (User-Wunsch: wie alle

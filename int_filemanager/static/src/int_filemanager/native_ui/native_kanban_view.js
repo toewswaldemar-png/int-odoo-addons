@@ -18,6 +18,7 @@
 import { registry } from "@web/core/registry";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
+import { ResizablePanel } from "@web/core/resizable_panel/resizable_panel";
 import { kanbanView } from "@web/views/kanban/kanban_view";
 import { KanbanController } from "@web/views/kanban/kanban_controller";
 import { Chatter } from "@mail/chatter/web_portal/chatter";
@@ -27,7 +28,7 @@ import { IntFilemanagerSearchModel } from "./native_search_model";
 
 export class IntFilemanagerKanbanController extends filemanagerControllerMixin(KanbanController) {
     static template = "int_filemanager.KanbanView";
-    static components = { ...KanbanController.components, Chatter, Dropdown, DropdownItem, FolderTree };
+    static components = { ...KanbanController.components, Chatter, Dropdown, DropdownItem, ResizablePanel, FolderTree };
 
     // Eigene Scoping-Klasse (native_kanban_view.scss) statt der Listen-Klasse - hier geht es um
     // die Kartengroesse/das Cover-Layout, nicht um Zahlenspalten-Ausrichtung wie bei der Liste.

@@ -133,6 +133,16 @@ export class IntFilemanagerListRenderer extends ListRenderer {
                 ev.target.closest("thead") ||
                 ev.target.closest(".o_control_panel") ||
                 ev.target.closest(".o_search_panel") ||
+                // Ordnerbaum-Seitenleiste (folder_tree_layout.scss) - seit 2026-09-16 eigene
+                // FolderTree-Komponente statt Odoos natives ".o_search_panel" (Ausnahme oben ist
+                // seitdem tot, aber gefahrlos stehen gelassen), seit 2026-09-18 zusaetzlich in
+                // Odoos ResizablePanel gewrappt (siehe filemanager_controller_mixin.js:
+                // onResizeTree). Live-Bug 2026-09-18 (Nutzerreport "beim Draggen am Handler zieht
+                // Rubberband auf"): der Drag-Griff (".o_resizable_panel_handle") liegt ausserhalb
+                // der Tabelle, aber innerhalb desselben document-weiten mousedown-Listeners hier -
+                // ohne diese Ausnahme startete jeder Resize-Drag zusaetzlich ein
+                // Rubberband-Auswahlrechteck.
+                ev.target.closest(".o_int_filemanager_tree_resizable") ||
                 // Mobil-Header (native_list_view.xml: SearchBar + Home/Baum-Toggle +
                 // Breadcrumb-Zeile) ist KEIN .o_control_panel - der native Control Panel wird
                 // auf schmalem Viewport (env.isSmall, siehe native_list_view.scss) per CSS
@@ -216,18 +226,22 @@ export class IntFilemanagerListRenderer extends ListRenderer {
             // nur reaktiv per Modal-Ausschluss.
             //
             // Nebenwirkung, live gefunden 2026-09-14: preventDefault() auf mousedown unterdrueckt
-            // auch den normalen Browser-Blur des zuvor fokussierten Elements. War das
-            // F2-Umbenennen-Input aktiv, blieb es dadurch bei einem Klick auf leere Flaeche
-            // haengen (onRenameBlur in name_icon_field.js feuerte nie, kein Commit). Deshalb hier
-            // manuell blur() auf ein noch aktives Rename-Input, BEVOR preventDefault greift -
-            // exakt das Explorer-Verhalten "Wegklicken uebernimmt den Namen" aus dem
-            // onRenameBlur-Kommentar dort.
-            const activeRenameInput = document.activeElement?.classList?.contains(
-                "o_int_filemanager_rename_input"
-            )
-                ? document.activeElement
-                : null;
-            activeRenameInput?.blur();
+            // auch den normalen Browser-Blur des zuvor fokussierten Elements. Urspruenglich nur
+            // fuer das F2-Umbenennen-Input bemerkt (blieb dadurch bei einem Klick auf leere
+            // Flaeche haengen, onRenameBlur in name_icon_field.js feuerte nie, kein Commit) -
+            // Nutzerreport 2026-09-18 zeigt dieselbe Ursache generischer: Odoos eigene Zellen
+            // tragen tabindex="-1" (list_renderer.xml), ein Klick auf den Namen fokussiert daher
+            // ganz regulaer die umschliessende <td> (Browser-Default fuer mousedown auf/innerhalb
+            // eines fokussierbaren Elements), was wiederum Odoos eigenes list_renderer.scss
+            // (":focus-within" auf ".o_data_row", siehe Kommentar bei toggleRecordSelection()
+            // oben) grau einfaerbt. Klickt man DANACH in eine andere Zeile, aber ausserhalb von
+            // deren Name/Icon-Handle (siehe dataRowEl-Block oben) - z.B. auf Leerflaeche, eine
+            // andere Spalte - greift genau DIESES preventDefault() und unterdrueckt den
+            // Browser-Blur der ERSTEN Zelle, ihr grauer Hintergrund blieb dadurch haengen, egal
+            // was als naechstes passierte. Deshalb jetzt generell (nicht nur fuer das
+            // Rename-Input) das zuvor fokussierte Element blur()en, BEVOR preventDefault greift -
+            // exakt das Verhalten, das der Browser ohne preventDefault ohnehin von selbst haette.
+            document.activeElement?.blur();
             ev.preventDefault();
             const rowRects = rowEls.map((el, i) => ({ record: records[i], rect: el.getBoundingClientRect() }));
             const additive = ev.ctrlKey || ev.metaKey;
@@ -409,6 +423,28 @@ export class IntFilemanagerListRenderer extends ListRenderer {
     // - kein Konflikt mit onCellClicked()/dem Long-Press unten, die auf anderen Zellen sitzen.
     get hasSelectors() {
         return this.props.allowSelectors;
+    }
+
+    // Nutzerreport 2026-09-18 (Screenshot): eine per Checkbox ABGEWAEHLTE Zeile behielt einen
+    // grauen Hintergrund, auch nach Interaktion mit einer anderen Zeile (Rechtsklick-Kontextmenue).
+    // Ursache in Odoos eigenem list_renderer.scss (Zeile ~505ff): ".o_data_row:not(.o_selected_row)
+    // :not(.o_data_row_selected):focus-within" faerbt eine fokussierte (aber nicht ausgewaehlte)
+    // Zeile grau - eingebaute Tastatur-Fokus-Anzeige, live am Quellcode verifiziert. Odoos eigenes
+    // toggleRecordSelection() (list_renderer.js) ruft dabei nie blur() auf, die Checkbox selbst
+    // bekommt beim Anklicken aber ganz normal Browser-Fokus (Standardverhalten von <input
+    // type="checkbox">) - beim Abwaehlen bleibt dieser Fokus einfach stehen, :focus-within matcht
+    // dadurch dauerhaft weiter, unabhaengig davon, was anderswo auf der Seite passiert. Exakt
+    // dasselbe "Checkbox-Auswahl und fokussierte-Zelle-Rahmen sind zwei getrennte Dinge"-Problem,
+    // das beim Escape-Deselect schon einmal aufgetreten ist (siehe Kommentar bei
+    // useExternalListener(window,"keydown",...) in filemanager_controller_mixin.js, dort dieselbe
+    // blur()-Loesung). super() zuerst (echtes Odoo-Verhalten unveraendert), blur() NUR wenn die
+    // Zeile jetzt WIRKLICH abgewaehlt ist - beim Auswaehlen soll der Fokus-Ring wie in jeder
+    // anderen Odoo-Liste erhalten bleiben (z.B. fuer Tastatur-Navigation direkt danach).
+    toggleRecordSelection(record, ev) {
+        super.toggleRecordSelection(record, ev);
+        if (!record.selected) {
+            document.activeElement?.blur();
+        }
     }
 
     async onCellClicked(record, column, ev, newWindow) {
