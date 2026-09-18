@@ -295,6 +295,34 @@
 // vermessen wird (Viewport-Koordinaten von getBoundingClientRect passen direkt zu einem
 // fixed-Element). z-index unter der Dropzone (2000) und unter Bootstrap-Modals (~1055 im
 // Normalfall hoeher als 1000), aber ueber der normalen Listeninhalt-Ebene.
+// Schiebt NUR den Listen-/Kanban-INHALT neben das Panel statt sich von ihm ueberlagern zu
+// lassen - dieselbe Technik wie die Ordnerbaum-Seitenleiste links (padding-left, siehe
+// folder_tree_layout.scss), hier aber gezielt auf ".o_content" statt auf die gesamte
+// .o_int_filemanager_list/_kanban-Wurzel (die auch die Toolbar/Breadcrumb-Zeile umschliesst -
+// erster Versuch schrumpfte dadurch faelschlich die Toolbar mit, Nutzerreport per Screenshot
+// 2026-09-17: "die toolbar soll aber die volle breite unabhaengig vom chatter beibehalten").
+// ".o_content" ist dieselbe Grenze, die _measureChatterTop() (filemanager_controller_mixin.js)
+// bereits nutzt, um das Panel unterhalb der Toolbar zu verankern - hier dieselbe Flaeche einfach
+// zusaetzlich schmaler gemacht. Das Panel selbst bleibt position:fixed (Begruendung siehe
+// filemanager_controller_mixin.js: setup()), nur der Inhalt bekommt per Klasse
+// (o_int_filemanager_chatter_open, siehe native_list_view.js/native_kanban_view.js:
+// get className()) ein rechtes Padding in Panel-Breite. Odoos eigener Spaltenbreiten-Hook
+// (column_width_hook.js, siehe Kommentar bei .o_int_filemanager_name_cell oben) misst die dadurch
+// schmalere Tabellenbreite neu und verteilt die Spalten entsprechend - kein manueller Eingriff
+// in die Spaltenbreiten noetig.
+.o_int_filemanager_chatter_open .o_content {
+    padding-right: 380px;
+}
+
+// Auf Mobil ist das Panel ohnehin ein Vollbild-Overlay (max-width:100vw unten) - ein
+// zusaetzliches Padding wuerde dort nur sinnlos Platz wegnehmen, den es nicht mehr auszugleichen
+// gibt.
+@media (max-width: 767.98px) {
+    .o_int_filemanager_chatter_open .o_content {
+        padding-right: 0;
+    }
+}
+
 .o_int_filemanager_chatter_panel {
     position: fixed;
     right: 0;

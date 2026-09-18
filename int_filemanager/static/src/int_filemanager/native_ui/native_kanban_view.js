@@ -32,7 +32,14 @@ export class IntFilemanagerKanbanController extends filemanagerControllerMixin(K
     // Eigene Scoping-Klasse (native_kanban_view.scss) statt der Listen-Klasse - hier geht es um
     // die Kartengroesse/das Cover-Layout, nicht um Zahlenspalten-Ausrichtung wie bei der Liste.
     get className() {
-        return [super.className, "o_int_filemanager_kanban"].filter(Boolean).join(" ");
+        const classes = [super.className, "o_int_filemanager_kanban"];
+        // Siehe native_list_view.js: get className() fuer die Begruendung - dieselbe
+        // padding-right-Technik, damit das Chatter-Panel die Karten-Galerie danebenschiebt
+        // statt sie zu ueberlagern.
+        if (this.chatterState.open) {
+            classes.push("o_int_filemanager_chatter_open");
+        }
+        return classes.filter(Boolean).join(" ");
     }
 }
 

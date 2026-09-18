@@ -62,6 +62,15 @@ export class IntFilemanagerListController extends filemanagerControllerMixin(Lis
                 classes.push("o_int_filemanager_mobile_tree_open");
             }
         }
+        // Schiebt den Listeninhalt per padding-right neben das Chatter-Panel statt sich von ihm
+        // ueberlagern zu lassen - dieselbe Technik wie die Ordnerbaum-Seitenleiste links
+        // (padding-left, siehe folder_tree_layout.scss), das Panel selbst bleibt weiterhin
+        // position:fixed (Begruendung siehe filemanager_controller_mixin.js: setup()). Auf
+        // Mobil setzt die Media Query in native_list_view.scss das Padding wieder zurueck, das
+        // Panel ist dort ohnehin ein Vollbild-Overlay (max-width:100vw).
+        if (this.chatterState.open) {
+            classes.push("o_int_filemanager_chatter_open");
+        }
         return classes.filter(Boolean).join(" ");
     }
 }
