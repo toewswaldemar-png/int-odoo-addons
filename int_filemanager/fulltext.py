@@ -59,7 +59,7 @@ def _build_indexed_text(pages_words):
     """Baut den Volltext UND eine parallele Liste von Wort-Boxen mit exaktem Zeichen-Offset in
     GENAU diesem Text auf - beide aus denselben Tokens im selben Durchlauf, damit ein
     Regex-Treffer im Text sich verlustfrei auf seine zugrundeliegenden Wort-Boxen zurueckfuehren
-    laesst (siehe _locate_span in _match_custom_patterns). page ist 1-basiert."""
+    laesst (siehe _locate_span in _match_patterns). page ist 1-basiert."""
     chunks = []
     word_index = []
     offset = 0
@@ -182,40 +182,6 @@ def extract_fulltext(abs_path, fulltext_type, max_bytes):
 # schlechte OCR) wuerden sonst reihenweise falsch-positiv im Fliesstext "gefunden".
 _MIN_PARTNER_NAME_LENGTH = 5
 
-# Die drei einzigen target_field-Werte, die weiterhin die eingebauten Felder
-# extracted_date/_invoice_number/_amount auf int_filemanager.file befuellen (siehe
-# filemanager_extraction_pattern.py). JEDER andere Wert ist ein selbstdefiniertes Feld und wird
-# stattdessen ueber _match_custom_patterns unten in einen int_filemanager.extracted_value-
-# Datensatz uebersetzt (siehe filemanager_file.py::action_apply_extracted_values).
-_LEGACY_TARGET_FIELDS = {"date", "invoice_number", "amount"}
-
-
-def _match_extraction_patterns(env, text):
-    """Ein Treffer pro target_field, das erste passende Muster in sequence-Reihenfolge gewinnt -
-    spaetere Muster fuer dasselbe Feld dienen als Fallback, falls das bevorzugte Muster nicht
-    greift. Ein einzelnes ungueltiges Muster (sollte durch die Konstraint auf dem Modell nicht
-    vorkommen, aber IndexError bei einer zu hoch gewaehlten group_index ist erst zur Matchzeit
-    pruefbar) wird uebersprungen statt die gesamte Erkennung abzubrechen. Betrachtet ausschliesslich
-    die drei Legacy-target_field-Werte - result.get() liefert fuer jeden anderen Wert None (nicht
-    False), der "is not False"-Vergleich unten ueberspringt solche (selbstdefinierten) Muster hier
-    automatisch, ohne dass diese Funktion selbst etwas von _LEGACY_TARGET_FIELDS wissen muesste."""
-    result = {"date": False, "invoice_number": False, "amount": False}
-    patterns = env["int_filemanager.extraction_pattern"].sudo().search([], order="sequence, id")
-    for rec in patterns:
-        if result.get(rec.target_field) is not False:
-            continue
-        try:
-            match = re.compile(rec.pattern, re.IGNORECASE if rec.ignore_case else 0).search(text)
-        except re.error:
-            continue
-        if not match:
-            continue
-        try:
-            result[rec.target_field] = match.group(rec.group_index)
-        except IndexError:
-            continue
-    return result
-
 
 def _locate_span(word_index, start, end):
     """Bildet einen Zeichenbereich (z.B. match.span(group_index)) auf eine Umriss-Box ab, indem
@@ -241,17 +207,18 @@ def _locate_span(word_index, start, end):
     }
 
 
-def _match_custom_patterns(env, text, word_index):
-    """Analog zu _match_extraction_patterns, aber fuer selbstdefinierte Muster (jedes target_field
-    ausserhalb der drei Legacy-Werte). Anders als dort gewinnt hier NICHT nur ein Treffer pro
-    target_field - jedes aktive Muster liefert unabhaengig sein eigenes Ergebnis, da es (anders als
-    bei den drei fest verdrahteten Feldern) keinen gemeinsamen Slot gibt, den sich mehrere Muster
-    teilen wuerden. Liefert zusaetzlich die Position im PDF (Phase C), sofern word_index vorhanden
-    und der Treffer nicht ueber eine Seitengrenze reicht."""
+def _match_patterns(env, text, word_index):
+    """Jedes aktive Erkennungsmuster liefert unabhaengig sein eigenes Ergebnis - kein gemeinsamer
+    Slot pro target_field mehr (seit 2026-09-19 vereinheitlicht, vorher gab es einen Sonderpfad
+    fuer drei fest verdrahtete Felder date/invoice_number/amount, die inzwischen entfernt sind -
+    siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md, Abschnitt "Vereinheitlichung").
+    Liefert zusaetzlich die Position im PDF (Phase C), sofern word_index vorhanden und der Treffer
+    nicht ueber eine Seitengrenze reicht. Ein einzelnes ungueltiges Muster (sollte durch die
+    Konstraint auf dem Modell nicht vorkommen, aber IndexError bei einer zu hoch gewaehlten
+    group_index ist erst zur Matchzeit pruefbar) wird uebersprungen statt die gesamte Erkennung
+    abzubrechen."""
     matches = []
-    patterns = env["int_filemanager.extraction_pattern"].sudo().search(
-        [("target_field", "not in", list(_LEGACY_TARGET_FIELDS))], order="sequence, id"
-    )
+    patterns = env["int_filemanager.extraction_pattern"].sudo().search([], order="sequence, id")
     for rec in patterns:
         try:
             match = re.compile(rec.pattern, re.IGNORECASE if rec.ignore_case else 0).search(text)
@@ -286,9 +253,9 @@ def suggest_from_text(env, text, word_index=None):
     einfaches Muster im Text ist. Ergebnis ist zur Kontrolle durch den Nutzer gedacht, nicht zur
     automatischen Uebernahme. Tags/Kontakt kommen inkl. Namen (nicht nur IDs) zurueck, damit der
     Kontroll-Dialog sie ohne weiteren Roundtrip direkt anzeigen kann. word_index (Phase B, optional)
-    sind Wort-Boxen fuer die selbstdefinierten Felder (custom_matches) - None/leer bei
-    Klartextdateien oder wenn keine Positionen ermittelt werden konnten (custom_matches liefert
-    dann trotzdem die Werte, nur ohne Position)."""
+    sind Wort-Boxen fuer die erkannten Felder (matches) - None/leer bei Klartextdateien oder wenn
+    keine Positionen ermittelt werden konnten (matches liefert dann trotzdem die Werte, nur ohne
+    Position)."""
     text_lower = text.lower()
 
     tag_matches = env["int_filemanager.tag"].sudo().search([])
@@ -303,14 +270,10 @@ def suggest_from_text(env, text, word_index=None):
             suggested_partner = {"id": partner.id, "name": partner.display_name}
             break
 
-    matched = _match_extraction_patterns(env, text)
-    custom_matches = _match_custom_patterns(env, text, word_index or [])
+    matches = _match_patterns(env, text, word_index or [])
 
     return {
         "suggested_tags": suggested_tags,
         "suggested_partner": suggested_partner,
-        "suggested_date": matched["date"],
-        "suggested_invoice_number": matched["invoice_number"],
-        "suggested_amount": matched["amount"],
-        "custom_matches": custom_matches,
+        "matches": matches,
     }

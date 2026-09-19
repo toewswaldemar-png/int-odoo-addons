@@ -280,21 +280,13 @@ class IntFilemanagerFile(models.Model):
         copy=False, help="Volltext aus OCR/Textextraktion - fuer die Suche, nicht zur Anzeige gedacht."
     )
 
-    # Aus content_text per einfacher Regex vorgeschlagene Werte (siehe fulltext.suggest_from_text)
-    # - bewusst feste, einzelne Felder statt eines fields.Properties: die Regex-Erkennung liefert
-    # ein festes, kleines Set moeglicher Werte, kein pro Dokumenttyp wechselndes Schema (das waere
-    # der eigentliche Anwendungsfall fuer Properties, siehe echte Odoo-Beispiele wie
-    # event.registration.registration_properties - hier nicht gegeben). Nur ueber den interaktiven
-    # Analyse-Dialog befuellt, nie automatisch ungeprueft uebernommen.
-    extracted_date = fields.Char(copy=False, string="Erkanntes Datum")
-    extracted_invoice_number = fields.Char(copy=False, string="Erkannte Rechnungsnummer")
-    extracted_amount = fields.Char(copy=False, string="Erkannter Betrag")
-
-    # Selbstdefinierte Extraktionsfelder (2026-09-19, siehe
-    # docs/int_filemanager_ocr_selbstdefinierte_felder.md) - echtes Datensatz-Modell statt eines
-    # weiteren JSON-Blobs, ein Datensatz pro Muster mit Treffer. Ersetzt NICHT die drei Felder
-    # oben (die bleiben unveraendert, siehe fulltext._LEGACY_TARGET_FIELDS), sondern ergaenzt sie
-    # um beliebig viele weitere, admin-definierte Felder.
+    # Erkannte Werte (2026-09-19, siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md) -
+    # echtes Datensatz-Modell statt eines JSON-Blobs (fields.Properties), ein Datensatz pro Muster
+    # mit Treffer. Bis 2026-09-19 gab es zusaetzlich drei fest verdrahtete Char-Felder
+    # (extracted_date/_invoice_number/_amount) fuer die drei mitgelieferten Muster - inzwischen
+    # vereinheitlicht, jedes Muster (egal ob mitgeliefert oder selbstdefiniert) landet hier.
+    # Bestandsdaten wurden per Migration uebernommen, siehe
+    # migrations/19.0.1.11.0/post-migrate_legacy_fields_to_extracted_value.py.
     extracted_value_ids = fields.One2many("int_filemanager.extracted_value", "file_id", string="Erkannte Werte")
 
     # --- Phase 5: Freigaben (intern & extern) -----------------------------
@@ -575,12 +567,11 @@ class IntFilemanagerFile(models.Model):
         Feldbearbeitung am Datensatz (siehe acl_rules.py) - anders als hier oben, wo sudo() den
         bereits durch authz.require() im Controller abgedeckten Schreibzugriff nur fuer die
         Extraktion selbst nutzt (gleiches Muster wie die Cron-Jobs weiter oben). Seit Phase B/C
-        (siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md) zusaetzlich custom_matches
-        (Liste der selbstdefinierten Feld-Treffer inkl. PDF-Position) und content_text_preview
-        (gekuerzter Volltext, fuer die Klartext-Vorschau im Dialog bei Nicht-PDF-Dateien)."""
+        (siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md) zusaetzlich matches (Liste der
+        erkannten Feld-Treffer inkl. PDF-Position) und content_text_preview (gekuerzter Volltext,
+        fuer die Klartext-Vorschau im Dialog bei Nicht-PDF-Dateien)."""
         empty = {"res_id": False, "suggested_tags": [], "suggested_partner": False,
-                 "suggested_date": False, "suggested_invoice_number": False, "suggested_amount": False,
-                 "custom_matches": [], "content_text_preview": ""}
+                 "matches": [], "content_text_preview": ""}
         rec = self.env["int_filemanager.file"].sudo().search([("path", "=", path)], limit=1)
         if not rec or rec.is_dir:
             return empty
@@ -594,16 +585,13 @@ class IntFilemanagerFile(models.Model):
     @api.model
     def action_apply_extracted_values(self, path, values):
         """Ersetzt die komplette extracted_value_ids-Liste der per path referenzierten Datei durch
-        die vom Kontroll-Dialog bestaetigten selbstdefinierten Werte (siehe
-        document_review_dialog.js onConfirm) - kein Merge/Diff, dieselbe simple
-        Rundumersetz-Semantik wie tag_ids: [[6, 0, ids]] fuer Tags. sudo() innen: anders als
-        extracted_date/_invoice_number/_amount (normale Felder auf int_filemanager.file, ueber
-        das bestehende ir.rule-System des Datensatzes geschuetzt) hat int_filemanager.extracted_value
-        bewusst keine eigene Schreib-ACL fuer Nutzer (siehe ir.model.access.csv) - derselbe Aufbau
-        wie int_filemanager.version, nur ueber diese Methode statt einen Dateisystem-Vorgang
-        erreichbar. Der Controller (/int_filemanager/apply_extracted_values) prueft VOR diesem
-        Aufruf bereits authz.require(..., "write") auf denselben Pfad - exakt dasselbe Muster wie
-        action_analyze_document oben."""
+        die vom Kontroll-Dialog bestaetigten Werte (siehe document_review_dialog.js onConfirm) -
+        kein Merge/Diff, einfache Rundumersetz-Semantik. sudo() innen: int_filemanager.extracted_value
+        hat bewusst keine eigene Schreib-ACL fuer Nutzer (siehe ir.model.access.csv) - derselbe
+        Aufbau wie int_filemanager.version, nur ueber diese Methode statt einen
+        Dateisystem-Vorgang erreichbar. Der Controller (/int_filemanager/apply_extracted_values)
+        prueft VOR diesem Aufruf bereits authz.require(..., "write") auf denselben Pfad - exakt
+        dasselbe Muster wie action_analyze_document oben."""
         rec = self.env["int_filemanager.file"].sudo().search([("path", "=", path)], limit=1)
         if not rec or rec.is_dir:
             return False

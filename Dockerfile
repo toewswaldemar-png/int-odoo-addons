@@ -17,8 +17,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 # pdfplumber ersetzt PyPDF2/odoo.tools.pdf.PdfReader als PDF-Textextraktion (liefert zusaetzlich
 # Wort-Positionen fuer das Highlighting, siehe fulltext.py); ocrmypdf ersetzt den rohen
-# pytesseract/pdf2image-Aufruf.
-RUN pip3 install --break-system-packages --no-cache-dir pyjwt mutagen==1.47.0 pdfplumber ocrmypdf
+# pytesseract/pdf2image-Aufruf. --ignore-installed: ocrmypdf zieht ueber pydantic eine neuere
+# typing_extensions als die vom Debian-Basisimage per apt vorinstallierte - pip kann diese apt-
+# verwaltete Version nicht sauber deinstallieren (fehlende RECORD-Metadaten, live am Image
+# bestaetigt: "Cannot uninstall typing_extensions ... installed by debian"). --ignore-installed
+# ueberschreibt sie einfach mit einer eigenen pip-Kopie statt sie zu deinstallieren.
+# pyopenssl explizit mitgezogen: ocrmypdf/pikepdf ziehen ueber ihre eigenen Abhaengigkeiten ein
+# neueres "cryptography" (50.x) als das per apt vorinstallierte pyOpenSSL (23.2.0) unterstuetzt -
+# live bestaetigt: Odoos "web"-Modul (importiert OpenSSL fuer ir_mail_server) scheiterte danach
+# mit "AttributeError: module 'lib' has no attribute 'GEN_EMAIL'", die komplette Oberflaeche war
+# nicht mehr erreichbar. pyopenssl>=24 ist mit cryptography 50.x kompatibel.
+RUN pip3 install --break-system-packages --ignore-installed --no-cache-dir pyjwt mutagen==1.47.0 "pyopenssl>=24" pdfplumber ocrmypdf
 # Wartet beim Start, bis die drei SMB-Freigaben unter /mnt/hm-daten wirklich als CIFS
 # gemountet sind (nicht Unraids leerer tmpfs-Platzhalter) - siehe Kommentar im Skript.
 # Muss noch als root kopiert/ausfuehrbar gemacht werden, laeuft danach aber als USER odoo.

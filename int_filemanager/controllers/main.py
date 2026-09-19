@@ -347,9 +347,9 @@ class IntFilemanagerController(http.Controller):
 
     @http.route("/int_filemanager/apply_extracted_values", type="jsonrpc", auth="user", methods=["POST"])
     def apply_extracted_values(self, path="", values=None):
-        """Gegenstueck zu analyze_document fuer die selbstdefinierten Felder (Phase A, siehe
+        """Gegenstueck zu analyze_document fuer die erkannten Werte (Phase A, siehe
         docs/int_filemanager_ocr_selbstdefinierte_felder.md): der Kontroll-Dialog ruft dies beim
-        "Übernehmen" auf, NACH dem normalen this.orm.write() fuer tag_ids/extracted_date/etc.
+        "Übernehmen" auf, NACH dem normalen this.orm.write() fuer tag_ids/partner_id.
         Dieselbe "write"-Pruefung wie oben - int_filemanager.extracted_value hat bewusst keine
         eigene Nutzer-ACL (siehe ir.model.access.csv), die Berechtigung wird hier am zugehoerigen
         Dateipfad geprueft, die eigentliche Schreibarbeit laeuft sudo() in

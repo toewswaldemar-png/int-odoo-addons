@@ -935,8 +935,7 @@ export function filemanagerControllerMixin(Base) {
                     continue;
                 }
                 const hasSuggestions = result.suggested_tags.length || result.suggested_partner
-                    || result.suggested_date || result.suggested_invoice_number || result.suggested_amount
-                    || result.custom_matches.length;
+                    || result.matches.length;
                 if (!hasSuggestions) {
                     continue;
                 }
