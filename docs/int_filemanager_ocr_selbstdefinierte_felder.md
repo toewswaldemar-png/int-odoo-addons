@@ -192,6 +192,77 @@ kompletten eigenen Renderer zu bauen wäre eine unbegründete Ausweitung gewesen
 `py_compile` auf Syntaxfehler geprüft, alle XML-Views auf Wohlgeformtheit, die neue
 Offset-Bookkeeping-Logik (`_build_indexed_text`/`_locate_span`) zusätzlich per eigenständigem
 Unittest (`tests/test_fulltext_word_index.py`, läuft ohne Odoo-Umgebung) und per manueller
-Durchrechnung bestätigt. Ein echter End-to-End-Test (Upload eines Scans, OCRmyPDF-Lauf,
-Highlighting im Dialog) steht noch aus und sollte vor einem Produktiv-Deploy einmal manuell
-durchgeklickt werden.
+Durchrechnung bestätigt.
+
+## Produktiv-Deploy (2026-09-19, HM-SRV)
+
+Direkt im Anschluss auf HM-SRV deployt (DB-Backup + Watcher-Kill-Switch + Docker-Rebuild +
+`-u int_filemanager` nach dem dokumentierten Rollout-Vorgehen). Dabei drei vorher nicht bekannte
+Probleme gefunden und behoben, alle im selben bzw. einem Folge-Commit:
+
+- **pip/apt-Konflikt**: `ocrmypdf`/`pikepdf` ziehen ein neueres `cryptography` als das per apt
+  vorinstallierte `pyOpenSSL` (23.2.0) vertraegt - Odoos `web`-Modul (importiert `OpenSSL` fuer
+  `ir_mail_server`) scheiterte danach komplett (`AttributeError: module 'lib' has no attribute
+  'GEN_EMAIL'`), die gesamte Oberflaeche war down. Fix: `pyopenssl>=24` explizit mit installieren.
+- **CRLF-Zeilenenden**: `core.autocrlf=true` im Repo wandelt `scripts/*.sh` beim Windows-Checkout
+  in CRLF um - ein `exec`-Aufruf eines so ausgecheckten Skripts scheitert mit "no such file or
+  directory" (der Kernel versteht die Shebang-Zeile mit `\r` nicht). Fix: `.gitattributes` mit
+  `*.sh text eol=lf` (die Git-Blobs selbst waren bereits LF, betraf nur Checkouts unter Windows).
+- **`wait_for_smb_mounts.sh` passt nicht zur echten Server-Topologie**: das Skript (Repo-Commit
+  `04904d6`, nie zuvor live deployt) erwartet drei separate CIFS-Mounts unter
+  `/mnt/hm-daten/{Daten,Produktiv-HM-Datenbank,Transfer}` - real ist `/mnt/hm-daten` ein einziger
+  flacher Bind-Mount von `/mnt/user/Daten`. Fuehrte zu einer Neustart-Schleife. Fuer dieses Deploy
+  ausgelassen (separates, unabhaengiges Problem, nicht Teil dieser Aufgabe) - auf dem Server liegt
+  aktuell eine abweichende Dockerfile-Variante ohne diesen ENTRYPOINT-Wrapper.
+
+## Vereinheitlichung (2026-09-19, noch am selben Tag)
+
+Nutzerwunsch nach dem ersten Test: die drei mitgelieferten Legacy-Felder
+(`extracted_date`/`_invoice_number`/`_amount`, bis dahin ein Sonderpfad neben
+`extracted_value`) entfernen, alles einheitlich über `extracted_value` laufen lassen. Umgesetzt:
+
+- Die drei Char-Felder auf `int_filemanager.file` sind komplett entfernt.
+- `fulltext.py`: `_match_extraction_patterns`/`_match_custom_patterns` zu einer einzigen
+  `_match_patterns()` zusammengeführt, `_LEGACY_TARGET_FIELDS` entfernt. `target_field` ist jetzt
+  nur noch ein freies Anzeige-/Sortier-Label ohne jede Sonderbedeutung im Code.
+- Dialog: die drei festen Eingabefelder sind raus, alle Muster (auch die drei mitgelieferten)
+  erscheinen einheitlich in der dynamischen Liste "Erkannte Felder".
+- **Migration** (`19.0.1.11.0`): bereits bestätigte Alt-Werte werden vor dem Löschen der Spalten
+  in `extracted_value`-Datensätze übernommen (kein Datenverlust) - am echten Produktivbestand
+  bestätigt (1 Datum + 1 Betrag korrekt übernommen).
+- Redeploy erfolgreich, keine neuen Probleme (kein Docker-Rebuild nötig, reiner Code+Migrations-
+  Durchlauf).
+
+## AcroForm-Formularfelder (2026-09-19, direkt im Anschluss an den ersten echten Test)
+
+Erster Test mit einer echten Datei (`04 Anlage Kind Clemens.pdf`, Suche nach einer bekannten
+Kindergeldnummer) fand: **nichts erkannt**, obwohl die Nummer im PDF sichtbar ist. Ursache am
+echten Dokument verifiziert: es ist ein ausfüllbares AcroForm-PDF - die eingetragenen Werte
+(Name, Geburtsdatum, Kindergeldnummer) stecken als Formularfeld-Werte in einer separaten
+Annotationsstruktur, NICHT im normalen Seiteninhalt. `pdfplumber.extract_words()` liest nur den
+gerenderten Seiteninhalt und sieht solche Werte grundsätzlich nie - unabhängig von der Regex.
+Nutzerentscheidung: beheben, da vermutlich ein relevanter Teil der Behörden-/
+Versicherungsdokumente im Bestand genauso aufgebaut ist.
+
+**Umsetzung**: `fulltext._pdf_form_field_words()` liest pro Seite die AcroForm-Annotationen
+(`page.annots`), nimmt Textfelder (`Tx`) und Dropdowns (`Ch`) - Checkboxen/Radiobuttons (`Btn`)
+bewusst ausgeschlossen, deren Wert ist ein PDF-Name (z.B. der gewählte Options-Wert), kein freier
+Text, und mehrere Buttons einer Radiogruppe teilen sich denselben Feldnamen. Jeder Feldwert wird
+als EIN zusammenhängendes Token (nicht in Einzelwörter zerlegt) an die normale Wortliste der
+Seite angehängt - dieselbe `_build_indexed_text`-Pipeline verarbeitet beides identisch, kein
+zweiter Auswertungsweg nötig. `_decode_form_field_value()` deckt beide in freier Wildbahn
+beobachteten Kodierungen ab (UTF-16BE mit BOM für Nicht-ASCII, PDFDocEncoding/Latin-1 ohne BOM).
+
+**Bewusste Einschränkung**: ein Formularfeld-Token hat keine Nachbarschaft zum gedruckten Label
+im Text (Label und Feldwert sind zwei unabhängige, räumlich getrennte Tokens) - ein Muster für
+einen Formularwert sollte daher das **Wertformat selbst** matchen (z.B. `\b\d{3}[A-Z]{2}\d{6}\b`
+für eine Kindergeldnummer), keine Label-Nähe voraussetzen wie bei echtem Fließtext. Am echten
+Dokument bestätigt: mit einem wertformat-basierten Muster wurde `006FK405328` korrekt samt
+Position erkannt: die eingebaute Datums-Regel fand zusätzlich `04.02.2025` aus einem Datumsfeld,
+das vorher ebenfalls nicht auffindbar war.
+
+Getestet direkt gegen die Produktivdatei per `odoo shell` (Testmuster angelegt, Analyse
+ausgeführt, Ergebnis verifiziert, Testmuster wieder gelöscht) - kein automatisierter Unittest für
+den PDF-Lesepfad selbst (braucht eine echte AcroForm-PDF-Datei), aber `_decode_form_field_value()`
+zusätzlich per Unittest abgedeckt (`tests/test_fulltext_word_index.py`). Kein Schema-/
+Migrationsbedarf, reine Erweiterung der Textextraktion - Version `19.0.1.12.0`.

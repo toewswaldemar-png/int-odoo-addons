@@ -42,6 +42,62 @@ def _extract_plain(abs_path):
         return {"content_text": f.read()}
 
 
+# Feldtypen, deren Wert als Text sinnvoll ist - "Tx" (Textfeld) und "Ch" (Dropdown/Kombifeld).
+# "Btn" (Checkbox/Radiobutton) bewusst ausgeschlossen: deren V ist ein PDF-Name (z.B. der
+# Options-Wert eines angekreuzten Radiobuttons), kein freier Text, und mehrere Buttons einer
+# Radiogruppe teilen sich denselben Feldnamen - als "Wort" verwurstet waere das nur Rauschen.
+_FORM_FIELD_TEXT_TYPES = {"Tx", "Ch"}
+
+
+def _decode_form_field_value(value):
+    """PDF-Formularfeldwerte kommen als bytes, ueblicherweise UTF-16BE mit BOM (\\xfe\\xff) fuer
+    alles ausserhalb reinem ASCII, manchmal auch als PDFDocEncoding/Latin-1 ohne BOM - beides in
+    freier Wildbahn beobachtet (live an echten Formularen wie diesem geprueft). None bei
+    leerem/nicht dekodierbarem Wert statt eines Fehlers, ein einzelnes kaputtes Feld darf die
+    gesamte Extraktion nicht abbrechen."""
+    if isinstance(value, str):
+        return value or None
+    if not isinstance(value, bytes) or not value:
+        return None
+    if value.startswith(b"\xfe\xff"):
+        text = value[2:].decode("utf-16-be", errors="replace")
+    else:
+        try:
+            text = value.decode("utf-8")
+        except UnicodeDecodeError:
+            text = value.decode("latin-1", errors="replace")
+    return text or None
+
+
+def _pdf_form_field_words(page):
+    """Ausgefuellte AcroForm-Feldwerte (Textfelder/Dropdowns) als zusaetzliche "Woerter" fuer
+    dieselbe Seite - live am Bestand entdeckt (2026-09-19): viele Behoerden-/Versicherungs-PDFs
+    sind ausfuellbare Formulare, deren eingetragene Werte NICHT im normalen Seitentext stehen,
+    sondern nur als Formularfeld-Wert in einer separaten Annotationsstruktur - page.extract_words()
+    sieht diese Werte grundsaetzlich nie, egal wie gut die Regex ist (leer am echten Fall
+    bestaetigt: eine Kindergeldnummer, die nur als Feldwert existierte, fehlte im extrahierten
+    Text komplett). Jeder Feldwert wird als EIN Token behalten (nicht in Einzelwoerter zerlegt,
+    anders als extract_words()) - Formularwerte sind meist kurze, in sich geschlossene Angaben
+    (Nummern, Namen, Daten), ein Muster soll den ganzen Wert matchen koennen, nicht nur ein
+    Teilwort. Kehrseite: anders als bei echtem Fliesstext gibt es kein Label direkt daneben im
+    Text (das gedruckte Label bleibt ein eigenes, unabhaengiges Wort an anderer Position) - ein
+    Muster fuer einen Formularwert sollte daher das Wertformat selbst matchen (z.B.
+    "\\b\\d{3}[A-Z]{2}\\d{6}\\b" fuer eine Kindergeldnummer), keine Label-Naehe voraussetzen."""
+    words = []
+    for annot in page.annots or []:
+        data = annot.get("data") or {}
+        field_type = getattr(data.get("FT"), "name", None)
+        if field_type not in _FORM_FIELD_TEXT_TYPES:
+            continue
+        text = _decode_form_field_value(data.get("V"))
+        if not text:
+            continue
+        words.append(
+            {"text": text, "x0": annot["x0"], "top": annot["top"], "x1": annot["x1"], "bottom": annot["bottom"]}
+        )
+    return words
+
+
 def _pdfplumber_words_per_page(pdf_path):
     # Lazy-Import: pdfplumber wird nur bei tatsaechlichem PDF-Zugriff gebraucht. Ersetzt seit
     # Phase B (docs/int_filemanager_ocr_selbstdefinierte_felder.md) PyPDF2/odoo.tools.pdf.PdfReader
@@ -52,7 +108,7 @@ def _pdfplumber_words_per_page(pdf_path):
     import pdfplumber
 
     with pdfplumber.open(pdf_path) as pdf:
-        return [page.extract_words(use_text_flow=False) for page in pdf.pages]
+        return [page.extract_words(use_text_flow=False) + _pdf_form_field_words(page) for page in pdf.pages]
 
 
 def _build_indexed_text(pages_words):

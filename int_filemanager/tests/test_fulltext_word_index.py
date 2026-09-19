@@ -1,6 +1,6 @@
 import unittest
 
-from odoo.addons.int_filemanager.fulltext import _build_indexed_text, _locate_span
+from odoo.addons.int_filemanager.fulltext import _build_indexed_text, _decode_form_field_value, _locate_span
 
 
 def _word(text, x0, top, x1, bottom):
@@ -62,6 +62,32 @@ class TestBuildIndexedText(unittest.TestCase):
 
     def test_locate_span_empty_word_index_returns_none(self):
         self.assertIsNone(_locate_span([], 0, 5))
+
+
+class TestDecodeFormFieldValue(unittest.TestCase):
+    """AcroForm-Feldwerte (2026-09-19, live an einem echten Behoerdenformular gefunden - eine
+    Kindergeldnummer existierte nur als Formularfeld-Wert, nicht im normalen Seitentext, siehe
+    docs/int_filemanager_ocr_selbstdefinierte_felder.md) - beide in freier Wildbahn beobachteten
+    Kodierungen pruefen."""
+
+    def test_utf16be_with_bom(self):
+        value = "﻿006FK405328".encode("utf-16-be")
+        self.assertEqual(_decode_form_field_value(value), "006FK405328")
+
+    def test_utf16be_with_umlaut(self):
+        value = "﻿Töws Clemens".encode("utf-16-be")
+        self.assertEqual(_decode_form_field_value(value), "Töws Clemens")
+
+    def test_plain_utf8_without_bom(self):
+        self.assertEqual(_decode_form_field_value(b"006FK405328"), "006FK405328")
+
+    def test_already_str(self):
+        self.assertEqual(_decode_form_field_value("006FK405328"), "006FK405328")
+
+    def test_empty_returns_none(self):
+        self.assertIsNone(_decode_form_field_value(b""))
+        self.assertIsNone(_decode_form_field_value(""))
+        self.assertIsNone(_decode_form_field_value(None))
 
 
 if __name__ == "__main__":
