@@ -1,19 +1,24 @@
 # Spiegelt das auf HM-SRV (Unraid) tatsächlich deployte Image
 # (/mnt/user/appdata/odoo/Dockerfile), ergänzt um mutagen für Phase 4
-# (Audio-Metadaten) sowie tesseract/poppler für Baustein 1 (Volltextsuche/OCR, siehe
-# docs/int_filemanager_paperoffice_recherche.md). Das offizielle odoo:19.0-Image läuft als
-# USER odoo - ein pip install direkt nach FROM ohne USER-root-Wechsel scheitert mangels
-# Schreibrechten auf die System-Packages (empirisch bestätigt, siehe
-# docs/int_filemanager_ausbau.md).
+# (Audio-Metadaten) sowie tesseract/OCRmyPDF für Baustein 1 (Volltextsuche/OCR, siehe
+# docs/int_filemanager_paperoffice_recherche.md, docs/int_filemanager_ocr_selbstdefinierte_felder.md
+# Phase B). Das offizielle odoo:19.0-Image läuft als USER odoo - ein pip install direkt nach FROM
+# ohne USER-root-Wechsel scheitert mangels Schreibrechten auf die System-Packages (empirisch
+# bestätigt, siehe docs/int_filemanager_ausbau.md).
 FROM odoo:19.0
 USER root
-# tesseract-ocr/poppler-utils sind System-Binaries (apt, nicht pip) - pytesseract/pdf2image sind
-# nur duenne Python-Wrapper darum, kein separater Dienst/Container noetig, alles laeuft
-# in-process in derselben Odoo-Instanz wie mutagen/Pillow/PyPDF2 auch.
+# tesseract-ocr (+ deutsches Sprachpaket) bleibt bestehen, laeuft aber seit Phase B nicht mehr
+# direkt ueber pytesseract, sondern intern durch OCRmyPDF (pip-Paket "ocrmypdf") - das braucht
+# zusaetzlich ghostscript+qpdf als System-Binaries (offizielle OCRmyPDF-Voraussetzungen).
+# poppler-utils raus: war nur fuer pdf2image (Rendern von PDF-Seiten zu Bildern vor dem rohen
+# pytesseract-Aufruf) noetig, das mit dem Wechsel auf OCRmyPDF komplett entfaellt.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        tesseract-ocr tesseract-ocr-deu poppler-utils \
+        tesseract-ocr tesseract-ocr-deu ghostscript qpdf \
     && rm -rf /var/lib/apt/lists/*
-RUN pip3 install --break-system-packages --no-cache-dir pyjwt mutagen==1.47.0 pytesseract pdf2image
+# pdfplumber ersetzt PyPDF2/odoo.tools.pdf.PdfReader als PDF-Textextraktion (liefert zusaetzlich
+# Wort-Positionen fuer das Highlighting, siehe fulltext.py); ocrmypdf ersetzt den rohen
+# pytesseract/pdf2image-Aufruf.
+RUN pip3 install --break-system-packages --no-cache-dir pyjwt mutagen==1.47.0 pdfplumber ocrmypdf
 # Wartet beim Start, bis die drei SMB-Freigaben unter /mnt/hm-daten wirklich als CIFS
 # gemountet sind (nicht Unraids leerer tmpfs-Platzhalter) - siehe Kommentar im Skript.
 # Muss noch als root kopiert/ausfuehrbar gemacht werden, laeuft danach aber als USER odoo.

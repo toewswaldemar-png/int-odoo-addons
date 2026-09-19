@@ -1,41 +1,90 @@
 <templates xml:space="preserve">
     <t t-name="int_filemanager.DocumentReviewDialog" owl="1">
-        <Dialog title="'Erkannte Werte: ' + props.fileName" size="'md'">
+        <Dialog title="'Erkannte Werte: ' + props.fileName" size="'lg'">
             <div t-if="!hasSuggestions" class="text-muted p-2">
                 Keine Tags/Werte erkannt - der Inhalt ist trotzdem durchsuchbar.
             </div>
-            <div t-else="" class="p-2">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Tags</label>
-                    <div t-if="!state.tags.length" class="text-muted">Keine erkannt.</div>
-                    <div class="d-flex flex-wrap gap-1">
-                        <span t-foreach="state.tags" t-as="tag" t-key="tag.id"
-                              class="badge text-bg-secondary d-flex align-items-center gap-1">
-                            <t t-esc="tag.name"/>
-                            <i class="fa fa-times" role="button" t-on-click="() => this.removeTag(tag_index)"/>
-                        </span>
+            <div t-else="" class="row g-3 p-2">
+                <!-- Links: PDF-Vorschau mit Markierungen (Phase C) - bei Nicht-PDF-Dateien
+                     stattdessen der (gekuerzte) Volltext, da es dort kein Positionskonzept gibt
+                     (siehe fulltext.py). -->
+                <div class="col-lg-6">
+                    <div t-if="isPdf">
+                        <IntPdfHighlightViewer
+                            downloadUrl="downloadUrl"
+                            pageNum="state.pageNum"
+                            boxes="pdfBoxes"
+                            activeKey="state.activeKey"
+                            onPageCountKnown.bind="onPageCountKnown"
+                            onBoxClick.bind="onBoxClick"
+                        />
+                        <div t-if="state.pageCount > 1" class="d-flex align-items-center justify-content-center gap-2 mt-1">
+                            <button class="btn btn-sm btn-outline-secondary" t-on-click="prevPage">
+                                <i class="fa fa-chevron-left"/>
+                            </button>
+                            <span class="text-muted" t-esc="`Seite ${state.pageNum} / ${state.pageCount}`"/>
+                            <button class="btn btn-sm btn-outline-secondary" t-on-click="nextPage">
+                                <i class="fa fa-chevron-right"/>
+                            </button>
+                        </div>
                     </div>
+                    <pre t-else="" class="o_int_content_text_preview" t-esc="contentTextPreview"/>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Kontakt</label>
-                    <div t-if="!state.partner" class="text-muted">Kein Kontakt erkannt.</div>
-                    <div t-else="" class="d-flex align-items-center gap-2">
-                        <span t-esc="state.partner.name"/>
-                        <i class="fa fa-times" role="button" t-on-click="clearPartner"/>
+
+                <!-- Rechts: die Werteliste, editierbar vor dem Uebernehmen. -->
+                <div class="col-lg-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tags</label>
+                        <div t-if="!state.tags.length" class="text-muted">Keine erkannt.</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            <span t-foreach="state.tags" t-as="tag" t-key="tag.id"
+                                  class="badge text-bg-secondary d-flex align-items-center gap-1">
+                                <t t-esc="tag.name"/>
+                                <i class="fa fa-times" role="button" t-on-click="() => this.removeTag(tag_index)"/>
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <div class="row g-2">
-                    <div class="col-4">
-                        <label class="form-label fw-bold">Datum</label>
-                        <input type="text" class="form-control" t-model="state.date"/>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Kontakt</label>
+                        <div t-if="!state.partner" class="text-muted">Kein Kontakt erkannt.</div>
+                        <div t-else="" class="d-flex align-items-center gap-2">
+                            <span t-esc="state.partner.name"/>
+                            <i class="fa fa-times" role="button" t-on-click="clearPartner"/>
+                        </div>
                     </div>
-                    <div class="col-4">
-                        <label class="form-label fw-bold">Rechnungsnr.</label>
-                        <input type="text" class="form-control" t-model="state.invoiceNumber"/>
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <label class="form-label fw-bold">Datum</label>
+                            <input type="text" class="form-control" t-model="state.date"/>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-bold">Rechnungsnr.</label>
+                            <input type="text" class="form-control" t-model="state.invoiceNumber"/>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-bold">Betrag</label>
+                            <input type="text" class="form-control" t-model="state.amount"/>
+                        </div>
                     </div>
-                    <div class="col-4">
-                        <label class="form-label fw-bold">Betrag</label>
-                        <input type="text" class="form-control" t-model="state.amount"/>
+
+                    <!-- Selbstdefinierte Felder: eine Zeile pro aktivem Erkennungsmuster
+                         (target_field ausserhalb der drei festen oben), keine feste Liste im
+                         Dialog-Code - neue Admin-Muster tauchen automatisch ab dem naechsten
+                         Analyse-Lauf hier auf (siehe filemanager_file.py::action_analyze_document). -->
+                    <div t-if="state.customFields.length" class="mb-3">
+                        <label class="form-label fw-bold">Eigene Felder</label>
+                        <div t-foreach="state.customFields" t-as="field" t-key="field.pattern_id"
+                             class="row g-2 align-items-center mb-1"
+                             t-on-mouseenter="() => this.onFocusCustomField(field)"
+                             t-on-mouseleave="onBlurCustomField">
+                            <div class="col-4 text-truncate" t-att-title="field.pattern_name" t-esc="field.pattern_name"/>
+                            <div class="col-7">
+                                <input type="text" class="form-control form-control-sm" t-model="field.value"/>
+                            </div>
+                            <div class="col-1">
+                                <i class="fa fa-times" role="button" t-on-click="() => this.removeCustomField(field_index)"/>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,10 @@
+.o_int_content_text_preview {
+    max-height: 70vh;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--body-bg-secondary, #f8f9fa);
+    border: 1px solid var(--border-color, #dee2e6);
+    padding: 0.5rem;
+    font-size: 0.85rem;
+}

@@ -62,6 +62,7 @@ export class IntFilemanagerAnalyzeButton extends Component {
         }
         this.dialog.add(IntDocumentReviewDialog, {
             fileName: record.data.name,
+            path: record.data.path,
             resId: result.res_id,
             suggestion: result,
             // record.model.load() statt this.reload() (das gibt es hier nicht, das Widget hat

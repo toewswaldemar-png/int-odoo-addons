@@ -1,0 +1,60 @@
+<odoo>
+    <!-- Reine Auswertungsansicht - kein Formular, kein Anlegen/Bearbeiten ueber die UI (die ACL
+         erlaubt Nutzern ohnehin nur Lesen, siehe ir.model.access.csv; Werte entstehen
+         ausschliesslich ueber den "Werte erkennen"-Dialog, siehe filemanager_file.py::
+         action_apply_extracted_values). Genau der in
+         docs/int_filemanager_ocr_selbstdefinierte_felder.md als Vorteil eines echten
+         Datensatz-Modells (statt fields.Properties) genannte Fall: Suchen/Filtern/Pivot direkt
+         auf den erkannten Werten, ohne JSON-Parsing. -->
+    <record id="view_filemanager_extracted_value_list" model="ir.ui.view">
+        <field name="name">int_filemanager.extracted_value.list</field>
+        <field name="model">int_filemanager.extracted_value</field>
+        <field name="arch" type="xml">
+            <list create="false" edit="false" delete="false">
+                <field name="file_id"/>
+                <field name="pattern_id"/>
+                <field name="value"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_filemanager_extracted_value_pivot" model="ir.ui.view">
+        <field name="name">int_filemanager.extracted_value.pivot</field>
+        <field name="model">int_filemanager.extracted_value</field>
+        <field name="arch" type="xml">
+            <pivot>
+                <field name="pattern_id" type="row"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_filemanager_extracted_value_search" model="ir.ui.view">
+        <field name="name">int_filemanager.extracted_value.search</field>
+        <field name="model">int_filemanager.extracted_value</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="value"/>
+                <field name="file_id"/>
+                <field name="pattern_id"/>
+                <filter name="group_by_pattern" string="Feld" context="{'group_by': 'pattern_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_filemanager_extracted_value" model="ir.actions.act_window">
+        <field name="name">Erkannte Werte</field>
+        <field name="res_model">int_filemanager.extracted_value</field>
+        <field name="view_mode">list,pivot</field>
+        <field name="context">{'search_default_group_by_pattern': 1}</field>
+    </record>
+
+    <!-- Bewusst NICHT unter "Konfiguration" (das ist admin-only) - die Werte selbst sind normale,
+         von jedem Nutzer per Analyse-Dialog erzeugte Daten, keine Admin-Einstellung. Gleiche
+         Sichtbarkeit wie der Wurzel-Menuepunkt selbst (group_filemanager_user). -->
+    <menuitem id="menu_int_filemanager_extracted_value"
+              name="Erkannte Werte"
+              parent="menu_int_filemanager_root"
+              action="action_filemanager_extracted_value"
+              groups="int_filemanager.group_filemanager_user"
+              sequence="25"/>
+</odoo>

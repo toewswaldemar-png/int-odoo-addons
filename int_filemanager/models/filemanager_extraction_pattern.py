@@ -10,14 +10,21 @@ class IntFilemanagerExtractionPattern(models.Model):
     _order = "target_field, sequence, id"
 
     name = fields.Char(required=True)
-    target_field = fields.Selection(
-        [
-            ("date", "Datum"),
-            ("invoice_number", "Rechnungsnummer"),
-            ("amount", "Betrag"),
-        ],
+    # Ehemals eine feste 3er-Selection (date/invoice_number/amount) - seit 2026-09-19 freier Text,
+    # damit Admins beliebig viele eigene Felder anlegen koennen (siehe
+    # docs/int_filemanager_ocr_selbstdefinierte_felder.md, Phase A). Die drei alten Werte
+    # "date"/"invoice_number"/"amount" bleiben als besondere, fest verdrahtete Werte bestehen
+    # (siehe fulltext._LEGACY_TARGET_FIELDS) - ein Muster mit einem dieser drei Werte befuellt
+    # weiterhin ausschliesslich die alten Felder extracted_date/_invoice_number/_amount auf
+    # int_filemanager.file (kein Migrationsrisiko fuer Bestandsdaten/-ansichten). JEDES ANDERE
+    # target_field erzeugt stattdessen einen dynamischen int_filemanager.extracted_value-Datensatz
+    # - siehe filemanager_file.py:action_apply_extracted_values.
+    target_field = fields.Char(
         required=True,
-        help="Welchen Vorschlags-Slot im \"Werte erkennen\"-Dialog dieses Muster befüllt.",
+        help="Technischer Name des Feldes, das dieses Muster befüllt (frei wählbar, z.B. "
+        "\"iban\" oder \"kundennummer\"). Die drei besonderen Werte \"date\", \"invoice_number\" "
+        "und \"amount\" befüllen weiterhin die eingebauten Felder Datum/Rechnungsnummer/Betrag - "
+        "jeder andere Wert erzeugt ein eigenes, frei benanntes Feld im \"Werte erkennen\"-Dialog.",
     )
     pattern = fields.Char(
         required=True,
@@ -36,9 +43,11 @@ class IntFilemanagerExtractionPattern(models.Model):
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
 
-    # Pro target_field wird in sequence-Reihenfolge geprueft, der erste Treffer gewinnt -
-    # fulltext.py:suggest_from_text() haelt sich strikt daran (kein Modell-Code dafuer noetig,
-    # das ist reine Auswertungslogik dort).
+    # Nur fuer die drei Legacy-target_field-Werte (date/invoice_number/amount) gilt "erster
+    # Treffer in sequence-Reihenfolge gewinnt pro target_field" - jedes selbstdefinierte Muster
+    # (jedes andere target_field) liefert dagegen unabhaengig sein eigenes Ergebnis, da es dafuer
+    # keinen gemeinsamen Slot gibt (siehe fulltext.py:_match_extraction_patterns vs.
+    # _match_custom_patterns; kein Modell-Code dafuer noetig, das ist reine Auswertungslogik dort).
     @api.constrains("pattern")
     def _check_pattern(self):
         for rec in self:

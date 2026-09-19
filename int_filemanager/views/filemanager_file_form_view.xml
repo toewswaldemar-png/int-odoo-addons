@@ -26,6 +26,19 @@
                         <field name="tag_ids" widget="many2many_tags"/>
                         <field name="partner_id"/>
                     </group>
+                    <!-- Nur lesend (kein editable="bottom"/create/delete-Button) - entstehen
+                         ausschliesslich ueber den "Werte erkennen"-Dialog, nicht per Hand hier
+                         (siehe filemanager_file.py::action_apply_extracted_values). -->
+                    <notebook invisible="not extracted_value_ids">
+                        <page string="Erkannte Werte" name="extracted_values">
+                            <field name="extracted_value_ids" readonly="1">
+                                <list create="false" delete="false">
+                                    <field name="pattern_id"/>
+                                    <field name="value"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
                 <chatter/>
             </form>

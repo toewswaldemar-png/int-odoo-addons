@@ -935,7 +935,8 @@ export function filemanagerControllerMixin(Base) {
                     continue;
                 }
                 const hasSuggestions = result.suggested_tags.length || result.suggested_partner
-                    || result.suggested_date || result.suggested_invoice_number || result.suggested_amount;
+                    || result.suggested_date || result.suggested_invoice_number || result.suggested_amount
+                    || result.custom_matches.length;
                 if (!hasSuggestions) {
                     continue;
                 }
@@ -944,6 +945,7 @@ export function filemanagerControllerMixin(Base) {
                         IntDocumentReviewDialog,
                         {
                             fileName: file.name,
+                            path,
                             resId: result.res_id,
                             suggestion: result,
                             onSaved: () => this.reload(),
@@ -1453,6 +1455,7 @@ export function filemanagerControllerMixin(Base) {
                     IntDocumentReviewDialog,
                     {
                         fileName: record.data.name,
+                        path: record.data.path,
                         resId: result.res_id,
                         suggestion: result,
                         onSaved: () => this.reload(),

@@ -345,6 +345,21 @@ class IntFilemanagerController(http.Controller):
         authz.require(request.env, rel, "write")
         return request.env["int_filemanager.file"].action_analyze_document(rel)
 
+    @http.route("/int_filemanager/apply_extracted_values", type="jsonrpc", auth="user", methods=["POST"])
+    def apply_extracted_values(self, path="", values=None):
+        """Gegenstueck zu analyze_document fuer die selbstdefinierten Felder (Phase A, siehe
+        docs/int_filemanager_ocr_selbstdefinierte_felder.md): der Kontroll-Dialog ruft dies beim
+        "Übernehmen" auf, NACH dem normalen this.orm.write() fuer tag_ids/extracted_date/etc.
+        Dieselbe "write"-Pruefung wie oben - int_filemanager.extracted_value hat bewusst keine
+        eigene Nutzer-ACL (siehe ir.model.access.csv), die Berechtigung wird hier am zugehoerigen
+        Dateipfad geprueft, die eigentliche Schreibarbeit laeuft sudo() in
+        action_apply_extracted_values."""
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        rel = to_relative(request.env, abs_path)
+        authz.require(request.env, rel, "write")
+        return request.env["int_filemanager.file"].action_apply_extracted_values(rel, values or [])
+
     # ---------------------------------------------------------------------
     # versioning
     # ---------------------------------------------------------------------
