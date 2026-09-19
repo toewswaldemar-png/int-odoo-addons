@@ -357,23 +357,6 @@ class IntFilemanagerFile(models.Model):
                 {"file_id": self.id, "path": self.path, "filename": self.name, "event_type": "revoked"}
             )
 
-    def action_open_form(self):
-        """Oeffnet das Formular als Dialog - Zielknopf fuer den Pfeil-Button in der nativen
-        Listenansicht (native_list_view.js), bewusst getrennt vom Namens-Klick dort (Navigation/
-        Vorschau/Download). Ein <button type="object"> in einer Listenzeile loest nie
-        openRecord()/den Zeilenklick aus (list_renderer.js: onButtonCellClicked prueft
-        ev.target.closest("button") und reicht nur bei Fehltreffer an onCellClicked weiter) -
-        deshalb reicht die reine Arch-Deklaration, kein JS-Klick-Abfang noetig."""
-        self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
-            "name": self.display_name,
-            "res_model": "int_filemanager.file",
-            "res_id": self.id,
-            "views": [(False, "form")],
-            "target": "new",
-        }
-
     def _cron_scan_filemanager(self):
         self._scan_and_reconcile()
 

@@ -3,25 +3,6 @@
 // (siehe native_kanban_view.js: get className()), analog zum o_int_filemanager_list-Scoping in
 // native_list_view.scss - betrifft keine andere Kanban-Ansicht im System.
 .o_int_filemanager_kanban {
-    // "Details öffnen"-Button (filemanager_file_kanban_view.xml, action_open_form) - kleiner,
-    // runder Overlay-Button oben rechts auf der Karte, damit er das Cover/den Platzhalter nicht
-    // verdraengt. Position bezieht sich auf die umschliessende position:relative-Div in der
-    // Kartenvorlage, nicht auf die Seite.
-    .o_int_filemanager_kanban_open_form {
-        position: absolute;
-        top: 0.375rem;
-        right: 0.375rem;
-        z-index: 1;
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.2);
-    }
-
     .o_int_filemanager_kanban_cover {
         width: 100%;
         height: 140px;

@@ -47,12 +47,10 @@ const VIDEO_MIME_TYPES = { mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg
 const TREE_WIDTH_LS = "int_filemanager.treeWidth";
 const TREE_WIDTH_DEFAULT = 280;
 
-// Audio ist NICHT nativ im FileViewer verdrahtet - anders als bei Video gibt es dort keinen
-// isAudio-Zweig (am Odoo-19-Quellcode geprueft: web/core/file_viewer/file_viewer.js/.xml kennt
-// nur isImage/isPdf/isText/isVideo/isUrlYoutube). Deshalb file_viewer_patch.xml (t-inherit
-// mode="extension" gegen web.FileViewer, gleiches Muster wie mail/static/src/chatter/web/
-// form_controller.xml es fuer web.FormView nutzt) - patcht die geteilte Komponente selbst
-// additiv um einen <audio>-Zweig, statt einen eigenen Player zu bauen. Bewusst ohne "wma" -
+// Audio laeuft NICHT ueber den FileViewer (anders als Video, das dort nativ verdrahtet ist),
+// sondern ueber den eigenen Systray-Player (systray/audio_player_service.js) - Nutzerentscheidung
+// 2026-09-18, "voller ueberlebt-Navigation-Effekt wie Cloudreve", den ein Modal-Dialog
+// strukturell nicht bieten kann (schliesst sich beim Verlassen der View). Bewusst ohne "wma" -
 // mediameta.py unterstuetzt es serverseitig fuer Metadaten, aber kein Browser spielt das
 // proprietaere Format nativ ab (gleiche Begruendung wie das fehlende "mov" bei Video oben).
 const AUDIO_EXTENSIONS = new Set(["mp3", "wav", "flac", "ogg", "m4a", "aac"]);
@@ -66,8 +64,11 @@ const AUDIO_MIME_TYPES = {
 // onPreview() die alte iframe-Vorschau ausloesen, die der Editor ersetzt).
 const TEXT_EDIT_EXTENSIONS = new Set(["txt", "csv", "log", "md", "json"]);
 
+// AUDIO_EXTENSIONS bewusst NICHT Teil davon (anders als frueher, siehe Kommentar oben) - Audio
+// wird in openRecord() VOR dieser Pruefung abgefangen, isPreviewable()/onPreview() betreffen nur
+// noch den echten FileViewer.
 const PREVIEWABLE_EXTENSIONS = new Set([
-    "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS,
+    "pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", ...VIDEO_EXTENSIONS,
 ]);
 
 // Ported from legacy_ui/filemanager_action.js's EDITABLE_EXTENSIONS - narrowed to actual
@@ -167,6 +168,7 @@ export function filemanagerControllerMixin(Base) {
             this.actionService = useService("action");
             this.busService = useService("bus_service");
             this.fileViewer = useFileViewer();
+            this.audioPlayer = useService("int_filemanager.audioPlayer");
             this.fileInput = useRef("fileInput");
 
             // Drag&Drop-Upload (2026-09-05): Mitarbeiter ziehen PDFs heute per Drag&Drop direkt aus
@@ -571,6 +573,10 @@ export function filemanagerControllerMixin(Base) {
                 this.onOpenZip(record);
                 return;
             }
+            if (AUDIO_EXTENSIONS.has(extOf(record.data.name))) {
+                this.onPlayAudio(record);
+                return;
+            }
             if (isPreviewable(record.data.name)) {
                 this.onPreview(record);
                 return;
@@ -810,16 +816,14 @@ export function filemanagerControllerMixin(Base) {
             const ext = extOf(record.data.name);
             const isPdf = ext === "pdf";
             const isVideo = VIDEO_EXTENSIONS.has(ext);
-            const isAudio = AUDIO_EXTENSIONS.has(ext);
             return {
                 path,
                 name: record.data.name,
                 downloadUrl,
-                isImage: PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && !isVideo && !isAudio,
+                isImage: PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && !isVideo,
                 isPdf,
                 isVideo,
-                isAudio,
-                mimetype: isVideo ? VIDEO_MIME_TYPES[ext] : isAudio ? AUDIO_MIME_TYPES[ext] : undefined,
+                mimetype: isVideo ? VIDEO_MIME_TYPES[ext] : undefined,
                 isViewable: isPreviewable(record.data.name),
                 defaultSource: isPdf
                     ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(downloadUrl)}#pagemode=none`
@@ -833,6 +837,36 @@ export function filemanagerControllerMixin(Base) {
                 .map((r) => this.toViewerFile(r));
             const file = files.find((f) => f.path === record.data.path);
             this.fileViewer.open(file, files);
+        }
+
+        // Queue = alle Audiodateien des AKTUELL GELADENEN Ordners, in Listenreihenfolge (dieselbe
+        // Quelle wie onPreview() fuer Bilder/PDFs/Video) - Startindex ist die angeklickte Datei.
+        // this.model.root.records ist bewusst NICHT dieselbe Menge wie state.queue im Service:
+        // ein Ordnerwechsel danach aendert die Queue nicht rueckwirkend, der Player spielt die
+        // einmal gestartete Liste zu Ende (Nutzererwartung: "Wiedergabe laeuft weiter", nicht
+        // "Queue springt mit, wenn ich woanders hinklicke").
+        onPlayAudio(record) {
+            const files = this.model.root.records
+                .filter((r) => !r.data.is_dir && AUDIO_EXTENSIONS.has(extOf(r.data.name)))
+                .map((r) => ({
+                    path: r.data.path,
+                    name: r.data.name,
+                    downloadUrl: `/int_filemanager/download?path=${encodeURIComponent(r.data.path)}&disposition=inline`,
+                    mimetype: AUDIO_MIME_TYPES[extOf(r.data.name)],
+                    // Von mediameta.py bereits befuellt, wenn die Datei ID3-/Vorbis-Tags hat -
+                    // audio_player_systray.js zeigt "Interpret - Titel" statt des rohen
+                    // Dateinamens, sobald beides vorhanden ist.
+                    title: r.data.audio_title || "",
+                    artist: r.data.audio_artist || "",
+                    // Nur fuer die Queue-Liste im Panel gebraucht (audio_player_systray.js:
+                    // queueHasMultipleFolders/trackFolder) - bei einer rekursiven Suche
+                    // (native_search_model.js: filter_search_recursive) koennen
+                    // model.root.records Dateien aus verschiedenen Ordnern enthalten, die Queue-
+                    // Liste zeigt den Ordner dann pro Zeile an statt ihn zu verschweigen.
+                    folderPath: r.data.folder_path || "",
+                }));
+            const startIndex = files.findIndex((f) => f.path === record.data.path);
+            this.audioPlayer.playQueue(files, startIndex);
         }
 
         // -----------------------------------------------------------------
@@ -1020,7 +1054,7 @@ export function filemanagerControllerMixin(Base) {
                 }
                 el.draggable = false;
                 const dragHandles = el.querySelectorAll(
-                    ".o_int_filemanager_open_form_icon, .o_int_filemanager_name_label"
+                    ".o_int_filemanager_name_icon, .o_int_filemanager_name_label"
                 );
                 for (const handle of dragHandles) {
                     handle.draggable = true;

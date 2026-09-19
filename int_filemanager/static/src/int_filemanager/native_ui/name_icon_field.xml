@@ -1,8 +1,20 @@
 <templates xml:space="preserve">
     <t t-name="int_filemanager.NameField">
         <div class="d-flex align-items-center gap-1 o_int_filemanager_name_cell">
-            <button type="button" class="btn btn-link p-0 border-0 o_int_filemanager_open_form_icon"
-                    t-on-click="onIconClick" data-tooltip="Details öffnen">
+            <!-- Icon oeffnet bewusst nichts mehr (Nutzerentscheidung 2026-09-18: die vorherige
+                 Klick-Funktion - hier wie der Pfeil-Button in der Kanban-Karte - ist entfernt,
+                 eine andere Loesung fuers Formular-Oeffnen folgt spaeter). Bewusst ein <div>,
+                 kein <span>: Odoos eigene, sehr spezifische Regel
+                 (".o_list_char .o_field_widget span:not(.o_m2o_avatar){display:inline}",
+                 list_renderer.scss) traf sonst DIESEN Wrapper selbst (vorher ein <button>, den
+                 die Regel mangels Tag-Match ignorierte) und gewann per hoeherer Spezifitaet
+                 gegen unser eigenes "display:inline-flex" unten - der Wrapper verlor dadurch
+                 seinen Flex-Charakter, sein Kind .o_image (ebenfalls ein <span>, ebenso
+                 getroffen) blieb ein normales Inline-Element ohne Breite/Hoehe und damit
+                 unsichtbar (nur .fa-folder, kein <span>, blieb unberuehrt und sichtbar - live so
+                 beobachtet, Nutzerreport 2026-09-18 "keine Datei-Icons mehr"). Ein <div> matcht
+                 die Span-spezifische Regel gar nicht erst. -->
+            <div class="o_int_filemanager_name_icon">
                 <!-- text-primary statt text-warning (Nutzerkorrektur 2026-09-16, "nicht Odoo
                      nativ"): Odoos eigenes search_panel.xml faerbt ein Kategoriefeld-Icon ohne
                      eigene section.color-Konfiguration mit text-primary
@@ -11,7 +23,7 @@
                      unkonfiguriertes Kategoriefeld, kein Filter. -->
                 <i t-if="isDir" class="fa fa-folder fa-fw text-primary" role="img" aria-label="Ordner"/>
                 <span t-else="" class="o_image" role="img" t-att-data-mimetype="pseudoMimetype"/>
-            </button>
+            </div>
             <!-- t-model unterstuetzt beliebig tiefe Pfade (OWL-Compiler spaltet nur am letzten
                  Punkt, alles davor ist ein normaler JS-Ausdruck) - am OWL-2.x-Quellcode
                  gegengeprueft, kein Sonderfall fuer verschachtelte env-Zugriffe noetig. -->

@@ -7,6 +7,12 @@
                 <field name="is_dir" column_invisible="1"/>
                 <field name="path" column_invisible="1"/>
                 <field name="folder_path" column_invisible="1"/>
+                <!-- Nur fuer den Systray-Audioplayer gebraucht (filemanager_controller_mixin.js:
+                     onPlayAudio() baut daraus die Panel-Anzeige "Interpret - Titel" statt des
+                     rohen Dateinamens), nicht auf der Karte/Zeile dargestellt - dieselben von
+                     mediameta.py bereits befuellten Felder wie im Formular. -->
+                <field name="audio_title" column_invisible="1"/>
+                <field name="audio_artist" column_invisible="1"/>
                 <!-- Baustein 1 (Werte erkennen) - ocr_state (pending/running/done/error) war
                      bisher nirgends sichtbar, nur "done" zaehlt praktisch als Normalfall und
                      bleibt deshalb unauffaellig (decoration nur fuer pending/error) -
@@ -26,10 +32,10 @@
                 <!-- Ordner-/Datei-Typ-Icon vor dem Namen - eigenes kleines Feld-Widget
                      (name_icon_field.js/.xml), nach dem Muster von Odoos eigenem
                      many2one_avatar-Widget (Icon + Feldwert in einer Zelle). Rein clientseitig
-                     aus is_dir/Dateiendung abgeleitet, kein neues Backend-Feld. Klick auf das
-                     Icon selbst oeffnet das Formular (action_open_form) - ersetzt die vorherige
-                     eigene Pfeil-Button-Spalte (Nutzerwunsch 2026-09-11), siehe
-                     name_icon_field.js fuer die Handverdrahtung. -->
+                     aus is_dir/Dateiendung abgeleitet, kein neues Backend-Feld. Reines Icon ohne
+                     eigene Klick-Funktion (Nutzerentscheidung 2026-09-18, entfernt die
+                     vorherige "Klick oeffnet das Formular"-Funktion aus 2026-09-11 wieder -
+                     eine andere Loesung dafuer folgt spaeter). -->
                 <field name="name" widget="int_filemanager_name"/>
                 <!-- Menschlich lesbar (z.B. "12.34Mb"/"700Mb"/"512 Bytes") statt roher Byte-
                      Zahl - dieselbe Formatierung, die Odoo intern fuer jede Binary-Feld-Groesse

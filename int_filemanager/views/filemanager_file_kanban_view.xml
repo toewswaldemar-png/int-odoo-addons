@@ -19,27 +19,19 @@
                 <field name="status_color"/>
                 <!-- Fuer den pending/error-Indikator unten - siehe Kommentar dort. -->
                 <field name="ocr_state"/>
+                <!-- Nur fuer den Systray-Audioplayer gebraucht, wie in der Liste - siehe
+                     Kommentar dort (filemanager_file_list_view.xml). -->
+                <field name="audio_title"/>
+                <field name="audio_artist"/>
                 <templates>
                     <t t-name="card">
-                        <!-- Eigene Wrapper-Div fuer position:relative - Anker fuer den
-                             "Details öffnen"-Button unten (position:absolute soll sich auf die
-                             ganze Karte beziehen, nicht auf die Seite). -->
-                        <div class="position-relative">
-                            <!-- Pendant zum Pfeil-Button in der Liste (filemanager_file_list_view.xml,
-                                 action_open_form) - Kartenklick loest hier ausschliesslich
-                                 openRecord() aus (Ordner-Navigation bzw. Datei oeffnen/downloaden,
-                                 filemanager_controller_mixin.js), es gibt sonst keinen Weg, das
-                                 volle Formular (exakte Byte-Groesse, alle Felder, Chatter als
-                                 Vollseite statt Seitenpanel) von der Karte aus zu erreichen. Kein
-                                 eigener Klick-Abfang noetig: der Kanban-Compiler versieht jeden
-                                 <button type="object"> automatisch mit der Klasse
-                                 "oe_kanban_action" (kanban_compiler.js), die in
-                                 CANCEL_GLOBAL_CLICK steht (kanban_record.js) - ein Klick darauf
-                                 loest nie openRecord()/die Kartennavigation aus, exakt dasselbe
-                                 native Verhalten wie der Listen-Button. -->
-                            <button name="action_open_form" type="object" icon="fa-arrow-right"
-                                    title="Details öffnen" string=""
-                                    class="btn btn-light btn-sm o_int_filemanager_kanban_open_form"/>
+                        <!-- Kein eigener Weg mehr, das volle Formular von der Karte aus zu
+                             erreichen (Nutzerentscheidung 2026-09-18: der bisherige
+                             "Details öffnen"-Pfeil-Button ist entfernt, eine andere Loesung
+                             dafuer folgt spaeter) - Kartenklick loest weiterhin ausschliesslich
+                             openRecord() aus (Ordner-Navigation bzw. Datei oeffnen/downloaden,
+                             filemanager_controller_mixin.js). -->
+                        <div>
                             <!-- thumbnail (filemanager_file.py) ist fuer Bilder/PDFs/Audio bereits
                                  befuellt (mediameta.py) - natives image-Widget, kein neuer Code.
                                  Fuer alles ohne Thumbnail (Ordner, Office-Dokumente, Archive, ...)

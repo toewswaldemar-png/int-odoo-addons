@@ -2,9 +2,9 @@
 
 // Direkter Icon-Button fuer "Werte erkennen" auf Zeile/Karte (2026-09-07, Nutzerfeedback
 // "aktuell nicht sehr effizient") - bisher nur ueber das Aktionsmenue erreichbar (Auswahl +
-// Dropdown + Klick). Kann NICHT wie "Details öffnen" (action_open_form) ein simples
-// <button type="object"> sein: das ruft eine Server-Methode auf, die eine Odoo-Action
-// zurueckgibt - "Werte erkennen" ist dagegen ein rein clientseitiger Ablauf (RPC + Owl-Dialog),
+// Dropdown + Klick). Kann NICHT ein simples <button type="object"> sein (Odoos eigener
+// Mechanismus, der eine Server-Methode aufruft, die eine Odoo-Action zurueckgibt) -
+// "Werte erkennen" ist ein rein clientseitiger Ablauf (RPC + Owl-Dialog),
 // den es serverseitig gar nicht als Action gibt. Stattdessen ein natives <widget>
 // (registry.category("view_widgets"), verifiziert am Odoo-19-Quellcode: web/static/src/
 // views/widgets/widget.js) - bekommt ueber props.record vollen Zugriff auf den Datensatz und

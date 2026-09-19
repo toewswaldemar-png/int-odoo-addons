@@ -1,0 +1,99 @@
+// Gemeinsame Steuer-Buttons (Vorherige/Play-Pause/Naechste) - dieselbe Klasse in der kompakten
+// Navbar-Reihe UND im aufgeklappten Panel (Nutzerwunsch 2026-09-18). Bewusst KEINE gemeinsame
+// Groessen-Regel hier (fruehere Fassung: "padding: 0.25rem 0.5rem" unscoped fuer beide) -
+// Nutzerreport 2026-09-18 "wirken sehr klein" im Panel, Ursache war genau diese Navbar-Groesse,
+// die dort mangels Odoos festem Hoehenbudget (var(--o-navbar-height)) gar nicht noetig ist.
+// Statt einen neuen Pixelwert zu raten: die Navbar-Verkleinerung bleibt NUR im
+// .o_int_filemanager_audio_systray-Scope, im Panel gilt unveraendert Bootstraps eigene
+// ".btn"-Standardgroesse (0.375rem 0.75rem) - dieselbe Groesse, die jeder andere Button in
+// diesem Popover (z.B. "Beenden" unten) ohnehin schon hat.
+.o_int_filemanager_audio_btn {
+    line-height: 1;
+}
+
+// Kompakte, zusammenhaengende Button-Reihe in der Navbar (Nutzerwunsch 2026-09-18, Vorbild
+// Discuss' eigener Anruf-Balken: Vorherige/Play-Pause/Naechste immer direkt klickbar, ohne
+// vorher ein Panel oeffnen zu muessen - nur Titel/Fortschritt/Lautstaerke brauchen das Popover,
+// dafuer reicht ein einzelner zusaetzlicher Button in derselben Gruppe).
+.o_int_filemanager_audio_systray {
+    // Kein eigener Aussenabstand mehr (frueherer Versuch: "margin: 0 0.5rem") - die
+    // "dropdown-toggle"-Klasse im Template gibt uns jetzt Odoos eigenes, navbar-einheitliches
+    // Padding automatisch (siehe Kommentar in audio_player_systray.xml).
+    .o_int_filemanager_audio_btn {
+        // Kompaktes Padding NUR hier (Navbar-Hoehenbudget, siehe Kommentar oben).
+        padding: 0.25rem 0.5rem;
+        color: var(--o-navbar-color, rgba(255, 255, 255, 0.8));
+
+        &:hover {
+            color: var(--o-navbar-color-hover, #fff);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+    }
+}
+
+.o_int_filemanager_audio_panel {
+    width: 280px;
+
+    // Panel hat einen hellen Hintergrund (echte Odoo-Dropdown-Huelle, siehe
+    // audio_player_systray.js) - dieselben Buttons brauchen hier normale, dunkle Textfarbe statt
+    // der navbar-weissen von oben. Groesse bewusst NICHT ueberschrieben (siehe Kommentar oben) -
+    // Bootstraps eigene ".btn"-Standardgroesse gilt hier unveraendert.
+    .o_int_filemanager_audio_btn {
+        color: var(--o-webclient-color, inherit);
+
+        &:hover {
+            background-color: var(--o-webclient-hover-bg, rgba(0, 0, 0, 0.06));
+        }
+
+        // Aktiv-Zustand fuer die beiden flachen Schalter (Wiedergabemodus/Playlist-Toggle) -
+        // Bootstraps ".active" allein bewirkt auf einem farblosen ".btn" ohne Varianten-Klasse
+        // (kein "btn-light"/"btn-primary" o.ae.) sichtbar nichts, deshalb hier explizit
+        // eingefaerbt statt uns auf eine implizite Bootstrap-Regel zu verlassen, die fuer
+        // diesen Fall gar nicht existiert.
+        &.active {
+            color: var(--o-brand-primary, #714b67);
+            background-color: var(--o-webclient-hover-bg, rgba(0, 0, 0, 0.06));
+        }
+    }
+
+    // Hoehe begrenzt, unabhaengig von der Ordnergroesse (Nutzerwunsch 2026-09-18) - Scroll-
+    // Optik selbst kommt aus "o-scrollbar-thin" (mail-Modul, siehe Kommentar in
+    // audio_player_systray.xml), hier nur die maximale Ausdehnung.
+    .o_int_filemanager_audio_queue {
+        max-height: 220px;
+    }
+
+    // Icon-Quadrat statt Cover-Bild (Nutzerwunsch 2026-09-18, Vorbild Cloudreve) - dieselbe
+    // Hintergrundfarbe wie der Kanban-Platzhalter fuer Dateien ohne thumbnail
+    // (native_kanban_view.scss: .o_int_filemanager_kanban_cover_fallback), nur klein statt
+    // kartengross.
+    .o_int_filemanager_audio_cover {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--bs-border-radius, 0.25rem);
+        background-color: var(--o-view-background-color-alt, #f8f9fa);
+        font-size: 20px;
+    }
+
+    // Hoehe + Klick-Cursor ergaenzt - Hintergrund/Rundung/Ueberlauf/Fuellfarbe kommen bereits aus
+    // Bootstraps eigenen ".progress"/".progress-bar"-Regeln (siehe audio_player_systray.xml),
+    // hier nicht nochmal dupliziert.
+    .o_int_filemanager_audio_progress {
+        height: 6px;
+        cursor: pointer;
+
+        // Nutzerreport 2026-09-18 "Animation sehr traege, Abspielen selbst sofort" - Ursache am
+        // Bootstrap-Quellcode verifiziert: ".progress-bar" hat standardmaessig
+        // "--bs-progress-bar-transition: width .6s ease" (_variables.scss), gedacht fuer
+        // sprunghafte Fortschrittsanzeigen wie Datei-Uploads, die sichtbar "nachziehen" sollen.
+        // Unsere Position kommt aber bereits exakt vom <audio>-Element (timeupdate) - die
+        // eingebaute Animation liess die Bar dadurch der echten Wiedergabe zeitverzoegert
+        // hinterherlaufen, statt sie sofort abzubilden. Bootstraps eigene CSS-Variable
+        // ueberschrieben statt "transition: none !important" erzwungen - so bleibt der
+        // Mechanismus fuer eine etwaige spaetere, bewusste Animation an anderer Stelle
+        // unangetastet, nur unsere Instanz hier ist betroffen.
+        .progress-bar {
+            --bs-progress-bar-transition: none;
+        }
+    }
+}

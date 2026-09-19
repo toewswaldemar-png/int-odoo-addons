@@ -211,29 +211,26 @@
         text-align: center;
     }
 
-    // Das Icon ist jetzt ein <button> (Klick oeffnet das Formular, name_icon_field.js). Zwei
-    // Effekte, live als Bug gefunden (2026-09-11):
-    // 1) display:inline-flex statt Bootstraps Default inline-block ist PFLICHT, nicht nur
-    //    Kosmetik: .o_image/.fa-folder waren bisher direkte Flex-Items von .d-flex oben und
-    //    wurden dadurch automatisch "geblockt" (CSS-Spec: Flex-Items ignorieren display:inline
-    //    ihrer eigenen Angabe, sie werden immer block-artig). Durch den Button dazwischen sind
-    //    sie das nicht mehr - eine native, sehr spezifische Odoo-Regel
-    //    (".o_list_char .o_field_widget span{display:inline}", fuer Text-Spans in Zeichenketten-
-    //    Zellen gedacht) gewinnt dann ungehindert, und ein leerer inline-Span ohne Text hat keine
-    //    Flaeche -> unsichtbar, obwohl width/height/background-image korrekt gesetzt sind. Indem
-    //    der Button selbst zum Flex-Container wird, werden seine Icon-Kinder wieder geblockt,
-    //    exakt wie vorher.
-    // 2) Kein eigener Hover-Hinweis: Bootstraps btn-link bringt sonst Unterstreichung/Linkfarbe
-    //    mit, die hier nicht passt (drunter sitzt ein Icon, kein Text).
-    .o_int_filemanager_open_form_icon {
+    // display:inline-flex statt des Default inline ist PFLICHT, nicht nur Kosmetik: .o_image/
+    // .fa-folder sind direkte Flex-Items dieses Wrappers und werden dadurch automatisch
+    // "geblockt" (CSS-Spec: Flex-Items ignorieren display:inline ihrer eigenen Angabe, sie
+    // werden immer block-artig) - eine native, sehr spezifische Odoo-Regel
+    // (".o_list_char .o_field_widget span:not(.o_m2o_avatar){display:inline}", fuer Text-Spans
+    // in Zeichenketten-Zellen gedacht) gewinnt sonst ungehindert, und ein leerer inline-Span ohne
+    // Text hat keine Flaeche -> unsichtbar, obwohl width/height/background-image korrekt gesetzt
+    // sind. Indem dieser Wrapper selbst zum Flex-Container wird, werden seine Icon-Kinder wieder
+    // geblockt (live als Bug gefunden 2026-09-11).
+    //
+    // Der Wrapper selbst MUSS ein <div> sein, kein <span> (name_icon_field.xml) - dieselbe
+    // Odoo-Regel matcht sonst naemlich auch IHN, degradiert sein eigenes "inline-flex" auf
+    // "inline" (Odoos Spezifitaet gewinnt gegen unsere zwei Klassen hier), und Blockifizierung
+    // macht aus "inline" nur "block" statt "flex" - der Wrapper waere dann selbst gar kein
+    // Flex-Container mehr, sein .o_image-Kind bliebe unveraendert ein unsichtbares Inline-Element
+    // (live als Regression gefunden 2026-09-18, als der Wrapper kurzzeitig ein <span> war).
+    .o_int_filemanager_name_icon {
         display: inline-flex;
         align-items: center;
         line-height: 1;
-        border-radius: 0.25rem;
-
-        &:hover, &:focus-visible {
-            background-color: var(--o-webclient-hover-bg, rgba(0, 0, 0, 0.06));
-        }
     }
 
     // Wrapper um Name + Pfad-Unterzeile (name_icon_field.xml, showPath - nur mobil bei aktiver

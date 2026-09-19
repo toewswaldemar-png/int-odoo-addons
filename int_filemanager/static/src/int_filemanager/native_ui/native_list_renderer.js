@@ -116,50 +116,28 @@ export class IntFilemanagerListRenderer extends ListRenderer {
             if (ev.button !== 0 || !this.canSelectRecord) {
                 return;
             }
-            // Ausgenommen unabhaengig vom Zeileninhalt: Checkbox-Spalte, Tabellenkopf
-            // (Sortier-Klicks), Control-Panel, SearchPanel-Seitenleiste, und jedes offene
-            // Modal/Dialog (live beobachtet: ohne diese Ausnahme loeste ein Rubberband-Versuch
-            // INNERHALB eines Dialogs - z.B. dem Odoo-Fehler-Modal selbst - einen echten Absturz
-            // aus: der Browser startet bei Ziehen ueber Text einen nativen
-            // Text-Selektions-Drag, der global ein "dragstart"-Ereignis feuert, das wiederum
-            // onWindowDragStartRecord() in filemanager_controller_mixin.js trifft - dort wird
-            // ev.target als Element angenommen (ev.target.closest("[data-id]")), bei einem
-            // Text-Selektions-Drag ist ev.target aber oft ein reiner Textknoten ohne .closest ->
-            // TypeError, Absturz der ganzen Ansicht. document.querySelector() statt closest(), da
-            // document.activeElement bei einem Dialog nicht zuverlaessig innerhalb des
-            // Modal-DOM liegt.
-            if (
-                ev.target.closest(".o_list_record_selector") ||
-                ev.target.closest("thead") ||
-                ev.target.closest(".o_control_panel") ||
-                ev.target.closest(".o_search_panel") ||
-                // Ordnerbaum-Seitenleiste (folder_tree_layout.scss) - seit 2026-09-16 eigene
-                // FolderTree-Komponente statt Odoos natives ".o_search_panel" (Ausnahme oben ist
-                // seitdem tot, aber gefahrlos stehen gelassen), seit 2026-09-18 zusaetzlich in
-                // Odoos ResizablePanel gewrappt (siehe filemanager_controller_mixin.js:
-                // onResizeTree). Live-Bug 2026-09-18 (Nutzerreport "beim Draggen am Handler zieht
-                // Rubberband auf"): der Drag-Griff (".o_resizable_panel_handle") liegt ausserhalb
-                // der Tabelle, aber innerhalb desselben document-weiten mousedown-Listeners hier -
-                // ohne diese Ausnahme startete jeder Resize-Drag zusaetzlich ein
-                // Rubberband-Auswahlrechteck.
-                ev.target.closest(".o_int_filemanager_tree_resizable") ||
-                // Mobil-Header (native_list_view.xml: SearchBar + Home/Baum-Toggle +
-                // Breadcrumb-Zeile) ist KEIN .o_control_panel - der native Control Panel wird
-                // auf schmalem Viewport (env.isSmall, siehe native_list_view.scss) per CSS
-                // ausgeblendet und durch diesen eigenen Header ersetzt. Ohne diesen Ausschluss
-                // faellt ein Antippen des Suchfelds durch alle
-                // obigen Ausnahmen durch, preventDefault() unten (siehe Kommentar dort)
-                // unterdrueckt dabei denselben normalen Browser-Fokus, den es beim
-                // F2-Rename-Input schon einmal unterdrueckt hat - Nutzerreport 2026-09-16:
-                // "Suchfeld reagiert gar nicht, keine Tastatur".
-                ev.target.closest(".o_int_filemanager_mobile_header") ||
-                ev.target.closest(".modal, .o_dialog") ||
-                ev.target.closest(".o_int_filemanager_chatter_panel") ||
-                document.querySelector(".modal.show, .o_dialog")
-            ) {
+            // Allowlist statt Denylist (Nutzerreport 2026-09-18: Rubberband liess sich sowohl
+            // ueber dem Such-Dropdown als auch ueber dem neuen Audio-Player in der Navbar
+            // aufziehen - beide standen schlicht auf keiner der bisherigen Ausschlusslisten
+            // unten). Der document-weite mousedown-Listener (siehe onMounted() unten) faengt
+            // JEDEN Mausklick im gesamten Webclient ab, Rubberband soll aber strukturell nur
+            // innerhalb DIESER Tabelle moeglich sein - Control-Panel, Ordnerbaum-Seitenleiste,
+            // Mobil-Header, Chatter-Panel, jedes Dialog/Popover (Kontextmenue, Such-Dropdown,
+            // Audio-Player-Panel, ...) sind alle NICHT Nachfahren von this.tableRef.el (Odoos
+            // eigener ListRenderer-Tabellen-Ref) - ein einziger .contains()-Check deckt damit
+            // jede aktuelle UND jede kuenftige Komponente ausserhalb der Liste automatisch ab,
+            // ohne sie einzeln namentlich pflegen zu muessen. Ersetzt die vorherige, staendig
+            // wachsende .closest()-Liste (u.a. ".o_search_panel", laut eigenem Kommentar dort
+            // schon seit 2026-09-16 tot) - dieselbe Eigenschaft loeste nebenbei auch den
+            // fruehereren Nutzerreport "beim Draggen am Resize-Griff zieht Rubberband auf" und den
+            // Dialog-Absturz (Text-Selektions-Drag in einem Modal, siehe frueherer Kommentar hier)
+            // strukturell mit, statt fuer jeden Einzelfall eine eigene Ausnahme zu brauchen.
+            if (!this.tableRef.el || !this.tableRef.el.contains(ev.target)) {
                 return;
             }
-            if (!this.tableRef.el) {
+            // Innerhalb der Tabelle bleiben zwei Bereiche ausgenommen, die selbst schon eine
+            // eigene Klick-Bedeutung haben: Checkbox-Spalte und Tabellenkopf (Sortier-Klicks).
+            if (ev.target.closest(".o_list_record_selector") || ev.target.closest("thead")) {
                 return;
             }
             const records = this.props.list.records;
@@ -208,7 +186,7 @@ export class IntFilemanagerListRenderer extends ListRenderer {
             const dataRowEl = ev.target.closest("tr.o_data_row");
             if (dataRowEl) {
                 const handleEls = dataRowEl.querySelectorAll(
-                    ".o_int_filemanager_open_form_icon, .o_int_filemanager_name_label"
+                    ".o_int_filemanager_name_icon, .o_int_filemanager_name_label"
                 );
                 if (handleEls.length) {
                     const handleRects = [...handleEls].map((el) => el.getBoundingClientRect());
