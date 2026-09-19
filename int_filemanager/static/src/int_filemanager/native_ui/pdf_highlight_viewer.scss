@@ -4,11 +4,19 @@
     overflow: auto;
     border: 1px solid var(--border-color, #dee2e6);
     background: #525659;
+    // Scroll-to-Zoom (2026-09-19): der Browser soll Mausrad-Gesten hier NIE als Seiten-Scroll
+    // interpretieren (der JS-Handler ruft immer preventDefault() auf und uebersetzt sie in
+    // Zoom+eigenes Scrollen) - overscroll-behavior verhindert zusaetzlich, dass ein "Ueberlaufen"
+    // am Rand an die dahinterliegende Dialog-Seite durchgereicht wird.
+    overscroll-behavior: contain;
 
     canvas {
         display: block;
-        width: 100%;
-        height: auto;
+        // Bewusst KEIN width:100%/height:auto mehr - das wuerde die Canvas-Anzeige immer auf die
+        // Containerbreite zurueckstauchen und jeden Zoom (canvas.width/height wird in
+        // pdf_highlight_viewer.js::_renderPage pixelgenau gesetzt) wirkungslos machen. Die
+        // native Canvas-Groesse ist bereits die gewuenschte Anzeigegroesse; ueberschreitet sie
+        // den Container, sorgt overflow:auto oben fuer die Scrollbalken.
     }
 }
 
