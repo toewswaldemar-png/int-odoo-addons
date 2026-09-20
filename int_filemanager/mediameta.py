@@ -11,6 +11,12 @@ PDF_EXTENSIONS = {"pdf"}
 AUDIO_EXTENSIONS = {"mp3", "wav", "flac", "ogg", "m4a", "aac", "wma"}
 
 THUMBNAIL_MAX_SIZE = (320, 320)
+# Fuer die Vollbildvorschau (Nutzerfeedback 2026-09-20: "Bild baut sich schrittweise auf" bei
+# Handyfotos mit mehreren MB) - deutlich groesser als das Kachel-Thumbnail, aber immer noch weit
+# unter typischen Kamera-Aufloesungen (4000x3000+). Kein Bildschirm braucht mehr als das zum
+# verlustfrei wirkenden Betrachten, das echte Original bleibt fuer "Original herunterladen"
+# weiterhin unangetastet erreichbar (siehe controllers/main.py:download).
+PREVIEW_MAX_SIZE = (1920, 1920)
 
 # EXIF-Tag-ID fuer "DateTimeOriginal" (Kamera-Aufnahmezeitpunkt) - per Name statt
 # fest verdrahteter Zahl nachgeschlagen, damit die Zuordnung nicht stillschweigend
@@ -42,6 +48,16 @@ def media_type_of(name):
     return None
 
 
+def _resized_jpeg(img, max_size):
+    resized = img.copy()
+    resized.thumbnail(max_size)
+    if resized.mode not in ("RGB", "L"):
+        resized = resized.convert("RGB")
+    buf = BytesIO()
+    resized.save(buf, format="JPEG", quality=85)
+    return base64.b64encode(buf.getvalue())
+
+
 def _extract_image(abs_path):
     with Image.open(abs_path) as img:
         width, height = img.size
@@ -55,13 +71,14 @@ def _extract_image(abs_path):
                 taken_at = datetime.strptime(raw, "%Y:%m:%d %H:%M:%S")
         except (ValueError, TypeError, SyntaxError):
             taken_at = None
-        img.thumbnail(THUMBNAIL_MAX_SIZE)
-        if img.mode not in ("RGB", "L"):
-            img = img.convert("RGB")
-        buf = BytesIO()
-        img.save(buf, format="JPEG", quality=85)
+        # Beide Groessen aus demselben bereits dekodierten Bild (.copy() statt erneutem
+        # Image.open()) - eine Datei wird fuer Kachel-Thumbnail UND Vollbild-Vorschau nur einmal
+        # von der Platte gelesen/dekodiert.
+        thumbnail = _resized_jpeg(img, THUMBNAIL_MAX_SIZE)
+        preview = _resized_jpeg(img, PREVIEW_MAX_SIZE)
     return {
-        "thumbnail": base64.b64encode(buf.getvalue()),
+        "thumbnail": thumbnail,
+        "preview": preview,
         "media_width": width,
         "media_height": height,
         "taken_at": taken_at,

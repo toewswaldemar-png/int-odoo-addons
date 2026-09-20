@@ -244,6 +244,12 @@ class IntFilemanagerFile(models.Model):
     )
 
     thumbnail = fields.Image(max_width=320, max_height=320, attachment=True, copy=False)
+    # Vollbild-Vorschaugroesse (2026-09-20, Nutzerfeedback "Bild baut sich schrittweise auf" bei
+    # mehrere-MB-Handyfotos ueber die externe Domain/mobil) - deutlich groesser als thumbnail,
+    # aber weit unter der echten Kamera-Aufloesung. Ersetzt NICHT downloadUrl/das Original (siehe
+    # controllers/main.py:download) - nur die Bildquelle der Vollbild-Vorschau im Kontroll-/
+    # Datei-Viewer wechselt darauf (filemanager_controller_mixin.js:toViewerFile).
+    preview = fields.Image(max_width=1920, max_height=1920, attachment=True, copy=False)
     media_width = fields.Integer(copy=False)
     media_height = fields.Integer(copy=False)
     taken_at = fields.Datetime(
