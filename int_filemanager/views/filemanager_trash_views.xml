@@ -8,8 +8,14 @@
         <field name="model">int_filemanager.file</field>
         <field name="arch" type="xml">
             <list create="false" default_order="trashed_at desc" delete="true">
+                <!-- Bewusst KEIN widget="int_filemanager_name": das Widget braucht
+                     env.filemanagerRename (Inline-Umbenennen per F2), das nur der native
+                     Explorer-Controller bereitstellt (filemanager_controller_mixin.js) - in
+                     dieser einfachen Standard-Liste undefiniert, brach live mit
+                     "Cannot read properties of undefined (reading 'state')". Umbenennen
+                     ergibt im Papierkorb ohnehin keinen Sinn. -->
                 <field name="is_dir" column_invisible="1"/>
-                <field name="name" widget="int_filemanager_name"/>
+                <field name="name"/>
                 <field name="original_path" string="Ursprünglicher Ort"/>
                 <field name="trashed_at" string="Gelöscht am"/>
                 <field name="trashed_by" string="Gelöscht von"/>
