@@ -1491,13 +1491,21 @@ export function filemanagerControllerMixin(Base) {
         }
 
         onDeleteSelected() {
+            // Text/Optik an das tatsaechliche Verhalten angepasst (docs/
+            // int_filemanager_papierkorb_konzept.md): /int_filemanager/delete verschiebt seit dem
+            // Papierkorb-Feature nur noch in .trash/, loescht nichts mehr endgueltig - "wirklich
+            // löschen"/btn-danger (rot, fuer eine unumkehrbare Aktion) waeren jetzt irrefuehrend,
+            // Live-Nutzerfeedback ("Dialog klingt noch nach endgueltig") hat das bestaetigt.
             const records = this.model.root.selection;
             const count = records.length;
             this.dialog.add(ConfirmationDialog, {
-                title: _t("Löschen bestätigen"),
-                body: _t("%s wirklich löschen?", count === 1 ? _t("1 Eintrag") : _t("%s Einträge", count)),
-                confirmLabel: _t("Löschen"),
-                confirmClass: "btn-danger",
+                title: _t("In den Papierkorb verschieben"),
+                body: _t(
+                    "%s in den Papierkorb verschieben?",
+                    count === 1 ? _t("1 Eintrag") : _t("%s Einträge", count)
+                ),
+                confirmLabel: _t("Verschieben"),
+                confirmClass: "btn-primary",
                 confirm: async () => {
                     const errors = [];
                     for (const record of records) {
