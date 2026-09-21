@@ -1,0 +1,36 @@
+<odoo>
+    <!-- docs/int_filemanager_papierkorb_konzept.md - bewusst eine einfache Standard-Odoo-Liste,
+         kein Ausbau der nativen Explorer-Komponente (filemanager_file_list_view.xml). Wer was
+         sieht, regelt ausschließlich rule_file_trash_visibility (security.xml) - die Domain hier
+         braucht keine Nutzer-Unterscheidung. -->
+    <record id="view_filemanager_trash_list" model="ir.ui.view">
+        <field name="name">int_filemanager.file.trash.list</field>
+        <field name="model">int_filemanager.file</field>
+        <field name="arch" type="xml">
+            <list create="false" default_order="trashed_at desc" delete="true">
+                <field name="is_dir" column_invisible="1"/>
+                <field name="name" widget="int_filemanager_name"/>
+                <field name="original_path" string="Ursprünglicher Ort"/>
+                <field name="trashed_at" string="Gelöscht am"/>
+                <field name="trashed_by" string="Gelöscht von"/>
+                <field name="size" invisible="is_dir" widget="int_filemanager_size" string="Größe"/>
+                <button name="action_restore" type="object" string="Wiederherstellen"
+                        icon="fa-undo" title="An den ursprünglichen Ort zurückverschieben"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_filemanager_trash" model="ir.actions.act_window">
+        <field name="name">Papierkorb</field>
+        <field name="res_model">int_filemanager.file</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_filemanager_trash_list"/>
+        <!-- folder_path = TRASH_DIRNAME (index_utils.py) statt z.B. "kein trashed-Vorfahre": nur
+             die WURZEL eines gelöschten Teilbaums liegt flach direkt unter .trash/, ihre
+             Nachfahren (falls Ordner) eine oder mehrere Ebenen tiefer - siehe die ausführliche
+             Begründung bei _cron_purge_trash() in models/filemanager_file.py. Ohne diesen Zusatz
+             würde z. B. das Löschen eines Ordners mit 1000 Dateien alle 1000 einzeln in dieser
+             Liste auflisten statt nur den einen gelöschten Ordner selbst. -->
+        <field name="domain">[("trashed", "=", True), ("folder_path", "=", ".trash")]</field>
+    </record>
+</odoo>

@@ -1,4 +1,6 @@
 import os
+import secrets
+import shutil
 import unicodedata
 from datetime import datetime
 
@@ -9,10 +11,16 @@ from odoo.tools.sql import escape_psql
 from . import authz
 from .fulltext import fulltext_type_of
 from .mediameta import media_type_of
-from .path_utils import resolve_path, safe_name, to_relative
+from .path_utils import get_root, resolve_path, safe_name, to_relative
 
 BUS_CHANNEL = "int_filemanager"
 BUS_NOTIFICATION_TYPE = "int_filemanager.change"
+
+# Punkt-Praefix: sowohl der Watcher (watcher.py:_is_hidden()) als auch der Vollscan
+# (models/filemanager_file.py) schliessen punktpraefixierte Namen bereits aus - der Papierkorb
+# nutzt genau diese bestehende Konvention, statt eine eigene Ausschlussregel zu brauchen (siehe
+# docs/int_filemanager_papierkorb_konzept.md).
+TRASH_DIRNAME = ".trash"
 
 
 def _notify_change(env):
@@ -158,6 +166,187 @@ def index_move_tree(env, old_rel, new_rel):
         new_child_parent = os.path.dirname(new_child_path)
         rec.write({"path": new_child_path, "folder_path": new_child_parent or False})
     _notify_change(env)
+
+
+def _trash_name(original_name):
+    """Kollisionsarmer Papierkorb-Dateiname - bewusst UNABHAENGIG von jeder DB-ID (waere bei
+    einem verlorenen Watcher-Rennen, siehe index_trash_tree(), nicht zuverlaessig verfuegbar,
+    schon BEVOR wir wissen, ob wir den Selbstheilungspfad brauchen). Gleiches Schema wie
+    friendly_fallback_name() in path_utils.py."""
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    suffix = secrets.token_hex(2)
+    return "%s_%s__%s" % (stamp, suffix, original_name)
+
+
+def trash_destination(env, rel):
+    """Berechnet den Papierkorb-Zielpfad fuer den (noch existierenden) Pfad rel - reiner
+    Namensentscheid ohne DB-Zugriff, siehe _trash_name(). Ruft _ensure_trash_folder() auf, damit
+    der physische .trash-Ordner vor dem eigentlichen shutil.move() des Aufrufers garantiert
+    existiert."""
+    _ensure_trash_folder(env)
+    name = os.path.basename(rel)
+    return "%s/%s" % (TRASH_DIRNAME, _trash_name(name))
+
+
+def _ensure_trash_folder(env):
+    """Stellt sicher, dass .trash als eigener, aber unsichtbarer (trashed=True) Ordner-Datensatz
+    existiert. Scan/Watcher legen ihn NIE an (dot-Praefix-Ausschluss, siehe TRASH_DIRNAME oben) -
+    der Papierkorb-Code muss also selbst dafuer sorgen, sonst waere parent_id fuer den ersten
+    Papierkorb-Eintrag nicht aufloesbar. Eigener Lock-Schluessel (derselbe Mechanismus wie
+    index_upsert(), siehe dort) gegen zwei gleichzeitige erste Papierkorb-Operationen, die sich
+    sonst genau das Wettrennen liefern koennten, das diese Session bei echten Dateien schon
+    gefunden hat - hier fuer den .trash-Ordner selbst statt fuer eine einzelne Datei."""
+    Model = env["int_filemanager.file"].sudo()
+    os.makedirs(os.path.join(get_root(env), TRASH_DIRNAME), exist_ok=True)
+    env.cr.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))", (TRASH_DIRNAME,))
+    rec = Model.search([("path", "=", TRASH_DIRNAME)], limit=1)
+    if rec:
+        return rec
+    return Model.create({
+        "name": TRASH_DIRNAME,
+        "path": TRASH_DIRNAME,
+        "folder_path": False,
+        "is_dir": True,
+        "size": 0,
+        "trashed": True,
+        "trashed_at": fields.Datetime.now(),
+        "trashed_by": env.uid,
+    })
+
+
+def _insert_trashed_from_disk(env, trash_rel, parent_id, original_path):
+    """Selbstheilungspfad fuer index_trash_tree(): baut einen frischen, sofort als trashed
+    markierten Datensatz aus der Datei/dem Ordner, die JETZT bereits auf trash_rel liegt - fuer
+    den Fall, dass der urspruengliche Datensatz durch das Watcher-Rennen (siehe
+    index_trash_tree()) schon verschwunden war, bevor der Lock dort griff. Wiederverwendet
+    _entry_vals() ganz normal (liest den tatsaechlichen, jetzt korrekten Plattenzustand)."""
+    Model = env["int_filemanager.file"].sudo()
+    abs_path = resolve_path(env, trash_rel)
+    vals = _entry_vals(env, abs_path)
+    vals["parent_id"] = parent_id
+    vals["trashed"] = True
+    vals["trashed_at"] = fields.Datetime.now()
+    vals["trashed_by"] = env.uid
+    vals["original_path"] = original_path
+    return Model.create(vals)
+
+
+def index_trash_tree(env, old_rel, trash_rel):
+    """Nachpflege im Index, NACHDEM die aufrufende Route Datei/Ordner physisch bereits nach
+    trash_rel verschoben hat (shutil.move) - setzt trashed/trashed_at/trashed_by/original_path
+    und schreibt path/folder_path/parent_id auf den neuen Ort um, fuer den verschobenen Eintrag
+    selbst UND alle Nachfahren (falls Ordner).
+
+    pg_advisory_xact_lock auf old_rel: derselbe Grund wie in index_upsert()/index_remove_tree()
+    (siehe dort, inkl. der live am 2026-09-21 gefundenen Bugs, die zu diesem Muster fuehrten).
+    Der Watcher sieht beim Verschieben nach .trash/ (unbeobachtet, dot-Praefix) nur ein
+    MOVED_FROM ohne passendes MOVED_TO und behandelt old_rel wie eine echte Loeschung
+    (index_remove_tree()), waehrend diese Funktion denselben Datensatz nur umschreiben will -
+    ohne Lock koennte der Watcher ihn loeschen, bevor die Umschreibung greift. Kein eigener Lock
+    pro Nachfahre noetig: der Watcher reagiert nur auf das EINE Move-Ereignis des verschobenen
+    Wurzelelements, nie auf dessen Kinder einzeln (dasselbe Verhalten wie index_move_tree())."""
+    Model = env["int_filemanager.file"].sudo()
+    trash_parent_rec = _ensure_trash_folder(env)
+
+    env.cr.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))", (old_rel,))
+
+    root = Model.search([("path", "=", old_rel)], limit=1)
+    now = fields.Datetime.now()
+    if root:
+        root.with_context(int_filemanager_syncing_index=True).write({
+            "path": trash_rel,
+            "name": os.path.basename(trash_rel),
+            "folder_path": TRASH_DIRNAME,
+            "parent_id": trash_parent_rec.id,
+            "trashed": True,
+            "trashed_at": now,
+            "trashed_by": env.uid,
+            "original_path": old_rel,
+        })
+    else:
+        # Selbstheilung - siehe Docstring oben.
+        root = _insert_trashed_from_disk(env, trash_rel, trash_parent_rec.id, old_rel)
+
+    prefix = old_rel + "/"
+    for rec in Model.search([("path", "=like", escape_psql(prefix) + "%")]):
+        suffix = rec.path[len(old_rel):]
+        new_child_path = trash_rel + suffix
+        rec.write({
+            "path": new_child_path,
+            "folder_path": os.path.dirname(new_child_path) or False,
+            "trashed": True,
+            "trashed_at": now,
+            "trashed_by": env.uid,
+            "original_path": old_rel + suffix,
+        })
+    _notify_change(env)
+    return root
+
+
+def index_restore_tree(env, rec):
+    """Verschiebt einen einzelnen, bereits als trashed markierten Datensatz (und seinen
+    physischen Unterbaum, falls Ordner) zurueck an original_path - fuehrt dabei selbst den
+    physischen shutil.move() aus (anders als index_trash_tree(), das vom Aufrufer schon
+    verschoben erwartet - hier gibt es keinen Aufrufer, der das vorab sinnvoll tun koennte, weil
+    erst hier der Kollisionscheck gegen den Zielort passiert). Kollision wird hart blockiert,
+    kein stilles Ausweichen (siehe docs/int_filemanager_papierkorb_konzept.md, Punkt 3) - exakt
+    dieselbe Linie wie der bestehende move()-Controller.
+
+    Nur fuer Wurzel-Eintraege gedacht (der Aufrufer - action_restore() auf dem Modell - wird nur
+    auf einem trashed-Wurzel-Datensatz angeboten); Nachfahren werden hier mit demselben
+    Nachfahren-Umschreibe-Muster wie index_trash_tree()/index_move_tree() mitgezogen.
+
+    pg_advisory_xact_lock auf new_rel (nicht old_rel!): das Gegenstueck zu index_trash_tree()s
+    Lock auf alte_rel - beim Wiederherstellen quert der Uebertritt in den beobachteten Baum am
+    NEUEN Ort (new_rel), wo der Watcher per CREATE/MOVED_TO parallel sein eigenes
+    index_upsert() versuchen koennte (das denselben Lock-Schluessel benutzt, siehe dort).
+    Innerhalb .trash/ selbst (old_rel) gibt es dagegen kein Watcher-Rennen, weil der Ordner
+    bewusst unbeobachtet ist."""
+    Model = env["int_filemanager.file"].sudo()
+    old_rel = rec.path
+    new_rel = rec.original_path
+    if not new_rel:
+        raise UserError(_("Kein ursprünglicher Pfad bekannt."))
+    new_parent = os.path.dirname(new_rel) if new_rel else ""
+
+    env.cr.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))", (new_rel,))
+
+    abs_new = resolve_path(env, new_rel)
+    if os.path.exists(abs_new):
+        raise UserError(_("Am ursprünglichen Ort existiert bereits ein Eintrag mit diesem Namen."))
+    abs_new_parent = resolve_path(env, new_parent) if new_parent else get_root(env)
+    if not os.path.isdir(abs_new_parent):
+        raise UserError(_("Der ursprüngliche Ordner existiert nicht mehr."))
+
+    abs_old = resolve_path(env, old_rel)
+    shutil.move(abs_old, abs_new)
+
+    new_parent_rec = Model.search([("path", "=", new_parent)], limit=1) if new_parent else Model.browse()
+    rec.with_context(int_filemanager_syncing_index=True).write({
+        "path": new_rel,
+        "name": os.path.basename(new_rel),
+        "folder_path": new_parent or False,
+        "parent_id": new_parent_rec.id,
+        "trashed": False,
+        "trashed_at": False,
+        "trashed_by": False,
+        "original_path": False,
+    })
+
+    prefix = old_rel + "/"
+    for child in Model.search([("path", "=like", escape_psql(prefix) + "%")]):
+        suffix = child.path[len(old_rel):]
+        new_child_path = new_rel + suffix
+        child.write({
+            "path": new_child_path,
+            "folder_path": os.path.dirname(new_child_path) or False,
+            "trashed": False,
+            "trashed_at": False,
+            "trashed_by": False,
+            "original_path": False,
+        })
+    _notify_change(env)
+    return rec
 
 
 def rename_entry(env, old_rel, new_name):

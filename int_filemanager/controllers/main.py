@@ -11,7 +11,7 @@ from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 
 from .. import authz, write_service, zip_utils
-from ..index_utils import index_move_tree, index_remove_tree, index_upsert, rename_entry
+from ..index_utils import index_move_tree, index_trash_tree, index_upsert, rename_entry, trash_destination
 from ..path_utils import (
     friendly_fallback_name,
     get_root,
@@ -247,6 +247,10 @@ class IntFilemanagerController(http.Controller):
 
     @http.route("/int_filemanager/delete", type="jsonrpc", auth="user", methods=["POST"])
     def delete(self, path=""):
+        """Verschiebt in den Papierkorb statt endgueltig zu loeschen (docs/
+        int_filemanager_papierkorb_konzept.md) - shutil.move() statt rmtree()/remove():
+        ein Ordner wandert dadurch als EIN Schritt komplett nach .trash/, keine rekursive
+        DB-Loeschung mehr noetig, index_trash_tree() zieht die Nachfahren im Index nach."""
         self._check_access()
         abs_path = resolve_path(request.env, path)
         if abs_path == get_root(request.env):
@@ -256,11 +260,10 @@ class IntFilemanagerController(http.Controller):
         authz.require_subtree_deletable(request.env, rel)
         if not os.path.exists(abs_path):
             raise UserError(_("Eintrag nicht gefunden."))
-        if os.path.isdir(abs_path):
-            shutil.rmtree(abs_path)
-        else:
-            os.remove(abs_path)
-        index_remove_tree(request.env, rel)
+        trash_rel = trash_destination(request.env, rel)
+        trash_abs = resolve_path(request.env, trash_rel)
+        shutil.move(abs_path, trash_abs)
+        index_trash_tree(request.env, rel, trash_rel)
         return {"ok": True}
 
     @http.route("/int_filemanager/write_text", type="jsonrpc", auth="user", methods=["POST"])

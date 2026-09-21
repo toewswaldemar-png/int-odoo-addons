@@ -29,6 +29,7 @@
         "views/res_partner_views.xml",
         "views/filemanager_file_form_view.xml",
         "views/filemanager_file_share_views.xml",
+        "views/filemanager_trash_views.xml",
         "views/portal_templates.xml",
         "data/ir_cron.xml",
     ],

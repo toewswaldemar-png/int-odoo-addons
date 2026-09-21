@@ -2,11 +2,22 @@
 <templates xml:space="preserve">
 
     <t t-name="int_filemanager.FolderTree">
-        <div class="o_int_filemanager_tree" role="tree">
-            <t t-call="int_filemanager.FolderTreeNode">
-                <t t-set="node" t-value="this.nodes['']"/>
-                <t t-set="depth" t-value="0"/>
-            </t>
+        <div class="o_int_filemanager_tree_root">
+            <div class="o_int_filemanager_tree" role="tree">
+                <t t-call="int_filemanager.FolderTreeNode">
+                    <t t-set="node" t-value="this.nodes['']"/>
+                    <t t-set="depth" t-value="0"/>
+                </t>
+            </div>
+            <!-- Fester Fuss, siehe folder_tree.js:onClickTrash() + folder_tree_layout.scss fuer
+                 die Flex-Aufteilung, die ihn immer sichtbar haelt statt mit dem Baum
+                 mitzuscrollen. -->
+            <div class="o_int_filemanager_tree_trash d-flex align-items-center"
+                 role="treeitem" t-on-click="onClickTrash">
+                <span class="o_int_filemanager_tree_caret_spacer"/>
+                <i class="fa fa-trash-o o_int_filemanager_tree_folder_icon text-muted"/>
+                <span>Papierkorb</span>
+            </div>
         </div>
     </t>
 

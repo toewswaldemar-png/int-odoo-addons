@@ -31,6 +31,12 @@
                                     class="btn-primary"/>
                         </setting>
                     </block>
+                    <block title="Papierkorb" name="int_filemanager_trash_setting">
+                        <setting id="int_filemanager_trash_retention_days_setting"
+                                 help="Papierkorb-Einträge werden nach dieser Anzahl Tage automatisch endgültig gelöscht.">
+                            <field name="int_filemanager_trash_retention_days"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

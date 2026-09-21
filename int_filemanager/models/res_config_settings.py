@@ -13,6 +13,14 @@ class ResConfigSettings(models.TransientModel):
         "Warnhinweis in der Ansicht.",
     )
 
+    int_filemanager_trash_retention_days = fields.Integer(
+        string="Papierkorb: Aufbewahrung (Tage)",
+        config_parameter="int_filemanager.trash_retention_days",
+        default=30,
+        help="Papierkorb-Einträge werden nach dieser Anzahl Tage automatisch endgültig "
+        "gelöscht (ir_cron_purge_trash_filemanager, siehe data/ir_cron.xml).",
+    )
+
     def action_scan_now(self):
         """Manueller Ersatz fuer Einstellungen > Technisch > Geplante Aktionen > "Jetzt
         ausfuehren" auf ir_cron_scan_filemanager (data/ir_cron.xml) - ruft denselben Cron-

@@ -83,6 +83,29 @@
         <field name="perm_unlink">True</field>
     </record>
 
+    <!-- Papierkorb-Sichtbarkeit (docs/int_filemanager_papierkorb_konzept.md): eigene, STATISCHE
+         Regel, unabhaengig von den drei generierten Schutzordner-Regeln oben - reine
+         trashed/trashed_by-Sichtbarkeit hat nichts mit Pfad-Praefixen zu tun, keine
+         Verflechtung mit acl_rules.py noetig. Ein Nutzer sieht/bearbeitet nur eigene
+         (trashed_by=ich) Papierkorb-Eintraege, Admins alle - Sicherheit dahinter: ein Nutzer
+         kann ohnehin nur loeschen (und landet damit automatisch in seinem eigenen Papierkorb),
+         wofuer er zum Loeschzeitpunkt schon Loeschrecht hatte (authz.require(rel_path,
+         "unlink"), unveraendert) - der Papierkorb zeigt also nie mehr, als er schon loeschen
+         durfte. Alle vier Operationen in EINER Regel (anders als die drei Schutzordner-Regeln
+         oben, die pro Operation unterschiedliche Bedingungen haben - hier ist die Bedingung
+         fuer read/write/unlink identisch). NICHT im noupdate="1"-Block oben: nichts schreibt
+         domain_force hier zur Laufzeit um, ein gewoehnliches Modul-Upgrade darf sie also
+         jederzeit neu aus dem XML laden. -->
+    <record id="rule_file_trash_visibility" model="ir.rule">
+        <field name="name">Filemanager: Papierkorb nur eigene Einträge + Admins</field>
+        <field name="model_id" ref="model_int_filemanager_file"/>
+        <field name="domain_force">['|', ('trashed','=',False), '|', ('trashed_by','=',user.id), (1,'=',1) if user.has_group('int_filemanager.group_filemanager_admin') else (0,'=',1)]</field>
+        <field name="perm_read">True</field>
+        <field name="perm_write">True</field>
+        <field name="perm_create">True</field>
+        <field name="perm_unlink">True</field>
+    </record>
+
     <!-- Dieselbe Bauart auf int_filemanager.version - eine Version erbt den
          Schutz ihrer zugehörigen Datei (file_id.path), damit niemand ohne
          Leserecht auf die Datei trotzdem alte Versionsinhalte über das
