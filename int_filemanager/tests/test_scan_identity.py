@@ -3,8 +3,6 @@ import shutil
 import tempfile
 from unittest.mock import patch
 
-import psycopg2
-
 from odoo.tests.common import TransactionCase, tagged
 
 
@@ -256,32 +254,6 @@ class TestScanIdentity(TransactionCase):
 
         self.assertEqual(file_rec.hash_state, "pending")
         self.assertTrue(folder_rec.is_dir)
-
-    def test_index_upsert_recovers_from_concurrent_writer_race(self):
-        """Live 2026-09-17 als Bug gefunden: controllers/main.py's mkdir()/upload() rufen
-        index_upsert() im selben Request auf, in dem auch der Watcher (eigene Transaktion,
-        eigener Commit) denselben neu angelegten Pfad sieht - der langsamere der beiden
-        Schreiber verletzt UNIQUE(path) beim create(). Model._create() fuehrt das INSERT
-        direkt per cr.execute() aus (kein eigenes try/except) - die dabei rohe
-        psycopg2.errors.UniqueViolation ist KEINE UserError-Subklasse, ein
-        "except UserError" (der urspruengliche, fehlerhafte Code hier) faengt sie also nie.
-        Der Nutzer sah die rohe DB-Fehlermeldung statt einer stillen Aktualisierung, obwohl
-        der Ordner/die Datei auf der Platte laengst korrekt angelegt war."""
-        from ..index_utils import index_upsert
-
-        file_path = self._write("raced.txt", b"content")
-        rel = "raced.txt"
-        # Simuliert den bereits committeten anderen Schreiber (z.B. der Watcher).
-        existing = self.Model.create({"name": "raced.txt", "path": rel, "is_dir": False, "size": 1})
-
-        def raise_conflict(self, vals_list):
-            raise psycopg2.errors.UniqueViolation("duplicate key value violates unique constraint")
-
-        with patch.object(type(self.Model), "create", raise_conflict):
-            rec = index_upsert(self.env, file_path)
-
-        self.assertEqual(rec.id, existing.id, "sollte den bereits existierenden Datensatz aktualisieren, nicht scheitern")
-        self.assertEqual(self.Model.search_count([("path", "=", rel)]), 1)
 
     def test_scan_skips_stale_cleanup_for_missing_large_subtree(self):
         """Live 2026-09-17 als Beinahe-Vorfall gefunden: ein Wurzel-Unterordner (in der

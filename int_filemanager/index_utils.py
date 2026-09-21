@@ -2,8 +2,6 @@ import os
 import unicodedata
 from datetime import datetime
 
-import psycopg2
-
 from odoo import _, fields
 from odoo.exceptions import UserError
 from odoo.tools.sql import escape_psql
@@ -69,6 +67,25 @@ def index_upsert(env, abs_path):
     # schon selbst indexiert (er muss existieren, damit dieser Pfad ueberhaupt entstehen
     # konnte) - anders als beim BFS-Ersteinlese-Scan reicht hier eine einzelne Query.
     vals["parent_id"] = Model.search([("path", "=", parent_rel)], limit=1).id if parent_rel else False
+
+    # pg_advisory_xact_lock: serialisiert alle gleichzeitigen index_upsert()-Aufrufe fuer
+    # DENSELBEN Pfad (Watcher vs. der explizite Aufruf aus dem Upload-/Mkdir-Controller,
+    # jeweils eigene Transaktion/eigener Cursor) VOR der Suche unten, nicht erst danach per
+    # Fehlerbehandlung. Vorherige Loesung (create(), psycopg2.errors.UniqueViolation fangen,
+    # per separatem SELECT erneut suchen, 2026-09-17) verlor ein echtes, produktives Rennen
+    # trotzdem manchmal - die Recovery-SELECT lief live am 2026-09-21 nachweislich manchmal
+    # VOR dem sichtbaren Commit des Gewinners, blieb leer, der rohe DB-Fehler erreichte den
+    # Nutzer trotz korrekt indexierter Datei. Mit dem Lock sieht der zweite Aufrufer bei
+    # SEINER Suche immer schon den endgueltigen Zustand (der erste ist entweder committet
+    # und sichtbar, oder komplett zurueckgerollt) - kein Recovery-Pfad mehr noetig, Anlegen/
+    # Aktualisieren bleibt vollstaendig ueber Model.create()/write() (kein rohes INSERT, keine
+    # manuelle Nachbildung von ORM-Defaults/mail.thread-Initialisierung/Cache-Invalidierung).
+    # hashtextextended() statt hashtext(): 64-Bit-Hash, vermeidet unnoetige Kollisionen
+    # unterschiedlicher Pfade auf denselben 32-Bit-Lock-Key (kein Korrektheitsproblem, nur ein
+    # vermeidbarer zusaetzlicher Wartezyklus). Automatisch freigegeben am Transaktionsende
+    # (Commit oder Rollback) - kein manuelles Unlock noetig, blockiert nie laenger als noetig.
+    env.cr.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))", (vals["path"],))
+
     rec = Model.search([("path", "=", vals["path"])], limit=1)
     if rec:
         # int_filemanager_syncing_index: Watcher-getriebenes CREATE/MODIFY auf einem
@@ -80,33 +97,7 @@ def index_upsert(env, abs_path):
         # durchlaufen, unabhaengig von Schutzordner-Rechten).
         rec.with_context(int_filemanager_syncing_index=True).write(vals)
     else:
-        try:
-            # cr.savepoint(): Model._create() fuehrt das INSERT direkt per cr.execute() aus,
-            # ohne eigenes try/except - eine Verletzung von _path_uniq (UNIQUE(path)) laesst
-            # die rohe psycopg2.errors.UniqueViolation hochlaufen UND die Transaktion in einem
-            # abgebrochenen Zustand zurueck (jede weitere Query wuerde "current transaction is
-            # aborted" werfen) - der Savepoint macht den fehlgeschlagenen Versuch isoliert
-            # rueckrollbar, ohne den Rest der (ggf. groesseren) umgebenden Transaktion (z.B.
-            # des ganzen HTTP-Requests) zu verlieren.
-            with env.cr.savepoint():
-                rec = Model.create(vals)
-        except psycopg2.errors.UniqueViolation:
-            # Race zwischen zwei gleichzeitigen Schreibern desselben neuen Pfads (2026-09-16:
-            # controllers/main.py's upload()/mkdir() rufen index_upsert() jetzt selbst auf,
-            # statt sich allein auf den Watcher zu verlassen). Beide Schreiber (dieser Request
-            # UND der Watcher in einer eigenen Transaktion) koennen zwischen der obigen
-            # search() und diesem create() denselben Pfad anlegen wollen. Live als Bug
-            # gefunden 2026-09-17: der urspruengliche "except UserError" hier fing NIE etwas
-            # ab - psycopg2.errors.UniqueViolation ist keine UserError-Subklasse, die
-            # freundliche Konstraint-Meldung wird erst spaeter, ausserhalb dieser Funktion, im
-            # JSON-RPC-Fehlerhandler daraus gebaut. Der Nutzer sah die rohe DB-Fehlermeldung,
-            # obwohl der Ordner/die Datei auf der Platte laengst korrekt angelegt war - der
-            # zweite Schreiber (hier) verliert das Wettrennen. Erneut suchen und stattdessen
-            # aktualisieren, exakt das gewuenschte Endergebnis eines Upserts.
-            rec = Model.search([("path", "=", vals["path"])], limit=1)
-            if not rec:
-                raise
-            rec.with_context(int_filemanager_syncing_index=True).write(vals)
+        rec = Model.create(vals)
     _notify_change(env)
     return rec
 
