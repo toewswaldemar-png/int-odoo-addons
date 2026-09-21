@@ -105,6 +105,21 @@ def index_upsert(env, abs_path):
 def index_remove_tree(env, rel_path):
     """Remove the index record for rel_path and, if it was a folder, all descendants."""
     Model = env["int_filemanager.file"].sudo()
+    # pg_advisory_xact_lock: derselbe Mechanismus wie in index_upsert() (siehe dort fuer die
+    # ausfuehrliche Begruendung), hier das Delete-Gegenstueck zum Upload-Rennen. Der Watcher
+    # (eigenes DELETE-Inotify-Ereignis, eigene Transaktion) und ein expliziter Aufruf hier
+    # (z.B. aus dem "Loeschen"-Controller, NACHDEM os.remove()/shutil.rmtree() schon gelaufen
+    # ist) versuchen sonst denselben Datensatz gleichzeitig zu unlinken. Live 2026-09-21
+    # beobachtet: Postgres meldete "could not serialize access due to concurrent delete",
+    # Odoos eigener Retry-Mechanismus wiederholte danach den GANZEN Request - os.remove() oben
+    # ist aber bereits gelaufen und rollt nicht zurueck, der wiederholte Versuch fand die Datei
+    # auf der Platte nicht mehr und zeigte dem Nutzer faelschlich "Eintrag nicht gefunden.",
+    # obwohl die Loeschung (Platte + Index, durch den Watcher gewonnen) laengst vollstaendig
+    # und korrekt durchgelaufen war (per DB-Abfrage nach dem Vorfall verifiziert: keine
+    # verwaisten mail.message-/mail.followers-Zeilen). Derselbe Lock-Schluessel-Namensraum wie
+    # index_upsert() (hashtextextended auf den Pfad), damit sich ein Anlegen und ein Loeschen
+    # desselben Pfads ebenfalls nie ueberholen koennen.
+    env.cr.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))", (rel_path,))
     # escape_psql(): rel_path kommt aus einem echten Datei-/Ordnernamen, der "%"/"_" enthalten
     # kann - beides SQL-LIKE-Wildcards. Ungeschaetzt wuerde z.B. "Plan_2026" auch Zeilen eines
     # unbeteiligten Nachbarn wie "PlanX2026" treffen ("_" matcht ein beliebiges Zeichen). Gleiche
