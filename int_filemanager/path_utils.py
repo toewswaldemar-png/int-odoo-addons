@@ -1,5 +1,7 @@
+import contextlib
 import os
 import secrets
+import threading
 import unicodedata
 from datetime import datetime
 
@@ -8,6 +10,51 @@ from odoo.exceptions import ValidationError
 from .mediameta import AUDIO_EXTENSIONS, IMAGE_EXTENSIONS, PDF_EXTENSIONS
 
 DEFAULT_ROOT = "/mnt/hm-daten"
+
+# --- Watcher-Unterdrueckung fuer App-eigene Aenderungen ------------------------------------
+# Grundproblem, live 2026-09-21 gefunden (docs/int_filemanager_papierkorb_konzept.md): jede
+# App-eigene Dateisystem-Operation (Upload, Loeschen/Papierkorb, Wiederherstellen, Umbenennen,
+# Verschieben) wird vom Watcher UNABHAENGIG noch einmal gesehen und fuehrt zu einem zweiten,
+# parallelen Versuch, denselben Index-Datensatz zu pflegen - unabhaengig davon, ob man das per
+# Datenbank-Lock zu verhindern versucht (nicht moeglich: Odoo setzt seine Cursor auf
+# REPEATABLE READ, sql_db.py - eine Transaktion sieht nach dem Warten auf einen Lock trotzdem
+# nur ihren eingefrorenen Schnappschuss, niemals den aktuellen Stand). inotify selbst kann
+# ohnehin nicht unterscheiden, wer eine Aenderung ausgeloest hat (dokumentierte Linux-
+# Einschraenkung, man7.org/linux/man-pages/man7/inotify.7.html) - die App muss es also selbst
+# wissen und dem Watcher mitteilen, statt zu versuchen, das Ergebnis hinterher zu reparieren.
+#
+# In-Memory statt DB, KEIN Zeitfenster/Timeout: markiert einen absoluten Pfad fuer die Dauer der
+# tatsaechlichen Operation (try/finally, siehe suppress()), nicht fuer eine geschaetzte Dauer -
+# funktioniert, weil Watcher und Webserver im selben Python-Prozess laufen (workers=0, bewusste
+# Entscheidung, siehe [[project_hm_odoo_filemanager]]). Ein abgestuerzter Prozess verliert die
+# Markierung automatisch beim Neustart, kein dauerhaft haengender Zustand moeglich. Absolute statt
+# relative Pfade: beide Seiten (Watcher-Ereignis, App-Aufrufer) haben sie ohnehin schon vorliegen,
+# keine DB-Abfrage fuer die reine Pruefung noetig.
+_suppressed_paths = set()
+_suppressed_lock = threading.Lock()
+
+
+@contextlib.contextmanager
+def suppress_watcher(*abs_paths):
+    """Markiert die gegebenen absoluten Pfade, solange der Kontext laeuft, als "wird gerade von
+    der App selbst bearbeitet" - watcher.py._process_batch() ueberspringt eigene
+    Indexierungsversuche fuer diese Pfade in dieser Zeit. Um jede App-eigene Operation legen, die
+    eine echte Dateisystem-Aenderung macht UND selbst den Index pflegt (siehe Aufrufer in
+    controllers/main.py, index_utils.py)."""
+    with _suppressed_lock:
+        for p in abs_paths:
+            _suppressed_paths.add(p)
+    try:
+        yield
+    finally:
+        with _suppressed_lock:
+            for p in abs_paths:
+                _suppressed_paths.discard(p)
+
+
+def is_watcher_suppressed(abs_path):
+    with _suppressed_lock:
+        return abs_path in _suppressed_paths
 
 # Nur fuer friendly_fallback_name() - mediameta.py hat bewusst kein Video (Phase 4 hat Video
 # explizit ausgeklammert), aber fuer die Wortwahl beim Umbenennen reicht die Dateiendung, keine

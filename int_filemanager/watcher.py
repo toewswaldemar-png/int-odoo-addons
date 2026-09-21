@@ -12,7 +12,7 @@ from odoo.service.db import list_dbs
 from odoo.tools import config
 
 from .index_utils import index_move_tree, index_remove_tree, index_upsert
-from .path_utils import get_root, to_relative
+from .path_utils import get_root, is_watcher_suppressed, to_relative
 from .vendor import inotify_simple
 
 _logger = logging.getLogger(__name__)
@@ -111,7 +111,13 @@ def _process_batch(events, inotify, wd_to_path):
         elif event.mask & flags.MOVED_TO:
             old_abs = moved_from.pop(event.cookie, None)
             if old_abs is not None:
-                _move(old_abs, abs_path)
+                # is_watcher_suppressed(): die App macht diese Verschiebung/Umbenennung gerade
+                # selbst (rename_entry()/move()-Controller, siehe path_utils.py fuer die
+                # ausfuehrliche Begruendung) - Watch-Umschreibung bleibt trotzdem unbedingt
+                # noetig (rein interne Buchhaltung fuer kuenftige Ereignisse, keine
+                # Index-Aenderung), nur der Index-Abgleich wird der App ueberlassen.
+                if not is_watcher_suppressed(old_abs) and not is_watcher_suppressed(abs_path):
+                    _move(old_abs, abs_path)
                 if is_dir:
                     # Rewrite the still-open watches for this subtree's own
                     # descendants to their new absolute paths.
@@ -120,18 +126,28 @@ def _process_batch(events, inotify, wd_to_path):
                         if path == old_abs or path.startswith(prefix):
                             wd_to_path[wd] = abs_path + path[len(old_abs):]
             else:
-                # Moved in from outside the watched tree - treat like new.
-                if is_dir:
+                # Moved in from outside the watched tree - treat like new. Betrifft u.a.
+                # index_restore_tree() (Papierkorb -> Baum): die App unterdrueckt abs_path fuer
+                # die Dauer ihrer eigenen Indexpflege - Watches fuer einen Ordner trotzdem immer
+                # registrieren (sonst blieben dessen kuenftige Aenderungen unbeobachtet), nur
+                # der Erstindexierungs-Aufruf entfaellt.
+                if is_watcher_suppressed(abs_path):
+                    if is_dir:
+                        _add_watches(inotify, wd_to_path, abs_path)
+                elif is_dir:
                     _bootstrap_subtree(inotify, wd_to_path, abs_path)
                 else:
                     _upsert(abs_path)
         elif event.mask & flags.CREATE:
-            if is_dir:
+            if is_watcher_suppressed(abs_path):
+                if is_dir:
+                    _add_watches(inotify, wd_to_path, abs_path)
+            elif is_dir:
                 _bootstrap_subtree(inotify, wd_to_path, abs_path)
             else:
                 _upsert(abs_path)
         elif event.mask & flags.MODIFY:
-            if not is_dir:
+            if not is_dir and not is_watcher_suppressed(abs_path):
                 _upsert(abs_path)
         elif event.mask & flags.CLOSE_WRITE:
             # Live per inotifywait am Host bestaetigt (2026-09-16): dieser CIFS-Mount liefert
@@ -146,16 +162,21 @@ def _process_batch(events, inotify, wd_to_path):
             # ist dieser Zweig redundant, aber harmlos - _upsert() ist bereits idempotent
             # (dasselbe Verhalten wie beim bestehenden CREATE+MODIFY-Doppelaufruf auf lokalen
             # Dateisystemen).
-            if not is_dir:
+            if not is_dir and not is_watcher_suppressed(abs_path):
                 _upsert(abs_path)
         elif event.mask & flags.DELETE:
-            _remove(abs_path)
+            if not is_watcher_suppressed(abs_path):
+                _remove(abs_path)
         elif event.mask & flags.DELETE_SELF:
             wd_to_path.pop(event.wd, None)
 
     # Anything left here was moved outside the watched tree entirely - the
     # matching MOVED_TO, if any, would already have arrived in this same batch.
+    # is_watcher_suppressed(): betrifft z.B. index_trash_tree() (Baum -> Papierkorb, siehe
+    # path_utils.py) - die App verschiebt selbst und pflegt den Index selbst nach.
     for old_abs in moved_from.values():
+        if is_watcher_suppressed(old_abs):
+            continue
         _remove(old_abs)
 
 
