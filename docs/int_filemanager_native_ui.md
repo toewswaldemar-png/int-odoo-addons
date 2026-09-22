@@ -1741,3 +1741,44 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
       Wurzel schlug erwartungsgemaess mit "Read-only file system" fehl (`/mnt/hm-daten` ist
       bewusst `:ro` gemountet) - unveraendertes Verhalten, da `expand` in diesem Fix nicht
       angefasst wurde, daher kein gesonderter Nachweis noetig.
+
+42. **"Lokal öffnen" fragt bei jedem Klick erneut nach Bestätigung (2026-09-22), Ursache liegt
+    außerhalb des Moduls.** Nutzerbeobachtung: der Browser-Dialog "Excel öffnen? http://... möchte
+    diese Anwendung öffnen" (Chromium-Protokoll-Handler-Bestätigung für `onOpenLocal`s
+    `ms-word:`/`ms-excel:`/`ms-powerpoint:ofe|u|...`-Handoff, siehe Punkt 19) erscheint **bei jedem
+    einzelnen Aufruf neu**, statt sich einmalig per "Immer erlauben"-Checkbox merken zu lassen - der
+    Dialog zeigt diese Checkbox in Wirklichkeit **überhaupt nicht** an (per Screenshot bestätigt,
+    kein Zuschneide-Artefakt).
+
+    **Zwei naheliegende Code-Hypothesen geprüft und beide live widerlegt, statt weiter zu raten:**
+    - *Auslöse-Mechanismus:* `window.location.href = "ms-word:..."` nach einem `await rpc(...)` gilt
+      in Chromium teils als nicht-vertrauenswürdige, skriptgesteuerte Navigation ohne "transiente
+      Nutzeraktivierung" - `onOpenLocal` (`filemanager_controller_mixin.js`) auf einen echten
+      `<a>`-Element-`.click()` umgestellt. Deployed (Commit `a2cc7cc`) und auf `unraid-odoo` live
+      getestet (Container-Neustart, Browser-Hard-Refresh) - **keine Änderung am Verhalten.**
+    - *Windows-Gruppenrichtlinie:* per MeshCentral-Fernzugriff (rein lesend, `connect.cjs
+      runcommand --powershell`) auf `HM-NB-002` `HKLM:\SOFTWARE\Policies\Microsoft\Edge` sowie
+      `HKCU:\...\Edge` und `HKLM:\...\Google\Chrome` geprüft: **kein**
+      `ExternalProtocolDialogShowAlwaysOpenCheckbox`-Eintrag gesetzt, auch sonst keine
+      protokollbezogene Policy - nur allgemeine Datenschutz-Policies (Telemetrie, Tracking,
+      Feedback). Installierte Edge-Version: `153.0.4234.32`.
+
+    **Tatsächliche Ursache (Websuche, offizielle Microsoft-/Chrome-Enterprise-Dokumentation zur
+    Policy):** *"This policy only applies to https:// links."* Chromium zeigt die "Immer
+    erlauben"-Checkbox beim externen Protokoll-Dialog **grundsätzlich nur bei HTTPS-Ursprüngen** an
+    - unabhängig von Version, Auslöse-Mechanismus oder Richtlinien-Konfiguration. Die
+    Produktivinstanz läuft unter `http://192.100.0.119:8069` (reines HTTP) - deshalb fehlt die
+    Checkbox systembedingt, keine Policy kann das für HTTP-Ursprünge freischalten. Bewusste
+    Chromium-Sicherheitsentscheidung: eine dauerhafte "diese Seite darf externe Programme starten"-
+    Erlaubnis wird nur für einen durch TLS authentifizierten, nicht spoofbaren Ursprung vergeben.
+
+    **Einordnung:** kein Bug in `int_filemanager` oder `onOpenLocal` - der `<a>`-Klick-Fix bleibt
+    trotzdem als sauberere Variante im Code (schadet nicht, behebt nur nicht das eigentliche
+    Symptom). Der tatsächliche Fix läge auf Infrastruktur-Ebene: Odoo über einen Reverse Proxy mit
+    TLS (auch internes/selbstsigniertes Zertifikat genügt) statt direkt über HTTP erreichbar machen
+    - deckt sich mit der bereits an anderer Stelle notierten Marschroute "HTTP intern + späterer
+    Reverse Proxy" für die Herrmann-Webanwendungen. Nicht in dieser Session umgesetzt, da
+    Infrastruktur-Entscheidung außerhalb des Modul-Scopes.
+
+    Quellen: [Microsoft Edge Policy: ExternalProtocolDialogShowAlwaysOpenCheckbox](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/externalprotocoldialogshowalwaysopencheckbox),
+    [Chrome Enterprise: ExternalProtocolDialogShowAlwaysOpenCheckbox](https://chromeenterprise.google/policies/external-protocol-dialog-show-always-open-checkbox/)
