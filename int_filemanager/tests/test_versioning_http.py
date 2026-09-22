@@ -65,6 +65,21 @@ class TestVersioningHttp(HttpCase):
         with open(os.path.join(self.root, "doc.txt"), "rb") as f:
             self.assertEqual(f.read(), b"version2")
 
+    def test_upload_overwrite_identical_content_skips_version(self):
+        """Byteidentischer Inhalt (z.B. ONLYOFFICE-Editor nur geoeffnet, nichts
+        bearbeitet) darf keine neue Version anlegen - siehe
+        docs/int_filemanager_onlyoffice_ladezeit_untersuchung_2026-09-22.md."""
+        self._authenticate()
+        resp = self._upload_overwrite("doc.txt", b"version1")
+        self.assertEqual(resp.status_code, 200)
+
+        self.env.cr.clear()
+        file_record = self.env["int_filemanager.file"].sudo().search([("path", "=", "doc.txt")])
+        versions = self.env["int_filemanager.version"].sudo().search([("file_id", "=", file_record.id)])
+        self.assertEqual(len(versions), 0)
+        with open(os.path.join(self.root, "doc.txt"), "rb") as f:
+            self.assertEqual(f.read(), b"version1")
+
     def test_restore_creates_new_version_and_restores_content(self):
         self._authenticate()
         self._upload_overwrite("doc.txt", b"version2")
