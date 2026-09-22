@@ -1782,3 +1782,99 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
 
     Quellen: [Microsoft Edge Policy: ExternalProtocolDialogShowAlwaysOpenCheckbox](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/externalprotocoldialogshowalwaysopencheckbox),
     [Chrome Enterprise: ExternalProtocolDialogShowAlwaysOpenCheckbox](https://chromeenterprise.google/policies/external-protocol-dialog-show-always-open-checkbox/)
+
+43. **Reverse Proxy mit HTTPS für Odoo + ONLYOFFICE eingerichtet (2026-09-22), als Konsequenz aus
+    Punkt 42.** Der in Punkt 42 identifizierte Fix (Odoo über HTTPS statt direktem HTTP erreichbar
+    machen) wurde umgesetzt - auf `unraid-odoo` lief bereits ein ungenutzter **Nginx Proxy
+    Manager**-Container, kein neuer Dienst nötig. Mehrere ineinandergreifende Probleme mussten
+    nacheinander gelöst werden, bevor Odoo inkl. ONLYOFFICE-Editor über den Proxy sauber lief:
+
+    **1. Grundaufbau:** Neuer Proxy-Host `odoo.lan` → `192.100.0.119:8069`, selbstsigniertes
+    Zertifikat (10 Jahre Laufzeit, bewusst länger als das bereits abgelaufene `onlyoffice.local`-
+    Zertifikat aus einem alten, nie fertig genutzten Setup - siehe Punkt darunter). Lokaler
+    Hosts-Eintrag für DNS-Auflösung (firmenweiter DNS-Eintrag auf `DCRX300S6.Herrmann.local`
+    bewusst zurückgestellt, erst lokal getestet).
+
+    **2. `allow_websocket_upgrade` war aus** - Standardverhalten von Nginx Proxy Manager, führte zu
+    "Echtzeitverbindung getrennt" in der Odoo-UI (Bus/WebSocket für Discuss, Benachrichtigungen
+    etc.). In der NPM-Oberfläche aktiviert.
+
+    **3. `proxy_mode = True` war in `odoo.conf` auskommentiert** - ohne das vertraut Odoo den
+    `X-Forwarded-*`-Headern des Proxys nicht, was u.a. den WebSocket-Handshake betrifft (Odoo kann
+    `ws`/`wss` nicht korrekt unterscheiden). Aktiviert, Container neu gestartet. **Bleibt dauerhaft
+    aktiv, kein Rollback nötig** - ohne Forwarded-Header (z.B. bei Direktzugriff auf Port 8069)
+    verhält sich Odoo unverändert wie vorher. Einziger Nebeneffekt: Port 8069 sollte langfristig
+    nicht mehr direkt offen bleiben, da `proxy_mode` auch von dort gesendeten (ggf. gefälschten)
+    Forwarded-Headern vertrauen würde.
+
+    **4. HTTP/2 verursachte einen Reload-Loop** - mit `http2_support` aktiv (NPM-Standard) lud die
+    komplette Odoo-Seite alle 4-5 Sekunden neu (WebSocket-Upgrade gelang laut Server-Log zwar
+    technisch mit Status 101, brach aber sofort wieder ab). Live per NPM-Access-Log nachgewiesen:
+    Requests liefen mit `HTTP/2.0`, nach Deaktivieren von "HTTP/2 Support" verschwand der Loop
+    komplett (Log-Diff über 15s zeigte keine neuen Requests mehr). Bekanntes Muster bei WebSocket
+    hinter Nginx - HTTP/2-Upgrade-Semantik unterscheidet sich von HTTP/1.1, nicht jede
+    Proxy-Konfiguration behandelt das korrekt.
+
+    **5. Eigentliche Ursache von "Echtzeitverbindung getrennt" war ein SSL-Zertifikatsfehler, nicht
+    der WebSocket selbst** - trotz Punkt 2-4 blieb die Meldung bestehen, auch nach Hard-Refresh und
+    Inkognito-Fenster. Browser-Konsole (das entscheidende Diagnosemittel, nachdem Server-Logs allein
+    nicht weiterhalfen) zeigte: `Service worker registration failed: SecurityError: ... An SSL
+    certificate error occurred when fetching the script.` Odoos Shared Worker (verwaltet die
+    WebSocket-Verbindung) und der Service Worker verlangen strengere Zertifikatsprüfung als ein
+    normaler Seitenaufruf - ein bloßes "Trotzdem fortfahren"-Klick im Browser reicht dafür nicht.
+    Fix: Zertifikat im Windows-Zertifikatsspeicher (Aktueller Benutzer → Vertrauenswürdige
+    Stammzertifizierungsstellen) importiert, `certutil` von der Kommandozeile aus schlug fehl (löst
+    einen interaktiven Windows-Sicherheitsdialog aus, der sich nicht scripten lässt) - musste manuell
+    über den Windows-Dialog bestätigt werden. Danach verschwand die Meldung.
+
+    **6. ONLYOFFICE-Editor: "Herunterladen ist fehlgeschlagen" nach dem HTTPS-Umstieg** - eigenständiges
+    Folgeproblem, gleiche Fehlerklasse wie Punkt 5 zu Beginn: Die Hauptseite lief jetzt über HTTPS,
+    der `onlyoffice_odoo`-Konnektor zeigte aber weiterhin auf den ONLYOFFICE-Server per reinem HTTP
+    (`onlyoffice_connector.doc_server_public_url`) - **Mixed-Content-Blockierung** durch den Browser
+    (aktive Inhalte wie Skripte dürfen nicht unverschlüsselt von einer HTTPS-Seite geladen werden).
+
+    Der tatsächliche ONLYOFFICE-Dokumentenserver läuft im Container `Cloudreve_office` (historisch
+    gewachsener Name, hat nichts mit Cloudreve zu tun) auf Port 1680 (HTTP) - Port 4430 (vermeintlich
+    HTTPS laut `docker ps`) nimmt tatsächlich keine Verbindungen an. Es existierte bereits ein
+    ungenutzter NPM-Proxy-Host `onlyoffice.local`, aber mit **totem Ziel-Port 9980** (nichts hört dort)
+    und **falschem SSL-Zertifikat** (ausgestellt auf CN `onlyoffice.lan`, nicht `onlyoffice.local` -
+    UND bereits seit 2025-11-21 abgelaufen). Behoben: neues 10-Jahre-Zertifikat mit korrektem CN,
+    Ziel-Port auf 1680 und Forward-Scheme auf `http` korrigiert (per SQL + direktem Patch der
+    generierten nginx-Config, da reine DB-Änderungen ohne Speichern über die NPM-UI nicht automatisch
+    in die laufende Konfiguration übernommen werden - siehe auch Punkt 2/4, gleiche Lektion),
+    `doc_server_public_url` in Odoo auf die neue `https://onlyoffice.local:18443/`-Adresse umgestellt.
+    HTTP/2 war auch hier aktiv und verursachte denselben Reload-Loop-Effekt wie in Punkt 4 - ebenfalls
+    deaktiviert.
+
+    **7. Nach alldem: ONLYOFFICE-Editor öffnete sich, aber "Herunterladen ist fehlgeschlagen" blieb
+    bestehen** - wieder über die Browser-Konsole gefunden (Server-Logs zeigten dafür nichts, da der
+    Fehler auftrat, bevor die Anfrage den Dokumentenserver überhaupt erreichte):
+    `GET https://onlyoffice.local/cache/files/data/...&filename=Editor.bin net::ERR_FAILED` - **ohne
+    Port** in der URL, obwohl der Proxy extern auf Port 18443 läuft (nicht Standard-443). Ursache:
+    NPMs gemeinsame `proxy.conf`-Include-Datei setzt `proxy_set_header Host $host;` - nginx-Variable
+    `$host` enthält bewusst **keinen** Port. Der ONLYOFFICE-Dokumentenserver baut seine eigenen
+    Cache-/Asset-URLs aus diesem empfangenen `Host`-Header und ließ dadurch den Port weg, was zu einem
+    fehlschlagenden Verbindungsversuch auf Standard-Port 443 führte (dort läuft nichts - Port 443 ist
+    nur lokal (`127.0.0.1`) durch Unraids eigene Oberfläche belegt, extern frei, aber NPM lauscht dort
+    nicht).
+
+    Zusätzlicher Fund beim Debuggen: Die vorhandenen `location`-Blöcke für `/loleaflet`, `/lool/*`,
+    `/hosting/discovery` in der `onlyoffice.local`-Config sind **Collabora/LibreOffice-Online-Pfade**,
+    nicht ONLYOFFICE - Überbleibsel eines alten, nie fertig genutzten Proxy-Host-Templates von
+    2025-10-22. Für den tatsächlichen Pfad (`/cache/files/...`) irrelevant, da der auf den
+    allgemeinen `location /`-Block fällt.
+
+    Fix: `proxy_set_header Host $http_host;` (Variante MIT Port) gezielt für den `location /`-Block
+    ergänzt. **Erster Versuch schlug fehl** (HTTP 400 direkt von NPMs eigenem nginx, nicht vom
+    Backend) - eine per verschachtelter SSH/`docker exec sh -c`-Anführungszeichen eingefügte Zeile
+    hatte alle `$`-Variablen durch Shell-Interpolation auf mehreren Ebenen zu Leerstrings zerstört
+    (dieselbe Fehlerklasse wie beim MeshCentral-Passwort-Reset, siehe
+    [[reference_meshcentral_access]]-Kontext dieser Session - `$`-Zeichen in Werten, die über
+    mehrere verschachtelte Shells laufen, nie direkt interpolieren, sondern als Datei übertragen).
+    Zweiter Versuch: komplette Config-Datei lokal repariert und unverändert (kein Shell-Escaping)
+    per `docker cp` in den Container übertragen - danach funktionierte auch der Cache-Pfad
+    (Testanfrage auf einen nicht existierenden Cache-Eintrag lieferte danach ein reguläres HTTP 403
+    vom Backend statt eines Verbindungsfehlers).
+
+    **Live verifiziert:** ONLYOFFICE-Editor öffnet und lädt Dokumente über `https://odoo.lan:18443`
+    fehlerfrei, vom Nutzer bestätigt.
