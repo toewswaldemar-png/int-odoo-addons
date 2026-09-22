@@ -615,7 +615,13 @@ export function filemanagerControllerMixin(Base) {
             }
             try {
                 const res = await rpc("/int_filemanager/webdav_token", { path: record.data.path });
-                window.location.href = `${protocol}:ofe|u|${res.url}`;
+                // Echter <a>-Klick statt window.location.href: bei einer per JS gesetzten
+                // location.href fehlt in Chrome/Edge oft die "Diesen Link-Typ immer mit dieser
+                // App oeffnen"-Checkbox im Protokoll-Handler-Dialog, wodurch bei jedem "Lokal
+                // oeffnen" erneut bestaetigt werden muss - ein echter Link-Klick zeigt sie.
+                const link = document.createElement("a");
+                link.href = `${protocol}:ofe|u|${res.url}`;
+                link.click();
             } catch (e) {
                 this.notification.add(e.data?.message || e.message, { type: "danger" });
             }
