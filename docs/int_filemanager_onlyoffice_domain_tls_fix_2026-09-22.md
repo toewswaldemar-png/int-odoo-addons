@@ -171,6 +171,53 @@ Redirect-Bugs ohne Port auf `/welcome/` um) und die Zertifikatswarnung dort akze
 Browser/Gerät einmalig wiederholt werden — der Grund, warum "funktioniert bei mir" und "funktioniert
 nicht bei dir" während der Diagnose gleichzeitig beide stimmten.
 
+### Nachtrag 2026-09-23: im Betrieb bestätigt, dauerhafte Lösung offen
+
+Symptom: ONLYOFFICE im Filemanager funktionierte nur auf dem Laptop 192.100.0.198, auf allen anderen
+Clients nicht.
+
+Befund aus den NPM-Access-Logs (`/data/logs/proxy-host-{4,5}_access.log` im NPM-Container):
+
+| Client | Requests an `odoo.herrmann.local` | Requests an `onlyoffice.herrmann.local` |
+|---|---|---|
+| 192.100.0.198 (Laptop) | 2792 | 2888 |
+| 10.212.134.201 | 426 | 214 |
+| 192.100.0.122 | 58 | **0** |
+| 192.100.0.126 | 88 | **0** |
+| 192.100.0.148 | 105 | **0** |
+
+Die anderen Clients erreichen Odoo (Warnung dort weggeklickt), aber keine Anfrage an ONLYOFFICE kommt
+beim Proxy an — der TLS-Handshake scheitert vorher im Browser. DNS, NPM-Access-Lists (keine) und
+Odoo-Parameter waren in Ordnung. Das Zertifikat ist auch auf dem Laptop **nicht** im
+Windows-Zertifikatsspeicher vertraut — dort wirkt nur eine im Browser weggeklickte Ausnahme, die
+irgendwann abläuft.
+
+Gegenprobe: auf 192.100.0.122 einmal `https://onlyoffice.herrmann.local:18443` aufgerufen und die
+Warnung akzeptiert → erste Requests dieses Clients überhaupt im Log (13:59), Welcome-Seite lädt.
+
+**AD-CA scheidet aktuell aus:** die beiden in den Clients noch vertrauten Domänen-CAs
+(`Herrmann-S2012R2-CA` auf `S2012R2`, `Herrmann-EX2012R2-CA` auf `EX2012R2`) antworten nicht
+(`certutil -ping` → `0x800706ba RPC_S_SERVER_UNAVAILABLE`). Über AD CS lässt sich derzeit nichts
+ausstellen.
+
+**TODO — dauerhafte Lösung (noch nicht umgesetzt):**
+
+1. **Kurzfristig: GPO-Verteilung.** Beide NPM-Zertifikate exportieren
+   (`/data/custom_ssl/npm-13/fullchain.pem` = onlyoffice, `/data/custom_ssl/npm-14/fullchain.pem` = odoo,
+   als `.crt` speichern) und auf `HM-DC01` per GPO verteilen:
+   Computerkonfiguration → Richtlinien → Windows-Einstellungen → Sicherheitseinstellungen →
+   Richtlinien für öffentliche Schlüssel → **Vertrauenswürdige Stammzertifizierungsstellen** → Importieren.
+   An Domänen-OU verknüpfen, auf einem Client `gpupdate /force` + Browser neu starten, prüfen.
+   Chrome/Edge nutzen den Windows-Speicher; Firefox nur mit `security.enterprise_roots.enabled=true`.
+   Nicht-Domänen-Geräte (VPN-Clients privat, Handys) brauchen weiterhin manuellen Import.
+2. **Mittelfristig: Let's Encrypt über die Strato-Domain** (DNS-01-Challenge, kein Port-Forwarding
+   nötig). Voraussetzung: Umzug von `*.herrmann.local` auf eine Subdomain der Strato-Domain
+   (DNS-Eintrag intern, `web.base.url` + `doc_server_public_url` per ORM umstellen). Danach entfällt
+   jeder Client-Import, auch für Nicht-Domänen-Geräte.
+
+Bei einer Neuausstellung zugleich den offenen Punkt aus Abschnitt 2 erledigen
+(`basicConstraints=CA:FALSE`).
+
 ---
 
 ## Endzustand
