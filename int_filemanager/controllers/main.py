@@ -99,14 +99,7 @@ class IntFilemanagerController(http.Controller):
             ],
         }
 
-    @http.route("/int_filemanager/download", type="http", auth="user")
-    def download(self, path="", disposition="attachment"):
-        self._check_access()
-        abs_path = resolve_path(request.env, path)
-        rel = to_relative(request.env, abs_path)
-        authz.require(request.env, rel, "read")
-        if not os.path.isfile(abs_path):
-            raise UserError(_("Datei nicht gefunden."))
+    def _file_stream_response(self, abs_path, as_attachment):
         # http.Stream statt manuellem open()+read()+make_response(): letzteres las die
         # komplette Datei in den Speicher und lieferte sie als einen Block ohne
         # HTTP-Range-Unterstuetzung - Spulen/Suchen im <video>-Player (native_ui/
@@ -116,7 +109,9 @@ class IntFilemanagerController(http.Controller):
         # Stream.from_path() scheidet aus (file_path() darin verlangt einen Pfad unterhalb eines
         # bekannten addons_path - unser konfigurierbares Filemanager-Stammverzeichnis liegt
         # ausserhalb davon), deshalb Stream direkt konstruiert - die eigene authz.require()-Pruefung
-        # oben ersetzt die generische Pfadvalidierung, die from_path() sonst uebernehmen wuerde.
+        # beim Aufrufer ersetzt die generische Pfadvalidierung, die from_path() sonst uebernehmen
+        # wuerde. Gemeinsamer Helper fuer download() UND den Bestandsdaten-Fallback in
+        # thumbnail() (siehe dort) - dieselbe Stream-Konstruktion, nicht zweimal geschrieben.
         stat = os.stat(abs_path)
         stream = http.Stream(
             type="path",
@@ -128,10 +123,25 @@ class IntFilemanagerController(http.Controller):
             etag=f"{int(stat.st_mtime)}-{stat.st_size}",
             public=False,
         )
-        return stream.get_response(as_attachment=disposition != "inline")
+        return stream.get_response(as_attachment=as_attachment)
+
+    @http.route("/int_filemanager/download", type="http", auth="user")
+    def download(self, path="", disposition="attachment"):
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        rel = to_relative(request.env, abs_path)
+        authz.require(request.env, rel, "read")
+        if not os.path.isfile(abs_path):
+            raise UserError(_("Datei nicht gefunden."))
+        return self._file_stream_response(abs_path, as_attachment=disposition != "inline")
 
     @http.route("/int_filemanager/thumbnail", type="http", auth="user")
-    def thumbnail(self, path=""):
+    def thumbnail(self, path="", size="thumbnail"):
+        """size="thumbnail" (Standard, Kachelansicht) oder "preview" (Vollbild-Vorschau, seit
+        2026-09-20 - siehe mediameta.PREVIEW_MAX_SIZE). Bestandsbilder, die vor dieser Erweiterung
+        erfasst wurden, haben noch kein preview-Feld - fuer size="preview" wird in dem Fall
+        ersatzweise das Original direkt gestreamt (kein Zwangs-Backfill noetig, sobald die Datei
+        das naechste Mal neu erfasst wird, greift dieser Fallback nicht mehr)."""
         self._check_access()
         abs_path = resolve_path(request.env, path)
         rel = to_relative(request.env, abs_path)
@@ -140,9 +150,15 @@ class IntFilemanagerController(http.Controller):
         # int_filemanager.file filtert eine geschuetzte Datei automatisch
         # heraus, statt nur ueber authz.require() hier gesondert zu pruefen.
         record = request.env["int_filemanager.file"].search([("path", "=", rel)], limit=1)
-        if not record or record.meta_state != "done" or not record.sudo().thumbnail:
+        if not record or record.meta_state != "done":
             raise UserError(_("Keine Vorschau verfügbar."))
-        data = base64.b64decode(record.sudo().thumbnail)
+        field = "preview" if size == "preview" else "thumbnail"
+        blob = record.sudo()[field]
+        if not blob:
+            if field == "preview" and os.path.isfile(abs_path):
+                return self._file_stream_response(abs_path, as_attachment=False)
+            raise UserError(_("Keine Vorschau verfügbar."))
+        data = base64.b64decode(blob)
         headers = [
             ("Content-Type", "image/jpeg"),
             ("Content-Length", str(len(data))),
@@ -354,6 +370,21 @@ class IntFilemanagerController(http.Controller):
         rel = to_relative(request.env, abs_path)
         authz.require(request.env, rel, "write")
         return request.env["int_filemanager.file"].action_analyze_document(rel)
+
+    @http.route("/int_filemanager/apply_extracted_values", type="jsonrpc", auth="user", methods=["POST"])
+    def apply_extracted_values(self, path="", values=None):
+        """Gegenstueck zu analyze_document fuer die erkannten Werte (Phase A, siehe
+        docs/int_filemanager_ocr_selbstdefinierte_felder.md): der Kontroll-Dialog ruft dies beim
+        "Übernehmen" auf, NACH dem normalen this.orm.write() fuer tag_ids/partner_id.
+        Dieselbe "write"-Pruefung wie oben - int_filemanager.extracted_value hat bewusst keine
+        eigene Nutzer-ACL (siehe ir.model.access.csv), die Berechtigung wird hier am zugehoerigen
+        Dateipfad geprueft, die eigentliche Schreibarbeit laeuft sudo() in
+        action_apply_extracted_values."""
+        self._check_access()
+        abs_path = resolve_path(request.env, path)
+        rel = to_relative(request.env, abs_path)
+        authz.require(request.env, rel, "write")
+        return request.env["int_filemanager.file"].action_apply_extracted_values(rel, values or [])
 
     # ---------------------------------------------------------------------
     # versioning

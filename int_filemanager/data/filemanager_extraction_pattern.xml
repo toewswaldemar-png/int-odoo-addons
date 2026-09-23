@@ -1,12 +1,14 @@
 <odoo>
     <!-- Startbelegung, entspricht 1:1 den bisher in fulltext.py hartkodierten Regex-Konstanten
          (_DATE_RE/_INVOICE_NO_RE/_AMOUNT_RE) - danach ueber "Dateimanager > Konfiguration >
-         Erkennungsmuster" frei erweiter-/aenderbar, keines dieser drei ist im Code fest
-         verdrahtet (siehe fulltext.py, suggest_from_text()). Bewusst ohne noupdate="1", analog
-         zu filemanager_status.xml (dort ebenfalls keins gesetzt) - selbes Verhalten wie die
-         Status-Werte: ein Modul-Update schreibt Name/Pattern dieser drei Startdatensaetze auf
-         die hier hinterlegten Werte zurueck, spaeter angelegte zusaetzliche Muster sind davon
-         nicht betroffen. -->
+         Erkennungsmuster" frei erweiter-/aenderbar. target_field ist seit der Vereinheitlichung
+         (2026-09-19, siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md) nur noch ein
+         freies Label ohne Sonderbedeutung im Code - diese drei Startdatensaetze sind ganz normale
+         Muster wie jedes spaeter angelegte, kein Unterschied mehr in der Auswertung. Bewusst ohne
+         noupdate="1", analog zu filemanager_status.xml (dort ebenfalls keins gesetzt) - selbes
+         Verhalten wie die Status-Werte: ein Modul-Update schreibt Name/Pattern dieser drei
+         Startdatensaetze auf die hier hinterlegten Werte zurueck, spaeter angelegte zusaetzliche
+         Muster sind davon nicht betroffen. -->
     <record id="filemanager_extraction_pattern_date" model="int_filemanager.extraction_pattern">
         <field name="name">Datum (TT.MM.JJJJ)</field>
         <field name="target_field">date</field>

@@ -10,14 +10,19 @@ class IntFilemanagerExtractionPattern(models.Model):
     _order = "target_field, sequence, id"
 
     name = fields.Char(required=True)
-    target_field = fields.Selection(
-        [
-            ("date", "Datum"),
-            ("invoice_number", "Rechnungsnummer"),
-            ("amount", "Betrag"),
-        ],
+    # Ehemals eine feste 3er-Selection (date/invoice_number/amount) - seit 2026-09-19 freier Text,
+    # damit Admins beliebig viele eigene Felder anlegen koennen (siehe
+    # docs/int_filemanager_ocr_selbstdefinierte_felder.md, Phase A). Zunaechst befuellten die drei
+    # Werte "date"/"invoice_number"/"amount" noch besondere, fest verdrahtete Felder auf
+    # int_filemanager.file - seit der Vereinheitlichung am selben Tag ist target_field nur noch
+    # ein frei waehlbares Label ohne Sonderbedeutung im Code: JEDES Muster (auch die drei
+    # mitgelieferten) erzeugt gleichermassen einen int_filemanager.extracted_value-Datensatz
+    # (siehe filemanager_file.py::action_apply_extracted_values).
+    target_field = fields.Char(
         required=True,
-        help="Welchen Vorschlags-Slot im \"Werte erkennen\"-Dialog dieses Muster befüllt.",
+        help="Freier Anzeigename/technischer Name des Feldes, das dieses Muster befüllt (z.B. "
+        "\"iban\" oder \"kundennummer\") - dient nur der Sortierung/Gruppierung in dieser Liste, "
+        "ohne Sonderbedeutung im Code.",
     )
     pattern = fields.Char(
         required=True,
@@ -36,9 +41,9 @@ class IntFilemanagerExtractionPattern(models.Model):
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
 
-    # Pro target_field wird in sequence-Reihenfolge geprueft, der erste Treffer gewinnt -
-    # fulltext.py:suggest_from_text() haelt sich strikt daran (kein Modell-Code dafuer noetig,
-    # das ist reine Auswertungslogik dort).
+    # Jedes aktive Muster liefert unabhaengig sein eigenes Ergebnis, kein gemeinsamer Slot pro
+    # target_field (siehe fulltext.py:_match_patterns; kein Modell-Code dafuer noetig, das ist
+    # reine Auswertungslogik dort).
     @api.constrains("pattern")
     def _check_pattern(self):
         for rec in self:

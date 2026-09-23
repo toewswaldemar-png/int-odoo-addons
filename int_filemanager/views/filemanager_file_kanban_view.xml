@@ -80,18 +80,15 @@
                                        options="{'color_field': 'status_color'}"/>
                                 <field name="tag_ids" widget="many2many_tags"/>
                                 <field name="partner_id"/>
-                                <!-- Baustein 1 (Werte erkennen) - analog zur Liste
-                                     (filemanager_file_list_view.xml) jetzt auch auf der Karte
-                                     sichtbar, Nutzerfeedback 2026-09-07. Jeweils per invisible
-                                     ausgeblendet statt einer leeren Zeile, da die meisten Dateien
-                                     keine erkannten Werte haben. -->
-                                <field name="extracted_date" invisible="not extracted_date"
-                                       class="text-muted small d-block"/>
-                                <field name="extracted_invoice_number"
-                                       invisible="not extracted_invoice_number"
-                                       class="text-muted small d-block"/>
-                                <field name="extracted_amount" invisible="not extracted_amount"
-                                       class="text-muted small d-block"/>
+                                <!-- Die frueheren festen Zeilen extracted_date/_invoice_number/
+                                     _amount (Baustein 1, Nutzerfeedback 2026-09-07) sind mit der
+                                     Vereinheitlichung auf int_filemanager.extracted_value entfallen
+                                     (2026-09-19, siehe
+                                     docs/int_filemanager_ocr_selbstdefinierte_felder.md) - erkannte
+                                     Werte sind stattdessen ueber "Dateimanager > Erkannte Werte"
+                                     und den Reiter im Datei-Formular einsehbar, nicht mehr direkt
+                                     auf der Karte (waere fuer eine beliebig lange Liste nicht mehr
+                                     sinnvoll darstellbar). -->
                                 <!-- ocr_state-Indikator (2026-09-07, Nutzerfeedback) - analog
                                      zur Liste nur fuer pending/error, "done" ist der
                                      Normalfall und bleibt unauffaellig. -->

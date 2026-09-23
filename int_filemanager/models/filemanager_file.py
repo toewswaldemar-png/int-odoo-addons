@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from ..fulltext import FulltextTooLarge, extract_fulltext, fulltext_type_of, suggest_from_text
+from ..fulltext import FulltextTooLarge, extract_fulltext, fulltext_type_of, pdf_word_index, suggest_from_text
 from ..hash_utils import compute_stable_hash
 from ..index_utils import rename_entry
 from ..mediameta import MetaTooLarge, extract_metadata, media_type_of
@@ -66,6 +66,11 @@ DEFAULT_FULLTEXT_MAX_BYTES = {
     "plain": 5 * 1024 * 1024,
     "pdf": 50 * 1024 * 1024,
 }
+
+# Klartext-Vorschau im "Werte erkennen"-Dialog (Phase C, nur fuer Nicht-PDF-Dateien - PDFs
+# bekommen stattdessen den gerenderten Highlight-Viewer) - reine UI-Bequemlichkeit, kein
+# Sicherheitslimit wie DEFAULT_FULLTEXT_MAX_BYTES, daher grosszuegig bemessen statt konfigurierbar.
+CONTENT_TEXT_PREVIEW_CHARS = 20000
 
 
 class IntFilemanagerFile(models.Model):
@@ -266,6 +271,12 @@ class IntFilemanagerFile(models.Model):
     )
 
     thumbnail = fields.Image(max_width=320, max_height=320, attachment=True, copy=False)
+    # Vollbild-Vorschaugroesse (2026-09-20, Nutzerfeedback "Bild baut sich schrittweise auf" bei
+    # mehrere-MB-Handyfotos ueber die externe Domain/mobil) - deutlich groesser als thumbnail,
+    # aber weit unter der echten Kamera-Aufloesung. Ersetzt NICHT downloadUrl/das Original (siehe
+    # controllers/main.py:download) - nur die Bildquelle der Vollbild-Vorschau im Kontroll-/
+    # Datei-Viewer wechselt darauf (filemanager_controller_mixin.js:toViewerFile).
+    preview = fields.Image(max_width=1920, max_height=1920, attachment=True, copy=False)
     media_width = fields.Integer(copy=False)
     media_height = fields.Integer(copy=False)
     taken_at = fields.Datetime(
@@ -302,15 +313,14 @@ class IntFilemanagerFile(models.Model):
         copy=False, help="Volltext aus OCR/Textextraktion - fuer die Suche, nicht zur Anzeige gedacht."
     )
 
-    # Aus content_text per einfacher Regex vorgeschlagene Werte (siehe fulltext.suggest_from_text)
-    # - bewusst feste, einzelne Felder statt eines fields.Properties: die Regex-Erkennung liefert
-    # ein festes, kleines Set moeglicher Werte, kein pro Dokumenttyp wechselndes Schema (das waere
-    # der eigentliche Anwendungsfall fuer Properties, siehe echte Odoo-Beispiele wie
-    # event.registration.registration_properties - hier nicht gegeben). Nur ueber den interaktiven
-    # Analyse-Dialog befuellt, nie automatisch ungeprueft uebernommen.
-    extracted_date = fields.Char(copy=False, string="Erkanntes Datum")
-    extracted_invoice_number = fields.Char(copy=False, string="Erkannte Rechnungsnummer")
-    extracted_amount = fields.Char(copy=False, string="Erkannter Betrag")
+    # Erkannte Werte (2026-09-19, siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md) -
+    # echtes Datensatz-Modell statt eines JSON-Blobs (fields.Properties), ein Datensatz pro Muster
+    # mit Treffer. Bis 2026-09-19 gab es zusaetzlich drei fest verdrahtete Char-Felder
+    # (extracted_date/_invoice_number/_amount) fuer die drei mitgelieferten Muster - inzwischen
+    # vereinheitlicht, jedes Muster (egal ob mitgeliefert oder selbstdefiniert) landet hier.
+    # Bestandsdaten wurden per Migration uebernommen, siehe
+    # migrations/19.0.1.11.0/post-migrate_legacy_fields_to_extracted_value.py.
+    extracted_value_ids = fields.One2many("int_filemanager.extracted_value", "file_id", string="Erkannte Werte")
 
     # --- Phase 5: Freigaben (intern & extern) -----------------------------
     # "Intern": shared_partner_ids - persistente Freigabe an konkrete Portal-
@@ -569,13 +579,17 @@ class IntFilemanagerFile(models.Model):
         (Pfad A: Drag&Drop direkt in die App, siehe controllers/main.py analyze_document) - beide
         wollen exakt dieselbe Extraktion, nur zu unterschiedlichen Zeitpunkten ausgeloest. Gibt
         content_text zurueck (leer, falls nichts extrahiert werden konnte) fuer den interaktiven
-        Aufrufer, der direkt im Anschluss Vorschlaege daraus ableiten will."""
+        Aufrufer, der direkt im Anschluss Vorschlaege daraus ableiten will. Gibt seit Phase B
+        (siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md) ein Tupel (text, word_index)
+        zurueck statt nur text - word_index sind Wort-Boxen fuer das PDF-Highlighting (Phase C),
+        None bei Klartextdateien oder wenn keine Positionen ermittelt werden konnten. Der
+        Hintergrund-Cron unten ignoriert das zweite Element einfach."""
         self.ensure_one()
         root = root or get_root(self.env)
         fulltext_type = fulltext_type_of(self.name)
         if fulltext_type is None:
             self.write({"ocr_state": False})
-            return ""
+            return "", None
 
         abs_path = os.path.join(root, self.path)
 
@@ -599,27 +613,36 @@ class IntFilemanagerFile(models.Model):
                 and current.st_size == self.ocr_source_size
                 and str(current.st_mtime_ns) == self.ocr_source_mtime_ns
             ):
-                return self.content_text or ""
+                # Positionen trotzdem guenstig neu ermitteln (nur ein lesender pdfplumber-Pass,
+                # NIE erneut OCRmyPDF - das waere fuer diesen reinen Wiederholungsfall zu teuer,
+                # siehe pdf_word_index-Docstring). Liefert [] statt Boxen, wenn die Datei keinen
+                # echten Textlayer (mehr) hat - z.B. ein Scan, dessen OCR-Textlayer beim letzten
+                # Lauf nur in einer verworfenen Temp-Datei existierte. Die Werte selbst bleiben
+                # in dem Fall trotzdem korrekt (aus dem gecachten content_text), nur ohne
+                # Markierung im PDF.
+                word_index = pdf_word_index(abs_path) if fulltext_type == "pdf" else None
+                return self.content_text or "", word_index
 
         max_bytes = self._fulltext_max_bytes(fulltext_type)
         try:
             result = extract_fulltext(abs_path, fulltext_type, max_bytes)
         except FulltextTooLarge as exc:
             self.write({"ocr_state": "error", "ocr_error": str(exc), "ocr_attempts": self.ocr_attempts + 1})
-            return ""
+            return "", None
         except Exception as exc:  # noqa: BLE001 - eine kaputte/fremde Datei darf den Aufrufer nicht abbrechen
             _logger.warning("int_filemanager: Volltextextraktion für %s fehlgeschlagen: %s", self.path, exc)
             self.write({"ocr_state": "error", "ocr_error": str(exc)[:500], "ocr_attempts": self.ocr_attempts + 1})
-            return ""
+            return "", None
 
         if result is None:
             # Datei aendert sich gerade oder ist kurz verschwunden - bleibt pending.
-            return ""
+            return "", None
 
+        word_index = result.pop("_word_index", None)
         result["ocr_state"] = "done"
         result["ocr_error"] = False
         self.write(result)
-        return result.get("content_text") or ""
+        return result.get("content_text") or "", word_index
 
     def _cron_extract_fulltext(self):
         """Asynchroner Batch-Job, analog zu _cron_extract_media_meta: extrahiert Volltext (Text
@@ -650,16 +673,53 @@ class IntFilemanagerFile(models.Model):
         eingeloggte Nutzer ueber dieselben generierten ir.rule-Regeln wie jede andere
         Feldbearbeitung am Datensatz (siehe acl_rules.py) - anders als hier oben, wo sudo() den
         bereits durch authz.require() im Controller abgedeckten Schreibzugriff nur fuer die
-        Extraktion selbst nutzt (gleiches Muster wie die Cron-Jobs weiter oben)."""
+        Extraktion selbst nutzt (gleiches Muster wie die Cron-Jobs weiter oben). Seit Phase B/C
+        (siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md) zusaetzlich matches (Liste der
+        erkannten Feld-Treffer inkl. PDF-Position) und content_text_preview (gekuerzter Volltext,
+        fuer die Klartext-Vorschau im Dialog bei Nicht-PDF-Dateien)."""
         empty = {"res_id": False, "suggested_tags": [], "suggested_partner": False,
-                 "suggested_date": False, "suggested_invoice_number": False, "suggested_amount": False}
+                 "matches": [], "content_text_preview": ""}
         rec = self.env["int_filemanager.file"].sudo().search([("path", "=", path)], limit=1)
         if not rec or rec.is_dir:
             return empty
-        text = rec._extract_fulltext_for_record()
+        text, word_index = rec._extract_fulltext_for_record()
         if not text:
             return {**empty, "res_id": rec.id}
-        return {**suggest_from_text(self.env, text), "res_id": rec.id}
+        result = suggest_from_text(self.env, text, word_index)
+        result["content_text_preview"] = text[:CONTENT_TEXT_PREVIEW_CHARS]
+        return {**result, "res_id": rec.id}
+
+    @api.model
+    def action_apply_extracted_values(self, path, values):
+        """Ersetzt die komplette extracted_value_ids-Liste der per path referenzierten Datei durch
+        die vom Kontroll-Dialog bestaetigten Werte (siehe document_review_dialog.js onConfirm) -
+        kein Merge/Diff, einfache Rundumersetz-Semantik. sudo() innen: int_filemanager.extracted_value
+        hat bewusst keine eigene Schreib-ACL fuer Nutzer (siehe ir.model.access.csv) - derselbe
+        Aufbau wie int_filemanager.version, nur ueber diese Methode statt einen
+        Dateisystem-Vorgang erreichbar. Der Controller (/int_filemanager/apply_extracted_values)
+        prueft VOR diesem Aufruf bereits authz.require(..., "write") auf denselben Pfad - exakt
+        dasselbe Muster wie action_analyze_document oben."""
+        rec = self.env["int_filemanager.file"].sudo().search([("path", "=", path)], limit=1)
+        if not rec or rec.is_dir:
+            return False
+        rec.extracted_value_ids.unlink()
+        Value = self.env["int_filemanager.extracted_value"].sudo()
+        for vals in values:
+            pattern_id = vals.get("pattern_id")
+            value = vals.get("value")
+            if not pattern_id or not value:
+                continue
+            Value.create({
+                "file_id": rec.id,
+                "pattern_id": pattern_id,
+                "value": value,
+                "page": vals.get("page") or False,
+                "x0": vals.get("x0") or False,
+                "y0": vals.get("y0") or False,
+                "x1": vals.get("x1") or False,
+                "y1": vals.get("y1") or False,
+            })
+        return True
 
     def _scan_and_reconcile(self, batch_size=2000):
         """Full filesystem scan, reconciling the search index with disk state.

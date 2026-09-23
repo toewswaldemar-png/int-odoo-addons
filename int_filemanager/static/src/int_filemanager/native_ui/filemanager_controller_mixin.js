@@ -886,17 +886,26 @@ export function filemanagerControllerMixin(Base) {
             const ext = extOf(record.data.name);
             const isPdf = ext === "pdf";
             const isVideo = VIDEO_EXTENSIONS.has(ext);
+            const isImage = PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && !isVideo;
+            // Vollbild-Vorschau nutzt seit 2026-09-20 eine verkleinerte Zwischengroesse
+            // (max. 1920px, siehe mediameta.PREVIEW_MAX_SIZE) statt direkt des Originals
+            // (downloadUrl) - Handyfotos mit mehreren MB bauten sich sonst sichtbar Stueck fuer
+            // Stueck auf, obwohl kein Bildschirm die volle Kamera-Aufloesung braucht.
+            // downloadUrl bleibt unveraendert fuer den "Original herunterladen"-Weg erhalten.
+            const previewUrl = `/int_filemanager/thumbnail?path=${encodeURIComponent(path)}&size=preview`;
             return {
                 path,
                 name: record.data.name,
                 downloadUrl,
-                isImage: PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && !isVideo,
+                isImage,
                 isPdf,
                 isVideo,
                 mimetype: isVideo ? VIDEO_MIME_TYPES[ext] : undefined,
                 isViewable: isPreviewable(record.data.name),
                 defaultSource: isPdf
                     ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(downloadUrl)}#pagemode=none`
+                    : isImage
+                    ? previewUrl
                     : downloadUrl,
             };
         }
@@ -1005,7 +1014,7 @@ export function filemanagerControllerMixin(Base) {
                     continue;
                 }
                 const hasSuggestions = result.suggested_tags.length || result.suggested_partner
-                    || result.suggested_date || result.suggested_invoice_number || result.suggested_amount;
+                    || result.matches.length;
                 if (!hasSuggestions) {
                     continue;
                 }
@@ -1014,6 +1023,7 @@ export function filemanagerControllerMixin(Base) {
                         IntDocumentReviewDialog,
                         {
                             fileName: file.name,
+                            path,
                             resId: result.res_id,
                             suggestion: result,
                             onSaved: () => this.reload(),
@@ -1523,6 +1533,7 @@ export function filemanagerControllerMixin(Base) {
                     IntDocumentReviewDialog,
                     {
                         fileName: record.data.name,
+                        path: record.data.path,
                         resId: result.res_id,
                         suggestion: result,
                         onSaved: () => this.reload(),

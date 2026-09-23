@@ -1,5 +1,6 @@
 import os
 import re
+import tempfile
 
 # v1 bewusst nur PDF + reine Textformate - Office-Dokumente (docx/xlsx/...) und Bilder sind ein
 # eigener, spaeterer Schritt (siehe docs/int_filemanager_paperoffice_recherche.md, Baustein 1/1b).
@@ -41,30 +42,156 @@ def _extract_plain(abs_path):
         return {"content_text": f.read()}
 
 
-def _ocr_pdf(abs_path):
-    # Lazy-Import: pytesseract/pdf2image (und die System-Binaries tesseract/poppler, siehe
-    # Dockerfile) werden nur gebraucht, wenn tatsaechlich ein Scan-PDF ohne Textlayer auftaucht -
-    # die meisten Aufrufe (Textlayer vorhanden) kommen nie hier an.
-    import pytesseract
-    from pdf2image import convert_from_path
+# Feldtypen, deren Wert als Text sinnvoll ist - "Tx" (Textfeld) und "Ch" (Dropdown/Kombifeld).
+# "Btn" (Checkbox/Radiobutton) bewusst ausgeschlossen: deren V ist ein PDF-Name (z.B. der
+# Options-Wert eines angekreuzten Radiobuttons), kein freier Text, und mehrere Buttons einer
+# Radiogruppe teilen sich denselben Feldnamen - als "Wort" verwurstet waere das nur Rauschen.
+_FORM_FIELD_TEXT_TYPES = {"Tx", "Ch"}
 
-    images = convert_from_path(abs_path, dpi=200)
-    return "\n".join(pytesseract.image_to_string(img, lang=OCR_LANGUAGES) for img in images)
+
+def _decode_form_field_value(value):
+    """PDF-Formularfeldwerte kommen als bytes, ueblicherweise UTF-16BE mit BOM (\\xfe\\xff) fuer
+    alles ausserhalb reinem ASCII, manchmal auch als PDFDocEncoding/Latin-1 ohne BOM - beides in
+    freier Wildbahn beobachtet (live an echten Formularen wie diesem geprueft). None bei
+    leerem/nicht dekodierbarem Wert statt eines Fehlers, ein einzelnes kaputtes Feld darf die
+    gesamte Extraktion nicht abbrechen."""
+    if isinstance(value, str):
+        return value or None
+    if not isinstance(value, bytes) or not value:
+        return None
+    if value.startswith(b"\xfe\xff"):
+        text = value[2:].decode("utf-16-be", errors="replace")
+    else:
+        try:
+            text = value.decode("utf-8")
+        except UnicodeDecodeError:
+            text = value.decode("latin-1", errors="replace")
+    return text or None
+
+
+def _pdf_form_field_words(page):
+    """Ausgefuellte AcroForm-Feldwerte (Textfelder/Dropdowns) als zusaetzliche "Woerter" fuer
+    dieselbe Seite - live am Bestand entdeckt (2026-09-19): viele Behoerden-/Versicherungs-PDFs
+    sind ausfuellbare Formulare, deren eingetragene Werte NICHT im normalen Seitentext stehen,
+    sondern nur als Formularfeld-Wert in einer separaten Annotationsstruktur - page.extract_words()
+    sieht diese Werte grundsaetzlich nie, egal wie gut die Regex ist (leer am echten Fall
+    bestaetigt: eine Kindergeldnummer, die nur als Feldwert existierte, fehlte im extrahierten
+    Text komplett). Jeder Feldwert wird als EIN Token behalten (nicht in Einzelwoerter zerlegt,
+    anders als extract_words()) - Formularwerte sind meist kurze, in sich geschlossene Angaben
+    (Nummern, Namen, Daten), ein Muster soll den ganzen Wert matchen koennen, nicht nur ein
+    Teilwort. Kehrseite: anders als bei echtem Fliesstext gibt es kein Label direkt daneben im
+    Text (das gedruckte Label bleibt ein eigenes, unabhaengiges Wort an anderer Position) - ein
+    Muster fuer einen Formularwert sollte daher das Wertformat selbst matchen (z.B.
+    "\\b\\d{3}[A-Z]{2}\\d{6}\\b" fuer eine Kindergeldnummer), keine Label-Naehe voraussetzen."""
+    words = []
+    for annot in page.annots or []:
+        data = annot.get("data") or {}
+        field_type = getattr(data.get("FT"), "name", None)
+        if field_type not in _FORM_FIELD_TEXT_TYPES:
+            continue
+        text = _decode_form_field_value(data.get("V"))
+        if not text:
+            continue
+        words.append(
+            {"text": text, "x0": annot["x0"], "top": annot["top"], "x1": annot["x1"], "bottom": annot["bottom"]}
+        )
+    return words
+
+
+def _pdfplumber_words_per_page(pdf_path):
+    # Lazy-Import: pdfplumber wird nur bei tatsaechlichem PDF-Zugriff gebraucht. Ersetzt seit
+    # Phase B (docs/int_filemanager_ocr_selbstdefinierte_felder.md) PyPDF2/odoo.tools.pdf.PdfReader
+    # als einzigen Extraktionsweg fuer PDFs - liefert Wort-Boxen direkt in PDF-Punkt-Koordinaten,
+    # dieselbe Bibliothek fuer digitale UND (nach OCRmyPDF) gescannte PDFs, kein zweiter
+    # Extraktionsweg mehr noetig. PyMuPDF bewusst nicht gewaehlt (AGPL, nicht mit der bisherigen
+    # freizuegigen Lizenzfamilie vereinbar).
+    import pdfplumber
+
+    with pdfplumber.open(pdf_path) as pdf:
+        return [page.extract_words(use_text_flow=False) + _pdf_form_field_words(page) for page in pdf.pages]
+
+
+def _build_indexed_text(pages_words):
+    """Baut den Volltext UND eine parallele Liste von Wort-Boxen mit exaktem Zeichen-Offset in
+    GENAU diesem Text auf - beide aus denselben Tokens im selben Durchlauf, damit ein
+    Regex-Treffer im Text sich verlustfrei auf seine zugrundeliegenden Wort-Boxen zurueckfuehren
+    laesst (siehe _locate_span in _match_patterns). page ist 1-basiert."""
+    chunks = []
+    word_index = []
+    offset = 0
+    for page_no, words in enumerate(pages_words, start=1):
+        for w in words:
+            token = w["text"]
+            start = offset
+            chunks.append(token)
+            offset += len(token)
+            word_index.append(
+                {"start": start, "end": offset, "page": page_no, "x0": w["x0"], "y0": w["top"], "x1": w["x1"], "y1": w["bottom"]}
+            )
+            chunks.append(" ")
+            offset += 1
+        chunks.append("\n")
+        offset += 1
+    return "".join(chunks), word_index
+
+
+def pdf_word_index(abs_path):
+    """Rein lesende, guenstige (KEINE OCR) Wort-Positions-Ermittlung gegen die aktuell auf der
+    Platte liegende Datei - fuer den Kurzschluss-Pfad in filemanager_file.py wenn content_text
+    schon gecacht ist und nur frische Positionen fuer eine erneute interaktive Analyse gebraucht
+    werden. Liefert [] statt eines Fehlers, wenn die Datei (nicht mehr) lesbar ist oder keinen
+    Textlayer hat - z.B. ein Scan, dessen OCR-Textlayer beim letzten Lauf nur in einer bereits
+    wieder geloeschten Temp-Datei existierte (siehe _extract_pdf: die Originaldatei wird von
+    OCRmyPDF nie ueberschrieben)."""
+    try:
+        _, word_index = _build_indexed_text(_pdfplumber_words_per_page(abs_path))
+    except Exception:
+        return []
+    return word_index
+
+
+def _ocr_pdf_searchable(abs_path):
+    """Baut mit OCRmyPDF (statt rohem pytesseract/pdf2image) eine durchsuchbare Kopie mit
+    korrekt positioniertem, unsichtbarem Textlayer in einer Temp-Datei - Tesseract laeuft
+    weiterhin intern (siehe Dockerfile), wird aber nicht mehr direkt aufgerufen. Schreibt NIE in
+    die Originaldatei zurueck (bewusste Entscheidung): ein automatischer Analyse-/Cron-Schritt
+    soll nie unbemerkt die vom Nutzer verwaltete Originaldatei veraendern (mtime/Hash wuerden
+    sonst Versionierung/Dedup verwirren) - die Temp-Datei existiert nur fuer die Dauer dieses
+    einen pdfplumber-Durchlaufs und wird danach vom Aufrufer wieder geloescht. force_ocr=True:
+    die eigene Textlayer-Heuristik oben hat bereits entschieden, dass der vorhandene Textlayer
+    (falls ueberhaupt einer existiert) unbrauchbar ist - OCRmyPDF soll ihn ersetzen statt mit
+    einem Fehler abzubrechen, weil es selbst noch (unzureichenden) Text vorfindet."""
+    import ocrmypdf
+
+    fd, out_path = tempfile.mkstemp(suffix=".pdf")
+    os.close(fd)
+    try:
+        ocrmypdf.ocr(abs_path, out_path, language=OCR_LANGUAGES, force_ocr=True, progress_bar=False)
+    except Exception:
+        os.remove(out_path)
+        raise
+    return out_path
 
 
 def _extract_pdf(abs_path):
-    from odoo.tools.pdf import PdfReader
+    pages_words = _pdfplumber_words_per_page(abs_path)
+    text, word_index = _build_indexed_text(pages_words)
 
-    with open(abs_path, "rb") as f:
-        reader = PdfReader(f, strict=False)
-        pages_text = [page.extract_text() or "" for page in reader.pages]
-    text = "\n".join(pages_text)
+    if pages_words and len(text) / len(pages_words) < MIN_CHARS_PER_PAGE_FOR_TEXT_LAYER:
+        # Praktisch kein Textlayer - vermutlich ein Scan, per OCRmyPDF nachbearbeiten. Anders als
+        # das fruehere rohe pytesseract.image_to_string() liefert das auch gleich Wort-Positionen
+        # fuer das PDF-Highlighting (Phase C), keine eigene Pixel->Punkt-Umrechnung noetig.
+        ocr_path = _ocr_pdf_searchable(abs_path)
+        try:
+            pages_words = _pdfplumber_words_per_page(ocr_path)
+            text, word_index = _build_indexed_text(pages_words)
+        finally:
+            os.remove(ocr_path)
 
-    if reader.pages and len(text) / len(reader.pages) < MIN_CHARS_PER_PAGE_FOR_TEXT_LAYER:
-        # Praktisch kein Textlayer - vermutlich ein Scan, per OCR nachbearbeiten.
-        text = _ocr_pdf(abs_path)
-
-    return {"content_text": text}
+    # "_word_index" beginnt bewusst mit "_": kein echtes Feld auf int_filemanager.file -
+    # filemanager_file.py::_extract_fulltext_for_record poppt es aus dem Ergebnis heraus, BEVOR
+    # der Rest per self.write() gespeichert wird (siehe dort).
+    return {"content_text": text, "_word_index": word_index}
 
 
 _EXTRACTORS = {"plain": _extract_plain, "pdf": _extract_pdf}
@@ -112,17 +239,43 @@ def extract_fulltext(abs_path, fulltext_type, max_bytes):
 _MIN_PARTNER_NAME_LENGTH = 5
 
 
-def _match_extraction_patterns(env, text):
-    """Ein Treffer pro target_field, das erste passende Muster in sequence-Reihenfolge gewinnt -
-    spaetere Muster fuer dasselbe Feld dienen als Fallback, falls das bevorzugte Muster nicht
-    greift. Ein einzelnes ungueltiges Muster (sollte durch die Konstraint auf dem Modell nicht
-    vorkommen, aber IndexError bei einer zu hoch gewaehlten group_index ist erst zur Matchzeit
-    pruefbar) wird uebersprungen statt die gesamte Erkennung abzubrechen."""
-    result = {"date": False, "invoice_number": False, "amount": False}
+def _locate_span(word_index, start, end):
+    """Bildet einen Zeichenbereich (z.B. match.span(group_index)) auf eine Umriss-Box ab, indem
+    alle Woerter herangezogen werden, deren eigener Bereich den Treffer ueberlappt (ein Treffer
+    kann mehrere Woerter umfassen, z.B. "12.345,67") - die Box ist die Vereinigung all dieser
+    Wort-Boxen. None, wenn kein Wort ueberlappt (z.B. reine Textdatei ohne word_index) oder der
+    Treffer ueber eine Seitengrenze hinweg reicht (seltener Randfall, dann lieber keine Markierung
+    als eine falsche - der Wert selbst bleibt trotzdem korrekt erkannt)."""
+    if not word_index:
+        return None
+    hits = [w for w in word_index if w["end"] > start and w["start"] < end]
+    if not hits:
+        return None
+    pages = {w["page"] for w in hits}
+    if len(pages) > 1:
+        return None
+    return {
+        "page": hits[0]["page"],
+        "x0": min(w["x0"] for w in hits),
+        "y0": min(w["y0"] for w in hits),
+        "x1": max(w["x1"] for w in hits),
+        "y1": max(w["y1"] for w in hits),
+    }
+
+
+def _match_patterns(env, text, word_index):
+    """Jedes aktive Erkennungsmuster liefert unabhaengig sein eigenes Ergebnis - kein gemeinsamer
+    Slot pro target_field mehr (seit 2026-09-19 vereinheitlicht, vorher gab es einen Sonderpfad
+    fuer drei fest verdrahtete Felder date/invoice_number/amount, die inzwischen entfernt sind -
+    siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md, Abschnitt "Vereinheitlichung").
+    Liefert zusaetzlich die Position im PDF (Phase C), sofern word_index vorhanden und der Treffer
+    nicht ueber eine Seitengrenze reicht. Ein einzelnes ungueltiges Muster (sollte durch die
+    Konstraint auf dem Modell nicht vorkommen, aber IndexError bei einer zu hoch gewaehlten
+    group_index ist erst zur Matchzeit pruefbar) wird uebersprungen statt die gesamte Erkennung
+    abzubrechen."""
+    matches = []
     patterns = env["int_filemanager.extraction_pattern"].sudo().search([], order="sequence, id")
     for rec in patterns:
-        if result.get(rec.target_field) is not False:
-            continue
         try:
             match = re.compile(rec.pattern, re.IGNORECASE if rec.ignore_case else 0).search(text)
         except re.error:
@@ -130,18 +283,35 @@ def _match_extraction_patterns(env, text):
         if not match:
             continue
         try:
-            result[rec.target_field] = match.group(rec.group_index)
+            value = match.group(rec.group_index)
+            span = match.span(rec.group_index)
         except IndexError:
             continue
-    return result
+        if not value:
+            continue
+        position = _locate_span(word_index, span[0], span[1])
+        matches.append({
+            "pattern_id": rec.id,
+            "pattern_name": rec.name,
+            "value": value,
+            "page": position["page"] if position else False,
+            "x0": position["x0"] if position else False,
+            "y0": position["y0"] if position else False,
+            "x1": position["x1"] if position else False,
+            "y1": position["y1"] if position else False,
+        })
+    return matches
 
 
-def suggest_from_text(env, text):
+def suggest_from_text(env, text, word_index=None):
     """Liefert Vorschlaege aus bereits vorhandenen Daten (Tags, Kontakte) plus simplen
     Regex-Treffern - erfindet nichts, schlaegt nur vor, was schon im System existiert bzw. ein
     einfaches Muster im Text ist. Ergebnis ist zur Kontrolle durch den Nutzer gedacht, nicht zur
     automatischen Uebernahme. Tags/Kontakt kommen inkl. Namen (nicht nur IDs) zurueck, damit der
-    Kontroll-Dialog sie ohne weiteren Roundtrip direkt anzeigen kann."""
+    Kontroll-Dialog sie ohne weiteren Roundtrip direkt anzeigen kann. word_index (Phase B, optional)
+    sind Wort-Boxen fuer die erkannten Felder (matches) - None/leer bei Klartextdateien oder wenn
+    keine Positionen ermittelt werden konnten (matches liefert dann trotzdem die Werte, nur ohne
+    Position)."""
     text_lower = text.lower()
 
     tag_matches = env["int_filemanager.tag"].sudo().search([])
@@ -156,12 +326,10 @@ def suggest_from_text(env, text):
             suggested_partner = {"id": partner.id, "name": partner.display_name}
             break
 
-    matched = _match_extraction_patterns(env, text)
+    matches = _match_patterns(env, text, word_index or [])
 
     return {
         "suggested_tags": suggested_tags,
         "suggested_partner": suggested_partner,
-        "suggested_date": matched["date"],
-        "suggested_invoice_number": matched["invoice_number"],
-        "suggested_amount": matched["amount"],
+        "matches": matches,
     }

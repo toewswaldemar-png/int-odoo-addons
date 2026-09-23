@@ -64,6 +64,19 @@ MODELS = {
         },
         "portal_share_field": None,
     },
+    # 2026-09-19 (docs/int_filemanager_ocr_selbstdefinierte_felder.md): dieselbe Bauart wie
+    # int_filemanager.version - ein erkannter Wert haengt am geschuetzten file_id, kein eigener
+    # Pfad. Kein portal_share_field: Portal-Kontakte bekommen (wie bei Versionen) nur den
+    # aktuellen Dateiinhalt, keine internen Erkennungsdetails.
+    "int_filemanager.extracted_value": {
+        "path_field": "file_id.path",
+        "rule_xml_ids": {
+            "read": "int_filemanager.rule_extracted_value_protected_read",
+            "write": "int_filemanager.rule_extracted_value_protected_write",
+            "unlink": "int_filemanager.rule_extracted_value_protected_unlink",
+        },
+        "portal_share_field": None,
+    },
 }
 
 PORTAL_GROUP_XML_ID = "base.group_portal"

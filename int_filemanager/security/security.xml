@@ -139,5 +139,47 @@
         <field name="perm_create">False</field>
         <field name="perm_unlink">True</field>
     </record>
+
+    <!-- Dieselbe Bauart nochmal auf int_filemanager.extracted_value (2026-09-19, siehe
+         docs/int_filemanager_ocr_selbstdefinierte_felder.md) - ein erkannter Wert haengt am
+         geschuetzten file_id, genau wie eine Version. Ohne diese Regeln koennte ein interner
+         Nutzer ohne Leserecht auf einen geschuetzten Ordner (z.B. "Kunden und Angebote") die
+         daraus erkannten Werte trotzdem ueber die Listen-/Pivot-Ansicht lesen - das waere ein
+         Leck des Schutzordner-Konzepts genau an der Stelle, an der ein echtes Datensatz-Modell
+         (statt eines reinen Felds auf int_filemanager.file) einen neuen Angriffspunkt eroeffnet.
+         write/unlink hier trotz perm_write=0/perm_unlink=0 in ir.model.access.csv (dort bewusst
+         nur lesend fuer Nutzer, echte Schreib-/Loeschvorgaenge laufen ausschliesslich sudo() ueber
+         filemanager_file.py::action_apply_extracted_values) - dieselbe scheinbare Redundanz
+         besteht bereits bei int_filemanager.version oben, als Verteidigung in der Tiefe falls die
+         Basis-ACL je gelockert wird. -->
+    <record id="rule_extracted_value_protected_read" model="ir.rule">
+        <field name="name">Filemanager: geschützte Ordner (Erkannte Werte lesen)</field>
+        <field name="model_id" ref="model_int_filemanager_extracted_value"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="perm_read">True</field>
+        <field name="perm_write">False</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">False</field>
+    </record>
+
+    <record id="rule_extracted_value_protected_write" model="ir.rule">
+        <field name="name">Filemanager: geschützte Ordner (Erkannte Werte schreiben)</field>
+        <field name="model_id" ref="model_int_filemanager_extracted_value"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="perm_read">False</field>
+        <field name="perm_write">True</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">False</field>
+    </record>
+
+    <record id="rule_extracted_value_protected_unlink" model="ir.rule">
+        <field name="name">Filemanager: geschützte Ordner (Erkannte Werte löschen)</field>
+        <field name="model_id" ref="model_int_filemanager_extracted_value"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="perm_read">False</field>
+        <field name="perm_write">False</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">True</field>
+    </record>
     </data>
 </odoo>
