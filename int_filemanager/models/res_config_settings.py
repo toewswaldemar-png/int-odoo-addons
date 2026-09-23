@@ -1,8 +1,27 @@
 from odoo import _, fields, models
 
+from .filemanager_file import DEFAULT_LOCK_FILE_PATTERNS
+
 
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
+
+    # Char statt Text: Odoo erlaubt fuer config_parameter-Felder auf res.config.settings nur
+    # boolean/integer/float/char/selection/many2one/datetime (base/models/res_config.py,
+    # _get_classified_fields() - live als Absturz gefunden, 2026-09-23: "Field ... must have
+    # type 'boolean', 'integer', 'float', 'char', 'selection', 'many2one' or 'datetime'"). Char
+    # speichert mehrzeiligen Text technisch genauso wie Text (beides eine reine String-Spalte),
+    # der Unterschied ist nur, welche Feldtypen Odoo hier zulaesst.
+    int_filemanager_lock_file_patterns = fields.Char(
+        string="Sperrdatei-Muster",
+        config_parameter="int_filemanager.lock_file_patterns",
+        default=DEFAULT_LOCK_FILE_PATTERNS,
+        help="Ein Dateinamens-Muster pro Zeile (z.B. \"~$*\", \"Thumbs.db\", \"desktop.ini\") - "
+        "Dateien, deren Name auf eines dieser Muster passt (Platzhalter wie bei fnmatch: \"*\" "
+        "fuer beliebig viele Zeichen, \"?\" fuer genau eines), gelten als Sperrdatei "
+        "(is_lock_file) und sind standardmäßig über den Suchfilter ausgeblendet, werden aber "
+        "ganz normal mitindexiert.",
+    )
 
     int_filemanager_root_path = fields.Char(
         string="Stammverzeichnis",

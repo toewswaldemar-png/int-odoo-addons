@@ -37,6 +37,12 @@
                             <field name="int_filemanager_trash_retention_days"/>
                         </setting>
                     </block>
+                    <block title="Sperrdateien" name="int_filemanager_lock_file_setting">
+                        <setting id="int_filemanager_lock_file_patterns_setting"
+                                 help="Ein Dateinamens-Muster pro Zeile (z.B. &quot;~$*&quot;, &quot;Thumbs.db&quot;) - passende Dateien gelten als Sperrdatei und sind standardmäßig über den Suchfilter ausgeblendet.">
+                            <field name="int_filemanager_lock_file_patterns" widget="text" nolabel="1"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

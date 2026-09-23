@@ -1,3 +1,4 @@
+import fnmatch
 import logging
 import os
 import secrets
@@ -16,6 +17,12 @@ from ..mediameta import MetaTooLarge, extract_metadata, media_type_of
 from ..path_utils import get_root, to_relative
 
 _logger = logging.getLogger(__name__)
+
+# Default fuer int_filemanager.lock_file_patterns (res_config_settings.py), falls der
+# Parameter noch nie gesetzt wurde - bewahrt das bisherige, hartkodierte "~$"-Verhalten
+# unveraendert und ergaenzt die beiden vom Nutzer genannten Betriebssystem-/App-eigenen
+# Sperr-/Metadatendateien als sinnvollen Startpunkt, nicht als abschliessende Liste.
+DEFAULT_LOCK_FILE_PATTERNS = "~$*\nThumbs.db\ndesktop.ini"
 
 # Gesamt-Hashbudget (Bytes) fuer das Ad-hoc-Hashen neu gefundener Kandidaten pro
 # Scan-Lauf. "Nur wenige Kandidaten" ist keine garantierte Eigenschaft - ohne
@@ -89,10 +96,12 @@ class IntFilemanagerFile(models.Model):
     _parent_name = "parent_id"
     _parent_store = True
     is_dir = fields.Boolean(string="Ist Ordner", index=True)
-    # Nutzerwunsch 2026-09-14: Word/Excel/PowerPoint legen waehrend eine Datei dort offen ist eine
-    # Sperrdatei "~$<name>" im selben Ordner an - reine Betriebssystem-/Office-Konvention, nicht
-    # konfigurierbar, deshalb hart codiertes Praefix statt eines Einstellungs-Parameters. Stored
-    # Compute (nicht ueber eine reine Python-Property geloest), damit das Feld in der
+    # Nutzerwunsch 2026-09-14, erweitert 2026-09-23: Word/Excel/PowerPoint legen waehrend eine
+    # Datei dort offen ist eine Sperrdatei "~$<name>" im selben Ordner an - urspruenglich hart
+    # codiertes Praefix. Auf Nutzerwunsch (weitere Sperr-/Metadatendateitypen wie "Thumbs.db")
+    # jetzt ueber int_filemanager.lock_file_patterns konfigurierbar (Muster per Zeile, per
+    # fnmatch.fnmatch() abgeglichen - siehe DEFAULT_LOCK_FILE_PATTERNS oben, res_config_settings.py).
+    # Stored Compute (nicht ueber eine reine Python-Property geloest), damit das Feld in der
     # Suchfilter-Domain unten verwendbar ist - ein Odoo-Domain-Ausdruck kann nur auf echte
     # Modellfelder zugreifen, nicht auf Methoden.
     is_lock_file = fields.Boolean(
@@ -100,9 +109,10 @@ class IntFilemanagerFile(models.Model):
         compute="_compute_is_lock_file",
         store=True,
         index=True,
-        help='Temporäre Office-Sperrdatei (Name beginnt mit "~$"), erscheint während ein '
-        "Dokument dort geöffnet ist. Wird ganz normal mitindexiert, ist in der Listenansicht "
-        "aber standardmäßig über den Suchfilter ausgeblendet.",
+        help="Temporäre Sperr-/Metadatendatei (Name passt auf eines der unter Einstellungen > "
+        "Dateimanager konfigurierten Muster, standardmäßig u.a. Office-Sperrdateien \"~$*\" und "
+        "\"Thumbs.db\"). Wird ganz normal mitindexiert, ist in der Listenansicht aber "
+        "standardmäßig über den Suchfilter ausgeblendet.",
     )
     size = fields.Float(
         string="Größe (Bytes)", digits=(0, 0),
@@ -160,8 +170,24 @@ class IntFilemanagerFile(models.Model):
 
     @api.depends("name")
     def _compute_is_lock_file(self):
+        # Parameter einmal pro Aufruf lesen, nicht pro Record - dieser Compute laeuft u.a. beim
+        # Voll-Scan ueber potenziell zehntausende Dateien (siehe SCAN_HASH_BUDGET_BYTES-Kommentar
+        # oben zur Groessenordnung), ein wiederholtes get_param() pro Record waere unnoetiger
+        # Overhead fuer einen Wert, der sich waehrend eines einzelnen Compute-Laufs nie aendert.
+        raw_patterns = self.env["ir.config_parameter"].sudo().get_param(
+            "int_filemanager.lock_file_patterns", DEFAULT_LOCK_FILE_PATTERNS
+        )
+        patterns = [p.strip() for p in raw_patterns.splitlines() if p.strip()]
+        # .lower() auf beiden Seiten statt fnmatch.fnmatch()s eigener, plattformabhaengiger
+        # Gross-/Kleinschreibungsbehandlung (unter Linux standardmaessig case-sensitiv) - die
+        # Dateien liegen auf SMB-Freigaben, die von Windows-Clients beschrieben werden
+        # ("Thumbs.db" vs. "thumbs.db" soll unabhaengig von der genauen Schreibweise treffen).
+        patterns_lower = [p.lower() for p in patterns]
         for record in self:
-            record.is_lock_file = bool(record.name) and record.name.startswith("~$")
+            name_lower = (record.name or "").lower()
+            record.is_lock_file = bool(name_lower) and any(
+                fnmatch.fnmatch(name_lower, pattern) for pattern in patterns_lower
+            )
 
     def write(self, vals):
         """Direktes Bearbeiten von "name" im Formular (Nutzerwunsch 2026-09-06) - schreibt
