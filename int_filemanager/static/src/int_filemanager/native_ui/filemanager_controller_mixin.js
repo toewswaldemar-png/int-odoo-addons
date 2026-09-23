@@ -22,6 +22,7 @@ import { browser } from "@web/core/browser/browser";
 import { useBus, useChildRef, useService } from "@web/core/utils/hooks";
 import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
 import { useNavigation } from "@web/core/navigation/navigation";
+import { useSetupAction } from "@web/search/action_hook";
 import { usePopover } from "@web/core/popover/popover_hook";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { IntTextInputDialog } from "../shared/text_input_dialog";
@@ -142,6 +143,60 @@ export function filemanagerControllerMixin(Base) {
     return class extends Base {
         setup() {
             super.setup();
+            // Selektions-Erhalt ueber JEDEN model.load()-Aufruf hinweg, insbesondere beim
+            // Zurueckspringen per Breadcrumb aus einer anderen Client-Action (z.B. "Bearbeiten"
+            // -> ONLYOFFICE -> Breadcrumb zurueck). Live per Network-Tab bestaetigt (2026-09-23):
+            // das erzeugt eine KOMPLETT NEUE Controller-/Model-Instanz, keine Wiederverwendung der
+            // alten - reine In-Memory-Reselektion innerhalb EINER Instanz (wie unten, seit
+            // 2026-09-18 fuer reload() u.a. nach Umbenennen) hilft hier nicht, this.model.root der
+            // neuen Instanz hat beim ersten eigenen load() noch nie eine Auswahl gehabt.
+            //
+            // Loesung ueber Odoos EIGENEN, dafuer vorgesehenen Mechanismus statt eines eigenen
+            // sessionStorage-Umwegs (verworfener erster Versuch, siehe Git-Historie): useSetupAction()
+            // weiter unten registriert einen zusaetzlichen getLocalState()-Callback. actionService
+            // (webclient/actions/action_service.js) ruft beim Verlassen ALLE ueber
+            // useCallbackRecorder registrierten getLocalState-Callbacks auf und fuehrt ihre
+            // Ergebnisse per Object.assign zusammen (list_controller.js registriert selbst schon
+            // einen fuer model.exportState()+Scroll-Position - unsere Registrierung kollidiert
+            // damit nicht, beide landen im selben zusammengefuehrten Objekt). Beim Wiederherstellen
+            // reicht actionService dieses zusammengefuehrte Ergebnis unveraendert als
+            // controller.props.state durch, AUCH an eine frisch erzeugte Komponente (line 1098,
+            // action_service.js: "controller.props.state = controller.exportedState") - genau das
+            // von Odoo selbst fuer Scroll-Position/Modell-Konfiguration genutzte Mittel, hier nur
+            // um einen eigenen Schluessel (int_filemanager_selectedResIds) erweitert.
+            const _origLoad = this.model.load.bind(this.model);
+            this.model.load = async (...args) => {
+                // this.model.root existiert beim ALLERERSTEN load()-Aufruf (Erstmontage der
+                // Ansicht) noch nicht - erst dieser Aufruf legt ihn an. Ohne die ?.-Absicherung
+                // wirft die naechste Zeile dort eine TypeError, BEVOR _origLoad ueberhaupt laeuft -
+                // model.root bleibt dann dauerhaft undefined und jeder Render stuerzt ab (live so
+                // aufgetreten: "Cannot destructure property 'count' of this.model.root").
+                const selectedResIds = new Set((this.model.root?.selection || []).map((r) => r.resId));
+                const result = await _origLoad(...args);
+
+                // this.props.state ist nur beim ALLERERSTEN load() einer (moeglicherweise frisch
+                // erzeugten) Instanz relevant - existiert this.model.root schon (selectedResIds
+                // nicht leer oder ein bewusst leer belassener Zustand aus einem frueheren load()
+                // DIESER Instanz), hat Vorrang die aktuelle In-Memory-Auswahl, nicht der beim
+                // urspruenglichen Verlassen gespeicherte Stand (sonst liesse sich eine Auswahl
+                // spaeter in derselben Instanz nie mehr manuell aufheben).
+                const toReselect = selectedResIds.size
+                    ? selectedResIds
+                    : new Set(this.props.state?.int_filemanager_selectedResIds || []);
+                if (toReselect.size) {
+                    for (const record of this.model.root.records) {
+                        if (toReselect.has(record.resId)) {
+                            record.toggleSelection(true);
+                        }
+                    }
+                }
+                return result;
+            };
+            useSetupAction({
+                getLocalState: () => ({
+                    int_filemanager_selectedResIds: this.model.root?.selection.map((r) => r.resId) || [],
+                }),
+            });
             // Unterdrueckt Odoos eigenen, global registrierten "PagerIndicator"-Toast auf Mobil
             // (position:fixed, top:0, end:0 - ueberlagerte sichtbar den lila App-Navbar,
             // Nutzerreport 2026-09-16 mit Screenshot: "1-1 / 1"-Box oben rechts). Grund: die
@@ -250,8 +305,17 @@ export function filemanagerControllerMixin(Base) {
                 // schuetzt z.B. das Suchfeld (Odoo soll dessen eigenes Escape-Verhalten behalten),
                 // die Dialog-Ausnahme laesst offene Modals (z.B. Bestaetigungsdialoge) ihr eigenes
                 // Escape-zum-Schliessen unangetastet, statt zusaetzlich die Auswahl zu leeren.
+                // .o-FileViewer ergaenzt (2026-09-23, Nutzerreport "ESC bei PDF-Vorschau
+                // deselektiert zusaetzlich"): Odoos FileViewer (@web/core/file_viewer/file_viewer.js,
+                // am Kernquellcode geprueft) rendert sein Wurzelelement mit class="modal
+                // modal-fullscreen" - OHNE Bootstraps "show"-Klasse, die dieser Selektor bisher
+                // verlangte. Ein Klick ausserhalb schliesst die Vorschau ueber einen reinen
+                // Klick-Pfad ohne jedes keydown-Ereignis, erreicht diesen Listener also nie - nur
+                // Escape lief gleichzeitig (Capture-Phase) auch hier durch und deselektierte
+                // zusaetzlich, weil der alte Selektor die Vorschau nicht als "offener Dialog"
+                // erkannte.
                 if (ev.key === "Escape") {
-                    if (isTypingContext(document.activeElement) || document.querySelector(".modal.show, .o_dialog")) {
+                    if (isTypingContext(document.activeElement) || document.querySelector(".modal.show, .o_dialog, .o-FileViewer")) {
                         return;
                     }
                     for (const record of this.model.root.selection) {
