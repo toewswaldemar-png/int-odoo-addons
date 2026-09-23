@@ -1741,3 +1741,193 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
       Wurzel schlug erwartungsgemaess mit "Read-only file system" fehl (`/mnt/hm-daten` ist
       bewusst `:ro` gemountet) - unveraendertes Verhalten, da `expand` in diesem Fix nicht
       angefasst wurde, daher kein gesonderter Nachweis noetig.
+
+42. **"Lokal öffnen" fragt bei jedem Klick erneut nach Bestätigung (2026-09-22), Ursache liegt
+    außerhalb des Moduls.** Nutzerbeobachtung: der Browser-Dialog "Excel öffnen? http://... möchte
+    diese Anwendung öffnen" (Chromium-Protokoll-Handler-Bestätigung für `onOpenLocal`s
+    `ms-word:`/`ms-excel:`/`ms-powerpoint:ofe|u|...`-Handoff, siehe Punkt 19) erscheint **bei jedem
+    einzelnen Aufruf neu**, statt sich einmalig per "Immer erlauben"-Checkbox merken zu lassen - der
+    Dialog zeigt diese Checkbox in Wirklichkeit **überhaupt nicht** an (per Screenshot bestätigt,
+    kein Zuschneide-Artefakt).
+
+    **Zwei naheliegende Code-Hypothesen geprüft und beide live widerlegt, statt weiter zu raten:**
+    - *Auslöse-Mechanismus:* `window.location.href = "ms-word:..."` nach einem `await rpc(...)` gilt
+      in Chromium teils als nicht-vertrauenswürdige, skriptgesteuerte Navigation ohne "transiente
+      Nutzeraktivierung" - `onOpenLocal` (`filemanager_controller_mixin.js`) auf einen echten
+      `<a>`-Element-`.click()` umgestellt. Deployed (Commit `a2cc7cc`) und auf `unraid-odoo` live
+      getestet (Container-Neustart, Browser-Hard-Refresh) - **keine Änderung am Verhalten.**
+    - *Windows-Gruppenrichtlinie:* per MeshCentral-Fernzugriff (rein lesend, `connect.cjs
+      runcommand --powershell`) auf `HM-NB-002` `HKLM:\SOFTWARE\Policies\Microsoft\Edge` sowie
+      `HKCU:\...\Edge` und `HKLM:\...\Google\Chrome` geprüft: **kein**
+      `ExternalProtocolDialogShowAlwaysOpenCheckbox`-Eintrag gesetzt, auch sonst keine
+      protokollbezogene Policy - nur allgemeine Datenschutz-Policies (Telemetrie, Tracking,
+      Feedback). Installierte Edge-Version: `153.0.4234.32`.
+
+    **Tatsächliche Ursache (Websuche, offizielle Microsoft-/Chrome-Enterprise-Dokumentation zur
+    Policy):** *"This policy only applies to https:// links."* Chromium zeigt die "Immer
+    erlauben"-Checkbox beim externen Protokoll-Dialog **grundsätzlich nur bei HTTPS-Ursprüngen** an
+    - unabhängig von Version, Auslöse-Mechanismus oder Richtlinien-Konfiguration. Die
+    Produktivinstanz läuft unter `http://192.100.0.119:8069` (reines HTTP) - deshalb fehlt die
+    Checkbox systembedingt, keine Policy kann das für HTTP-Ursprünge freischalten. Bewusste
+    Chromium-Sicherheitsentscheidung: eine dauerhafte "diese Seite darf externe Programme starten"-
+    Erlaubnis wird nur für einen durch TLS authentifizierten, nicht spoofbaren Ursprung vergeben.
+
+    **Einordnung:** kein Bug in `int_filemanager` oder `onOpenLocal` - der `<a>`-Klick-Fix bleibt
+    trotzdem als sauberere Variante im Code (schadet nicht, behebt nur nicht das eigentliche
+    Symptom). Der tatsächliche Fix läge auf Infrastruktur-Ebene: Odoo über einen Reverse Proxy mit
+    TLS (auch internes/selbstsigniertes Zertifikat genügt) statt direkt über HTTP erreichbar machen
+    - deckt sich mit der bereits an anderer Stelle notierten Marschroute "HTTP intern + späterer
+    Reverse Proxy" für die Herrmann-Webanwendungen. Nicht in dieser Session umgesetzt, da
+    Infrastruktur-Entscheidung außerhalb des Modul-Scopes.
+
+    Quellen: [Microsoft Edge Policy: ExternalProtocolDialogShowAlwaysOpenCheckbox](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/externalprotocoldialogshowalwaysopencheckbox),
+    [Chrome Enterprise: ExternalProtocolDialogShowAlwaysOpenCheckbox](https://chromeenterprise.google/policies/external-protocol-dialog-show-always-open-checkbox/)
+
+43. **Reverse Proxy mit HTTPS für Odoo + ONLYOFFICE eingerichtet (2026-09-22), als Konsequenz aus
+    Punkt 42.** Der in Punkt 42 identifizierte Fix (Odoo über HTTPS statt direktem HTTP erreichbar
+    machen) wurde umgesetzt - auf `unraid-odoo` lief bereits ein ungenutzter **Nginx Proxy
+    Manager**-Container, kein neuer Dienst nötig. Mehrere ineinandergreifende Probleme mussten
+    nacheinander gelöst werden, bevor Odoo inkl. ONLYOFFICE-Editor über den Proxy sauber lief:
+
+    **1. Grundaufbau:** Neuer Proxy-Host `odoo.lan` → `192.100.0.119:8069`, selbstsigniertes
+    Zertifikat (10 Jahre Laufzeit, bewusst länger als das bereits abgelaufene `onlyoffice.local`-
+    Zertifikat aus einem alten, nie fertig genutzten Setup - siehe Punkt darunter). Lokaler
+    Hosts-Eintrag für DNS-Auflösung (firmenweiter DNS-Eintrag auf `DCRX300S6.Herrmann.local`
+    bewusst zurückgestellt, erst lokal getestet).
+
+    **2. `allow_websocket_upgrade` war aus** - Standardverhalten von Nginx Proxy Manager, führte zu
+    "Echtzeitverbindung getrennt" in der Odoo-UI (Bus/WebSocket für Discuss, Benachrichtigungen
+    etc.). In der NPM-Oberfläche aktiviert.
+
+    **3. `proxy_mode = True` war in `odoo.conf` auskommentiert** - ohne das vertraut Odoo den
+    `X-Forwarded-*`-Headern des Proxys nicht, was u.a. den WebSocket-Handshake betrifft (Odoo kann
+    `ws`/`wss` nicht korrekt unterscheiden). Aktiviert, Container neu gestartet. **Bleibt dauerhaft
+    aktiv, kein Rollback nötig** - ohne Forwarded-Header (z.B. bei Direktzugriff auf Port 8069)
+    verhält sich Odoo unverändert wie vorher. Einziger Nebeneffekt: Port 8069 sollte langfristig
+    nicht mehr direkt offen bleiben, da `proxy_mode` auch von dort gesendeten (ggf. gefälschten)
+    Forwarded-Headern vertrauen würde.
+
+    **4. HTTP/2 verursachte einen Reload-Loop** - mit `http2_support` aktiv (NPM-Standard) lud die
+    komplette Odoo-Seite alle 4-5 Sekunden neu (WebSocket-Upgrade gelang laut Server-Log zwar
+    technisch mit Status 101, brach aber sofort wieder ab). Live per NPM-Access-Log nachgewiesen:
+    Requests liefen mit `HTTP/2.0`, nach Deaktivieren von "HTTP/2 Support" verschwand der Loop
+    komplett (Log-Diff über 15s zeigte keine neuen Requests mehr). Bekanntes Muster bei WebSocket
+    hinter Nginx - HTTP/2-Upgrade-Semantik unterscheidet sich von HTTP/1.1, nicht jede
+    Proxy-Konfiguration behandelt das korrekt.
+
+    **5. Eigentliche Ursache von "Echtzeitverbindung getrennt" war ein SSL-Zertifikatsfehler, nicht
+    der WebSocket selbst** - trotz Punkt 2-4 blieb die Meldung bestehen, auch nach Hard-Refresh und
+    Inkognito-Fenster. Browser-Konsole (das entscheidende Diagnosemittel, nachdem Server-Logs allein
+    nicht weiterhalfen) zeigte: `Service worker registration failed: SecurityError: ... An SSL
+    certificate error occurred when fetching the script.` Odoos Shared Worker (verwaltet die
+    WebSocket-Verbindung) und der Service Worker verlangen strengere Zertifikatsprüfung als ein
+    normaler Seitenaufruf - ein bloßes "Trotzdem fortfahren"-Klick im Browser reicht dafür nicht.
+    Fix: Zertifikat im Windows-Zertifikatsspeicher (Aktueller Benutzer → Vertrauenswürdige
+    Stammzertifizierungsstellen) importiert, `certutil` von der Kommandozeile aus schlug fehl (löst
+    einen interaktiven Windows-Sicherheitsdialog aus, der sich nicht scripten lässt) - musste manuell
+    über den Windows-Dialog bestätigt werden. Danach verschwand die Meldung.
+
+    **6. ONLYOFFICE-Editor: "Herunterladen ist fehlgeschlagen" nach dem HTTPS-Umstieg** - eigenständiges
+    Folgeproblem, gleiche Fehlerklasse wie Punkt 5 zu Beginn: Die Hauptseite lief jetzt über HTTPS,
+    der `onlyoffice_odoo`-Konnektor zeigte aber weiterhin auf den ONLYOFFICE-Server per reinem HTTP
+    (`onlyoffice_connector.doc_server_public_url`) - **Mixed-Content-Blockierung** durch den Browser
+    (aktive Inhalte wie Skripte dürfen nicht unverschlüsselt von einer HTTPS-Seite geladen werden).
+
+    Der tatsächliche ONLYOFFICE-Dokumentenserver läuft im Container `Cloudreve_office` (historisch
+    gewachsener Name, hat nichts mit Cloudreve zu tun) auf Port 1680 (HTTP) - Port 4430 (vermeintlich
+    HTTPS laut `docker ps`) nimmt tatsächlich keine Verbindungen an. Es existierte bereits ein
+    ungenutzter NPM-Proxy-Host `onlyoffice.local`, aber mit **totem Ziel-Port 9980** (nichts hört dort)
+    und **falschem SSL-Zertifikat** (ausgestellt auf CN `onlyoffice.lan`, nicht `onlyoffice.local` -
+    UND bereits seit 2025-11-21 abgelaufen). Behoben: neues 10-Jahre-Zertifikat mit korrektem CN,
+    Ziel-Port auf 1680 und Forward-Scheme auf `http` korrigiert (per SQL + direktem Patch der
+    generierten nginx-Config, da reine DB-Änderungen ohne Speichern über die NPM-UI nicht automatisch
+    in die laufende Konfiguration übernommen werden - siehe auch Punkt 2/4, gleiche Lektion),
+    `doc_server_public_url` in Odoo auf die neue `https://onlyoffice.local:18443/`-Adresse umgestellt.
+    HTTP/2 war auch hier aktiv und verursachte denselben Reload-Loop-Effekt wie in Punkt 4 - ebenfalls
+    deaktiviert.
+
+    **7. Nach alldem: ONLYOFFICE-Editor öffnete sich, aber "Herunterladen ist fehlgeschlagen" blieb
+    bestehen** - wieder über die Browser-Konsole gefunden (Server-Logs zeigten dafür nichts, da der
+    Fehler auftrat, bevor die Anfrage den Dokumentenserver überhaupt erreichte):
+    `GET https://onlyoffice.local/cache/files/data/...&filename=Editor.bin net::ERR_FAILED` - **ohne
+    Port** in der URL, obwohl der Proxy extern auf Port 18443 läuft (nicht Standard-443). Ursache:
+    NPMs gemeinsame `proxy.conf`-Include-Datei setzt `proxy_set_header Host $host;` - nginx-Variable
+    `$host` enthält bewusst **keinen** Port. Der ONLYOFFICE-Dokumentenserver baut seine eigenen
+    Cache-/Asset-URLs aus diesem empfangenen `Host`-Header und ließ dadurch den Port weg, was zu einem
+    fehlschlagenden Verbindungsversuch auf Standard-Port 443 führte (dort läuft nichts - Port 443 ist
+    nur lokal (`127.0.0.1`) durch Unraids eigene Oberfläche belegt, extern frei, aber NPM lauscht dort
+    nicht).
+
+    Zusätzlicher Fund beim Debuggen: Die vorhandenen `location`-Blöcke für `/loleaflet`, `/lool/*`,
+    `/hosting/discovery` in der `onlyoffice.local`-Config sind **Collabora/LibreOffice-Online-Pfade**,
+    nicht ONLYOFFICE - Überbleibsel eines alten, nie fertig genutzten Proxy-Host-Templates von
+    2025-10-22. Für den tatsächlichen Pfad (`/cache/files/...`) irrelevant, da der auf den
+    allgemeinen `location /`-Block fällt.
+
+    Fix: `proxy_set_header Host $http_host;` (Variante MIT Port) gezielt für den `location /`-Block
+    ergänzt. **Erster Versuch schlug fehl** (HTTP 400 direkt von NPMs eigenem nginx, nicht vom
+    Backend) - eine per verschachtelter SSH/`docker exec sh -c`-Anführungszeichen eingefügte Zeile
+    hatte alle `$`-Variablen durch Shell-Interpolation auf mehreren Ebenen zu Leerstrings zerstört
+    (dieselbe Fehlerklasse wie beim MeshCentral-Passwort-Reset, siehe
+    [[reference_meshcentral_access]]-Kontext dieser Session - `$`-Zeichen in Werten, die über
+    mehrere verschachtelte Shells laufen, nie direkt interpolieren, sondern als Datei übertragen).
+    Zweiter Versuch: komplette Config-Datei lokal repariert und unverändert (kein Shell-Escaping)
+    per `docker cp` in den Container übertragen - danach funktionierte auch der Cache-Pfad
+    (Testanfrage auf einen nicht existierenden Cache-Eintrag lieferte danach ein reguläres HTTP 403
+    vom Backend statt eines Verbindungsfehlers).
+
+    **Live verifiziert:** ONLYOFFICE-Editor öffnet und lädt Dokumente über `https://odoo.lan:18443`
+    fehlerfrei, vom Nutzer bestätigt.
+
+44. **Nachtrag zu Punkt 43: Port-443-Umstellung gescheitert, dabei "Lokal öffnen" (WebDAV) kaputt
+    gegangen und ein zweiter, grundlegenderer Header-Bug gefunden (2026-09-22, gleicher Tag).**
+
+    **Versuch, NPMs HTTPS-Port von 18443 auf Standard-443 umzustellen** (Wunsch: URLs ohne
+    Portangabe): Port 443 ist auf dem Unraid-Host bereits durch dessen **eigene Weboberfläche**
+    belegt - allerdings nur auf `127.0.0.1:443` (Loopback), nicht auf `0.0.0.0:443`. Der Docker-
+    Wildcard-Bind (`0.0.0.0:443`, wie ihn ein `-p 443:443`-Portmapping braucht) kollidiert trotzdem
+    mit der bereits bestehenden Loopback-Bindung - `docker run` schlug mit "address already in use"
+    fehl. **Port 80 ist zusätzlich extern (nicht nur Loopback) durch Unraids eigene GUI belegt**,
+    im Gegensatz zu 443. Container-Neuanlage sofort rückgängig gemacht (alter Container war vorher
+    umbenannt statt gelöscht worden, dadurch verlustfrei wiederherstellbar) - Umstellung auf
+    Standard-443 damit **nicht möglich**, ohne Unraids eigene Verwaltungsoberfläche anzufassen
+    (bewusst nicht gemacht, da Systemkomponente außerhalb des Anwendungs-Scopes). Bleibt bei
+    `:18443`.
+
+    **Dabei aufgefallen: "Lokal öffnen" (WebDAV, Punkt 19/42) zeigte danach bei jeder Datei
+    denselben falschen Inhalt** (Unraids eigene Login-Seite, "HM-SRV"/"Anmelden"/"Passwort-
+    Wiederherstellung" - Text landete in Excel-Zellen). Ursache lag NICHT am Port-443-Versuch
+    selbst, sondern war bereits vorher durch Punkt 43 angelegt: `web.base.url` hatte sich durch
+    Odoos Auto-Update-Mechanismus auf `http://odoo.lan` (ohne Port, falsches Schema) gesetzt.
+    Zwischenschritt behoben (`web.base.url` korrekt gesetzt + `web.base.url.freeze = True`, damit
+    Odoo es nicht wieder selbst überschreibt) - **löste das Problem aber nur teilweise**, da
+    `webdav_token()` (`controllers/webdav.py:56`) `web.base.url` gar nicht verwendet, sondern
+    `request.httprequest.host_url` - die URL wird also dynamisch aus dem tatsächlich empfangenen
+    Request gebaut, nicht aus dem statischen Parameter.
+
+    **Grundlegenderer Fund:** `request.httprequest.host_url` lieferte auch nach dem `web.base.url`-
+    Fix weiterhin `http://odoo.lan:18443/...` - Host jetzt korrekt (Port 43 aus diesem Tag behoben),
+    aber **Schema weiterhin `http` statt `https`**, was auf Port 18443 (reiner TLS-Listener) zu
+    einem harten Verbindungsfehler in Excel führte. Root Cause in Odoos eigenem Code (`http.py:2835`):
+
+    ```python
+    if odoo.tools.config['proxy_mode'] and environ.get("HTTP_X_FORWARDED_HOST"):
+        ...ProxyFix(fake_app)(environ, fake_start_response)
+    ```
+
+    Werkzeugs `ProxyFix`-Middleware (die `X-Forwarded-Proto`/`-For`/`-Host` auswertet und damit
+    Schema/Host/IP korrekt aus den Proxy-Headern rekonstruiert) wird von Odoo **nur aktiviert, wenn
+    der `X-Forwarded-Host`-Header überhaupt vorhanden ist** - unabhängig davon, ob `proxy_mode =
+    True` gesetzt ist. NPMs Standard-Template (`conf.d/include/proxy.conf`) setzt zwar
+    `X-Forwarded-Proto`, `X-Forwarded-For`, `X-Forwarded-Scheme`, aber **kein
+    `X-Forwarded-Host`** - Odoo übersprang ProxyFix deshalb komplett und fiel auf die rohen
+    WSGI-Werte zurück (Schema immer `http`, da Odoos eigener Werkzeug-Server selbst kein TLS
+    terminiert).
+
+    **Fix:** `proxy_set_header X-Forwarded-Host $http_host;` in den `location /`-Blöcken beider
+    Proxy-Hosts (`odoo.lan` UND `onlyoffice.local`, gleiche Fehlerklasse, proaktiv auch dort
+    ergänzt) hinzugefügt - direkter Config-Patch + `docker cp` + `nginx -s reload`, gleiches
+    sicheres Verfahren wie in Punkt 43 (keine Inline-Shell-Interpolation von `$`-Variablen).
+
+    **Live verifiziert:** "Lokal öffnen" vom Nutzer erneut getestet, funktioniert - WebDAV-URL wird
+    jetzt korrekt mit `https://` und Port erzeugt, Excel öffnet die Datei erfolgreich.

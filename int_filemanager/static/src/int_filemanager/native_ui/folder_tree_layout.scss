@@ -88,12 +88,46 @@ html.o_int_filemanager_resizing_tree {
     // (resizable_panel.xml) - flex:1 1 auto statt height:100%, damit er sich korrekt auf die
     // vom Grid oben zugewiesene Zeilenspanne streckt (Grid-Item-Default ist align-items:stretch,
     // aber der FLEX-Container DAZWISCHEN braucht seinerseits einen wachsenden Fluss-Nachfahren
-    // fuer eigenes Scrolling).
+    // fuer eigenes Scrolling). Selbst jetzt ZUSAETZLICH ein eigener Flex-Container (display:flex;
+    // flex-direction:column) fuer sein einziges Kind .o_int_filemanager_tree_root - bewusst
+    // flex:1 1 auto dort statt height:100% (siehe Kommentar dort): ein Prozent-Hoehen-Kind eines
+    // auto-hohen Elternteils (wie beim Mobil-Sheet unten) wuerde sonst nicht zuverlaessig
+    // aufloesen, ein Flex-Kind mit flex-grow dagegen schon, unabhaengig davon, ob die eigene
+    // Elternhoehe fest oder ueber max-height gedeckelt ist. Eigenes overflow-y/padding NICHT
+    // mehr hier (siehe .o_int_filemanager_tree unten) - der feste Papierkorb-Fuss braucht einen
+    // nicht-scrollenden Rahmen darum, sonst wuerde er mit dem Baum mitscrollen.
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    background-color: var(--o-view-background-color, #fff);
+}
+
+// FolderTrees eigenes Root-Template (folder_tree.xml) - Flex-Spalte mit zwei Teilen: dem
+// scrollenden Baum oben und dem festen Papierkorb-Fuss unten (docs/
+// int_filemanager_papierkorb_konzept.md, cloudreve-Vorbild "Papierkorb bleibt immer sichtbar,
+// scrollt nicht mit"). Gilt fuer BEIDE Einbettungen (Desktop-Sidebar + Mobil-Bottom-Sheet, siehe
+// native_list_view.xml) automatisch, weil sie hier im Template der geteilten Komponente selbst
+// sitzt, nicht an jeder Einbettungsstelle einzeln nachgebaut werden muss - beide Einbettungen
+// muessen dafuer nur selbst Flex-Container sein (siehe .o_int_filemanager_tree_sidebar oben,
+// .o_int_filemanager_tree_sheet weiter unten), .o_int_filemanager_tree_root selbst braucht
+// keinen expliziten Hoehenwert.
+.o_int_filemanager_tree_root {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.o_int_filemanager_tree {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
     padding: 0.5rem;
-    background-color: var(--o-view-background-color, #fff);
+}
+
+.o_int_filemanager_tree_trash {
+    flex: 0 0 auto;
 }
 
 // Mobil-Bottom-Sheet-Variante (nur innerhalb der Client-Action-Einbettung gerendert, siehe
@@ -110,7 +144,13 @@ html.o_int_filemanager_resizing_tree {
 }
 
 .o_int_filemanager_mobile_tree_open .o_int_filemanager_tree_sheet {
-    display: block;
+    // display:flex statt block (Papierkorb-Aenderung): macht .o_int_filemanager_tree_root
+    // (einziges Kind, siehe oben) zu einem echten Flex-Kind mit flex:1 1 auto - dieselbe
+    // Begruendung wie bei .o_int_filemanager_tree_sidebar oben. overflow-y/padding wandern von
+    // hier zum inneren .o_int_filemanager_tree (siehe oben), sonst waere der Papierkorb-Fuss
+    // auch hier nicht fest, sondern wuerde mit dem Baum mitscrollen.
+    display: flex;
+    flex-direction: column;
     position: fixed;
     left: 0;
     right: 0;
@@ -119,8 +159,6 @@ html.o_int_filemanager_resizing_tree {
     max-width: 420px;
     height: auto;
     max-height: 60vh;
-    overflow-y: auto;
-    padding: 0.5rem;
     z-index: 1100;
     border-radius: 1rem 1rem 0 0;
     box-shadow: 0 -0.5rem 1.5rem rgba(0, 0, 0, 0.2);

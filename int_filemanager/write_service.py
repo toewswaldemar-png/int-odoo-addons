@@ -148,6 +148,22 @@ def _do_snapshot_and_write(dbname, file_record, abs_path, new_content, operation
             with open(abs_path, "rb") as f:
                 old_content = f.read()
 
+        if old_content is not None and old_content == new_content:
+            # Inhalt unveraendert gegenueber der Platte (Regelfall beim bloszen
+            # Oeffnen eines Dokuments im ONLYOFFICE-Editor, siehe
+            # docs/int_filemanager_onlyoffice_ladezeit_untersuchung_2026-09-22.md) -
+            # keine neue Version, kein Tempfile-Schreibvorgang mit fsync auf
+            # identischen Inhalt, kein os.replace()/chmod. Journal wird direkt
+            # als abgeschlossen markiert statt der vollen Stage-Kette.
+            same_sha256 = hashlib.sha256(old_content).hexdigest()
+            _update_journal(
+                stage="done",
+                old_sha256=same_sha256,
+                new_sha256=same_sha256,
+                finished_at=Datetime.now(),
+            )
+            return {"version_id": None, "new_sha256": same_sha256, "skipped": True}
+
         version_id = None
         old_sha256 = None
         if old_content is not None:

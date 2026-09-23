@@ -1,8 +1,8 @@
 import os
+import secrets
+import shutil
 import unicodedata
 from datetime import datetime
-
-import psycopg2
 
 from odoo import _, fields
 from odoo.exceptions import UserError
@@ -11,10 +11,16 @@ from odoo.tools.sql import escape_psql
 from . import authz
 from .fulltext import fulltext_type_of
 from .mediameta import media_type_of
-from .path_utils import resolve_path, safe_name, to_relative
+from .path_utils import get_root, resolve_path, safe_name, suppress_watcher, to_relative
 
 BUS_CHANNEL = "int_filemanager"
 BUS_NOTIFICATION_TYPE = "int_filemanager.change"
+
+# Punkt-Praefix: sowohl der Watcher (watcher.py:_is_hidden()) als auch der Vollscan
+# (models/filemanager_file.py) schliessen punktpraefixierte Namen bereits aus - der Papierkorb
+# nutzt genau diese bestehende Konvention, statt eine eigene Ausschlussregel zu brauchen (siehe
+# docs/int_filemanager_papierkorb_konzept.md).
+TRASH_DIRNAME = ".trash"
 
 
 def _notify_change(env):
@@ -61,7 +67,23 @@ def _entry_vals(env, abs_path):
 
 
 def index_upsert(env, abs_path):
-    """Create or refresh the index record for a single filesystem path."""
+    """Create or refresh the index record for a single filesystem path.
+
+    Race-Absicherung (docs/int_filemanager_papierkorb_konzept.md, live 2026-09-21
+    ueberarbeitet): der VORHERIGE Ansatz - ein pg_advisory_xact_lock VOR der Suche - konnte das
+    Watcher-vs-App-Rennen strukturell nicht loesen. Odoo setzt seine Cursor auf REPEATABLE READ
+    (sql_db.py) - eine Transaktion, die auf einen Lock gewartet hat, sieht bei ihrer
+    anschliessenden Suche trotzdem nur ihren eingefrorenen Schnappschuss, nie den inzwischen
+    committeten Gewinner. Die eigentliche, an der Wurzel ansetzende Loesung: der Watcher
+    unterdrueckt sich fuer App-eigene Pfade jetzt selbst (path_utils.suppress_watcher(), von
+    allen App-Aufrufern - Upload/mkdir/Papierkorb/Wiederherstellen/Umbenennen/Verschieben - um
+    die jeweilige physische Operation gelegt) - der Watcher versucht fuer diese Pfade also gar
+    nicht erst, parallel denselben Datensatz zu pflegen. Fuer den seltenen Rest (zwei
+    GLEICHZEITIGE App-Anfragen, oder falls die Unterdrueckung doch einmal nicht greift) reicht
+    kein reines ORM: Odoo wiederholt einen UniqueViolation NICHT automatisch (nur
+    SerializationFailure/DeadlockDetected, service/model.py:retrying(), live am Odoo-19-
+    Quellcode verifiziert), siehe _upsert_by_path() fuer die atomare Alternative.
+    """
     Model = env["int_filemanager.file"].sudo()
     vals = _entry_vals(env, abs_path)
     parent_rel = vals["folder_path"]
@@ -69,6 +91,7 @@ def index_upsert(env, abs_path):
     # schon selbst indexiert (er muss existieren, damit dieser Pfad ueberhaupt entstehen
     # konnte) - anders als beim BFS-Ersteinlese-Scan reicht hier eine einzelne Query.
     vals["parent_id"] = Model.search([("path", "=", parent_rel)], limit=1).id if parent_rel else False
+
     rec = Model.search([("path", "=", vals["path"])], limit=1)
     if rec:
         # int_filemanager_syncing_index: Watcher-getriebenes CREATE/MODIFY auf einem
@@ -80,35 +103,62 @@ def index_upsert(env, abs_path):
         # durchlaufen, unabhaengig von Schutzordner-Rechten).
         rec.with_context(int_filemanager_syncing_index=True).write(vals)
     else:
-        try:
-            # cr.savepoint(): Model._create() fuehrt das INSERT direkt per cr.execute() aus,
-            # ohne eigenes try/except - eine Verletzung von _path_uniq (UNIQUE(path)) laesst
-            # die rohe psycopg2.errors.UniqueViolation hochlaufen UND die Transaktion in einem
-            # abgebrochenen Zustand zurueck (jede weitere Query wuerde "current transaction is
-            # aborted" werfen) - der Savepoint macht den fehlgeschlagenen Versuch isoliert
-            # rueckrollbar, ohne den Rest der (ggf. groesseren) umgebenden Transaktion (z.B.
-            # des ganzen HTTP-Requests) zu verlieren.
-            with env.cr.savepoint():
-                rec = Model.create(vals)
-        except psycopg2.errors.UniqueViolation:
-            # Race zwischen zwei gleichzeitigen Schreibern desselben neuen Pfads (2026-09-16:
-            # controllers/main.py's upload()/mkdir() rufen index_upsert() jetzt selbst auf,
-            # statt sich allein auf den Watcher zu verlassen). Beide Schreiber (dieser Request
-            # UND der Watcher in einer eigenen Transaktion) koennen zwischen der obigen
-            # search() und diesem create() denselben Pfad anlegen wollen. Live als Bug
-            # gefunden 2026-09-17: der urspruengliche "except UserError" hier fing NIE etwas
-            # ab - psycopg2.errors.UniqueViolation ist keine UserError-Subklasse, die
-            # freundliche Konstraint-Meldung wird erst spaeter, ausserhalb dieser Funktion, im
-            # JSON-RPC-Fehlerhandler daraus gebaut. Der Nutzer sah die rohe DB-Fehlermeldung,
-            # obwohl der Ordner/die Datei auf der Platte laengst korrekt angelegt war - der
-            # zweite Schreiber (hier) verliert das Wettrennen. Erneut suchen und stattdessen
-            # aktualisieren, exakt das gewuenschte Endergebnis eines Upserts.
-            rec = Model.search([("path", "=", vals["path"])], limit=1)
-            if not rec:
-                raise
-            rec.with_context(int_filemanager_syncing_index=True).write(vals)
+        rec = _upsert_by_path(env, vals)
     _notify_change(env)
     return rec
+
+
+def _upsert_by_path(env, vals):
+    """Atomarer Ersatz fuer Model.create() im "existiert noch nicht"-Zweig von index_upsert()
+    (und den Selbstheilungs-Stellen in diesem Modul) - ein einzelnes
+    INSERT ... ON CONFLICT (path) DO UPDATE, das (anders als eine SELECT-dann-INSERT-Folge
+    unter REPEATABLE READ) immer den tatsaechlichen aktuellen Stand prueft, nicht Odoos
+    eingefrorenen Transaktions-Schnappschuss - siehe index_upsert()-Docstring fuer die
+    Begruendung, warum das hier nicht durch reines ORM ersetzbar ist. Offizielle Postgres-
+    Empfehlung fuer genau dieses Muster (postgresql.org/docs/current/transaction-iso.html).
+
+    Bypasst Model.create()/write(), muss also die Handvoll Felder nachbilden, die Model.create()
+    sonst automatisch ueber ihren Python-Default fuellt: hash_state="pending" und
+    meta_attempts/ocr_attempts=0 sind die einzigen Felder auf diesem Modell mit einem
+    (grep -n "default=" auf filemanager_file.py) - alles andere, was hier fehlt, wird NULL/
+    False, genau wie bei einem echten create().
+
+    invalidate_model(): rohes SQL ist fuer Odoos ORM-Cache unsichtbar - ohne das wuerde ein
+    bereits VOR diesem Aufruf im selben Environment gecachter Datensatz fuer dieselbe id weiter
+    seine alten Feldwerte zeigen, obwohl die DB-Zeile gerade per ON CONFLICT aktualisiert wurde
+    (live als Test-Fehlschlag gefunden, 2026-09-21)."""
+    cols = dict(vals)
+    cols.setdefault("hash_state", "pending")
+    cols["meta_attempts"] = 0
+    cols["ocr_attempts"] = 0
+    now = fields.Datetime.now()
+    cols["create_date"] = now
+    cols["create_uid"] = env.uid
+    cols["write_date"] = now
+    cols["write_uid"] = env.uid
+
+    # Bei einem Konflikt nur echte vals-Felder aktualisieren - dieselbe Menge, die auch
+    # rec.write(vals) an anderer Stelle in diesem Modul anfassen wuerde. meta_attempts/
+    # ocr_attempts (Retry-Zaehler) und create_date/create_uid eines bereits existierenden
+    # Datensatzes bleiben unangetastet, write_date/write_uid werden wie bei jedem echten
+    # ORM write() nachgezogen.
+    update_cols = [c for c in vals if c != "path"] + ["write_date", "write_uid"]
+
+    columns = list(cols.keys())
+    query = 'INSERT INTO int_filemanager_file ({}) VALUES ({}) ON CONFLICT (path) DO UPDATE SET {} RETURNING id'.format(
+        ", ".join('"%s"' % c for c in columns),
+        ", ".join(["%s"] * len(columns)),
+        ", ".join('"%s" = EXCLUDED."%s"' % (c, c) for c in update_cols),
+    )
+    # False ist Odoos eigene "leer"-Konvention fuer Char/Many2one (folder_path/parent_id an der
+    # Wurzel) - psycopg2 braucht dafuer echtes None/NULL, sonst laeuft z.B. parent_id=False als
+    # Integer 0 statt NULL in die Spalte. is_dir ist das einzige echte Boolean-Feld hier, wo
+    # False ein gueltiger Wert bleibt statt "leer" zu bedeuten.
+    params = tuple(cols[c] if c == "is_dir" or cols[c] is not False else None for c in columns)
+    env.cr.execute(query, params)
+    (row_id,) = env.cr.fetchone()
+    env["int_filemanager.file"].invalidate_model(columns)
+    return env["int_filemanager.file"].sudo().browse(row_id)
 
 
 def index_remove_tree(env, rel_path):
@@ -154,6 +204,179 @@ def index_move_tree(env, old_rel, new_rel):
     _notify_change(env)
 
 
+def _trash_name(original_name):
+    """Kollisionsarmer Papierkorb-Dateiname - bewusst UNABHAENGIG von jeder DB-ID (waere bei
+    einem verlorenen Watcher-Rennen, siehe index_trash_tree(), nicht zuverlaessig verfuegbar,
+    schon BEVOR wir wissen, ob wir den Selbstheilungspfad brauchen). Gleiches Schema wie
+    friendly_fallback_name() in path_utils.py."""
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    suffix = secrets.token_hex(2)
+    return "%s_%s__%s" % (stamp, suffix, original_name)
+
+
+def trash_destination(env, rel):
+    """Berechnet den Papierkorb-Zielpfad fuer den (noch existierenden) Pfad rel - reiner
+    Namensentscheid ohne DB-Zugriff, siehe _trash_name(). Ruft _ensure_trash_folder() auf, damit
+    der physische .trash-Ordner vor dem eigentlichen shutil.move() des Aufrufers garantiert
+    existiert."""
+    _ensure_trash_folder(env)
+    name = os.path.basename(rel)
+    return "%s/%s" % (TRASH_DIRNAME, _trash_name(name))
+
+
+def _ensure_trash_folder(env):
+    """Stellt sicher, dass .trash als eigener, aber unsichtbarer (trashed=True) Ordner-Datensatz
+    existiert. Scan/Watcher legen ihn NIE an (dot-Praefix-Ausschluss, siehe TRASH_DIRNAME oben) -
+    der Papierkorb-Code muss also selbst dafuer sorgen, sonst waere parent_id fuer den ersten
+    Papierkorb-Eintrag nicht aufloesbar. _upsert_by_path() statt Model.create() fuer den seltenen
+    Fall zweier gleichzeitiger ERSTER Papierkorb-Operationen (kein Watcher-Rennen hier moeglich -
+    der Watcher sieht .trash nie -, aber zwei App-Anfragen koennten sich theoretisch
+    ueberholen)."""
+    Model = env["int_filemanager.file"].sudo()
+    os.makedirs(os.path.join(get_root(env), TRASH_DIRNAME), exist_ok=True)
+    rec = Model.search([("path", "=", TRASH_DIRNAME)], limit=1)
+    if rec:
+        return rec
+    return _upsert_by_path(env, {
+        "name": TRASH_DIRNAME,
+        "path": TRASH_DIRNAME,
+        "folder_path": False,
+        "is_dir": True,
+        "size": 0,
+        "trashed": True,
+        "trashed_at": fields.Datetime.now(),
+        "trashed_by": env.uid,
+    })
+
+
+def _insert_trashed_from_disk(env, trash_rel, parent_id, original_path):
+    """Selbstheilungspfad fuer index_trash_tree(): baut einen frischen, sofort als trashed
+    markierten Datensatz aus der Datei/dem Ordner, die JETZT bereits auf trash_rel liegt - fuer
+    den (dank path_utils.suppress_watcher() seltenen) Fall, dass der urspruengliche Datensatz
+    schon verschwunden war. Wiederverwendet _entry_vals() ganz normal (liest den tatsaechlichen,
+    jetzt korrekten Plattenzustand)."""
+    abs_path = resolve_path(env, trash_rel)
+    vals = _entry_vals(env, abs_path)
+    vals["parent_id"] = parent_id
+    vals["trashed"] = True
+    vals["trashed_at"] = fields.Datetime.now()
+    vals["trashed_by"] = env.uid
+    vals["original_path"] = original_path
+    return _upsert_by_path(env, vals)
+
+
+def index_trash_tree(env, old_rel, trash_rel):
+    """Nachpflege im Index, NACHDEM die aufrufende Route Datei/Ordner physisch bereits nach
+    trash_rel verschoben hat (shutil.move) - setzt trashed/trashed_at/trashed_by/original_path
+    und schreibt path/folder_path/parent_id auf den neuen Ort um, fuer den verschobenen Eintrag
+    selbst UND alle Nachfahren (falls Ordner).
+
+    Race-Absicherung liegt jetzt beim Aufrufer (controllers/main.py:delete() legt alles ab
+    dem shutil.move() in path_utils.suppress_watcher(alter_pfad)) - der Watcher versucht fuer
+    diesen Pfad also gar nicht erst parallel index_remove_tree() aufzurufen. Der Selbstheilungs-
+    Zweig unten (root nicht gefunden -> neu anlegen) bleibt als Sicherheitsnetz fuer den
+    seltenen Rest (siehe index_upsert()-Docstring fuer die ausfuehrliche Begruendung)."""
+    Model = env["int_filemanager.file"].sudo()
+    trash_parent_rec = _ensure_trash_folder(env)
+
+    root = Model.search([("path", "=", old_rel)], limit=1)
+    now = fields.Datetime.now()
+    if root:
+        root.with_context(int_filemanager_syncing_index=True).write({
+            "path": trash_rel,
+            "name": os.path.basename(trash_rel),
+            "folder_path": TRASH_DIRNAME,
+            "parent_id": trash_parent_rec.id,
+            "trashed": True,
+            "trashed_at": now,
+            "trashed_by": env.uid,
+            "original_path": old_rel,
+        })
+    else:
+        # Selbstheilung - siehe Docstring oben.
+        root = _insert_trashed_from_disk(env, trash_rel, trash_parent_rec.id, old_rel)
+
+    prefix = old_rel + "/"
+    for rec in Model.search([("path", "=like", escape_psql(prefix) + "%")]):
+        suffix = rec.path[len(old_rel):]
+        new_child_path = trash_rel + suffix
+        rec.write({
+            "path": new_child_path,
+            "folder_path": os.path.dirname(new_child_path) or False,
+            "trashed": True,
+            "trashed_at": now,
+            "trashed_by": env.uid,
+            "original_path": old_rel + suffix,
+        })
+    _notify_change(env)
+    return root
+
+
+def index_restore_tree(env, rec):
+    """Verschiebt einen einzelnen, bereits als trashed markierten Datensatz (und seinen
+    physischen Unterbaum, falls Ordner) zurueck an original_path - fuehrt dabei selbst den
+    physischen shutil.move() aus (anders als index_trash_tree(), das vom Aufrufer schon
+    verschoben erwartet - hier gibt es keinen Aufrufer, der das vorab sinnvoll tun koennte, weil
+    erst hier der Kollisionscheck gegen den Zielort passiert). Kollision wird hart blockiert,
+    kein stilles Ausweichen (siehe docs/int_filemanager_papierkorb_konzept.md, Punkt 3) - exakt
+    dieselbe Linie wie der bestehende move()-Controller.
+
+    Nur fuer Wurzel-Eintraege gedacht (der Aufrufer - action_restore() auf dem Modell - wird nur
+    auf einem trashed-Wurzel-Datensatz angeboten); Nachfahren werden hier mit demselben
+    Nachfahren-Umschreibe-Muster wie index_trash_tree()/index_move_tree() mitgezogen.
+
+    suppress_watcher(abs_new) statt Lock: beim Wiederherstellen quert der Uebertritt in den
+    beobachteten Baum am NEUEN Ort (new_rel/abs_new), wo der Watcher sonst per CREATE/MOVED_TO
+    parallel sein eigenes index_upsert() versuchen wuerde - siehe index_upsert()-Docstring fuer
+    die Begruendung, warum ein DB-Lock das nicht loesen konnte. Innerhalb .trash/ selbst
+    (old_rel) gibt es kein Watcher-Rennen, weil der Ordner bewusst unbeobachtet ist - nur der
+    NEUE Ort muss unterdrueckt werden."""
+    Model = env["int_filemanager.file"].sudo()
+    old_rel = rec.path
+    new_rel = rec.original_path
+    if not new_rel:
+        raise UserError(_("Kein ursprünglicher Pfad bekannt."))
+    new_parent = os.path.dirname(new_rel) if new_rel else ""
+
+    abs_new = resolve_path(env, new_rel)
+    if os.path.exists(abs_new):
+        raise UserError(_("Am ursprünglichen Ort existiert bereits ein Eintrag mit diesem Namen."))
+    abs_new_parent = resolve_path(env, new_parent) if new_parent else get_root(env)
+    if not os.path.isdir(abs_new_parent):
+        raise UserError(_("Der ursprüngliche Ordner existiert nicht mehr."))
+
+    abs_old = resolve_path(env, old_rel)
+    with suppress_watcher(abs_new):
+        shutil.move(abs_old, abs_new)
+
+        new_parent_rec = Model.search([("path", "=", new_parent)], limit=1) if new_parent else Model.browse()
+        rec.with_context(int_filemanager_syncing_index=True).write({
+            "path": new_rel,
+            "name": os.path.basename(new_rel),
+            "folder_path": new_parent or False,
+            "parent_id": new_parent_rec.id,
+            "trashed": False,
+            "trashed_at": False,
+            "trashed_by": False,
+            "original_path": False,
+        })
+
+        prefix = old_rel + "/"
+        for child in Model.search([("path", "=like", escape_psql(prefix) + "%")]):
+            suffix = child.path[len(old_rel):]
+            new_child_path = new_rel + suffix
+            child.write({
+                "path": new_child_path,
+                "folder_path": os.path.dirname(new_child_path) or False,
+                "trashed": False,
+                "trashed_at": False,
+                "trashed_by": False,
+                "original_path": False,
+            })
+    _notify_change(env)
+    return rec
+
+
 def rename_entry(env, old_rel, new_name):
     """Bennent eine Datei/einen Ordner tatsaechlich auf der Platte um (nicht nur den
     DB-Spiegel) und pflegt danach den Index nach (index_move_tree).
@@ -174,9 +397,10 @@ def rename_entry(env, old_rel, new_name):
         raise UserError(_("Eintrag nicht gefunden."))
     new_abs = os.path.join(os.path.dirname(abs_path), new_name)
     new_rel = to_relative(env, new_abs)
-    if new_abs != abs_path:
-        if os.path.exists(new_abs):
-            raise UserError(_("Es existiert bereits ein Eintrag mit diesem Namen."))
-        os.rename(abs_path, new_abs)
-    index_move_tree(env, old_rel, new_rel)
+    with suppress_watcher(abs_path, new_abs):
+        if new_abs != abs_path:
+            if os.path.exists(new_abs):
+                raise UserError(_("Es existiert bereits ein Eintrag mit diesem Namen."))
+            os.rename(abs_path, new_abs)
+        index_move_tree(env, old_rel, new_rel)
     return new_rel

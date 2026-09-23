@@ -121,18 +121,30 @@ export class IntFilemanagerListRenderer extends ListRenderer {
             // aufziehen - beide standen schlicht auf keiner der bisherigen Ausschlusslisten
             // unten). Der document-weite mousedown-Listener (siehe onMounted() unten) faengt
             // JEDEN Mausklick im gesamten Webclient ab, Rubberband soll aber strukturell nur
-            // innerhalb DIESER Tabelle moeglich sein - Control-Panel, Ordnerbaum-Seitenleiste,
-            // Mobil-Header, Chatter-Panel, jedes Dialog/Popover (Kontextmenue, Such-Dropdown,
-            // Audio-Player-Panel, ...) sind alle NICHT Nachfahren von this.tableRef.el (Odoos
-            // eigener ListRenderer-Tabellen-Ref) - ein einziger .contains()-Check deckt damit
-            // jede aktuelle UND jede kuenftige Komponente ausserhalb der Liste automatisch ab,
-            // ohne sie einzeln namentlich pflegen zu muessen. Ersetzt die vorherige, staendig
-            // wachsende .closest()-Liste (u.a. ".o_search_panel", laut eigenem Kommentar dort
-            // schon seit 2026-09-16 tot) - dieselbe Eigenschaft loeste nebenbei auch den
-            // fruehereren Nutzerreport "beim Draggen am Resize-Griff zieht Rubberband auf" und den
-            // Dialog-Absturz (Text-Selektions-Drag in einem Modal, siehe frueherer Kommentar hier)
-            // strukturell mit, statt fuer jeden Einzelfall eine eigene Ausnahme zu brauchen.
-            if (!this.tableRef.el || !this.tableRef.el.contains(ev.target)) {
+            // innerhalb DIESES Listenbereichs moeglich sein - Control-Panel, Ordnerbaum-
+            // Seitenleiste, Mobil-Header, Chatter-Panel, jedes Dialog/Popover (Kontextmenue,
+            // Such-Dropdown, Audio-Player-Panel, ...) sind alle NICHT Nachfahren davon - ein
+            // einziger .contains()-Check deckt damit jede aktuelle UND jede kuenftige Komponente
+            // ausserhalb der Liste automatisch ab, ohne sie einzeln namentlich pflegen zu muessen.
+            // Ersetzt die vorherige, staendig wachsende .closest()-Liste (u.a. ".o_search_panel",
+            // laut eigenem Kommentar dort schon seit 2026-09-16 tot) - dieselbe Eigenschaft loeste
+            // nebenbei auch den fruehereren Nutzerreport "beim Draggen am Resize-Griff zieht
+            // Rubberband auf" und den Dialog-Absturz (Text-Selektions-Drag in einem Modal, siehe
+            // frueherer Kommentar hier) strukturell mit, statt fuer jeden Einzelfall eine eigene
+            // Ausnahme zu brauchen.
+            //
+            // Bewusst gegen den AEUSSEREN .o_list_renderer-Container geprueft, nicht gegen
+            // this.tableRef.el (das nackte <table>) selbst - Nutzerreport 2026-09-23: "Rubberband
+            // laesst sich nur in Zeilen aufziehen, nicht im leeren Platz darunter". Am
+            // Odoo-Kernquellcode geprueft (list_renderer.xml): <table t-ref="table"> sitzt
+            // innerhalb von <div class="o_list_renderer ...">; ein HTML-<table> nimmt immer nur
+            // die Hoehe seiner eigenen Zeilen ein, nie die des umgebenden, tatsaechlich bis zum
+            // Seitenende reichenden Containers - ein Ziehstart im leeren Platz unterhalb der
+            // letzten Zeile lag deshalb ausserhalb von tableRef.el.contains(). Der Container
+            // deckt zusaetzlich (erwuenscht, echtes Explorer-Verhalten) auch den leeren Platz
+            // rechts neben einer schmalen Tabelle ab.
+            const listContainerEl = this.tableRef.el?.closest(".o_list_renderer");
+            if (!listContainerEl || !listContainerEl.contains(ev.target)) {
                 return;
             }
             // Innerhalb der Tabelle bleiben zwei Bereiche ausgenommen, die selbst schon eine

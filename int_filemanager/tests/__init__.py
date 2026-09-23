@@ -7,3 +7,4 @@ from . import test_media_meta
 from . import test_sharing
 from . import test_watcher
 from . import test_fulltext_word_index
+from . import test_trash

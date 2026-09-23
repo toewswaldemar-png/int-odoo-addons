@@ -11,13 +11,14 @@ from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 
 from .. import authz, write_service, zip_utils
-from ..index_utils import index_move_tree, index_remove_tree, index_upsert, rename_entry
+from ..index_utils import index_move_tree, index_trash_tree, index_upsert, rename_entry, trash_destination
 from ..path_utils import (
     friendly_fallback_name,
     get_root,
     make_shareable,
     resolve_path,
     safe_name,
+    suppress_watcher,
     to_relative,
 )
 
@@ -220,9 +221,10 @@ class IntFilemanagerController(http.Controller):
         new_path = os.path.join(abs_parent, name)
         if os.path.exists(new_path):
             raise UserError(_("Es existiert bereits ein Eintrag mit diesem Namen."))
-        os.makedirs(new_path)
-        make_shareable(new_path, is_dir=True)
-        index_upsert(request.env, new_path)
+        with suppress_watcher(new_path):
+            os.makedirs(new_path)
+            make_shareable(new_path, is_dir=True)
+            index_upsert(request.env, new_path)
         return {"ok": True}
 
     @http.route("/int_filemanager/rename", type="jsonrpc", auth="user", methods=["POST"])
@@ -257,12 +259,17 @@ class IntFilemanagerController(http.Controller):
         new_rel = to_relative(request.env, new_abs)
         if os.path.exists(new_abs):
             raise UserError(_("Es existiert bereits ein Eintrag mit diesem Namen im Zielordner."))
-        shutil.move(abs_src, new_abs)
-        index_move_tree(request.env, old_rel, new_rel)
+        with suppress_watcher(abs_src, new_abs):
+            shutil.move(abs_src, new_abs)
+            index_move_tree(request.env, old_rel, new_rel)
         return {"ok": True}
 
     @http.route("/int_filemanager/delete", type="jsonrpc", auth="user", methods=["POST"])
     def delete(self, path=""):
+        """Verschiebt in den Papierkorb statt endgueltig zu loeschen (docs/
+        int_filemanager_papierkorb_konzept.md) - shutil.move() statt rmtree()/remove():
+        ein Ordner wandert dadurch als EIN Schritt komplett nach .trash/, keine rekursive
+        DB-Loeschung mehr noetig, index_trash_tree() zieht die Nachfahren im Index nach."""
         self._check_access()
         abs_path = resolve_path(request.env, path)
         if abs_path == get_root(request.env):
@@ -272,11 +279,11 @@ class IntFilemanagerController(http.Controller):
         authz.require_subtree_deletable(request.env, rel)
         if not os.path.exists(abs_path):
             raise UserError(_("Eintrag nicht gefunden."))
-        if os.path.isdir(abs_path):
-            shutil.rmtree(abs_path)
-        else:
-            os.remove(abs_path)
-        index_remove_tree(request.env, rel)
+        trash_rel = trash_destination(request.env, rel)
+        trash_abs = resolve_path(request.env, trash_rel)
+        with suppress_watcher(abs_path):
+            shutil.move(abs_path, trash_abs)
+            index_trash_tree(request.env, rel, trash_rel)
         return {"ok": True}
 
     @http.route("/int_filemanager/write_text", type="jsonrpc", auth="user", methods=["POST"])
@@ -287,9 +294,10 @@ class IntFilemanagerController(http.Controller):
         authz.require(request.env, rel, "write")
         if not os.path.isfile(abs_path):
             raise UserError(_("Datei nicht gefunden."))
-        with open(abs_path, "w", encoding="utf-8") as f:
-            f.write(content)
-        index_upsert(request.env, abs_path)
+        with suppress_watcher(abs_path):
+            with open(abs_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            index_upsert(request.env, abs_path)
         return {"ok": True}
 
     @http.route("/int_filemanager/upload", type="http", auth="user", methods=["POST"], csrf=False)
@@ -327,24 +335,26 @@ class IntFilemanagerController(http.Controller):
                 # String selbst geoeffnet haette. Gleiches Muster wie Odoos eigener Aufruf in
                 # web/controllers/database.py ("with tempfile.NamedTemporaryFile(...) as data_file:
                 # backup_file.save(data_file)") - live an einem 500er nachgewiesen, nicht vermutet.
-                with open(target, "wb") as dst:
-                    f.save(dst)
-                make_shareable(target, is_dir=False)
-                # index_upsert() direkt hier aufrufen (Kurswechsel 2026-09-16, live als Bug
-                # gefunden: Upload lief fehlerfrei durch, Datei blieb aber dauerhaft
-                # unindexiert). Vorherige Begruendung war, das ausschliesslich dem Watcher zu
-                # ueberlassen (inotify-CREATE durch open() oben) - das setzt aber voraus, dass
-                # der Watcher das Ereignis zuverlaessig bekommt. Laut Linux-Kernel-eigener
-                # CIFS-Dokumentation (kernel.org/doc/html/.../cifs/todo.html) ist inotify auf
-                # CIFS-Mounts nur unvollstaendig implementiert - live bestaetigt: derselbe
-                # Schreibvorgang loeste mal CLOSE_WRITE, mal MODIFY, mal (beim lange
-                # laufenden Watcher-Thread) GAR KEIN Ereignis aus. Die App kennt ihren eigenen
-                # Schreibvorgang bereits - sie muss nicht auf ein bei CIFS unzuverlaessiges
-                # Kernel-Feature warten, um ihn in der eigenen DB zu vermerken. Der
-                # ehemalige Race mit dem Watcher (beide versuchen create() fuer denselben neuen
-                # Pfad) ist jetzt in index_upsert() selbst abgefangen (siehe dort), nicht mehr
-                # hier vermieden.
-                index_upsert(request.env, target)
+                with suppress_watcher(target):
+                    with open(target, "wb") as dst:
+                        f.save(dst)
+                    make_shareable(target, is_dir=False)
+                    # index_upsert() direkt hier aufrufen (Kurswechsel 2026-09-16, live als Bug
+                    # gefunden: Upload lief fehlerfrei durch, Datei blieb aber dauerhaft
+                    # unindexiert). Vorherige Begruendung war, das ausschliesslich dem Watcher zu
+                    # ueberlassen (inotify-CREATE durch open() oben) - das setzt aber voraus, dass
+                    # der Watcher das Ereignis zuverlaessig bekommt. Laut Linux-Kernel-eigener
+                    # CIFS-Dokumentation (kernel.org/doc/html/.../cifs/todo.html) ist inotify auf
+                    # CIFS-Mounts nur unvollstaendig implementiert - live bestaetigt: derselbe
+                    # Schreibvorgang loeste mal CLOSE_WRITE, mal MODIFY, mal (beim lange
+                    # laufenden Watcher-Thread) GAR KEIN Ereignis aus. Die App kennt ihren eigenen
+                    # Schreibvorgang bereits - sie muss nicht auf ein bei CIFS unzuverlaessiges
+                    # Kernel-Feature warten, um ihn in der eigenen DB zu vermerken. suppress_watcher()
+                    # (path_utils.py) haelt den Watcher fuer target waehrend dieses ganzen Blocks
+                    # davon ab, parallel dasselbe zu versuchen (live 2026-09-21 als noetig
+                    # erkannt - ein reiner DB-Lock in index_upsert() konnte das Rennen nicht
+                    # zuverlaessig loesen, siehe dort).
+                    index_upsert(request.env, target)
             saved.append(name)
         return self._json_response({"ok": True, "saved": saved})
 

@@ -85,14 +85,18 @@
         <field name="mobile_view_mode">list</field>
         <field name="view_id" ref="view_filemanager_file_list_native"/>
         <field name="search_view_id" ref="int_filemanager_file_search"/>
-        <!-- Explizit [] statt das Feld wegzulassen: ein aus dem XML entferntes <field> wird von
-             Odoo beim Modul-Update NICHT zurueckgesetzt, der alte DB-Wert bleibt stehen (live so
-             erlebt). Kein statisches folder_path/parent_id-Filter hier noetig: die Navigation
-             (inkl. Wurzel-Ansicht) laeuft komplett ueber den parent_id-SearchPanel in
-             filemanager_file_search.xml + search_model_patch.js - eine hier gesetzte Domain
-             wuerde permanent in searchModel.globalDomain landen und mit jeder Kategorie-Auswahl
-             ge-ANDet, was Navigation in Unterordner unmoeglich machen wuerde. -->
-        <field name="domain">[]</field>
+        <!-- ("trashed","=",False) statt []: docs/int_filemanager_papierkorb_konzept.md - blendet
+             Papierkorb-Inhalte (inkl. des .trash-Ordners selbst) aus der Hauptansicht aus. Sicher
+             kombinierbar mit der Ordner-Navigation (anders als eine pfadbezogene Domain, siehe
+             der ausfuehrliche Kommentar dazu weiter unten bei "context"): trashed ist ein
+             globales, vom aktuell gewaehlten Ordner unabhaengiges Kriterium - native_search_model.js
+             _getDomain() UNDet super._getDomain() (inkl. dieser statischen Action-Domain) IMMER
+             mit der eigenen Ordner-Navigations-Domain, ein Zusatzkriterium hier bricht diese
+             Kombination nicht, im Unterschied zu einem festen folder_path/parent_id-Filter.
+             Die eigentliche Zugriffskontrolle fuer Papierkorb-Inhalte laeuft ueber
+             rule_file_trash_visibility (security.xml), nicht ueber diese Domain - sie ist nur
+             eine UI-Hoeflichkeit. -->
+        <field name="domain">[("trashed", "=", False)]</field>
         <!-- filter_hide_lock_files (filemanager_file_search.xml) war hier per
              search_default_ standardmaessig aktiv - Nutzerentscheidung 2026-09-14
              zurueckgenommen: der Filter-Chip belegt permanent Platz im

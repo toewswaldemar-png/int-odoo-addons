@@ -20,6 +20,7 @@
 import { Component, onMounted, onWillUpdateProps, useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
+import { useService } from "@web/core/utils/hooks";
 
 // Root-Knoten hat literal path==="" (Wurzel des Filemanager-Stammverzeichnisses) - als
 // DOM-Attributwert dafuer bewusst NICHT die leere Zeichenkette direkt verwendet: t-att auf einem
@@ -46,6 +47,7 @@ export class FolderTree extends Component {
     };
 
     setup() {
+        this.actionService = useService("action");
         this.nodes = useState({
             "": makeNode("", _t("Alle Ordner"), true),
         });
@@ -175,5 +177,14 @@ export class FolderTree extends Component {
         if (!wasActive) {
             this.props.onSelectFolder(node.path, node.hasChildren);
         }
+    }
+
+    // Fester Eintrag unten im Baum (docs/int_filemanager_papierkorb_konzept.md, cloudreve-Vorbild) -
+    // keine Ordner-Navigation, sondern ein eigenstaendiger Sprung in die separate Papierkorb-Liste
+    // (filemanager_trash_views.xml). Gleicher this.actionService.doAction()-Mechanismus, den
+    // filemanager_controller_mixin.js bereits fuer den Freigabe-Dialog nutzt - kein neuer
+    // Navigationsweg.
+    onClickTrash() {
+        this.actionService.doAction("int_filemanager.action_filemanager_trash");
     }
 }

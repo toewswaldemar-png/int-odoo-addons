@@ -56,7 +56,12 @@ class IntFilemanagerWebdavController(http.Controller):
             raise UserError("Datei nicht gefunden.")
         token = webdav_tokens.issue(rel_path)
         filename = os.path.basename(abs_path)
-        url = "%sint_filemanager/webdav/%s/%s" % (request.httprequest.host_url, token, filename)
+        # request.httprequest.host_url spiegelt die Anfrage wider, wie sie intern beim
+        # Reverse-Proxy-Hop ankommt (Schema/Port koennen dabei verlorengehen, siehe
+        # docs/int_filemanager_onlyoffice_domain_tls_fix_2026-09-22.md) - web.base.url ist die
+        # verlaessliche, explizit konfigurierte Basis-URL, unabhaengig von Proxy-Kopfzeilen.
+        base_url = request.env["ir.config_parameter"].sudo().get_param("web.base.url").rstrip("/")
+        url = "%s/int_filemanager/webdav/%s/%s" % (base_url, token, filename)
         return {"token": token, "url": url}
 
     @http.route(

@@ -73,3 +73,18 @@
     outline: 2px dashed var(--bs-danger, #dc3545);
     outline-offset: -2px;
 }
+
+// Fester Papierkorb-Fuss (folder_tree.xml/.js:onClickTrash()) - dieselben Hover-/Abstands-
+// Konventionen wie .o_int_filemanager_tree_node_header oben, plus eine obere Trennlinie, weil er
+// (anders als ein normaler Baumknoten) optisch vom scrollenden Baum darueber abgesetzt sein soll
+// (siehe folder_tree_layout.scss fuer die Flex-Aufteilung, die ihn dort haelt).
+.o_int_filemanager_tree_trash {
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    gap: 0.25rem;
+    border-top: 1px solid var(--border-color, #dee2e6);
+
+    &:hover {
+        background-color: var(--o-webclient-hover-bg, rgba(0, 0, 0, 0.06));
+    }
+}

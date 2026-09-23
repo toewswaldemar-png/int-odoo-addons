@@ -82,5 +82,10 @@ class IrAttachment(models.Model):
         # mit "could not serialize access due to concurrent update" abgelehnt).
         from .. import write_service
 
-        write_service.snapshot_and_write(self.env, file_record, attachment.raw or b"", operation="sync_write")
-        _logger.info("int_filemanager: Attachment %s zurück nach %s geschrieben (versioniert)", attachment.id, path)
+        result = write_service.snapshot_and_write(self.env, file_record, attachment.raw or b"", operation="sync_write")
+        if result.get("skipped"):
+            _logger.info(
+                "int_filemanager: Attachment %s / %s unveraendert - Schreibvorgang uebersprungen", attachment.id, path
+            )
+        else:
+            _logger.info("int_filemanager: Attachment %s zurück nach %s geschrieben (versioniert)", attachment.id, path)
