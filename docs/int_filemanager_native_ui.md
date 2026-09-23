@@ -1878,3 +1878,56 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
 
     **Live verifiziert:** ONLYOFFICE-Editor öffnet und lädt Dokumente über `https://odoo.lan:18443`
     fehlerfrei, vom Nutzer bestätigt.
+
+44. **Nachtrag zu Punkt 43: Port-443-Umstellung gescheitert, dabei "Lokal öffnen" (WebDAV) kaputt
+    gegangen und ein zweiter, grundlegenderer Header-Bug gefunden (2026-09-22, gleicher Tag).**
+
+    **Versuch, NPMs HTTPS-Port von 18443 auf Standard-443 umzustellen** (Wunsch: URLs ohne
+    Portangabe): Port 443 ist auf dem Unraid-Host bereits durch dessen **eigene Weboberfläche**
+    belegt - allerdings nur auf `127.0.0.1:443` (Loopback), nicht auf `0.0.0.0:443`. Der Docker-
+    Wildcard-Bind (`0.0.0.0:443`, wie ihn ein `-p 443:443`-Portmapping braucht) kollidiert trotzdem
+    mit der bereits bestehenden Loopback-Bindung - `docker run` schlug mit "address already in use"
+    fehl. **Port 80 ist zusätzlich extern (nicht nur Loopback) durch Unraids eigene GUI belegt**,
+    im Gegensatz zu 443. Container-Neuanlage sofort rückgängig gemacht (alter Container war vorher
+    umbenannt statt gelöscht worden, dadurch verlustfrei wiederherstellbar) - Umstellung auf
+    Standard-443 damit **nicht möglich**, ohne Unraids eigene Verwaltungsoberfläche anzufassen
+    (bewusst nicht gemacht, da Systemkomponente außerhalb des Anwendungs-Scopes). Bleibt bei
+    `:18443`.
+
+    **Dabei aufgefallen: "Lokal öffnen" (WebDAV, Punkt 19/42) zeigte danach bei jeder Datei
+    denselben falschen Inhalt** (Unraids eigene Login-Seite, "HM-SRV"/"Anmelden"/"Passwort-
+    Wiederherstellung" - Text landete in Excel-Zellen). Ursache lag NICHT am Port-443-Versuch
+    selbst, sondern war bereits vorher durch Punkt 43 angelegt: `web.base.url` hatte sich durch
+    Odoos Auto-Update-Mechanismus auf `http://odoo.lan` (ohne Port, falsches Schema) gesetzt.
+    Zwischenschritt behoben (`web.base.url` korrekt gesetzt + `web.base.url.freeze = True`, damit
+    Odoo es nicht wieder selbst überschreibt) - **löste das Problem aber nur teilweise**, da
+    `webdav_token()` (`controllers/webdav.py:56`) `web.base.url` gar nicht verwendet, sondern
+    `request.httprequest.host_url` - die URL wird also dynamisch aus dem tatsächlich empfangenen
+    Request gebaut, nicht aus dem statischen Parameter.
+
+    **Grundlegenderer Fund:** `request.httprequest.host_url` lieferte auch nach dem `web.base.url`-
+    Fix weiterhin `http://odoo.lan:18443/...` - Host jetzt korrekt (Port 43 aus diesem Tag behoben),
+    aber **Schema weiterhin `http` statt `https`**, was auf Port 18443 (reiner TLS-Listener) zu
+    einem harten Verbindungsfehler in Excel führte. Root Cause in Odoos eigenem Code (`http.py:2835`):
+
+    ```python
+    if odoo.tools.config['proxy_mode'] and environ.get("HTTP_X_FORWARDED_HOST"):
+        ...ProxyFix(fake_app)(environ, fake_start_response)
+    ```
+
+    Werkzeugs `ProxyFix`-Middleware (die `X-Forwarded-Proto`/`-For`/`-Host` auswertet und damit
+    Schema/Host/IP korrekt aus den Proxy-Headern rekonstruiert) wird von Odoo **nur aktiviert, wenn
+    der `X-Forwarded-Host`-Header überhaupt vorhanden ist** - unabhängig davon, ob `proxy_mode =
+    True` gesetzt ist. NPMs Standard-Template (`conf.d/include/proxy.conf`) setzt zwar
+    `X-Forwarded-Proto`, `X-Forwarded-For`, `X-Forwarded-Scheme`, aber **kein
+    `X-Forwarded-Host`** - Odoo übersprang ProxyFix deshalb komplett und fiel auf die rohen
+    WSGI-Werte zurück (Schema immer `http`, da Odoos eigener Werkzeug-Server selbst kein TLS
+    terminiert).
+
+    **Fix:** `proxy_set_header X-Forwarded-Host $http_host;` in den `location /`-Blöcken beider
+    Proxy-Hosts (`odoo.lan` UND `onlyoffice.local`, gleiche Fehlerklasse, proaktiv auch dort
+    ergänzt) hinzugefügt - direkter Config-Patch + `docker cp` + `nginx -s reload`, gleiches
+    sicheres Verfahren wie in Punkt 43 (keine Inline-Shell-Interpolation von `$`-Variablen).
+
+    **Live verifiziert:** "Lokal öffnen" vom Nutzer erneut getestet, funktioniert - WebDAV-URL wird
+    jetzt korrekt mit `https://` und Port erzeugt, Excel öffnet die Datei erfolgreich.
