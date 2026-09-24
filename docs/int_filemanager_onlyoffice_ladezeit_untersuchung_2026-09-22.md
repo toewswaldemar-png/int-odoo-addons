@@ -199,6 +199,59 @@ Klick vorziehen.
 
 ---
 
+## 5. Nachtrag 2026-09-23: Abschnitt 2 endgültig geklärt + ein dritter, bisher unentdeckter Kostenpunkt in Odoos eigenem `ir.attachment`
+
+Auslöser: der Auftrag, Office-Dateien "so reibungslos wie möglich" zu öffnen (Hauptarbeitsmittel im
+Unternehmen), direkt am Odoo-19-Quellcode nachgeprüft statt nur vermutet.
+
+**Abschnitt 2s offene Frage ist jetzt beantwortet: der ONLYOFFICE-Konvertierungs-Cache wird NICHT
+mit ausgehebelt.** `ir.attachment._get_datas_related_values()` (`odoo/addons/base/models/ir_attachment.py:314`)
+berechnet den `checksum` rein inhaltsbasiert (`self._compute_checksum(data)`) — bei byteidentischem
+Inhalt entsteht **garantiert derselbe** Wert, unabhängig davon, wie oft `write({"raw": ...})`
+aufgerufen wird. Der ONLYOFFICE-Cache-Schlüssel (`id + checksum`) bleibt also stabil, dessen eigener
+Konvertierungs-Cache greift weiterhin. **Entwarnung für diesen Punkt.**
+
+**Dafür ein neuer, unabhängiger Kostenpunkt gefunden: Odoos eigenes `ir.attachment` macht bei jedem
+`write({"raw": ...})` unconditional echte Arbeit, selbst bei komplett unverändertem Inhalt** — die
+Ineffizienz aus Abschnitt 1 sitzt also nicht nur in `int_filemanager`s eigenem Code, sondern
+**zusätzlich** eine Ebene tiefer in Odoo selbst:
+
+```python
+# _set_attachment_data() → für jeden Aufruf, ohne Kurzschluss bei unveraendertem Inhalt:
+vals = self._get_datas_related_values(bin_data, attach.mimetype)  # SHA1 ueber die GESAMTE Datei
+...
+super(IrAttachment, attach.sudo()).write(vals)                    # Metadaten-Schreibvorgang
+...
+self._file_write(raw, checksum)                                   # Filestore-Schreibversuch
+```
+
+Kein `_filter_not_equal`-Kurzschluss vor dieser Kette — anders als bei einem gewöhnlichen
+gespeicherten Feld prüft ein `compute`/`inverse`-Feld wie `raw` nicht vorab, ob sich der Wert
+überhaupt geändert hat, bevor die Inverse-Methode läuft. Konkret unconditional bei **jedem**
+Öffnen einer bereits einmal editierten Office-Datei: eine vollständige SHA1-Berechnung über die
+gesamte Dateigröße, plus ein `write()`-Aufruf auf die Attachment-Metadatenfelder. **Für Office-
+Dateien selbst unkritisch ist dabei nur der `_index()`-Aufruf** (`ir_attachment.py:434`) — der
+tut in Community-Odoo ausschließlich bei `text/*`-Mimetypes etwas (ein einfacher ASCII-String-Scan),
+bei `application/vnd.openxmlformats-officedocument...` liefert er sofort `None`. Der eigentliche
+Filestore-Schreibversuch selbst bleibt zwar folgenlos (siehe Abschnitt zu `_file_write` weiter oben
+in dieser Analysereihe: Odoos Filestore ist content-addressiert, ein bereits vorhandener Pfad wird
+übersprungen) — aber die **SHA1-Berechnung davor** passiert so oder so, jedes Mal.
+
+**Präzisierter, "so reibungslos wie möglich"-tauglicher Fix — eine Stufe früher ansetzen als
+ursprünglich vorgeschlagen:** nicht erst vor `snapshot_and_write()` prüfen (Abschnitt "Einordnung"
+unten), sondern **noch vor dem allerersten `open()`-Aufruf in `open_editor()` selbst**. Da
+`int_filemanager.file` aus Phase 1 (`int_filemanager_ausbau.md`) bereits `content_sha256`,
+`hash_source_mtime_ns` und `hash_size` pflegt, ließe sich beim Öffnen zunächst nur ein billiger
+`os.stat()` auf die Datei machen und dessen Größe/`mtime_ns` gegen die bereits bekannten,
+gespeicherten Werte vergleichen — **stimmen sie überein, kann `open_editor()` sofort die
+bestehende `attachment_id` zurückgeben, ganz ohne Datei zu lesen, ohne `attachment.write()`,
+ohne SHA1-Berechnung, ohne die komplette `write_service`-Kette.** Das wäre die maximal
+reibungslose Variante: ein wiederholtes Öffnen einer unveränderten Office-Datei kostet dann nur
+noch einen einzigen schnellen Datenbank-/Dateisystem-Abgleich, bevor ONLYOFFICEs eigener (nicht
+vermeidbarer) Konvertierungsschritt beginnt.
+
+---
+
 ## Einordnung / möglicher Ansatzpunkt (nicht umgesetzt)
 
 Der naheliegende Fix für Punkt 1 wäre ein **Inhalts-Vergleich vor dem Schreiben**: `open_editor()`
