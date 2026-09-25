@@ -9,6 +9,19 @@ Dokument prüft diese Skizze **direkt am lokal geklonten Odoo-19-Quellcode**
 Erinnerung — und gleicht sie mit dem tatsächlichen `int_filemanager`-Code ab. Reine Analyse, nichts
 umgesetzt.
 
+**Nachtrag 2026-09-24: Dieses Dokument war gegenstandslos, als es geschrieben wurde.** Der
+Papierkorb existierte bereits seit dem 2026-09-21 (Commit `b53fed2`, zwei Tage vor diesem
+Dokument) — allerdings über ein eigenes `trashed`-Boolean-Feld mit `.trash/`-Unterbaum, nicht über
+das hier geplante `active`. Der komplette unten stehende Plan wurde also nie gebraucht. Die
+tatsächlich noch offene, echte Lücke: der tägliche Vollscan prüft beim Stale-Abgleich nicht auf
+`trashed`/`.trash`-Präfix und läuft mit `sudo()` (an `rule_file_trash_visibility` vorbei) — ein in
+den Papierkorb verschobener Eintrag kann dadurch beim nächsten 03:00-Lauf **endgültig** gelöscht
+werden statt erst nach der Aufbewahrungsfrist (Fund B1). Vollständige Analyse inkl. Migrationsplan
+`trashed` → natives `active` in `int_filemanager_konzept_db_vorrang_2026-09-24.md`
+(Branch `docs/konzept-db-vorrang`), Abschnitte 16.1 und 16.2. Der Rest dieses Dokuments bleibt nur
+als Beleg stehen, wie Odoos `active`-Mechanismus grundsätzlich funktioniert — nicht als gültiger
+Bauplan.
+
 ---
 
 ## 1. Odoo hat kein natives "Papierkorb"-Konzept — nur "Archivieren"

@@ -50,6 +50,15 @@ Retention-Cron (bestehendes Muster, siehe Version-Pruning-Cron) räumt nach X Ta
 auf. Fügt sich sauber neben die bestehende Versionierung: Versionierung schützt vor
 Überschreiben, Papierkorb schützt vor Löschen — zwei verschiedene, komplementäre Sicherheitsnetze.
 
+**Nachtrag 2026-09-24: A1 ist umgesetzt.** Commit `b53fed2` (2026-09-21, gleicher Tag wie dieser
+Fund) hat den Papierkorb bereits gebaut — `.trash/`-Unterbaum, Felder `trashed`/`trashed_at`/
+`trashed_by`/`original_path`, Wiederherstellung, Pro-Nutzer-Sichtbarkeit per `ir.rule`, eigener
+Menüpunkt, 30-Tage-Retention-Cron. Die hier skizzierte Umsetzung ("`.trash/<uuid>`-Unterordner",
+neues Modell/View) beschreibt im Kern, was tatsächlich gebaut wurde. Details und ein noch offener
+Bug (Vollscan kann Papierkorb-Einträge versehentlich endgültig löschen, B1) in
+`int_filemanager_konzept_db_vorrang_2026-09-24.md` (Branch `docs/konzept-db-vorrang`), Abschnitt
+16.1 — dort auch der Vorschlag, `trashed` durch natives `active` zu ersetzen.
+
 **A2. Undo der letzten Aktion.** Kleinere Ergänzung zu A1: ein Toast/Notification nach
 Löschen/Verschieben/Umbenennen mit "Rückgängig"-Aktion (analog Gmail/Windows-Explorer),
 technisch nur ein UI-Komfort über die ohnehin vorhandenen Routen (Restore aus Papierkorb,

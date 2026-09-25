@@ -54,6 +54,19 @@ aufzugeben und einen vollständigen WebDAV-Server neu zu bauen. **Papierkorb wir
 in `int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` geplant über den Watcher-Guard
 gelöst**, kein Architekturwechsel nötig.
 
+**Nachtrag 2026-09-24 (Entscheidung revidiert): diese Ablehnung gilt nicht mehr.** Nach deutlich
+tieferer, live auf HM-SRV getesteter Prüfung (eigene Testinstanz, echte Postgres-/Dateisystem-
+Experimente, vollständiger Odoo-19-Core-Durchgang) hat der Nutzer am 2026-09-24 das Gegenteil
+entschieden: **Variante B — DB als Wahrheit**, dokumentiert in
+`int_filemanager_konzept_db_vorrang_2026-09-24.md` (Branch `docs/konzept-db-vorrang`). Der
+seinerzeitige Ausschlussgrund ("Erstellen/Umbenennen/Löschen/Verschieben von extern wären
+unsichtbar") gilt dort nicht mehr, weil ein eigens gebauter, auf einen Zulieferer reduzierter
+Watcher plus Abgleich-Cron genau diese externen Änderungen weiterhin einsammelt — nur die
+Datenautorität selbst liegt bei der DB, nicht mehr bei der Platte. Die Roadmap in Abschnitt 3
+dieses Dokuments bleibt inhaltlich meist gültig, ihre Reihenfolge wird aber von Abschnitt 10 des
+neuen Konzeptdokuments überstimmt (Hotfix Papierkorb-Scan-Bug zuerst, dann App-Schreibwege, dann
+Watcher/Abgleich-Cron — erst danach CIFS-Optimierung).
+
 ---
 
 ## 2. Was "massiver Ausbau" konkret heißt — Zusammenführung aller bisherigen Funde dieser Session

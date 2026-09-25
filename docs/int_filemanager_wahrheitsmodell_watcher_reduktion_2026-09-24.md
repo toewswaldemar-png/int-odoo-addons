@@ -7,6 +7,20 @@ dokumentierten Funden zu `watcher.py` (`int_filemanager_watcher_stille_fehlschla
 und FileBrowser Quantum (`int_filemanager_filebrowser_scan_architektur_2026-09-23.md`). Reine
 Planung, nichts umgesetzt.
 
+**Nachtrag 2026-09-24 (noch am selben Tag überholt): Dieses Dokument ist durch
+`int_filemanager_konzept_db_vorrang_2026-09-24.md` (Branch `docs/konzept-db-vorrang`) ersetzt.**
+Der Nutzer hat dort — live auf HM-SRV getestet, nicht nur konzeptionell — bereits **Variante B: DB
+als Wahrheit** entschieden, das genaue Gegenteil der hier zugrunde gelegten Annahme ("DB ist
+Wahrheit wurde verworfen"). Das Dokument dort benennt den Denkfehler hier explizit (Abschnitt 9):
+der "Schnitt lokal/CIFS" trägt nicht, weil 99,96 % der Daten tatsächlich auf den drei
+CIFS-Testfreigaben liegen, nicht lokal — die Prämisse "lokal ist der stabile, primäre Teil" war
+falsch. Ebenso trifft die hier gemachte Annahme "App-Schreibvorgänge sind bereits DB-geführt"
+nicht zu (Fund B4: ONLYOFFICE-Save, Upload-Überschreiben, Version-Restore und WebDAV-PUT pflegen
+den Index nicht selbst, sondern hängen vom Watcher ab). Als Referenz zum "SMB-Watcher"-Gespräch von
+heute bleibt nur der Fund zu SMB2 `CHANGE_NOTIFY` (Abschnitt weiter unten in diesem Chat, nicht in
+diesem Dokument) gültig — er betrifft die Protokollebene, nicht die hier verworfene
+Architekturentscheidung.
+
 ---
 
 ## 1. Die Grundidee: beide Prinzipien nur dort einsetzen, wo sie bereits nachweislich stabil sind
