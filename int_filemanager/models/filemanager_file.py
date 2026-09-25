@@ -247,6 +247,40 @@ class IntFilemanagerFile(models.Model):
         copy=False,
     )
 
+    # --- "Datenbank hat Vorrang": Veroeffentlichen auf den Share --------------------------------
+    # docs/int_filemanager_konzept_db_vorrang_2026-09-24.md, Abschnitt 4.1. Bisher nur vom Upload-
+    # Ueberschreiben genutzt (publish_service.py, Durchstich); die uebrigen Schreibwege folgen.
+    # Der Request-Commit ist verbindlich: der neue Inhalt liegt dann als Blob im Filestore
+    # (pending_content) und share_state='pending' - die Platte folgt per postcommit-Hook bzw. Cron
+    # (_cron_publish_pending). "conflict" ist ein Hinweis-Zustand (der Ablauf kann nicht
+    # weitermachen, z.B. Bestandsdatei nach dem Ablegen ueber die Versionsgroessengrenze
+    # gewachsen), kein blockierender Sperrzustand.
+    # OHNE Backfill der Bestandszeilen per ORM: die Spalten werden in
+    # migrations/19.0.1.15.0/pre-migrate.py mit Metadaten-Default (PG >= 11, kein Tabellen-
+    # Rewrite) angelegt - ein ORM-Backfill wuerde 1,39 Mio. breite Zeilen neu schreiben.
+    share_state = fields.Selection(
+        [("synced", "Auf Platte"), ("pending", "Wartet auf Veröffentlichung"), ("conflict", "Hinweis")],
+        default="synced",
+        copy=False,
+        help="pending: der Inhalt ist in der Datenbank verbindlich, aber noch nicht auf dem Share "
+        "veröffentlicht.",
+    )
+    revision = fields.Integer(default=0, copy=False, help="Zähler der über die App veröffentlichten Inhaltsstände.")
+    pending_content = fields.Binary(
+        attachment=True,
+        copy=False,
+        help="Noch nicht auf den Share veröffentlichter Inhalt (Filestore-Blob, nach dem Veröffentlichen geleert).",
+    )
+    pending_sha256 = fields.Char(copy=False)
+    pending_version_id = fields.Many2one(
+        "int_filemanager.version",
+        copy=False,
+        ondelete="set null",
+        help="Bereits committete Sicherung des alten Plattenstands für den laufenden Veröffentlichungsvorgang "
+        "(macht den Ablauf nach einem Abbruch wiederholbar, ohne Doppelversion).",
+    )
+    _share_state_open_idx = models.Index("(share_state) WHERE share_state <> 'synced'")
+
     # --- Phase 4: Vorschau & Metadaten -----------------------------------
     # meta_state bleibt False/leer fuer Ordner und fuer Dateitypen ohne
     # Extraktor (media_type_of() == None) - nur unterstuetzte Medientypen
@@ -470,6 +504,14 @@ class IntFilemanagerFile(models.Model):
             ("folder_path", "=", TRASH_DIRNAME),
         ])
         stale.unlink()
+
+    def _cron_publish_pending(self):
+        """Recovery des Ablaufs "Datenbank hat Vorrang" (publish_service.py): holt Zeilen mit
+        share_state='pending' nach, deren postcommit-Hook nicht (fertig) gelaufen ist (Prozess-
+        abbruch, Fehler, gesperrte Zeile). Jeder Schritt ist wiederholbar."""
+        from .. import publish_service
+
+        publish_service.publish_all_pending(self.env)
 
     def _cron_compute_hashes(self):
         """Asynchroner Batch-Job: berechnet content_sha256 fuer alle Dateien mit

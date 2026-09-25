@@ -10,6 +10,17 @@
         <field name="active">True</field>
     </record>
 
+    <record id="ir_cron_publish_pending" model="ir.cron">
+        <field name="name">Filemanager: vorgemerkte Änderungen auf den Share veröffentlichen (Recovery)</field>
+        <field name="model_id" ref="model_int_filemanager_file"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_publish_pending()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="nextcall" eval="(datetime.now() + relativedelta(minutes=5)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="active">True</field>
+    </record>
+
     <record id="ir_cron_compute_hashes" model="ir.cron">
         <field name="name">Filemanager: Datei-Hashes berechnen (Identitäts-Grundlage)</field>
         <field name="model_id" ref="model_int_filemanager_file"/>

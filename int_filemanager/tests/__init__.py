@@ -8,3 +8,4 @@ from . import test_sharing
 from . import test_watcher
 from . import test_fulltext_word_index
 from . import test_trash
+from . import test_publish_overwrite

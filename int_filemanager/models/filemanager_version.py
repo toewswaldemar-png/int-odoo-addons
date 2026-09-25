@@ -20,6 +20,12 @@ class IntFilemanagerVersion(models.Model):
         "anders als fields.Image kein automatisch abgeleitetes Größenfeld.",
     )
     content_sha256 = fields.Char(index=True, help="SHA-256 des gesicherten Inhalts (Diagnose/Dedup-Tests).")
+    origin = fields.Selection(
+        [("app", "App"), ("extern", "Extern geändert")],
+        default="app",
+        help="extern: Der Plattenstand wich beim Sichern vom zuletzt bekannten Indexstand ab (z.B. im "
+        "Explorer geändert) und wurde vor dem Überschreiben als Version gesichert.",
+    )
 
     _version_no_uniq = models.Constraint(
         "UNIQUE(file_id, version_no)",
