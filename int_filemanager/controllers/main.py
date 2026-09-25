@@ -10,7 +10,7 @@ from odoo import _, fields, http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 
-from .. import authz, write_service, zip_utils
+from .. import authz, publish_service, write_service, zip_utils
 from ..index_utils import index_move_tree, index_trash_tree, index_upsert, rename_entry, trash_destination
 from ..path_utils import (
     friendly_fallback_name,
@@ -321,10 +321,11 @@ class IntFilemanagerController(http.Controller):
             if os.path.exists(target):
                 existing = request.env["int_filemanager.file"].sudo().search([("path", "=", target_rel)], limit=1)
             if existing:
-                # Überschreibt eine bereits indexierte Datei - über den
-                # zentralen Dienst (Version sichern, atomar schreiben) statt
-                # kommentarlos zu überschreiben.
-                write_service.snapshot_and_write(request.env, existing, f.read(), operation="upload_overwrite")
+                # Überschreibt eine bereits indexierte Datei - Ablauf "Datenbank hat Vorrang"
+                # (publish_service.py, Konzept 4.1): der Request-Commit ist verbindlich, der
+                # Share folgt per postcommit-Hook bzw. Cron. Kein direkter Dateizugriff und keine
+                # eigene DB-Verbindung mehr in diesem Request, Odoos retrying() darf ihn wiederholen.
+                publish_service.stage_overwrite(request.env, existing, f.read())
             else:
                 # Neue Datei (auch: existiert auf Platte, aber noch nicht
                 # indexiert) - kein Versionierungsziel vorhanden.

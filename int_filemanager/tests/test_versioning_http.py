@@ -5,6 +5,8 @@ import tempfile
 
 from odoo.tests.common import HttpCase, tagged
 
+from odoo.addons.int_filemanager import publish_service
+
 
 @tagged("post_install", "-at_install")
 class TestVersioningHttp(HttpCase):
@@ -51,12 +53,23 @@ class TestVersioningHttp(HttpCase):
     def _upload_overwrite(self, filename, content):
         return self.url_open("/int_filemanager/upload", data={"path": ""}, files={"ufile": (filename, content)})
 
+    def _publish(self, path):
+        """Upload-Ueberschreiben committet nur in die DB (share_state='pending'); der Share folgt per
+        postcommit-Hook - den ignoriert Odoos TestCursor (siehe publish_service.py). Hier wird der Hook
+        deshalb direkt aufgerufen."""
+        self.env.cr.clear()
+        rec = self.env["int_filemanager.file"].sudo().search([("path", "=", path)])
+        self.assertEqual(rec.share_state, "pending")
+        status = publish_service.publish_pending(self.env.cr.dbname, rec.id)
+        self.assertEqual(status, "published")
+        self.env.cr.clear()
+
     def test_upload_overwrite_creates_version_and_writes_atomically(self):
         self._authenticate()
         resp = self._upload_overwrite("doc.txt", b"version2")
         self.assertEqual(resp.status_code, 200)
+        self._publish("doc.txt")
 
-        self.env.cr.clear()
         file_record = self.env["int_filemanager.file"].sudo().search([("path", "=", "doc.txt")])
         self.assertTrue(file_record)
         versions = self.env["int_filemanager.version"].sudo().search([("file_id", "=", file_record.id)])
@@ -83,7 +96,7 @@ class TestVersioningHttp(HttpCase):
     def test_restore_creates_new_version_and_restores_content(self):
         self._authenticate()
         self._upload_overwrite("doc.txt", b"version2")
-        self.env.cr.clear()
+        self._publish("doc.txt")
 
         file_record = self.env["int_filemanager.file"].sudo().search([("path", "=", "doc.txt")])
         v1 = self.env["int_filemanager.version"].sudo().search([("file_id", "=", file_record.id)], limit=1)
@@ -128,7 +141,7 @@ class TestVersioningHttp(HttpCase):
             "/int_filemanager/upload", data={"path": "Geheim"}, files={"ufile": ("s.txt", b"secret-v2")}
         )
         self.assertEqual(resp.status_code, 200)
-        self.env.cr.clear()
+        self._publish("Geheim/s.txt")
 
         file_record = self.env["int_filemanager.file"].sudo().search([("path", "=", "Geheim/s.txt")])
         version = self.env["int_filemanager.version"].sudo().search([("file_id", "=", file_record.id)], limit=1)
