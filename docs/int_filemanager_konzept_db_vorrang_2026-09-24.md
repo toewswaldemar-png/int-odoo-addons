@@ -80,11 +80,11 @@ aber belastbare Muster:
 
 | Baustein | Fundstelle (Odoo 19 im Container) | Aussage |
 |---|---|---|
-| Blob zuerst, unveränderlich | `ir_attachment.py:158` `_file_write` | Name = sha1, nur schreiben wenn nicht vorhanden, vorher in Checkliste. Abbruch → harmloser Orphan |
+| Blob vor dem Commit, unveränderlich | `ir_attachment.py:754-800` `create`, `:158` `_file_write` | Reihenfolge in Odoo: erst DB-Zeile (`super().create`, Name `store_fname` aus dem Hash vorab bekannt), dann Blob (`_file_write`), beides vor dem Request-Commit. Name = sha1, nur schreiben wenn nicht vorhanden, vorher in Checkliste. Abbruch → Rollback der Zeile, Blob bleibt als harmloser Orphan (GC). Zugesichert ist also "Blob liegt vor dem Commit", nicht "Blob vor der Zeile" |
 | Löschen: erst DB, Bytes später | `ir_attachment.py:741` `unlink`, `_file_delete`, `_gc_file_store` | Bytes nur per GC-Cron, nie sofort |
 | Externe Wirkung nach Commit | `sql_db.py:165-168, 566-577`; `mail_mail.py:689`; `ir_actions.py:1062`; `bus.py:139-150` | `cr.postcommit`; bei `rollback()` wird `postcommit.clear()` aufgerufen → **Retry wiederholt nur DB-Arbeit** |
 | Hooks fangen nichts ab | `tools/misc.py` `Callbacks.run` | Ein Fehler im Hook = 500 trotz Commit → Hook muss selbst try/except |
-| Sperren | `orm/models.py` `lock_for_update()` / `try_lock_for_update()` (`SKIP LOCKED`); Cron `FOR NO KEY UPDATE SKIP LOCKED` | Nur Zeilensperren; **kein einziger Advisory-Lock im Core** |
+| Sperren | `orm/models.py` `lock_for_update()` / `try_lock_for_update()` (`SKIP LOCKED`); Cron `FOR NO KEY UPDATE SKIP LOCKED` | Zeilensperren; Advisory-Lock nur **einmal** im Core (`mail_thread.py:1488`, `pg_try_advisory_xact_lock(hashtext(message_id))` zur Duplikatserkennung eingehender Mails, Korrektur 2026-09-25) |
 | Isolation / Retry | `sql_db.py:373` `REPEATABLE READ`; `service/model.py:185-239` `retrying` (bis 5×, bei `40001`/Deadlock/LockNotAvailable) | `retrying(func, env)` ist auch für Hintergrundarbeit nutzbar |
 | Externes System synchronisieren | `google_calendar/models/google_sync.py` | `need_sync`-Flag, `@after_commit` (postcommit + eigener Cursor + try/except, nur loggen), Pull per Cron, `need_sync=False` beim Schreiben von extern (Echo-Vermeidung), Archivieren (`active=False`) statt Löschen, "Last updated wins" (Kommentar im Code: "dangerous" bei Uhrenabweichung) |
 | Cron-Werkzeuge | `ir_cron.py:735` `_trigger()`, `:846` `_commit_progress()`; `server.py:542-583` | `_trigger()` weckt den Cron-Thread per `LISTEN cron_trigger` (sonst alle 60 s); `at=` nur minutengenau; Batches mit Zeitbudget und Fortschritt |
@@ -104,8 +104,11 @@ aber belastbare Muster:
   `precommit`-Hooks. Ein Hook, der in einem gescheiterten `with cr.savepoint()`-Block registriert
   wurde, läuft nach dem Commit trotzdem. Regel: Hook erst am Ende registrieren und im Hook den Zustand
   aus der DB prüfen (idempotent).
-- **Sperren:** Im gesamten Core kein einziges `pg_advisory` (grep über alle `.py` außer Tests);
-  Tabellensperren nur in `ir_attachment` (GC), `ir_module`, `transifex`. `lock_for_update()` wirft
+- **Sperren:** Im Core genau ein Advisory-Lock: `pg_try_advisory_xact_lock` in `mail_thread.py:1488`
+  (Dedupe je `message_id`; der Grep vom 09-24 suchte `pg_advisory` und verfehlte `pg_try_advisory`,
+  Korrektur 2026-09-25). Die Entscheidung gegen Advisory-Locks stützt sich daher **nicht** auf "Odoo
+  nutzt keine", sondern darauf, dass `lock_for_update` auf der Zeile genügt. Tabellensperren nur in
+  `ir_attachment` (GC), `ir_module`, `transifex`. `lock_for_update()` wirft
   `LockError` (UserError), wenn nicht alle Zeilen sperrbar sind, es wartet nicht.
 - **Cron läuft nicht in `retrying`.** Ein `40001` im Cron ist ein Fehlschlag des Jobs
   (`failure_count`+1); Deaktivierung erst bei ≥5 Fehlern in Folge **und** erstem Fehler älter als
@@ -119,7 +122,11 @@ aber belastbare Muster:
   Status 2/3 die Datei und ruft `attachment.write({"raw": …})` ohne Vergleich mit der aktuellen
   Checksum. Ein veralteter Save überschreibt still. Die Basisrevisionsprüfung (Body-`key` gegen
   `id + aktuelle checksum`) müssen wir ergänzen (das `key`-Feld im Callback-Body ist laut
-  ONLYOFFICE-API vorhanden, im Code nicht geprüft).
+  ONLYOFFICE-API vorhanden, im Code nicht geprüft). Code liegt im Repo
+  (`onlyoffice_odoo/controllers/controllers.py:200-275`, am 2026-09-25 gelesen): Callback vergleicht
+  `body["key"]` nicht; der Key wird beim Öffnen als `id + checksum` gebildet (`:271`). Status 3 wird wie
+  Status 2 geschrieben (`:236`); nach der ONLYOFFICE-API bedeutet 3 einen Speicherfehler, die URL ist dann
+  evtl. unbrauchbar (aus API-Wissen, nicht gegen die Doku geprüft).
 - **Snapshot-Test (Wegwerf-Postgres 17):** `LOCK TABLE` als erstes Statement einer
   `REPEATABLE READ`-Transaktion sieht die inzwischen committete Zeile (1); ein Advisory-Lock als
   erstes Statement sieht sie nicht (0); "erst SELECT, dann LOCK" ebenfalls nicht (0).
@@ -135,7 +142,11 @@ Neues Feld `share_state` auf `int_filemanager.file`: `synced` / `pending` / `con
 
 ### 4.1 Inhalt ändern (App-Speichern, ONLYOFFICE, WebDAV, Text, Version-Restore)
 1. Rechte und Editorsitzung prüfen (Sitzung an **Dokument-ID + Basisrevision/Checksum** gebunden).
-2. Neue Bytes als **Temp-Blob** bereitstellen (harmlos bei Abbruch; GC räumt auf).
+2. Neue Bytes als **Blob im Filestore** bereitstellen (harmlos bei Abbruch; GC räumt auf). Wie in
+   Odoo (`ir_attachment.create`) geschieht das **innerhalb der Request-Transaktion, vor dem Commit**, und
+   zwar **erst die DB-Zeile, dann der Blob** — die Reihenfolge ist *nicht* gleichgültig: Der GC löscht
+   Blobs ohne committete Zeile und wartet nur auf Transaktionen, die schon eine Zeile eingefügt haben
+   (`ir_attachment.py:190-217, 794-797`; Korrektur 2026-09-25). Blob nie nach dem Commit.
 3. Request-Transaktion: Dateizeile per `lock_for_update` sperren, Version anlegen (Filestore,
    Odoo-GC), Größe/Checksum/Revision setzen, `share_state='pending'`. **Commit = verbindlich.**
 4. `postcommit`-Hook (mit eigenem Cursor, komplett in try/except): **Vorher-Nachher-Prüfung** —
@@ -158,8 +169,23 @@ Prüfung von `parent_path`). Download bei `pending` liest vom Blob bzw. alten Pf
 Zeile zuerst als gelöscht markieren/entfernen, Bytes später per Cron (GC-Muster). Nie umgekehrt.
 
 ### 4.4 Retry-Sicherheit
-Nichts Externes passiert vor dem Commit → Odoos `retrying()` ist unproblematisch. Zusätzlich vom
-Client mitgeschickte **Vorgangs-ID** gegen Doppelklick/erneutes Senden.
+Nichts Externes passiert vor dem Commit → Odoos `retrying()` ist für die DB-Arbeit unproblematisch.
+Zusätzlich vom Client mitgeschickte **Vorgangs-ID** gegen Doppelklick/erneutes Senden.
+
+**Was `retrying` wiederholt und was nicht** (`service/model.py:196-214`, 2026-09-25): nur 40001,
+Deadlock, `LockNotAvailable` und `ConcurrencyError`. `IntegrityError` wird zu einem `ValidationError`
+**ohne** Wiederholung. `LockError` (`lock_for_update`) ist ein `UserError` und wird ebenfalls nicht
+wiederholt: Ein Doppelklick auf dieselbe Datei liefert sofort eine Fehlermeldung, kein stilles Warten —
+das fängt nur die Vorgangs-ID ab. Positiv (aus der PostgreSQL-Semantik abgeleitet, nicht ausgeführt):
+`FOR UPDATE SKIP LOCKED` auf einer nach dem Snapshot committeten Zeile wirft unter `REPEATABLE READ` 40001;
+der Retry liest dann frisch und erkennt die geänderte Basisrevision.
+
+**Einschränkung Upload-Body (aus `service/model.py` `retrying` abgeleitet, nicht ausgelöst, 2026-09-25):**
+Beim Retry spult Odoo nur `request.httprequest.files` zurück, und nur wenn sie `seekable` sind (sonst
+`RuntimeError`). Ein roher Body (WebDAV-PUT) steht nicht in `.files`. Wird er im Controller in die
+Temp-Datei gestreamt (4.1 Schritt 2), liest ein zweiter Versuch einen bereits verbrauchten Body und
+könnte eine **leere Datei** veröffentlichen. Das Staging muss deshalb **idempotent** sein: Temp-Datei je
+Vorgangs-ID mit Fertig-Marker, die ein Retry wiederverwendet, statt den Body erneut zu lesen.
 
 ### 4.5 Was entfällt
 `suppress_watcher()`, `_upsert_by_path` (rohes SQL), eigene psycopg2-Verbindung und `pg_advisory_lock`
@@ -189,14 +215,28 @@ DB-Zustands (sonst gehen Signale verloren, z. B. Explorer-Schreiben während `pe
    Commit, wie Odoos `after_commit`/Mail-Versand). Scheitert er (DB weg, `40001`), bleiben die Einträge im
    Speicher und werden im nächsten Takt erneut versucht; wächst der Speicher über ein Limit, wird
    "Vollabgleich nötig" gesetzt. Bewusst **keine** reine Speicher-Liste: die würde nur funktionieren,
-   solange Watcher und Cron im selben Prozess laufen (`workers=0`).
+   solange Watcher und Cron im selben Prozess laufen (`workers=0`). **Trigger sparsam setzen:** jeder
+   `_trigger()`-Aufruf legt eine `ir.cron.trigger`-Zeile an (`ir_cron.py:~787`); sie wird beim Lauf gelöscht
+   (`_clear_schedule`). Der Autovacuum `_gc_cron_triggers` (`ir_cron.py:906-916`) räumt nur Trigger
+   **inaktiver** Crons nach einer Woche auf, nicht die eines aktiven, aber hängenden Crons. Bei 1 Aufruf/s
+   wären das bis zu 86.400 Zeilen/Tag, ohne dass jemand aufräumt → nur triggern, wenn `dirty` von leer auf
+   nicht leer wechselt.
 4. Herzschlag (Zeitstempel pro Minute).
 5. Aufpasser: Absturz von `read()` → Neustart, Watches neu, "Vollabgleich nötig"; `Q_OVERFLOW` →
    "Vollabgleich nötig". Kein Schreiben in Index-Tabellen.
 
 ### 5.3 Abgleich-Cron
 - Bearbeitet nur `dirty`-Pfade, die älter als 2–3 s sind (Ruhezeit, **Debounce per Zeitstempel**, da
-  `_trigger(at=…)` nur minutengenau ist); triggert sich selbst erneut, solange welche fehlen.
+  `_trigger(at=…)` nur minutengenau ist). **Wartet in der Ruhezeit im Lauf selbst** (Zeitbudget je Lauf
+  ca. 10 s, `MIN_TIME_PER_JOB`), statt sich per `_trigger()` neu anzustoßen: Der Cron-Thread wartet nach
+  `_process_jobs` wieder auf NOTIFY oder 60 s (`server.py:542-616`); ein Selbst-Trigger pro Lauf liefe im
+  Sekundentakt heiß (Acquire, Trigger-INSERT, NOTIFY). Meldet der Lauf `remaining>0` ohne Fortschritt
+  (`PARTIALLY_DONE`), legt `_reschedule_asap` einen Trigger **ohne** NOTIFY an (nur mit
+  `ODOO_NOTIFY_CRON_CHANGES`, `ir_cron.py:436-441, 659-669`); der nächste Lauf kommt dann erst nach ≤60 s.
+  `_run_job` ruft den Callback bis zu 10-mal auf, solange `remaining>0` und `done>0` gemeldet werden — die
+  Fortschrittsmeldung muss stimmen.
+- Cron läuft nicht, solange irgendein Modul auf "to upgrade/install/remove" steht (`_check_modules_state`,
+  `ir_cron.py:250-283`): Bei Rollouts staut sich `dirty` auf; der Rückstau muss verkraftbar sein.
 - Batches mit `_commit_progress`, ORM-Schreibzugriffe, Kontext-Flag `int_filemanager_syncing_index`
   (existiert bereits) statt Echo, `retrying` bei `40001`.
 - **Eine** Abgleich-Funktion `reconcile_path(pfad)` für Watcher-Signale, Nachholabgleich, Scan und
@@ -221,6 +261,13 @@ Latenz: Sekunden bis etwa eine Minute (heute: Sekunden, direkt durch den Watcher
 `unique(path)` gilt auch für archivierte Zeilen: Neue Datei mit gleichem Pfad würde kollidieren.
 Beim Archivieren Pfad freigeben oder Unique-Index nur für aktive Zeilen definieren. **Empfehlung:**
 partieller Unique-Index, in Odoo 19 nativ als `models.UniqueIndex` mit `WHERE`-Klausel (Abschnitt 15).
+
+**Achtung, doppelte Bedeutung von `active` (Konzeptlücke, 2026-09-25):** Abschnitt 16.1 will den Papierkorb
+ebenfalls als `active=False` abbilden. Odoo kennt nur **ein** `active` (`orm/models.py:5371-5374`). Dann zeigt
+die Papierkorb-Ansicht `[('active','=',False)]` auch Tombstones "extern entfernt", "Wiederherstellen" hätte für
+sie keine Datei in `.trash`, und der Purge-Cron träfe beide. Aus der Semantik abgeleitet, nicht ausprobiert.
+Nötig ist ein Unterscheidungsmerkmal (Grund-Feld/Status, z. B. `removal_reason`: `trash` / `external`) oder
+Tombstones nicht über `active` zu führen; Papierkorb-Ansicht, Restore und Purge filtern dann auf den Grund.
 
 ---
 
@@ -248,7 +295,9 @@ konstruktiv: **ein einziger Schreiber** pro Speicher (Filestore) und **unveränd
 (`_file_write` schreibt nur, wenn nicht vorhanden; Session-Store: Temp + Rename). Für uns heißt das:
 Das Restfenster verschwindet nur dort vollständig, wo Odoo alleiniger Schreiber ist (Modus
 "Explorer read-only"). Zwischen zwei App-Nutzern gilt der native Weg: Zeile per `lock_for_update`
-sperren und die Basisrevision (Checksum, wie der ONLYOFFICE-Key) in derselben Transaktion prüfen.
+sperren und die Basisrevision (Checksum, wie der ONLYOFFICE-Key) in derselben Transaktion prüfen. Ein
+zwischenzeitlich committeter Save löst unter `REPEATABLE READ` 40001 aus, der Retry sieht dann die neue
+Revision (siehe 4.4).
 
 **Ordner-Modi** (Konfiguration je Ordner):
 
@@ -475,9 +524,9 @@ Ziel: nichts übersehen und nichts nachbauen, was Odoo schon kann. Gelesen wurde
 | Upload-Limit **128 MiB pro Request** (`DEFAULT_MAX_CONTENT_LENGTH`), global über ICP `web.max_file_upload_size` (live nicht gesetzt), pro Route überschreibbar mit `@route(max_content_length=…)` | `http.py:247, 1484, 2440`; `base/models/ir_http.py:298-318` | Unsere `/upload`-Route und der WebDAV-PUT haben keine Überschreibung: Dateien >128 MiB (501 im Bestand) gehen weder hoch noch per "Lokal öffnen" zurück. Nötig: Route-Limit + Streaming in eine Temp-Datei (kein `f.read()`/`get_data()`), Blob-Staging in 4.1 entsprechend |
 | `postcommit`-Hooks laufen im Testmodus **nicht** (`TestCursor`: "post-commit hooks are ignored"); `mail_mail` weicht mit `modules.module.current_test` aus | `tests/test_cursor.py`, `base/tests/test_db_cursor.py:284-338`, `mail/models/mail_mail.py:681` | Veröffentlichen-Hook als einzeln aufrufbare Methode bauen; Fehlerinjektion in der Testinstanz mit echten Prozessen, nicht in `TransactionCase` |
 | `models.UniqueIndex(…)` mit `WHERE` | `orm/table_objects.py:185-200` | löst `unique(path)` vs. Archivierung (5.5) sauber: `(path) WHERE active IS TRUE` |
-| `@api.ondelete(at_uninstall=False)` statt `unlink()`-Override (Odoo warnt: Override verträgt sich nicht mit Modul-Deinstallation) | `orm/decorators.py:130` | Schutz "Scan löscht keine Zeilen mit Nutzerdaten" als `_unlink_except_…`; Bytes-Löschung aus `unlink()` heraus in Nachwirkung/Cron |
-| `@api.autovacuum` (tägliche GC-Methoden ohne eigenen Cron, mit Fortschritt `(done, remaining)`) | `orm/decorators.py:299` | Papierkorb-Purge, `scan_log`, Versionen, `write_journal`, `dirty`-Aufräumen als Autovacuum statt eigener Cron-Einträge |
-| `fields.Char(index='trigram')` (GIN, braucht `pg_trgm`) | `orm/fields.py:116`, `fields_textual.py:439-451`, Nutzung z. B. in `account` | Namenssuche (siehe Messung); `pg_trgm` ist im Live-Postgres verfügbar, aber nicht installiert (Anlage durch Odoo/Rechte ungeprüft) |
+| `@api.ondelete(at_uninstall=False)` statt `unlink()`-Override (Odoo warnt: Override verträgt sich nicht mit Modul-Deinstallation) | `orm/decorators.py:130` | Schutz "Scan löscht keine Zeilen mit Nutzerdaten" als `_unlink_except_…`; Bytes-Löschung aus `unlink()` heraus in Nachwirkung/Cron. Die Methode läuft bei **jedem** `unlink()`, auch mit `sudo`, nach `check_access`, außer beim Deinstallieren (`orm/models.py:4199-4216`): Ein Scan-Batch, der eine geschützte Zeile löschen will, bekommt einen `UserError` statt stillem Überspringen → der Scan filtert vorher |
+| `@api.autovacuum` (tägliche GC-Methoden ohne eigenen Cron, mit Fortschritt `(done, remaining)`) | `orm/decorators.py:299` | Papierkorb-Purge, `scan_log`, Versionen, `write_journal`, `dirty`-Aufräumen als Autovacuum statt eigener Cron-Einträge. Läuft nur als Admin mit `cron_id`, einmal täglich, in zufälliger Reihenfolge; ein Fehler führt zu Rollback und Log, ohne `failure_count` (`base/models/ir_autovacuum.py`) → richtig für Aufräumen, ungeeignet für Zeitkritisches |
+| `fields.Char(index='trigram')` (GIN, braucht `pg_trgm`) | `orm/fields.py:116`, `fields_textual.py:439-451`, Nutzung z. B. in `account` | Namenssuche (siehe Messung). `pg_trgm` ist im Live-Postgres verfügbar, aber nicht installiert. **Ohne die Extension wird `index='trigram'` still ignoriert** (`orm/registry.py:869-870`; `has_trigram` prüft nur `word_similarity`, `modules/db.py:192`); Odoo legt sie nur beim Anlegen einer DB an (`service/db.py:154`). Nach dem `pg_restore`-Umzug (15.5) ist sie nur vorhanden, wenn der Dump sie enthält, sonst manuell `CREATE EXTENSION pg_trgm`. Ist `--unaccent` aktiv, baut Odoo `unaccent(name) gin_trgm_ops` (`registry.py:885-891`) — abweichend vom gemessenen Index `name gin_trgm_ops`; Messung W2 dann neu |
 | `@route(readonly=True)` (RO-Cursor, bei Schreibversuch automatischer Retry mit RW) | `http.py:796, 2276-2298` | Leserouten (`tree`, `download`, `versions`, `zip_list`, `thumbnail`) ohne Schreib-/Konfliktlast; klein, risikoarm |
 | `mail.mail`-Queue: `state`, `failure_type`, `scheduled_date`, `process_email_queue(batch_size)`, `auto_commit = not current_test` | `mail/models/mail_mail.py:69-100, 194-244` | Vorlage für `dirty`-/`pending`-Verarbeitung (Batches, Fehlerarten, Testschalter) |
 | `attachment_indexation`: `_index_docx/_pptx/_xlsx/_opendoc/_pdf` (pdfminer) | `attachment_indexation/models/ir_attachment.py` | Office-Volltext nativ nutzbar statt eigene Extraktion (Feature-Idee B); Verfügbarkeit von pdfminer im Container ungeprüft |
@@ -530,6 +579,13 @@ sind daher weder `pattern_ops`-Indizes noch ein `protected_folder_id`-Feld nöti
 `path`, `parent_path` und `folder_path` greifen von selbst. `models.Index("(path varchar_pattern_ops)")` wäre
 nativ deklarierbar (freie SQL-Definition, `orm/table_objects.py:125-180`), aber Odoo hat dafür keine eigene
 Feld-Option (`index` kennt nur `btree`, `btree_not_null`, `trigram`).
+**Kollation ist auch ein Korrektheitsargument (2026-09-25):** `_parent_store_update` verschiebt Teilbäume
+per Bereichsvergleich `parent_path >= node.parent_path AND parent_path < left(node.parent_path,-1)||'0'`
+(`orm/models.py:5039-5054`); der Code-Kommentar setzt voraus, dass `/` direkt vor `0` sortiert. Unter
+Byte-Ordnung (C) ist das sicher, unter `en_US.utf8` (Live) hängt es von der glibc-Sortierung ab.
+Vermutlich funktioniert es auf dem aktuellen Image, **nicht getestet**. Prüfung auf der Live-DB (nur
+Literale): `SELECT '1/2/3/' >= '1/2/' AND '1/2/3/' < '1/20'` muss `true` liefern. Mit der C-Kollation
+entfällt das Thema.
 **Entscheidung des Nutzers:** Da die Odoo-Instanz noch nicht produktiv ist, wird die DB sauber auf
 **C-Kollation** umgestellt (Weg B, Odoo-Standard) statt Zusatzindizes zu legen.
 Folgen und Aufgaben: (1) Umzug per Dump/Restore in eine neue DB mit `LC_COLLATE 'C'` (`template0`), alte DB
@@ -581,10 +637,13 @@ Ordnerbezug.
 `… 'PDF', 'Papierkorb', 'Personal'`, `'AVL', 'Akiem', 'Alphitan Germany'`. `order='lower(name)'` ist in Odoo
 **nicht erlaubt** (`UserError: Invalid "order" specified`) — eine Funktion im `_order`-String geht also nicht.
 **Native Lösung (im Core gelesen und über die ORM getestet, kein `name_sort`-Feld nötig):**
-1. **Offizieller Hook `_order_field_to_sql(alias, field_name, direction, nulls, query)`** (`orm/models.py:5268`;
-   überschrieben in `stock`, `project`, `hr_recruitment`, `res_device`). Für `name` liefert er
+1. **Offizieller Hook `_order_field_to_sql(alias, field_name, direction, nulls, query)`** (`orm/models.py:5268`,
+   lokal `5275`; überschrieben in `stock`, `project`, `hr_recruitment`, `res_device`). Für `name` liefert er
    `SQL("%s COLLATE %s %s %s", sql_field, SQL.identifier('fm_natural'), direction, nulls)`; `_order` bleibt
-   `"is_dir desc, name"`. Der Core selbst nutzt nirgends `COLLATE`.
+   `"is_dir desc, name"`. Der Core selbst nutzt nirgends `COLLATE`. **Der Override muss den Ausdruck wie die
+   Basis in `query._order_groupby` eintragen** (`orm/models.py:5332`), sonst scheitert Gruppierung nach Ordner
+   (`parent_id`, many2one mit Comodel-Order) vermutlich mit "must appear in GROUP BY" (aus dem Code
+   abgeleitet, nicht getestet).
 2. **ICU-Kollation** in PostgreSQL (Image `postgres:17` hat 871 ICU-Kollationen):
    `CREATE COLLATION fm_natural (provider = icu, locale = 'de-u-kn', deterministic = true)` — Groß/Klein und
    Umlaute wie im Explorer, natürliche Zahlenfolge (`datei2` < `datei10`). Odoo verwaltet keine Kollationen:
@@ -597,8 +656,10 @@ Ordnerbezug.
 448 ms (Admin) / 833 ms (Nicht-Admin mit Rechten), **mit Index 0,42 / 0,44 ms ohne Sort-Schritt**; Ordnerliste
 0,13 ms. Sortierung an echten Namen: `Papierkorb, PDF, Personal`; `AFS-Federhenn, Akiem, Alphitan Germany,
 Alstom, Arinko, Augsburger Verkehrsbtriebe, Auler Handkühlgerät, AVL`.
-Ungeprüft: Sortierung über Spaltenkopf und `_read_group` laufen vermutlich ebenfalls über `_order_to_sql`
-(im Test nur `search`/`_search`); Verhalten in der Oberfläche.
+`_read_group` läuft nur bei Gruppierung nach many2one mit Comodel-Order über `_order_to_sql`
+(`orm/models.py:2200-2207`, im lokalen Core 2026-09-25 gelesen); Gruppierung direkt nach `name` sortiert
+**nicht** mit `fm_natural`.
+Ungeprüft bleibt das Verhalten in der Oberfläche (Spaltenkopf-Sortierung).
 **Nicht Teil des Probelaufs:** Server/UI auf der Kopie (nur `odoo shell`), Schreibkosten, Live-Umschaltung.
 
 ---
@@ -612,9 +673,9 @@ des heutigen Codes gezielt gegen den Core (Container `Odoo19`, Odoo 19) durch.
 ### 16.1 Neue Funde
 | Eigenbau (Konzept/Code) | Nativ gefunden | Fundstelle / Prüfung | Konsequenz |
 |---|---|---|---|
-| **Watch-Buchhaltung** im Watcher (`wd_to_path`, Ordner-Umschreiben, `moved_from` je Batch, Watches nach `.trash`) | **`watchdog` 3.0.0** ist im Image installiert und wird vom Core selbst genutzt (`service/server.py`: `FSWatcherWatchdog`, `Observer.schedule(..., recursive=True)`). Die Bibliothek führt `_wd_for_path`/`_path_for_wd`, schreibt Watches bei Moves um und merkt Move-Kennungen **über Lesevorgänge hinweg** (`_moved_from_events`); der `InotifyBuffer` paart `MOVED_FROM`/`MOVED_TO` mit 0,5 s Verzögerung | `watchdog/observers/inotify_c.py:172-182, 220-225, 322-333`; `inotify_buffer.py:28-110` | Punkt 1 des minimalen Watchers (5.2, "Watches pflegen") entfällt weitgehend; das Batch-Grenzen-Problem (B11) ist in der Bibliothek gelöst. **Nicht abgedeckt:** Überlauf (`IN_Q_OVERFLOW` nur als Konstante, `inotify_c.py:70`) — Rescan, Neustart-Abgleich und Herzschlag bleiben Eigenbau. Ungeprüft: Verhalten unter gevent (`workers>0`), Last bei 69k Verzeichnissen, `FileClosedEvent`-Verfügbarkeit |
-| **ACL-Regeltext-Generator** (`acl_rules.py`, ~250 Zeilen: Textbau, Platzhalter, `rebuild_rules`, Selbsttests) | **Regel-Domain darf zur Auswertungszeit abfragen:** `ir.rule`-Kontext enthält `user` (= `env.user`), das Regelergebnis wird pro Nutzer gecacht. Im Test lieferte `safe_eval("user.env['int_filemanager.protected_folder'].search_count([])", …)` den Wert 7 | `base/models/ir_rule.py:38-52` (`_eval_context`), `:138-141` (`ormcache` auf `_compute_domain`); Test in `odoodb_c` | Eine kurze Regel könnte die Schutzordner selbst abfragen statt eines generierten Textes. **Offen:** Cache-Invalidierung bei Änderungen an Schutzordnern, `@api.private` gegen RPC-Aufruf, Selbsttests, die `NOT LIKE`-Struktur bleibt (Vollscans, 15.2). Nur Machbarkeit geprüft, nicht umgesetzt |
-| **`trashed` (eigenes Boolean)** | **Natives `active`**: `_search` filtert Archiviertes automatisch, auch für `sudo()`; ein `active`-Blatt in der Domain oder `active_test=False` hebt das gezielt auf | `orm/models.py:5362-5369` (`_active_name`, `active_test`) | **Befund im Modul:** 47 `search()`/`search_count()`-Aufrufe, **0** mit `trashed`-Bezug; die Regel `rule_file_trash_visibility` greift nur für Nicht-`sudo`, Watcher/Scan/Index-Funktionen laufen mit `sudo` — B1 ("Scan löscht Papierkorb") ist genau diese Auslassung. Mit `active` entfällt die ganze Fehlerklasse |
+| **Watch-Buchhaltung** im Watcher (`wd_to_path`, Ordner-Umschreiben, `moved_from` je Batch, Watches nach `.trash`) | **`watchdog` 3.0.0** ist im Image installiert. Der Core nutzt es nur als **Fallback** für den Auto-Reload im Entwicklermodus, wenn das Paket `inotify` fehlt (`service/server.py:29-50`, `FSWatcherWatchdog`, `Observer.schedule(..., recursive=True)`); es steht in **keiner** Abhängigkeitsliste des Cores (`requirements.txt`, `setup.py`, `debian/control`). Daher: im Manifest unter `external_dependencies` deklarieren, Version pinnen, Image-Build muss es enthalten (Korrektur 2026-09-25). Die Bibliothek führt `_wd_for_path`/`_path_for_wd`, schreibt Watches bei Moves um und merkt Move-Kennungen **über Lesevorgänge hinweg** (`_moved_from_events`); der `InotifyBuffer` paart `MOVED_FROM`/`MOVED_TO` mit 0,5 s Verzögerung | `watchdog/observers/inotify_c.py:172-182, 220-225, 322-333`; `inotify_buffer.py:28-110` | Punkt 1 des minimalen Watchers (5.2, "Watches pflegen") entfällt weitgehend; das Batch-Grenzen-Problem (B11) ist in der Bibliothek gelöst. **Nicht abgedeckt:** Überlauf (`IN_Q_OVERFLOW` nur als Konstante, `inotify_c.py:70`) — Rescan, Neustart-Abgleich und Herzschlag bleiben Eigenbau. Ungeprüft: Verhalten unter gevent (`workers>0`), Last bei 69k Verzeichnissen, `FileClosedEvent`-Verfügbarkeit |
+| **ACL-Regeltext-Generator** (`acl_rules.py`, ~250 Zeilen: Textbau, Platzhalter, `rebuild_rules`, Selbsttests) | **Regel-Domain darf zur Auswertungszeit abfragen:** `ir.rule`-Kontext enthält `user` (= `env.user`), das Regelergebnis wird pro Nutzer gecacht. Im Test lieferte `safe_eval("user.env['int_filemanager.protected_folder'].search_count([])", …)` den Wert 7 | `base/models/ir_rule.py:38-52` (`_eval_context`), `:138-141` (`ormcache` auf `_compute_domain`); Test in `odoodb_c` | Eine kurze Regel könnte die Schutzordner selbst abfragen statt eines generierten Textes. **Cache (2026-09-25 im Core bestätigt, sicherheitsrelevant):** `_compute_domain` ist per `ormcache` (Schlüssel `uid, su, model, mode, Kontextwerte`) gecacht (`ir_rule.py:138`) und wird nur bei Änderungen an `ir.rule` selbst geleert (`registry.clear_cache()`, Zeilen 187/195/205). Änderungen an `protected_folder` wirken sonst erst nach einem Cache-Clear → beim Anlegen/Ändern/Löschen von Schutzordnern **explizit** `registry.clear_cache()` aufrufen. Der Cache ist nur aktiv, wenn `xml` nicht in `dev_mode` steht (`tools.conditional`), Tests im Dev-Modus verdecken das Problem. **Offen:** `@api.private` gegen RPC-Aufruf, Selbsttests, die `NOT LIKE`-Struktur bleibt (Vollscans, 15.2). **Ungeklärt (2026-09-25):** Der Regelkontext ist `user = env.user.with_context({})` **ohne** `sudo` (`ir_rule.py:38-52`); die Abfrage läuft also mit den Rechten des Nutzers. Der Test mit Ergebnis 7 lief möglicherweise als Admin. Für Nicht-Admins ungeprüft: `AccessError` oder Rekursion möglich, vermutlich ist `user.sudo()` nötig. Nur Machbarkeit geprüft, nicht umgesetzt |
+| **`trashed` (eigenes Boolean)** | **Natives `active`**: `_search` filtert Archiviertes automatisch, auch für `sudo()`; ein `active`-Blatt in der Domain oder `active_test=False` hebt das gezielt auf | `orm/models.py:5371-5376` (`_active_name`, `active_test`) | **Befund im Modul:** 47 `search()`/`search_count()`-Aufrufe, **0** mit `trashed`-Bezug; die Regel `rule_file_trash_visibility` greift nur für Nicht-`sudo`, Watcher/Scan/Index-Funktionen laufen mit `sudo` — B1 ("Scan löscht Papierkorb") ist genau diese Auslassung. Mit `active` entfällt die ganze Fehlerklasse |
 | **`PIL` direkt** für Thumbnails/Vorschau (`mediameta.py`) | `odoo.tools.image`: `image_process`, `ImageProcess`, `image_fix_orientation`, `binary_to_image` (mit Auflösungsgrenze) | `tools/image.py:60, 295, 391, 428` | niedrige Priorität; bei nächster Änderung an `mediameta.py` prüfen |
 
 **`trashed` → `active` (Umfang):** 5 Dateien, 48 Stellen (`index_utils.py`, `models/filemanager_file.py`,
@@ -679,16 +740,23 @@ Unser Modell benutzt bereits das native `fields.Image` (`thumbnail` 320 px, `pre
 schreibt fertige Base64-JPEGs in beide Felder; `/int_filemanager/thumbnail` decodiert sie im RAM wieder. Das
 native Feld sollte genau das leisten: **Orientierung, Verkleinerung, Qualität, Format und Auflösungsgrenze
 (50 MP)** (`Image.write` → `image_process`, `fields_binary.py:246`). Das sichtbare Symptom (Hochformatfotos in
-der Kachelvorschau gedreht) ist Folge dieser Vorverarbeitung, **nicht** ein fehlender EXIF-Aufruf. Es wird
+der Kachelvorschau gedreht) ist Folge dieser Vorverarbeitung, **nicht** ein fehlender EXIF-Aufruf.
+**Einschränkung (Core 2026-09-25 gelesen):** `ImageProcess` korrigiert die Orientierung zwar immer
+(`tools/image.py:103`), zählt das aber nicht als Operation; ohne Verkleinern gibt `image_process` die Quelle
+**unverändert** zurück (`image.py:142`). Bilder unter 320 px (Thumbnail) bzw. 1920 px (Preview) behalten
+also unrotierte Pixel samt EXIF-Tag und erscheinen nur richtig, weil Browser den Tag anwenden. Erst
+verkleinerte Bilder werden gedreht und ohne EXIF gespeichert. **WebP** wird vom Feld nie skaliert, nur auf die
+Auflösung geprüft (`fields_binary.py` `_image_process`, `image.py:84-91`): das `thumbnail` wäre dort das
+Original in voller Größe. Es wird
 deshalb nicht in `mediameta` nachgebessert, sondern durch den Umbau beseitigt.
 
 ### 17.2 Ist gegen nativ
 | Aspekt | heute | nativ (Zielbild) |
 |---|---|---|
 | Felder | `thumbnail` und `preview` unabhängig, je von uns gefüllt | **`image.mixin`-Muster** (`base/models/image_mixin.py`): eine Quelle (`fields.Image(max_width=1920)`) und abgeleitete Größen als `fields.Image(related=…, max_width=…, store=True)`; Schreiben der Quelle erzeugt alle Größen |
-| Erzeugung | PIL-Decode, 2× `_resized_jpeg`, Base64 | Rohbytes der Originaldatei in das **Quellfeld** schreiben; Odoo verarbeitet |
-| Auslieferung | `/int_filemanager/thumbnail?path=…`: pfadbasiert, eigene `authz`-Prüfung, `b64decode` im RAM, fester Typ `image/jpeg`, `max-age=3600`, kein ETag | **`/web/image/int_filemanager.file/<id>/thumbnail`** (`web/controllers/binary.py:165-179`): `ir.binary._find_record` prüft `check_access("read")` — unsere Rechteregeln greifen ohne Eigencode; Streaming aus dem Filestore; ETag/Last-Modified und `unique=` (Cache), Platzhalter, `access_token` für Freigaben |
-| Anzeige | JS baut Pfad-URLs | URLs aus `record.id` (Kanban-Helfer `kanban_image`, `web/static/src/views/kanban/kanban_arch_parser.js:123`); `FileViewer` bleibt (bereits nativ) |
+| Erzeugung | PIL-Decode, 2× `_resized_jpeg`, Base64 | Originaldatei **Base64-kodiert** in das **Quellfeld** schreiben (`_image_process` ruft `b64decode`, `fields_binary.py:322`); Odoo verarbeitet |
+| Auslieferung | `/int_filemanager/thumbnail?path=…`: pfadbasiert, eigene `authz`-Prüfung, `b64decode` im RAM, fester Typ `image/jpeg`, `max-age=3600`, kein ETag | **`/web/image/int_filemanager.file/<id>/thumbnail`** (`web/controllers/binary.py:165-179`): `ir.binary._find_record` prüft `check_access("read")` — unsere Rechteregeln greifen ohne Eigencode; Streaming aus dem Filestore; ETag/Last-Modified und `unique=` (Cache), Platzhalter; `_can_return_content` ist in der Basis `False` (`orm/models.py:5868`), unsere Regeln greifen also. Der `access_token` ist ein HMAC je Datensatz und Feld (`limited_field_access_token(record, field, scope="binary")`, `ir_binary.py:50`), **kein** Freigabe-Token wie bei `portal.mixin`, und nur **14 bis 42 Tage** gültig (`tools/misc.py:1866ff`); Freigabe-Links mit eigener Ablauflogik müssten ihn selbst erzeugen oder eine eigene Route nutzen |
+| Anzeige | JS baut Pfad-URLs | URLs aus `record.id` (Kanban-Helfer `getImageSrcFromRecordInfo`, `web/static/src/views/kanban/kanban_record.js:119`, baut `imageUrl(model, id, field, {unique: write_date})`; `kanban_arch_parser.js:123` ist nur ein Regex, der `write_date` nachlädt). Das Cache-Busting hängt also am `write_date` der Datei-Zeile und greift nur, wenn die Vorschau per ORM geschrieben wird, nicht per SQL. `FileViewer` bleibt (bereits nativ) |
 | Bearbeiten | nicht vorhanden | Client: `activateCropper` (siehe 17.3); Server: `odoo.tools.image` (`image_process`, `crop_resize`, `image_quality`, `image_fix_orientation`) |
 | Lebenszyklus | `meta_state` + Cron | bleibt: abgeleitete Assets sind Zustand **pro Inhaltsrevision**, Regeneration im Abgleich-Cron (Abschnitt 5) |
 
@@ -697,7 +765,7 @@ deshalb nicht in `mediameta` nachgebessert, sondern durch den Umbau beseitigt.
    `thumbnail` wird `fields.Image(related="preview", max_width=320, max_height=320, store=True)`. Das
    `image.mixin` selbst wird nicht übernommen (5 Größen = 5 Attachments je Bild), nur sein Muster.
 2. **Erzeugung:** Der Meta-/Abgleich-Cron liest die Originaldatei (Grenze `meta_max_bytes_image`) und schreibt
-   **nur** das Quellfeld mit den Rohbytes. Ein `UserError` (Auflösung über 50 MP, ungültiges Bild) setzt
+   **nur** das Quellfeld mit den Originalbytes (Base64-kodiert). Ein `UserError` (Auflösung über 50 MP, ungültiges Bild) setzt
    `meta_state='error'`. Veraltungsschutz: Größe/mtime (bzw. `content_sha256`) vor und nach dem Lesen vergleichen;
    nur schreiben, wenn die Revision unverändert ist (Testliste "veraltete OCR-/Hash-Ergebnisse", Abschnitt 10).
 3. **Auslieferung:** ausschließlich `/web/image/…` mit Datensatz-ID; Cache-Busting per `unique`. Ohne Vorschau:
@@ -706,7 +774,10 @@ deshalb nicht in `mediameta` nachgebessert, sondern durch den Umbau beseitigt.
 4. **Bearbeiten (Crop, Drehen, später Filter):** OWL-Dialog mit **`activateCropper(image, aspectRatio, dataset,
    {onReady})`** aus `@html_editor/utils/image_processing` (eigenständig exportiert, lädt das Bundle
    `html_editor.assets_image_cropper` bei Bedarf; enthält Cropper.js **und** `webgl-image-filter.js`,
-   `html_editor/__manifest__.py:96-99`; `html_editor` ist über `mail` installiert). Ergebnis über
+   `html_editor/__manifest__.py:96-99`; `html_editor` ist `auto_install` mit nur `base`, `bus`, `web`). Der
+   Dialog muss das **Original** laden (Download-Route), nicht `/web/image/…/preview`: `activateCropper`
+   arbeitet mit dem `src` des übergebenen `<img>`, Odoos eigener Ablauf schneidet ebenfalls das Original
+   (`image_post_process_plugin.js:97-115`); mit der 1920-px-Vorschau wäre das Ergebnis auf 1920 px begrenzt. Ergebnis über
    `getCroppedCanvas().toDataURL(mimetype, 0.92)` (Odoo-Standardqualität 92) an **unsere Schreibroute**
    (Konzept 4.1: Blob-Staging, DB-Commit, Hook veröffentlicht). Das **Original bleibt als Version** erhalten —
    dasselbe Prinzip wie Odoos `modify_image` (`html_editor/controllers/main.py:406`: Kopie mit
@@ -728,7 +799,7 @@ Zu prüfen: dass die generierte Leserechte-Regel für `check_access("read")` in 
 und der `access_token`-Weg für externe Freigaben.
 
 ### 17.5 Abnahme
-EXIF-Orientierungen 1–8; Bild über 50 MP (`meta_state='error'`, kein Absturz); Nicht-Admin auf Schutzordner
+EXIF-Orientierungen 1–8, **auch für kleine Bilder unter 320/1920 px** (bleiben unverändert, Anzeige hängt am Browser); WebP (Vorschau in voller Größe, Limit oder akzeptieren); Bild über 50 MP (`meta_state='error'`, kein Absturz); Nicht-Admin auf Schutzordner
 (kein Bild, Platzhalter); ETag/`304`; Range; Bearbeiten → Original als Version vorhanden, Vorschau neu erzeugt,
 veralteter Cron-Lauf überschreibt keine neuere Revision; GIF/SVG unverändert; Backfill-Lauf ohne Fehler auf der
 Testinstanz.
@@ -737,3 +808,46 @@ Testinstanz.
 Prototyp (`related` + `store` bei sehr vielen Zeilen, Speicherbedarf: zwei Attachments je Bild); Verhalten von
 `kanban_image` in Liste/Dialog; Canvas-/Speichergrenzen im Browser bei sehr großen Bildern; Anzahl der Bilddateien
 im Bestand; `attachment_indexation` ist auf Live nicht installiert.
+
+---
+
+## 18. Gegenprüfung gegen den lokalen Odoo-Quellcode (2026-09-25)
+
+Geprüft wurden die Odoo-Aussagen der Abschnitte 3, 15, 16 und 17 gegen `GitHub\odoo` (Odoo 19.0, HEAD
+`8d05257d`, 10. Aug 2026). Das Container-Image kann eine leicht andere Revision haben (z. B.
+`_order_field_to_sql` lokal `models.py:5275`, im Doc 5268); Zeilennummern können um einige Zeilen abweichen.
+
+**Korrigiert (eingearbeitet):** Advisory-Lock im Core (Abschnitt 3), `watchdog` nur optionaler Fallback
+(16.1).
+
+**Ergänzt (eingearbeitet):** Upload-Body bei `retrying` (4.4), Trigger-Volumen (5.2), doppelte Bedeutung von
+`active` (5.5), `ir.rule`-Cache (16.1), EXIF bei kleinen Bildern und WebP (17.1, 17.5), Bedeutung des
+`access_token` (17.2), `_read_group`-Sortierung (15.5).
+
+**Zweiter Durchgang (2026-09-25, unabhängig, zusätzlich `mail`, `google_calendar`, `html_editor`,
+`attachment_indexation`, `web`, `onlyoffice_odoo`), direkt in den Abschnitten korrigiert:** Reihenfolge
+Zeile/Blob und GC-Race (4.1, einzige inhaltlich falsche Aussage), Trigger-Autovacuum nur für inaktive Crons
+(5.2), Debounce/Selbst-Trigger und `_check_modules_state` (5.3), Retry-Grenzen und `LockError` (4.4, 6),
+`@api.ondelete`/Autovacuum-Semantik (15.1), `pg_trgm`-Voraussetzung und `unaccent`-Index (15.1),
+Kollation als Korrektheitsargument für `_parent_store_update` (15.2), `_order_groupby` im Sortier-Hook und
+`_read_group`-Reichweite (15.5), `user`-Kontext der Regel-Domain ohne `sudo` (16.1), Base64, Original statt
+Vorschau beim Bearbeiten, Kanban-Helfer, `access_token`-Gültigkeit (17), ONLYOFFICE-Callback (3).
+
+**Bestätigt:** `postcommit` wird bei `rollback()` verworfen, Savepoint-Rollback leert nur `precommit`;
+`retrying` 5 Versuche; Cron nicht in `retrying`; `TestCursor` ignoriert `postcommit`; `_trigger` minutengenau
+und meldet per `postcommit`; `_commit_progress` committet außerhalb eines Crons nur; Fehlerkonstanten 5 / 7
+Tage; `lock_for_update` (`SKIP LOCKED`, `LockError`); Filestore-Ablauf (`create` → `_file_write`, nicht
+atomar, Kollisionsprüfung, `_mark_for_gc`, Autovacuum-GC, `LOCK` als erstes Statement); `models.Index` /
+`UniqueIndex` mit `WHERE`; `@api.ondelete`, `@api.autovacuum`, `@api.private`; `index='trigram'`;
+`_order_field_to_sql` (Overrides in `stock`, `project`, `hr_recruitment`, `res_device`); `LC_COLLATE 'C'`
+(`service/db.py:146`); `active_test` auch für `sudo()`; 128-MiB-Limit, ICP-Override, Route-Override;
+`readonly=True` mit RW-Fallback; `x_sendfile` nur unter `filestore`; `image.mixin`-Muster, 50-MP-Grenze,
+`activateCropper` mit Bundle, `modify_image` mit `original_id`; `attachment_indexation._index*`;
+`google_sync`-Muster (`need_sync`, `after_commit`, Archivieren statt Löschen); Bus-, Webhook- und
+Mail-`postcommit`-Belege.
+
+**Lokal nicht prüfbar:** Interna der `watchdog`-Bibliothek, alle Live- und Testinstanz-Messungen, der
+Eigencode B1–B15, Abweichungen zwischen Container-Image und lokalem HEAD. Der ONLYOFFICE-Callback liegt im
+Repo (`onlyoffice_odoo`) und wurde gelesen (Abschnitt 3). Aus PostgreSQL-Semantik abgeleitet und nicht
+ausgeführt: `SKIP LOCKED` unter `REPEATABLE READ` (4.4), Byte-Ordnung von `parent_path` unter `en_US.utf8`
+(15.2).
