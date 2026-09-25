@@ -7,6 +7,10 @@ Variante B — DB als Wahrheit, lesbare Ordner auf dem Share, Odoo schreibt, min
 `ODOO_DB_WAHRHEIT_PRUEFUNG_2026-09-24.md`) in einem Dokument. Prüfgrundlage: Repo `int-odoo-addons`
 HEAD `432a95f`, Live-Instanz HM-SRV (192.100.0.119), Container `Odoo19` / `odoo_db`.
 
+**Nachtrag 2026-09-25:** Die offenen und ungeprüften Punkte wurden auf dem zweiten Unraid-Server (lokal,
+"Tower") in einer isolierten Testumgebung live geprüft, mit einer lesend erstellten Kopie der Tower-Live-DB und
+echten SMB-Zugriffen von Windows (Abschnitt 19). Die betroffenen Stellen sind unten mit "→ 19" markiert.
+
 Löst in Teilen die Docs vom 2026-09-23/24 ab (siehe Abschnitt 9) — sie bleiben als Recherchebasis
 stehen, ihre Schlussfolgerungen gelten nur noch, soweit sie hier nicht korrigiert werden.
 
@@ -176,9 +180,10 @@ Zusätzlich vom Client mitgeschickte **Vorgangs-ID** gegen Doppelklick/erneutes 
 Deadlock, `LockNotAvailable` und `ConcurrencyError`. `IntegrityError` wird zu einem `ValidationError`
 **ohne** Wiederholung. `LockError` (`lock_for_update`) ist ein `UserError` und wird ebenfalls nicht
 wiederholt: Ein Doppelklick auf dieselbe Datei liefert sofort eine Fehlermeldung, kein stilles Warten —
-das fängt nur die Vorgangs-ID ab. Positiv (aus der PostgreSQL-Semantik abgeleitet, nicht ausgeführt):
-`FOR UPDATE SKIP LOCKED` auf einer nach dem Snapshot committeten Zeile wirft unter `REPEATABLE READ` 40001;
-der Retry liest dann frisch und erkennt die geänderte Basisrevision.
+das fängt nur die Vorgangs-ID ab. Positiv (**2026-09-25 auf PostgreSQL 16 ausgeführt, → 19.2**):
+`FOR UPDATE SKIP LOCKED` auf einer nach dem Snapshot committeten Zeile wirft unter `REPEATABLE READ` 40001
+(ebenso `FOR NO KEY UPDATE SKIP LOCKED` und `NOWAIT`); ist die Zeile von einer offenen Transaktion gesperrt,
+liefert `SKIP LOCKED` leer. Der Retry liest dann frisch und erkennt die geänderte Basisrevision.
 
 **Einschränkung Upload-Body (aus `service/model.py` `retrying` abgeleitet, nicht ausgelöst, 2026-09-25):**
 Beim Retry spult Odoo nur `request.httprequest.files` zurück, und nur wenn sie `seekable` sind (sonst
@@ -322,8 +327,10 @@ für Versionen und "verwaltete" Ordner.
 - **Alter Inhalt bei externem Überschreiben** ist weg, wenn die App ihn nicht vorher versioniert hat
   (Unraid-Snapshots/Backup wären die einzige Rettung).
 - **Clients mit offenem Dateihandle** schreiben nach dem Austausch in den alten Inode; diese
-  Schreibungen sind danach nicht mehr erreichbar (bei Excel vermutlich selten, weil es per Umbenennen
-  speichert — ungeprüft).
+  Schreibungen sind danach nicht mehr erreichbar. **Über SMB bestätigt (→ 19.3):** Der Windows-Client bekommt
+  keinen Fehler; auch eine Sperre wie bei Word (`FileShare.Read`, andere dürfen nicht schreiben) hält das
+  `os.replace` auf dem Server nicht auf. Word, Excel und LibreOffice speichern per Umbenennen und sind davon beim
+  Speichern selbst nicht betroffen (→ 19.3).
 - **Latenz externer Änderungen** Sekunden bis eine Minute; Lesewege müssen `pending` behandeln.
 - **Ereignisverlust** lässt sich nie ausschließen → Nachholabgleich bleibt Pflicht.
 - Odoo-Filestore hat kein fsync im Core (für unsere Publish-Pfade ergänzen).
@@ -416,6 +423,10 @@ Eigenbau und braucht die meisten Tests.**
   und Explorer-Aktionen per SMB (Share `TestRepo_UNRAID` ist nicht freigegeben); Ordner-Rename über
   mehrere Array-Platten; ob Enterprise-`documents`/OCA-Module etwas Vergleichbares für externe Ordner
   bieten.
+- **Nachtrag 2026-09-25 (→ 19):** Durchstich "Upload überschreiben" mit Fehlerinjektion, Explorer-Aktionen,
+  Word-/Excel-Speicherabläufe und echte LibreOffice-Saves per SMB sowie Ordner-Rename über mehrere Array-Platten
+  sind auf Tower geprüft. Echtes MS Office war nicht verfügbar; Word und Excel wurden mit ihren bekannten
+  Dateioperationen über SMB nachgebildet. Enterprise/OCA weiterhin offen.
 
 ---
 
@@ -477,7 +488,8 @@ Samba). Die Live-Instanz blieb unberührt.
   `dirty`-Tabelle gelöst werden.
 - ONLYOFFICE-Callback braucht die eigene Basisrevisionsprüfung.
 - Rename-Erkennung per **Inode als Hinweis** ist auf shfs machbar (stabil beim Rename, ungeprüft über
-  Neustart/Plattenwechsel).
+  Neustart/Plattenwechsel). **→ 19.3:** Die Inode ist auch plattenübergreifend, nach `drop_caches` und im neuen
+  Container stabil, **ändert sich aber**, wenn der Mover eine Datei auf eine andere Platte umzieht (gleicher Pfad).
 
 ---
 
@@ -526,10 +538,10 @@ Ziel: nichts übersehen und nichts nachbauen, was Odoo schon kann. Gelesen wurde
 | `models.UniqueIndex(…)` mit `WHERE` | `orm/table_objects.py:185-200` | löst `unique(path)` vs. Archivierung (5.5) sauber: `(path) WHERE active IS TRUE` |
 | `@api.ondelete(at_uninstall=False)` statt `unlink()`-Override (Odoo warnt: Override verträgt sich nicht mit Modul-Deinstallation) | `orm/decorators.py:130` | Schutz "Scan löscht keine Zeilen mit Nutzerdaten" als `_unlink_except_…`; Bytes-Löschung aus `unlink()` heraus in Nachwirkung/Cron. Die Methode läuft bei **jedem** `unlink()`, auch mit `sudo`, nach `check_access`, außer beim Deinstallieren (`orm/models.py:4199-4216`): Ein Scan-Batch, der eine geschützte Zeile löschen will, bekommt einen `UserError` statt stillem Überspringen → der Scan filtert vorher |
 | `@api.autovacuum` (tägliche GC-Methoden ohne eigenen Cron, mit Fortschritt `(done, remaining)`) | `orm/decorators.py:299` | Papierkorb-Purge, `scan_log`, Versionen, `write_journal`, `dirty`-Aufräumen als Autovacuum statt eigener Cron-Einträge. Läuft nur als Admin mit `cron_id`, einmal täglich, in zufälliger Reihenfolge; ein Fehler führt zu Rollback und Log, ohne `failure_count` (`base/models/ir_autovacuum.py`) → richtig für Aufräumen, ungeeignet für Zeitkritisches |
-| `fields.Char(index='trigram')` (GIN, braucht `pg_trgm`) | `orm/fields.py:116`, `fields_textual.py:439-451`, Nutzung z. B. in `account` | Namenssuche (siehe Messung). `pg_trgm` ist im Live-Postgres verfügbar, aber nicht installiert. **Ohne die Extension wird `index='trigram'` still ignoriert** (`orm/registry.py:869-870`; `has_trigram` prüft nur `word_similarity`, `modules/db.py:192`); Odoo legt sie nur beim Anlegen einer DB an (`service/db.py:154`). Nach dem `pg_restore`-Umzug (15.5) ist sie nur vorhanden, wenn der Dump sie enthält, sonst manuell `CREATE EXTENSION pg_trgm`. Ist `--unaccent` aktiv, baut Odoo `unaccent(name) gin_trgm_ops` (`registry.py:885-891`) — abweichend vom gemessenen Index `name gin_trgm_ops`; Messung W2 dann neu |
+| `fields.Char(index='trigram')` (GIN, braucht `pg_trgm`) | `orm/fields.py:116`, `fields_textual.py:439-451`, Nutzung z. B. in `account` | Namenssuche (siehe Messung). `pg_trgm` ist im Live-Postgres verfügbar, aber nicht installiert. **Ohne die Extension wird `index='trigram'` still ignoriert** (`orm/registry.py:869-870`; `has_trigram` prüft nur `word_similarity`, `modules/db.py:192`); Odoo legt sie nur beim Anlegen einer DB an (`service/db.py:154`). Nach dem `pg_restore`-Umzug (15.5) ist sie nur vorhanden, wenn der Dump sie enthält, sonst manuell `CREATE EXTENSION pg_trgm`. Ist `--unaccent` aktiv, baut Odoo `unaccent(name) gin_trgm_ops` (`registry.py:885-891`) — abweichend vom gemessenen Index `name gin_trgm_ops`; Messung W2 dann neu. **→ 19.2:** Beim Anlegen einer DB durch Odoo entsteht `pg_trgm` bestätigt automatisch; Tower-Live hat sie; der Index greift auf der echten ORM-SQL (`rechnung` 267 → 0,3 ms) |
 | `@route(readonly=True)` (RO-Cursor, bei Schreibversuch automatischer Retry mit RW) | `http.py:796, 2276-2298` | Leserouten (`tree`, `download`, `versions`, `zip_list`, `thumbnail`) ohne Schreib-/Konfliktlast; klein, risikoarm |
 | `mail.mail`-Queue: `state`, `failure_type`, `scheduled_date`, `process_email_queue(batch_size)`, `auto_commit = not current_test` | `mail/models/mail_mail.py:69-100, 194-244` | Vorlage für `dirty`-/`pending`-Verarbeitung (Batches, Fehlerarten, Testschalter) |
-| `attachment_indexation`: `_index_docx/_pptx/_xlsx/_opendoc/_pdf` (pdfminer) | `attachment_indexation/models/ir_attachment.py` | Office-Volltext nativ nutzbar statt eigene Extraktion (Feature-Idee B); Verfügbarkeit von pdfminer im Container ungeprüft |
+| `attachment_indexation`: `_index_docx/_pptx/_xlsx/_opendoc/_pdf` (pdfminer) | `attachment_indexation/models/ir_attachment.py` | Office-Volltext nativ nutzbar statt eigene Extraktion (Feature-Idee B). **→ 19.2:** pdfminer ist im Image `odoo:19.0-hm` vorhanden (`pdfminer.six` 20260107 per pip über pdfplumber, überdeckt apt 20221105); `attachment_indexation` installiert und extrahiert DOCX und PDF |
 | `portal.mixin`: `access_token`, `_get_share_url`, `action_share` | `portal/models/portal_mixin.py` | Alternative zum eigenen `share_token`; unsere Freigabe kann mehr (Ablauf, Log) — nur Prüfpunkt |
 | `x_sendfile` greift nur für Dateien unter `<data_dir>/filestore` | `http.py:668-676` | Für Share-Dateien nicht nutzbar; große Downloads belegen im Threaded-Modus einen Thread (eigener Offload wäre Eigenbau) |
 
@@ -583,9 +595,13 @@ Feld-Option (`index` kennt nur `btree`, `btree_not_null`, `trigram`).
 per Bereichsvergleich `parent_path >= node.parent_path AND parent_path < left(node.parent_path,-1)||'0'`
 (`orm/models.py:5039-5054`); der Code-Kommentar setzt voraus, dass `/` direkt vor `0` sortiert. Unter
 Byte-Ordnung (C) ist das sicher, unter `en_US.utf8` (Live) hängt es von der glibc-Sortierung ab.
-Vermutlich funktioniert es auf dem aktuellen Image, **nicht getestet**. Prüfung auf der Live-DB (nur
-Literale): `SELECT '1/2/3/' >= '1/2/' AND '1/2/3/' < '1/20'` muss `true` liefern. Mit der C-Kollation
-entfällt das Thema.
+~~Vermutlich funktioniert es auf dem aktuellen Image, nicht getestet.~~ **Geprüft 2026-09-25 (→ 19.2):** Die
+Literalprüfung liefert unter `en_US.utf8` **`false`**. Die Bereichsprüfung steht nur im **neueren** Core des
+lokalen Repos; das laufende Image (Build 2026-08-17) nutzt noch `LIKE` und ist kollationsunabhängig. Mit
+exakt dem neuen SQL auf einer `en_US`-Spalte aktualisiert das Verschieben eines Ordners mit 35 Knoten nur den
+Ordner selbst, **34 Nachkommen behalten einen falschen `parent_path`**. Ein Image-Update auf einer
+`en_US`-DB zerstört damit bei jedem Ordner-Verschieben den Baum. **Die C-Umstellung muss vor jedem
+Image-Update erfolgen.**
 **Entscheidung des Nutzers:** Da die Odoo-Instanz noch nicht produktiv ist, wird die DB sauber auf
 **C-Kollation** umgestellt (Weg B, Odoo-Standard) statt Zusatzindizes zu legen.
 Folgen und Aufgaben: (1) Umzug per Dump/Restore in eine neue DB mit `LC_COLLATE 'C'` (`template0`), alte DB
@@ -609,7 +625,8 @@ zusätzliches Sortierfeld.
 Die ORM-erzeugte SQL im echten Ablauf (die Regelstruktur wurde nachgebaut, nicht über die ORM ausgeführt),
 Schreibkosten der zusätzlichen Indizes, andere Rollen (Nutzer mit Zugriff nur einmal in W1), Verhalten unter
 Last, `pg_trgm`-Installation durch Odoo, Verfügbarkeit von pdfminer, `mail.thread`-Tracking als Audit-Baustein
-und Enterprise-Module (nicht vorhanden).
+und Enterprise-Module (nicht vorhanden). **→ 19.2:** ORM-SQL, `pg_trgm`, pdfminer und Tracking sind auf Tower
+geprüft; offen bleiben Schreibkosten der Indizes, Last und Enterprise.
 
 ### 15.5 Probelauf C-Kollation (Testinstanz, 2026-09-24)
 **Ablauf:** neue DB `odoodb_c` (`CREATE DATABASE … ENCODING 'unicode' LC_COLLATE 'C' TEMPLATE template0`, wie Odoo
@@ -673,8 +690,8 @@ des heutigen Codes gezielt gegen den Core (Container `Odoo19`, Odoo 19) durch.
 ### 16.1 Neue Funde
 | Eigenbau (Konzept/Code) | Nativ gefunden | Fundstelle / Prüfung | Konsequenz |
 |---|---|---|---|
-| **Watch-Buchhaltung** im Watcher (`wd_to_path`, Ordner-Umschreiben, `moved_from` je Batch, Watches nach `.trash`) | **`watchdog` 3.0.0** ist im Image installiert. Der Core nutzt es nur als **Fallback** für den Auto-Reload im Entwicklermodus, wenn das Paket `inotify` fehlt (`service/server.py:29-50`, `FSWatcherWatchdog`, `Observer.schedule(..., recursive=True)`); es steht in **keiner** Abhängigkeitsliste des Cores (`requirements.txt`, `setup.py`, `debian/control`). Daher: im Manifest unter `external_dependencies` deklarieren, Version pinnen, Image-Build muss es enthalten (Korrektur 2026-09-25). Die Bibliothek führt `_wd_for_path`/`_path_for_wd`, schreibt Watches bei Moves um und merkt Move-Kennungen **über Lesevorgänge hinweg** (`_moved_from_events`); der `InotifyBuffer` paart `MOVED_FROM`/`MOVED_TO` mit 0,5 s Verzögerung | `watchdog/observers/inotify_c.py:172-182, 220-225, 322-333`; `inotify_buffer.py:28-110` | Punkt 1 des minimalen Watchers (5.2, "Watches pflegen") entfällt weitgehend; das Batch-Grenzen-Problem (B11) ist in der Bibliothek gelöst. **Nicht abgedeckt:** Überlauf (`IN_Q_OVERFLOW` nur als Konstante, `inotify_c.py:70`) — Rescan, Neustart-Abgleich und Herzschlag bleiben Eigenbau. Ungeprüft: Verhalten unter gevent (`workers>0`), Last bei 69k Verzeichnissen, `FileClosedEvent`-Verfügbarkeit |
-| **ACL-Regeltext-Generator** (`acl_rules.py`, ~250 Zeilen: Textbau, Platzhalter, `rebuild_rules`, Selbsttests) | **Regel-Domain darf zur Auswertungszeit abfragen:** `ir.rule`-Kontext enthält `user` (= `env.user`), das Regelergebnis wird pro Nutzer gecacht. Im Test lieferte `safe_eval("user.env['int_filemanager.protected_folder'].search_count([])", …)` den Wert 7 | `base/models/ir_rule.py:38-52` (`_eval_context`), `:138-141` (`ormcache` auf `_compute_domain`); Test in `odoodb_c` | Eine kurze Regel könnte die Schutzordner selbst abfragen statt eines generierten Textes. **Cache (2026-09-25 im Core bestätigt, sicherheitsrelevant):** `_compute_domain` ist per `ormcache` (Schlüssel `uid, su, model, mode, Kontextwerte`) gecacht (`ir_rule.py:138`) und wird nur bei Änderungen an `ir.rule` selbst geleert (`registry.clear_cache()`, Zeilen 187/195/205). Änderungen an `protected_folder` wirken sonst erst nach einem Cache-Clear → beim Anlegen/Ändern/Löschen von Schutzordnern **explizit** `registry.clear_cache()` aufrufen. Der Cache ist nur aktiv, wenn `xml` nicht in `dev_mode` steht (`tools.conditional`), Tests im Dev-Modus verdecken das Problem. **Offen:** `@api.private` gegen RPC-Aufruf, Selbsttests, die `NOT LIKE`-Struktur bleibt (Vollscans, 15.2). **Ungeklärt (2026-09-25):** Der Regelkontext ist `user = env.user.with_context({})` **ohne** `sudo` (`ir_rule.py:38-52`); die Abfrage läuft also mit den Rechten des Nutzers. Der Test mit Ergebnis 7 lief möglicherweise als Admin. Für Nicht-Admins ungeprüft: `AccessError` oder Rekursion möglich, vermutlich ist `user.sudo()` nötig. Nur Machbarkeit geprüft, nicht umgesetzt |
+| **Watch-Buchhaltung** im Watcher (`wd_to_path`, Ordner-Umschreiben, `moved_from` je Batch, Watches nach `.trash`) | **`watchdog` 3.0.0** ist im Image installiert. Der Core nutzt es nur als **Fallback** für den Auto-Reload im Entwicklermodus, wenn das Paket `inotify` fehlt (`service/server.py:29-50`, `FSWatcherWatchdog`, `Observer.schedule(..., recursive=True)`); es steht in **keiner** Abhängigkeitsliste des Cores (`requirements.txt`, `setup.py`, `debian/control`). Daher: im Manifest unter `external_dependencies` deklarieren, Version pinnen, Image-Build muss es enthalten (Korrektur 2026-09-25). Die Bibliothek führt `_wd_for_path`/`_path_for_wd`, schreibt Watches bei Moves um und merkt Move-Kennungen **über Lesevorgänge hinweg** (`_moved_from_events`); der `InotifyBuffer` paart `MOVED_FROM`/`MOVED_TO` mit 0,5 s Verzögerung | `watchdog/observers/inotify_c.py:172-182, 220-225, 322-333`; `inotify_buffer.py:28-110` | Punkt 1 des minimalen Watchers (5.2, "Watches pflegen") entfällt weitgehend; das Batch-Grenzen-Problem (B11) ist in der Bibliothek gelöst. **Nicht abgedeckt:** Überlauf (`IN_Q_OVERFLOW` nur als Konstante, `inotify_c.py:70`) — Rescan, Neustart-Abgleich und Herzschlag bleiben Eigenbau. ~~Ungeprüft: gevent, Last, `FileClosedEvent`~~ **→ 19.2:** `python3-watchdog` kommt aus dem offiziellen Image `odoo:19.0` (apt), nicht aus Odoos Abhängigkeiten. `FileClosedEvent` wird bei `IN_CLOSE_WRITE` erzeugt. **Unter gevent-Monkeypatching blockiert der Observer den ganzen Prozess** (für `workers>0` so unbrauchbar). Threaded: 30.000 Dateien in 4,4 s bei langsamem Handler ohne Verlust. Den Überlauf **verwirft die Bibliothek stillschweigend** (`inotify_c.py:320`) |
+| **ACL-Regeltext-Generator** (`acl_rules.py`, ~250 Zeilen: Textbau, Platzhalter, `rebuild_rules`, Selbsttests) | **Regel-Domain darf zur Auswertungszeit abfragen:** `ir.rule`-Kontext enthält `user` (= `env.user`), das Regelergebnis wird pro Nutzer gecacht. Im Test lieferte `safe_eval("user.env['int_filemanager.protected_folder'].search_count([])", …)` den Wert 7 | `base/models/ir_rule.py:38-52` (`_eval_context`), `:138-141` (`ormcache` auf `_compute_domain`); Test in `odoodb_c` | Eine kurze Regel könnte die Schutzordner selbst abfragen statt eines generierten Textes. **Cache (2026-09-25 im Core bestätigt, sicherheitsrelevant):** `_compute_domain` ist per `ormcache` (Schlüssel `uid, su, model, mode, Kontextwerte`) gecacht (`ir_rule.py:138`) und wird nur bei Änderungen an `ir.rule` selbst geleert (`registry.clear_cache()`, Zeilen 187/195/205). Änderungen an `protected_folder` wirken sonst erst nach einem Cache-Clear → beim Anlegen/Ändern/Löschen von Schutzordnern **explizit** `registry.clear_cache()` aufrufen. Der Cache ist nur aktiv, wenn `xml` nicht in `dev_mode` steht (`tools.conditional`), Tests im Dev-Modus verdecken das Problem. **Offen:** `@api.private` gegen RPC-Aufruf, Selbsttests, die `NOT LIKE`-Struktur bleibt (Vollscans, 15.2). ~~Ungeklärt (2026-09-25): Regelkontext ohne `sudo`, `AccessError` für Nicht-Admins möglich.~~ **Geklärt (→ 19.2):** `env.user` ist in Odoo 19 immer `sudo` (`orm/environments.py:213`, "current user - sudoed"). Die Abfrage läuft daher auch für Nicht-Admins **ohne** `AccessError` und ohne `user.sudo()`; live mit einem Nutzer ohne Leserecht auf `protected_folder` getestet. Der **Cache-Befund ist live bestätigt**: Ein neuer Schutzordner ohne `ir.rule`-Schreibvorgang bleibt für den Nutzer unsichtbar, bis `registry.clear_cache()` läuft. Nur Machbarkeit geprüft, nicht umgesetzt |
 | **`trashed` (eigenes Boolean)** | **Natives `active`**: `_search` filtert Archiviertes automatisch, auch für `sudo()`; ein `active`-Blatt in der Domain oder `active_test=False` hebt das gezielt auf | `orm/models.py:5371-5376` (`_active_name`, `active_test`) | **Befund im Modul:** 47 `search()`/`search_count()`-Aufrufe, **0** mit `trashed`-Bezug; die Regel `rule_file_trash_visibility` greift nur für Nicht-`sudo`, Watcher/Scan/Index-Funktionen laufen mit `sudo` — B1 ("Scan löscht Papierkorb") ist genau diese Auslassung. Mit `active` entfällt die ganze Fehlerklasse |
 | **`PIL` direkt** für Thumbnails/Vorschau (`mediameta.py`) | `odoo.tools.image`: `image_process`, `ImageProcess`, `image_fix_orientation`, `binary_to_image` (mit Auflösungsgrenze) | `tools/image.py:60, 295, 391, 428` | niedrige Priorität; bei nächster Änderung an `mediameta.py` prüfen |
 
@@ -724,6 +741,8 @@ OCR und Werteerkennung (Odoo-Community hat keine OCR).
 ### 16.5 Nicht geprüft
 JS-Seite der Oberfläche (native Komponenten), `mail.thread`-Tracking als Audit-Baustein, ZIP-Behandlung,
 `bus.bus` im Detail, Umstellung von `trashed` auf `active` in der Praxis, `watchdog` unter Last und gevent.
+**→ 19.2:** Tracking und `watchdog` sind geprüft; bei `trashed` → `active` wurde nur der Umfang bestätigt (weiterhin
+5 Dateien, 48 Stellen), die Umstellung selbst ist nicht ausprobiert.
 
 ---
 
@@ -796,7 +815,8 @@ Bestand nicht umbauen, sondern **neu ableiten**: Felder umstellen (Modell-Update
 `meta_state='pending'` setzen, der Cron erzeugt Quelle und abgeleitete Größe neu (Backfill in Batches mit
 `_commit_progress`); danach Frontend-URLs auf `/web/image/…`, dann Route und `_resized_jpeg` löschen.
 Zu prüfen: dass die generierte Leserechte-Regel für `check_access("read")` in `ir.binary` greift (Schutzordner),
-und der `access_token`-Weg für externe Freigaben.
+und der `access_token`-Weg für externe Freigaben. **→ 19.2:** Die Regel greift (Nicht-Admin: Schutzordner-Bild →
+Platzhalter bzw. 404, offenes Bild → JPEG); der `access_token`-Weg ist weiter offen.
 
 ### 17.5 Abnahme
 EXIF-Orientierungen 1–8, **auch für kleine Bilder unter 320/1920 px** (bleiben unverändert, Anzeige hängt am Browser); WebP (Vorschau in voller Größe, Limit oder akzeptieren); Bild über 50 MP (`meta_state='error'`, kein Absturz); Nicht-Admin auf Schutzordner
@@ -807,7 +827,8 @@ Testinstanz.
 ### 17.6 Nicht geprüft
 Prototyp (`related` + `store` bei sehr vielen Zeilen, Speicherbedarf: zwei Attachments je Bild); Verhalten von
 `kanban_image` in Liste/Dialog; Canvas-/Speichergrenzen im Browser bei sehr großen Bildern; Anzahl der Bilddateien
-im Bestand; `attachment_indexation` ist auf Live nicht installiert.
+im Bestand; `attachment_indexation` ist auf Live nicht installiert. **→ 19.2:** Bestand Tower: 165.951 Bilddateien
+(davon 144.747 JPG, 337 GB), 209.390 Vorschau-Attachments, Filestore 3 GB.
 
 ---
 
@@ -851,3 +872,138 @@ Eigencode B1–B15, Abweichungen zwischen Container-Image und lokalem HEAD. Der 
 Repo (`onlyoffice_odoo`) und wurde gelesen (Abschnitt 3). Aus PostgreSQL-Semantik abgeleitet und nicht
 ausgeführt: `SKIP LOCKED` unter `REPEATABLE READ` (4.4), Byte-Ordnung von `parent_path` unter `en_US.utf8`
 (15.2).
+
+**→ 19:** Die Punkte "Interna der `watchdog`-Bibliothek", "Abweichungen Image/lokaler HEAD", `SKIP LOCKED` und
+Byte-Ordnung sind inzwischen live geprüft.
+
+---
+
+## 19. Live-Prüfung der offenen Punkte auf Tower (2026-09-25)
+
+### 19.1 Aufbau und Grenzen
+- **Server:** zweiter Unraid-Server "Tower" (anderer Standort als HM-SRV). Tower-Live: Container `odoo` / `odoo_db`
+  (PostgreSQL **16**, DB bereits mit **C-Kollation**, `pg_trgm` installiert), 427.914 Indexzeilen, 1 Schutzordner,
+  1 interner Nutzer, Wurzel `/mnt/user/Daten` (Array, 1,8 TB, **keine** CIFS-Freigaben). Die Zahlen sind also nicht
+  1:1 auf HM-SRV übertragbar.
+- **Testumgebung, isoliert:** `fmtest_pg` (postgres:16) und `fmtest_odoo` (Image `odoo:19.0-hm` wie Live, Repo-Stand
+  `master` `aef0b4d`, Modul 1.15.0, `workers=0`, Watcher aktiv), eigenes Docker-Netz, Port 8070.
+  - DB `fmtest`: frisch von Odoo angelegt (`LC_COLLATE C`, `LC_CTYPE en_US.utf8`), Wurzel `/mnt/user/test/fmroot`
+    (shfs auf dem Cache-Pool).
+  - DB `fmreal`: `pg_dump` der Tower-Live-DB (nur lesend, Restore 97 s, 523 MB), Filestore kopiert (3 GB, 8 min),
+    `odoo neutralize`, Watcher aus, Wurzel = Live-Daten **schreibgeschützt** (`/mnt/live-ro:ro`).
+  - SMB: temporäre Freigabe `fmtest` (Samba 4.23.2, Optionen wie `Daten`: Gast, `catia fruit streams_xattr`) auf
+    der Testwurzel, Zugriff von Windows 10 (Laufwerk T:). Ein zweiter, reiner Ereignis-Logger
+    (`watchdog.observers.inotify_c.Inotify`) protokollierte alle rohen inotify-Ereignisse.
+- **Live-Instanz:** nur lesende Abfragen, ein `pg_dump` und lesende Verzeichnisdurchläufe; nichts geändert.
+- **Nicht verfügbar:** echtes MS Office. Word/Excel wurden mit ihren bekannten Speicherabläufen als echte
+  SMB-Dateioperationen nachgestellt; LibreOffice (echt) und die Explorer-Shell (`Shell.Application`, gleiche
+  Kopier-/Verschiebe-Engine wie der Explorer) liefen original.
+- **Code-Stände:** Das Image (Build `19.0-20260817`) weicht vom lokalen Odoo-Repo (HEAD `2e2acfd6`, 24.09., flacher
+  Clone) in **958 von 20.010** vergleichbaren `.py/.js/.xml`-Dateien ab, darunter `orm/models.py`, `http.py`,
+  `sql_db.py`, `service/server.py`, `ir_binary.py`, `mail_thread.py`, `tools/misc.py`. Zeilenangaben dieses Docs
+  stammen teils aus dem Image, teils aus dem lokalen Repo. Für Verhalten gilt das Image (siehe 19.2, `parent_path`).
+
+### 19.2 Odoo-Core und Datenbank
+| Punkt (Abschnitt) | Ergebnis | Beleg |
+|---|---|---|
+| `ir.rule` mit `user.env[...]` für Nicht-Admins (16.1) | **Kein `AccessError`, kein `sudo()` nötig:** `env.user` ist immer `sudo` | `orm/environments.py:213` (Image und lokal gleich); Nicht-Admin ohne Leserecht auf `protected_folder`: Regel mit und ohne `.sudo()` liefert dasselbe Ergebnis |
+| `ir.rule`-Cache (16.1) | **Bestätigt:** Neuer Schutzordner (ohne `ir.rule`-Schreibvorgang) wirkt erst nach `registry.clear_cache()`, auch über neue Transaktionen hinweg; `dev_mode` war aus. Jedes `ICP.set_param` leert den Cache nebenbei (zufällige Heilung, kein Mechanismus) | Test in `fmtest` |
+| `@api.private` (16.1) | Wirkt über die ganze MRO; `_`-Methoden sind ohnehin gesperrt. Per RPC geprüft: `_cron_scan_filemanager` und `lock_for_update` → "Private methods … cannot be called remotely" | `service/model.py:45-70` |
+| `ir.binary` + Schutzordner (17.4) | **Regeln greifen:** Nicht-Admin, `/web/image/…/thumbnail` im Schutzordner → Platzhalter (PNG 6078 B), `/web/content` → 404; offener Ordner → JPEG 200. Eigene Route: 403 / 200 | HTTP-Test mit echtem Bild |
+| pdfminer / `attachment_indexation` (15.1) | vorhanden (`pdfminer.six` 20260107 per pip, überdeckt apt 20221105); Modul installiert, DOCX- und PDF-Text werden extrahiert | Test in `fmtest` |
+| `pg_trgm` (15.1, 15.4) | Odoo legt sie beim Anlegen einer DB selbst an (bestätigt), Tower-Live hat sie. Trigram-Index auf `name` greift auf der **echten ORM-SQL** (Nicht-Admin mit Regeln): `rechnung` 267 → **0,30 ms**, `IMG_20` 265 → 17 ms, `.jpg` 561 → 128 ms; 20 MB. `unaccent` ist aus | `fmreal`, 427.914 Zeilen |
+| ORM-SQL der Rechte (15.4) | Nicht-Admin, C-Kollation: W1 alle zählen 269 ms (Parallel Seq Scan; Admin 37 ms), W2 Name 275 ms, W3 Ordnerliste 2,6 ms, W4 Unterbaum 1,8 ms, W5 großer Präfix (188k Zeilen) 491 ms, W7 `child_of` 1,6 ms, Top-80-Liste sortiert 2,7 ms. Form: `path LIKE … AND (path NOT IN … AND path NOT LIKE … AND (trashed IS NOT TRUE OR trashed_by IN …))` | `fmreal` |
+| `SKIP LOCKED` unter `REPEATABLE READ` (4.4) | **Bestätigt:** `FOR UPDATE`, `… SKIP LOCKED`, `FOR NO KEY UPDATE SKIP LOCKED`, `NOWAIT` auf eine nach dem Snapshot committete Zeile → jeweils `40001`; Zeile von offener Transaktion gesperrt → `SKIP LOCKED` leer | PostgreSQL 16.15 |
+| `parent_path` und Kollation (15.2) | Literalprüfung: `en_US.utf8` **false**, C true. Echte Werte: 294 von 300 Ordnern bekämen unter `en_US` einen falschen Teilbaum (47.313 Nachkommen fehlen). **Das Image nutzt noch `LIKE`** (unkritisch), der neuere Core die Bereichsprüfung. Exaktes neues `UPDATE` auf `en_US`-Spalte (zurückgerollt): Ordner mit 35 Knoten → **1 aktualisiert, 34 Nachkommen falsch** | Image `orm/models.py:5020-5045` vs. lokal `5027-5058`. **Folge:** Vor einem Image-Update muss eine `en_US`-DB (HM-SRV laut 15.2) auf C umgestellt sein; der Punkt eignet sich als Upstream-Meldung an Odoo |
+| `mail.thread`-Tracking als Audit (15.4, 16.5) | Nur `status_id` hat `tracking=True` (1 Nachricht + 1 Tracking-Wert je Änderung, entsteht im `precommit`). Name, Pfad, Partner werden nicht erfasst; Schreibwege mit rohem SQL (`index_utils.py:158`) umgehen das Tracking ganz | Test in `fmtest` |
+| `trashed` → `active` (16.1) | Umfang unverändert: 5 Dateien, 48 Stellen (Stand 1.15.0) | `grep` |
+| Migration 1.15.0 an echten Daten | 427.914 Zeilen, Modul in **3,5 s** geladen (`ADD COLUMN … DEFAULT` ohne Umschreiben). **Aber:** Das Update schaltet alle 9 `int_filemanager`-Crons wieder ein (`ir_cron.xml` ohne `noupdate`), auch nach `neutralize` oder manuellem Abschalten | `fmreal` |
+| `watchdog` (16.1) | Herkunft: offizielles Image `odoo:19.0` (apt `python3-watchdog 3.0.0-1`). `FileClosedEvent` bei `IN_CLOSE_WRITE` (`inotify.py:184`). **gevent:** Observer nach `monkey.patch_all()` blockiert den ganzen Prozess (Container hing > 6 min). **Threaded:** 30.000 Dateien in 4,4 s, Handler 2 ms je Ereignis → alle 30.000 nach 70 s angekommen (der Lesethread leert die Kernel-Queue in eine unbegrenzte Python-Queue). **Überlauf:** `IN_Q_OVERFLOW` wird verworfen (`inotify_c.py:320`, `if wd == -1: continue`); roh 16.384 von ca. 40.000 Ereignissen ohne jedes Signal. Tower-Live hält 29.131 Watches für 29.318 Ordner (Grenze 524.288) | Wegwerf-Container |
+
+### 19.3 Dateisystem und SMB
+**shfs-Inode (13.4, 11.4):** 64-Bit-Werte (Platte + Platten-Inode). Stabil bei: Umbenennen, Verschieben in einen Ordner,
+der nur auf einer anderen Platte liegt (die Datei bleibt physisch auf ihrer Platte), Verschieben Cache → Array-Ordner,
+Umbenennen eines Ordners, der auf zwei Platten verteilt ist (Ordner und Kinder), nach `drop_caches`, in einem neuen
+Container, Host- und Container-Sicht identisch. **Geändert** hat sie sich beim Umzug im Stil des Movers (Cache →
+`disk3`, gleicher Pfad): `12103423999611841` → `649362771271483443`. Die Inode taugt also als Hinweis; gleicher Pfad
+mit neuer Inode darf nicht als neue Datei gelten.
+
+**Offenes Dateihandle (7):** Windows-Client öffnet eine Datei über SMB, schreibt, der Server tauscht sie per
+`os.replace` aus, der Client schreibt weiter und schließt: Die zweite Schreibung ist **still verloren**, der Client
+bekommt keinen Fehler. Mit `FileShare.Read` (andere dürfen nicht schreiben, wie bei Word) genauso: Samba-Sperren
+halten ein `os.replace` auf dem Server nicht auf.
+
+**SMB-Abläufe (Watcher = heutiger Code, 1.15.0):**
+| Aktion (Windows) | Rohe Ereignisse auf dem Server | Ergebnis im Index |
+|---|---|---|
+| Ordner anlegen | Samba legt `.::TMPNAME:D:…:<name>` an und benennt um; shfs meldet zusätzlich `CREATE <name>` | korrekt (Punktnamen werden ignoriert) |
+| Neue Datei | `CREATE`, `ATTRIB` (2×), `MODIFY`, `CLOSE_WRITE` | korrekt |
+| Speichern im Editor, Explorer-Kopie "Ersetzen" | nur `CLOSE_WRITE` (gleiche Inode) | Zeile und Token bleiben, Größe aktualisiert |
+| Umbenennen, Verschieben, Ordner umbenennen/verschieben, nur Groß-/Kleinschreibung (Explorer-Shell) | ein `MOVED`-Paar mit Cookie | Zeile und Token bleiben, auch für Kinder |
+| Verschieben über vorhandenen Namen (`MoveFileEx` mit Ersetzen) | Samba: **`DELETE` des Ziels, dann `MOVED`** | Zielzeile gelöscht (Token/Versionen weg), Quellzeile übernimmt den Pfad; **keine** `UniqueViolation` (anders als `mv -f` auf dem Host, 13.3) |
+| Löschen | `DELETE` | Zeile hart gelöscht (heutiges Verhalten) |
+| **Word-Speicherablauf** (schnell und mit 2-s-Pausen) | `~$…` anlegen, `~WRD0000.tmp` schreiben, Original → `~WRL0001.tmp`, `~WRD…` → Original, `DELETE ~WRL…`, `DELETE ~$…` | **Original-Zeile gelöscht, neue Zeile ohne Token** (11 → 21, 21 → 23); `~$`-Besitzerdatei wird kurz indexiert |
+| **Excel-Speicherablauf** | wie Word mit 8-stelligen Hex-Namen | neue Zeile, Token verloren (12 → 25) |
+| **LibreOffice** (echt, Überschreiben) | `.~lock…#`, `lu….tmp` schreiben, dann Windows `ReplaceFile`: `…~RFd….TMP` anlegen, Original → `~RFd`, `lu…` → Original, `DELETE ~RFd` | Zeile behält Token **zufällig** (Umbenennen nach `~RFd` ignoriert, `lu…` → Original scheitert mit `UniqueViolation`); **Geisterzeile** `lu….tmp` bleibt |
+| 3-GB-Datei kopieren | `CREATE`, 27 s später `CLOSE_WRITE` | **Die Größe steht sofort auf 3 GB** (Windows reserviert vorab); nur `CLOSE_WRITE` zeigt das Ende an. Hash-Cron während der Kopie: `compute_stable_hash` erkennt die Änderung, bleibt `pending` (richtig) |
+| 20.000 Dateien (robocopy `/MT:16`) | ca. 13 Dateien/s (shfs 108 % CPU) | Watcher schafft ca. 8/s; Endstand **16.576 von 20.000 (17 % dauerhaft verloren)**; der Logger (eigene Queue) sah keinen Überlauf, der Verlust liegt in der Queue des Watchers (B11). Ordner, die im Rückstau angelegt wurden, bekamen **keinen Watch**, spätere Saves darin blieben unsichtbar. Erst der Vollscan (17,6 s) holte alles nach |
+| Name mit NFD-Zeichen (`e` + U+0301) | Name auf der Platte in NFD | **Index speichert NFC** (`index_utils.py:38, 42`, `path_utils.py:107`, `filemanager_file.py:879`) → Pfad existiert so nicht; Download liefert **422** |
+
+Rechte: Über SMB angelegte Ordner erhalten 0777. Auf dem Host als root angelegte Ordner (0755) kann Odoo (uid 100) nicht
+beschreiben, dann scheitert jedes Veröffentlichen (Temp-Datei im Zielordner).
+
+**Kosten Nachholabgleich (5.3), Tower-Live-Daten nur lesend:** `scandir` + `stat` aller Einträge (429.184 Einträge,
+29.316 Ordner): **211 s kalt, 214 s im zweiten Lauf** (shfs profitiert praktisch nicht vom Cache); nur Ordner
+(`scandir` aller Einträge, `stat` nur je Ordner, als Grundlage eines mtime-basierten Abgleichs): **38 s** für 29.317 Ordner, also rund 5,5-mal schneller. Der tägliche Vollscan auf Tower-Live
+braucht zum Vergleich ca. 11 min (03:00:53–03:12:00).
+
+### 19.4 Durchstich 1.15.0 und Pflichttests
+- **Modul-Tests:** 95 Tests, 0 Fehler (86 s, Wegwerf-DB, eigene leere Wurzel).
+- **Upload überschreiben + Explorer schreibt während `pending`:** Fehlerinjektion `hook_before_snapshot` → Zeile
+  `pending`, Revision 1, Platte unverändert (richtig). Dann per SMB `EXTERN-V3`; danach Nachholen per
+  `publish_pending` → Platte = App-Fassung, `synced`, die externe Fassung ist **als Version gesichert**
+  (27 Bytes), kein Verlust. **Aber:** Herkunft `app` statt `extern`, weil der Watcher den Index vorher schon auf
+  den externen Stand gezogen hatte und `_differs_from_index` gegen diesen Index vergleicht. Die zuvor extern
+  überschriebene Ausgangsfassung V1 ist erwartungsgemäß weg (Abschnitt 7).
+- **B10 live:** Das Watcher-Ereignis zur selben Zeile scheiterte mit `40001`. **Zusätzlich** bricht damit der Rest
+  des Ereignis-Batches ab: `_run` fängt die Ausnahme, danach committet `with reg.cursor()` die abgebrochene
+  Transaktion → `InFailedSqlTransaction` → "error processing event batch" (`watcher.py:36-56`).
+- **B1 live bestätigt:** Datei über `/int_filemanager/delete` in den Papierkorb, danach ein normaler Vollscan →
+  Papierkorb-Zeile **und** Datei auf der Platte gelöscht, `.trash` verschwunden. Tower-Live ist derzeit nicht
+  betroffen: Der dort laufende Stand hat keine `trashed`-Spalte, obwohl er als 1.14.0 geführt wird (der
+  Papierkorb-Commit `b53fed2` hat die Version nicht erhöht; eine Versionsnummer beschreibt damit mehrere
+  Code-Stände).
+
+### 19.5 Neue Befunde (nicht im Konzept)
+| # | Schwere | Befund | Beleg |
+|---|---|---|---|
+| N1 | **kritisch (Sicherheit)** | `action_analyze_document(path)` und `action_apply_extracted_values(path, values)` sind öffentliche `@api.model`-Methoden, arbeiten mit `sudo()` und verlassen sich auf `authz.require` im Controller. Per RPC (`/web/dataset/call_kw`) umgeht man den Controller: Ein Nicht-Admin bekam den **Volltext einer Datei im Schutzordner** (`content_text_preview`) und konnte dort extrahierte Werte **überschreiben**. Auch im Tower-Live-Code vorhanden (dort nur 1 interner Nutzer). Abhilfe: Methoden privat machen (`_`-Präfix oder `@api.private`) oder die Rechte in der Methode selbst prüfen | RPC-Test als Nicht-Admin |
+| N2 | hoch | NFD-Namen: Index in NFC, Platte in NFD → Datei per App nicht erreichbar (422). Betrifft macOS-Clients (`fruit`) und Namen mit kombinierenden Zeichen | 19.3 |
+| N3 | hoch | Überlauf hinterlässt Ordner **ohne Watch**; alles darin bleibt bis zum Scan oder Neustart unsichtbar | 19.3 |
+| N4 | mittel | Ein fehlgeschlagenes Ereignis verwirft den Rest seines Batches | 19.4 |
+| N5 | mittel | Jeder CLI-Start mit derselben DB (`odoo shell`, `odoo -u`) startet einen **zweiten Watcher** (`_resolve_dbname` über `db_name`), auf Live also doppelte Verarbeitung, solange die Shell läuft | Log "watcher active" im Shell-Prozess |
+| N6 | mittel | Modul-Update schaltet alle Crons wieder ein (`noupdate` fehlt) | 19.2 |
+| N7 | mittel | Herkunft `app` statt `extern`, wenn der Watcher den externen Stand vorher indexiert hat | 19.4 |
+| N8 | niedrig | Frische Installation: `share_state`/`revision` sind bei Watcher-Zeilen `NULL` (rohes `INSERT`, DB-Default gibt es nur über die Migration). Der Code verträgt es (`revision or 0`, Vergleiche auf `'pending'`); der Teilindex `WHERE share_state <> 'synced'` schließt `NULL` aus | `fmtest` |
+| N9 | niedrig | Versionsnummern mehrdeutig (Code-Änderungen ohne Versionssprung) | 19.4 |
+
+### 19.6 Bezug zu den offenen Entscheidungen (Abschnitt 11)
+- **11.1 Tombstone:** Löschen über SMB ist auf dem Share endgültig (kein Papierkorb im Share). Der Tombstone ist
+  danach die einzige Spur der Metadaten.
+- **11.4 Inode:** hilft bei Umbenennen und Verschieben, die ohnehin als `MOVED`-Paar mit Cookie ankommen. Bei den
+  Speicherabläufen von Word, Excel und LibreOffice entsteht eine **neue** Datei (neue Inode), dort hilft die Inode nicht.
+  Identität braucht hier die Endzustandslogik aus 5.4 ("Pfad in der Ruhezeit gelöscht und wieder angelegt → gleiche
+  Zeile"). Nach einem Mover-Umzug ändert sich die Inode bei gleichem Pfad.
+- **11.5 Teilindex:** Verschieben über einen vorhandenen Namen kommt über SMB als `DELETE` + `MOVED`. Mit Archivieren
+  statt Löschen hielte die archivierte Zielzeile den Pfad weiter → der partielle Unique-Index ist nötig (stützt die
+  Empfehlung).
+- **Die übrigen Entscheidungen (11.2, 11.3, 11.6)** sind Produktfragen; die Tests liefern dazu keine neuen Fakten.
+- **Konsequenzen für die Reihenfolge (Abschnitt 10):** N1 vor allem anderen (Sicherheit). Hotfix B1 bleibt Punkt 1.
+  Watcher: `watchdog` nur im Threaded-Modus. Der Überlauf muss selbst erkannt werden, da die Bibliothek ihn
+  verschluckt, etwa mit einem eigenen Lesezugriff auf den Deskriptor oder einem regelmäßigen Nachholabgleich.
+  Außerdem nötig: NFD-Behandlung und der Schutz vor einem zweiten Watcher bei CLI-Starts.
+
+### 19.7 Nicht geprüft
+Echtes MS Office (nur nachgestellte Abläufe); macOS-Clients; HM-SRV selbst (nicht erreichbar); `access_token`-Weg
+für externe Freigaben (17.4); Enterprise/OCA; die Umstellung `trashed` → `active` und der partielle Unique-Index als
+Code; Last mit mehreren gleichzeitigen Nutzern.

@@ -56,5 +56,8 @@ eine belastbare Aussage.
   live testen, nicht raten.
 - **Produktentscheidungen vorab mit dem Nutzer klären**, nicht impliziten Annahmen folgen.
 - Aktueller architektonischer Leitfaden für int_filemanager: `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`
-  auf Branch `docs/konzept-db-vorrang` (noch nicht in `master` gemergt, aber als maßgeblich
-  bestätigt) — bei Fragen zu Watcher, Papierkorb, ACL oder DB-Performance zuerst dort nachsehen.
+  (in `master`, Live-Prüfung auf Tower in Abschnitt 19) — bei Fragen zu Watcher, Papierkorb, ACL oder
+  DB-Performance zuerst dort nachsehen.
+- `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher (Konzept 19.5, N5). Workaround:
+  vorher `int_filemanager.watcher_enabled` auf `false`, danach zurück auf `true` (der laufende Server prüft den
+  Schalter nur beim Start, sein Watcher läuft weiter).
