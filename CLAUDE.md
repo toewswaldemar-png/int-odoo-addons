@@ -2,7 +2,16 @@
 
 Custom-Odoo-19-Addons. Module: `int_filemanager` (Dateiverwaltung/DMS), `int_repair_workshop`
 (Reparatur-Werkstatt), `int_fleet_kanban_width`, `int_generic`, `int_legacy_erp_import`,
-`onlyoffice_odoo`. Produktivinstanz läuft im Docker-Container `Odoo19` auf Host `unraid-odoo`.
+`onlyoffice_odoo`.
+
+Es gibt zwei Unraid-Server an unterschiedlichen Standorten, jeweils mit eigener Odoo-Instanz:
+
+- **HM-SRV:** Container `Odoo19`, Host `unraid-odoo`.
+- **Lokal (Tower):** Container `odoo` (+ `odoo_db`, `OnlyOfficeDocumentServer`), per SSH über
+  den Host-Alias `unraid` erreichbar. Addons liegen unter `/mnt/user/appdata/odoo/extra-addons`
+  (einfache Kopie, kein Git-Checkout), dort nur `int_filemanager` und `onlyoffice_odoo`.
+
+Die `docker exec Odoo19 …`-Beispiele unten gelten für HM-SRV; auf Tower heißt der Container `odoo`.
 
 ## Verbindlich: vor jeder "kein Bordmittel"/Eigenbau-Aussage Odoo-Core prüfen
 
