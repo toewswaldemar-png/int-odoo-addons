@@ -9,7 +9,9 @@ HEAD `432a95f`, Live-Instanz HM-SRV (192.100.0.119), Container `Odoo19` / `odoo_
 
 **Nachtrag 2026-09-25:** Die offenen und ungeprüften Punkte wurden auf dem zweiten Unraid-Server (lokal,
 "Tower") in einer isolierten Testumgebung live geprüft, mit einer lesend erstellten Kopie der Tower-Live-DB und
-echten SMB-Zugriffen von Windows (Abschnitt 19). Die betroffenen Stellen sind unten mit "→ 19" markiert.
+echten SMB-Zugriffen von Windows (Abschnitt 19). Die betroffenen Stellen sind unten mit "→ 19" markiert. Eine
+zweite Runde am selben Tag (Abschnitt 20) hat die Code-Befunde B2–B15 live ausgelöst, die Pflichttests gegen den
+Durchstich 1.15.0 ausgeführt und `trashed` → `active` sowie einen `watchdog`-Watcher als Prototyp erprobt.
 
 Löst in Teilen die Docs vom 2026-09-23/24 ab (siehe Abschnitt 9) — sie bleiben als Recherchebasis
 stehen, ihre Schlussfolgerungen gelten nur noch, soweit sie hier nicht korrigiert werden.
@@ -766,7 +768,10 @@ der Kachelvorschau gedreht) ist Folge dieser Vorverarbeitung, **nicht** ein fehl
 also unrotierte Pixel samt EXIF-Tag und erscheinen nur richtig, weil Browser den Tag anwenden. Erst
 verkleinerte Bilder werden gedreht und ohne EXIF gespeichert. **WebP** wird vom Feld nie skaliert, nur auf die
 Auflösung geprüft (`fields_binary.py` `_image_process`, `image.py:84-91`): das `thumbnail` wäre dort das
-Original in voller Größe. Es wird
+Original in voller Größe. **Korrektur (→ 20.1, live geprüft):** Im Odoo-Prozess scheitert WebP schon vorher mit
+`UnidentifiedImageError`, weil `odoo/tools/image.py:27-28` Pillow auf die Formate aus `Image.preinit()` beschränkt
+(BMP, GIF, JPEG, PPM, PNG). Auf Tower-Live stehen alle 22 WebP-Dateien auf `meta_state=error`. Kleine Bilder mit EXIF
+und das Drehen großer Bilder sind wie beschrieben bestätigt; über 50 MP gibt es einen `UserError`. Es wird
 deshalb nicht in `mediameta` nachgebessert, sondern durch den Umbau beseitigt.
 
 ### 17.2 Ist gegen nativ
@@ -827,8 +832,9 @@ Testinstanz.
 ### 17.6 Nicht geprüft
 Prototyp (`related` + `store` bei sehr vielen Zeilen, Speicherbedarf: zwei Attachments je Bild); Verhalten von
 `kanban_image` in Liste/Dialog; Canvas-/Speichergrenzen im Browser bei sehr großen Bildern; Anzahl der Bilddateien
-im Bestand; `attachment_indexation` ist auf Live nicht installiert. **→ 19.2:** Bestand Tower: 165.951 Bilddateien
-(davon 144.747 JPG, 337 GB), 209.390 Vorschau-Attachments, Filestore 3 GB.
+im Bestand; `attachment_indexation` ist auf Live nicht installiert. **→ 19.2:** Bestand Tower: 209.429 Bilddateien
+(davon 187.914 JPG mit 565 GB, 15.204 PNG, 5.371 GIF, 42 TIFF, 22 WebP; gezählt ohne Unterscheidung der
+Groß-/Kleinschreibung), 209.390 Vorschau-Attachments, Filestore 3 GB.
 
 ---
 
@@ -1007,3 +1013,109 @@ braucht zum Vergleich ca. 11 min (03:00:53–03:12:00).
 Echtes MS Office (nur nachgestellte Abläufe); macOS-Clients; HM-SRV selbst (nicht erreichbar); `access_token`-Weg
 für externe Freigaben (17.4); Enterprise/OCA; die Umstellung `trashed` → `active` und der partielle Unique-Index als
 Code; Last mit mehreren gleichzeitigen Nutzern.
+
+**→ 20:** `access_token`, die Umstellung `trashed` → `active` mit partiellem Unique-Index (als Prototyp) und Last mit
+mehreren Nutzern sind inzwischen geprüft.
+
+---
+
+## 20. Zweite Prüfrunde auf Tower: Code-Befunde, Pflichttests, Prototypen (2026-09-25)
+
+Aufbau wie in 19.1. Zusätzlich: Die Tests liefen aus einem Hilfscontainer im Testnetz (HTTP gegen `fmtest_odoo`,
+direkter DB-Zugriff für Sperren und Prüfungen), damit sie auch einen absichtlich beendeten Odoo-Prozess überstehen.
+Für "Platte voll", "Mount weg" und "anderes Dateisystem" bekam der Testcontainer zwei zusätzliche Mounts: ein
+2-MB-tmpfs unter `voll/` und einen verschachtelten Ordner unter `p/nested/`. Die Prototypen liefen in einer
+**Kopie** der Addons (`addons_proto`) auf eigenen Datenbanken; das Repo ist unverändert.
+
+### 20.1 Befunde B2–B15 live ausgelöst
+| # | Test | Ergebnis |
+|---|---|---|
+| B2 | Umbenennen, Verschieben, Löschen; `40001` erzwungen (zweite Transaktion sperrt die Zeile und committet nach dem Snapshot des Requests) | **Alle drei bestätigt.** Die Platte ist geändert, der Retry meldet dem Nutzer einen Fehler ("Eintrag nicht gefunden" bzw. "existiert bereits"). Umbenennen: Index zeigt weiter den alten Namen (Geisterzeile), der neue ist nicht indexiert. Verschieben: Geisterzeile am alten Ort plus neue Zeile am Ziel (Identität verloren). Löschen: Datei liegt in `.trash`, **ohne** Papierkorb-Zeile, also unsichtbar und vom Aufräum-Cron nie erfasst. **Auch ohne künstliche Sperre beobachtet:** Ein Umbenennen, während der Watcher das Ereignis eines WebDAV-PUT derselben Datei verarbeitete, lief in `40001` → Retry → Fehlermeldung, obwohl umbenannt war |
+| B4/B5 | WebDAV-PUT ("Lokal öffnen") | **Überschreibt ohne Version** (V1 weg). PUT wird **trotz fremdem LOCK** angenommen. ETag aus ganzzahligen Sekunden: nach einem PUT in derselben Sekunde gleiches ETag, `If-None-Match` liefert **304 mit veraltetem Inhalt**. Ein PUT mit `Content-Type: application/x-www-form-urlencoded` schreibt **0 Bytes** und meldet 204 (werkzeug liest den Body als Formular). 129 MiB → 413 (Upload und PUT, 15.1 bestätigt). Tokens liegen nur im Speicher: **nach einem Server-Neustart 403**, ein offenes Office-Dokument kann dann nicht mehr zurückspeichern |
+| B6 | Upload auf eine Datei, die nur auf der Platte liegt (z. B. nach Überlauf nicht indexiert) | **Ohne Version überschrieben** |
+| B6 | `write_text` bei voller Platte | Datei abgeschnitten und nur teilweise neu geschrieben, **Original zerstört**, keine Version |
+| B7 | WebDAV-Token, dann Umbenennen in der App, dann Save mit altem Token | **Legt die alte Datei neu an** (neue Zeile); die umbenannte Datei bleibt unverändert |
+| B13 | Unterordner unlesbar (`chmod 000`), dann Vollscan | **Alle 5 Zeilen darin gelöscht**, Token weg, obwohl die Dateien existieren. Tower-Live hat einen solchen Ordner (`cloudreve/2/Musik/Kinderlieder`, root 0744, für Odoo nicht betretbar): Seine Einträge fehlen dauerhaft im Index |
+| B13 | Verschachtelter Mount fällt weg (leerer Ordner an seiner Stelle), Vollscan, Mount kommt zurück | Zeilen gelöscht, danach **als neue Zeilen ohne Token** angelegt. Der Schutz greift nur für Ordner der obersten Ebene |
+| B14 | Endgültiges Löschen, DB-Fehler beim Löschen der Zeile (Trigger in der Test-DB) | **Zeile bleibt, Bytes sind weg**; "Wiederherstellen" endet mit rohem "No such file or directory" |
+
+### 20.2 Pflichttests gegen den Durchstich 1.15.0 (Upload überschreiben)
+| Test | Ergebnis |
+|---|---|
+| **Harter Prozessabbruch** (`os._exit`) nach jeder Stufe: `stage_before_commit`, `hook_before_snapshot`, `hook_after_snapshot_commit`, `hook_after_temp_written`, `hook_after_replace`, `hook_before_finalize_commit`; danach Neustart und Nachholen | **Alle sechs korrekt:** Vor dem Commit bleibt V1 (nichts halb geschrieben); nach dem Commit liegt nach dem Nachholen V2 auf der Platte, V1 ist **genau einmal** gesichert, keine Temp-Reste, `synced`. Der Client sieht bei Abbrüchen im Hook einen Verbindungsabbruch, obwohl der Upload verbindlich gespeichert ist |
+| Zwei gleichzeitige Saves derselben Basisrevision | einer 200, der andere **422 mit Meldung**, nichts still verloren |
+| Identischer Upload zweimal | zweiter wird als byteidentisch übersprungen, keine Doppelversion |
+| Umbenennen während `pending` | Nachholen schreibt an den neuen Pfad (richtig) |
+| **Elternordner extern verschoben während `pending`** (in einen gerade neu angelegten Ordner) | **Datenverlust:** Der Watcher löscht die Zeilen und legt neue an; die `pending`-Zeile samt `pending_content`-Attachment ist weg, die bestätigte App-Fassung verloren. Praktischer Beleg für "Watcher und Scan löschen nie" (5.1, 10.1) |
+| Zielordner nicht beschreibbar | Nutzer bekommt 200, Datei bleibt **dauerhaft `pending`**, der Cron scheitert bei jedem Lauf; der Nutzer erfährt nichts |
+| **Platte voll** | Original unversehrt, `pending`, keine Temp-Reste; nach Freigabe von Platz holt der **echte Cron** nach (`synced`, genau eine Sicherung). Zum Vergleich: `write_text` und WebDAV-PUT zerstören bei voller Platte das Original (20.1) |
+| Verschieben über Dateisystemgrenzen (App) | Zeile, Token und Versionen bleiben |
+| Cron während Modul auf "to upgrade" (5.3) | **Bestätigt:** Odoo überspringt **alle** Crons der DB ("Skipping database … because of modules to install/upgrade/remove"), auch das Nachholen. Ein hängengebliebenes Update hält die Wiederherstellung unbegrenzt an |
+
+### 20.3 Weitere Punkte
+- **`access_token` (17.4):** `/web/image/…/thumbnail?access_token=…` funktioniert anonym, ist an das Feld gebunden (ein
+  Token für `thumbnail` öffnet `preview` nicht) und umgeht bewusst die Schutzordner-Regel. Für Freigaben richtig,
+  solange Tokens nur für freigegebene Dateien erzeugt werden.
+- **`fields.Image` (17.5):** siehe Korrektur in 17.1. Zusätzlich: Pillow ist im Odoo-Prozess auf wenige Formate
+  beschränkt, außerhalb von Odoo öffnet dasselbe Image die WebP-Datei problemlos.
+- **Trigram-Schreibkosten (15.4):** 50.000 Updates 7,1 → 7,7 s (+8 %), 20.000 Inserts im Messrauschen, Indexbau 3,9 s.
+- **Last (ein Odoo-Prozess wie live, Nicht-Admin, 428.000 Zeilen, je 30 s Mix aus Baum, Ordnerliste, Suche, Download):**
+
+| Nutzer | ohne Trigram: Anfragen/s | Suche p50 / p95 | mit Trigram: Anfragen/s | Suche p50 / p95 |
+|---|---|---|---|---|
+| 1 | 13,8 | 355 / 437 ms | 58,7 | 15 / 48 ms |
+| 5 | 35,6 | 668 / 904 ms | 187,5 | 21 / 65 ms |
+| 10 | 33,4 | 1.164 / 2.735 ms | 186,9 | 38 / 82 ms |
+| 20 | 37,3 | 2.145 / 4.380 ms | 184,5 | 85 / 130 ms |
+
+  Keine Fehler. Baum, Ordnerliste und Download bleiben in beiden Fällen schnell. Ohne Trigram ist die Namenssuche der
+  Engpass und bremst über den gemeinsamen Prozess alle anderen Anfragen; mit Index steigt der Durchsatz um das
+  Fünffache.
+
+### 20.4 Prototyp `trashed` → `active` mit partiellem Unique-Index
+Minimaler Umbau in einer Kopie: `active` + `removal_reason` (`trash`/`external`),
+`models.UniqueIndex("(path) WHERE active IS TRUE")` statt `unique(path)`, Papierkorb setzt zusätzlich `active=False`,
+Migration mit DB-Default `true`. Absichtlich **nicht** alle 48 Stellen angepasst, um zu sehen, was bricht.
+- **Teilindex:** Odoo 19 legt ihn korrekt an (`int_filemanager_file_path_uniq_active … WHERE (active IS TRUE)`) und
+  entfernt die alte Constraint beim Update selbst.
+- **Bruch 1:** `INSERT … ON CONFLICT (path)` in `_upsert_by_path` (auch vom Watcher genutzt) ist mit einem Teilindex
+  unverträglich (`there is no unique or exclusion constraint matching the ON CONFLICT specification`, 7 von 95 Tests).
+  Abhilfe: `ON CONFLICT (path) WHERE active IS TRUE`, oder `_upsert_by_path` wie in 4.5 vorgesehen ganz entfernen.
+- **Bruch 2:** Bei einer frischen Installation legt Odoo `active` **ohne DB-Default** an. Rohe `INSERT`s erzeugen
+  `active = NULL`: Diese Zeilen sind für die ORM unsichtbar und fallen nicht unter den Teilindex → **Duplikate**
+  (Test: "182 != 179 … nicht duplizieren"). Abhilfe: DB-Default per Migration **und** Init-Hook, oder nur ORM-`create`.
+- **Bruch 3:** Suchen ohne `active_test=False` finden archivierte Einträge nicht mehr (3 Papierkorb-Tests). Versteckte
+  Folge: `_ensure_trash_folder` findet den archivierten `.trash`-Ordner nicht und legt **einen zweiten** an.
+- **Wirkung:** **B1 ist behoben, ohne den Scan-Code anzufassen** (Papierkorb-Zeile und Bytes überstehen den
+  Vollscan). Eine neue Datei am Pfad eines Tombstones "extern entfernt" lässt sich anlegen. **Doppelbedeutung
+  bestätigt:** Eine naive Papierkorb-Ansicht `active=False` zeigt Tombstones mit an, erst `removal_reason` trennt.
+- **Migration auf der Live-Kopie (428.000 Zeilen):** Modul in 4,0 s geladen, Gesamtlauf 17 s, alle Zeilen `active`.
+
+### 20.5 Prototyp minimaler Watcher mit `watchdog` (5.2)
+Threaded-Observer sammelt nur Pfade (Dirty-Satz), keine DB. Überlauferkennung per Patch auf
+`Inotify._parse_event_buffer` (erkennt `wd == -1` mit `IN_Q_OVERFLOW`, bevor `watchdog` es verwirft). Auf shfs:
+- **200 neue Ordner × 100 Dateien** (20.000 in 11,3 s): **alle 20.000** im Dirty-Satz, auch die in den neuen Ordnern
+  (`watchdog` durchläuft neu angelegte Ordner selbst). Ruhe nach 18 s. Zum Vergleich der heutige Watcher: 17 % Verlust
+  bei nur 13 Dateien/s über SMB (19.3).
+- **Erzwungener Überlauf** (Leseprozess per SIGSTOP angehalten, 30.000 Dateien): nur 5.462 kommen an, der Überlauf wird
+  aber **zuverlässig erkannt** und kann einen Vollabgleich auslösen.
+- Damit tragen die Bausteine aus 5.2: `watchdog` für Watches und Move-Paare, eigene Überlauferkennung, danach Abgleich.
+  Nicht Teil des Prototyps: `dirty`-Tabelle, Abgleich-Cron, gevent (dort blockiert `watchdog`, 19.2).
+
+### 20.6 Folgen für die Reihenfolge (Abschnitt 10)
+1. **N1 (RPC-Lücke)** zuerst, dann **Hotfix B1**. Der Prototyp zeigt, dass `active` B1 ohne Scan-Änderung behebt;
+   Voraussetzung sind die drei Brüche aus 20.4.
+2. **Watcher und Scan dürfen nichts löschen** (B13, P10-Verlust in 20.2). Das ist auch vor dem großen Umbau als
+   Hotfix sinnvoll: Stale-Zeilen nur markieren, nie löschen.
+3. **Übrige App-Schreibwege** auf den Durchstich-Ablauf umstellen: `write_text` und WebDAV-PUT zerstören bei Fehlern
+   das Original und legen keine Version an; der Durchstich hat alle Abbruch- und Platte-voll-Tests bestanden. B2
+   verschwindet mit dem Ablauf, weil vor dem Commit nichts mehr auf der Platte passiert.
+4. WebDAV: Tokens persistent (Tabelle statt Speicher), an Datei-ID statt Pfad (B7), PUT mit Lock- und Revisionsprüfung,
+   ETag aus `mtime_ns`/Revision.
+5. **Trigram-Index** auf `name` früh einführen: großer, risikoarmer Gewinn unter Last.
+6. Nutzer-Rückmeldung für dauerhaft `pending` (nicht beschreibbares Ziel) und für "Verbindung abgebrochen, aber
+   gespeichert".
+
+### 20.7 Weiterhin nicht geprüft
+Echtes MS Office, macOS-Clients, HM-SRV, Enterprise/OCA-`dms`, dynamische `ir.rule` als Code, Bild-Zielbild 17.3 als
+Code.
