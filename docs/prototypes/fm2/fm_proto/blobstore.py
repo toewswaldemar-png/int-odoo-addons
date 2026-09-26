@@ -12,6 +12,7 @@ from odoo.tools import config
 
 _logger = logging.getLogger(__name__)
 CHUNK = 1024 * 1024
+EMPTY_SHA = hashlib.sha256(b"").hexdigest()
 FAULT_FILE = os.environ.get("FM_PROTO_FAULT_FILE", "")
 
 
@@ -95,3 +96,27 @@ def write_stream_to_temp(env, stream, name):
         while chunk := stream.read(CHUNK):
             out.write(chunk)
     return tmp_path
+
+
+def ensure_empty_blob(env):
+    """Blob fuer leeren Inhalt (Datei auf 0 Bytes gekuerzt)."""
+    final = blob_path(env, EMPTY_SHA)
+    if not os.path.exists(final):
+        tmp = os.path.join(tmp_dir(env), "empty_%d" % os.getpid())
+        open(tmp, "wb").close()
+        adopt_temp(env, tmp)
+
+
+def adopt_hashed(env, tmp_path, sha, size):
+    """Wie adopt_temp, aber mit dem beim Empfang berechneten Hash (19.6): kein erneutes Lesen. Odoo hat den Hash
+    selbst berechnet, I2 bleibt erfuellt. Die Temp-Datei wurde vom Schreiber bereits mit fsync geschrieben."""
+    final = blob_path(env, sha)
+    os.makedirs(os.path.dirname(final), exist_ok=True)
+    mark_for_gc(env, sha)
+    try:
+        os.link(tmp_path, final)          # kein Ueberschreiben (I2)
+        deduped = False
+    except FileExistsError:
+        deduped = True
+    _fsync_dir(os.path.dirname(final))
+    return sha, size, deduped
