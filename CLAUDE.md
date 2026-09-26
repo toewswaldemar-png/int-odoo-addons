@@ -55,9 +55,11 @@ eine belastbare Aussage.
 - **Claims immer verifizieren**, nie "sollte sicher funktionieren" — im Code/Container nachsehen,
   live testen, nicht raten.
 - **Produktentscheidungen vorab mit dem Nutzer klären**, nicht impliziten Annahmen folgen.
-- Aktueller architektonischer Leitfaden für int_filemanager: `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`
-  (in `master`, Live-Prüfung auf Tower in Abschnitt 19) — bei Fragen zu Watcher, Papierkorb, ACL oder
-  DB-Performance zuerst dort nachsehen.
+- **Einstieg int_filemanager: `docs/int_filemanager_v2_uebergabe_2026-09-26.md`** (Stand, Entscheidungen, nächste
+  Schritte, Testumgebung auf Tower). Leitfaden ist das Konzept `docs/int_filemanager_v2_konzept_2026-09-26.md`
+  (Nutzerentscheidung 2026-09-26: vollständig Odoo-Addon, Odoo alleiniger Schreiber, eigener Blob-Speicher).
+  Hintergrund und Befunde zum heutigen Modul: `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`
+  (Abschnitte 19/20). Vor Freigabe des Konzepts kein Modul-Code.
 - `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher (Konzept 19.5, N5). Workaround:
   vorher `int_filemanager.watcher_enabled` auf `false`, danach zurück auf `true` (der laufende Server prüft den
   Schalter nur beim Start, sein Watcher läuft weiter).
