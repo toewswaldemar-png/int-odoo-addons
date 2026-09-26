@@ -277,8 +277,13 @@ Zeitlimits, belegte Worker, internes Attribut – nur mit Kniffen beherrschbar).
   Wiederholung mit Odoos `retrying()` (ganze Anfrage außer `PUT`, XML-Body gepuffert; beim `PUT` nur der Abschluss).
 - **Protokollschicht WsgiDAV** (Version festnageln; zwei Eigenheiten im Provider bzw. per Middleware umgangen:
   Sperrprüfung beim `DELETE`, Content-Type der LOCK-Antwort, 19.4). WsgiDAV und `json5` kommen ins Odoo-Image.
-- **Anmeldung:** Basic mit Odoo-Login und **API-Schlüssel** über HTTPS (dieselbe Prüfung wie `auth='bearer'`),
-  geprüfte Zugangsdaten 60 s zwischengespeichert (Widerruf wirkt spätestens nach 60 s). `OPTIONS` ohne Anmeldung.
+- **Anmeldung:** Basic mit Odoo-Login und **API-Schlüssel** über HTTPS, geprüft mit Odoos
+  `res.users.apikeys._check_credentials` – aber mit **eigenem Geltungsbereich** `int_filemanager.dav` statt `rpc`
+  (19.16): ein eigens erzeugter Laufwerks-Schlüssel gilt dann **nur** für WebDAV, nicht für JSON-2; globale Schlüssel
+  (ohne Bereich) gelten weiter überall. Geprüfte Zugangsdaten 60 s zwischengespeichert (Widerruf wirkt spätestens nach
+  60 s). `OPTIONS` ohne Anmeldung. Laufzeit der Schlüssel: Nicht-Admins brauchen ein Ablaufdatum bis zur
+  Höchstdauer ihrer Gruppe (`res.groups.api_key_duration`, sonst 1 Tag) – für ein Netzlaufwerk vor dem Einsatz
+  festzulegen.
   Kein anonymer Zugang (nur auf der Testinstanz für eine IP).
 - **`PUT`** wie Cloudreve: lesen/prüfen → Transaktion beenden → Datenstrom ohne Transaktion in den Blob-Speicher
   (SHA-256 beim Empfang, `fsync`, 5) → kurzer Abschluss mit **erneuter Sperr- und Zielprüfung**. Leerer Body ohne
@@ -314,6 +319,10 @@ Word/Excel auf Wunsch des Nutzers entfallen, HTTPS am Windows-Client ungetestet)
 
 - **Anfangsausstattung (17.5):** ein Bereich "Alle" für den ganzen Share, der heutige Schutzordner als eigener
   Bereich; weitere erst bei Bedarf.
+- **Öffentliche Methoden sind die externe API:** Odoo 19 macht jede öffentliche Modellmethode (ohne `_`, nicht
+  `@api.private`) über **JSON-2** (`POST /json/2/<modell>/<methode>`) für jeden Nutzer mit API-Schlüssel aufrufbar –
+  mit beliebigen Argumenten (19.16). Deshalb: öffentlich nur, was mit fremden Argumenten sicher ist (I7, N1); interne
+  Logik `_…` oder `@api.private`; nur lesende Methoden mit `@api.readonly` (lesender Cursor).
 - Rechte-Bereiche (`int_filemanager.scope`) statt Pfad-Präfix-Regeln. Regel-Domains nur über indizierte Felder
   (`[('scope_id.read_group_ids', 'in', user.all_group_ids.ids)]`), damit keine Vollscans entstehen (heute 269 ms
   für Nicht-Admins, 19.2).
@@ -1043,3 +1052,35 @@ schließen), I6 (jede Fassung wiederherstellbar) und I7 (Rechte nur über Odoo).
 einem Odoo-FUSE-Dateisystem** (19.14) die Invarianten: dort schreibt Samba nicht auf die Platte, sondern durch
 Odoos Code, Rechte werden je Aufruf geprüft, jede geschlossene Fassung wird Revision – und inotify wird überflüssig,
 weil jede Änderung ohnehin durch Odoo läuft.
+
+### 19.16 JSON-2 (Odoos empfohlene externe Schnittstelle) und WebDAV (Code-Prüfung, 2026-09-26)
+
+**Befund im Odoo-19-Core:**
+- `addons/rpc/controllers/json2.py`: `POST /json/2/<model>/<method>` mit `auth='bearer'` (API-Schlüssel),
+  `type='json2'` (JSON-Körper mit benannten Argumenten, `ids`, `context`), `save_session=False`, lesender Cursor für
+  Methoden mit `@api.readonly`; aufrufbar ist **jede öffentliche Methode** (`service/model.py:get_public_method`:
+  nicht mit `_` beginnend, nicht `@api.private`, keine class-/staticmethod). Eine Transaktion je Aufruf.
+- `addons/rpc/controllers/__init__.py`: `/xmlrpc`, `/xmlrpc/2` und `/jsonrpc` sind in Odoo 19 **veraltet, Entfernung
+  geplant für Odoo 22**. Im Repo nutzt sie niemand (geprüft).
+- API-Schlüssel (`base/models/res_users.py`): Prüfung `scope IS NULL OR scope = <angefragt>` – ein Schlüssel ohne
+  Bereich gilt überall, ein Schlüssel mit Bereich nur dort. `auth='bearer'`/JSON-2 fragt Bereich `rpc` an.
+  Nicht-Admins müssen ein Ablaufdatum setzen, höchstens `api_key_duration` ihrer Gruppen (Standard 1 Tag);
+  dauerhafte Schlüssel nur als Admin/sudo. Doku empfiehlt zusätzlich die Header `X-Odoo-Database` und `User-Agent`.
+
+**Bezug zu WebDAV:**
+
+| Bauform | Rolle von JSON-2 |
+|---|---|
+| `odoo fmdav` (gewählt, 11.2) | WebDAV spricht **nicht** per HTTP mit Odoo, sondern nutzt das ORM direkt – JSON-2 ist dafür nicht nötig. Die Anmeldung nutzt **denselben** Schlüssel-Mechanismus wie JSON-2; mit eigenem Bereich `int_filemanager.dav` (statt `rpc` wie im Prototyp) gelten Laufwerks-Schlüssel nicht für JSON-2 (geringste Rechte). |
+| separater Dienst (19.4, verworfen) | Nach Odoos Empfehlung müsste ein externer Dienst JSON-2 statt eigener JSON-RPC-Routen benutzen. Datei-**Inhalte** gingen trotzdem nicht darüber: JSON-2 nimmt nur JSON, Binärdaten nur base64 im Speicher (I12) – eigene Upload-Routen blieben nötig. Bestätigt die Wahl von `odoo fmdav`. |
+
+**Folgen für int_filemanager 2 (eingearbeitet in 11.2 und 12):**
+1. **Jede öffentliche Methode von `int_filemanager.*` ist per JSON-2 erreichbar** – öffentlich nur, was mit
+   beliebigen Argumenten sicher ist; sonst `_…`/`@api.private`; lesende mit `@api.readonly`. Das verallgemeinert die
+   Lehre aus N1.
+2. **WebDAV-Anmeldung mit eigenem Bereich** `int_filemanager.dav`; Oberfläche zum Erzeugen eines Laufwerks-Schlüssels
+   und die Schlüssel-Laufzeit (`api_key_duration`) erst, wenn ein Netzlaufwerk kommt (17.7).
+3. **Automatisierung von außen** (Skripte, spätere Werkzeuge) über JSON-2 für Metadaten (suchen, verschieben,
+   taggen); Datei-Inhalte über die eigenen Upload-/Download-Routen mit API-Schlüssel (7, 8), nie base64 über JSON-2.
+4. Externe Aufrufer senden `X-Odoo-Database` (spart die Datenbank-Ermittlung je Aufruf, 19.6) und einen `User-Agent`.
+

@@ -97,6 +97,9 @@ Umbenennen, Verschieben und Kopieren ändern nur die Datenbank – keine Datei w
 Zum Start **minimal**: ein Bereich "Alle" und der heutige Schutzordner als eigener Bereich. Unterordner mit engeren
 Rechten bekommen bei Bedarf einen eigenen Bereich. Rechte gelten für alle Wege gleich (Liste, Suche, Vorschau,
 Download, Freigabe-Links); öffentliche Methoden arbeiten nie mit Admin-Rechten auf Nutzereingaben (→ K 12).
+**Wichtig:** Odoo 19 macht jede öffentliche Modellmethode über seine externe Schnittstelle **JSON-2** für jeden
+Nutzer mit API-Schlüssel aufrufbar – öffentlich ist deshalb nur, was mit beliebigen Argumenten sicher ist; alles
+andere bleibt intern (→ K 12, K 19.16).
 
 ## 8. Übernahme des Bestands
 
