@@ -218,8 +218,8 @@ von Tower sind ca. 3,7 TB frei.
 6. **Prüfung:** Anzahl und Hash jeder Datei gegen die Quelle.
 7. Originale bleiben **schreibgeschützt** bis zur Abnahme, danach Freigabe des Platzes.
 
-**Dauer:** bestimmt durch die Schreibrate des Arrays mit Parität (auf Tower nicht gemessen); Größenordnung Stunden
-bis ein Tag. Vorher auf der Testinstanz mit einem Teilbestand messen.
+**Dauer:** auf Tower gemessen 27,5 MB/s über einen gemischten Teilbestand (19.3), hochgerechnet rund 18 Stunden für
+1,8 TB; der Import läuft wiederholbar in Etappen.
 
 **Rückfall:** Bis zur Abnahme kann der alte Stand wieder beschreibbar gemacht werden.
 
@@ -266,3 +266,67 @@ bis ein Tag. Vorher auf der Testinstanz mit einem Teilbestand messen.
 6. **Office** (ONLYOFFICE, "Lokal öffnen").
 7. **Explorer-Zugriff** nach Entscheidung.
 8. **Migration:** Probelauf, dann Umstellung Tower; danach HM-SRV.
+
+---
+
+## 19. Prototyp-Ergebnisse (Tower, 2026-09-26)
+
+**Aufbau:** Testmodul `fm_proto` (nur auf Tower, nicht im Repo) mit `fm.blob`/`fm.node`/`fm.revision`/`fm.upload`,
+eigene DB `fmv2` (PostgreSQL 16), Odoo im **Prefork-Modus** (`workers=2`, `x_sendfile=True`) hinter **nginx**
+(`X-Accel-Redirect`, `location /web/filestore/ internal`). Blob-Speicher auf einem temporären Array-Share
+`fmv2blobs` (nur `disk3`, kein Cache, **keine** SMB-Freigabe), eingehängt unter `<data_dir>/filestore/fmv2/fm`.
+Tests aus einem Hilfscontainer über nginx.
+
+### 19.1 Blob-Speicher, Upload in Stücken, Auslieferung
+| Test | Ergebnis |
+|---|---|
+| 3-GB-Datei hochladen (Stücke 16 MB / 4 MB) | 115 MB/s bzw. 84 MB/s; Hash identisch mit der Quelle; Blob liegt auf `disk3` |
+| `finish` (Hash erneut lesen, `fsync`, DB) für 3 GB | **51–56 s im Request**. Für sehr große Dateien gehört das in einen Hintergrundjob (`finish` → Status "wird verarbeitet" → Cron) |
+| Download 3 GB über nginx | 9,6 s, Hash identisch; Odoo braucht **5 ms** (nginx liefert per `x_sendfile`, Pfadprüfung `http.py:665-680` greift für den eingehängten Share), kein `X-Accel-Redirect` sichtbar beim Client |
+| Range `bytes=1000-1999` | 206, 1000 Bytes, Inhalt korrekt, `Content-Range` korrekt |
+| `If-None-Match` mit SHA-256-ETag | 304 |
+| Abbruch nach 5 Stücken, Fortsetzen | fortgesetzt ab dem Server-Stand; wiederholtes Stück wird übersprungen (idempotent); Stück mit Lücke → 409 |
+| `finish` doppelt | zweites liefert dieselbe Revision (`repeated`), genau **1** Revision |
+| Gleicher Inhalt unter anderem Namen | 1 Blob, 2 Knoten (Deduplizierung) |
+| Worker-Abbruch (`os._exit`) nach dem Verlinken des Blobs bzw. vor dem Commit | im Prefork stirbt nur der Worker (nginx meldet Fehler, Odoo startet ihn neu); danach Blob auf der Platte, keine DB-Zeile, Upload offen; erneutes `finish` → korrekt, genau 1 Revision (Temp-Datei wird erst nach dem Commit gelöscht) |
+| Fehler vor dem Commit → verwaister Blob | Aufräumjob (`@api.autovacuum`, Tabellensperre als erstes Statement, Checkliste) entfernt ihn; referenzierte Blobs bleiben |
+| Temp-Datei eines nie abgeschlossenen Uploads | bleibt liegen → Cron für abgelaufene Uploads nötig (geplant) |
+
+### 19.2 Befunde im Odoo-Code, die das Konzept ändern
+- **Kein Zugriff auf den rohen Request-Strom.** Odoos `HTTPRequest` reicht `stream` nicht durch (`HTTPREQUEST_ATTRIBUTES`,
+  `http.py:1498-1510`) und filtert `wsgi.input` aus `environ` (`http.py:1480-1495`). Ein Body ist nur über
+  `get_data()` erreichbar und liegt dann **ganz im RAM** (begrenzt durch `max_content_length` der Route). Deshalb ist
+  der Upload in Stücken zwingend.
+- **Speicher der Worker:** Große Request-Bodies lassen die Worker wachsen (bis 1,5–1,9 GB bei 16-MB-Stücken und 3 GB
+  Upload). `tracemalloc` zeigt **kein** Python-Leck (keine großen Objekte mehr referenziert); der Speicher liegt in
+  anonymen Bereichen und wird vom Allokator nicht zurückgegeben. `MALLOC_MMAP_THRESHOLD_`, `MALLOC_TRIM_THRESHOLD_`
+  und `MALLOC_ARENA_MAX` helfen nicht verlässlich. Odoo begrenzt es selbst: Im Prefork-Modus wird ein Worker nach dem
+  Request recycelt, sobald `limit_memory_soft` überschritten ist (beobachtet). Kleinere Stücke begrenzen das
+  Wachstum (1 MB: 160 MB, 4 MB: rund 200–600 MB, 16 MB: bis 1,9 GB). **Festlegung: Stücke von 4 MB,
+  `limit_memory_soft`/`hard` bewusst setzen.**
+- **Folge für den Explorer-Zugriff per WebDAV (11 A):** Der Windows-Explorer schickt eine Datei mit **einem** `PUT`.
+  Im Odoo-Prozess landet sie komplett im RAM; Dateien im GB-Bereich sind so nicht sauber möglich (Grenze
+  `limit_memory_hard`). Option A braucht daher für große Dateien einen WebDAV-Teil **außerhalb** des Odoo-Prozesses
+  (eigener kleiner Dienst, der streamt, den Blob schreibt und dann Odoo den Commit machen lässt) oder eine
+  Größengrenze für WebDAV-Schreibzugriffe. Das ist beim WebDAV-Prototyp zu klären.
+- **`fields.Integer` ist `int4`** (max. ca. 2,1 GB): Dateigrößen als `Float` (double, exakt bis 2^53) oder eigene
+  `bigint`-Spalte speichern.
+
+### 19.3 Kopierrate (Migration)
+Importwerkzeug (Kopie in einem Durchgang mit Hash, `sync` vor jedem Commit von 500 Dateien, danach DB-Zeilen per
+ORM) von der Live-Freigabe (nur lesend, shfs, Array) in den Blob-Speicher (shfs, `disk3`, Array mit Parität):
+
+| Teilbestand | Dateien | Größe | Dauer | Rate |
+|---|---|---|---|---|
+| `Gemeinde/08 Tontechnik` (viele kleine Dateien) | 59.924 | 29,8 GB | 1.279 s | 23,3 MB/s, 46,9 Dateien/s |
+| `Bilder/06 Verwandtschaft Enns` (Fotos) | 2.930 | 12,3 GB | 446 s | 27,7 MB/s |
+| `Programme/Mac` (wenige große Dateien) | 32 | 13,0 GB | 283 s | 46,0 MB/s |
+| **Gesamt** | **62.886** | **55,1 GB** | **2.008 s** | **27,5 MB/s, 31,3 Dateien/s** |
+
+- 0 Fehler; 32.274 Dateien waren inhaltsgleich mit bereits gespeicherten (vor allem kleine Dateien in `Tontechnik`),
+  daher rund 2,5 GB weniger Speicher.
+- **Unversehrtheit:** Stichprobe von 300 zufälligen Dateien: Blob-Inhalt = Blob-Name (SHA-256) = Quelldatei, 300 von 300.
+- **Hochrechnung für den ganzen Share (1,8 TB):** bei 27,5 MB/s etwa **18 Stunden**, bei 46 MB/s (große Dateien) etwa
+  11 Stunden. Begrenzend ist das Array mit Parität (Quelle und Ziel liegen beide auf dem Array). Unraids Schreibmodus
+  "reconstruct write" (Turbo Write) dürfte die Rate erhöhen, ist aber nicht getestet. Der Import ist wiederholbar und
+  kann über mehrere Nächte laufen (Abschnitt 14).
