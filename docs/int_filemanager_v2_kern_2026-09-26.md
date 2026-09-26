@@ -132,13 +132,14 @@ Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
 | 2026-09-26 | HM-SRV bleibt vorerst beim heutigen Modul |
 | 2026-09-26 | Modellnamen mit Modulpräfix (`int_filemanager.node` usw.) nach Odoo-Konvention |
 | 2026-09-26 | Code nach Odoo-/OCA-Konventionen: Englisch in Code, Kommentaren und Commits; Oberflächentexte englisch + deutsche Übersetzung (`i18n/de.po`) |
-| 2026-09-26 | Prüfwerkzeuge: pre-commit (OCA-Vorlage, nur neuer Code) und Odoos `test_lint`; keine GitHub Action |
+| 2026-09-26 | Prüfwerkzeuge: pre-commit (OCA-Vorlage, nur neuer Code), Odoos `test_lint` und Odoos Language Server `odoo-ls` (prüft Modelle, Felder, Abhängigkeiten); keine GitHub Action |
+| 2026-09-26 | Spätere Änderungen am Datenmodell über Migrationsskripte mit Odoos `upgrade-util` |
 | 2026-09-26 | Start ohne Netzlaufwerk, mit Eingangsordner; Netzlaufwerk später nach Nutzung (WebDAV über `odoo fmdav` oder SMB über Odoo-FUSE) |
 
 ## 11. Reihenfolge mit Abnahme
 
 Jeder Schritt ist erst fertig, wenn seine Abnahme erfüllt ist; der nächste beginnt erst danach. **Für jeden Schritt
-gilt zusätzlich:** pre-commit und Odoos `test_lint` grün, `i18n/de.po` vollständig (keine englischen Texte in der
+gilt zusätzlich:** pre-commit, Odoos `test_lint` und `odoo-ls` ohne Befund im eigenen Code, `i18n/de.po` vollständig (keine englischen Texte in der
 deutschen Oberfläche). Jeder Schritt wird
 vor der Abnahme von einer zweiten Instanz gegengelesen (`codex -p review`). *(Abnahmekriterien: Vorschlag, mit der
 Freigabe verbindlich.)*

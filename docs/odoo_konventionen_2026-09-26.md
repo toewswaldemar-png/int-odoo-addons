@@ -13,8 +13,10 @@ diesem Repo, insbesondere int_filemanager 2. Englische Fachbegriffe bleiben, wo 
 | 4 | Odoo **`test_lint`** – `odoo/addons/test_lint/tests/` (im Image `odoo:19.0`) | was Odoos CI **maschinell** prüft; läuft über **alle** Addon-Pfade, also auch über unsere Module |
 | 5 | **OCA Guidelines** – `OCA/odoo-community.org`, `website/Contribution/CONTRIBUTING.rst` | Community-Regeln (Stand-Datum 2018, teils veraltet; Tests/Commits aktualisiert) |
 | 6 | **OCA-Repo-Vorlage** – `OCA/oca-addons-repo-template` (`.pre-commit-config.yaml`, `.pylintrc-mandatory`) | was die OCA **maschinell** prüft (Stand 09/2026) |
+| 7 | **odoo-ls** – `odoo/odoo-ls` (Odoo Language Server, Release 1.6.0 vom 2026-09-22) | Odoo-eigene statische Prüfung, die Modelle, Felder und Abhängigkeiten kennt (Abschnitt 9) |
+| 8 | **upgrade-util** – `odoo/upgrade-util` | Odoos eigene Hilfsfunktionen für Migrationsskripte (Abschnitt 1) |
 
-Rangfolge: Odoo (1–4) vor OCA (5–6). Bei Änderungen an **bestehendem** Code gilt nach Odoo 1: vorhandenen Stil nicht
+Rangfolge: Odoo (1–4) vor OCA (5–6); 7 und 8 sind Odoo-Werkzeuge, keine Regeln. Bei Änderungen an **bestehendem** Code gilt nach Odoo 1: vorhandenen Stil nicht
 umformatieren, Diffs klein halten; größere Umstellungen erst als reiner Verschiebe-Commit, dann die Änderung.
 
 ---
@@ -49,6 +51,10 @@ umformatieren, Diffs klein halten; größere Umstellungen erst als reiner Versch
   `demo: []`) – Odoo 4 meldet das als Fehler; `icon` nicht auf den Standardpfad setzen.
 - **Version** `19.0.x.y.z`: x = Datenmodell/Views mit Migrationsbedarf, y = neue Funktion abwärtskompatibel,
   z = Fehlerbehebung (OCA 5). Bei brechenden Änderungen Migrationsskript in `migrations/19.0.x.y.z/`.
+- **Migrationsskripte** mit `odoo/upgrade-util` schreiben statt eigenem SQL (`from odoo.upgrade import util`: Felder/Modelle
+  umbenennen oder entfernen, Datensätze verschieben, Domains anpassen, SQL-Helfer). Einbinden über
+  `--upgrade-path=<upgrade-util>/src` oder `pip install git+https://github.com/odoo/upgrade-util@master`
+  (im Image nicht enthalten). Dieselben Helfer nutzt Odoo für seine eigenen Versionssprünge.
 - `license` und (OCA) `images` angeben, keine leeren Schlüssel. Externe Python-Pakete/Programme in
   `external_dependencies`.
 
@@ -220,6 +226,22 @@ Pylint mit `used-before-assignment`, `undefined-variable`, `eval-used`, `unreach
 Parameternamen `ids`/`context`, keine Onchange-Domains, kein Import aus `odoo.orm`, Überschreibungs-Signaturen,
 doppelte `.pot`-Einträge, Routen-Vererbung, nicht importierte Testdateien.
 
+**odoo-ls, Parse-Modus** (Odoo 7): `odoo_ls_server --parse -c <Odoo-Pfad> -a <Addon-Pfad> -t <Addon-Pfad>
+--python <python> --stdlib <typeshed>/stdlib -s <typeshed>/stubs -o out.json` schreibt alle Befunde als JSON.
+Findet, was pylint nicht sehen kann, weil es die Odoo-Registry kennt: unbekanntes Modell, Modell nicht in `depends`,
+Feld existiert nicht, ungültiges Domain-Feld, Methode existiert nicht, Compute-Methode setzt das Feld nicht,
+Related-Feld mit falschem Typ, falsche Aufrufargumente; dazu ESLint (oxc) für JS.
+*Probelauf 2026-09-26 auf Tower* (Wegwerf-Container aus `odoo:19.0-hm`, `--network none`, nur lesend eingebunden:
+`fm_proto` und die Live-Addons): ~30 s. Echte Funde: 7 × `documents.document` in `onlyoffice_odoo` ohne
+`documents` in `depends` (Enterprise-Modell), ESLint-Hinweise in `onlyoffice_odoo`, 4 × doppelte Basisklasse im
+Prototyp durch `try: import wsgidav … except ImportError: … = object` (sauber: `external_dependencies` im
+Manifest statt Ersatzklasse). Fallstricke: (1) `typeshed.zip` aus dem Release gehört dazu, sonst bricht der Lauf
+ab; (2) Bibliotheken außerhalb des Images (z. B. `wsgidav` in `/mnt/pylib`) per `PYTHONPATH` sichtbar machen, sonst
+Fehlalarme; (3) die Ausgabe enthält auch ~1.800 Befunde aus dem Odoo-Core → nach eigenen Pfaden filtern;
+(4) Hinweise mit Stufe 3 (z. B. `OLS03024`, Klassen in Testfunktionen) sind Information, kein Fehler.
+Das Programm beendet sich unabhängig von den Befunden normal, deshalb wertet ein kleines Skript das JSON aus und
+scheitert bei Fehlern/Warnungen in eigenen Pfaden.
+
 **OCA pre-commit** (Vorlage, Odoo ≥ 18): `whool`, `oca-gen-addon-readme` (README aus `readme/`-Bausteinen, Markdown),
 `oca-fix-manifest-website`, `oca-gen-external-dependencies`, `oca-checks-odoo-module` (mit `--fix`), `oca-checks-po`,
 `autoflake`, `black` (bzw. ruff), `prettier`, `eslint`, `trailing-whitespace`, `end-of-file-fixer`,
@@ -243,6 +265,7 @@ doppelte `.pot`-Einträge, Routen-Vererbung, nicht importierte Testdateien.
 | `sudo()` | heutiges Modul: 59 Stellen (N1-Lücke) | v2: I7 – nie auf Nutzereingaben; jede Stelle begründet |
 | Rohes SQL | heutiges Modul: 13 × `cr.execute`; Prototyp: Pfadauflösung per rekursiver CTE | v2: nur wo das ORM nicht reicht, mit `odoo.tools.SQL`, Rechteprüfung über das ORM danach |
 | Hooks | Prototyp `post_load` in `__init__.py` | in `hooks.py` (OCA) |
-| Lint/pre-commit | im Repo **keine** Konfiguration | **entschieden 2026-09-26:** pre-commit nach OCA-Vorlage (nur neuer Code) + Odoos `test_lint` auf der Testinstanz; keine GitHub Action |
+| Lint/pre-commit | im Repo **keine** Konfiguration | **entschieden 2026-09-26:** pre-commit nach OCA-Vorlage (nur neuer Code) + Odoos `test_lint` + **odoo-ls Parse-Modus** (nur eigene Pfade) auf der Testinstanz; keine GitHub Action |
+| Migrationsskripte | im heutigen Modul keine `migrations/` | **entschieden 2026-09-26:** ab dem ersten Datenmodell-Wechsel nach Inbetriebnahme mit `odoo/upgrade-util` |
 | Commit-Nachrichten | bisher `docs: …`, `CLAUDE.md: …` | für Modul-Code `[TAG] modul: …` (Odoo 2) |
-| Manifest | `19.0.1.15.0`, `LGPL-3` – Format passt | keine Schlüssel mit Standardwert; `hooks`/`external_dependencies` (z. B. `wsgidav`) angeben |
+| Manifest | `19.0.1.15.0`, `LGPL-3` – Format passt | keine Schlüssel mit Standardwert; `hooks`/`external_dependencies` (z. B. `wsgidav`) angeben, kein `except ImportError`-Ersatz |

@@ -55,8 +55,9 @@ eine belastbare Aussage.
 - **Code-Konventionen:** `docs/odoo_konventionen_2026-09-26.md` (Odoo Coding/Git Guidelines 19.0, Security Pitfalls,
   Odoos `test_lint`, OCA-Richtlinien und -pre-commit) gelten für neuen Code; Abschnitt 10 dort listet die
   Abweichungen dieses Repos. Entschieden 2026-09-26: neuer Code **englisch** (Namen, Kommentare, Docstrings, Logs,
-  Commits `[TAG] modul: …`), Oberflächentexte englisch + `i18n/de.po`; **pre-commit** (OCA-Vorlage, nur neuer Code)
-  und Odoos **`test_lint`** müssen grün sein; keine GitHub Action. Bestehende Module nicht umformatieren.
+  Commits `[TAG] modul: …`), Oberflächentexte englisch + `i18n/de.po`; **pre-commit** (OCA-Vorlage, nur neuer
+  Code), Odoos **`test_lint`** und **odoo-ls** (Parse-Modus, Konventionen Abschnitt 9) müssen grün sein; keine GitHub Action;
+  Migrationsskripte mit `odoo/upgrade-util`. Bestehende Module nicht umformatieren.
   Kommentare: Hausregeln in Abschnitt 3 "Kommentare und Docstrings" (Warum statt Was, Invarianten-Kürzel, Odoo-Stellen
   per Funktionsname statt Zeilennummer).
 

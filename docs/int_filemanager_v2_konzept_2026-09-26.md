@@ -20,7 +20,7 @@ Start ohne Explorer-Zugriff, WebDAV/SMB vorbereitet), **wartet auf Freigabe durc
    **unbegrenzt**; Papierkorb **30 Tage**; Rechte-Bereiche **minimal**; **HM-SRV bleibt vorerst beim heutigen
    Modul** (17).
 
-5. Code nach den Odoo-/OCA-Konventionen (`docs/odoo_konventionen_2026-09-26.md`): **Englisch** in Namen, Kommentaren, Docstrings, Log-Meldungen und Commits (`[TAG] modul: …`); Oberflächentexte englisch im Code, deutsche Übersetzung in `i18n/de.po`. Prüfwerkzeuge: **pre-commit** nach OCA-Vorlage (nur für neuen Code) und Odoos **`test_lint`** auf der Testinstanz; **keine** GitHub Action (Entscheidung 2026-09-26).
+5. Code nach den Odoo-/OCA-Konventionen (`docs/odoo_konventionen_2026-09-26.md`): **Englisch** in Namen, Kommentaren, Docstrings, Log-Meldungen und Commits (`[TAG] modul: …`); Oberflächentexte englisch im Code, deutsche Übersetzung in `i18n/de.po`. Prüfwerkzeuge: **pre-commit** nach OCA-Vorlage (nur für neuen Code), Odoos **`test_lint`** und **odoo-ls** (Parse-Modus, nur eigene Pfade) auf der Testinstanz; **keine** GitHub Action; Migrationsskripte mit **`odoo/upgrade-util`** (Entscheidung 2026-09-26).
 
 **Grundlage:** Live-Prüfungen auf Tower und Code-Prüfungen im Odoo-19-Core, dokumentiert in
 `int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitte 19 und 20). Dort ist belegt, dass fast alle Fehler
@@ -412,7 +412,10 @@ von Tower sind ca. 3,7 TB frei.
   bzw. ruff, autoflake, pylint-odoo mit der OCA-Pflichtliste, oca-checks-odoo-module/-po, prettier, eslint) – nur für
   den neuen Code, bestehende Module ausgenommen (Odoo-Regel: vorhandenen Code nicht umformatieren); Odoos `test_lint`
   (`--test-tags /test_lint`) bei jedem Testlauf auf der Testinstanz, pylint dafür per `PYTHONPATH` eingebunden (im
-  Image nicht enthalten). Keine GitHub Action. Übersetzung: `i18n/de.po` wird mit jedem Schritt aktualisiert.
+  Image nicht enthalten); **odoo-ls** im Parse-Modus (`odoo/odoo-ls`, Wegwerf-Container aus dem Odoo-Image, Befunde
+  nach eigenen Pfaden gefiltert; Aufruf und Fallstricke in `docs/odoo_konventionen_2026-09-26.md` Abschnitt 9).
+  Keine GitHub Action. Übersetzung: `i18n/de.po` wird mit jedem Schritt aktualisiert. Datenmodell-Änderungen nach
+  Inbetriebnahme über `migrations/` mit `odoo/upgrade-util`, getestet an einer Kopie der Live-DB.
 - **Update-Absicherung:** Tests für die genutzten halb-internen Odoo-Stellen (`_check_access`/`_search`-Muster,
   `x_sendfile`-Pfad, Routen, `odoo.cli.command.Command` + Laden aus Addons, `Registry.check_signaling`/
   `signal_changes`, `odoo.service.model.retrying`, `res.users.apikeys._check_credentials`); ein Image-Update erst nach
@@ -442,7 +445,7 @@ Abnahmekriterien je Schritt ("fertig, wenn …") und Gegenlesen durch eine zweit
 
 1. ~~Prototypen auf Tower~~ (erledigt, 19).
 2. ~~Konzept festschreiben~~ (erledigt 2026-09-26) → **Freigabe durch den Nutzer**.
-3. **Fundament:** zuerst pre-commit und `test_lint` einrichten (16), dann Modelle, Blob-Speicher, Schreibwege, Rechte,
+3. **Fundament:** zuerst pre-commit, `test_lint` und odoo-ls einrichten (16), dann Modelle, Blob-Speicher, Schreibwege, Rechte,
    Tests je Invariante.
 4. **Oberfläche** auf das neue Modell umstellen.
 5. **Vorschau/OCR** über den Umwandler.
