@@ -9,6 +9,8 @@ Dateiinhalte liegen in einem **eigenen, inhaltsadressierten Blob-Speicher**. Odo
 gebaut wird nur, wo Odoo nachweislich begrenzt ist. Der Bestand wird **kopiert** (kein Hardlink).
 
 **Maßgebliche Dokumente (in dieser Reihenfolge lesen):**
+0. `docs/int_filemanager_v2_kern_2026-09-26.md` – **Kurzfassung** (Regeln, Aufbau, Funktionen zum Start,
+   Entscheidungen, Reihenfolge mit Abnahmekriterien); das ist das Dokument zur Freigabe.
 1. `docs/int_filemanager_v2_konzept_2026-09-26.md` – Konzept: Invarianten I1–I12, Datenmodell, Schreibwege,
    Migration, Testplan, offene Entscheidungen (17), Reihenfolge (18), **Prototyp-Ergebnisse (19, WebDAV: 19.4)**.
 2. `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`, Abschnitte **19 und 20** – Live-Prüfungen auf Tower,
@@ -32,6 +34,8 @@ gebaut wird nur, wo Odoo nachweislich begrenzt ist. Der Bestand wird **kopiert**
 | 2026-09-26 | Migration: **ganzer Share**; Versionen **unbegrenzt**; Papierkorb **30 Tage** (Konzept 17.1–17.4) |
 | 2026-09-26 | WebDAV-Bauform, falls WebDAV: **eigener Odoo-Befehl `odoo fmdav`** (Konzept 11.2, 19.10) |
 | 2026-09-26 | **Start ohne Explorer-Zugriff** (Odoo-Oberfläche, ONLYOFFICE im Browser) **plus Eingangsordner**; Netzlaufwerk (WebDAV oder SMB über Odoo-FUSE) später nach Nutzung entscheiden (Konzept 11, 17.1/17.7) |
+| 2026-09-26 | Code nach den Odoo-/OCA-Konventionen (`docs/odoo_konventionen_2026-09-26.md`): **Englisch** in Namen, Kommentaren, Docstrings, Log-Meldungen und Commits (`[TAG] modul: …`); Oberflächentexte englisch im Code, deutsche Übersetzung in `i18n/de.po`. Prüfwerkzeuge: **pre-commit** nach OCA-Vorlage (nur für neuen Code) und Odoos **`test_lint`** auf der Testinstanz; **keine** GitHub Action |
+| 2026-09-26 | Modellnamen mit Modulpräfix `int_filemanager.*` (Konventionen, `docs/odoo_konventionen_2026-09-26.md`) |
 | 2026-09-26 | Rechte-Bereiche **minimal** ("Alle" + heutiger Schutzordner); **HM-SRV bleibt vorerst beim heutigen Modul** (17.5, 17.6) |
 
 Vorgabe des Nutzers für den Umbau: **erst vollständig durchplanen, keine Zeile Modul-Code vor Freigabe des

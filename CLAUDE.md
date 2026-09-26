@@ -52,11 +52,20 @@ eine belastbare Aussage.
 
 ## Weitere Grundsätze
 
+- **Code-Konventionen:** `docs/odoo_konventionen_2026-09-26.md` (Odoo Coding/Git Guidelines 19.0, Security Pitfalls,
+  Odoos `test_lint`, OCA-Richtlinien und -pre-commit) gelten für neuen Code; Abschnitt 10 dort listet die
+  Abweichungen dieses Repos. Entschieden 2026-09-26: neuer Code **englisch** (Namen, Kommentare, Docstrings, Logs,
+  Commits `[TAG] modul: …`), Oberflächentexte englisch + `i18n/de.po`; **pre-commit** (OCA-Vorlage, nur neuer Code)
+  und Odoos **`test_lint`** müssen grün sein; keine GitHub Action. Bestehende Module nicht umformatieren.
+  Kommentare: Hausregeln in Abschnitt 3 "Kommentare und Docstrings" (Warum statt Was, Invarianten-Kürzel, Odoo-Stellen
+  per Funktionsname statt Zeilennummer).
+
 - **Claims immer verifizieren**, nie "sollte sicher funktionieren" — im Code/Container nachsehen,
   live testen, nicht raten.
 - **Produktentscheidungen vorab mit dem Nutzer klären**, nicht impliziten Annahmen folgen.
 - **Einstieg int_filemanager: `docs/int_filemanager_v2_uebergabe_2026-09-26.md`** (Stand, Entscheidungen, nächste
-  Schritte, Testumgebung auf Tower). Leitfaden ist das Konzept `docs/int_filemanager_v2_konzept_2026-09-26.md`
+  Schritte, Testumgebung auf Tower). Kurzfassung zur Freigabe: `docs/int_filemanager_v2_kern_2026-09-26.md`.
+  Leitfaden ist das Konzept `docs/int_filemanager_v2_konzept_2026-09-26.md`
   (Nutzerentscheidung 2026-09-26: vollständig Odoo-Addon, Odoo alleiniger Schreiber, eigener Blob-Speicher).
   Hintergrund und Befunde zum heutigen Modul: `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`
   (Abschnitte 19/20). Vor Freigabe des Konzepts kein Modul-Code.
