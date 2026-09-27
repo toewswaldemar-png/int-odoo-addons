@@ -1,7 +1,8 @@
 # Übergabe: int_filemanager 2 – Stand und nächste Schritte
 
-Stand 2026-09-26, ergänzt 2026-09-27 (Code-Prüfung eingearbeitet). Für eine neue Sitzung: zuerst dieses Dokument,
-dann Kern und Konzept lesen.
+Stand 2026-09-26, ergänzt 2026-09-27 (Code-Prüfung eingearbeitet, **Konzept freigegeben, Schritt 3 begonnen**).
+Für eine neue Sitzung: zuerst dieses Dokument, dann Kern und Konzept lesen. **Gearbeitet wird auf dem Branch
+`feature/int-filemanager-v2`** (master = Stand `int_filemanager-v1` plus Dokumente).
 
 ## 1. Worum es geht
 
@@ -94,9 +95,25 @@ Konzepts.** Prototypen auf der Testinstanz sind erlaubt. **Freigabe von Konzept 
    3–7, 10–14, 16–18 eingearbeitet.
 5. ~~Code-Prüfung einarbeiten~~ – **erledigt** (2026-09-27): Befunde A1–A21 in Konzept und Kern.
 6. ~~Freigabe durch den Nutzer~~ – **erteilt** (2026-09-27).
-7. **Nächster Schritt: Umsetzung nach Konzept 18.** Schritt 3 (Fundament) beginnt mit: Test-Image aktualisieren
-   (`docker build --pull`, Konzept 13), pre-commit/`test_lint`/odoo-ls einrichten, **zuerst die Tests für A1–A4**
-   (erzwungene Überlappung, echter Prozessabbruch, Konzept 16). Update der Live-Instanz ist eine eigene Entscheidung.
+7. **Schritt 3 (Fundament), erster Teil – erledigt** (2026-09-27, Branch `feature/int-filemanager-v2`):
+   - Tag `int_filemanager-v1` (Stand für HM-SRV und Tower-Live), Branch angelegt.
+   - Test-Image `odoo:19.0-hm-test` (19.0-20260908, mit Sicherheits-Fix); Live-Tag unberührt.
+   - pre-commit nach OCA-Vorlage, nur für `int_filemanager` (`py -3.13 -m pre_commit run --files …`; der Git-Hook
+     läuft bei jedem Commit), `.gitattributes` mit LF für `int_filemanager`, Manifest mit Autor, `README.rst`.
+   - Prüfskript `tools/v2check/v2check.sh [--quick]` für odoo-ls und Odoos `test_lint` (Konventionen 9): scheitert
+     nur an Befunden in seit `int_filemanager-v1` geänderten/neuen Dateien; der v1-Code hat 12 Altbefunde.
+8. **Nächster Schritt: Tests für A1–A4 zuerst schreiben** (Konzept 16, Kern 11 Schritt 3), danach Modelle,
+   Blob-Speicher, Schreibwege, Rechte. Vorab zu klären (Vorschlag machen, Nutzer entscheidet):
+   - **Testform:** A1/A2 (Rechte über `call_kw`, JSON-2, `search_read`/`read_group` auf jedem Modell) passen in
+     Odoo-Tests (`TransactionCase`/`HttpCase`). A3/A4 brauchen echte Transaktionen, Überlappung per Barriere oder
+     Fehlerinjektion und echten Prozessabbruch – `TransactionCase` committet nicht und führt keine Post-Commit-Hooks
+     aus. Vorbild: der Durchstich mit `os._exit` im DB-Vorrang-Konzept (Abschnitt 20) und `fm_proto`
+     (`blobstore.fault`, `controllers.py`).
+   - **Reihenfolge im Modul:** neue Modelle (`int_filemanager.node`/`.revision`/`.blob`/`.scope`/`.upload`/
+     `.operation`) neben den alten; Version 19.0.2.0.0 erst, wenn das Datenmodell steht.
+   - Nach jedem Teil: pre-commit grün, `tools/v2check/v2check.sh` grün, `i18n/de.po` gepflegt, Gegenlesen mit
+     `codex -p review`; Commit nur nach Rückfrage.
+   Update der Live-Instanz ist eine eigene Entscheidung.
 
 ## 5. Testumgebung auf Tower (lokaler Unraid, `ssh unraid`)
 
@@ -116,14 +133,14 @@ gelesen.
 | `fmv2_dav` | WebDAV-Dienst (Image `fmdav:proto`, Port **8082**), Konfiguration `/mnt/user/appdata/fmtest/fmdav/env` (nur root lesbar, enthält den API-Schlüssel von `davuser`); Wurzelordner in `fmv2`: Knoten `davtest` (ID 68624). Anonymer Testzugang nur für `192.168.188.188` (Arbeitsrechner). Kopie des Codes: `docs/prototypes/fm2/fmdav/` |
 | Test-Image | `odoo:19.0-hm-test` (19.0-20260908, gebaut 2026-09-27 aus einer Kopie von `/mnt/user/appdata/odoo/Dockerfile` in `/tmp/odoo-test-build`); das Live-Tag `odoo:19.0-hm` (20260817) ist unverändert |
 | pre-commit (Arbeitsrechner) | 4.6.2 für Windows-Python 3.13 (`py -3.13 -m pre_commit`), Programme unter `%APPDATA%\Python\Python313\Scripts` (nicht im `PATH`) |
-| odoo-ls | `/tmp/odoo-ls` auf dem Tower-Host (Release 1.6.0: `odoo_ls_server`, `typeshed/`, Auswerteskripte `sum.py`/`det.py`); läuft im Wegwerf-Container `docker run --rm --network none --entrypoint /ols/odoo_ls_server … odoo:19.0-hm --parse …` (Aufruf: Konventionen Abschnitt 9). Liegt in `/tmp`, also nach einem Neustart weg |
+| Prüfskript | `tools/v2check/v2check.sh [--quick]` (Repo): odoo-ls + Odoos `test_lint`, gefiltert auf `int_filemanager` (Konventionen Abschnitt 9). Auf Tower: `/mnt/user/appdata/fmtest/odoo-ls` (Release 1.6.0 mit `typeshed/`), `/mnt/user/appdata/fmtest/lintlib` (pylint 3.3.9), `/mnt/user/appdata/fmtest/v2src` (vom Skript kopierter Arbeitsstand), `/mnt/user/appdata/fmtest/v2check` (Ergebnisse, Daten-Ordner), DB `fmv2_lint` auf `fmtest_pg` (bei jedem Lauf neu) |
 | Konfiguration | `/mnt/user/appdata/fmtest/config_v2/odoo.conf` und `nginx.conf` (Kopie ohne Passwort: `docs/prototypes/fm2/tower/config_v2_odoo_und_nginx.txt`) |
 | Blob-Speicher | temporärer Unraid-Share **`fmv2blobs`** (nur `disk3`, kein Cache, keine SMB-Freigabe), Config `/boot/config/shares/fmv2blobs.cfg`, ca. **53 GB** (Import-Teilbestand + Testdateien) |
 | Testdateien | `/mnt/user/test/v2src` (3,3 GB) |
 | Skripte | `/mnt/user/appdata/fmtest/runv2.sh <schritt>` (Prototyp-Tests `t_v2.py`), `runt.sh` (Block-A-Tests), `fmshell.sh <db>` (odoo shell mit Watcher-Schalter), `snap.sh`; Tests unter `/mnt/user/appdata/fmtest/tests/` (Kopie: `docs/prototypes/fm2/tests*`) |
 | Testnutzer | in `fmtest`: `admin`/`admin`, `fmuser`/`fmtest-pw-1`; in `fmreal`: `fmuser_real`/`fmreal-pw-1`; in `fmv2`: `admin`/`admin`, `davuser`/`davuser-pw-1` plus API-Schlüssel "fmdav-proto" für `davuser` und `admin` (nur Testdatenbanken) |
 
-**Aufräumen, wenn nicht mehr gebraucht (nur nach Rückfrage):** Container `fmv2_*` (inkl. `fmv2_dav`, `fmv2_odoo_dav`, `fmv2_fmdav`), `/mnt/user/appdata/fmtest/pylib_v2`, `/tmp/odoo-ls`, `fmtest_*`, `fmreal_odoo`;
+**Aufräumen, wenn nicht mehr gebraucht (nur nach Rückfrage):** Container `fmv2_*` (inkl. `fmv2_dav`, `fmv2_odoo_dav`, `fmv2_fmdav`), `/mnt/user/appdata/fmtest/pylib_v2`, `lintlib`, `odoo-ls`, `v2src`, `v2check`, DB `fmv2_lint`, Image `odoo:19.0-hm-test`, `fmtest_*`, `fmreal_odoo`;
 Images `fmdav:proto`, `python:3.12-slim`, `debian:bookworm-slim`, `curlimages/curl`;
 Share `fmv2blobs` (Verzeichnis `/mnt/disk3/fmv2blobs` + `.cfg`); `/mnt/user/test/v2src`, `/mnt/user/test/fmroot`;
 `/mnt/user/appdata/fmtest`; Netzwerk `fmtest-net`.

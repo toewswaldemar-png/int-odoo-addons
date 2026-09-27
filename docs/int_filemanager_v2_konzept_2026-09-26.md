@@ -517,6 +517,8 @@ von Tower sind ca. 3,6 TB frei (2026-09-27), davon 3,2 TB auf disk2 + disk3 (Ent
   (`--test-tags /test_lint`) bei jedem Testlauf auf der Testinstanz, pylint dafür per `PYTHONPATH` eingebunden (im
   Image nicht enthalten); **odoo-ls** im Parse-Modus (`odoo/odoo-ls`, Wegwerf-Container aus dem Odoo-Image, Befunde
   nach eigenen Pfaden gefiltert; Aufruf und Fallstricke in `docs/odoo_konventionen_2026-09-26.md` Abschnitt 9).
+  Beides zusammen: `tools/v2check/v2check.sh` – scheitert nur an Befunden in seit `int_filemanager-v1` geänderten
+  oder neuen Dateien (eingerichtet 2026-09-27).
   Keine GitHub Action. Übersetzung: `i18n/de.po` wird mit jedem Schritt aktualisiert. Datenmodell-Änderungen nach
   Inbetriebnahme über `migrations/` mit `odoo/upgrade-util`, getestet an einer Kopie der Live-DB.
 - **Update-Absicherung:** Tests für die genutzten halb-internen Odoo-Stellen (`_check_access`/`_search`-Muster,

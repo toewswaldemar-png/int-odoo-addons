@@ -70,6 +70,9 @@ eine belastbare Aussage.
   (Nutzerentscheidung 2026-09-26: vollständig Odoo-Addon, Odoo alleiniger Schreiber, eigener Blob-Speicher).
   Hintergrund und Befunde zum heutigen Modul: `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`
   (Abschnitte 19/20). Konzept und Kern am 2026-09-27 freigegeben; Umsetzung nach Konzept 18 / Kern 11 mit Abnahme je Schritt.
+  v2-Code nur auf Branch `feature/int-filemanager-v2` (Tag `int_filemanager-v1` = heutiges Modul). Prüfungen:
+  pre-commit (`py -3.13 -m pre_commit`, Hook installiert) und `tools/v2check/v2check.sh [--quick]` (odoo-ls +
+  `test_lint` auf Tower, Konventionen Abschnitt 9).
 - `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher (Konzept 19.5, N5). Workaround:
   vorher `int_filemanager.watcher_enabled` auf `false`, danach zurück auf `true` (der laufende Server prüft den
   Schalter nur beim Start, sein Watcher läuft weiter).

@@ -242,6 +242,17 @@ Fehlalarme; (3) die Ausgabe enthält auch ~1.800 Befunde aus dem Odoo-Core → n
 Das Programm beendet sich unabhängig von den Befunden normal, deshalb wertet ein kleines Skript das JSON aus und
 scheitert bei Fehlern/Warnungen in eigenen Pfaden.
 
+**Aufruf für int_filemanager 2 (seit 2026-09-27): `tools/v2check/v2check.sh [--quick]`** (Git Bash, aus dem Repo).
+Kopiert den Arbeitsstand von `int_filemanager` und `onlyoffice_odoo` nach Tower, lässt odoo-ls (~25 s) und ohne
+`--quick` auch Odoos `test_lint` (~8 min, eigene DB `fmv2_lint` auf `fmtest_pg`, pylint 3.3.9 aus
+`/mnt/user/appdata/fmtest/lintlib`) in Wegwerf-Containern aus `odoo:19.0-hm-test` laufen und filtert mit
+`tools/v2check/v2check_filter.py` auf `int_filemanager`. Befunde in Dateien, die sich seit dem Tag
+`int_filemanager-v1` geändert haben oder neu sind, lassen die Prüfung scheitern; Befunde im unveränderten v1-Code
+werden als Altbestand nur angezeigt. Grund für den Filter: `test_pylint` prüft den ganzen Odoo-Core, der mit
+pylint 3.3 selbst 4 Befunde hat (`l10n_tr_nilvera`, `point_of_sale`, `purchase`) – der Test schlägt deshalb immer
+fehl und sagt allein nichts über unseren Code. Probe am 2026-09-27: absichtlicher Fehler in einer neuen Datei →
+`FAIL`, 12 alte Befunde nur als Altbestand.
+
 **OCA pre-commit** (Vorlage, Odoo ≥ 18): `whool`, `oca-gen-addon-readme` (README aus `readme/`-Bausteinen, Markdown),
 `oca-fix-manifest-website`, `oca-gen-external-dependencies`, `oca-checks-odoo-module` (mit `--fix`), `oca-checks-po`,
 `autoflake`, `black` (bzw. ruff), `prettier`, `eslint`, `trailing-whitespace`, `end-of-file-fixer`,
