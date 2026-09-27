@@ -33,6 +33,7 @@
         "views/filemanager_trash_views.xml",
         "views/portal_templates.xml",
         "data/ir_cron.xml",
+        "data/int_filemanager_upload_cron.xml",
     ],
     "assets": {
         "web.assets_backend": [

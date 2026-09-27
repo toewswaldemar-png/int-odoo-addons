@@ -83,6 +83,18 @@ msgstr "Das Wiederherstellen würde mit einer bestehenden Datei oder einem Ordne
 
 #. module: int_filemanager
 #. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
+msgid "Specify either a target folder and name for a new file, or an existing file to revise - not both."
+msgstr "Bitte entweder einen Zielordner und Namen für eine neue Datei angeben oder eine bestehende Datei zum Überarbeiten - nicht beides."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
+msgid "This chunk does not continue where the upload left off."
+msgstr "Dieses Stück setzt nicht dort an, wo der Upload aufgehört hat."
+
+#. module: int_filemanager
+#. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "This file changed since you loaded it; reload and try again."
 msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneut versuchen."
@@ -108,3 +120,21 @@ msgstr "Dieser Vorgangsschlüssel wurde bereits verwendet."
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "This revision does not belong to this file."
 msgstr "Diese Revision gehört nicht zu dieser Datei."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
+msgid "This upload has not received any data yet."
+msgstr "Für diesen Upload wurden noch keine Daten empfangen."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
+msgid "This upload is not open."
+msgstr "Dieser Upload ist nicht offen."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
+msgid "This upload is not open for more chunks."
+msgstr "Dieser Upload ist nicht offen für weitere Stücke."
