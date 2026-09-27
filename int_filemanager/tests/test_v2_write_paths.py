@@ -272,3 +272,160 @@ class TestNodeCreateNewRevision(TransactionCase):
             self._node_env(self.outsider).create_new_revision(
                 self.node.id, self.base_revision_id, b"denied", "op-nr-denied"
             )
+
+
+@tagged("post_install", "-at_install")
+class TestNodeRenameOrMove(TransactionCase):
+    def setUp(self):
+        super().setUp()
+        self.write_group = (
+            self.env["res.groups"].sudo().create({"name": "Rename test writer"})
+        )
+        self.scope_a = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Rename test scope A",
+                    "read_group_ids": [(4, self.write_group.id)],
+                    "write_group_ids": [(4, self.write_group.id)],
+                }
+            )
+        )
+        self.other_write_group = (
+            self.env["res.groups"].sudo().create({"name": "Rename test other writer"})
+        )
+        self.scope_b = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Rename test scope B",
+                    "read_group_ids": [(4, self.other_write_group.id)],
+                    "write_group_ids": [(4, self.other_write_group.id)],
+                }
+            )
+        )
+        self.folder_a = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "folder_a", "scope_id": self.scope_a.id, "is_dir": True})
+        )
+        self.folder_b = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "folder_b", "scope_id": self.scope_b.id, "is_dir": True})
+        )
+        base_group = self.env.ref("int_filemanager.group_filemanager_user")
+        self.writer = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Rename writer",
+                    "login": "rename_writer",
+                    "group_ids": [(6, 0, [base_group.id, self.write_group.id])],
+                }
+            )
+        )
+        self.both_scopes_writer = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Rename both-scopes writer",
+                    "login": "rename_both_writer",
+                    "group_ids": [
+                        (
+                            6,
+                            0,
+                            [
+                                base_group.id,
+                                self.write_group.id,
+                                self.other_write_group.id,
+                            ],
+                        )
+                    ],
+                }
+            )
+        )
+        created = (
+            self.env["int_filemanager.node"]
+            .with_user(self.writer)
+            .create_file(self.folder_a.id, "doc.txt", b"content", "op-rn-setup")
+        )
+        self.node = self.env["int_filemanager.node"].sudo().browse(created["node_id"])
+
+    def _node_env(self, user=None):
+        return self.env["int_filemanager.node"].with_user(user or self.writer)
+
+    def test_rename_changes_name_only(self):
+        result = self._node_env().rename_or_move(
+            self.node.id, False, "renamed.txt", "op-rename-1"
+        )
+
+        self.node.invalidate_recordset()
+        self.assertEqual(result["node_id"], self.node.id)
+        self.assertEqual(self.node.name, "renamed.txt")
+        self.assertEqual(self.node.parent_id, self.folder_a)
+
+    def test_rename_conflict_raises_user_error(self):
+        self._node_env().create_file(self.folder_a.id, "taken.txt", b"x", "op-rn-taken")
+
+        with self.assertRaises(UserError):
+            self._node_env().rename_or_move(self.node.id, False, "taken.txt", "op-rn-2")
+
+        self.node.invalidate_recordset()
+        self.assertEqual(self.node.name, "doc.txt")
+
+    def test_move_within_same_scope_keeps_scope(self):
+        sibling_folder = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "sibling", "scope_id": self.scope_a.id, "is_dir": True})
+        )
+
+        self._node_env().rename_or_move(
+            self.node.id, sibling_folder.id, "doc.txt", "op-move-same-scope"
+        )
+
+        self.node.invalidate_recordset()
+        self.assertEqual(self.node.parent_id, sibling_folder)
+        self.assertEqual(self.node.scope_id, self.scope_a)
+
+    def test_move_to_different_scope_updates_whole_subtree(self):
+        parent_folder = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create(
+                {"name": "parent_folder", "scope_id": self.scope_a.id, "is_dir": True}
+            )
+        )
+        leaf_result = self._node_env().create_file(
+            parent_folder.id, "leaf.txt", b"y", "op-subtree-leaf"
+        )
+        leaf = self.env["int_filemanager.node"].sudo().browse(leaf_result["node_id"])
+
+        self._node_env(self.both_scopes_writer).rename_or_move(
+            parent_folder.id, self.folder_b.id, "parent_folder", "op-move-subtree"
+        )
+
+        parent_folder.invalidate_recordset()
+        leaf.invalidate_recordset()
+        self.assertEqual(parent_folder.scope_id, self.scope_b)
+        self.assertEqual(leaf.scope_id, self.scope_b)
+
+    def test_move_denied_without_write_on_destination_scope(self):
+        with self.assertRaises(AccessError):
+            self._node_env().rename_or_move(
+                self.node.id, self.folder_b.id, "doc.txt", "op-move-denied"
+            )
+
+    def test_repeated_operation_key_is_idempotent(self):
+        first = self._node_env().rename_or_move(
+            self.node.id, False, "once.txt", "op-rename-repeat"
+        )
+        second = self._node_env().rename_or_move(
+            self.node.id, False, "once.txt", "op-rename-repeat"
+        )
+        self.assertEqual(first, second)

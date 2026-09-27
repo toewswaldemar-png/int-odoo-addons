@@ -209,3 +209,73 @@ class IntFilemanagerNode(models.Model):
         operation.write({"result": result})
         self.env.cr.postcommit.add(lambda: _remove_if_exists(tmp_path))
         return result
+
+    @api.model
+    def rename_or_move(self, node_id, new_parent_id, new_name, operation_key):
+        """Konzept 6 "Umbenennen, Verschieben": a pure node write, no disk
+        operation at all (no blob touched, so none of the B2/B7 failure
+        modes from the old module apply here). Moving into a different
+        scope updates the whole subtree's scope_id in the same commit;
+        moving into a scope this user cannot write to is checked against
+        the DESTINATION parent explicitly (ir.rule only re-validates a
+        write against the record's own scope, not a value being assigned
+        to a related field)."""
+        operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
+            operation_key
+        )
+        if not is_new:
+            return operation.result
+
+        node = self.browse(node_id)
+        node.check_access("write")
+
+        vals = {"name": new_name}
+        new_scope_id = None
+        if new_parent_id and new_parent_id != node.parent_id.id:
+            new_parent = self.browse(new_parent_id)
+            new_parent.check_access("write")
+            vals["parent_id"] = new_parent_id
+            if new_parent.scope_id != node.scope_id:
+                new_scope_id = new_parent.scope_id.id
+                vals["scope_id"] = new_scope_id
+
+        fault.fault_point("node_lock_before_wait")
+        cr = self.env.cr
+        cr.execute("SET LOCAL lock_timeout TO '5s'")
+        # LockNotAvailable propagates uncaught, same reasoning as create_new_revision.
+        cr.execute(
+            SQL("SELECT id FROM int_filemanager_node WHERE id = %s FOR UPDATE", node_id)
+        )
+
+        fault.fault_point("node_rename_before_check")
+        try:
+            with self.env.cr.savepoint():
+                node.write(vals)
+        except psycopg2.errors.UniqueViolation:
+            raise UserError(
+                self.env._(
+                    "A file or folder named %(name)s already exists here.",
+                    name=new_name,
+                )
+            ) from None
+
+        if new_scope_id is not None:
+            # write() above recomputed parent_path (its own _parent_store logic)
+            # but this recordset's cached value predates that - refetch it.
+            node.invalidate_recordset(["parent_path"])
+            # Whole subtree moves scope together, in this same commit (Konzept 6);
+            # node's own row is included (harmless no-op re-write of what write()
+            # above already set) since parent_path always starts with itself.
+            cr.execute(
+                SQL(
+                    "UPDATE int_filemanager_node SET scope_id = %s"
+                    " WHERE parent_path LIKE %s",
+                    new_scope_id,
+                    f"{node.parent_path}%",
+                )
+            )
+            self.invalidate_model(["scope_id"])
+
+        result = {"node_id": node.id}
+        operation.write({"result": result})
+        return result
