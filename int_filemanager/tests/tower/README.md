@@ -10,17 +10,26 @@ prototype tests (`docs/prototypes/fm2/tests/t_exit.py`). Deliberately outside
 lint this code, but `odoo-bin --test-tags` never collects it, and it is only ever run by
 hand against `fmtest_pg`.
 
-## Status: harness ready, scenarios blocked on the write path
+## Status: harness and scenarios wired to the real write paths
 
-`race_scenarios.py` implements the harness (HTTP session handling, writing the
-fault-file, firing two requests so they overlap, tearing the barrier back down) and
-every scenario from Konzept 16 as a function - but each one's `perform_*()` call raises
-`NotImplementedError` until Schritt 3b (Datenmodell, Schreibwege) defines the actual
-JSON-2 method names for creating a node, uploading a revision, renaming/moving, and
-running the blob cleanup job. Fill those in where marked `# TODO(schreibwege):` once
-they exist; the barrier mechanics themselves are already covered for real (not
-simulated) processes by
+`race_scenarios.py` drives the 5 A3 scenarios from Konzept 16 over real
+`/json/2/int_filemanager.node/<method>` calls (Kern 11 Schritt 3's write paths all exist
+now). A4 ("Aufraeumjob") has no scenario here: the cleanup cron is `@api.autovacuum`, a
+private method with no public/`ir.cron` trigger, so a live two-process reproduction
+would need a dedicated admin trigger endpoint this module does not otherwise have. That
+invariant (a reused blob must survive a concurrent cleanup run) is instead covered
+deterministically in `int_filemanager/tests/test_v2_blobstore.py`, which can force the
+exact ordering directly rather than hoping an HTTP race lands on it - see the comment
+above `load_fixtures()` in `race_scenarios.py` for the full reasoning. The barrier
+mechanics themselves are covered for real (not simulated) processes by
 `int_filemanager/tests/test_v2_fault.py::TestCrossProcessBarrier`.
+
+Fixture ids (a scope, a write group, a writer + API key, and one dedicated node per
+scenario) come from `bootstrap_fixtures.py` in this same directory, run once via
+`odoo shell` against the throwaway instance before `race_scenarios.py` - see "Running"
+below. Each scenario gets its OWN node fixture, never shared, so running
+`--scenario all` does not make a later scenario's outcome depend on how an earlier one's
+race happened to resolve.
 
 ## The stage-name contract
 
@@ -49,16 +58,25 @@ this is the single source of truth `race_scenarios.py` assumes:
 - Both workers see the same `INT_FILEMANAGER_FAULT_FILE` path on a filesystem they share
   (bind mount), so the barrier directory (`<fault file>.barrier.<stage>`) is visible to
   both.
-- An admin API key (`res.users.apikeys._generate`, scope `rpc`) for the test user
-  driving the scenario, and network access to the instance from wherever this script
-  runs (matches the existing Tower helper-container setup used for 20.2 and `runv2.sh`).
+- `int_filemanager.watcher_enabled` set to `false` before running `odoo shell` against
+  this database (Konzept 19.5, N5 - a shell session against the watcher DB starts a
+  second watcher otherwise), matching the existing `fmshell.sh` Tower helper.
+- Network access to the instance from wherever this script runs (matches the existing
+  Tower helper-container setup used for 20.2 and `runv2.sh`).
 
 ## Running
 
 ```
-python race_scenarios.py --base-url http://<host>:<port> --api-key <key> \
+cat bootstrap_fixtures.py | odoo shell -d fmtest_pg --no-http > fixtures.json
+
+python race_scenarios.py --base-url http://<host>:<port> \
+    --fixtures-json fixtures.json \
     --fault-file /mnt/user/appdata/fmtest/v2race/fault --scenario all
 ```
+
+`bootstrap_fixtures.py` creates the scope, write group, writer user + API key, and one
+dedicated node per scenario, then prints their ids as JSON - `fixtures.json` is passed
+straight through to `race_scenarios.py` via `--fixtures-json`.
 
 Each scenario resets the fault file to empty before returning, so a crash mid-scenario
 can leave a stale barrier directory behind - `--cleanup` removes

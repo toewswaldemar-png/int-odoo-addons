@@ -80,7 +80,7 @@ class IntFilemanagerBlob(models.Model):
         # Ends whatever transaction ir.autovacuum._run_vacuum_cleaner's shuffled
         # queue of sibling methods left open, so LOCK below is the first statement
         # of a fresh one (Odoo's own ir_attachment._gc_file_store does the same).
-        cr.commit()  # pylint: disable=invalid-commit
+        cr.commit()  # pylint: disable=unknown-option-value,invalid-commit
         cr.execute("SET LOCAL lock_timeout TO '10s'")
         try:
             cr.execute(
@@ -93,7 +93,7 @@ class IntFilemanagerBlob(models.Model):
         stale_count, removed, kept = self._gc_blobs_unsafe()
         # Releases the table lock; the filesystem deletes are not transactional
         # anyway, so nothing is lost by committing here rather than at the cron's end.
-        cr.commit()  # pylint: disable=invalid-commit
+        cr.commit()  # pylint: disable=unknown-option-value,invalid-commit
         _logger.info(
             "int_filemanager blob gc: %d w/o revision, %d file(s) removed, %d kept",
             stale_count,

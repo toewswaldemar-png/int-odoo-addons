@@ -10,6 +10,7 @@ installed.
 """
 
 import argparse
+import base64
 import glob
 import json
 import logging
@@ -21,6 +22,10 @@ import urllib.error
 import urllib.request
 
 _logger = logging.getLogger(__name__)
+
+
+def _b64(data):
+    return base64.b64encode(data).decode()
 
 
 class ScenarioFailed(AssertionError):
@@ -100,65 +105,102 @@ def run_concurrent(fn_a, fn_b):
 
 
 # --------------------------------------------------------------------------
-# Pending on Schritt 3b (Datenmodell, Schreibwege): fill in the JSON-2 method
-# names below once they exist, then delete the NotImplementedError. Keep the
-# barrier/assertion structure - that part is already correct per Konzept 6/16.
+# Thin wrappers around the real write-path methods (int_filemanager.node),
+# called over JSON-2 with a bearer API key (Konzept 19.16). Content always
+# travels as base64 (JSON cannot carry binary data, Konzept 12/19.16) -
+# blobstore.decode_content() on the server side accepts that transparently.
 # --------------------------------------------------------------------------
 
 
-def perform_create_node(base_url, api_key, parent_id, name):
-    # TODO(schreibwege): call the future "create a node under a name" JSON-2
-    # method (Konzept 6 "Hochladen (neu)"). Must reach node_create_before_check
-    # / node_create_after_insert internally.
-    raise NotImplementedError(
-        "write path for node creation does not exist yet (Schritt 3b)"
+def perform_create_node(base_url, api_key, parent_id, name, content=b"race"):
+    return json2_call(
+        base_url,
+        api_key,
+        "int_filemanager.node",
+        "create_file",
+        {
+            "parent_id": parent_id,
+            "name": name,
+            "content": _b64(content),
+            "operation_key": f"race-create-{name}-{time.monotonic_ns()}",
+        },
     )
 
 
-def perform_new_revision(base_url, api_key, node_id, base_revision_id, content_sha256):
-    # TODO(schreibwege): call the future "new revision" JSON-2 method
-    # (Konzept 6 "Neue Fassung"). Must reach revision_write_before_check /
-    # revision_write_after_insert internally.
-    raise NotImplementedError(
-        "write path for new revisions does not exist yet (Schritt 3b)"
+def perform_new_revision(base_url, api_key, node_id, base_revision_id, content):
+    return json2_call(
+        base_url,
+        api_key,
+        "int_filemanager.node",
+        "create_new_revision",
+        {
+            "node_id": node_id,
+            "base_revision_id": base_revision_id,
+            "content": _b64(content),
+            "operation_key": f"race-revise-{node_id}-{time.monotonic_ns()}",
+        },
     )
 
 
-def perform_rename(base_url, api_key, node_id, new_name):
-    # TODO(schreibwege): call the future rename/move JSON-2 method (Konzept 6
-    # "Umbenennen, Verschieben"). Must reach node_rename_before_check internally.
-    raise NotImplementedError(
-        "write path for rename/move does not exist yet (Schritt 3b)"
+def perform_rename(base_url, api_key, node_id, new_name, new_parent_id=False):
+    return json2_call(
+        base_url,
+        api_key,
+        "int_filemanager.node",
+        "rename_or_move",
+        {
+            "node_id": node_id,
+            "new_parent_id": new_parent_id,
+            "new_name": new_name,
+            "operation_key": f"race-rename-{node_id}-{time.monotonic_ns()}",
+        },
     )
 
 
-def perform_move(base_url, api_key, node_id, new_parent_id):
-    raise NotImplementedError("write path for move does not exist yet (Schritt 3b)")
+def perform_move(base_url, api_key, node_id, new_parent_id, new_name):
+    return perform_rename(base_url, api_key, node_id, new_name, new_parent_id)
 
 
-def perform_delete(base_url, api_key, node_id):
-    raise NotImplementedError("write path for delete does not exist yet (Schritt 3b)")
+def perform_trash(base_url, api_key, node_id):
+    return json2_call(
+        base_url,
+        api_key,
+        "int_filemanager.node",
+        "trash",
+        {
+            "node_id": node_id,
+            "operation_key": f"race-trash-{node_id}-{time.monotonic_ns()}",
+        },
+    )
 
 
-def trigger_cleanup_cron(base_url, api_key):
-    # TODO(schreibwege): trigger the future blob-cleanup cron directly
-    # (e.g. env.ref("int_filemanager.cron_blob_gc").method_direct_trigger()
-    # via call_kw/JSON-2 as an admin key). Must reach blob_gc_after_dedup_check
-    # / blob_gc_after_delete_before_commit internally.
-    raise NotImplementedError("blob cleanup cron does not exist yet (Schritt 3b)")
+# A4's cleanup job is @api.autovacuum, not a public method or an ir.cron
+# record of its own - it is only ever invoked by Odoo's own daily vacuum
+# sweep (ir.autovacuum._run_vacuum_cleaner, which itself requires admin AND
+# a 'cron_id' in context) and is deliberately not exposed for external
+# triggering. A live two-process reproduction of A4 would need a dedicated
+# admin trigger endpoint this module does not have; the exact invariant
+# (a reused blob must survive a concurrent cleanup run) is instead covered
+# deterministically in int_filemanager/tests/test_v2_blobstore.py, which can
+# force the precise ordering directly instead of hoping an HTTP race lands on
+# it. Left as a documented gap rather than adding test-only production code.
 
 
-def setup_fixtures(base_url, api_key):
-    """Create the parent folder, an existing node with a revision, and a
-    second existing node that every scenario below needs, and return their
-    ids. Pending on the same write path as the perform_*() helpers above -
-    kept as ONE place so main() can report "nothing to run yet" once instead
-    of every scenario failing with a confusing TypeError over missing ids."""
-    # TODO(schreibwege): create real fixtures via perform_create_node() /
-    # perform_new_revision() once they work, then return e.g.:
-    # {"parent_id": ..., "node_id": ..., "base_revision_id": ...,
-    #  "node_b_id": ..., "new_parent_id": ..., "stale_blob_node_id": ...}
-    raise NotImplementedError("scenario fixtures need the write path from Schritt 3b")
+def load_fixtures(fixtures_path):
+    """Fixture ids come from a separate odoo-shell bootstrap step
+    (bootstrap_fixtures.py in this directory, see README "Prerequisites"),
+    not from calling the write paths themselves: a scope and its root
+    folder are administrative setup (creating a scope needs "manage"
+    rights nobody has by default, Konzept 12), not something a normal
+    write-path caller ever does. Each scenario gets its OWN node fixture
+    (never shared) so running --scenario all does not make a later
+    scenario's outcome depend on an earlier one having won its race a
+    particular way. That script's JSON output - api_key, parent_id,
+    revision_node_id/revision_base_revision_id, rename_node_a_id/
+    rename_node_b_id, move_node_id/move_new_parent_id, lock_node_id - is
+    passed straight through here."""
+    with open(fixtures_path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 # --------------------------------------------------------------------------
@@ -200,16 +242,16 @@ def scenario_same_base_revision_twice(base_url, api_key, fault_file, fixtures):
     """Two racers save a new revision of the same node from the same base
     revision (double-click / two tabs). Expectation (I6/A3): one wins, the
     other gets a base-revision conflict - never a silently dropped edit."""
-    node_id = fixtures["node_id"]
-    base_revision_id = fixtures["base_revision_id"]
+    node_id = fixtures["revision_node_id"]
+    base_revision_id = fixtures["revision_base_revision_id"]
     set_fault(fault_file, "revision_write_before_check:barrier:2")
     try:
         results = run_concurrent(
             lambda: perform_new_revision(
-                base_url, api_key, node_id, base_revision_id, "a" * 64
+                base_url, api_key, node_id, base_revision_id, b"racer-a-content"
             ),
             lambda: perform_new_revision(
-                base_url, api_key, node_id, base_revision_id, "b" * 64
+                base_url, api_key, node_id, base_revision_id, b"racer-b-content"
             ),
         )
     finally:
@@ -229,8 +271,8 @@ def scenario_rename_to_same_name(base_url, api_key, fault_file, fixtures):
     the same time. Expectation (A3): one rename succeeds, the other is
     rejected with a name-conflict error - never two nodes ending up with the
     same (parent, name)."""
-    node_id = fixtures["node_id"]
-    node_b_id = fixtures["node_b_id"]
+    node_id = fixtures["rename_node_a_id"]
+    node_b_id = fixtures["rename_node_b_id"]
     set_fault(fault_file, "node_rename_before_check:barrier:2")
     try:
         results = run_concurrent(
@@ -254,13 +296,15 @@ def scenario_move_against_delete(base_url, api_key, fault_file, fixtures):
     a defined outcome either way (moved node stays deleted-or-not
     consistently; no orphaned row, no node that is both trashed and present
     under a new parent)."""
-    node_id = fixtures["node_id"]
-    new_parent_id = fixtures["new_parent_id"]
+    node_id = fixtures["move_node_id"]
+    new_parent_id = fixtures["move_new_parent_id"]
     set_fault(fault_file, "node_rename_before_check:barrier:2")
     try:
         results = run_concurrent(
-            lambda: perform_move(base_url, api_key, node_id, new_parent_id),
-            lambda: perform_delete(base_url, api_key, node_id),
+            lambda: perform_move(
+                base_url, api_key, node_id, new_parent_id, "moved-away.txt"
+            ),
+            lambda: perform_trash(base_url, api_key, node_id),
         )
     finally:
         clear_fault(fault_file)
@@ -277,7 +321,7 @@ def scenario_lock_timeout_triggers_retry(base_url, api_key, fault_file, fixtures
     writes it. Expectation (A3): the second racer sees `LockError`
     (`retrying()` retries it, Konzept 6) rather than hanging indefinitely or
     silently overwriting."""
-    node_id = fixtures["node_id"]
+    node_id = fixtures["lock_node_id"]
     set_fault(fault_file, "node_lock_before_wait:barrier:2")
     try:
         started = time.monotonic()
@@ -301,41 +345,10 @@ def scenario_lock_timeout_triggers_retry(base_url, api_key, fault_file, fixtures
         )
 
 
-# --------------------------------------------------------------------------
-# A4 scenario (Konzept 16 "A4 Aufraeumjob")
-# --------------------------------------------------------------------------
-
-
-def scenario_cleanup_races_blob_reuse(base_url, api_key, fault_file, fixtures):
-    """The cleanup cron runs between a writer finding an old blob to reuse
-    (deduplication) and that writer's commit. Expectation (A4): the writer's
-    new revision always references a blob that still exists on disk - the
-    mark gets renewed on reuse, or the writer re-links after the cron won the
-    race, per Konzept 5 "Schreiben". A regression here reproduces exactly the
-    dangling reference the review found in `fm_proto/blobstore.py`."""
-    stale_blob_node_id = fixtures["stale_blob_node_id"]
-    set_fault(fault_file, "blob_write_after_dedup_found:barrier:2")
-    try:
-        results = run_concurrent(
-            lambda: perform_new_revision(
-                base_url, api_key, stale_blob_node_id, None, "c" * 64
-            ),
-            lambda: trigger_cleanup_cron(base_url, api_key),
-        )
-    finally:
-        clear_fault(fault_file)
-        clear_barrier_dirs(fault_file)
-
-    writer_result = results[0]
-    if not writer_result.ok:
-        raise ScenarioFailed(
-            f"writer must not fail because the cleanup job ran concurrently: "
-            f"{writer_result.error}"
-        )
-    # TODO(schreibwege): once the revision is created, fetch its blob and
-    # assert the underlying file exists on disk (the actual regression test
-    # for A4 - the cleanup job must never delete a blob a concurrent writer
-    # is about to reference).
+# A4 (Konzept 16 "A4 Aufraeumjob") has no scenario here: see the comment
+# above load_fixtures() for why a live two-process reproduction is not
+# feasible without adding test-only production code, and where its
+# invariant is instead covered deterministically.
 
 
 SCENARIOS = {
@@ -344,15 +357,19 @@ SCENARIOS = {
     "rename_to_same_name": scenario_rename_to_same_name,
     "move_against_delete": scenario_move_against_delete,
     "lock_timeout_triggers_retry": scenario_lock_timeout_triggers_retry,
-    "cleanup_races_blob_reuse": scenario_cleanup_races_blob_reuse,
 }
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", required=True)
-    parser.add_argument("--api-key", required=True)
     parser.add_argument("--fault-file", required=True)
+    parser.add_argument(
+        "--fixtures-json",
+        required=False,
+        help="path to the JSON fixture file produced by the odoo-shell bootstrap"
+        " script (see README 'Prerequisites'); contains api_key and all fixture ids",
+    )
     parser.add_argument("--scenario", default="all", choices=["all", *SCENARIOS])
     parser.add_argument(
         "--cleanup", action="store_true", help="remove stale barrier dirs and exit"
@@ -365,18 +382,18 @@ def main():
         _logger.info("cleaned up")
         return
 
-    try:
-        fixtures = setup_fixtures(args.base_url, args.api_key)
-    except NotImplementedError as exc:
-        _logger.info("PENDING: %s", exc)
-        return
+    if not args.fixtures_json:
+        parser.error("--fixtures-json is required unless --cleanup is given")
+
+    fixtures = load_fixtures(args.fixtures_json)
+    api_key = fixtures["api_key"]
 
     names = list(SCENARIOS) if args.scenario == "all" else [args.scenario]
     failures = []
     for name in names:
         _logger.info("--- %s ---", name)
         try:
-            SCENARIOS[name](args.base_url, args.api_key, args.fault_file, fixtures)
+            SCENARIOS[name](args.base_url, api_key, args.fault_file, fixtures)
         except NotImplementedError as exc:
             _logger.info("PENDING: %s", exc)
         except ScenarioFailed as exc:
