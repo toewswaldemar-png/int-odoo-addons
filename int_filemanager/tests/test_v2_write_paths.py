@@ -137,3 +137,138 @@ class TestNodeCreateFile(TransactionCase):
             self._node_env(self.outsider).create_file(
                 self.parent.id, "denied.txt", b"x", "op-denied"
             )
+
+
+@tagged("post_install", "-at_install")
+class TestNodeCreateNewRevision(TransactionCase):
+    def setUp(self):
+        super().setUp()
+        self.write_group = (
+            self.env["res.groups"].sudo().create({"name": "New revision test writer"})
+        )
+        self.scope = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "New revision test scope",
+                    "read_group_ids": [(4, self.write_group.id)],
+                    "write_group_ids": [(4, self.write_group.id)],
+                }
+            )
+        )
+        self.parent = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "root", "scope_id": self.scope.id, "is_dir": True})
+        )
+        base_group = self.env.ref("int_filemanager.group_filemanager_user")
+        self.writer = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "New revision writer",
+                    "login": "new_revision_writer",
+                    "group_ids": [(6, 0, [base_group.id, self.write_group.id])],
+                }
+            )
+        )
+        self.outsider = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "New revision outsider",
+                    "login": "new_revision_outsider",
+                    "group_ids": [(6, 0, [base_group.id])],
+                }
+            )
+        )
+        first = (
+            self.env["int_filemanager.node"]
+            .with_user(self.writer)
+            .create_file(self.parent.id, "doc.txt", b"version one", "op-nr-setup")
+        )
+        self.node = self.env["int_filemanager.node"].sudo().browse(first["node_id"])
+        self.base_revision_id = first["revision_id"]
+
+    def _node_env(self, user=None):
+        return self.env["int_filemanager.node"].with_user(user or self.writer)
+
+    def test_creates_second_revision_keeps_the_first(self):
+        result = self._node_env().create_new_revision(
+            self.node.id, self.base_revision_id, b"version two", "op-nr-1"
+        )
+
+        self.node.invalidate_recordset()
+        self.assertEqual(self.node.current_revision_id.id, result["revision_id"])
+        self.assertEqual(self.node.current_revision_id.revision_no, 2)
+        revisions = (
+            self.env["int_filemanager.revision"]
+            .sudo()
+            .search([("node_id", "=", self.node.id)])
+        )
+        self.assertEqual(len(revisions), 2)
+        self.assertEqual(
+            revisions.filtered(lambda r: r.revision_no == 1).origin, "upload"
+        )
+
+        blob_path = blobstore.blob_path(self.env, result["sha256"])
+        with open(blob_path, "rb") as f:
+            self.assertEqual(f.read(), b"version two")
+
+    def test_stale_base_revision_raises_conflict_not_silent_overwrite(self):
+        """I6: a write from a stale base revision must not overwrite silently."""
+        with self.assertRaises(UserError):
+            self._node_env().create_new_revision(
+                self.node.id,
+                self.base_revision_id + 999999,
+                b"clobber",
+                "op-nr-conflict",
+            )
+
+        self.node.invalidate_recordset()
+        self.assertEqual(self.node.current_revision_id.id, self.base_revision_id)
+        revisions = (
+            self.env["int_filemanager.revision"]
+            .sudo()
+            .search([("node_id", "=", self.node.id)])
+        )
+        self.assertEqual(len(revisions), 1)
+
+    def test_same_content_is_a_noop_no_new_revision(self):
+        result = self._node_env().create_new_revision(
+            self.node.id, self.base_revision_id, b"version one", "op-nr-same"
+        )
+
+        self.assertTrue(result.get("unchanged"))
+        self.assertEqual(result["revision_id"], self.base_revision_id)
+        revisions = (
+            self.env["int_filemanager.revision"]
+            .sudo()
+            .search([("node_id", "=", self.node.id)])
+        )
+        self.assertEqual(len(revisions), 1)
+
+    def test_repeated_operation_key_is_idempotent(self):
+        first = self._node_env().create_new_revision(
+            self.node.id, self.base_revision_id, b"version two", "op-nr-repeat"
+        )
+        second = self._node_env().create_new_revision(
+            self.node.id, self.base_revision_id, b"version two", "op-nr-repeat"
+        )
+
+        self.assertEqual(first, second)
+        revisions = (
+            self.env["int_filemanager.revision"]
+            .sudo()
+            .search([("node_id", "=", self.node.id)])
+        )
+        self.assertEqual(len(revisions), 2)
+
+    def test_denied_without_write_group_on_scope(self):
+        with self.assertRaises(AccessError):
+            self._node_env(self.outsider).create_new_revision(
+                self.node.id, self.base_revision_id, b"denied", "op-nr-denied"
+            )

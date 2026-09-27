@@ -76,6 +76,12 @@ msgid "Filemanager v2 write operation (idempotency key)"
 msgstr "Dateimanager v2 Schreibvorgang (Idempotenzschlüssel)"
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "This file changed since you loaded it; reload and try again."
+msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneut versuchen."
+
+#. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_upload_operation_id_uniq
 msgid "This operation already has an upload in progress."
 msgstr "Für diesen Vorgang läuft bereits ein Upload."
