@@ -25,6 +25,12 @@ msgid "A blob with this hash already exists."
 msgstr "Ein Blob mit diesem Hash existiert bereits."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "A file or folder named %(name)s already exists here."
+msgstr "Eine Datei oder ein Ordner namens %(name)s existiert hier bereits."
+
+#. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_node_unique_name_per_parent
 msgid "A file or folder with this name already exists here."
 msgstr "Eine Datei oder ein Ordner mit diesem Namen existiert hier bereits."
