@@ -11,6 +11,11 @@
     "data": [
         "security/security.xml",
         "security/ir.model.access.csv",
+        "security/int_filemanager_node_security.xml",
+        "security/int_filemanager_revision_security.xml",
+        "security/int_filemanager_upload_security.xml",
+        "security/int_filemanager_operation_security.xml",
+        "security/int_filemanager_scope_security.xml",
         "data/filemanager_status.xml",
         "data/filemanager_extraction_pattern.xml",
         "views/filemanager_file_search.xml",

@@ -9,3 +9,6 @@ from . import test_watcher
 from . import test_fulltext_word_index
 from . import test_trash
 from . import test_publish_overwrite
+from . import test_v2_fault
+from . import test_v2_access
+from . import test_v2_access_http

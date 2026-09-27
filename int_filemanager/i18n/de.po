@@ -1,0 +1,80 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* int_filemanager
+#
+# Only the v2 code's strings (English source, decision 2026-09-26): the
+# pre-existing v1 code is written directly in German and is not translated
+# here. Extend this file as new v2 code adds user-facing text; regenerate
+# the full export with odoo.tools.translate.trans_export(...) if it drifts.
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0-20260908\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-27 07:21+0000\n"
+"PO-Revision-Date: 2026-09-27 07:21+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_blob_sha256_uniq
+msgid "A blob with this hash already exists."
+msgstr "Ein Blob mit diesem Hash existiert bereits."
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_node_unique_name_per_parent
+msgid "A file or folder with this name already exists here."
+msgstr "Eine Datei oder ein Ordner mit diesem Namen existiert hier bereits."
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_revision_revision_no_uniq
+msgid "A node cannot have two revisions with the same number."
+msgstr "Ein Knoten kann nicht zwei Revisionen mit derselben Nummer haben."
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_scope_name_uniq
+msgid "A scope with this name already exists."
+msgstr "Ein Bereich mit diesem Namen existiert bereits."
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_blob
+msgid "Filemanager v2 blob (content, by hash)"
+msgstr "Dateimanager v2 Blob (Inhalt, nach Hash)"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_upload
+msgid "Filemanager v2 chunked upload in progress"
+msgstr "Dateimanager v2 laufender Stück-Upload"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_node
+msgid "Filemanager v2 node (folder or file)"
+msgstr "Dateimanager v2 Knoten (Ordner oder Datei)"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_revision
+msgid "Filemanager v2 revision"
+msgstr "Dateimanager v2 Revision"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_scope
+msgid "Filemanager v2 rights scope"
+msgstr "Dateimanager v2 Rechte-Bereich"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_operation
+msgid "Filemanager v2 write operation (idempotency key)"
+msgstr "Dateimanager v2 Schreibvorgang (Idempotenzschlüssel)"
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_upload_operation_id_uniq
+msgid "This operation already has an upload in progress."
+msgstr "Für diesen Vorgang läuft bereits ein Upload."
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_operation_key_uniq
+msgid "This operation key was already used."
+msgstr "Dieser Vorgangsschlüssel wurde bereits verwendet."
