@@ -149,6 +149,7 @@ class IntFilemanagerUpload(models.Model):
         19.1); a chunk with a gap is rejected rather than silently accepted
         out of order. Locked the same way as any other multi-request write
         (Konzept 6) - two chunks for the same upload must not race."""
+        data = blobstore.decode_content(data)
         upload = self.browse(upload_id)
         cr = self.env.cr
         cr.execute("SET LOCAL lock_timeout TO '5s'")

@@ -18,6 +18,7 @@ existing marker via `open(path, "ab")` alone does not reliably bump its mtime
 (A4), so an explicit `os.utime` follows it.
 """
 
+import base64
 import hashlib
 import os
 
@@ -28,6 +29,20 @@ from . import fault
 CHUNK_SIZE = 1024 * 1024
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 BLOBS_DIRNAME = "blobs"
+
+
+def decode_content(content):
+    """Normalise a write path's content argument: a direct Python caller
+    passes real bytes, but JSON-2/call_kw cannot carry binary data at all
+    (Konzept 12/19.16: "Binaerdaten nur base64 im Speicher") - a caller going
+    through either route must send base64 text instead, which this decodes
+    transparently so create_file/create_new_revision/upload_chunk work
+    unchanged for both."""
+    if isinstance(content, str):
+        return base64.b64decode(content)
+    return content
+
+
 CHECKLIST_DIRNAME = "checklist"
 TMP_DIRNAME = "tmp"
 

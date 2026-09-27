@@ -76,6 +76,7 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
+        content = blobstore.decode_content(content)
         parent = self.browse(parent_id)
         scope_id = parent.scope_id.id
 
@@ -200,6 +201,7 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
+        content = blobstore.decode_content(content)
         node = self.browse(node_id)
         node.check_access("write")
 

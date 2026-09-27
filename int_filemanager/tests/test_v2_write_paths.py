@@ -2,6 +2,8 @@
 create_file() - Konzept 6 "Hochladen (neu)" for content that fits a single
 request/commit (Konzept 7)."""
 
+import base64
+
 from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import TransactionCase, tagged
 
@@ -71,6 +73,19 @@ class TestNodeCreateFile(TransactionCase):
         self.assertTrue(node.current_revision_id)
         self.assertEqual(node.current_revision_id.revision_no, 1)
         self.assertEqual(node.current_revision_id.origin, "upload")
+
+        blob_path = blobstore.blob_path(self.env, result["sha256"])
+        with open(blob_path, "rb") as f:
+            self.assertEqual(f.read(), b"hello world")
+
+    def test_accepts_base64_text_content_same_as_raw_bytes(self):
+        """JSON-2/call_kw cannot carry binary data at all (Konzept 12/19.16)
+        - a caller going through either route must send base64 text."""
+        encoded = base64.b64encode(b"hello world").decode()
+
+        result = self._node_env().create_file(
+            self.parent.id, "b64.txt", encoded, "op-create-b64"
+        )
 
         blob_path = blobstore.blob_path(self.env, result["sha256"])
         with open(blob_path, "rb") as f:
