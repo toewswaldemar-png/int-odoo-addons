@@ -213,7 +213,10 @@ class IntFilemanagerNode(models.Model):
         )
         sha256, size = blobstore.hash_file(tmp_path)
 
-        if current and current.blob_id.sha256 == sha256:
+        # .sudo() here only reaches the blob's own sha256 field (I7, same reasoning
+        # as the blob touches below) - current itself was already read un-sudo'd via
+        # the rights-checked node above, this is not a new access-check bypass.
+        if current and current.sudo().blob_id.sha256 == sha256:
             os.remove(tmp_path)
             result = {
                 "node_id": node.id,

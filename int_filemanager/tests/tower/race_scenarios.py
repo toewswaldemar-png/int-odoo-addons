@@ -90,6 +90,14 @@ def run_concurrent(fn_a, fn_b):
             results[i] = CallResult(value=fn())
         except urllib.error.HTTPError as exc:
             results[i] = CallResult(error=exc)
+        except OSError as exc:
+            # A genuine network/read timeout (json2_call's own 30s), not an HTTP
+            # error response - e.g. a barrier that never got satisfied because of
+            # a scenario design bug (found this way: see
+            # scenario_same_base_revision_twice's docstring). Surfaced as a result
+            # instead of silently leaving results[i] None, which used to turn into
+            # a confusing AttributeError in the scenario's own assertions.
+            results[i] = CallResult(error=exc)
 
     t_a = threading.Thread(target=wrap, args=(0, fn_a))
     t_b = threading.Thread(target=wrap, args=(1, fn_b))
@@ -241,10 +249,21 @@ def scenario_same_new_name_twice(base_url, api_key, fault_file, fixtures):
 def scenario_same_base_revision_twice(base_url, api_key, fault_file, fixtures):
     """Two racers save a new revision of the same node from the same base
     revision (double-click / two tabs). Expectation (I6/A3): one wins, the
-    other gets a base-revision conflict - never a silently dropped edit."""
+    other gets a base-revision conflict - never a silently dropped edit.
+
+    Barrier on node_lock_before_wait, not revision_write_before_check: the
+    latter fires AFTER `SELECT ... FOR UPDATE` succeeds, which Postgres
+    itself already serializes on this node's row - a barrier there can
+    never be satisfied by both racers at once (found empirically on Tower:
+    both threads hung for the full 30s and then both timed out, since
+    racer B's own lock attempt blocks on racer A, who in turn is parked at
+    a barrier waiting for an arrival that structurally cannot happen).
+    node_lock_before_wait fires BEFORE either racer attempts the row lock,
+    so both reach it freely; only afterwards does Postgres serialize them,
+    which is the real thing being tested."""
     node_id = fixtures["revision_node_id"]
     base_revision_id = fixtures["revision_base_revision_id"]
-    set_fault(fault_file, "revision_write_before_check:barrier:2")
+    set_fault(fault_file, "node_lock_before_wait:barrier:2")
     try:
         results = run_concurrent(
             lambda: perform_new_revision(
@@ -291,29 +310,17 @@ def scenario_rename_to_same_name(base_url, api_key, fault_file, fixtures):
         raise ScenarioFailed(f"expected exactly one rename to win, got {results}")
 
 
-def scenario_move_against_delete(base_url, api_key, fault_file, fixtures):
-    """One racer moves a node while the other deletes it. Expectation (A3):
-    a defined outcome either way (moved node stays deleted-or-not
-    consistently; no orphaned row, no node that is both trashed and present
-    under a new parent)."""
-    node_id = fixtures["move_node_id"]
-    new_parent_id = fixtures["move_new_parent_id"]
-    set_fault(fault_file, "node_rename_before_check:barrier:2")
-    try:
-        results = run_concurrent(
-            lambda: perform_move(
-                base_url, api_key, node_id, new_parent_id, "moved-away.txt"
-            ),
-            lambda: perform_trash(base_url, api_key, node_id),
-        )
-    finally:
-        clear_fault(fault_file)
-        clear_barrier_dirs(fault_file)
-
-    if all(r.ok for r in results):
-        raise ScenarioFailed(
-            f"move and delete both reported success on the same node: {results}"
-        )
+# move_against_delete (Konzept 16) has no scenario here either: forcing a real
+# overlap needs BOTH racers to call fault.fault_point() with the SAME stage name
+# (the barrier directory is keyed by stage - see fault.py), but trash() has no
+# fault_point() call anywhere in it, unlike every other write path. perform_move
+# (rename_or_move) would sit at node_rename_before_check's barrier forever
+# waiting for an arrival from the trash side that cannot happen, the same
+# deadlock same_base_revision_twice hit empirically before its fix above. Adding
+# a trash()-side fault point is a production-code change (which stage name, and
+# whether restore()/delete_permanently() need the same one for symmetry) worth
+# deciding deliberately rather than bolting on under time pressure - left as a
+# documented gap alongside A4 rather than a rushed instrumentation call.
 
 
 def scenario_lock_timeout_triggers_retry(base_url, api_key, fault_file, fixtures):
@@ -355,7 +362,6 @@ SCENARIOS = {
     "same_new_name_twice": scenario_same_new_name_twice,
     "same_base_revision_twice": scenario_same_base_revision_twice,
     "rename_to_same_name": scenario_rename_to_same_name,
-    "move_against_delete": scenario_move_against_delete,
     "lock_timeout_triggers_retry": scenario_lock_timeout_triggers_retry,
 }
 

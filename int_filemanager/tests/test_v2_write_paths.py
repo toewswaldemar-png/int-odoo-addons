@@ -266,6 +266,27 @@ class TestNodeCreateNewRevision(TransactionCase):
         )
         self.assertEqual(len(revisions), 1)
 
+    def test_dedup_check_works_without_a_warm_cache(self):
+        """Regression: the same-content dedup check (`current.blob_id.sha256`)
+        read the blob's own field un-sudo'd, which passed every existing test
+        here only because setUp's create_file() already warmed this
+        transaction's shared field cache for that exact blob row via a sudo'd
+        create() - so the later non-sudo read never actually needed a fresh
+        fetch, and ir.rule (blob has zero user-facing ACL, Konzept 12/A1)
+        never got a chance to reject it. A real HTTP request never shares
+        that cache with anything before it (found this way: a real two-worker
+        run over JSON-2 on Tower raised AccessError on 'Filemanager v2 blob'
+        for every writer, every time - not a race, a plain per-request bug).
+        invalidate_all() reproduces that cold-cache condition here."""
+        self.env.invalidate_all()
+
+        result = self._node_env().create_new_revision(
+            self.node.id, self.base_revision_id, b"version two", "op-nr-cold-cache"
+        )
+
+        self.node.invalidate_recordset()
+        self.assertEqual(self.node.current_revision_id.id, result["revision_id"])
+
     def test_repeated_operation_key_is_idempotent(self):
         first = self._node_env().create_new_revision(
             self.node.id, self.base_revision_id, b"version two", "op-nr-repeat"
