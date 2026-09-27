@@ -1,12 +1,12 @@
 # int_filemanager 2: Odoo als alleiniger Schreiber
 
-Stand 2026-09-26. **Konzept, nichts umgesetzt. Vor der Freigabe durch den Nutzer wird kein Code geschrieben.**
+Stand 2026-09-26. **Vom Nutzer freigegeben am 2026-09-27.** Umsetzung nach Abschnitt 18, beginnend mit Schritt 3.
 
 **Kurzfassung zum Prüfen und Freigeben: `int_filemanager_v2_kern_2026-09-26.md`.** Dieses Dokument ist die
 ausführliche Referenz mit allen Belegen; bei einem Widerspruch gilt dieses Dokument, und der Kern wird angepasst.
 
 **Stand: festgeschrieben am 2026-09-26** (Prototyp-Befunde aus 19 und alle Entscheidungen aus 17 eingearbeitet,
-Start ohne Explorer-Zugriff, WebDAV/SMB vorbereitet), **wartet auf Freigabe durch den Nutzer.**
+Start ohne Explorer-Zugriff, WebDAV/SMB vorbereitet); **freigegeben am 2026-09-27.**
 
 **Überarbeitet am 2026-09-27:** Befunde A1–A21 der Code-Prüfung (`docs/review/konzept_codepruefung_2026-09-26.md`)
 und die Entscheidungen 6–8 eingearbeitet; neue Tests und Messungen in 19.17.
@@ -27,8 +27,16 @@ und die Entscheidungen 6–8 eingearbeitet; neue Tests und Messungen in 19.17.
 6. **Eingangsordner:** Eine Datei gilt als fertig, wenn Größe und Änderungszeit eine **Ruhezeit** lang unverändert
    sind (11.1) (Entscheidung 2026-09-27).
 7. **ZIP-Download:** bis zu einer Grenze direkt gestreamt, darüber als **Hintergrundjob** (8) (Entscheidung 2026-09-27).
-8. **Blob-Speicher** auf einem Share über **disk2 + disk3** (Tower; `link`/`rename` über Plattengrenzen geprüft,
-   19.17) (Entscheidung 2026-09-27).
+8. **Blob-Speicher** auf einem Unraid-Share unter `/mnt/user/<name>` mit Plattenauswahl **disk2 + disk3** und ohne
+   Cache (Tower; `link`/`rename` über Plattengrenzen geprüft, 19.17) (Entscheidung 2026-09-27).
+9. **Umsetzung im Modul `int_filemanager`** (Version 19.0.2.0.0): neue Modelle neben den alten, bis die Migration
+   abgenommen ist, dann alte Teile entfernen. Odoo löscht beim Update die Tabelle eines aus dem Code entfernten
+   Modells nicht (`ir.model._drop_table` greift nur für Modelle in der Registry) – Altdaten bleiben für die Migration
+   lesbar, Aufräumen danach ausdrücklich per upgrade-util. Entwicklung auf dem Branch `feature/int-filemanager-v2`;
+   der Stand des heutigen Moduls wird als Tag `int_filemanager-v1` festgehalten (HM-SRV, Tower-Live bis zur
+   Umstellung) (Entscheidung 2026-09-27).
+10. **Test-Image** mit eigenem Tag `odoo:19.0-hm-test` (Live-Tag `odoo:19.0-hm` unberührt); **pre-commit** läuft auf
+   dem Arbeitsrechner (Entscheidung 2026-09-27).
 
 **Grundlage:** Live-Prüfungen auf Tower und Code-Prüfungen im Odoo-19-Core, dokumentiert in
 `int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitte 19 und 20). Dort ist belegt, dass fast alle Fehler
@@ -128,8 +136,11 @@ Rechte hängen am Elterndatensatz. Große Dateien, Streaming und fortsetzbare Up
 (Code-Prüfung Nr. 33–35). `ir.attachment` bleibt für Vorschaubilder und Anhänge an Geschäftsdatensätzen.
 
 **Aufbau:** Nachbildung des Filestore-Musters, erweitert um Streaming.
-- **Ablage:** `<blobroot>/<sha[0:2]>/<sha[2:4]>/<sha>`. `<blobroot>` liegt auf einem **Array-Share über disk2 + disk3**
-  (Entscheidung 8; shfs legt fehlende Ordner auf der Platte der Datei an, `link`/`rename` funktionieren über
+- **Ablage:** `<blobroot>/<sha[0:2]>/<sha[2:4]>/<sha>`. `<blobroot>` ist ein **Unraid-Share unter `/mnt/user/<name>`**;
+  Odoo greift nur über diesen shfs-Pfad zu, nie direkt auf `/mnt/diskN`. Die Share-Einstellung "Included disks" legt
+  fest, wo shfs die Dateien physisch ablegt: **disk2 + disk3** (disk1 ist zu 76 % belegt und trägt andere Daten;
+  feste Platten erleichtern Backup und Wiederherstellung), **kein Cache-Pool** (95 GB frei auf der SSD, und der Mover
+  würde Blobs nachträglich verschieben) (Entscheidung 8; shfs legt fehlende Ordner auf der Platte der Datei an, `link`/`rename` funktionieren über
   Plattengrenzen, ein vorhandener Name auf der anderen Platte wird mit `EEXIST` abgelehnt, 19.17) und wird im
   Container **unterhalb von `<data_dir>/filestore/<db>/`** eingebunden. Nur so gilt Odoos `x_sendfile`-Pfadprüfung
   (`http.Stream.get_response`, prüft "unterhalb von `data_dir/filestore`"). Samba gibt diesen Share nicht frei (I1).
@@ -410,10 +421,13 @@ Word/Excel auf Wunsch des Nutzers entfallen, HTTPS am Windows-Client ungetestet)
 - **HM-SRV:** behält vorerst das heutige Modul (17.6). DB vor jedem Image-Update auf C-Kollation umstellen (19.2);
   Sicherheitslücke N1 dort separat beheben. Die heutigen WebDAV-Tokens liegen je Prozess im Speicher
   (`webdav_tokens.py`) – mit `workers>0` sieht ein Worker die Tokens des anderen nicht (A18).
-- **Blob-Speicher:** Share über disk2 + disk3 (Entscheidung 8; am 2026-09-27 3,2 TB frei). Die Platten schlafen nach
+- **Blob-Speicher:** Share unter `/mnt/user/<name>`, Plattenauswahl disk2 + disk3, kein Cache (Entscheidung 8;
+  am 2026-09-27 3,2 TB frei). Die Platten schlafen nach
   30 min (Spindown), der erste Zugriff kann Sekunden dauern (19.17) – Zeitlimits für Upload-Abschluss,
   Eingangsordner und WebDAV darauf auslegen.
-- **Image aktuell halten:** Vor Schritt 3 das Test-Image auf den aktuellen 19.0-Stand bringen (`docker build --pull`).
+- **Image aktuell halten:** Vor Schritt 3 das Test-Image auf den aktuellen 19.0-Stand bringen (`docker build --pull`;
+  erledigt 2026-09-27: `odoo:19.0-hm-test` = 19.0-20260908, eigener Build-Ordner, weil im Appdata-Ordner die
+  Live-Datenbankdateien liegen).
   Das Tower-Image 19.0-20260817 enthält einen späteren Sicherheits-Fix noch nicht (Zugriffsprüfung bei
   Relations-Befehlen in `create`/`write`, A5). Das Update der Live-Instanz ist eine eigene Entscheidung.
 - Überwachung: Upload-Reste, fehlerhafte Vorschauen, Hash-Prüffehler, Platz im Blob-Speicher.
@@ -534,7 +548,7 @@ von Tower sind ca. 3,6 TB frei (2026-09-27), davon 3,2 TB auf disk2 + disk3 (Ent
 Abnahmekriterien je Schritt ("fertig, wenn …") und Gegenlesen durch eine zweite Instanz: Kern, Abschnitt 11.
 
 1. ~~Prototypen auf Tower~~ (erledigt, 19).
-2. ~~Konzept festschreiben~~ (erledigt 2026-09-26) → **Freigabe durch den Nutzer**.
+2. ~~Konzept festschreiben~~ (erledigt 2026-09-26), ~~Freigabe durch den Nutzer~~ (erteilt 2026-09-27).
 3. **Fundament:** Test-Image aktualisieren (13), pre-commit, `test_lint` und odoo-ls einrichten (16), **dann die Tests
    für A1–A4 schreiben** (16: erzwungene Überlappung, echter Prozessabbruch), dann Modelle, Blob-Speicher,
    Schreibwege, Rechte, Tests je Invariante.
@@ -1193,6 +1207,8 @@ Vollständige Prüfung dieses Konzepts gegen Odoo 19.0-20260817 und den aktuelle
 | `SET LOCAL lock_timeout` + `FOR UPDATE` gegen eine gehaltene Sperre | `55P03 lock_not_available` → `retrying()` wiederholt |
 | `UPDATE` einer Zeile, die ein anderer löscht und committet (REPEATABLE READ) | `40001 could not serialize access due to concurrent delete` → `retrying()` wiederholt; Grundlage der `last_used`-Regel (5) |
 | `fsync` 20 × 4 KiB auf dem Array | Median 33 ms, ein Ausreißer 7,3 s (Anlaufen nach Spindown, `spindownDelay=30`) (A13) |
+| `_parent_store_update` ab Odoo-Commit `9b1872b179` (2026-09-08, "match parent_store descendants by range instead of LIKE": `child.parent_path >= node.parent_path AND < left(node.parent_path, -1) \|\| '0'`) | unter `C` korrekt; unter `en_US.utf8` fehlen echte Nachfahren (`1/2/5/`), ein fremder Pfad (`12/`) wird erfasst → Teilbäume würden beim Verschieben beschädigt. Belegt damit Abschnitt 4 (C-Kollation) und 13 (HM-SRV vor dem Image-Update umstellen). Tower-Live-DB `odoo`: Collate `C`. Im Test-Image 20260908 noch nicht enthalten |
+| Test-Image `odoo:19.0-hm-test` (2026-09-27) | 19.0-20260908; enthält den Sicherheits-Fix `97e3d6152d` (A5); OCR-Bibliotheken laden; `pip check`: `maxminddb` verlangt neueres `setuptools` (aus der pip-Schicht des Dockerfiles, unkritisch) |
 | `link`/`rename` über Plattengrenzen (temporärer Share über disk2 + disk3) | beide funktionieren; shfs legt den fehlenden Zielordner auf der Platte der Datei an; `link`/`O_EXCL` auf einen Namen, der auf der anderen Platte existiert → `EEXIST` (I2 hält) |
 
 Belege im Code: Odoo-Cursor mit REPEATABLE READ (`sql_db.py`, `set_isolation_level`), wiederholte Fehlerklassen

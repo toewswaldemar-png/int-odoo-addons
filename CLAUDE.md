@@ -65,11 +65,11 @@ eine belastbare Aussage.
   live testen, nicht raten.
 - **Produktentscheidungen vorab mit dem Nutzer klären**, nicht impliziten Annahmen folgen.
 - **Einstieg int_filemanager: `docs/int_filemanager_v2_uebergabe_2026-09-26.md`** (Stand, Entscheidungen, nächste
-  Schritte, Testumgebung auf Tower). Kurzfassung zur Freigabe: `docs/int_filemanager_v2_kern_2026-09-26.md`.
+  Schritte, Testumgebung auf Tower). Kurzfassung: `docs/int_filemanager_v2_kern_2026-09-26.md`.
   Leitfaden ist das Konzept `docs/int_filemanager_v2_konzept_2026-09-26.md`
   (Nutzerentscheidung 2026-09-26: vollständig Odoo-Addon, Odoo alleiniger Schreiber, eigener Blob-Speicher).
   Hintergrund und Befunde zum heutigen Modul: `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`
-  (Abschnitte 19/20). Vor Freigabe des Konzepts kein Modul-Code.
+  (Abschnitte 19/20). Konzept und Kern am 2026-09-27 freigegeben; Umsetzung nach Konzept 18 / Kern 11 mit Abnahme je Schritt.
 - `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher (Konzept 19.5, N5). Workaround:
   vorher `int_filemanager.watcher_enabled` auf `false`, danach zurück auf `true` (der laufende Server prüft den
   Schalter nur beim Start, sein Watcher läuft weiter).

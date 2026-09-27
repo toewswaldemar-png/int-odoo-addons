@@ -1,6 +1,6 @@
 # int_filemanager 2 – Kern
 
-Stand 2026-09-26, überarbeitet 2026-09-27 nach der Code-Prüfung. **Kurzfassung zum Prüfen und Freigeben.** Die Einzelheiten, Messungen und Belege stehen im
+Stand 2026-09-26, überarbeitet 2026-09-27 nach der Code-Prüfung, **freigegeben am 2026-09-27.** Kurzfassung des Konzepts. Die Einzelheiten, Messungen und Belege stehen im
 ausführlichen Konzept `int_filemanager_v2_konzept_2026-09-26.md` (Verweise wie "→ K 5" = Konzept Abschnitt 5).
 Bei einem Widerspruch zwischen beiden gilt das Konzept; ein Widerspruch ist ein Fehler und wird in beiden behoben.
 
@@ -120,8 +120,8 @@ Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
 
 - Odoo im Prefork-Modus (mehrere Prozesse), nginx davor, Umwandler-Container (→ K 13).
 - Aufräumjobs: unbenutzte Inhalte, abgebrochene Uploads, Temp-Dateien.
-- Dateispeicher auf einem Share über zwei Array-Platten (disk2 + disk3, 3,2 TB frei); schlafende Platten brauchen
-  beim ersten Zugriff einige Sekunden.
+- Dateispeicher: Unraid-Share unter `/mnt/user/<name>`, abgelegt nur auf disk2 + disk3 (3,2 TB frei), ohne
+  Cache-SSD; Odoo greift nur über `/mnt/user` zu. Schlafende Platten brauchen beim ersten Zugriff einige Sekunden.
 - Backup: Datenbank **und** Dateispeicher gehören zusammen; da Inhalte nie verändert werden, reicht für den Speicher
   ein inkrementelles Backup. Erst die Datenbank sichern, dann den Dateispeicher; das Aufräumen wartet länger als ein
   Backup-Lauf.
@@ -145,15 +145,15 @@ Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
 | 2026-09-26 | Start ohne Netzlaufwerk, mit Eingangsordner; Netzlaufwerk später nach Nutzung (WebDAV über `odoo fmdav` oder SMB über Odoo-FUSE) |
 | 2026-09-27 | Eingangsordner: Datei gilt nach 2 Minuten ohne Änderung als fertig |
 | 2026-09-27 | ZIP-Download bis ca. 500 MB direkt, darüber im Hintergrund |
-| 2026-09-27 | Dateispeicher auf disk2 + disk3 (Tower) |
+| 2026-09-27 | Dateispeicher als Share unter `/mnt/user`, Plattenauswahl disk2 + disk3, ohne Cache (Tower) |
 
 ## 11. Reihenfolge mit Abnahme
 
 Jeder Schritt ist erst fertig, wenn seine Abnahme erfüllt ist; der nächste beginnt erst danach. **Für jeden Schritt
 gilt zusätzlich:** pre-commit, Odoos `test_lint` und `odoo-ls` ohne Befund im eigenen Code, `i18n/de.po` vollständig (keine englischen Texte in der
 deutschen Oberfläche). Jeder Schritt wird
-vor der Abnahme von einer zweiten Instanz gegengelesen (`codex -p review`). *(Abnahmekriterien: Vorschlag, mit der
-Freigabe verbindlich.)*
+vor der Abnahme von einer zweiten Instanz gegengelesen (`codex -p review`). *(Abnahmekriterien mit der Freigabe
+am 2026-09-27 verbindlich.)*
 
 | # | Schritt | fertig, wenn |
 |---|---|---|
