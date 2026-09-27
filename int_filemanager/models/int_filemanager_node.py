@@ -82,7 +82,11 @@ class IntFilemanagerNode(models.Model):
         fault.fault_point("node_create_before_check")
         try:
             with self.env.cr.savepoint():
-                node = self.create(
+                # mail.thread's own creation-logging chatter message is not wanted for
+                # every single file (volume, and it runs un-sudo'd - mail_thread.py
+                # _message_log_batch/_notify_get_reply_to_batch - so it can fail on a
+                # company/reply-to lookup this user has no reason to need for this).
+                node = self.with_context(mail_create_nolog=True).create(
                     {
                         "name": name,
                         "parent_id": parent_id,
@@ -130,6 +134,54 @@ class IntFilemanagerNode(models.Model):
         self.env.cr.postcommit.add(lambda: _remove_if_exists(tmp_path))
         return result
 
+    def _lock_and_check_base_revision(self, node, base_revision_id):
+        """Konzept 6 "Zeilen wartend sperren ... und Basisrevision pruefen"
+        (shared by create_new_revision and restore_version): SET LOCAL
+        lock_timeout + SELECT ... FOR UPDATE instead of lock_for_update()
+        (A3: the latter is SKIP LOCKED and raises LockError immediately);
+        LockNotAvailable propagates uncaught so retrying() retries the
+        whole request (Konzept 6/19.17). Returns the node's current
+        revision (possibly empty) as it stands AFTER the lock is held."""
+        fault.fault_point("node_lock_before_wait")
+        cr = self.env.cr
+        cr.execute("SET LOCAL lock_timeout TO '5s'")
+        cr.execute(
+            SQL("SELECT id FROM int_filemanager_node WHERE id = %s FOR UPDATE", node.id)
+        )
+        node.invalidate_recordset(["current_revision_id"])
+
+        current = node.current_revision_id
+        if base_revision_id != (current.id or False):
+            raise UserError(
+                self.env._(
+                    "This file changed since you loaded it; reload and try again."
+                )
+            )
+        return current
+
+    def _attach_revision(self, node, current, blob_id, size, origin, operation):
+        """Creates the new revision and re-points current_revision_id,
+        unless blob_id already matches the current one (no new revision at
+        all then, Konzept 6). Shared by create_new_revision, restore_version
+        and copy_node (which passes current=None: revision_no always starts
+        at 1 for a brand-new node, nothing to compare against)."""
+        if current and current.blob_id.id == blob_id:
+            return {"node_id": node.id, "revision_id": current.id, "unchanged": True}
+
+        next_no = (current.revision_no if current else 0) + 1
+        revision = self.env["int_filemanager.revision"].create(
+            {
+                "node_id": node.id,
+                "blob_id": blob_id,
+                "revision_no": next_no,
+                "origin": origin,
+                "operation_id": operation.id,
+                "size": size,
+            }
+        )
+        node.write({"current_revision_id": revision.id, "size": size})
+        return {"node_id": node.id, "revision_id": revision.id}
+
     @api.model
     def create_new_revision(
         self, node_id, base_revision_id, content, operation_key, origin="edit"
@@ -151,24 +203,7 @@ class IntFilemanagerNode(models.Model):
         node = self.browse(node_id)
         node.check_access("write")
 
-        fault.fault_point("node_lock_before_wait")
-        cr = self.env.cr
-        cr.execute("SET LOCAL lock_timeout TO '5s'")
-        # LockNotAvailable propagates uncaught: retrying() retries the whole
-        # request on it (Konzept 6/19.17), this method must not swallow it.
-        cr.execute(
-            SQL("SELECT id FROM int_filemanager_node WHERE id = %s FOR UPDATE", node_id)
-        )
-        node.invalidate_recordset(["current_revision_id"])
-
-        current = node.current_revision_id
-        if base_revision_id != (current.id or False):
-            raise UserError(
-                self.env._(
-                    "This file changed since you loaded it; reload and try again."
-                )
-            )
-
+        current = self._lock_and_check_base_revision(node, base_revision_id)
         fault.fault_point("revision_write_before_check")
 
         tmp_path = blobstore.write_stream_to_temp(
@@ -191,23 +226,102 @@ class IntFilemanagerNode(models.Model):
         blob = self.env["int_filemanager.blob"].sudo()._get_or_create(sha256, size)
         blobstore.ensure_on_disk(self.env, sha256, tmp_path)
 
-        next_no = (current.revision_no if current else 0) + 1
-        revision = self.env["int_filemanager.revision"].create(
-            {
-                "node_id": node.id,
-                "blob_id": blob.id,
-                "revision_no": next_no,
-                "origin": origin,
-                "operation_id": operation.id,
-                "size": size,
-            }
-        )
-        node.write({"current_revision_id": revision.id, "size": size})
+        result = self._attach_revision(node, current, blob.id, size, origin, operation)
+        result["sha256"] = sha256
         fault.fault_point("revision_write_after_insert")
 
-        result = {"node_id": node.id, "revision_id": revision.id, "sha256": sha256}
         operation.write({"result": result})
         self.env.cr.postcommit.add(lambda: _remove_if_exists(tmp_path))
+        return result
+
+    @api.model
+    def restore_version(self, node_id, revision_id, base_revision_id, operation_key):
+        """Konzept 6 "Version wiederherstellen": a new revision on the OLD
+        blob - no bytes copied, the blob is content-addressed and already
+        on disk. Restoring the revision that is already current is the same
+        no-op _attach_revision already gives create_new_revision."""
+        operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
+            operation_key
+        )
+        if not is_new:
+            return operation.result
+
+        node = self.browse(node_id)
+        node.check_access("write")
+
+        old_revision = self.env["int_filemanager.revision"].browse(revision_id)
+        old_revision.check_access("read")
+        if old_revision.node_id.id != node.id:
+            raise UserError(self.env._("This revision does not belong to this file."))
+
+        current = self._lock_and_check_base_revision(node, base_revision_id)
+        fault.fault_point("revision_write_before_check")
+
+        result = self._attach_revision(
+            node,
+            current,
+            old_revision.blob_id.id,
+            old_revision.size,
+            "restore",
+            operation,
+        )
+        fault.fault_point("revision_write_after_insert")
+
+        operation.write({"result": result})
+        return result
+
+    @api.model
+    def copy_node(self, node_id, target_parent_id, new_name, operation_key):
+        """Konzept 6 "Kopieren": a new node with a new revision on the SAME
+        blob - no bytes copied. Runs the node create() (rights-checked,
+        Konzept 6 "Rechte pruefen" first) before anything else, same
+        ordering fix as create_file. revision_no always starts at 1 on the
+        new node, so no lock/base-revision check is needed here (nobody
+        else can know about a node that does not exist yet)."""
+        operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
+            operation_key
+        )
+        if not is_new:
+            return operation.result
+
+        source = self.browse(node_id)
+        source.check_access("read")
+        if not source.current_revision_id:
+            raise UserError(
+                self.env._("This file has no content yet; nothing to copy.")
+            )
+
+        target_parent = self.browse(target_parent_id)
+        scope_id = target_parent.scope_id.id
+
+        try:
+            with self.env.cr.savepoint():
+                new_node = self.with_context(mail_create_nolog=True).create(
+                    {
+                        "name": new_name,
+                        "parent_id": target_parent_id,
+                        "scope_id": scope_id,
+                        "is_dir": False,
+                        "mime": source.mime,
+                    }
+                )
+        except psycopg2.errors.UniqueViolation:
+            raise UserError(
+                self.env._(
+                    "A file or folder named %(name)s already exists here.",
+                    name=new_name,
+                )
+            ) from None
+
+        result = self._attach_revision(
+            new_node,
+            None,
+            source.current_revision_id.blob_id.id,
+            source.current_revision_id.size,
+            "restore",
+            operation,
+        )
+        operation.write({"result": result})
         return result
 
     @api.model

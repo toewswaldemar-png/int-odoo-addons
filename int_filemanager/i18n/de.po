@@ -88,6 +88,12 @@ msgid "This file changed since you loaded it; reload and try again."
 msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneut versuchen."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "This file has no content yet; nothing to copy."
+msgstr "Diese Datei hat noch keinen Inhalt; nichts zu kopieren."
+
+#. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_upload_operation_id_uniq
 msgid "This operation already has an upload in progress."
 msgstr "Für diesen Vorgang läuft bereits ein Upload."
@@ -96,3 +102,9 @@ msgstr "Für diesen Vorgang läuft bereits ein Upload."
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_operation_key_uniq
 msgid "This operation key was already used."
 msgstr "Dieser Vorgangsschlüssel wurde bereits verwendet."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "This revision does not belong to this file."
+msgstr "Diese Revision gehört nicht zu dieser Datei."

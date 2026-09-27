@@ -571,3 +571,255 @@ class TestNodeTrashRestoreDelete(TransactionCase):
         first = self._node_env().trash(self.node.id, "op-trash-repeat")
         second = self._node_env().trash(self.node.id, "op-trash-repeat")
         self.assertEqual(first, second)
+
+
+@tagged("post_install", "-at_install")
+class TestNodeCopy(TransactionCase):
+    def setUp(self):
+        super().setUp()
+        self.write_group = (
+            self.env["res.groups"].sudo().create({"name": "Copy test writer"})
+        )
+        self.scope_a = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Copy test scope A",
+                    "read_group_ids": [(4, self.write_group.id)],
+                    "write_group_ids": [(4, self.write_group.id)],
+                }
+            )
+        )
+        self.other_write_group = (
+            self.env["res.groups"].sudo().create({"name": "Copy test other writer"})
+        )
+        self.scope_b = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Copy test scope B",
+                    "read_group_ids": [(4, self.other_write_group.id)],
+                    "write_group_ids": [(4, self.other_write_group.id)],
+                }
+            )
+        )
+        self.folder_a = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "folder_a", "scope_id": self.scope_a.id, "is_dir": True})
+        )
+        self.folder_b = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "folder_b", "scope_id": self.scope_b.id, "is_dir": True})
+        )
+        base_group = self.env.ref("int_filemanager.group_filemanager_user")
+        self.writer = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Copy writer",
+                    "login": "copy_writer",
+                    "group_ids": [(6, 0, [base_group.id, self.write_group.id])],
+                }
+            )
+        )
+        self.both_scopes_writer = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Copy both-scopes writer",
+                    "login": "copy_both_writer",
+                    "group_ids": [
+                        (
+                            6,
+                            0,
+                            [
+                                base_group.id,
+                                self.write_group.id,
+                                self.other_write_group.id,
+                            ],
+                        )
+                    ],
+                }
+            )
+        )
+        created = (
+            self.env["int_filemanager.node"]
+            .with_user(self.writer)
+            .create_file(self.folder_a.id, "source.txt", b"copy me", "op-copy-setup")
+        )
+        self.source = self.env["int_filemanager.node"].sudo().browse(created["node_id"])
+        self.sha256 = created["sha256"]
+
+    def _node_env(self, user=None):
+        return self.env["int_filemanager.node"].with_user(user or self.writer)
+
+    def test_copy_creates_new_node_on_same_blob(self):
+        result = self._node_env().copy_node(
+            self.source.id, self.folder_a.id, "copy.txt", "op-copy-1"
+        )
+
+        copy_node = self.env["int_filemanager.node"].sudo().browse(result["node_id"])
+        self.assertNotEqual(copy_node.id, self.source.id)
+        self.assertEqual(copy_node.current_revision_id.blob_id.sha256, self.sha256)
+        self.assertEqual(copy_node.current_revision_id.revision_no, 1)
+        blobs = (
+            self.env["int_filemanager.blob"]
+            .sudo()
+            .search([("sha256", "=", self.sha256)])
+        )
+        self.assertEqual(len(blobs), 1)
+
+    def test_copy_across_scopes_requires_destination_write_right(self):
+        with self.assertRaises(AccessError):
+            self._node_env().copy_node(
+                self.source.id, self.folder_b.id, "copy.txt", "op-copy-denied"
+            )
+
+        self._node_env(self.both_scopes_writer).copy_node(
+            self.source.id, self.folder_b.id, "copy.txt", "op-copy-2"
+        )
+        found = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .search([("parent_id", "=", self.folder_b.id), ("name", "=", "copy.txt")])
+        )
+        self.assertTrue(found)
+
+    def test_copy_name_conflict_raises_user_error(self):
+        with self.assertRaises(UserError):
+            self._node_env().copy_node(
+                self.source.id, self.folder_a.id, "source.txt", "op-copy-conflict"
+            )
+
+    def test_copy_directory_without_content_raises_user_error(self):
+        empty_folder = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "empty_dir", "scope_id": self.scope_a.id, "is_dir": True})
+        )
+        with self.assertRaises(UserError):
+            self._node_env().copy_node(
+                empty_folder.id, self.folder_a.id, "empty_dir_copy", "op-copy-nodir"
+            )
+
+    def test_repeated_operation_key_is_idempotent(self):
+        first = self._node_env().copy_node(
+            self.source.id, self.folder_a.id, "copy_once.txt", "op-copy-repeat"
+        )
+        second = self._node_env().copy_node(
+            self.source.id, self.folder_a.id, "copy_once.txt", "op-copy-repeat"
+        )
+        self.assertEqual(first, second)
+
+
+@tagged("post_install", "-at_install")
+class TestNodeRestoreVersion(TransactionCase):
+    def setUp(self):
+        super().setUp()
+        self.write_group = (
+            self.env["res.groups"].sudo().create({"name": "Restore version writer"})
+        )
+        self.scope = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Restore version scope",
+                    "read_group_ids": [(4, self.write_group.id)],
+                    "write_group_ids": [(4, self.write_group.id)],
+                }
+            )
+        )
+        self.folder = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "folder", "scope_id": self.scope.id, "is_dir": True})
+        )
+        base_group = self.env.ref("int_filemanager.group_filemanager_user")
+        self.writer = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Restore version writer",
+                    "login": "restore_version_writer",
+                    "group_ids": [(6, 0, [base_group.id, self.write_group.id])],
+                }
+            )
+        )
+        self.outsider = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Restore version outsider",
+                    "login": "restore_version_outsider",
+                    "group_ids": [(6, 0, [base_group.id])],
+                }
+            )
+        )
+        v1 = self._node_env().create_file(
+            self.folder.id, "doc.txt", b"v1", "op-rv-setup-1"
+        )
+        self.node = self.env["int_filemanager.node"].sudo().browse(v1["node_id"])
+        self.v1_revision_id = v1["revision_id"]
+        v2 = self._node_env().create_new_revision(
+            self.node.id, self.v1_revision_id, b"v2", "op-rv-setup-2"
+        )
+        self.v2_revision_id = v2["revision_id"]
+
+    def _node_env(self, user=None):
+        return self.env["int_filemanager.node"].with_user(user or self.writer)
+
+    def test_restore_creates_new_revision_on_old_blob(self):
+        result = self._node_env().restore_version(
+            self.node.id, self.v1_revision_id, self.v2_revision_id, "op-rv-1"
+        )
+
+        self.node.invalidate_recordset()
+        self.assertEqual(self.node.current_revision_id.id, result["revision_id"])
+        self.assertEqual(self.node.current_revision_id.revision_no, 3)
+        self.assertEqual(
+            self.node.current_revision_id.blob_id.sha256,
+            self.env["int_filemanager.revision"]
+            .sudo()
+            .browse(self.v1_revision_id)
+            .blob_id.sha256,
+        )
+
+    def test_restoring_the_current_version_is_a_noop(self):
+        result = self._node_env().restore_version(
+            self.node.id, self.v2_revision_id, self.v2_revision_id, "op-rv-noop"
+        )
+        self.assertTrue(result.get("unchanged"))
+        self.assertEqual(result["revision_id"], self.v2_revision_id)
+
+    def test_stale_base_revision_raises_conflict(self):
+        with self.assertRaises(UserError):
+            self._node_env().restore_version(
+                self.node.id, self.v1_revision_id, self.v1_revision_id, "op-rv-stale"
+            )
+
+    def test_revision_from_another_node_is_rejected(self):
+        other = self._node_env().create_file(
+            self.folder.id, "other.txt", b"other", "op-rv-other-setup"
+        )
+        with self.assertRaises(UserError):
+            self._node_env().restore_version(
+                self.node.id,
+                other["revision_id"],
+                self.v2_revision_id,
+                "op-rv-wrong-node",
+            )
+
+    def test_denied_without_write_group(self):
+        with self.assertRaises(AccessError):
+            self._node_env(self.outsider).restore_version(
+                self.node.id, self.v1_revision_id, self.v2_revision_id, "op-rv-denied"
+            )
