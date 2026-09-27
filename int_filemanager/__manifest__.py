@@ -1,14 +1,9 @@
 {
     "name": "Filemanager",
-    "summary": "Dateimanager für ein Verzeichnis auf der Festplatte, mit OnlyOffice-Integration.",
-    "description": (
-        "Browst und verwaltet ein Verzeichnis auf dem Server-Dateisystem direkt aus Odoo heraus "
-        "(Upload, Download, Umbenennen, Löschen, Ordner anlegen). Office-Dokumente lassen sich "
-        "über die bestehende ONLYOFFICE-Integration direkt im Browser bearbeiten; Änderungen "
-        "werden zurück auf die Originaldatei geschrieben."
-    ),
+    "summary": "File manager with versions, trash, rights and ONLYOFFICE editing.",
     "version": "19.0.1.15.0",
     "category": "Productivity",
+    "author": "Waldemar Toews",
     "license": "LGPL-3",
     "depends": ["base", "bus", "mail", "portal", "onlyoffice_odoo"],
     "post_load": "post_load",

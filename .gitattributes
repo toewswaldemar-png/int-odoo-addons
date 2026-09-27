@@ -1,1 +1,3 @@
 *.sh text eol=lf
+# int_filemanager v2: LF in the working tree, as enforced by pre-commit (mixed-line-ending --fix=lf)
+int_filemanager/** text=auto eol=lf
