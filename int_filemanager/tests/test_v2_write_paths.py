@@ -429,3 +429,145 @@ class TestNodeRenameOrMove(TransactionCase):
             self.node.id, False, "once.txt", "op-rename-repeat"
         )
         self.assertEqual(first, second)
+
+
+@tagged("post_install", "-at_install")
+class TestNodeTrashRestoreDelete(TransactionCase):
+    def setUp(self):
+        super().setUp()
+        self.write_group = (
+            self.env["res.groups"].sudo().create({"name": "Trash test writer"})
+        )
+        self.purge_group = (
+            self.env["res.groups"].sudo().create({"name": "Trash test purger"})
+        )
+        self.scope = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Trash test scope",
+                    "read_group_ids": [(4, self.write_group.id)],
+                    "write_group_ids": [(4, self.write_group.id)],
+                    "purge_group_ids": [(4, self.purge_group.id)],
+                }
+            )
+        )
+        self.folder = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "folder", "scope_id": self.scope.id, "is_dir": True})
+        )
+        base_group = self.env.ref("int_filemanager.group_filemanager_user")
+        self.writer = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Trash writer",
+                    "login": "trash_writer",
+                    "group_ids": [(6, 0, [base_group.id, self.write_group.id])],
+                }
+            )
+        )
+        self.purger = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Trash purger",
+                    "login": "trash_purger",
+                    "group_ids": [
+                        (
+                            6,
+                            0,
+                            [base_group.id, self.write_group.id, self.purge_group.id],
+                        )
+                    ],
+                }
+            )
+        )
+        created = (
+            self.env["int_filemanager.node"]
+            .with_user(self.writer)
+            .create_file(self.folder.id, "doc.txt", b"content", "op-trash-setup")
+        )
+        self.node = self.env["int_filemanager.node"].sudo().browse(created["node_id"])
+        self.revision_id = created["revision_id"]
+        self.sha256 = created["sha256"]
+
+    def _node_env(self, user=None):
+        return self.env["int_filemanager.node"].with_user(user or self.writer)
+
+    def test_trash_marks_whole_subtree_inactive_and_hides_from_search(self):
+        child = (
+            self.env["int_filemanager.node"]
+            .with_user(self.writer)
+            .create_file(self.folder.id, "child.txt", b"c", "op-trash-child")
+        )
+        child_node = self.env["int_filemanager.node"].sudo().browse(child["node_id"])
+
+        self._node_env().trash(self.folder.id, "op-trash-1")
+
+        self.folder.invalidate_recordset()
+        child_node.invalidate_recordset()
+        self.assertFalse(self.folder.active)
+        self.assertEqual(self.folder.removal_reason, "trash")
+        self.assertFalse(child_node.active)
+        self.assertEqual(child_node.removal_reason, "trash")
+        found = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .search([("id", "=", self.folder.id)])
+        )
+        self.assertFalse(found)
+
+    def test_restore_reactivates_subtree(self):
+        self._node_env().trash(self.folder.id, "op-trash-2")
+
+        self._node_env().restore(self.folder.id, "op-restore-1")
+
+        self.folder.invalidate_recordset()
+        self.assertTrue(self.folder.active)
+        self.assertFalse(self.folder.removal_reason)
+
+    def test_restore_conflict_raises_user_error(self):
+        self._node_env().trash(self.node.id, "op-trash-3")
+        self._node_env().create_file(
+            self.folder.id, "doc.txt", b"new one", "op-trash-new-doc"
+        )
+
+        with self.assertRaises(UserError):
+            self._node_env().restore(self.node.id, "op-restore-conflict")
+
+        self.node.invalidate_recordset()
+        self.assertFalse(self.node.active)
+
+    def test_delete_permanently_removes_rows_but_keeps_blob(self):
+        self._node_env(self.purger).delete_permanently(self.node.id, "op-delete-1")
+
+        self.assertFalse(
+            self.env["int_filemanager.node"]
+            .sudo()
+            .with_context(active_test=False)
+            .search([("id", "=", self.node.id)])
+        )
+        self.assertFalse(
+            self.env["int_filemanager.revision"]
+            .sudo()
+            .search([("id", "=", self.revision_id)])
+        )
+        self.assertTrue(
+            self.env["int_filemanager.blob"]
+            .sudo()
+            .search([("sha256", "=", self.sha256)])
+        )
+
+    def test_delete_permanently_denied_without_purge_group(self):
+        with self.assertRaises(AccessError):
+            self._node_env().delete_permanently(self.node.id, "op-delete-denied")
+
+    def test_repeated_operation_key_is_idempotent_for_trash(self):
+        first = self._node_env().trash(self.node.id, "op-trash-repeat")
+        second = self._node_env().trash(self.node.id, "op-trash-repeat")
+        self.assertEqual(first, second)

@@ -78,6 +78,12 @@ msgstr "Dateimanager v2 Schreibvorgang (Idempotenzschlüssel)"
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "Restoring would collide with an existing file or folder of the same name."
+msgstr "Das Wiederherstellen würde mit einer bestehenden Datei oder einem Ordner gleichen Namens kollidieren."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "This file changed since you loaded it; reload and try again."
 msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneut versuchen."
 

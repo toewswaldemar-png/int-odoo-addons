@@ -279,3 +279,85 @@ class IntFilemanagerNode(models.Model):
         result = {"node_id": node.id}
         operation.write({"result": result})
         return result
+
+    @api.model
+    def trash(self, node_id, operation_key):
+        """Konzept 6 "Loeschen": active=False + removal_reason='trash' over
+        the WHOLE subtree - never just the node itself, or its children
+        would keep showing up active under a parent that no longer does.
+        Only descendants this user can already see are included (plain
+        search(), no sudo - I7); child_of also matches node_id itself."""
+        operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
+            operation_key
+        )
+        if not is_new:
+            return operation.result
+
+        node = self.browse(node_id)
+        node.check_access("write")
+
+        subtree = self.search([("id", "child_of", node_id)])
+        subtree.write({"active": False, "removal_reason": "trash"})
+
+        result = {"node_id": node.id}
+        operation.write({"result": result})
+        return result
+
+    @api.model
+    def restore(self, node_id, operation_key):
+        """Konzept 6 "Wiederherstellen": active=True over the trashed
+        subtree; a name collision in the target folder is a UserError, not
+        an automatic rename."""
+        operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
+            operation_key
+        )
+        if not is_new:
+            return operation.result
+
+        node = self.browse(node_id)
+        node.check_access("write")
+
+        subtree = self.with_context(active_test=False).search(
+            [("id", "child_of", node_id)]
+        )
+        try:
+            with self.env.cr.savepoint():
+                subtree.write({"active": True, "removal_reason": False})
+        except psycopg2.errors.UniqueViolation:
+            raise UserError(
+                self.env._(
+                    "Restoring would collide with an existing file or folder"
+                    " of the same name."
+                )
+            ) from None
+
+        result = {"node_id": node.id}
+        operation.write({"result": result})
+        return result
+
+    @api.model
+    def delete_permanently(self, node_id, operation_key):
+        """Konzept 6 "Endgueltig loeschen": rows only - the blob a deleted
+        revision pointed to is swept later by the cleanup job once nothing
+        references it any more (I4), never deleted here directly. Clearing
+        current_revision_id first breaks its own ondelete=restrict link to
+        revision before the cascade delete, rather than relying on unlink()
+        ordering its own cascade simulation the same way."""
+        operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
+            operation_key
+        )
+        if not is_new:
+            return operation.result
+
+        node = self.browse(node_id)
+        node.check_access("unlink")
+
+        subtree = self.with_context(active_test=False).search(
+            [("id", "child_of", node_id)]
+        )
+        subtree.write({"current_revision_id": False})
+        subtree.unlink()
+
+        result = {"node_id": node_id}
+        operation.write({"result": result})
+        return result
