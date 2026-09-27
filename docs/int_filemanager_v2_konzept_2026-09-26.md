@@ -8,6 +8,9 @@ ausführliche Referenz mit allen Belegen; bei einem Widerspruch gilt dieses Doku
 **Stand: festgeschrieben am 2026-09-26** (Prototyp-Befunde aus 19 und alle Entscheidungen aus 17 eingearbeitet,
 Start ohne Explorer-Zugriff, WebDAV/SMB vorbereitet), **wartet auf Freigabe durch den Nutzer.**
 
+**Überarbeitet am 2026-09-27:** Befunde A1–A21 der Code-Prüfung (`docs/review/konzept_codepruefung_2026-09-26.md`)
+und die Entscheidungen 6–8 eingearbeitet; neue Tests und Messungen in 19.17.
+
 **Entscheidungen des Nutzers (2026-09-26):**
 1. Der Dateimanager wird **vollständig als Odoo-Addon** gebaut. Odoo-Bausteine werden genutzt; **selbst gebaut wird
    nur dort, wo Odoo nachweislich an Grenzen stößt.**
@@ -21,6 +24,11 @@ Start ohne Explorer-Zugriff, WebDAV/SMB vorbereitet), **wartet auf Freigabe durc
    Modul** (17).
 
 5. Code nach den Odoo-/OCA-Konventionen (`docs/odoo_konventionen_2026-09-26.md`): **Englisch** in Namen, Kommentaren, Docstrings, Log-Meldungen und Commits (`[TAG] modul: …`); Oberflächentexte englisch im Code, deutsche Übersetzung in `i18n/de.po`. Prüfwerkzeuge: **pre-commit** nach OCA-Vorlage (nur für neuen Code), Odoos **`test_lint`** und **odoo-ls** (Parse-Modus, nur eigene Pfade) auf der Testinstanz; **keine** GitHub Action; Migrationsskripte mit **`odoo/upgrade-util`** (Entscheidung 2026-09-26).
+6. **Eingangsordner:** Eine Datei gilt als fertig, wenn Größe und Änderungszeit eine **Ruhezeit** lang unverändert
+   sind (11.1) (Entscheidung 2026-09-27).
+7. **ZIP-Download:** bis zu einer Grenze direkt gestreamt, darüber als **Hintergrundjob** (8) (Entscheidung 2026-09-27).
+8. **Blob-Speicher** auf einem Share über **disk2 + disk3** (Tower; `link`/`rename` über Plattengrenzen geprüft,
+   19.17) (Entscheidung 2026-09-27).
 
 **Grundlage:** Live-Prüfungen auf Tower und Code-Prüfungen im Odoo-19-Core, dokumentiert in
 `int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitte 19 und 20). Dort ist belegt, dass fast alle Fehler
@@ -50,12 +58,12 @@ jede Änderung wird dagegen geprüft; jede Invariante hat Tests (Abschnitt 16).
 | I1 | **Nur Odoo schreibt in den Blob-Speicher.** Kein Mount, keine Freigabe mit Schreibrecht, kein anderes Programm. | Überlauf, Identitätsverlust Word/Excel, Geisterzeilen, NFD, P10 |
 | I2 | **Ein Blob wird nie verändert.** Neuer Inhalt = neuer Blob; der Name ist der SHA-256 des Inhalts. | stilles Überschreiben, falsche ETags |
 | I3 | **Erst die DB, dann die Wirkung nach außen.** Vor dem Commit werden nur Blobs angelegt (harmlos bei Abbruch); alles andere Externe (E-Mail, Umwandler, WebDAV-Antworten mit Folgen) erst danach. | B2 |
-| I4 | **Bytes werden nie vor ihrer DB-Zeile gelöscht**, nur durch den Aufräumjob, wenn kein Verweis mehr existiert. | B14 |
+| I4 | **Bytes werden nie vor ihrer DB-Zeile gelöscht**, nur durch den Aufräumjob, wenn keine Revision mehr auf den Blob verweist **und** die Schonfrist seit seiner letzten Verwendung abgelaufen ist; im Zweifel wird nicht gelöscht (5). | B14, Prüfung A4 |
 | I5 | **Nichts wird gelöscht, weil etwas nicht beobachtet wurde.** Es gibt keinen Watcher und keinen Scan, der Zeilen entfernt. | B1, B13 |
 | I6 | **Jede bestätigte Änderung ist wiederherstellbar.** Jede ersetzte Fassung bleibt als Version erhalten (Aufbewahrung konfigurierbar, Löschen nur per Regel). | B5, B6 |
-| I7 | **Rechte werden ausschließlich über Odoos Rechtesystem geprüft** (`ir.model.access`, `ir.rule`). Öffentliche Methoden arbeiten nie mit `sudo()` auf nutzergesteuerten Eingaben. | N1 |
+| I7 | **Rechte werden ausschließlich über Odoos Rechtesystem geprüft** (`ir.model.access`, `ir.rule`) – für **jedes** Modell des Moduls, nicht nur den Knoten, und für **jeden** Zugriffsweg (Oberfläche, `call_kw`, JSON-2, Routen, `/web/image`, Freigabe-Links). Kein `sudo()` in einem nutzererreichbaren Pfad, bevor die Prüfung unter der Nutzeridentität abgeschlossen ist; danach nur eng begrenzt (12). | N1, Prüfung A1/A2 |
 | I8 | **Verweise gehen über IDs, nie über Pfade.** Pfade sind abgeleitete Anzeige. | B7 |
-| I9 | **Jeder Schreibvorgang ist eine Transaktion** und entweder ganz oder gar nicht sichtbar. Wiederholungen (`retrying`, Doppelklick, erneutes Senden) erzeugen keine Doppelungen (Vorgangs-ID). | B2, P3 |
+| I9 | **Der sichtbare Zustand jedes Schreibvorgangs wird in einer PostgreSQL-Transaktion geschrieben** – ganz oder gar nicht. Blobs, die vor einem gescheiterten Commit entstanden sind, dürfen liegen bleiben und werden später sicher entfernt (I4). Wiederholungen (Doppelklick, erneutes Senden, Konflikt zweier Worker) erzeugen keine Doppelungen: Vorgangs-ID, Eindeutigkeit durch die DB, Konflikte werden ausdrücklich behandelt (6). | B2, P3, Prüfung A3 |
 | I10 | **Der Odoo-Core wird nicht verändert oder gepatcht.** Erweiterung nur über dokumentierte Mechanismen (Vererbung, Hooks, Routen, Auth-Methoden, CLI-Befehle aus Addons). | Update-Brüche |
 | I11 | **Native Bibliotheken für fremde Dateiformate laufen außerhalb des Odoo-Prozesses.** | Abstürze und Speicherfresser im Odoo-Prozess, Pillow-Beschränkung |
 | I12 | **Keine Dateibytes im RAM des Odoo-Prozesses** über eine feste Grenze hinaus; Übertragung per Streaming und `x_sendfile`. | 128-MiB-Grenze, RAM |
@@ -78,7 +86,7 @@ jede Änderung wird dagegen geprüft; jede Invariante hat Tests (Abschnitt 16).
  ├─ Crons: Vorschau/OCR, Aufräumen         │
  │  (Blobs, Uploads, Temp-Dateien)         │
  └─ Modelle + Rechte ─────────── gemeinsam: int_filemanager.node, int_filemanager.revision, int_filemanager.blob, int_filemanager.scope, int_filemanager.upload,
-                                  int_filemanager.dav_lock, int_filemanager.dav_prop, Tags, Status, OCR-Werte; ir.model.access + ir.rule
+                                  (mit WebDAV: .dav_lock, .dav_prop), Tags, Status, OCR-Werte; ir.model.access + ir.rule
         │                               │
         ▼                               ▼
  PostgreSQL (C-Kollation)        Blob-Speicher (Array-Share, nur Odoo-Prozesse schreiben)
@@ -93,16 +101,16 @@ Entscheidung 2026-09-26). In den Prototypen (Abschnitt 19) hießen die Modelle n
 
 | Modell | Zweck | Wesentliche Felder / Regeln |
 |---|---|---|
-| `int_filemanager.node` | Ordner und Dateien (Verzeichniseintrag) | `name`, `parent_id` (`_parent_store`), `is_dir`, `active`, `removal_reason` (`trash`), `scope_id`, `current_revision_id`, `size`, `mime`, `tag_ids`, `status_id`, `partner_id`, `mail.thread`; für WebDAV `vacated_parent_id`/`vacated_name`/`vacated_at`/`vacated_uid` und `shadow_of_id` (Identitätsregel, 11). **Teil-Unique-Index** `(parent_id, lower(name COLLATE "und-x-icu")) WHERE active` über `models.UniqueIndex`: Name je Ordner **ohne Rücksicht auf Groß/Klein** eindeutig wie unter Windows (19.4; geprüft: `größe.TXT` neben `Größe.txt` abgelehnt, `GRÖSSE.txt` erlaubt wie auf NTFS), Papierkorb blockiert nicht. Namenssuchen nutzen denselben Ausdruck, damit der Index greift. Pfad nur berechnet/zur Anzeige. **Leere Datei = Knoten ohne Revision.** |
+| `int_filemanager.node` | Ordner und Dateien (Verzeichniseintrag) | `name`, `parent_id` (`_parent_store`), `is_dir`, `active`, `removal_reason` (`trash`), `scope_id`, `current_revision_id`, `size`, `mime`, `tag_ids`, `status_id`, `partner_id`, `mail.thread`; für WebDAV `vacated_parent_id`/`vacated_name`/`vacated_at`/`vacated_uid` und `shadow_of_id` (Identitätsregel, 11). **Teil-Unique-Index** `(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active` über `models.UniqueIndex`: Name je Ordner **ohne Rücksicht auf Groß/Klein** eindeutig wie unter Windows (19.4; geprüft: `größe.TXT` neben `Größe.txt` abgelehnt, `GRÖSSE.txt` erlaubt wie auf NTFS), Papierkorb blockiert nicht. `NULLS NOT DISTINCT`, weil PostgreSQL leere Eltern sonst als verschieden zählt und gleichnamige Wurzelknoten zuließe (19.17, A6). Namenssuchen nutzen denselben Ausdruck, damit der Index greift. Pfad nur berechnet/zur Anzeige. **Jede Datei hat eine aktuelle Revision, auch eine leere** (Revision auf den 0-Byte-Blob, A7); die Sonderregel für den leeren Vorab-`PUT` des Windows-Explorers gehört in die WebDAV-Schicht (11.2). |
 | `int_filemanager.revision` | eine Fassung einer Datei | `node_id`, `revision_no`, `blob_id`, `size` (`Float`, 19.2), `origin` (`upload`, `webdav`, `office`, `edit`, `restore`, `import`), `create_uid`, `create_date`, `operation_id`. Nie verändert. |
-| `int_filemanager.blob` | Inhalt | `sha256` (eindeutig), `size` (**`Float`**, weil `fields.Integer` `int4` ist, 19.2), `state` (`present`). Speicherort aus dem Hash abgeleitet, nicht gespeichert. |
+| `int_filemanager.blob` | Inhalt | `sha256` (eindeutig), `size` (**`Float`**, weil `fields.Integer` `int4` ist, 19.2), `state` (`present`), `last_used` (bei jeder Verwendung im Abschluss-Commit gesetzt; Grundlage der Schonfrist, 5). Anlegen im Savepoint, bei `UniqueViolation` die vorhandene Zeile nehmen (zwei Worker mit gleichem Inhalt, 6). Speicherort aus dem Hash abgeleitet, nicht gespeichert. |
 | `int_filemanager.scope` | Rechte-Bereich | `name`, `read_group_ids`, `write_group_ids`, `manage_group_ids`, `purge_group_ids`. Knoten erben den Bereich des nächsten Ordners mit eigenem Bereich (gespeichert, beim Verschieben per ORM für den Teilbaum gesetzt). |
 | `int_filemanager.upload` | laufender Upload in Stücken | `operation_id` (eindeutig), `create_uid`, Zielordner/-datei, erwartete Größe (`Float`, unbekannt erlaubt), bisherige Größe, Temp-Datei, `state` (`open`, `processing`, `done`, `failed`), Ablauf. |
 | `int_filemanager.dav_lock` (erst mit WebDAV) | WebDAV-Sperren | `token` (eindeutig), `root` (Pfad, wie WsgiDAV sperrt), `data` (Sperre als JSON), `expire`; zusätzlich `node_id` für die Anzeige in der Oberfläche ("wird in Word bearbeitet") und ONLYOFFICE. In der DB, damit alle Prozesse sie sehen und ein Neustart sie nicht verliert (19.7, 19.10). LOCK/UNLOCK über `pg_advisory_xact_lock` serialisiert. |
 | `int_filemanager.dav_prop` (erst mit WebDAV) | tote WebDAV-Eigenschaften | `node_id` (Kaskade), `name`, `value`; an der Knoten-ID, übersteht Verschieben (I8). Windows-Zeitstempel werden nicht gespeichert (Änderungsdatum = Revision). |
 | `int_filemanager.operation` | Vorgangs-IDs | `key` (eindeutig), Ergebnis. Doppelte Anfragen liefern das gespeicherte Ergebnis. |
 | bestehend | Tags, Status, Extraktionsmuster, extrahierte Werte, Freigabe-Log | werden auf `int_filemanager.node` umgehängt. |
-| Geschäftsbezug | Mixin für Geschäftsobjekte | heute `int_filemanager.linkable.mixin` fest auf `partner_id`. Künftig generisch (`res_model`/`res_id`-Verknüpfungen mit Rechteprüfung nach dem Muster von `mail.activity`: `_check_access` **und** `_search` überschreiben, `exists()` vor der Prüfung, Aufräumjob für per DB-Kaskade gelöschte Ziele). |
+| Geschäftsbezug | Mixin für Geschäftsobjekte | heute `int_filemanager.linkable.mixin` fest auf `partner_id`. Künftig generisch (`res_model`/`res_id`-Verknüpfungen mit Rechteprüfung nach dem Muster von `mail.activity`: `_check_access` **und** `_search` überschreiben, `exists()` vor der Prüfung – beides dort vorhanden). Zusätzlich ein **eigener** Aufräumjob für per DB-Kaskade gelöschte Ziele (`mail.activity` hat keinen, es überspringt solche Ziele nur, A16). `_check_access` ist laut Odoo-Docstring zum Überschreiben gedacht; die `_search`-Signatur hat sich in 19 geändert (`bypass_access`) → Update-Test (16). |
 
 **Datenbank:** C-Kollation (Odoo-Standard, `service/db.py:146`). Präfix- und Teilbaum-Abfragen nutzen dann die
 normalen Indizes, und `_parent_store_update` des neueren Cores ist korrekt (auf `en_US.utf8` zerstört er
@@ -113,36 +121,51 @@ liefern könnten).
 
 ## 5. Blob-Speicher (Eigenbau, weil `ir.attachment` hier nicht reicht)
 
-**Warum eigen:** `ir.attachment` nimmt Inhalte nur als Bytes im Speicher (`_set_attachment_data`,
-`ir_attachment.py:284-313`), und `store_fname` ist nicht setzbar (`create`/`write` entfernen es, Z. 723, 762). Große
-Dateien und Streaming sind damit nicht möglich. `ir.attachment` bleibt für Vorschaubilder und Anhänge an
-Geschäftsdatensätzen.
+**Warum eigen:** `ir.attachment` ist Odoos allgemeines Anhang-System, kein revisionsorientierter Speicher für einen
+großen Dateibestand. Konkret: Inhalte nur als Bytes im Speicher (`_set_attachment_data`), `store_fname` nicht setzbar
+(`write`/`create` entfernen es), Prüfsumme SHA-1 (`_compute_checksum`), kein `fsync` beim Schreiben (`_file_write`),
+Rechte hängen am Elterndatensatz. Große Dateien, Streaming und fortsetzbare Uploads sind damit nicht möglich
+(Code-Prüfung Nr. 33–35). `ir.attachment` bleibt für Vorschaubilder und Anhänge an Geschäftsdatensätzen.
 
 **Aufbau:** Nachbildung des Filestore-Musters, erweitert um Streaming.
-- **Ablage:** `<blobroot>/<sha[0:2]>/<sha[2:4]>/<sha>`. `<blobroot>` liegt auf einem **Array-Share** (Platz) und wird im
+- **Ablage:** `<blobroot>/<sha[0:2]>/<sha[2:4]>/<sha>`. `<blobroot>` liegt auf einem **Array-Share über disk2 + disk3**
+  (Entscheidung 8; shfs legt fehlende Ordner auf der Platte der Datei an, `link`/`rename` funktionieren über
+  Plattengrenzen, ein vorhandener Name auf der anderen Platte wird mit `EEXIST` abgelehnt, 19.17) und wird im
   Container **unterhalb von `<data_dir>/filestore/<db>/`** eingebunden. Nur so gilt Odoos `x_sendfile`-Pfadprüfung
-  (`http.py:665-680`, prüft "unterhalb von `data_dir/filestore`"). Samba gibt diesen Share nicht frei (I1).
-- **Schreiben (vor dem Commit):** Stream in Temp-Datei im selben Dateisystem, **SHA-256 beim Empfang**, `fsync`,
-  existiert der Ziel-Hash schon → Temp löschen (Deduplizierung), sonst `link` ohne Überschreiben auf den Hash-Namen,
-  `fsync` des Ordners. Erst danach die DB-Zeilen (`int_filemanager.blob`, `int_filemanager.revision`) in einer **kurzen** Transaktion.
+  (`http.Stream.get_response`, prüft "unterhalb von `data_dir/filestore`"). Samba gibt diesen Share nicht frei (I1).
+- **Schreiben:** Stream in Temp-Datei im selben Dateisystem, **SHA-256 beim Empfang**, `fsync`, Aufräum-Markierung
+  für den Hash setzen **oder erneuern** (`os.utime`), `link` ohne Überschreiben auf den Hash-Namen (existiert er schon:
+  Deduplizierung), `fsync` des Ordners. **Die Temp-Datei bleibt bis nach dem Commit.** Dann in einer **kurzen**
+  Transaktion: Blob-Zeile anlegen oder ihr `last_used` setzen, **danach** prüfen, ob die Blob-Datei existiert (fehlt
+  sie, aus der Temp-Datei neu verlinken), Revision anlegen, Commit, Temp-Datei löschen. Das Setzen von `last_used`
+  sperrt die Zeile gegen den Aufräumjob; hat der Aufräumjob sie gerade gelöscht, meldet PostgreSQL unter REPEATABLE
+  READ (Odoos Isolationsstufe, `sql_db.py`) einen Serialisierungsfehler, den `retrying()` wiederholt (19.17, A4).
   **Während des Datenstroms ist keine Transaktion offen** (19.8: sonst hält sie den Snapshot, bremst VACUUM und
   belegt die Verbindung). Ein Abbruch hinterlässt höchstens einen unreferenzierten Blob (Aufräumjob) oder eine
   Temp-Datei (eigener Aufräumjob für Temp-Dateien älter als N Stunden). `fsync` kostet auf dem Unraid-Array ~28 ms je
-  Datei, die Schreibrate liegt bei ~46 MB/s (19.7).
-- **Aufräumen:** `@api.autovacuum`: Blobs ohne Verweis aus `int_filemanager.revision` (und ohne laufende Uploads) älter als eine
-  Schonfrist löschen. Wie Odoos `_gc_file_store` (`ir_attachment.py:191-263`) unter einer Tabellensperre als erstem
-  Statement einer frischen Transaktion, damit kein gerade committeter Verweis übersehen wird (Snapshot-Befund 3).
-- **Lesen:** `http.Stream(type='path')` mit `etag=sha256`, Range-Anfragen (`send_file` mit `accept_ranges`,
-  `http.py:653-680`), Auslieferung über nginx per `X-Accel-Redirect`.
+  Datei, die Schreibrate liegt bei ~46 MB/s (19.7); nach dem Einschlafen der Platten (Spindown 30 min) dauerte der
+  erste Schreibzugriff 7,3 s (19.17, A13) – Zeitlimits entsprechend großzügig.
+- **Aufräumen:** `@api.autovacuum`, wie Odoos `_gc_file_store` in einer frischen Transaktion mit der Sperre von
+  Blob- und Revisionstabelle als **erstem** Statement (sonst sieht der Snapshot gerade committete Verweise nicht,
+  Snapshot-Befund 3). Gelöscht werden nur Blob-Zeilen ohne Revision (und ohne laufende Uploads), deren `last_used`
+  älter als die Schonfrist ist, sowie Dateien, deren Markierung älter als die Schonfrist ist und zu denen keine Zeile
+  existiert. Die Schonfrist ist länger als ein Backup-Lauf (unten). Odoos eigener Aufräumjob hat beim Wiederverwenden
+  dieselbe Lücke (`_file_write` markiert nur beim Neuschreiben) – deshalb die Regeln unter "Schreiben" (A4).
+- **Lesen:** `http.Stream(type='path', …)` direkt erzeugen (nicht `Stream.from_path`, das nur Addon-Pfade zulässt,
+  A19) mit `etag=sha256`; Range und bedingte Anfragen über `send_file` (`conditional`), Auslieferung über nginx per
+  `X-Accel-Redirect` (`Stream.get_response`).
 - **Prüfen:** periodischer Hash-Abgleich in Stichproben (Bitfäule, Plattenfehler) als Cron mit Zeitbudget.
 - **Backup:** DB und Blob-Speicher gehören zusammen. Weil Blobs unveränderlich sind, reicht für den Blob-Speicher ein
   inkrementelles Backup; wiederhergestellt wird immer DB-Stand plus alle Blobs, die dieser Stand referenziert.
+  **Reihenfolge:** erst die DB sichern, dann die Blobs; die Schonfrist des Aufräumjobs ist länger als ein Backup-Lauf
+  (sonst kann ein Blob, auf den die gesicherte DB zeigt, dazwischen gelöscht werden). Regelmäßig prüfen, dass alle
+  von der gesicherten DB referenzierten Blobs im Blob-Backup liegen (A11).
 
 ## 6. Schreibwege
 
 Alle Schreibwege folgen demselben Ablauf: Rechte prüfen → Vorgangs-ID prüfen → ggf. Blob anlegen (Abschnitt 5) →
-Zeilen sperren (`lock_for_update`) und Basisrevision prüfen → DB schreiben → Commit. Keine Plattenoperation
-außer "Blob anlegen", kein `sudo` auf Nutzereingaben.
+Zeilen **wartend** sperren (siehe unten) und Basisrevision prüfen → DB schreiben → Commit. Keine Plattenoperation
+außer "Blob anlegen", kein `sudo` auf Nutzereingaben (I7).
 
 | Vorgang | Ablauf | Bemerkung |
 |---|---|---|
@@ -160,10 +183,24 @@ außer "Blob anlegen", kein `sudo` auf Nutzereingaben.
 Wird in einem Vorgang ein Name frei gemacht (Papierkorb, Umbenennen) und danach wieder belegt, muss dazwischen
 `flush_recordset()` stehen, sonst scheitert der Vorgang am Index (19.4, litmus copymove).
 
-**Wiederholungssicherheit:** Da vor dem Commit nur Blobs angelegt werden (idempotent über den Hash), kann Odoos
-`retrying()` jeden Schreibvorgang gefahrlos wiederholen. Wird der Inhalt als Strom empfangen (WebDAV-`PUT`), liegt er
-vor der DB-Arbeit vollständig als Blob vor; wiederholt wird nur der kurze Abschluss (19.10: 10 gleichzeitige `PUT`
-auf denselben neuen Namen → 1 Knoten, 10 Revisionen).
+**Wiederholungssicherheit:** Da vor dem Commit nur Blobs angelegt werden (idempotent über den Hash), darf Odoos
+`retrying()` einen Schreibvorgang wiederholen. `retrying()` wiederholt aber **nur** Serialisierungsfehler, Deadlocks
+und `LockNotAvailable` (`service/model.py`, `PG_CONCURRENCY_EXCEPTIONS_TO_RETRY`); eine `IntegrityError` (auch der
+Namensindex) wird sofort zur Fehlermeldung, und `lock_for_update()` wartet nicht (`SKIP LOCKED`) und wirft
+`LockError`, eine `UserError`, die gar nicht wiederholt wird (A3). Deshalb:
+- **Sperren:** `SET LOCAL lock_timeout` (wenige Sekunden) und `SELECT … FOR UPDATE` über `odoo.tools.SQL` statt
+  `lock_for_update()`; läuft die Zeit ab, meldet PostgreSQL `LockNotAvailable`, und `retrying()` wiederholt (19.17;
+  `lock_timeout` setzt auch `_gc_file_store` selbst).
+- **Anlegen:** `create` in einem Savepoint; bei `UniqueViolation` die inzwischen vorhandene Zeile nehmen und nach der
+  Regel des Schreibwegs fortfahren (Upload/`PUT`: neue Revision des vorhandenen Knotens; Umbenennen/Verschieben auf
+  einen belegten Namen: Meldung an den Nutzer). Muster: Blob-Anlage im Prototyp (`fm.blob._get_or_create`).
+- **Tests mit erzwungener Überlappung** (Barriere bzw. Fehlerinjektion zwischen Prüfen und Schreiben), nicht durch
+  gleichzeitiges Starten: Der Prototyp-Test "10 gleichzeitige `PUT` auf denselben neuen Namen → 1 Knoten,
+  10 Revisionen" (19.10) hat den Wettlauf zeitlich nicht getroffen; der Code hätte dort mit `ValidationError` bzw.
+  `LockError` abgebrochen.
+
+Wird der Inhalt als Strom empfangen (WebDAV-`PUT`), liegt er vor der DB-Arbeit vollständig als Blob vor; wiederholt
+wird nur der kurze Abschluss.
 
 ## 7. Upload aus dem Browser in Stücken
 
@@ -186,8 +223,11 @@ API ganz in den RAM (19.2); das Streamen ginge nur über ein internes Attribut (
 ## 8. Lesen, Vorschau, Medien
 
 - **Download und Video:** Stream mit Range und `x_sendfile` (5). Rechteprüfung über das ORM vor der Auslieferung.
-- **Mehrere Dateien/Ordner als ZIP:** gestreamt erzeugt, ohne die ganze ZIP-Datei im Speicher (I12); Rechte je
-  enthaltener Datei.
+- **Mehrere Dateien/Ordner als ZIP (Entscheidung 7):** Bis zu einer Grenze (Vorschlag 500 MB Summe) direkt gestreamt,
+  ohne die ganze ZIP-Datei im Speicher (I12); das belegt einen Worker für die Dauer. Darüber baut ein Cron das ZIP
+  unter der Identität des anfordernden Nutzers in eine Temp-Datei **unterhalb von `<data_dir>/filestore`** (sonst
+  kein `x_sendfile`), der Nutzer bekommt eine Benachrichtigung, ausgeliefert wird per nginx; Temp-ZIPs nach 24 h
+  löschen (A9). Rechte je enthaltener Datei.
 - **Vorschaubilder:** `fields.Image` am Knoten bzw. an der Revision (Größen nach dem `image.mixin`-Muster), Auslieferung
   über `/web/image` (Rechte greifen nativ, geprüft in 19.2).
 - **Umwandler als eigener Container (I11):** kleiner HTTP-Dienst ohne Internetzugang, liest Blobs schreibgeschützt und
@@ -209,7 +249,9 @@ API ganz in den RAM (19.2); das Streamen ginge nur über ein internes Attribut (
 ## 10. Office
 
 - **ONLYOFFICE im Browser:** Callback-Route speichert als neue Revision mit **Basisrevisionsprüfung** über den
-  Dokument-Key (heute fehlt die Prüfung, 13.1). Editor-Sitzung an Knoten-ID + Revision gebunden (I8).
+  Dokument-Key (heute fehlt die Prüfung, 13.1). Editor-Sitzung an Knoten-ID + Revision gebunden (I8). **JWT
+  verpflichtend** und echte Rechteprüfung mit `check_access`: Das heutige `onlyoffice_odoo` ruft im Callback
+  `has_access("write")` auf und verwirft das Ergebnis (`has_access` liefert nur `True`/`False`, A14).
 - **Start:** Office-Dateien werden im Browser mit ONLYOFFICE bearbeitet; andere Formate herunterladen, lokal
   bearbeiten, hochladen (neue Revision mit Basisrevisionsprüfung, 6).
 - **Idee, ungetestet:** "Lokal bearbeiten" über die File System Access API (Chrome/Edge): die Odoo-Seite öffnet eine
@@ -248,13 +290,17 @@ Schreiber des Bestands (I1).
 - **Zuordnung:** je Eingangsordner (bzw. Unterordner) ein Zielordner in Odoo und ein Odoo-Nutzer als Urheber; Rechte
   über den Rechte-Bereich des Zielordners (I7). Die Samba-Freigabe selbst nur für die Geräte/Nutzer, die einliefern.
 - **Abholen:** Cron in kurzen Abständen (kein Watcher nötig; der Ordner ist klein und flüchtig). Eine Datei gilt als
-  fertig, wenn Größe und Änderungszeit über eine Ruhezeit gleich bleiben und sie nicht mehr geöffnet ist (Samba-Temp-
-  und Punktnamen ignorieren). Dann: Strom in den Blob-Speicher mit SHA-256 (5), Knoten + Revision `origin='import'`
-  in einer kurzen Transaktion, **erst nach dem Commit** die Datei im Eingangsordner löschen (I3/I4). Namenskonflikt im
-  Ziel → Zusatz im Namen, nicht überschreiben.
+  fertig, wenn Größe und Änderungszeit eine **Ruhezeit** lang (Vorschlag 2 min) gleich bleiben (Entscheidung 6;
+  Samba-Temp- und Punktnamen ignorieren). Ob Samba die Datei noch offen hält, sieht der Odoo-Container nicht, das
+  weiß nur der Host (A8). Dann: Strom in den Blob-Speicher mit SHA-256 (5), Knoten + Revision `origin='import'` in
+  einer kurzen Transaktion, **erst nach dem Commit** die Datei in den Unterordner `_übernommen` verschieben (I3/I4)
+  und dort erst nach 24 h ohne Änderung löschen. Grund: Wird eine sehr langsame Kopie mit langer Pause zu früh
+  übernommen, schreibt Samba über das offene Handle in die verschobene Datei weiter (gleiches Dateisystem); der
+  nächste Lauf sieht die Änderung und übernimmt sie als weitere Revision – nichts geht verloren (I6). Direktes
+  Löschen würde diese Schreibvorgänge verlieren. Namenskonflikt im Ziel → Zusatz im Namen, nicht überschreiben.
 - **Fehler:** Datei in einen Unterordner `_fehler` verschieben, Grund protokollieren und in Odoo als Aktivität melden.
 - **Wiederholung:** idempotent über Pfad + Größe + Änderungszeit + Hash; ein Abbruch nach dem Commit, aber vor dem
-  Löschen führt beim nächsten Lauf zu "schon übernommen" → nur löschen.
+  Verschieben führt beim nächsten Lauf zu "schon übernommen" → nur verschieben.
 - Ordnerstruktur im Eingang wird im Ziel nachgebildet (für Kopien ganzer Ordner).
 
 ### 11.2 Vorbereitete Bauform WebDAV: `odoo fmdav`
@@ -274,7 +320,8 @@ Zeitlimits, belegte Worker, internes Attribut – nur mit Kniffen beherrschbar).
   Prefork-Worker, kein `limit_time_real`**; `wsgi.input` über `werkzeug.wsgi.get_input_stream()` begrenzt.
 - **ORM wie `ir_cron`/`odoo shell`:** je Anfrage `Registry(db).check_signaling()`, `registry.cursor()`,
   `api.Environment(cr, uid, …)` mit dem angemeldeten Nutzer (I7), danach `signal_changes()` bzw. `reset_changes()`;
-  Wiederholung mit Odoos `retrying()` (ganze Anfrage außer `PUT`, XML-Body gepuffert; beim `PUT` nur der Abschluss).
+  Wiederholung mit Odoos `retrying()` (ganze Anfrage außer `PUT`, XML-Body gepuffert; beim `PUT` nur der Abschluss);
+  Namens- und Sperrkonflikte nach den Regeln in 6 (A3).
 - **Protokollschicht WsgiDAV** (Version festnageln; zwei Eigenheiten im Provider bzw. per Middleware umgangen:
   Sperrprüfung beim `DELETE`, Content-Type der LOCK-Antwort, 19.4). WsgiDAV und `json5` kommen ins Odoo-Image.
 - **Anmeldung:** Basic mit Odoo-Login und **API-Schlüssel** über HTTPS, geprüft mit Odoos
@@ -296,7 +343,9 @@ Zeitlimits, belegte Worker, internes Attribut – nur mit Kniffen beherrschbar).
   den Versionen des Originals liegen, werden beim Löschen endgültig entfernt, alles andere geht in den Papierkorb.
   Fenster 10 min (einstellbar). Geprüft mit Word-, Excel- und "löschen-dann-umbenennen"-Muster und LibreOffice.
 - **Sperren** in `int_filemanager.dav_lock`, **tote Eigenschaften** in `int_filemanager.dav_prop` (4).
-- **Pfadauflösung in einer Abfrage** (rekursive CTE, danach `check_access('read')` auf dem Treffer).
+- **Pfadauflösung in einer Abfrage** (rekursive CTE, danach `check_access('read')` auf dem Treffer); Namen **ohne
+  Groß/Klein** über denselben Ausdruck wie der Namensindex (`lower(name COLLATE "und-x-icu")`, 4) – der Prototyp
+  vergleicht noch exakt (A17).
 - **Aus dem Cloudreve-Vergleich (19.5):** je Zugang (API-Schlüssel) optional eigener Wurzelordner und "nur lesen";
   Punkt-/Systemdateien optional sperren; macOS Finder testen (chunked `PUT` funktioniert).
 - **Grenzen, bewusst hingenommen:** viele kleine Dateien langsamer als SMB (71 Dateien 13 s, WebClient: 8 Requests je
@@ -320,15 +369,36 @@ Word/Excel auf Wunsch des Nutzers entfallen, HTTPS am Windows-Client ungetestet)
 - **Anfangsausstattung (17.5):** ein Bereich "Alle" für den ganzen Share, der heutige Schutzordner als eigener
   Bereich; weitere erst bei Bedarf.
 - **Öffentliche Methoden sind die externe API:** Odoo 19 macht jede öffentliche Modellmethode (ohne `_`, nicht
-  `@api.private`) über **JSON-2** (`POST /json/2/<modell>/<methode>`) für jeden Nutzer mit API-Schlüssel aufrufbar –
-  mit beliebigen Argumenten (19.16). Deshalb: öffentlich nur, was mit fremden Argumenten sicher ist (I7, N1); interne
-  Logik `_…` oder `@api.private`; nur lesende Methoden mit `@api.readonly` (lesender Cursor).
+  `@api.private`) mit beliebigen Argumenten aufrufbar – über **JSON-2** (`POST /json/2/<modell>/<methode>`) für jeden
+  Nutzer mit API-Schlüssel **und** über `/web/dataset/call_kw` für **jeden angemeldeten Nutzer** ohne Schlüssel
+  (`auth="user"`, dieselbe Freigaberegel `get_public_method`; das Modul `rpc` lädt Odoo standardmäßig; 19.16, A2).
+  Deshalb: öffentlich nur, was mit fremden Argumenten sicher ist (I7, N1); interne Logik `_…` oder `@api.private`;
+  nur lesende Methoden mit `@api.readonly` (lesender Cursor).
+- **`sudo()`** nur nach abgeschlossener Prüfung unter der Nutzeridentität und nur für den geprüften Datensatz (z. B.
+  Blob-Pfad nach der Knotenprüfung). Die `/web/image`-Hooks `_can_return_content` und Zugriffstoken liefern `sudo`
+  – für Dateimanager-Modelle nicht öffnen (Code-Prüfung Nr. 61).
 - Rechte-Bereiche (`int_filemanager.scope`) statt Pfad-Präfix-Regeln. Regel-Domains nur über indizierte Felder
   (`[('scope_id.read_group_ids', 'in', user.all_group_ids.ids)]`), damit keine Vollscans entstehen (heute 269 ms
   für Nicht-Admins, 19.2).
-- Unterordner mit engeren Rechten bekommen einen eigenen Bereich (Odoo-Regeln erlauben nur, sie verbieten nicht).
-- Beim Ändern von Bereichen `registry.clear_cache()` (Regel-Cache, 19.2).
-- Revisionen, Vorschauen, OCR-Werte erben die Rechte des Knotens (keine eigenen Regelsätze).
+- Unterordner mit engeren Rechten bekommen einen eigenen Bereich: Gruppenregeln werden ODER-verknüpft und können nur
+  erweitern; nur **globale** Regeln schränken ein (UND, `ir.rule._compute_domain`, A10).
+- Beim Ändern von Bereichen **kein** `registry.clear_cache()`: Der Regel-Cache gilt je Nutzer/Modell/Modus
+  (`_compute_domain`, `ormcache`); welche Gruppen ein Bereich hat, steht in der SQL-Unterabfrage und wirkt sofort.
+  `clear_cache()` würde alle Caches aller Worker leeren (A10). Ändern sich die Gruppen eines Nutzers, leert Odoo den
+  Cache selbst (`res.users.write`, `_get_invalidation_fields`).
+- **Regeln für jedes Modell (A1):** `ir.rule` wirkt je Modell; übernommen werden nur Regeln von `_inherits`-Eltern
+  (`ir.rule._compute_domain`). Ohne eigene Regeln wären Revisionen, Blobs und Uploads für jeden mit Lese-ACL
+  vollständig lesbar. Festlegung:
+
+  | Modell | Zugriff für Nutzer |
+  |---|---|
+  | `int_filemanager.revision`, Vorschau- und OCR-Werte | eigene Regeln über den Knoten (`[('node_id.scope_id.read_group_ids', 'in', user.all_group_ids.ids)]`, schreibend entsprechend) |
+  | `int_filemanager.blob` | **keine** ACL für Nutzer; Zugriff nur über Methoden, die vorher den Knoten unter der Nutzeridentität geprüft haben |
+  | `int_filemanager.upload`, `int_filemanager.operation` | nur eigene Datensätze (`create_uid` = Nutzer) |
+  | `int_filemanager.scope` | lesen für interne Nutzer, ändern nur mit dem Recht "verwalten" |
+  | `int_filemanager.dav_lock`, `.dav_prop` (mit WebDAV) | wie Revision, über `node_id` |
+
+  Die Rechte-Tests (16) decken **jedes** Modell über **jeden** Weg ab.
 - Freigabe-Links für Externe: eigene Tokens mit Ablauf und Log (bestehend), Auslieferung über dieselbe Stream-Route.
 - Kundenportal über `portal`.
 
@@ -338,7 +408,14 @@ Word/Excel auf Wunsch des Nutzers entfallen, HTTPS am Windows-Client ungetestet)
 - Cron-Datensätze mit `noupdate="1"` (sonst schaltet ein Modul-Update sie wieder ein, N6).
 - Modul-eigene `data/neutralize.sql` (Crons, externe Dienste); Testkopien nur neutralisiert.
 - **HM-SRV:** behält vorerst das heutige Modul (17.6). DB vor jedem Image-Update auf C-Kollation umstellen (19.2);
-  Sicherheitslücke N1 dort separat beheben.
+  Sicherheitslücke N1 dort separat beheben. Die heutigen WebDAV-Tokens liegen je Prozess im Speicher
+  (`webdav_tokens.py`) – mit `workers>0` sieht ein Worker die Tokens des anderen nicht (A18).
+- **Blob-Speicher:** Share über disk2 + disk3 (Entscheidung 8; am 2026-09-27 3,2 TB frei). Die Platten schlafen nach
+  30 min (Spindown), der erste Zugriff kann Sekunden dauern (19.17) – Zeitlimits für Upload-Abschluss,
+  Eingangsordner und WebDAV darauf auslegen.
+- **Image aktuell halten:** Vor Schritt 3 das Test-Image auf den aktuellen 19.0-Stand bringen (`docker build --pull`).
+  Das Tower-Image 19.0-20260817 enthält einen späteren Sicherheits-Fix noch nicht (Zugriffsprüfung bei
+  Relations-Befehlen in `create`/`write`, A5). Das Update der Live-Instanz ist eine eigene Entscheidung.
 - Überwachung: Upload-Reste, fehlerhafte Vorschauen, Hash-Prüffehler, Platz im Blob-Speicher.
 - **Konfiguration:** nur `db_name` setzen, **kein `dbfilter` zusätzlich** – sonst baut Odoo bei jedem Request ohne
   Sitzung (API-Schlüssel, `/web/health`) eine neue Verbindung zur `postgres`-DB auf (~20 ms, 19.6).
@@ -360,7 +437,7 @@ Word/Excel auf Wunsch des Nutzers entfallen, HTTPS am Windows-Client ungetestet)
 
 **Umfang (entschieden 17.2: ganzer Share):** der bisherige Share (Tower: `Daten`, ca. 1,8 TB, 429.184 Einträge, 29.316 Ordner). Etwa 7 % sind
 doppelte Inhalte (98 GB gemessen) und werden nur einmal gespeichert. Platzbedarf ca. 1,65–1,7 TB; auf dem Array
-von Tower sind ca. 3,7 TB frei.
+von Tower sind ca. 3,6 TB frei (2026-09-27), davon 3,2 TB auf disk2 + disk3 (Entscheidung 8).
 
 **Ablauf:**
 1. **Erstkopie im laufenden Betrieb:** Importwerkzeug (Odoo-Cron oder CLI) liest den alten Share, schreibt Blobs
@@ -368,8 +445,8 @@ von Tower sind ca. 3,7 TB frei.
 2. **Metadaten übernehmen:** Tags, Status, Partner-Verknüpfungen, OCR-Werte, Freigabe-Tokens aus
    `int_filemanager.file` (über den alten Pfad zugeordnet); bisherige Versionen aus `int_filemanager.version`
    als ältere Revisionen; Schutzordner → Rechte-Bereiche (Tower: 1 Schutzordner → eigener Bereich, Rest "Alle").
-   **Namen, die sich nur in Groß/Klein unterscheiden,** kann es im Bestand nicht geben (SMB), trotzdem vor dem Import
-   prüfen und melden.
+   **Namen, die sich nur in Groß/Klein unterscheiden,** können im Bestand vorkommen: Der Share wird nicht nur über
+   SMB beschrieben, sondern auch von Linux-Prozessen (heutiges Modul, Container). Vor dem Import prüfen und melden.
 3. **Abgleich** der Änderungen seit der Erstkopie (Größe, mtime, Hash).
 4. **Share schreibgeschützt** setzen.
 5. **Letzter Abgleich**, dann **Umschalten** (neue Oberfläche aktiv, alter Watcher und Scan aus).
@@ -395,6 +472,18 @@ von Tower sind ca. 3,7 TB frei.
 
 - **Je Invariante** mindestens ein Test; I1–I6 und I9 zusätzlich mit **Fehlerinjektion** (Prozessabbruch nach jeder
   Stufe, Platte voll, DB weg), wie in 20.2 erprobt.
+- **Zuerst – vor dem Code von Schritt 3 – Tests für die Befunde der Code-Prüfung:**
+  - **A1/A2 Rechte:** Ein Nicht-Admin liest und schreibt über `call_kw`, JSON-2, `search_read` und `read_group` auf
+    **jedem** Modell des Moduls (Knoten, Revision, Blob, Upload, Vorgang, Bereich) – nur Erlaubtes kommt zurück.
+  - **A3 Wettläufe:** zwei Prozesse, per Barriere bzw. Fehlerinjektion **zwischen Prüfen und Schreiben** angehalten:
+    gleicher neuer Name (→ ein Knoten mit zwei Revisionen bzw. Meldung), gleiche Basisrevision, Umbenennen auf
+    denselben Namen, Verschieben gegen Löschen, Sperre länger als `lock_timeout` (→ Wiederholung).
+  - **A4 Aufräumjob:** läuft zwischen Deduplizierung und Commit eines Schreibers; alte Markierung; Absturz des
+    Aufräumjobs nach dem Löschen einer Datei, vor dem Commit.
+  - **Echte Prozesse** für Abbruchtests (`os._exit`/`kill -9`, Neustart, danach Invarianten prüfen);
+    `TransactionCase` führt Post-Commit-Hooks nicht aus (`odoo/tests/test_cursor.py`) und simuliert keinen Absturz.
+  - Namensindex: gleichnamige Wurzeln werden abgelehnt (A6); eine leere Datei hat eine Revision auf den 0-Byte-Blob
+    (A7).
 - **Rechte:** Nicht-Admins, Portal-Nutzer und anonyme Freigaben gegen **alle** Zugriffswege: Listen, Suche,
   Gruppierung, `/web/image`, Download-Route, RPC (`call_kw`) auf jede öffentliche Methode, WebDAV.
 - **Gleichzeitigkeit:** zwei Saves derselben Basisrevision, Doppelklick, Timeout nach Commit, Verschieben gegen Save.
@@ -418,7 +507,8 @@ von Tower sind ca. 3,7 TB frei.
   Inbetriebnahme über `migrations/` mit `odoo/upgrade-util`, getestet an einer Kopie der Live-DB.
 - **Update-Absicherung:** Tests für die genutzten halb-internen Odoo-Stellen (`_check_access`/`_search`-Muster,
   `x_sendfile`-Pfad, Routen, `odoo.cli.command.Command` + Laden aus Addons, `Registry.check_signaling`/
-  `signal_changes`, `odoo.service.model.retrying`, `res.users.apikeys._check_credentials`); ein Image-Update erst nach
+  `signal_changes`, `odoo.service.model.retrying` und welche Fehler es wiederholt, `res.users.apikeys._check_credentials`,
+  `_search`-Signatur); ein Image-Update erst nach
   grünem Testlauf auf der Testinstanz.
 
 ## 17. Entscheidungen (Stand 2026-09-26; 17.7 fällt später)
@@ -445,8 +535,9 @@ Abnahmekriterien je Schritt ("fertig, wenn …") und Gegenlesen durch eine zweit
 
 1. ~~Prototypen auf Tower~~ (erledigt, 19).
 2. ~~Konzept festschreiben~~ (erledigt 2026-09-26) → **Freigabe durch den Nutzer**.
-3. **Fundament:** zuerst pre-commit, `test_lint` und odoo-ls einrichten (16), dann Modelle, Blob-Speicher, Schreibwege, Rechte,
-   Tests je Invariante.
+3. **Fundament:** Test-Image aktualisieren (13), pre-commit, `test_lint` und odoo-ls einrichten (16), **dann die Tests
+   für A1–A4 schreiben** (16: erzwungene Überlappung, echter Prozessabbruch), dann Modelle, Blob-Speicher,
+   Schreibwege, Rechte, Tests je Invariante.
 4. **Oberfläche** auf das neue Modell umstellen.
 5. **Vorschau/OCR** über den Umwandler.
 6. **Office:** ONLYOFFICE im Browser auf Revisionen umstellen ("Lokal öffnen" erst mit Netzlaufwerk, 10).
@@ -525,7 +616,7 @@ ORM) von der Live-Freigabe (nur lesend, shfs, Array) in den Blob-Speicher (shfs,
 **Aufbau:** eigener WebDAV-Dienst `fmdav` als Container **neben** Odoo (wegen 19.2 nicht im Odoo-Prozess). Die
 Protokollschicht ist die Bibliothek **WsgiDAV 4.3.5** (PROPFIND, LOCK, Windows-/Office-Eigenheiten); selbst
 geschrieben ist nur der Provider (`docs/prototypes/fm2/fmdav/dav_service.py`, ca. 530 Zeilen) und die Odoo-Seite
-(`docs/prototypes/fm2/fm_proto/dav.py`, ca. 430 Zeilen). Kein WebDAV im Odoo-19-Core (`PROPFIND` kommt dort nicht
+(`docs/prototypes/fm2/fm_proto/dav.py`, ca. 480 Zeilen nach 19.10). Kein WebDAV im Odoo-19-Core (`PROPFIND` kommt dort nicht
 vor).
 - Der Dienst **schreibt nichts auf die Platte** und hat den Blob-Speicher nicht eingebunden. Jede Operation geht mit dem
   **API-Schlüssel des Nutzers** an Odoo (`auth='bearer'`, Odoo-Bordmittel, `base/models/ir_http.py:212-251`); Odoo
@@ -601,7 +692,7 @@ echtem Word/Excel **entfällt** (Nutzerentscheidung 2026-09-26); bleibt als Rest
 - Client-Voraussetzungen (HTTPS-Vertrauen, 50-MB-Grenze) gehören in die Betriebsdoku (13) und sind je Standort
   (Tower, HM-SRV mit AD) zu lösen.
 
-### 19.5 Vergleich: WebDAV in Cloudreve (Code-Stand `cloudreve` lokal, 4.18.0)
+### 19.5 Vergleich: WebDAV in Cloudreve (Code-Stand `cloudreve` lokal, damals 4.18.0; inzwischen 4.19.1)
 
 Geprüft im Quellcode (`pkg/webdav/`, `middleware/auth.go:105-178`, `pkg/filemanager/`), nicht live.
 
@@ -685,7 +776,7 @@ geprüft.
 
 ### 19.7 Prototyp: WebDAV im Odoo-Prozess
 
-**Aufbau** (`docs/prototypes/fm2/fm_proto/dav_inproc.py`, ca. 560 Zeilen; Pfadauflösung in `dav.py`):
+**Aufbau** (`docs/prototypes/fm2/fm_proto/dav_inproc.py`, ca. 640 Zeilen; Pfadauflösung in `dav.py`):
 - **WsgiDAV hinter einer Odoo-Route** `/dav/…` (alle WebDAV-Methoden, `type='http'`, `csrf=False`,
   `max_content_length` 64 GB). Die Route reicht das originale WSGI-`environ` mit dem rohen Strom (19.6) an WsgiDAV
   weiter (`SCRIPT_NAME=/dav`), WsgiDAV ist nur Protokollschicht. Der Provider arbeitet **direkt mit dem ORM**
@@ -769,7 +860,7 @@ grundsätzlich anders arbeitet. **Cloudreve** (`pkg/filemanager/manager/upload.g
 | 4 | Worker-Belegung durch große Uploads | siehe 19.7 | eigener Odoo-Prozess für `/dav/`; mit Maßnahme 2 belegt ein Upload einen Worker nur für die Schreibdauer (3 GB ≈ 70 s bei 46 MB/s) | getestet (19.7) |
 | 5 | Zugriff auf den Strom über internes Attribut `_HTTPRequest__wrapped` | kein dokumentierter Weg (Cloudreve: nativ) | Test in der Update-Absicherung (16); bei Änderung durch Odoo bricht nur `PUT` | Restrisiko |
 | 6 | Wiederholung nach DB-Konflikt (`retrying`) liest den Strom nicht erneut | Ergebnis des ersten Durchlaufs wird am Request wiederverwendet | eingebaut, **nicht mit Fehlerinjektion getestet** | offen |
-| 7 | Zwei gleichzeitige `PUT` auf denselben neuen Namen | Cloudreve: zweiter scheitert an der Platzhalter-Sperre. Hier: beide streamen, der spätere wird neue Revision (Unique-Index + Retry), nichts geht verloren (I6) | bewusst so, oder Platzhalter wie Cloudreve | Entscheidung bei Umsetzung |
+| 7 | Zwei gleichzeitige `PUT` auf denselben neuen Namen | Cloudreve: zweiter scheitert an der Platzhalter-Sperre. Hier: beide streamen, der spätere wird neue Revision (Unique-Index + Retry), nichts geht verloren (I6) | bewusst so, oder Platzhalter wie Cloudreve | Entscheidung bei Umsetzung. **Korrektur 19.17:** `retrying()` wiederholt die `UniqueViolation` nicht → Regeln in 6 (A3) |
 | 8 | Widerruf eines API-Schlüssels | durch den 60-s-Zwischenspeicher je Worker bis zu 60 s wirksam | Zeit kürzer wählen oder Cache abschalten (+6 ms je Request) | bewusst |
 | 9 | WsgiDAV-Eigenheiten | zwei Fehler umgangen (19.4 Befund 5) | Version festnageln, Tests | bewusst |
 | 10 | Windows-Client (HTTPS-Vertrauen, 50-MB-Grenze, Groß/Klein) | betrifft Cloudreve genauso | 13, 4 | unverändert |
@@ -847,7 +938,7 @@ Modelle `fm.dav.lock`/`fm.dav.prop` und die `fm.node`-Methoden unverändert aus 
 | Speicher | Dienst 85 MB + Odoo bis 1 GB | Odoo 265 MB | **fmdav max. 108 MB** |
 | 3 parallele 3-GB-Uploads + 1 langsamer (200 MB mit 5 MB/s) | – | mit `workers=2` alles blockiert; mit eigenem Prozess (4 Worker) ok | WebDAV 50–98 ms, Oberfläche 6–321 ms; alle korrekt |
 | langsamer Client | – | Abbruch bei `limit_time_real` → nginx-Puffer nötig | **läuft durch** (40,6 s), kein Puffer, kein Zeitlimit |
-| 10 gleichzeitige `PUT` auf denselben neuen Namen | – | – | **1 Knoten, 10 Revisionen**, kein Fehler |
+| 10 gleichzeitige `PUT` auf denselben neuen Namen | – | – | **1 Knoten, 10 Revisionen**, kein Fehler (**Korrektur 19.17:** Wettlauf zeitlich nicht getroffen, A3) |
 | Word-/Excel-/"löschen-dann-umbenennen"-Muster, LibreOffice | Identität erhalten | Identität erhalten | **Identität erhalten** (3/2/2 bzw. je 3 Revisionen), 0 offene Sperren |
 
 **Stolpersteine aus 19.8 – Stand bei `odoo fmdav`:**
@@ -1087,3 +1178,25 @@ weil jede Änderung ohnehin durch Odoo läuft.
    taggen); Datei-Inhalte über die eigenen Upload-/Download-Routen mit API-Schlüssel (7, 8), nie base64 über JSON-2.
 4. Externe Aufrufer senden `X-Odoo-Database` (spart die Datenbank-Ermittlung je Aufruf, 19.6) und einen `User-Agent`.
 
+### 19.17 Code-Prüfung und Nachtests (2026-09-26/27)
+
+Vollständige Prüfung dieses Konzepts gegen Odoo 19.0-20260817 und den aktuellen 19.0-Stand auf GitHub:
+`docs/review/konzept_codepruefung_2026-09-26.md` (194 Behauptungen, 21 Befunde A1–A21; eingearbeitet in 2–6, 8,
+10–14, 16, 18). Neue Tests nur auf dem Test-PostgreSQL `fmtest_pg` und auf temporären Test-Shares (danach entfernt):
+
+| Test | Ergebnis |
+|---|---|
+| Namensindex mit leerem Elternteil | ohne `NULLS NOT DISTINCT` zwei Wurzeln `Daten`/`daten` angelegt, mit abgelehnt (A6) |
+| NFD gegen NFC | `lower(NFD) ≠ lower(NFC)` → Normalisierung beim Anlegen nötig |
+| Namens- und Präfixsuche | Index-Nutzung mit demselben Ausdruck bzw. mit C-Kollation bestätigt (`EXPLAIN`) |
+| gleicher neuer Name in zwei Transaktionen (REPEATABLE READ) | `UniqueViolation`, auch mit Snapshot vor dem Commit des anderen → `retrying()` wiederholt nicht (A3) |
+| `SET LOCAL lock_timeout` + `FOR UPDATE` gegen eine gehaltene Sperre | `55P03 lock_not_available` → `retrying()` wiederholt |
+| `UPDATE` einer Zeile, die ein anderer löscht und committet (REPEATABLE READ) | `40001 could not serialize access due to concurrent delete` → `retrying()` wiederholt; Grundlage der `last_used`-Regel (5) |
+| `fsync` 20 × 4 KiB auf dem Array | Median 33 ms, ein Ausreißer 7,3 s (Anlaufen nach Spindown, `spindownDelay=30`) (A13) |
+| `link`/`rename` über Plattengrenzen (temporärer Share über disk2 + disk3) | beide funktionieren; shfs legt den fehlenden Zielordner auf der Platte der Datei an; `link`/`O_EXCL` auf einen Namen, der auf der anderen Platte existiert → `EEXIST` (I2 hält) |
+
+Belege im Code: Odoo-Cursor mit REPEATABLE READ (`sql_db.py`, `set_isolation_level`), wiederholte Fehlerklassen
+(`service/model.py`, `PG_CONCURRENCY_EXCEPTIONS_TO_RETRY`, `retrying`), `LockError(UserError)` (`exceptions.py`),
+`lock_for_update` mit `SKIP LOCKED` (`orm/models.py`). Außerdem gefunden: Das Tower-Image hat einen späteren
+Sicherheits-Fix des 19.0-Zweigs noch nicht (A5); `onlyoffice_odoo` verwirft das Ergebnis seiner Rechteprüfung im
+Callback (A14).

@@ -1,6 +1,7 @@
 # Übergabe: int_filemanager 2 – Stand und nächste Schritte
 
-Stand 2026-09-26. Für eine neue Sitzung: zuerst dieses Dokument, dann das Konzept lesen.
+Stand 2026-09-26, ergänzt 2026-09-27 (Code-Prüfung eingearbeitet). Für eine neue Sitzung: zuerst dieses Dokument,
+dann Kern und Konzept lesen.
 
 ## 1. Worum es geht
 
@@ -15,7 +16,9 @@ gebaut wird nur, wo Odoo nachweislich begrenzt ist. Der Bestand wird **kopiert**
    Migration, Testplan, offene Entscheidungen (17), Reihenfolge (18), **Prototyp-Ergebnisse (19, WebDAV: 19.4)**.
 2. `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`, Abschnitte **19 und 20** – Live-Prüfungen auf Tower,
    die zur Entscheidung geführt haben (Fehlerbilder des heutigen Moduls, Odoo-Core-Befunde, SMB-Verhalten).
-3. `CLAUDE.md` (Repo-Wurzel) – Regeln: vor "kein Bordmittel" den Odoo-Core prüfen; Claims verifizieren;
+3. `docs/review/konzept_codepruefung_2026-09-26.md` – Code-Prüfung des Konzepts (194 Behauptungen mit Beleg,
+   Befunde A1–A21); seit 2026-09-27 in Konzept und Kern eingearbeitet.
+4. `CLAUDE.md` (Repo-Wurzel) – Regeln: vor "kein Bordmittel" den Odoo-Core prüfen; Claims verifizieren;
    Produktentscheidungen beim Nutzer.
 
 **Nicht verfolgte Alternative:** Verbindung von `web-filemanager` mit Odoo, geprüft und dokumentiert in
@@ -37,6 +40,8 @@ gebaut wird nur, wo Odoo nachweislich begrenzt ist. Der Bestand wird **kopiert**
 | 2026-09-26 | Code nach den Odoo-/OCA-Konventionen (`docs/odoo_konventionen_2026-09-26.md`): **Englisch** in Namen, Kommentaren, Docstrings, Log-Meldungen und Commits (`[TAG] modul: …`); Oberflächentexte englisch im Code, deutsche Übersetzung in `i18n/de.po`. Prüfwerkzeuge: **pre-commit** nach OCA-Vorlage (nur für neuen Code), Odoos **`test_lint`** und **odoo-ls** (Parse-Modus) auf der Testinstanz; **keine** GitHub Action; Migrationsskripte mit **`odoo/upgrade-util`** |
 | 2026-09-26 | Modellnamen mit Modulpräfix `int_filemanager.*` (Konventionen, `docs/odoo_konventionen_2026-09-26.md`) |
 | 2026-09-26 | Rechte-Bereiche **minimal** ("Alle" + heutiger Schutzordner); **HM-SRV bleibt vorerst beim heutigen Modul** (17.5, 17.6) |
+| 2026-09-27 | Eingangsordner: Datei gilt nach **2 Minuten** ohne Änderung als fertig; ZIP-Download bis **ca. 500 MB** direkt, darüber Hintergrundjob; Blob-Speicher auf **disk2 + disk3** (Konzept, Entscheidungen 6–8) |
+| 2026-09-27 | Kern-Änderungen aus der Code-Prüfung übernommen; Zusatzpunkte aus dem externen Review (Import-Manifest, Outbox-Regel, B-Invarianten, Versionen festnageln) **nicht** aufgenommen |
 
 Vorgabe des Nutzers für den Umbau: **erst vollständig durchplanen, keine Zeile Modul-Code vor Freigabe des
 Konzepts.** Prototypen auf der Testinstanz sind erlaubt.
@@ -51,6 +56,7 @@ Konzepts.** Prototypen auf der Testinstanz sind erlaubt.
 | Prototyp-Code und Testskripte archiviert | `docs/prototypes/fm2/` (siehe 5) | Commit `57ffd83` |
 | **WebDAV im Odoo-Prozess** (Nachprüfung 19.6, Prototyp 19.7) | Strom in Odoo-Route lesbar, 25-ms-Grundlast war Konfiguration; WsgiDAV hinter Odoo-Route: litmus 100 %, schneller als der Dienst, eigener Odoo-Prozess für `/dav/` nötig | `fm_proto/dav_inproc.py` |
 | **WebDAV-Prototyp (Explorer-Zugriff, Konzept 11 A)** | Abschnitt 19.4 des Konzepts; litmus 100 %, Windows-WebClient, LibreOffice, Identitätsregel für Word/Excel-Speichermuster | `docs/prototypes/fm2/fmdav/`, `fm_proto/dav.py` |
+| **Code-Prüfung des Konzepts** (2026-09-26/27) | 194 Behauptungen gegen Odoo 19 geprüft, 21 Befunde; hoch: Regeln für Neben-Modelle (A1), `call_kw` (A2), `retrying()` wiederholt keine Namens-/Sperrkonflikte (A3), Aufräumjob-Wettlauf (A4); in Konzept (u. a. 2, 4–6, 12, 16, 19.17) und Kern eingearbeitet; Plattengrenzen-Test für disk2 + disk3 bestanden | `docs/review/konzept_codepruefung_2026-09-26.md` |
 
 **Wichtigste Prototyp-Befunde (Details: Konzept 19):**
 - Blob-Speicher, Upload in 4-MB-Stücken, Fortsetzen, Idempotenz, Deduplizierung, Absturzsicherheit und Aufräumjob
@@ -84,8 +90,12 @@ Konzepts.** Prototypen auf der Testinstanz sind erlaubt.
 3. ~~Offene Entscheidungen des Nutzers~~ (Konzept 17) – **alle erledigt** (2026-09-26). Folgeaufgabe aus 17.6:
    Sicherheitslücke N1 im heutigen Modul beheben (HM-SRV läuft damit weiter).
 4. ~~Konzept festschreiben~~ – **erledigt** (2026-09-26): Befunde aus 19 und Entscheidungen aus 17 in die Abschnitte
-   3–7, 10–14, 16–18 eingearbeitet. **Nächster Schritt: Freigabe durch den Nutzer.**
-5. Erst danach Umsetzung nach Konzept 18 (Fundament → Oberfläche → Vorschau/OCR → Office → Explorer → Migration).
+   3–7, 10–14, 16–18 eingearbeitet.
+5. ~~Code-Prüfung einarbeiten~~ – **erledigt** (2026-09-27): Befunde A1–A21 in Konzept und Kern.
+   **Nächster Schritt: Freigabe durch den Nutzer.**
+6. Erst danach Umsetzung nach Konzept 18. Schritt 3 (Fundament) beginnt mit: Test-Image aktualisieren
+   (`docker build --pull`, Konzept 13), pre-commit/`test_lint`/odoo-ls einrichten, **zuerst die Tests für A1–A4**
+   (erzwungene Überlappung, echter Prozessabbruch, Konzept 16). Update der Live-Instanz ist eine eigene Entscheidung.
 
 ## 5. Testumgebung auf Tower (lokaler Unraid, `ssh unraid`)
 

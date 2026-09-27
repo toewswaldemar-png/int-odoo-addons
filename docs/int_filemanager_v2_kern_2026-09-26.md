@@ -1,6 +1,6 @@
 # int_filemanager 2 – Kern
 
-Stand 2026-09-26. **Kurzfassung zum Prüfen und Freigeben.** Die Einzelheiten, Messungen und Belege stehen im
+Stand 2026-09-26, überarbeitet 2026-09-27 nach der Code-Prüfung. **Kurzfassung zum Prüfen und Freigeben.** Die Einzelheiten, Messungen und Belege stehen im
 ausführlichen Konzept `int_filemanager_v2_konzept_2026-09-26.md` (Verweise wie "→ K 5" = Konzept Abschnitt 5).
 Bei einem Widerspruch zwischen beiden gilt das Konzept; ein Widerspruch ist ein Fehler und wird in beiden behoben.
 
@@ -22,12 +22,12 @@ Diese Regeln gelten immer, auch bei Absturz und Last. Jede hat Tests (→ K 2).
 | I1 | Nur Odoo schreibt in den Dateispeicher. | Keine Hintertür auf die Dateien. |
 | I2 | Ein gespeicherter Inhalt wird nie verändert. | Neue Fassung = neue Datei im Speicher, benannt nach ihrer Prüfsumme. |
 | I3 | Erst die Datenbank, dann die Wirkung nach außen. | Mails, Umwandlungen usw. erst, wenn der Vorgang sicher gespeichert ist. |
-| I4 | Inhalte werden erst gelöscht, wenn nichts mehr auf sie verweist. | Kein Datenverlust durch Aufräumen. |
+| I4 | Inhalte werden erst gelöscht, wenn nichts mehr auf sie verweist **und** eine Schonfrist abgelaufen ist; im Zweifel bleiben sie. | Kein Datenverlust durch Aufräumen, auch nicht, wenn gerade jemand denselben Inhalt hochlädt. |
 | I5 | Nichts wird gelöscht, nur weil es nicht gesehen wurde. | Kein Watcher, kein Scan, der Dateien entfernt. |
 | I6 | Jede gespeicherte Fassung ist wiederherstellbar. | Versionen und Papierkorb. |
-| I7 | Rechte prüft nur Odoo. | Kein Umgehen über Admin-Rechte im Code. |
+| I7 | Rechte prüft nur Odoo – für jede Tabelle und jeden Zugriffsweg. | Auch Versionen und Inhalte sind geschützt, nicht nur Ordner und Dateien; Admin-Rechte im Code erst nach der Prüfung. |
 | I8 | Verweise über Nummern (IDs), nie über Pfade. | Umbenennen und Verschieben brechen nichts. |
-| I9 | Jeder Vorgang ganz oder gar nicht; Wiederholungen erzeugen keine Doppelungen. | Doppelklick, Abbruch, erneutes Senden sind harmlos. |
+| I9 | Was Nutzer sehen, ändert sich ganz oder gar nicht; Wiederholungen und gleichzeitige Zugriffe erzeugen keine Doppelungen. | Doppelklick, Abbruch, erneutes Senden, zwei gleichzeitige Uploads sind harmlos. |
 | I10 | Odoo selbst wird nicht verändert. | Updates bleiben möglich. |
 | I11 | Fremde Dateiformate werden außerhalb von Odoo verarbeitet. | Vorschaubilder/OCR in einem eigenen Container. |
 | I12 | Keine ganzen großen Dateien im Arbeitsspeicher. | Hoch- und Herunterladen als Datenstrom. |
@@ -57,12 +57,12 @@ Diese Regeln gelten immer, auch bei Absturz und Last. Jede hat Tests (→ K 2).
 |---|---|
 | Ordner und Dateien verwalten | Odoo-Oberfläche: anlegen, umbenennen, verschieben, kopieren, löschen (Papierkorb 30 Tage) |
 | Hochladen | im Browser, auch ganze Ordner und große Dateien (in Stücken, abgebrochene Uploads werden fortgesetzt, → K 7) |
-| Herunterladen | einzeln oder als ZIP |
+| Herunterladen | einzeln oder als ZIP; große ZIPs (über ca. 500 MB) werden im Hintergrund gepackt, dann kommt eine Nachricht (→ K 8) |
 | Office-Dateien bearbeiten | im Browser mit ONLYOFFICE (→ K 10) |
 | Andere Dateien bearbeiten | herunterladen, lokal bearbeiten, hochladen – wird eine neue Version; wer inzwischen geändert hat, bekommt einen Hinweis statt stillem Überschreiben |
 | Versionen | jede Fassung bleibt, wiederherstellbar (unbegrenzt) |
 | Suchen | nach Namen, nach Inhalt (Texterkennung), nach Tags/Status/Kontakt |
-| Einliefern | Scanner, Handy, Kopien in den Eingangsordner legen; Odoo übernimmt (→ K 11.1) |
+| Einliefern | Scanner, Handy, Kopien in den Eingangsordner legen; Odoo übernimmt eine Datei, wenn sie sich 2 Minuten nicht mehr ändert (→ K 11.1) |
 | Teilen | Freigabe-Links mit Ablauf, Kundenportal |
 
 **Zum Start nicht:** Netzlaufwerk im Explorer, Word/Excel am Desktop direkt vom Server öffnen, Programme, die mit
@@ -73,7 +73,7 @@ entschieden; zwei Wege sind vorbereitet (→ K 11, K 19.10, K 19.14).
 
 | Baustein | ist |
 |---|---|
-| **Knoten** (`int_filemanager.node`) | ein Ordner oder eine Datei: Name, übergeordneter Ordner, Rechte-Bereich, aktuelle Fassung, Tags, Status. Namen je Ordner eindeutig, **ohne Rücksicht auf Groß/Klein** (wie Windows). Leere Datei = Knoten ohne Fassung. |
+| **Knoten** (`int_filemanager.node`) | ein Ordner oder eine Datei: Name, übergeordneter Ordner, Rechte-Bereich, aktuelle Fassung, Tags, Status. Namen je Ordner eindeutig, **ohne Rücksicht auf Groß/Klein** (wie Windows). Auch eine leere Datei hat eine Fassung. |
 | **Fassung** (`int_filemanager.revision`) | eine Version einer Datei; wird nie verändert |
 | **Inhalt** (`int_filemanager.blob`) | eine Datei im Dateispeicher (Prüfsumme, Größe) |
 | **Rechte-Bereich** (`int_filemanager.scope`) | wer lesen, schreiben, verwalten, endgültig löschen darf; gilt für einen Ordner samt Inhalt |
@@ -84,11 +84,14 @@ entschieden; zwei Wege sind vorbereitet (→ K 11, K 19.10, K 19.14).
 
 Jeder Schreibvorgang läuft gleich ab (→ K 6):
 1. Rechte prüfen, Vorgangsnummer prüfen (gegen Doppelungen).
-2. Falls neuer Inhalt: als Datenstrom in den Dateispeicher, Prüfsumme dabei berechnen. Das ist harmlos, falls danach
-   etwas schiefgeht – der Aufräumjob entfernt unbenutzte Inhalte.
+2. Falls neuer Inhalt: als Datenstrom in den Dateispeicher, Prüfsumme dabei berechnen; die Zwischendatei bleibt bis
+   zum Abschluss liegen. Das ist harmlos, falls danach etwas schiefgeht – der Aufräumjob entfernt unbenutzte Inhalte.
 3. Kurze Datenbank-Transaktion: Knoten/Fassung anlegen oder ändern, dabei prüfen, ob inzwischen jemand anderes
    geändert hat.
 4. Erst danach Wirkungen nach außen.
+
+Treffen zwei Vorgänge aufeinander (gleicher Name, gleiche Datei), wartet der zweite kurz oder wird wiederholt. Odoo
+erledigt das nicht von selbst, der Code regelt es ausdrücklich (→ K 6).
 
 Umbenennen, Verschieben und Kopieren ändern nur die Datenbank – keine Datei wird bewegt oder kopiert.
 
@@ -97,9 +100,10 @@ Umbenennen, Verschieben und Kopieren ändern nur die Datenbank – keine Datei w
 Zum Start **minimal**: ein Bereich "Alle" und der heutige Schutzordner als eigener Bereich. Unterordner mit engeren
 Rechten bekommen bei Bedarf einen eigenen Bereich. Rechte gelten für alle Wege gleich (Liste, Suche, Vorschau,
 Download, Freigabe-Links); öffentliche Methoden arbeiten nie mit Admin-Rechten auf Nutzereingaben (→ K 12).
-**Wichtig:** Odoo 19 macht jede öffentliche Modellmethode über seine externe Schnittstelle **JSON-2** für jeden
-Nutzer mit API-Schlüssel aufrufbar – öffentlich ist deshalb nur, was mit beliebigen Argumenten sicher ist; alles
-andere bleibt intern (→ K 12, K 19.16).
+**Wichtig:** Odoo 19 macht jede öffentliche Modellmethode für **jeden angemeldeten Nutzer** aufrufbar – über die
+Schnittstelle der Oberfläche und über **JSON-2** (mit API-Schlüssel). Öffentlich ist deshalb nur, was mit beliebigen
+Argumenten sicher ist; alles andere bleibt intern. Außerdem braucht **jede** Tabelle eigene Regeln: Odoo überträgt
+die Rechte eines Ordners nicht von selbst auf Versionen und Inhalte (→ K 12, K 19.16).
 
 ## 8. Übernahme des Bestands
 
@@ -116,8 +120,12 @@ Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
 
 - Odoo im Prefork-Modus (mehrere Prozesse), nginx davor, Umwandler-Container (→ K 13).
 - Aufräumjobs: unbenutzte Inhalte, abgebrochene Uploads, Temp-Dateien.
+- Dateispeicher auf einem Share über zwei Array-Platten (disk2 + disk3, 3,2 TB frei); schlafende Platten brauchen
+  beim ersten Zugriff einige Sekunden.
 - Backup: Datenbank **und** Dateispeicher gehören zusammen; da Inhalte nie verändert werden, reicht für den Speicher
-  ein inkrementelles Backup.
+  ein inkrementelles Backup. Erst die Datenbank sichern, dann den Dateispeicher; das Aufräumen wartet länger als ein
+  Backup-Lauf.
+- Das Odoo-Image vor Schritt 3 auf den aktuellen Stand bringen (dem heutigen fehlt ein Sicherheits-Fix).
 - Überwachung: Upload-Reste, fehlerhafte Vorschauen, Prüfsummenfehler, freier Platz.
 - HM-SRV behält vorerst das heutige Modul; dort ist die Sicherheitslücke N1 separat zu schließen.
 
@@ -135,6 +143,9 @@ Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
 | 2026-09-26 | Prüfwerkzeuge: pre-commit (OCA-Vorlage, nur neuer Code), Odoos `test_lint` und Odoos Language Server `odoo-ls` (prüft Modelle, Felder, Abhängigkeiten); keine GitHub Action |
 | 2026-09-26 | Spätere Änderungen am Datenmodell über Migrationsskripte mit Odoos `upgrade-util` |
 | 2026-09-26 | Start ohne Netzlaufwerk, mit Eingangsordner; Netzlaufwerk später nach Nutzung (WebDAV über `odoo fmdav` oder SMB über Odoo-FUSE) |
+| 2026-09-27 | Eingangsordner: Datei gilt nach 2 Minuten ohne Änderung als fertig |
+| 2026-09-27 | ZIP-Download bis ca. 500 MB direkt, darüber im Hintergrund |
+| 2026-09-27 | Dateispeicher auf disk2 + disk3 (Tower) |
 
 ## 11. Reihenfolge mit Abnahme
 
@@ -146,7 +157,7 @@ Freigabe verbindlich.)*
 
 | # | Schritt | fertig, wenn |
 |---|---|---|
-| 3 | **Fundament:** Prüfwerkzeuge einrichten, dann Datenmodell, Dateispeicher, Schreibwege, Rechte | je Grundregel ein grüner Test, für I1–I6 und I9 auch mit Abbruch mitten im Vorgang; Rechte-Tests für Nicht-Admins über alle Wege; kein `sudo` auf Nutzereingaben |
+| 3 | **Fundament:** Test-Image aktualisieren, Prüfwerkzeuge einrichten, **zuerst die Tests für die vier schweren Befunde der Code-Prüfung (A1–A4)**, dann Datenmodell, Dateispeicher, Schreibwege, Rechte | je Grundregel ein grüner Test, für I1–I6 und I9 auch mit Abbruch mitten im Vorgang; die Tests für A1–A4 erzwingen die Überschneidung (zweiter Vorgang wird angehalten) und brechen echte Prozesse ab – nicht nur "gleichzeitig starten"; Rechte-Tests für Nicht-Admins über alle Wege **und alle Tabellen**; kein `sudo` auf Nutzereingaben |
 | 4 | **Oberfläche** auf das neue Modell | alle Funktionen aus Abschnitt 4 (außer Office/Einliefern) in der Oberfläche bedienbar; Upload 3 GB mit Abbruch und Fortsetzen |
 | 5 | **Vorschau/Texterkennung** im Umwandler | Vorschau für die häufigen Formate; Fehler sichtbar statt still; Odoo-Prozess bleibt bei defekten Dateien stabil |
 | 6 | **Office** (ONLYOFFICE im Browser) | Speichern ergibt neue Fassung; zwei gleichzeitige Bearbeitungen führen zu Hinweis statt Verlust |
@@ -166,14 +177,17 @@ Freigabe verbindlich.)*
   entschieden, Umfang bleibt klein gehalten.
 - **Odoo-Details, auf die wir uns verlassen** – alles läuft in Odoo, ist aber keine fest zugesicherte Schnittstelle:
   (a) Odoos offizielle Option `x_sendfile` übergibt Downloads nur für Dateien unterhalb von `data_dir/filestore` an
-  nginx (dort liegt deshalb der Dateispeicher); (b) für die Rechte werden Odoos interne Methoden `_check_access`/`_search`
-  überschrieben (wie in Odoos `mail.activity`). Durch Tests abgesichert, Odoo-Updates nur nach grünem Testlauf auf der
+  nginx (dort liegt deshalb der Dateispeicher); (b) für die Verknüpfung mit Geschäftsobjekten werden Odoos Methoden
+  `_check_access`/`_search` überschrieben (wie in Odoos `mail.activity`) – die Ordnerrechte selbst laufen über normale
+  Odoo-Regeln. Durch Tests abgesichert, Odoo-Updates nur nach grünem Testlauf auf der
   Testinstanz. Ohne nginx liefert Odoo selbst aus – dann belegt jeder Download einen Odoo-Prozess für die ganze Dauer
   und lange Downloads laufen ins Zeitlimit. Deshalb bleibt es bei Odoos offizieller Auslieferung über `x_sendfile`:
   Odoo prüft Rechte und Datei, nginx liefert die Bytes.
 - **`fsync` auf dem Array** kostet ~28 ms je Datei (Absturzsicherheit); ein Dateispeicher auf SSD würde es verkürzen –
   Entscheidung beim Betrieb.
 - **Nicht mit echtem Word/Excel getestet** (nur nachgespielt), betrifft erst ein späteres Netzlaufwerk.
+- **Gleichzeitige Zugriffe:** Odoos automatische Wiederholung greift nicht bei Namenskonflikten und belegten Sperren;
+  der eigene Code muss das regeln – deshalb in Schritt 3 die Tests zuerst (→ K 6, Prüfbericht A3).
 
 ## 14. Wo was steht
 
@@ -186,3 +200,4 @@ Freigabe verbindlich.)*
 | Rechte, Betrieb, Übernahme | K 12–14 |
 | Tests | K 16 |
 | Messungen und Prototypen | K 19 |
+| Code-Prüfung (Beleg je Aussage) | `docs/review/konzept_codepruefung_2026-09-26.md` |
