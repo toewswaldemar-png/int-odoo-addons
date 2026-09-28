@@ -89,6 +89,12 @@ msgstr "Bitte entweder einen Zielordner und Namen für eine neue Datei angeben o
 
 #. module: int_filemanager
 #. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "The target folder is in the trash; restore it first."
+msgstr "Der Zielordner liegt im Papierkorb; bitte zuerst wiederherstellen."
+
+#. module: int_filemanager
+#. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_upload.py:0
 msgid "This chunk does not continue where the upload left off."
 msgstr "Dieses Stück setzt nicht dort an, wo der Upload aufgehört hat."
@@ -104,6 +110,12 @@ msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneu
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "This file has no content yet; nothing to copy."
 msgstr "Diese Datei hat noch keinen Inhalt; nichts zu kopieren."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "This item is in the trash; restore it before moving it."
+msgstr "Dieses Element liegt im Papierkorb; bitte vor dem Verschieben wiederherstellen."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_upload_operation_id_uniq

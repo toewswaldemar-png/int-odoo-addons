@@ -457,6 +457,32 @@ class TestNodeRenameOrMove(TransactionCase):
                 self.node.id, self.folder_b.id, "doc.txt", "op-move-denied"
             )
 
+    def test_move_into_a_trashed_folder_is_rejected(self):
+        """No active node below a trashed folder (write-skew rule, see
+        _touch_active_parent); the real overlap is tests/tower move_against_delete."""
+        target = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "target", "scope_id": self.scope_a.id, "is_dir": True})
+        )
+        self._node_env().trash(target.id, "op-trash-move-target")
+
+        with self.assertRaises(UserError):
+            self._node_env().rename_or_move(
+                self.node.id, target.id, "doc.txt", "op-move-into-trash"
+            )
+
+        self.node.invalidate_recordset()
+        self.assertEqual(self.node.parent_id, self.folder_a)
+
+    def test_moving_a_trashed_node_is_rejected(self):
+        self._node_env().trash(self.node.id, "op-trash-moved-node")
+
+        with self.assertRaises(UserError):
+            self._node_env().rename_or_move(
+                self.node.id, False, "renamed.txt", "op-rename-trashed"
+            )
+
     def test_repeated_operation_key_is_idempotent(self):
         first = self._node_env().rename_or_move(
             self.node.id, False, "once.txt", "op-rename-repeat"
@@ -578,6 +604,33 @@ class TestNodeTrashRestoreDelete(TransactionCase):
 
         self.node.invalidate_recordset()
         self.assertFalse(self.node.active)
+
+    def test_create_file_in_a_trashed_folder_is_rejected(self):
+        self._node_env().trash(self.folder.id, "op-trash-create-target")
+
+        with self.assertRaises(UserError):
+            self._node_env().create_file(
+                self.folder.id, "late.txt", b"x", "op-create-in-trash"
+            )
+
+    def test_restore_below_a_trashed_folder_is_rejected(self):
+        """Restoring only the file while its folder is still in the trash would
+        leave an active node under an inactive one."""
+        self._node_env().trash(self.folder.id, "op-trash-whole-folder")
+
+        with self.assertRaises(UserError):
+            self._node_env().restore(self.node.id, "op-restore-child-first")
+
+        self.node.invalidate_recordset()
+        self.assertFalse(self.node.active)
+
+    def test_restore_of_the_folder_restores_children_under_it(self):
+        self._node_env().trash(self.folder.id, "op-trash-whole-folder-2")
+
+        self._node_env().restore(self.folder.id, "op-restore-folder-first")
+
+        self.node.invalidate_recordset()
+        self.assertTrue(self.node.active)
 
     def test_delete_permanently_removes_rows_but_keeps_blob(self):
         self._node_env(self.purger).delete_permanently(self.node.id, "op-delete-1")
@@ -731,6 +784,14 @@ class TestNodeCopy(TransactionCase):
         with self.assertRaises(UserError):
             self._node_env().copy_node(
                 self.source.id, self.folder_a.id, "source.txt", "op-copy-conflict"
+            )
+
+    def test_copy_into_a_trashed_folder_is_rejected(self):
+        self._node_env().trash(self.folder_a.id, "op-copy-trash-target")
+
+        with self.assertRaises(UserError):
+            self._node_env().copy_node(
+                self.source.id, self.folder_a.id, "late-copy.txt", "op-copy-in-trash"
             )
 
     def test_copy_directory_without_content_raises_user_error(self):

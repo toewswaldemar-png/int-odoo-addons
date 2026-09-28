@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import shutil
+import subprocess
 import threading
 import time
 import urllib.error
@@ -33,9 +34,14 @@ class ScenarioFailed(AssertionError):
 
 
 class CallResult:
-    def __init__(self, value=None, error=None):
+    def __init__(self, value=None, error=None, elapsed=0.0):
         self.value = value
         self.error = error
+        self.elapsed = elapsed
+
+    def __repr__(self):
+        detail = self.error if self.error is not None else self.value
+        return f"CallResult({detail!r}, {self.elapsed:.1f}s)"
 
     @property
     def ok(self):
@@ -86,6 +92,7 @@ def run_concurrent(fn_a, fn_b):
     results = [None, None]
 
     def wrap(i, fn):
+        started = time.monotonic()
         try:
             results[i] = CallResult(value=fn())
         except urllib.error.HTTPError as exc:
@@ -98,6 +105,7 @@ def run_concurrent(fn_a, fn_b):
             # instead of silently leaving results[i] None, which used to turn into
             # a confusing AttributeError in the scenario's own assertions.
             results[i] = CallResult(error=exc)
+        results[i].elapsed = time.monotonic() - started
 
     t_a = threading.Thread(target=wrap, args=(0, fn_a))
     t_b = threading.Thread(target=wrap, args=(1, fn_b))
@@ -120,7 +128,9 @@ def run_concurrent(fn_a, fn_b):
 # --------------------------------------------------------------------------
 
 
-def perform_create_node(base_url, api_key, parent_id, name, content=b"race"):
+def perform_create_node(
+    base_url, api_key, parent_id, name, content=b"race", timeout=30
+):
     return json2_call(
         base_url,
         api_key,
@@ -132,6 +142,7 @@ def perform_create_node(base_url, api_key, parent_id, name, content=b"race"):
             "content": _b64(content),
             "operation_key": f"race-create-{name}-{time.monotonic_ns()}",
         },
+        timeout=timeout,
     )
 
 
@@ -182,16 +193,10 @@ def perform_trash(base_url, api_key, node_id):
     )
 
 
-# A4's cleanup job is @api.autovacuum, not a public method or an ir.cron
-# record of its own - it is only ever invoked by Odoo's own daily vacuum
-# sweep (ir.autovacuum._run_vacuum_cleaner, which itself requires admin AND
-# a 'cron_id' in context) and is deliberately not exposed for external
-# triggering. A live two-process reproduction of A4 would need a dedicated
-# admin trigger endpoint this module does not have; the exact invariant
-# (a reused blob must survive a concurrent cleanup run) is instead covered
-# deterministically in int_filemanager/tests/test_v2_blobstore.py, which can
-# force the precise ordering directly instead of hoping an HTTP race lands on
-# it. Left as a documented gap rather than adding test-only production code.
+# A4's cleanup job is @api.autovacuum: private, and no ir.cron record of its own, so
+# there is no HTTP trigger for it (and adding one only for tests would be
+# test-only production code). The driver runs it as what it really is - a SECOND
+# real OS process, `odoo shell` calling the method (see scenario_blob_gc_against_reuse).
 
 
 def load_fixtures(fixtures_path):
@@ -310,59 +315,228 @@ def scenario_rename_to_same_name(base_url, api_key, fault_file, fixtures):
         raise ScenarioFailed(f"expected exactly one rename to win, got {results}")
 
 
-# move_against_delete (Konzept 16) has no scenario here either: forcing a real
-# overlap needs BOTH racers to call fault.fault_point() with the SAME stage name
-# (the barrier directory is keyed by stage - see fault.py), but trash() has no
-# fault_point() call anywhere in it, unlike every other write path. perform_move
-# (rename_or_move) would sit at node_rename_before_check's barrier forever
-# waiting for an arrival from the trash side that cannot happen, the same
-# deadlock same_base_revision_twice hit empirically before its fix above. Adding
-# a trash()-side fault point is a production-code change (which stage name, and
-# whether restore()/delete_permanently() need the same one for symmetry) worth
-# deciding deliberately rather than bolting on under time pressure - left as a
-# documented gap alongside A4 rather than a rushed instrumentation call.
+def _is_defined_error(result):
+    """A racer that lost must lose with a domain error the client can act on
+    (UserError -> 4xx), never a server crash (5xx) or a network timeout."""
+    return (
+        isinstance(result.error, urllib.error.HTTPError)
+        and 400 <= result.error.code < 500
+    )
 
 
-def scenario_lock_timeout_triggers_retry(base_url, api_key, fault_file, fixtures):
-    """One racer holds the row lock past `lock_timeout` while the other
-    writes it. Expectation (A3): the second racer sees `LockError`
-    (`retrying()` retries it, Konzept 6) rather than hanging indefinitely or
-    silently overwriting."""
-    node_id = fixtures["lock_node_id"]
-    set_fault(fault_file, "node_lock_before_wait:barrier:2")
+def scenario_move_against_delete(base_url, api_key, fault_file, fixtures):
+    """One racer moves a file INTO a folder while the other trashes that folder.
+    Odoo runs REPEATABLE READ, so without an explicit shared write the two are a
+    write skew: trash() decided its subtree from a snapshot that cannot see the
+    newcomer, the move decided the folder was active from one that cannot see
+    the trash. Expectation: whatever the order, no ACTIVE node ends up under a
+    trashed folder.
+
+    Both racers meet at node_tree_before_write (after their own checks, before
+    their writes), so the interleaving is forced instead of hoped for."""
+    file_id = fixtures["move_node_id"]
+    folder_id = fixtures["move_new_parent_id"]
+    set_fault(fault_file, "node_tree_before_write:barrier:2")
     try:
-        started = time.monotonic()
         results = run_concurrent(
-            lambda: perform_rename(base_url, api_key, node_id, "held-by-racer-a.txt"),
-            lambda: perform_rename(base_url, api_key, node_id, "held-by-racer-b.txt"),
+            lambda: perform_move(base_url, api_key, file_id, folder_id, "moved.txt"),
+            lambda: perform_trash(base_url, api_key, folder_id),
         )
-        elapsed = time.monotonic() - started
     finally:
         clear_fault(fault_file)
         clear_barrier_dirs(fault_file)
 
-    if elapsed > 30:
-        raise ScenarioFailed(
-            f"racer took {elapsed:.1f}s - lock_timeout/retry does not appear wired up"
+    for result in results:
+        if not result.ok and not _is_defined_error(result):
+            raise ScenarioFailed(
+                f"racer crashed instead of a defined outcome: {results}"
+            )
+
+    state = {
+        row["id"]: row
+        for row in json2_call(
+            base_url,
+            api_key,
+            "int_filemanager.node",
+            "search_read",
+            {
+                "domain": [["id", "in", [file_id, folder_id]]],
+                "fields": ["active", "parent_id"],
+                "context": {"active_test": False},
+            },
         )
+    }
+    file_row, folder_row = state[file_id], state[folder_id]
+    file_in_folder = (
+        bool(file_row["parent_id"]) and file_row["parent_id"][0] == folder_id
+    )
+    if folder_row["active"]:
+        raise ScenarioFailed(f"the trash did not take effect: {state} / {results}")
+    if file_row["active"] and file_in_folder:
+        raise ScenarioFailed(
+            f"active file under a trashed folder (write skew): {state} / {results}"
+        )
+
+
+def scenario_lock_timeout_triggers_retry(base_url, api_key, fault_file, fixtures):
+    """One racer HOLDS the row lock past `lock_timeout` (5 s) while the other
+    saves a new revision from the same base. Expectation (A3, Konzept 6): the
+    waiting racer is not left hanging and does not overwrite anything - its lock
+    wait ends in LockNotAvailable after the 5 s timeout, retrying() runs the
+    request again, and by then it sees the winner's revision and gets the
+    base-revision conflict. So: exactly one success, one defined error, and the
+    loser waited for at least the lock timeout (otherwise the lock was never
+    contended and this proves nothing)."""
+    node_id = fixtures["lock_node_id"]
+    base_revision_id = fixtures["lock_base_revision_id"]
+    lock_timeout_s = 5
+    set_fault(fault_file, f"node_lock_acquired:hold:{lock_timeout_s + 3}")
+    try:
+        results = run_concurrent(
+            lambda: perform_new_revision(
+                base_url, api_key, node_id, base_revision_id, b"lock-racer-a"
+            ),
+            lambda: perform_new_revision(
+                base_url, api_key, node_id, base_revision_id, b"lock-racer-b"
+            ),
+        )
+    finally:
+        clear_fault(fault_file)
+        clear_barrier_dirs(fault_file)
+
     oks = [r for r in results if r.ok]
-    if len(oks) != 1:
+    errs = [r for r in results if not r.ok]
+    if len(oks) != 1 or len(errs) != 1:
+        raise ScenarioFailed(f"expected one winner and one loser, got {results}")
+    if not _is_defined_error(errs[0]):
+        raise ScenarioFailed(f"the loser did not get a defined conflict: {results}")
+    if errs[0].elapsed < lock_timeout_s - 0.5:
         raise ScenarioFailed(
-            f"expected exactly one rename to win after the lock timeout, got {results}"
+            f"the loser returned after {errs[0].elapsed:.1f}s, before the"
+            f" {lock_timeout_s}s lock timeout - the lock was never contended: {results}"
         )
+    if max(r.elapsed for r in results) > 30:
+        raise ScenarioFailed(f"a racer needed more than 30s: {results}")
 
 
-# A4 (Konzept 16 "A4 Aufraeumjob") has no scenario here: see the comment
-# above load_fixtures() for why a live two-process reproduction is not
-# feasible without adding test-only production code, and where its
-# invariant is instead covered deterministically.
+_GC_SCRIPT = """
+import json
+sha256 = {sha256!r}
+Blob = env["int_filemanager.blob"].sudo()
+before = Blob.search_count([("sha256", "=", sha256)])
+Blob._gc_blobs()
+env.cr.commit()
+env.invalidate_all()
+after = Blob.search_count([("sha256", "=", sha256)])
+print("RESULT " + json.dumps({{"row_before": before, "row_after": after}}))
+"""
+
+_VERIFY_SCRIPT = """
+import json, os
+from odoo.addons.int_filemanager import blobstore
+sha256 = {sha256!r}
+blob = env["int_filemanager.blob"].sudo().search([("sha256", "=", sha256)])
+path = blobstore.blob_path(env, sha256)
+file_ok = os.path.exists(path) and blobstore.hash_file(path)[0] == sha256
+print("RESULT " + json.dumps({{
+    "blob_rows": len(blob),
+    "revisions": len(blob.revision_ids),
+    "file_ok": file_ok,
+}}))
+"""
+
+
+def _run_odoo_shell(shell_cmd, script):
+    """Run *script* in `odoo shell` (a real second process) and return the JSON
+    it prints after its RESULT marker - odoo shell writes plenty of other noise."""
+    proc = subprocess.run(
+        shell_cmd,
+        input=script,
+        capture_output=True,
+        text=True,
+        shell=True,
+        check=False,
+        timeout=180,
+    )
+    for line in proc.stdout.splitlines():
+        if line.startswith("RESULT "):
+            return json.loads(line[len("RESULT ") :])
+    raise ScenarioFailed(
+        f"odoo shell printed no RESULT line (exit {proc.returncode}): "
+        f"{proc.stdout[-500:]} {proc.stderr[-500:]}"
+    )
+
+
+def scenario_blob_gc_against_reuse(base_url, api_key, fault_file, fixtures):
+    """A4: the cleanup job deletes a stale blob row while a writer has just
+    decided to REUSE that very content. Expectation: the writer still ends with a
+    live revision on a live blob row and an intact file - nothing the writer
+    committed points at a blob the job took away.
+
+    The writer is parked right after it found the file already on disk
+    (blob_write_after_dedup_found, hold mode) - the claim of the fault file is the
+    signal that it is parked. Only then does the job run, in its own process, to
+    completion. Only then is the writer released."""
+    shell_cmd = fixtures.get("_odoo_shell_cmd")
+    if not shell_cmd:
+        raise NotImplementedError("needs --odoo-shell-cmd (second real process)")
+    sha256 = fixtures["a4_sha256"]
+    content = base64.b64decode(fixtures["a4_content_b64"])
+    release = f"{fault_file}.release.blob_write_after_dedup_found"
+    if os.path.exists(release):
+        os.remove(release)
+    set_fault(fault_file, "blob_write_after_dedup_found:hold:120")
+
+    outcome = {}
+
+    def writer():
+        try:
+            outcome["value"] = perform_create_node(
+                base_url,
+                api_key,
+                fixtures["parent_id"],
+                "race-a4-writer.txt",
+                content,
+                timeout=180,
+            )
+        except (urllib.error.HTTPError, OSError) as exc:
+            outcome["error"] = exc
+
+    thread = threading.Thread(target=writer)
+    thread.start()
+    try:
+        deadline = time.monotonic() + 60
+        while os.path.exists(fault_file):
+            if time.monotonic() > deadline:
+                raise ScenarioFailed("the writer never reached the dedup stage")
+            time.sleep(0.1)
+        gc = _run_odoo_shell(shell_cmd, _GC_SCRIPT.format(sha256=sha256))
+    finally:
+        open(release, "w", encoding="utf-8").close()
+        thread.join(timeout=180)
+        clear_fault(fault_file)
+        if os.path.exists(release):
+            os.remove(release)
+
+    if gc["row_before"] != 1 or gc["row_after"] != 0:
+        raise ScenarioFailed(
+            f"the job did not remove the stale row while the writer was parked - the"
+            f" interleaving was not exercised: {gc}"
+        )
+    if "value" not in outcome:
+        raise ScenarioFailed(f"the writer failed: {outcome}")
+    verify = _run_odoo_shell(shell_cmd, _VERIFY_SCRIPT.format(sha256=sha256))
+    if verify != {"blob_rows": 1, "revisions": 1, "file_ok": True}:
+        raise ScenarioFailed(f"the reused blob did not survive intact: {verify}")
 
 
 SCENARIOS = {
     "same_new_name_twice": scenario_same_new_name_twice,
     "same_base_revision_twice": scenario_same_base_revision_twice,
     "rename_to_same_name": scenario_rename_to_same_name,
+    "move_against_delete": scenario_move_against_delete,
     "lock_timeout_triggers_retry": scenario_lock_timeout_triggers_retry,
+    "blob_gc_against_reuse": scenario_blob_gc_against_reuse,
 }
 
 
@@ -375,6 +549,12 @@ def main():
         required=False,
         help="path to the JSON fixture file produced by the odoo-shell bootstrap"
         " script (see README 'Prerequisites'); contains api_key and all fixture ids",
+    )
+    parser.add_argument(
+        "--odoo-shell-cmd",
+        help="shell command that starts `odoo shell` against the SAME database (script"
+        " on stdin); needed for blob_gc_against_reuse, which runs the cleanup job in"
+        " its own process. The scenario stays PENDING without it.",
     )
     parser.add_argument("--scenario", default="all", choices=["all", *SCENARIOS])
     parser.add_argument(
@@ -393,6 +573,7 @@ def main():
 
     fixtures = load_fixtures(args.fixtures_json)
     api_key = fixtures["api_key"]
+    fixtures["_odoo_shell_cmd"] = args.odoo_shell_cmd
 
     names = list(SCENARIOS) if args.scenario == "all" else [args.scenario]
     failures = []

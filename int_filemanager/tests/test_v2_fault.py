@@ -29,9 +29,61 @@ class TestFaultPoint(BaseCase):
         fd, path = tempfile.mkstemp(prefix="int_filemanager_fault_test_")
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(content)
-        self.addCleanup(os.remove, path)
+        # hold mode deletes the file itself (its claim), so a plain os.remove would fail
+        self.addCleanup(lambda: os.path.exists(path) and os.remove(path))
         os.environ[fault.FAULT_FILE_ENV] = path
         return path
+
+    def test_hold_sleeps_once_and_consumes_the_spec(self):
+        path = self._write_fault_file("stage_a:hold:0.3")
+        started = time.monotonic()
+        fault.fault_point("stage_a")
+        self.assertGreaterEqual(time.monotonic() - started, 0.3)
+        self.assertFalse(os.path.exists(path), "the first arrival must claim the spec")
+
+        started = time.monotonic()
+        fault.fault_point("stage_a")  # a retry or the second racer: no hold any more
+        self.assertLess(time.monotonic() - started, 0.2)
+
+    def test_hold_only_one_of_two_concurrent_arrivals_waits(self):
+        self._write_fault_file("stage_a:hold:0.5")
+        elapsed = []
+
+        def arrive():
+            started = time.monotonic()
+            fault.fault_point("stage_a")
+            elapsed.append(time.monotonic() - started)
+
+        threads = [threading.Thread(target=arrive) for _i in range(2)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=5)
+
+        self.assertEqual(len(elapsed), 2)
+        self.assertEqual(
+            sorted(e >= 0.5 for e in elapsed),
+            [False, True],
+            "exactly one racer must hold, the other must pass immediately",
+        )
+
+    def test_hold_ends_early_when_the_release_file_appears(self):
+        path = self._write_fault_file("stage_a:hold:30")
+        release = f"{path}.release.stage_a"
+        self.addCleanup(lambda: os.path.exists(release) and os.remove(release))
+        timer = threading.Timer(0.2, lambda: open(release, "w").close())
+        timer.start()
+        self.addCleanup(timer.cancel)
+
+        started = time.monotonic()
+        fault.fault_point("stage_a")
+
+        self.assertLess(time.monotonic() - started, 5)
+
+    def test_hold_on_stage_mismatch_keeps_the_spec(self):
+        path = self._write_fault_file("stage_a:hold:0.3")
+        fault.fault_point("stage_b")
+        self.assertTrue(os.path.exists(path))
 
     def test_noop_without_fault_file(self):
         os.environ.pop(fault.FAULT_FILE_ENV, None)

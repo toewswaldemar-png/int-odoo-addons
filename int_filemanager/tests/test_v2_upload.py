@@ -173,6 +173,16 @@ class TestUploadFlow(TransactionCase):
         upload = self.env["int_filemanager.upload"].sudo().browse(result["upload_id"])
         self.assertEqual(upload.state, "open")
 
+    def test_finish_into_a_trashed_folder_is_rejected(self):
+        result = self._init_new_file(name="late.bin", key="op-init-trashed-target")
+        self._upload_env().upload_chunk(result["upload_id"], 0, b"data")
+        self.env["int_filemanager.node"].with_user(self.writer).trash(
+            self.folder.id, "op-trash-upload-target"
+        )
+
+        with self.assertRaises(UserError):
+            self._upload_env().finish_upload(result["upload_id"], "op-finish-trashed")
+
     def test_finish_repeated_operation_key_is_idempotent(self):
         result = self._init_new_file(name="once.bin", key="op-finish-repeat-init")
         self._upload_env().upload_chunk(result["upload_id"], 0, b"data")

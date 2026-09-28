@@ -102,6 +102,7 @@ class IntFilemanagerNode(models.Model):
                     "A file or folder named %(name)s already exists here.", name=name
                 )
             ) from None
+        self._touch_active_parent(parent)
 
         tmp_path = blobstore.write_stream_to_temp(
             self.env, io.BytesIO(content), f"create_{operation.id}"
@@ -135,6 +136,36 @@ class IntFilemanagerNode(models.Model):
         self.env.cr.postcommit.add(lambda: _remove_if_exists(tmp_path))
         return result
 
+    def _touch_active_parent(self, parent):
+        """Materialises the conflict between "put something under this folder"
+        and "trash this folder": both must UPDATE the folder's row. Odoo runs
+        REPEATABLE READ, so without a shared written row the two transactions
+        are a plain write skew - trash() decided its subtree from a snapshot
+        that cannot see the newcomer, the newcomer decided the folder was
+        active from a snapshot that cannot see the trash, and both commit
+        (active node under a trashed folder). Written in ONE statement with
+        `AND active`: a folder already trashed in our snapshot matches no row
+        (-> UserError), one trashed after it fails the UPDATE with a
+        serialization error, which retrying() turns into a fresh attempt that
+        then sees the trash. Raw SQL does not go through ir.rule - call it only
+        after the caller's rights on the destination were checked."""
+        if not parent:
+            return
+        cr = self.env.cr
+        cr.execute("SET LOCAL lock_timeout TO '5s'")
+        cr.execute(
+            SQL(
+                "UPDATE int_filemanager_node"
+                " SET write_date = (now() AT TIME ZONE 'utc')"
+                " WHERE id = %s AND active RETURNING id",
+                parent.id,
+            )
+        )
+        if not cr.fetchone():
+            raise UserError(
+                self.env._("The target folder is in the trash; restore it first.")
+            )
+
     def _lock_and_check_base_revision(self, node, base_revision_id):
         """Konzept 6 "Zeilen wartend sperren ... und Basisrevision pruefen"
         (shared by create_new_revision and restore_version): SET LOCAL
@@ -149,6 +180,7 @@ class IntFilemanagerNode(models.Model):
         cr.execute(
             SQL("SELECT id FROM int_filemanager_node WHERE id = %s FOR UPDATE", node.id)
         )
+        fault.fault_point("node_lock_acquired")
         node.invalidate_recordset(["current_revision_id"])
 
         current = node.current_revision_id
@@ -317,6 +349,7 @@ class IntFilemanagerNode(models.Model):
                     name=new_name,
                 )
             ) from None
+        self._touch_active_parent(target_parent)
 
         result = self._attach_revision(
             new_node,
@@ -350,6 +383,7 @@ class IntFilemanagerNode(models.Model):
 
         vals = {"name": new_name}
         new_scope_id = None
+        new_parent = self.browse()
         if new_parent_id and new_parent_id != node.parent_id.id:
             new_parent = self.browse(new_parent_id)
             new_parent.check_access("write")
@@ -365,8 +399,15 @@ class IntFilemanagerNode(models.Model):
         cr.execute(
             SQL("SELECT id FROM int_filemanager_node WHERE id = %s FOR UPDATE", node_id)
         )
+        fault.fault_point("node_lock_acquired")
+        if not node.active:
+            raise UserError(
+                self.env._("This item is in the trash; restore it before moving it.")
+            )
 
         fault.fault_point("node_rename_before_check")
+        fault.fault_point("node_tree_before_write")
+        self._touch_active_parent(new_parent)
         try:
             with self.env.cr.savepoint():
                 node.write(vals)
@@ -416,6 +457,7 @@ class IntFilemanagerNode(models.Model):
         node.check_access("write")
 
         subtree = self.search([("id", "child_of", node_id)])
+        fault.fault_point("node_tree_before_write")
         subtree.write({"active": False, "removal_reason": "trash"})
 
         result = {"node_id": node.id}
@@ -439,6 +481,11 @@ class IntFilemanagerNode(models.Model):
         subtree = self.with_context(active_test=False).search(
             [("id", "child_of", node_id)]
         )
+        fault.fault_point("node_tree_before_write")
+        # Restoring under a folder that is still in the trash would leave an active
+        # node below an inactive one - same rule (and same row conflict) as moving
+        # into it.
+        self._touch_active_parent(node.parent_id)
         try:
             with self.env.cr.savepoint():
                 subtree.write({"active": True, "removal_reason": False})

@@ -260,6 +260,7 @@ class IntFilemanagerUpload(models.Model):
                         name=upload.target_name,
                     )
                 ) from None
+            Node._touch_active_parent(upload.target_parent_id)
             attach_result = Node._attach_revision(
                 new_node, None, blob.id, size, "upload", operation
             )

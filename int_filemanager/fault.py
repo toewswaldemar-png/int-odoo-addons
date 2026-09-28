@@ -47,6 +47,15 @@ def fault_point(stage):
     - "<stage>:barrier:<n>"         -> blocks until *n* processes (including
                                        this one) have called fault_point() for
                                        this stage, then returns normally
+    - "<stage>:hold:<seconds>"      -> the FIRST process to arrive claims the
+                                       spec (deletes the file) and sleeps that
+                                       long; every later arrival, including a
+                                       retry of the same request, passes
+                                       untouched. Lets a test keep a row lock
+                                       held past lock_timeout without the
+                                       holder's own retry holding it again.
+                                       Ends early once the file
+                                       "<fault file>.release.<stage>" exists.
     """
     hook = _test_hooks.get(stage)
     if hook is not None:
@@ -70,6 +79,19 @@ def fault_point(stage):
     elif mode.startswith("barrier:"):
         count = int(mode.split(":", 2)[1])
         wait_at_barrier(f"{path}.barrier.{stage}", count)
+    elif mode.startswith("hold:"):
+        seconds = float(mode.split(":", 2)[1])
+        try:
+            # unlink is the atomic claim: exactly one racer gets past it.
+            os.unlink(path)
+        except OSError:
+            return
+        release = f"{path}.release.{stage}"
+        deadline = time.monotonic() + seconds
+        # A test that knows when the other side is done can end the hold early by
+        # creating <fault file>.release.<stage>; otherwise it simply runs out.
+        while time.monotonic() < deadline and not os.path.exists(release):
+            time.sleep(DEFAULT_BARRIER_POLL_S)
     elif mode:
         raise FaultInjected(f"fault_point: unknown mode {mode!r} for stage {stage!r}")
     else:
