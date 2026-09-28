@@ -13,7 +13,6 @@ Stand 2026-09-28. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde g
 | [`int_filemanager_v2_schritt4_plan_2026-09-28.md`](int_filemanager_v2_schritt4_plan_2026-09-28.md) | Plan der Oberfläche (Schritt 4) |
 | [`review/konzept_codepruefung_2026-09-26.md`](review/konzept_codepruefung_2026-09-26.md) | Code-Prüfung des Konzepts (194 Behauptungen) |
 | [`odoo_konventionen_2026-09-26.md`](odoo_konventionen_2026-09-26.md) | Code-Konventionen für neuen Code |
-| [`int_filemanager_odoo_bausteine.md`](int_filemanager_odoo_bausteine.md) | Was Odoo nativ kann und was Eigenbau bleibt (vor jeder "gibt es nicht"-Aussage lesen) |
 | [`int_filemanager_konzept_db_vorrang_2026-09-24.md`](int_filemanager_konzept_db_vorrang_2026-09-24.md) | Hintergrund: Abschnitte 19 und 20 (Live-Prüfungen auf Tower) |
 
 ## Betrieb und Themen, die in v2 noch kommen
@@ -46,6 +45,6 @@ Der v1-Code zitiert diese Dokumente in Kommentaren. Sie wandern ins Archiv, wenn
 ## Archiv
 
 - [`archiv/`](archiv/): v1-Watcher-, Scan- und ACL-Dokumente sowie die frühe Explorer-Roadmap, alle von v2 ersetzt.
-- [`archiv/recherchen-odoo-bausteine/`](archiv/recherchen-odoo-bausteine/): die 18 Einzelrecherchen, zusammengefasst in
-  [`int_filemanager_odoo_bausteine.md`](int_filemanager_odoo_bausteine.md). Die Originale nur öffnen, wenn eine
-  Zeilenangabe oder ein Gedankengang nachzulesen ist.
+- [`archiv/recherchen-odoo-bausteine/`](archiv/recherchen-odoo-bausteine/): 18 Recherchen zu nativen Odoo-Bausteinen
+  (Navigation, Listenansicht, Bilder, PDF, Papierkorb, `core/`), für das v1-Modul geschrieben. Nachschlagewerk, nicht Teil
+  des v2-Konzepts.
