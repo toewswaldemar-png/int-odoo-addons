@@ -318,7 +318,7 @@ export const mutationsMixin = (Base) =>
     async onDownloadSelected() {
       const records = this.model.root.selection;
       if (records.length === 1 && !records[0].data.is_dir) {
-        this._startDownload(downloadUrl(records[0].resId));
+        this._startDownload(this._urlToDownload(records[0]));
         return;
       }
       try {
@@ -342,6 +342,16 @@ export const mutationsMixin = (Base) =>
       } catch (error) {
         this._fail(error);
       }
+    }
+
+    // Asks for the revision the list shows and remembers it as the base of "New version",
+    // so a change by somebody else before the edited copy comes back is reported.
+    _urlToDownload(record) {
+      const revisionId = record.data.current_revision_id
+        ? record.data.current_revision_id.id
+        : false;
+      this.uploads.rememberBase(record.resId, revisionId);
+      return downloadUrl(record.resId, {revisionId});
     }
 
     // A real link click: the browser shows its download UI without leaving the page.
@@ -420,7 +430,7 @@ export const mutationsMixin = (Base) =>
       } else if (isPreviewable(name)) {
         this.onPreview(record);
       } else {
-        window.open(downloadUrl(record.resId), "_blank");
+        window.open(this._urlToDownload(record), "_blank");
       }
     }
 

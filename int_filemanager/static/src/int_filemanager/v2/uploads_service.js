@@ -10,12 +10,12 @@ import {registry} from "@web/core/registry";
 import {browser} from "@web/core/browser/browser";
 import {ConnectionLostError} from "@web/core/network/rpc";
 import {planUpload} from "./upload_plan.js";
+import {DownloadBases} from "./download_bases.js";
 import {UploadManager} from "./upload_manager.js";
 import {newOperationKey} from "./utils.js";
 
 const STORAGE_KEY = "int_filemanager.uploads";
 const BASES_KEY = "int_filemanager.bases";
-const BASES_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
 // A piece that hits a gateway problem or a lost link is worth another try (after the
 // server has been asked how far it got); the rest is a refusal.
 const RETRYABLE_HTTP_STATUS = new Set([0, 408, 425, 429, 500, 502, 503, 504]);
@@ -112,6 +112,11 @@ export const uploadsService = {
     });
     state.unfinished = manager.unfinished().length;
 
+    const downloadBases = new DownloadBases({
+      load: () => readJson(BASES_KEY),
+      save: (value) => writeJson(BASES_KEY, value),
+    });
+
     return {
       state,
       /** From dropped or chosen files to a plan: folders, name conflicts, decisions. */
@@ -123,29 +128,8 @@ export const uploadsService = {
       cancel: (id) => manager.cancel(id),
       renameAndRetry: (id, name) => manager.renameAndRetry(id, name),
       clearFinished: () => manager.clearFinished(),
-      /**
-       * "Edit locally": the revision a file was downloaded from is remembered, so the
-       * upload of the edited copy carries it as its base and a change made by somebody
-       * else in between is reported instead of overwritten.
-       */
-      rememberBase(nodeId, revisionId) {
-        if (!revisionId) {
-          return;
-        }
-        const bases = readJson(BASES_KEY);
-        bases[nodeId] = {revisionId, at: Date.now()};
-        writeJson(BASES_KEY, bases);
-      },
-      takeBase(nodeId) {
-        const bases = readJson(BASES_KEY);
-        const entry = bases[nodeId];
-        if (!entry || Date.now() - entry.at > BASES_KEEP_MS) {
-          return false;
-        }
-        delete bases[nodeId];
-        writeJson(BASES_KEY, bases);
-        return entry.revisionId;
-      },
+      rememberBase: (nodeId, revisionId) => downloadBases.remember(nodeId, revisionId),
+      takeBase: (nodeId) => downloadBases.take(nodeId),
     };
   },
 };
