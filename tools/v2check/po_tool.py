@@ -17,6 +17,7 @@ V2_MODELS = (
     "int_filemanager_node",
     "int_filemanager_revision",
     "int_filemanager_blob",
+    "int_filemanager_derivative",
     "int_filemanager_scope",
     "int_filemanager_upload",
     "int_filemanager_operation",
@@ -60,7 +61,7 @@ def is_v2(entry):
     return any(
         f"int_filemanager.field_{m}__" in refs
         or f"int_filemanager.model_{m}" in refs
-        or f"selection_{m}__" in refs
+        or f"selection__{m}__" in refs
         or f"constraint_{m}_" in refs
         for m in V2_MODELS
     )

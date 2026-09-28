@@ -16,19 +16,22 @@ R="$BASE/v2race"
 IMAGE=odoo:19.0-hm-test
 DB=fmv2_race
 SERVER=fmv2_race_odoo
+CONVERTER=fmv2_race_conv
 NET=fmtest-net
 
 cd "$(git rev-parse --show-toplevel)"
 
 cleanup() {
   [[ "${RACE_KEEP:-0}" == 1 ]] && return
-  ssh "$HOST" "docker rm -f $SERVER >/dev/null 2>&1; docker exec fmtest_pg dropdb -U odoo --if-exists $DB; rm -rf $R" || true
+  ssh "$HOST" "docker rm -f $SERVER $CONVERTER >/dev/null 2>&1; docker exec fmtest_pg dropdb -U odoo --if-exists $DB; rm -rf $R" || true
 }
 trap cleanup EXIT
 
 echo "== sync"
 ssh "$HOST" "docker rm -f $SERVER >/dev/null 2>&1 || true; rm -rf $R && mkdir -p $R/addons $R/config $R/data $R/work && chmod 777 $R/data"
 tar -c --exclude=__pycache__ int_filemanager onlyoffice_odoo | ssh "$HOST" "tar -x -C $R/addons"
+ssh "$HOST" "mkdir -p $R/tools"
+tar -c tools/fmconverter | ssh "$HOST" "tar -x -C $R"
 scp -q int_filemanager/tests/tower/race_scenarios.py int_filemanager/tests/tower/bootstrap_fixtures.py "$HOST:$R/work/"
 ssh "$HOST" "sed -e 's/^db_name = .*/db_name = $DB/' -e 's#^addons_path = .*#addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons#' \
   -e 's#^data_dir = .*#data_dir = /var/lib/odoo#' -e 's/^max_cron_threads = .*/max_cron_threads = 0/' -e 's/^x_sendfile = .*/x_sendfile = False/' -e 's/^workers = .*/workers = 2/' \
@@ -58,10 +61,17 @@ for _ in $(seq 1 60); do
   sleep 2
 done
 
+echo "== start converter (blob store read-only, no published port)"
+# The real converter service, run from the Odoo image (which has Pillow) instead of its own image.
+ssh "$HOST" "mkdir -p $R/data/filestore/$DB/blobs && chmod -R 777 $R/data/filestore && docker rm -f $CONVERTER >/dev/null 2>&1 || true; \
+  docker run -d --name $CONVERTER --network $NET --user 10001 -v $R/data/filestore/$DB/blobs:/blobs:ro \
+  -v $R/tools/fmconverter:/app:ro --entrypoint python3 $IMAGE /app/server.py >/dev/null"
+
 echo "== scenarios"
 status=0
 ssh "$HOST" "docker run --rm --network $NET $MOUNTS -v $R/work:/work $IMAGE python3 -u /work/race_scenarios.py \
   --base-url http://$SERVER:8069 --fixtures-json /work/fixtures.json --fault-file /var/lib/odoo/fault.txt \
+  --converter-url http://$CONVERTER:8090 \
   --odoo-shell-cmd 'odoo shell -c /etc/odoo/odoo.conf -d $DB --no-http --log-level=warn' $*" || status=$?
 if [[ $status != 0 ]]; then
   echo "== server log (tail)"

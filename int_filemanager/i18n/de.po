@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260908\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 05:45+0000\n"
-"PO-Revision-Date: 2026-09-28 05:45+0000\n"
+"POT-Creation-Date: 2026-09-28 14:14+0000\n"
+"PO-Revision-Date: 2026-09-28 14:14+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -73,13 +73,10 @@ msgstr "Ein Ordner kann nicht in sich selbst verschoben werden."
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid ""
-"A name must not contain / \\ : * ? \" < > | or control characters, end with a "
-"dot, or be a reserved Windows name such as CON, NUL or COM1 (with or without "
-"an extension)."
-msgstr ""
-"Ein Name darf keines der Zeichen / \\ : * ? \" < > | oder Steuerzeichen "
-"enthalten, nicht mit einem Punkt enden und kein reservierter Windows-Name "
-"wie CON, NUL oder COM1 sein (auch nicht mit Dateiendung)."
+"A name must not contain / \\ : * ? \" < > | or control characters, end with "
+"a dot, or be a reserved Windows name such as CON, NUL or COM1 (with or "
+"without an extension)."
+msgstr "Ein Name darf keines der Zeichen / \ : * ? \" < > | oder Steuerzeichen enthalten, nicht mit einem Punkt enden und kein reservierter Windows-Name wie CON, NUL oder COM1 sein (auch nicht mit Dateiendung)."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_revision_revision_no_uniq
@@ -115,6 +112,11 @@ msgstr "Alle Ordner"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_attachment_count
 msgid "Attachment Count"
 msgstr "Anzahl der Anhänge"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__attempts
+msgid "Attempts"
+msgstr "Versuche"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__base_revision_id
@@ -225,6 +227,7 @@ msgstr "Link erzeugen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__create_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__create_uid
@@ -247,6 +250,7 @@ msgstr "Erstellt von"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__create_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__create_date
@@ -284,6 +288,11 @@ msgid "Deleted on"
 msgstr "Gelöscht am"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__derived_blob_id
+msgid "Derived Blob"
+msgstr "Abgeleiteter Blob"
+
+#. module: int_filemanager
 #: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node_details
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
 msgid "Details"
@@ -297,6 +306,7 @@ msgstr "Verwerfen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__display_name
@@ -324,6 +334,7 @@ msgstr "Anzeigename"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_upload__state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__done
 msgid "Done"
@@ -360,6 +371,7 @@ msgid "Edit"
 msgstr "Bearbeiten"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__error
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__error
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__error
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__error
@@ -391,6 +403,14 @@ msgid "Expires At"
 msgstr "Läuft ab am"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__failed
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__failed
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_upload__state__failed
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__failed
+msgid "Failed"
+msgstr "Fehlgeschlagen"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__file_name
 msgid "File Name"
 msgstr "Dateiname"
@@ -414,6 +434,11 @@ msgstr "Dateimanager v2 Blob (Inhalt, nach Hash)"
 #: model:ir.model,name:int_filemanager.model_int_filemanager_upload
 msgid "Filemanager v2 chunked upload in progress"
 msgstr "Dateimanager v2 laufender Stück-Upload"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_derivative
+msgid "Filemanager v2 derived file"
+msgstr "Dateimanager v2 abgeleitete Datei"
 
 #. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_int_filemanager_node
@@ -451,6 +476,11 @@ msgid "Filemanager v2: clean up orphaned uploads"
 msgstr "Dateimanager v2: verwaiste Uploads aufräumen"
 
 #. module: int_filemanager
+#: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_derivatives_ir_actions_server
+msgid "Filemanager v2: create thumbnails and previews"
+msgstr "Dateimanager v2: Vorschaubilder erzeugen"
+
+#. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_finish_pending_uploads_ir_actions_server
 msgid "Filemanager v2: finish large uploads"
 msgstr "Dateimanager v2: große Uploads abschließen"
@@ -475,6 +505,12 @@ msgstr "Dateien"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
 msgid "Files only"
 msgstr "Nur Dateien"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__finished_at
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__finished_at
+msgid "Finished At"
+msgstr "Beendet am"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -519,6 +555,7 @@ msgstr "Hat Nachricht"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__id
@@ -615,7 +652,13 @@ msgid "Key"
 msgstr "Schlüssel"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__kind
+msgid "Kind"
+msgstr "Art"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__write_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__write_uid
@@ -638,6 +681,7 @@ msgstr "Zuletzt aktualisiert von"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__write_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__write_date
@@ -662,6 +706,11 @@ msgstr "Zuletzt aktualisiert am"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__last_used
 msgid "Last Used"
 msgstr "Zuletzt verwendet"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__lease_until
+msgid "Lease Until"
+msgstr "Reserviert bis"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
@@ -692,6 +741,7 @@ msgid "Messages"
 msgstr "Nachrichten"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__mime
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__mime
 msgid "Mime"
 msgstr "MIME-Typ"
@@ -802,6 +852,11 @@ msgid "New name"
 msgstr "Neuer Name"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__next_try_at
+msgid "Next Try At"
+msgstr "Nächster Versuch am"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__node_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__node_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__node_id
@@ -812,6 +867,16 @@ msgstr "Knoten"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__node_ids_json
 msgid "Node Ids Json"
 msgstr "Knoten-IDs (JSON)"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__none
+msgid "None"
+msgstr "Keine"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__not_applicable
+msgid "Not applicable"
+msgstr "Nicht anwendbar"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -861,6 +926,11 @@ msgstr "Office"
 #: code:addons/int_filemanager/models/int_filemanager_share.py:0
 msgid "Only single files with content can be shared by link."
 msgstr "Nur einzelne Dateien mit Inhalt können per Link freigegeben werden."
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_upload__state__open
+msgid "Open"
+msgstr "Offen"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -924,6 +994,34 @@ msgid "Paused"
 msgstr "Pausiert"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__pending
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__pending
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__pending
+msgid "Pending"
+msgstr "Ausstehend"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_blob__state__present
+msgid "Present"
+msgstr "Vorhanden"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__preview_state
+msgid "Preview State"
+msgstr "Vorschau-Status"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__priority
+msgid "Priority"
+msgstr "Priorität"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_upload__state__processing
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__processing
+msgid "Processing"
+msgstr "In Bearbeitung"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__purge_group_ids
 msgid "Purge groups"
 msgstr "Endgültig löschen erlaubt für"
@@ -937,6 +1035,11 @@ msgstr "An den ursprünglichen Ort zurücklegen"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__read_group_ids
 msgid "Read groups"
 msgstr "Lesen erlaubt für"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__ready
+msgid "Ready"
+msgstr "Bereit"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__received_size
@@ -1021,6 +1124,11 @@ msgstr "Diesen Link widerrufen"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__revoked_at
 msgid "Revoked At"
 msgstr "Widerrufen am"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__running
+msgid "Running"
+msgstr "Läuft"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_has_sms_error
@@ -1109,6 +1217,16 @@ msgid "Skip all"
 msgstr "Alle überspringen"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__source_blob_id
+msgid "Source Blob"
+msgstr "Quell-Blob"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__spec
+msgid "Spec"
+msgstr "Spezifikation"
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_upload.py:0
 msgid ""
@@ -1117,7 +1235,14 @@ msgid ""
 msgstr "Bitte entweder einen Zielordner und Namen für eine neue Datei angeben oder eine vorhandene Datei zum Überarbeiten - nicht beides."
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__started_at
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__started_at
+msgid "Started At"
+msgstr "Gestartet am"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__state
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__state
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__state
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__state
 msgid "State"
@@ -1199,6 +1324,11 @@ msgstr "Das Ziel ist kein Ordner."
 msgid ""
 "These names already exist in the folder. Choose what happens to each file."
 msgstr "Diese Namen existieren im Ordner bereits. Wählen Sie, was mit jeder Datei geschehen soll."
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_derivative_source_kind_spec_uniq
+msgid "This blob already has this derived file."
+msgstr "Zu diesem Blob gibt es diese abgeleitete Datei bereits."
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_trash_list
@@ -1299,9 +1429,25 @@ msgid "This upload is not open."
 msgstr "Dieser Upload ist nicht offen."
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__thumbnail
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__tile
+msgid "Thumbnail"
+msgstr "Vorschaubild"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__token
 msgid "Token"
 msgstr "Token"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__tool
+msgid "Tool"
+msgstr "Werkzeug"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__tool_version
+msgid "Tool Version"
+msgstr "Werkzeugversion"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -1390,6 +1536,11 @@ msgstr "Versionen von %s"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
 msgid "Waiting…"
 msgstr "Wartet …"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_revision__origin__webdav
+msgid "WebDAV"
+msgstr "WebDAV"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__website_message_ids

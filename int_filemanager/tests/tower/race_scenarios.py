@@ -4,7 +4,8 @@ See README.md in this directory for prerequisites, the stage names the write
 paths implement, and why this cannot be an Odoo TransactionCase. Never run it
 against a live database.
 
-Standard library only: it runs in a helper container without `requests`.
+Standard library only (Pillow for the JPEG test files): it runs in a helper
+container without `requests`.
 """
 
 import argparse
@@ -784,9 +785,12 @@ print("RESULT " + json.dumps({{"state": upload.state}}))
 """
 
 
-def _run_odoo_shell(shell_cmd, script):
+def _run_odoo_shell(shell_cmd, script, extra_env=None, expect_death=False):
     """Run *script* in `odoo shell` (a real second process) and return the JSON
-    it prints after its RESULT marker - odoo shell writes plenty of other noise."""
+    it prints after its RESULT marker - odoo shell writes plenty of other noise.
+
+    With ``expect_death`` the process is meant to be killed by a fault point: its
+    exit code is returned instead of a result."""
     proc = subprocess.run(
         shell_cmd,
         input=script,
@@ -795,13 +799,16 @@ def _run_odoo_shell(shell_cmd, script):
         shell=True,
         check=False,
         timeout=180,
+        env={**os.environ, **(extra_env or {})},
     )
+    if expect_death:
+        return proc.returncode
     for line in proc.stdout.splitlines():
         if line.startswith("RESULT "):
             return json.loads(line[len("RESULT ") :])
     raise ScenarioFailed(
         f"odoo shell printed no RESULT line (exit {proc.returncode}): "
-        f"{proc.stdout[-500:]} {proc.stderr[-500:]}"
+        f"{proc.stdout[-500:]} {proc.stderr[-2500:]}"
     )
 
 
@@ -865,6 +872,270 @@ def scenario_blob_gc_against_reuse(base_url, api_key, fault_file, fixtures):
         raise ScenarioFailed(f"the reused blob did not survive intact: {verify}")
 
 
+# --------------------------------------------------------------------------
+# Derived files (thumbnails): the real queue in real processes against the real
+# converter service (tools/fmconverter), with real JPEG files.
+# --------------------------------------------------------------------------
+
+_DERIVATIVE_FAULT = "/var/lib/odoo/fault_derivative.txt"
+_CONVERT_LOG = "/var/lib/odoo/convert_log.txt"
+
+_SET_URL_SCRIPT = """
+env["ir.config_parameter"].sudo().set_param("int_filemanager.converter_url", {url!r})
+env.cr.commit()
+print("RESULT {{}}")
+"""
+
+_RUN_QUEUE_SCRIPT = """
+import contextlib, json, os
+from odoo.addons.int_filemanager import converter_client
+
+real = converter_client.convert
+
+@contextlib.contextmanager
+def logged(url, sha256, kind, spec, timeout):
+    with open({log!r}, "a") as f:
+        f.write(str(os.getpid()) + " " + sha256 + "\\n")
+    with real(url, sha256, kind, spec, timeout) as result:
+        yield result
+
+converter_client.convert = logged
+env["int_filemanager.derivative"].sudo()._cron_run()
+print("RESULT {{}}")
+"""
+
+_STATE_SCRIPT = """
+import json, os
+from odoo.addons.int_filemanager import blobstore
+shas = {shas!r}
+out = {{}}
+for sha in shas:
+    blob = env["int_filemanager.blob"].sudo().search([("sha256", "=", sha)])
+    jobs = env["int_filemanager.derivative"].sudo().search(
+        [("source_blob_id", "in", blob.ids)])
+    entry = {{"jobs": len(jobs), "state": jobs.state if len(jobs) == 1 else None}}
+    if len(jobs) == 1 and jobs.derived_blob_id:
+        derived = jobs.derived_blob_id
+        path = blobstore.blob_path(env, derived.sha256)
+        with open(path, "rb") as f:
+            head = f.read(3)
+        entry["file_ok"] = (
+            blobstore.hash_file(path)[0] == derived.sha256
+            and head == b"\\xff\\xd8\\xff"
+            and derived.size < 60000
+        )
+        entry["derived_rows"] = env["int_filemanager.blob"].sudo().search_count(
+            [("sha256", "=", derived.sha256)])
+    out[sha] = entry
+print("RESULT " + json.dumps(out))
+"""
+
+_EXPIRE_LEASES_SCRIPT = """
+env.cr.execute(
+    "UPDATE int_filemanager_derivative d SET lease_until = '2000-01-01'"
+    " FROM int_filemanager_blob b WHERE b.id = d.source_blob_id"
+    " AND d.state = 'running' AND b.sha256 IN %s", [tuple({shas!r})]
+)
+n = env.cr.rowcount
+env.cr.commit()
+print("RESULT " + str(n))
+"""
+
+
+def _jpeg(seed):
+    import io
+
+    from PIL import Image
+
+    # Distinct bytes per seed: size and colour both depend on it (a JPEG side < 65536).
+    image = Image.new(
+        "RGB", (900 + seed % 500, 700), (seed * 37 % 256, seed // 7 % 256, 160)
+    )
+    buf = io.BytesIO()
+    image.save(buf, "JPEG")
+    return buf.getvalue()
+
+
+def _make_photos(base_url, api_key, fixtures, tag, count):
+    """Create ``count`` distinct JPEG files; return their blob hashes."""
+    shas = []
+    salt = int(time.monotonic() * 1000) % 100000
+    for i in range(count):
+        content = _jpeg(i + 1 + salt)
+        perform_create_node(
+            base_url,
+            api_key,
+            fixtures["parent_id"],
+            f"race-{tag}-{i}-{time.monotonic_ns()}.jpg",
+            content,
+        )
+        shas.append(hashlib.sha256(content).hexdigest())
+    return shas
+
+
+def _deriv_setup(fixtures, url=None):
+    shell_cmd = fixtures.get("_odoo_shell_cmd")
+    converter_url = url or fixtures.get("_converter_url")
+    if not shell_cmd or not fixtures.get("_converter_url"):
+        raise NotImplementedError("needs --odoo-shell-cmd and --converter-url")
+    if os.path.exists(_CONVERT_LOG):
+        os.remove(_CONVERT_LOG)
+    _run_odoo_shell(shell_cmd, _SET_URL_SCRIPT.format(url=converter_url))
+    return shell_cmd
+
+
+def _convert_log():
+    if not os.path.exists(_CONVERT_LOG):
+        return []
+    with open(_CONVERT_LOG, encoding="utf-8") as f:
+        return [line.split() for line in f if line.strip()]
+
+
+def scenario_derivative_end_to_end(base_url, api_key, fault_file, fixtures):
+    """Photos are queued, converted by the real service and stored as intact blobs."""
+    shell_cmd = _deriv_setup(fixtures)
+    shas = _make_photos(base_url, api_key, fixtures, "e2e", 2)
+    _run_odoo_shell(shell_cmd, _RUN_QUEUE_SCRIPT.format(log=_CONVERT_LOG))
+    state = _run_odoo_shell(shell_cmd, _STATE_SCRIPT.format(shas=shas))
+    for sha in shas:
+        got = state[sha]
+        if got != {"jobs": 1, "state": "done", "file_ok": True, "derived_rows": 1}:
+            raise ScenarioFailed(f"{sha[:8]} not converted correctly: {got}")
+
+
+_TRANSACTION_PROBE_SCRIPT = """
+import contextlib, json
+from odoo import sql_db
+from odoo.addons.int_filemanager import converter_client
+
+real = converter_client.convert
+seen = []
+own_pid = env.cr._cnx.get_backend_pid()
+
+@contextlib.contextmanager
+def probing(url, sha256, kind, spec, timeout):
+    # From a second connection: what does the worker's own connection do right now?
+    with sql_db.db_connect(env.cr.dbname).cursor() as cr:
+        cr.execute("SELECT state FROM pg_stat_activity WHERE pid = %s", [own_pid])
+        seen.append(cr.fetchone()[0])
+    with real(url, sha256, kind, spec, timeout) as result:
+        yield result
+
+converter_client.convert = probing
+env["int_filemanager.derivative"].sudo()._cron_run()
+print("RESULT " + json.dumps(seen))
+"""
+
+
+def scenario_derivative_idle_while_converting(base_url, api_key, fault_file, fixtures):
+    """While the converter works, the worker holds no open database transaction.
+
+    An open transaction would keep its snapshot (and so old row versions) alive for
+    as long as a conversion takes.
+    """
+    shell_cmd = _deriv_setup(fixtures)
+    _make_photos(base_url, api_key, fixtures, "notx", 2)
+    seen = _run_odoo_shell(shell_cmd, _TRANSACTION_PROBE_SCRIPT)
+    if not seen or set(seen) != {"idle"}:
+        raise ScenarioFailed(f"the connection was not idle during the calls: {seen}")
+
+
+def scenario_derivative_converter_down_then_up(base_url, api_key, fault_file, fixtures):
+    """With the converter unreachable the jobs stay open without an attempt; when it
+    is back they are done."""
+    shell_cmd = _deriv_setup(fixtures, url="http://127.0.0.1:9")
+    shas = _make_photos(base_url, api_key, fixtures, "down", 2)
+    _run_odoo_shell(shell_cmd, _RUN_QUEUE_SCRIPT.format(log=_CONVERT_LOG))
+    state = _run_odoo_shell(shell_cmd, _STATE_SCRIPT.format(shas=shas))
+    if any(state[sha] != {"jobs": 1, "state": "pending"} for sha in shas):
+        raise ScenarioFailed(f"jobs did not stay open: {state}")
+    _run_odoo_shell(shell_cmd, _SET_URL_SCRIPT.format(url=fixtures["_converter_url"]))
+    _run_odoo_shell(shell_cmd, _RUN_QUEUE_SCRIPT.format(log=_CONVERT_LOG))
+    state = _run_odoo_shell(shell_cmd, _STATE_SCRIPT.format(shas=shas))
+    if any(state[sha].get("state") != "done" for sha in shas):
+        raise ScenarioFailed(f"jobs were not done once the converter was back: {state}")
+
+
+def scenario_crash_derivative_after_link(base_url, api_key, fault_file, fixtures):
+    """The worker dies after linking the result file, before the row is committed.
+
+    Nothing is lost and nothing is half done: the job is still marked as running,
+    becomes free again when its lease has run out, and then ends with exactly one
+    intact result.
+    """
+    shell_cmd = _deriv_setup(fixtures)
+    shas = _make_photos(base_url, api_key, fixtures, "crash", 1)
+    set_fault(_DERIVATIVE_FAULT, "derivative_after_link:exit")
+    try:
+        code = _run_odoo_shell(
+            shell_cmd,
+            _RUN_QUEUE_SCRIPT.format(log=_CONVERT_LOG),
+            extra_env={"INT_FILEMANAGER_FAULT_FILE": _DERIVATIVE_FAULT},
+            expect_death=True,
+        )
+    finally:
+        clear_fault(_DERIVATIVE_FAULT)
+    if code != 137:
+        raise ScenarioFailed(f"the worker was expected to die (137), exit code {code}")
+    state = _run_odoo_shell(shell_cmd, _STATE_SCRIPT.format(shas=shas))
+    if state[shas[0]] != {"jobs": 1, "state": "running"}:
+        raise ScenarioFailed(f"a dead worker must leave a running job: {state}")
+    if _run_odoo_shell(shell_cmd, _EXPIRE_LEASES_SCRIPT.format(shas=shas)) != 1:
+        raise ScenarioFailed("expected exactly one running job to expire")
+    _run_odoo_shell(shell_cmd, _RUN_QUEUE_SCRIPT.format(log=_CONVERT_LOG))
+    state = _run_odoo_shell(shell_cmd, _STATE_SCRIPT.format(shas=shas))
+    if state[shas[0]] != {
+        "jobs": 1,
+        "state": "done",
+        "file_ok": True,
+        "derived_rows": 1,
+    }:
+        raise ScenarioFailed(f"the job did not end intact after the crash: {state}")
+
+
+def scenario_two_workers_take_different_jobs(base_url, api_key, fault_file, fixtures):
+    """Two queue runs overlap (held at the barrier right after taking their jobs).
+
+    Expectation: no job is converted twice, both runs did some of the work, and
+    every job ends done.
+    """
+    shell_cmd = _deriv_setup(fixtures)
+    shas = _make_photos(base_url, api_key, fixtures, "two", 6)
+    set_fault(_DERIVATIVE_FAULT, "derivative_after_claim:barrier:2:150")
+    env = {"INT_FILEMANAGER_FAULT_FILE": _DERIVATIVE_FAULT}
+    try:
+
+        def queue_run(delay=0):
+            # Two `odoo shell` processes starting at the very same moment collide in the
+            # old module's rule rebuild at registry load; the barrier does the overlap.
+            time.sleep(delay)
+            try:
+                return _run_odoo_shell(
+                    shell_cmd, _RUN_QUEUE_SCRIPT.format(log=_CONVERT_LOG), env
+                )
+            except ScenarioFailed as exc:
+                # run_concurrent reports OSError as a result of the racer.
+                raise OSError(str(exc)) from exc
+
+        results = run_concurrent(queue_run, lambda: queue_run(delay=15))
+    finally:
+        clear_fault(_DERIVATIVE_FAULT)
+        clear_barrier_dirs(_DERIVATIVE_FAULT)
+    if not all(r.ok for r in results):
+        raise ScenarioFailed(f"a queue run failed: {[r.error for r in results]}")
+    log = [entry for entry in _convert_log() if entry[1] in shas]
+    per_job = {}
+    for _pid, sha in log:
+        per_job[sha] = per_job.get(sha, 0) + 1
+    if sorted(per_job) != sorted(shas) or set(per_job.values()) != {1}:
+        raise ScenarioFailed(f"jobs must be converted exactly once: {per_job}")
+    if len({pid for pid, _sha in log}) != 2:
+        raise ScenarioFailed(f"both runs should have worked: {log}")
+    state = _run_odoo_shell(shell_cmd, _STATE_SCRIPT.format(shas=shas))
+    if any(state[sha].get("state") != "done" for sha in shas):
+        raise ScenarioFailed(f"not every job is done: {state}")
+
+
 SCENARIOS = {
     "same_new_name_twice": scenario_same_new_name_twice,
     "same_base_revision_twice": scenario_same_base_revision_twice,
@@ -876,6 +1147,11 @@ SCENARIOS = {
     "crash_create_file": scenario_crash_create_file,
     "crash_new_revision": scenario_crash_new_revision,
     "crash_rename_and_trash": scenario_crash_rename_and_trash,
+    "derivative_end_to_end": scenario_derivative_end_to_end,
+    "derivative_idle_while_converting": scenario_derivative_idle_while_converting,
+    "derivative_converter_down_then_up": scenario_derivative_converter_down_then_up,
+    "crash_derivative_after_link": scenario_crash_derivative_after_link,
+    "two_workers_take_different_jobs": scenario_two_workers_take_different_jobs,
 }
 
 
@@ -894,6 +1170,11 @@ def main():
         help="shell command that starts `odoo shell` against the SAME database (script"
         " on stdin); needed for blob_gc_against_reuse, which runs the cleanup job in"
         " its own process. The scenario stays PENDING without it.",
+    )
+    parser.add_argument(
+        "--converter-url",
+        help="base URL of the converter service (tools/fmconverter); the derivative"
+        " scenarios stay PENDING without it.",
     )
     parser.add_argument(
         "--upload-mb",
@@ -921,6 +1202,7 @@ def main():
     api_key = fixtures["api_key"]
     fixtures["_odoo_shell_cmd"] = args.odoo_shell_cmd
     fixtures["_upload_mb"] = args.upload_mb
+    fixtures["_converter_url"] = args.converter_url
 
     names = list(SCENARIOS) if args.scenario == "all" else [args.scenario]
     failures = []
