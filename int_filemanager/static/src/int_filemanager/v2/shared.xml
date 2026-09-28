@@ -134,6 +134,7 @@
       onRename="(item) => this.onUploadRename(item)"
       onCancel="(id) => this.uploads.cancel(id)"
       onClear="() => this.uploads.clearFinished()"
+      onDiscard="() => this.uploads.discardUnfinished()"
     />
   </t>
 

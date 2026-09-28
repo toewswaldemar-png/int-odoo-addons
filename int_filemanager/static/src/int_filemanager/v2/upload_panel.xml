@@ -28,9 +28,15 @@
       <div t-if="!ui.collapsed" class="card-body p-2 o_int_filemanager_upload_list">
         <div
           t-if="props.unfinishedCount and !visibleItems.length"
-          class="text-muted small p-1"
-          t-esc="unfinishedMessage"
-        />
+          class="d-flex align-items-start gap-2 text-muted small p-1"
+        >
+          <span class="flex-grow-1" t-esc="unfinishedMessage" />
+          <button
+            type="button"
+            class="btn btn-sm btn-link p-0 text-nowrap"
+            t-on-click="props.onDiscard"
+          >Discard</button>
+        </div>
         <div t-foreach="visibleItems" t-as="item" t-key="item.id" class="mb-2">
           <div class="d-flex align-items-center gap-2">
             <span

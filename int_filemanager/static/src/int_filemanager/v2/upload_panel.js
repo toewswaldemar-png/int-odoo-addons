@@ -16,6 +16,7 @@ export class IntFilemanagerV2UploadPanel extends Component {
     onRename: Function,
     onCancel: Function,
     onClear: Function,
+    onDiscard: Function,
   };
 
   setup() {

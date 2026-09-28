@@ -278,6 +278,12 @@ msgid "Details"
 msgstr "Details"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
+msgid "Discard"
+msgstr "Verwerfen"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__display_name

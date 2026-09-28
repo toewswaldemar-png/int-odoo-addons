@@ -128,6 +128,7 @@ export const uploadsService = {
       cancel: (id) => manager.cancel(id),
       renameAndRetry: (id, name) => manager.renameAndRetry(id, name),
       clearFinished: () => manager.clearFinished(),
+      discardUnfinished: () => manager.discardUnfinished(),
       rememberBase: (nodeId, revisionId) => downloadBases.remember(nodeId, revisionId),
       takeBase: (nodeId) => downloadBases.take(nodeId),
     };

@@ -52,7 +52,8 @@ export class UploadManager {
     const saved = this.storage.load();
     const fresh = {};
     for (const [key, entry] of Object.entries(saved)) {
-      if (this.now() - entry.updatedAt < KEEP_MS) {
+      // A refusal (rights, a name in use) is final: nothing to resume after a reload.
+      if (!entry.failed && this.now() - entry.updatedAt < KEEP_MS) {
         fresh[key] = entry;
       }
     }
@@ -61,11 +62,35 @@ export class UploadManager {
 
   /** Uploads that were started and never finished (kept across page reloads). */
   unfinished() {
-    return Object.values(this.storage.load()).map((entry) => ({
-      name: entry.name,
-      size: entry.size,
-      parentId: entry.parentId,
-    }));
+    return Object.values(this.storage.load())
+      .filter((entry) => !entry.failed)
+      .map((entry) => ({
+        name: entry.name,
+        size: entry.size,
+        parentId: entry.parentId,
+      }));
+  }
+
+  /** Forgets what earlier page loads left behind; uploads of this session stay. */
+  discardUnfinished() {
+    const live = new Set(this.items.map((item) => item.fp));
+    const saved = this.storage.load();
+    for (const fp of Object.keys(saved)) {
+      if (!live.has(fp)) {
+        delete saved[fp];
+      }
+    }
+    this.storage.save(saved);
+    this._emit();
+  }
+
+  // Kept while the session lasts, so a failed upload can still be renamed and retried.
+  _setFailed(item, failed) {
+    const saved = this.storage.load();
+    if (saved[item.fp]) {
+      saved[item.fp].failed = failed;
+      this.storage.save(saved);
+    }
   }
 
   snapshot() {
@@ -188,6 +213,9 @@ export class UploadManager {
         item.state = error.retryable ? ITEM_STATES.interrupted : ITEM_STATES.failed;
         item.error = error.message;
         item.retryable = Boolean(error.retryable);
+        if (!error.retryable) {
+          this._setFailed(item, true);
+        }
         this._sinceIdle.push(this.snapshot().find((s) => s.id === item.id));
       }
     }
@@ -216,6 +244,9 @@ export class UploadManager {
       )
     ) {
       return;
+    }
+    if (item.state === ITEM_STATES.failed) {
+      this._setFailed(item, false);
     }
     item.state = ITEM_STATES.queued;
     item.error = null;

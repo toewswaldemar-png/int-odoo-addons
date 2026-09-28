@@ -155,6 +155,57 @@ test("cancelling a queued file never starts it; cancelling a running one tells t
   assert.deepEqual(manager.unfinished(), []);
 });
 
+test("a refused upload is not counted as interrupted, not even after a reload", async () => {
+  const server = new FakeServer();
+  server.faults.fatalChunk.add(0);
+  const storage = memoryStorage();
+  const {manager} = setup({server, storage});
+  manager.add([{file: makeFile(4000, "no.bin"), parentId: 5, name: "no.bin"}]);
+  await settle();
+  assert.equal(manager.snapshot()[0].state, ITEM_STATES.failed);
+  assert.deepEqual(manager.unfinished(), []);
+
+  const reloaded = setup({server, storage});
+  assert.deepEqual(reloaded.manager.unfinished(), []);
+  assert.deepEqual(storage.peek(), {}, "nothing left in the storage");
+});
+
+test("a failed upload can still be retried in the session after being flagged", async () => {
+  const server = new FakeServer();
+  server.existingNames.add("taken.bin");
+  const storage = memoryStorage();
+  const {manager} = setup({server, storage});
+  manager.add([{file: makeFile(3000, "taken.bin"), parentId: 5, name: "taken.bin"}]);
+  await settle();
+  const [item] = manager.snapshot();
+  assert.equal(item.state, ITEM_STATES.failed);
+
+  manager.renameAndRetry(item.id, "taken (2).bin");
+  assert.equal(Object.values(storage.peek())[0].failed, false);
+  await settle();
+  assert.equal(manager.snapshot()[0].state, ITEM_STATES.done);
+});
+
+test("discardUnfinished forgets what earlier page loads left, not the running ones", async () => {
+  const server = new FakeServer();
+  for (let n = 1; n < 60; n++) {
+    server.faults.failChunkBefore.add(n);
+  }
+  const storage = memoryStorage({
+    left: {key: "k", name: "old.bin", size: 9, parentId: 5, updatedAt: Date.now()},
+  });
+  const {manager} = setup({server, storage});
+  manager.add([{file: makeFile(4000, "now.bin"), parentId: 5, name: "now.bin"}]);
+  await settle();
+  assert.equal(manager.unfinished().length, 2);
+
+  manager.discardUnfinished();
+  assert.deepEqual(
+    manager.unfinished().map((u) => u.name),
+    ["now.bin"]
+  );
+});
+
 test("clearFinished drops done and cancelled entries, keeps the rest", async () => {
   const server = new FakeServer();
   server.faults.fatalChunk.add(0);
