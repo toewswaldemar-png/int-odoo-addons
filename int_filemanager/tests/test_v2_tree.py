@@ -329,3 +329,236 @@ class TestTrashPurge(TransactionCase):
         self.Node._purge_expired_trash()
 
         self.assertFalse(node.with_context(active_test=False).exists())
+
+
+@tagged("post_install", "-at_install")
+class TestTreeNavigation(TransactionCase):
+    """What the sidebar tree, the breadcrumb and the upload conflict dialog ask
+    the server (Schritt 4b-1)."""
+
+    def setUp(self):
+        super().setUp()
+        env = self.env
+        Group = env["res.groups"].sudo()
+        self.group = Group.create({"name": "Nav group"})
+        self.narrow_group = Group.create({"name": "Nav narrow group"})
+        Scope = env["int_filemanager.scope"].sudo()
+        self.scope = Scope.create(
+            {"name": "Nav scope", "read_group_ids": [(4, self.group.id)]}
+        )
+        self.narrow_scope = Scope.create(
+            {
+                "name": "Nav narrow scope",
+                "read_group_ids": [(4, self.narrow_group.id), (4, self.group.id)],
+            }
+        )
+        base_group = env.ref("int_filemanager.group_filemanager_user")
+        Users = env["res.users"].sudo()
+        self.user = Users.create(
+            {
+                "name": "Nav user",
+                "login": "nav_user",
+                "group_ids": [(6, 0, [base_group.id, self.group.id])],
+            }
+        )
+        self.narrow_user = Users.create(
+            {
+                "name": "Nav narrow user",
+                "login": "nav_narrow_user",
+                "group_ids": [(6, 0, [base_group.id, self.narrow_group.id])],
+            }
+        )
+        self.Node = env["int_filemanager.node"].sudo()
+        self.root = self._folder("Root", None)
+        self.beta = self._folder("beta", self.root)
+        self.alpha = self._folder("Alpha", self.root)
+        self.deep = self._folder("deep", self.beta)
+        # only the narrow group may read below here: the user's chain must not show it
+        self.private = self._folder("private", self.root, self.narrow_scope)
+        self.private_child = self._folder("inner", self.private, self.narrow_scope)
+
+    def _folder(self, name, parent, scope=None):
+        return self.Node.create(
+            {
+                "name": name,
+                "parent_id": parent.id if parent else False,
+                "scope_id": (scope or self.scope).id,
+                "is_dir": True,
+            }
+        )
+
+    def _as(self, user):
+        return self.env["int_filemanager.node"].with_user(user)
+
+    def test_roots_are_listed_when_no_parent_is_given(self):
+        result = self._as(self.user).tree_children(False)
+        self.assertEqual([r["name"] for r in result], ["Root"])
+        self.assertTrue(result[0]["has_children"])
+
+    def test_children_are_sorted_without_case_and_flag_their_own_children(self):
+        result = self._as(self.user).tree_children(self.root.id)
+        # the narrow scope lists self.group too, so "private" is visible here; the
+        # test for unreadable folders below covers a real exclusion
+        self.assertEqual([r["name"] for r in result], ["Alpha", "beta", "private"])
+        flags = {r["name"]: r["has_children"] for r in result}
+        self.assertEqual(flags, {"Alpha": False, "beta": True, "private": True})
+
+    def test_files_and_trashed_folders_are_not_in_the_tree(self):
+        self.Node.create_new_revision(
+            self.Node.create(
+                {"name": "f.txt", "parent_id": self.root.id, "scope_id": self.scope.id}
+            ).id,
+            False,
+            b"x",
+            "op-nav-file",
+        )
+        self.Node.trash(self.alpha.id, "op-nav-trash")
+        result = self._as(self.user).tree_children(self.root.id)
+        self.assertEqual([r["name"] for r in result], ["beta", "private"])
+
+    def test_unreadable_folders_are_left_out_of_the_tree(self):
+        outsider_scope = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Nav closed scope",
+                    "read_group_ids": [(4, self.narrow_group.id)],
+                }
+            )
+        )
+        closed = self._folder("closed", self.root, outsider_scope)
+        result = self._as(self.user).tree_children(self.root.id)
+        self.assertNotIn(closed.name, [r["name"] for r in result])
+        narrow = self._as(self.narrow_user).tree_children(self.root.id)
+        self.assertIn("closed", [r["name"] for r in narrow])
+
+    def test_breadcrumb_runs_from_the_top_to_the_node(self):
+        crumbs = self._as(self.user).breadcrumb(self.deep.id)
+        self.assertEqual([c["name"] for c in crumbs], ["Root", "beta", "deep"])
+        self.assertEqual(crumbs[-1]["id"], self.deep.id)
+
+    def test_breadcrumb_leaves_out_ancestors_the_caller_cannot_read(self):
+        # the narrow user reads only the narrow scope: the chain starts at "private"
+        crumbs = self._as(self.narrow_user).breadcrumb(self.private_child.id)
+        self.assertEqual([c["name"] for c in crumbs], ["private", "inner"])
+
+    def test_breadcrumb_of_a_missing_or_unreadable_node(self):
+        self.assertEqual(self._as(self.user).breadcrumb(999999999), [])
+        with self.assertRaises(AccessError):
+            self._as(self.narrow_user).breadcrumb(self.deep.id)
+
+    def test_existing_names_match_without_case_and_nfc(self):
+        self.Node.create(
+            {
+                "name": "R\u00fcckblick.txt",
+                "parent_id": self.root.id,
+                "scope_id": self.scope.id,
+            }
+        )
+        result = self._as(self.user).existing_names(
+            self.root.id,
+            ["ALPHA", "rU\u0308CKBLICK.TXT", "not-there.txt"],
+        )
+        self.assertEqual(
+            sorted(r["name"] for r in result), ["Alpha", "R\u00fcckblick.txt"]
+        )
+        alpha = next(r for r in result if r["name"] == "Alpha")
+        self.assertTrue(alpha["is_dir"])
+        self.assertFalse(alpha["current_revision_id"])
+
+    def test_existing_names_reports_the_current_revision_of_files(self):
+        node = self.Node.create(
+            {"name": "doc.txt", "parent_id": self.root.id, "scope_id": self.scope.id}
+        )
+        created = self.Node.create_new_revision(node.id, False, b"v1", "op-nav-doc")
+        result = self._as(self.user).existing_names(self.root.id, ["doc.txt"])
+        self.assertEqual(result[0]["current_revision_id"], created["revision_id"])
+
+    def test_existing_names_at_the_root_level_and_for_no_names(self):
+        self.assertEqual(
+            [r["name"] for r in self._as(self.user).existing_names(False, ["root"])],
+            ["Root"],
+        )
+        self.assertEqual(self._as(self.user).existing_names(self.root.id, []), [])
+
+    def test_existing_names_never_shows_what_the_caller_cannot_read(self):
+        result = self._as(self.narrow_user).existing_names(self.private.id, ["inner"])
+        self.assertEqual([r["name"] for r in result], ["inner"])
+        with self.assertRaises(AccessError):
+            self._as(self.narrow_user).existing_names(self.deep.id, ["x"])
+
+    def test_mtime_follows_the_current_revision(self):
+        node = self.Node.create(
+            {"name": "m.txt", "parent_id": self.root.id, "scope_id": self.scope.id}
+        )
+        self.assertFalse(node.mtime)
+        created = self.Node.create_new_revision(node.id, False, b"v1", "op-nav-m")
+        revision = self.env["int_filemanager.revision"].browse(created["revision_id"])
+        self.assertEqual(node.mtime, revision.create_date)
+
+
+@tagged("post_install", "-at_install")
+class TestTrashListButtons(TransactionCase):
+    """The two buttons of the trash list call these node methods."""
+
+    def setUp(self):
+        super().setUp()
+        Group = self.env["res.groups"].sudo()
+        self.group = Group.create({"name": "Trash buttons group"})
+        self.purge_group = Group.create({"name": "Trash buttons purge group"})
+        scope = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Trash buttons scope",
+                    "read_group_ids": [(4, self.group.id)],
+                    "write_group_ids": [(4, self.group.id)],
+                    "purge_group_ids": [(4, self.purge_group.id)],
+                }
+            )
+        )
+        base = self.env.ref("int_filemanager.group_filemanager_user")
+        Users = self.env["res.users"].sudo()
+        self.user = Users.create(
+            {
+                "name": "Trash buttons user",
+                "login": "trash_buttons_user",
+                "group_ids": [(6, 0, [base.id, self.group.id])],
+            }
+        )
+        self.purger = Users.create(
+            {
+                "name": "Trash buttons purger",
+                "login": "trash_buttons_purger",
+                "group_ids": [(6, 0, [base.id, self.group.id, self.purge_group.id])],
+            }
+        )
+        self.folder = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "tb", "scope_id": scope.id, "is_dir": True})
+        )
+        self.node = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create(
+                {"name": "x.txt", "scope_id": scope.id, "parent_id": self.folder.id}
+            )
+        )
+        self.env["int_filemanager.node"].sudo().trash(self.node.id, "op-tb-trash")
+
+    def test_restore_button(self):
+        self.node.with_user(self.user).with_context(active_test=False).action_restore()
+        self.assertTrue(self.node.active)
+
+    def test_delete_permanently_button_needs_the_purge_right(self):
+        with self.assertRaises(AccessError):
+            self.node.with_user(self.user).with_context(
+                active_test=False
+            ).action_delete_permanently()
+        self.node.with_user(self.purger).with_context(
+            active_test=False
+        ).action_delete_permanently()
+        self.assertFalse(self.node.with_context(active_test=False).exists())

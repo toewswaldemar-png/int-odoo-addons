@@ -2,6 +2,7 @@ import io
 import logging
 import os
 import unicodedata
+import uuid
 from datetime import timedelta
 
 import psycopg2
@@ -65,6 +66,7 @@ class IntFilemanagerNode(models.Model):
         string="Tags",
     )
     status_id = fields.Many2one("int_filemanager.status", ondelete="set null")
+    status_color = fields.Integer(related="status_id.color")
     partner_id = fields.Many2one("res.partner", ondelete="set null", index=True)
     revision_ids = fields.One2many("int_filemanager.revision", "node_id")
     # Portal contacts who may download this file from /my/files, independent of any
@@ -91,6 +93,103 @@ class IntFilemanagerNode(models.Model):
         '(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active',
         "A file or folder with this name already exists here.",
     )
+
+    # When the content last changed (the current revision's creation), what the file
+    # list shows as "modified"; write_date would also move on a tag or status edit.
+    mtime = fields.Datetime(related="current_revision_id.create_date", store=True)
+    # Active links only; created and revoked through int_filemanager.share methods.
+    share_ids = fields.One2many(
+        "int_filemanager.share", "node_id", domain=[("revoked_at", "=", False)]
+    )
+
+    @api.model
+    def tree_children(self, parent_id):
+        """The sub-FOLDERS directly below *parent_id* (the roots for a falsy id) that
+        the caller can see, for the sidebar tree - one level per call, so what it
+        costs grows with the level that is opened, not with the size of the tree.
+        has_children needs one more query for the whole level, not one per folder."""
+        folders = self.search(
+            [("parent_id", "=", parent_id or False), ("is_dir", "=", True)]
+        )
+        with_children = set()
+        if folders:
+            grouped = self._read_group(
+                [("parent_id", "in", folders.ids), ("is_dir", "=", True)],
+                ["parent_id"],
+                ["__count"],
+            )
+            with_children = {parent.id for parent, _count in grouped}
+        return [
+            {"id": f.id, "name": f.name, "has_children": f.id in with_children}
+            for f in sorted(folders, key=lambda f: f.name.casefold())
+        ]
+
+    @api.model
+    def breadcrumb(self, node_id):
+        """[{id, name}] from the topmost folder the caller can see down to the node
+        itself. A caller whose scope starts below the real root simply gets a shorter
+        chain - ancestors they cannot read are left out, not revealed."""
+        node = self.browse(node_id).exists()
+        if not node:
+            return []
+        node.check_access("read")
+        ids = [int(i) for i in node.parent_path.split("/") if i]
+        visible = self.with_context(active_test=False).search([("id", "in", ids)])
+        names = {n.id: n.name for n in visible}
+        return [{"id": i, "name": names[i]} for i in ids if i in names]
+
+    @api.model
+    def existing_names(self, parent_id, names):
+        """Which of *names* are already taken below *parent_id*, compared the way the
+        unique index does (without case, NFC), for the upload conflict dialog. The raw
+        query only finds candidates; what the caller may see is decided by search()."""
+        names = [unicodedata.normalize("NFC", n) for n in names or []]
+        if not names:
+            return []
+        if parent_id:
+            self.browse(parent_id).check_access("read")
+        cr = self.env.cr
+        cr.execute(
+            SQL(
+                """
+                SELECT id FROM int_filemanager_node
+                WHERE parent_id IS NOT DISTINCT FROM %s AND active
+                  AND lower(name COLLATE "und-x-icu") IN (
+                      SELECT lower(x COLLATE "und-x-icu") FROM unnest(%s::text[]) AS x
+                  )
+                """,
+                parent_id or None,
+                names,
+            )
+        )
+        found = self.search([("id", "in", [row[0] for row in cr.fetchall()])])
+        return [
+            {
+                "id": n.id,
+                "name": n.name,
+                "is_dir": n.is_dir,
+                "current_revision_id": n.current_revision_id.id or False,
+            }
+            for n in found
+        ]
+
+    def action_restore(self):
+        """Button of the trash list; one operation key per click (I9)."""
+        for node in self:
+            self.restore(node.id, f"ui-restore-{uuid.uuid4().hex}")
+        return True
+
+    def action_delete_permanently(self):
+        """Button of the trash list (asks first); needs the purge right (Konzept 12)."""
+        for node in self:
+            self.delete_permanently(node.id, f"ui-delete-{uuid.uuid4().hex}")
+        return True
+
+    def action_create_share_link(self):
+        """Button of the share dialog form; the right is checked by create_link."""
+        self.ensure_one()
+        self.env["int_filemanager.share"].create_link(self.id)
+        return True
 
     def _display_path(self):
         """ "/root/sub/file.txt" for logs and messages. Ancestors are read with sudo:

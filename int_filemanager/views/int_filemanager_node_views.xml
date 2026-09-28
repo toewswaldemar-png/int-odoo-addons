@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+  <!-- The v2 file explorer on int_filemanager.node (Schritt 4b). The JS classes live in
+         static/src/int_filemanager/v2/; folder navigation is not a domain of the action but
+         of the search model (see int_filemanager_v2_search_model.js). -->
+  <record id="int_filemanager_node_search" model="ir.ui.view">
+    <field name="name">int_filemanager.node.search</field>
+    <field name="model">int_filemanager.node</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name" string="Name" />
+        <field name="tag_ids" string="Tags" />
+        <field name="status_id" />
+        <field name="partner_id" />
+        <filter
+          name="filter_folders"
+          string="Folders only"
+          domain="[('is_dir', '=', True)]"
+        />
+        <filter
+          name="filter_files"
+          string="Files only"
+          domain="[('is_dir', '=', False)]"
+        />
+        <separator />
+        <!-- Marker without a domain: int_filemanager_v2_search_model.js reads its name to
+             switch between "this folder" and "this folder and everything below it". -->
+        <filter name="filter_search_recursive" string="Include subfolders" />
+        <separator />
+        <filter
+          name="filter_tagged"
+          string="With tags"
+          domain="[('tag_ids', '!=', False)]"
+        />
+        <filter
+          name="filter_untagged"
+          string="Without tags"
+          domain="[('tag_ids', '=', False)]"
+        />
+        <separator />
+        <filter
+          name="groupby_status_id"
+          string="Status"
+          context="{'group_by': 'status_id'}"
+        />
+      </search>
+    </field>
+  </record>
+
+  <record id="int_filemanager_node_list" model="ir.ui.view">
+    <field name="name">int_filemanager.node.list</field>
+    <field name="model">int_filemanager.node</field>
+    <field name="arch" type="xml">
+      <list
+        js_class="int_filemanager_v2_list"
+        default_order="is_dir desc, name"
+        create="false"
+        delete="false"
+      >
+        <field name="is_dir" column_invisible="1" />
+        <field name="mime" column_invisible="1" />
+        <field name="parent_id" column_invisible="1" />
+        <field name="current_revision_id" column_invisible="1" />
+        <field name="status_color" column_invisible="1" />
+        <field
+          name="status_id"
+          widget="badge"
+          options="{'color_field': 'status_color'}"
+          optional="show"
+        />
+        <field name="name" widget="int_filemanager_v2_name" />
+        <field
+          name="size"
+          string="Size"
+          invisible="is_dir"
+          optional="show"
+          widget="int_filemanager_v2_size"
+        />
+        <field name="mtime" string="Modified" optional="show" />
+        <field name="tag_ids" widget="many2many_tags" optional="show" />
+        <field name="partner_id" optional="hide" />
+      </list>
+    </field>
+  </record>
+
+  <record id="int_filemanager_node_kanban" model="ir.ui.view">
+    <field name="name">int_filemanager.node.kanban</field>
+    <field name="model">int_filemanager.node</field>
+    <field name="arch" type="xml">
+      <kanban js_class="int_filemanager_v2_kanban" default_order="is_dir desc, name">
+        <field name="is_dir" />
+        <field name="mime" />
+        <field name="parent_id" />
+        <field name="current_revision_id" />
+        <field name="status_color" />
+        <templates>
+          <t t-name="card">
+            <div class="o_int_filemanager_kanban_body p-2">
+              <field
+                name="name"
+                widget="int_filemanager_v2_name"
+                class="o_int_filemanager_kanban_cover_fallback"
+              />
+              <field
+                name="status_id"
+                widget="badge"
+                options="{'color_field': 'status_color'}"
+              />
+              <field name="tag_ids" widget="many2many_tags" />
+              <field name="partner_id" />
+            </div>
+          </t>
+        </templates>
+      </kanban>
+    </field>
+  </record>
+
+  <record id="action_int_filemanager_node" model="ir.actions.act_window">
+    <field name="name">Files</field>
+    <field name="path">files</field>
+    <field name="res_model">int_filemanager.node</field>
+    <field name="view_mode">list,kanban</field>
+    <!-- Without this Odoo picks its own default view on small screens (action_service.js). -->
+    <field name="mobile_view_mode">list</field>
+    <field name="view_id" ref="int_filemanager_node_list" />
+    <field name="search_view_id" ref="int_filemanager_node_search" />
+    <field name="context">{}</field>
+  </record>
+
+  <!-- Trash: only the roots of what was deleted (below an active folder or at the top). -->
+  <record id="int_filemanager_node_trash_list" model="ir.ui.view">
+    <field name="name">int_filemanager.node.trash.list</field>
+    <field name="model">int_filemanager.node</field>
+    <field name="arch" type="xml">
+      <list create="false" delete="false" edit="false" default_order="trashed_at desc">
+        <field name="is_dir" column_invisible="1" />
+        <field name="name" />
+        <field name="parent_id" string="Original location" />
+        <field name="trashed_at" string="Deleted on" />
+        <field
+          name="size"
+          string="Size"
+          invisible="is_dir"
+          widget="int_filemanager_v2_size"
+        />
+        <button
+          name="action_restore"
+          type="object"
+          string="Restore"
+          icon="fa-undo"
+          title="Put it back where it was"
+        />
+        <button
+          name="action_delete_permanently"
+          type="object"
+          string="Delete permanently"
+          icon="fa-times"
+          title="Delete permanently"
+          confirm="This cannot be undone. Delete permanently?"
+        />
+      </list>
+    </field>
+  </record>
+
+  <record id="action_int_filemanager_node_trash" model="ir.actions.act_window">
+    <field name="name">Trash</field>
+    <field name="res_model">int_filemanager.node</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="int_filemanager_node_trash_list" />
+    <field
+      name="domain"
+    >[('removal_reason', '=', 'trash'), '|', ('parent_id', '=', False), ('parent_id.active', '=', True)]</field>
+    <field name="context">{'active_test': False}</field>
+  </record>
+
+  <!-- Share dialog: portal contacts and anonymous links, opened from the explorer. -->
+  <record id="int_filemanager_node_share_form" model="ir.ui.view">
+    <field name="name">int_filemanager.node.share.form</field>
+    <field name="model">int_filemanager.node</field>
+    <field name="arch" type="xml">
+      <form string="Share">
+        <sheet>
+          <group>
+            <field name="name" readonly="1" />
+          </group>
+          <group string="Shared with portal contacts">
+            <field
+              name="shared_partner_ids"
+              widget="many2many_tags"
+              nolabel="1"
+              colspan="2"
+            />
+          </group>
+          <group string="Links without login">
+            <field name="share_ids" nolabel="1" colspan="2" readonly="1">
+              <list create="false" delete="false" edit="false">
+                <field name="url" widget="CopyClipboardURL" />
+                <field name="expires_at" string="Valid until" />
+                <field name="download_count" string="Downloads" />
+                <button
+                  name="action_revoke"
+                  type="object"
+                  string="Revoke"
+                  icon="fa-ban"
+                  title="Revoke this link"
+                />
+              </list>
+            </field>
+            <button
+              name="action_create_share_link"
+              type="object"
+              string="Create link"
+              class="btn-primary"
+              colspan="2"
+            />
+          </group>
+        </sheet>
+        <footer>
+          <button string="Save" special="save" class="btn-primary" />
+          <button string="Close" special="cancel" />
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_int_filemanager_node_share" model="ir.actions.act_window">
+    <field name="name">Share</field>
+    <field name="res_model">int_filemanager.node</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="int_filemanager_node_share_form" />
+    <field name="target">new</field>
+  </record>
+
+  <menuitem
+    id="menu_int_filemanager_v2_root"
+    name="Files"
+    action="action_int_filemanager_node"
+    groups="int_filemanager.group_filemanager_user"
+    sequence="21"
+  />
+</odoo>

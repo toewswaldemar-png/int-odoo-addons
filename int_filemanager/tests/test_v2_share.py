@@ -219,3 +219,17 @@ class TestV2Share(HttpCase):
         self.node.write({"shared_partner_ids": [(4, self.portal_user.partner_id.id)]})
         with self.assertRaises(AccessError):
             self.env["int_filemanager.node"].with_user(self.portal_user).search([])
+
+    # --- the share dialog's buttons ---------------------------------------------
+
+    def test_dialog_buttons_create_and_revoke_a_link(self):
+        node = self.node.with_user(self.writer)
+        node.action_create_share_link()
+        links = node.share_ids
+        self.assertEqual(len(links), 1)
+        self.assertIn("/int_filemanager/v2/share/", links.url)
+
+        links.action_revoke()
+
+        node.invalidate_recordset(["share_ids"])
+        self.assertFalse(node.share_ids)

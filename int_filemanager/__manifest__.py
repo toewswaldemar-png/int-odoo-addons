@@ -24,6 +24,7 @@
         "views/filemanager_file_list_view.xml",
         "views/filemanager_file_kanban_view.xml",
         "views/menu.xml",
+        "views/int_filemanager_node_views.xml",
         "views/res_config_settings_views.xml",
         "views/filemanager_protected_folder_views.xml",
         "views/filemanager_status_views.xml",

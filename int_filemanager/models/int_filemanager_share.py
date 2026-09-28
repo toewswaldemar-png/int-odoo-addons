@@ -87,6 +87,12 @@ class IntFilemanagerShare(models.Model):
             "expires_at": fields.Datetime.to_string(share.expires_at),
         }
 
+    def action_revoke(self):
+        """Button in the share dialog's list of links."""
+        for share in self:
+            self.revoke_link(share.id)
+        return True
+
     @api.model
     def revoke_link(self, share_id):
         share = self.browse(share_id).exists()
