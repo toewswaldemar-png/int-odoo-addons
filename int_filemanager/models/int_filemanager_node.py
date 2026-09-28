@@ -14,6 +14,7 @@ from odoo.tools import SQL
 from odoo.tools.mimetypes import guess_mimetype
 
 from .. import blobstore, fault
+from . import int_filemanager_derivative as derivative
 
 _logger = logging.getLogger(__name__)
 
@@ -83,6 +84,16 @@ class IntFilemanagerNode(models.Model):
     )
     # Set by trash() for the whole subtree; the trash purge counts from it.
     trashed_at = fields.Datetime(index=True)
+    # Only the state: the explorer builds the thumbnail URL from the revision itself.
+    preview_state = fields.Selection(
+        [
+            ("ready", "Ready"),
+            ("pending", "Pending"),
+            ("failed", "Failed"),
+            ("none", "None"),
+        ],
+        compute="_compute_preview_state",
+    )
 
     # Names are unique per folder regardless of case, like on Windows. NULLS NOT
     # DISTINCT: otherwise two roots (parent_id IS NULL) would never collide.
@@ -118,6 +129,50 @@ class IntFilemanagerNode(models.Model):
             node.is_scope_root = (
                 not node.parent_id or node.parent_id.scope_id != node.scope_id
             )
+
+    def _compute_preview_state(self):
+        blobs = self.sudo().current_revision_id.blob_id
+        states = {
+            d.source_blob_id.id: d.state
+            for d in self.env["int_filemanager.derivative"]
+            .sudo()
+            .search([("source_blob_id", "in", blobs.ids), ("kind", "=", "tile")])
+        }
+        for node in self:
+            blob = node.sudo().current_revision_id.blob_id
+            if node.is_dir or not blob:
+                node.preview_state = "none"
+                continue
+            state = states.get(blob.id)
+            if state == "done":
+                node.preview_state = "ready"
+            elif state == "failed":
+                node.preview_state = "failed"
+            elif state == "not_applicable" or node.mime not in derivative.TILE_MIMES:
+                node.preview_state = "none"
+            else:
+                # No row yet: the cron has not queued it, but it will.
+                node.preview_state = "pending"
+
+    @api.model
+    def request_previews(self, node_ids):
+        """Move the thumbnails of the nodes on screen to the front of the queue.
+
+        Does not wait for them: the explorer shows an icon until they exist.
+        """
+        if not isinstance(node_ids, list | tuple):
+            return 0
+        ids = [i for i in node_ids if type(i) is int][: derivative.MAX_REQUESTED_NODES]
+        # search() applies the caller's rights; the queue itself needs sudo.
+        nodes = self.search([("id", "in", ids), ("is_dir", "=", False)])
+        blobs = nodes.sudo().current_revision_id.blob_id
+        jobs = (
+            self.env["int_filemanager.derivative"]
+            .sudo()
+            .search([("source_blob_id", "in", blobs.ids), ("state", "=", "pending")])
+        )
+        jobs.write({"priority": derivative.VISIBLE_PRIORITY})
+        return len(jobs)
 
     @api.model
     def _readable_scope_ids(self):

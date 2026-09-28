@@ -82,8 +82,8 @@ class IntFilemanagerBlob(models.Model):
         cr.execute("SET LOCAL lock_timeout TO '10s'")
         try:
             cr.execute(
-                "LOCK int_filemanager_blob, int_filemanager_revision"
-                " IN SHARE ROW EXCLUSIVE MODE"
+                "LOCK int_filemanager_blob, int_filemanager_revision,"
+                " int_filemanager_derivative IN SHARE ROW EXCLUSIVE MODE"
             )
         except psycopg2.errors.LockNotAvailable:
             cr.rollback()
@@ -105,11 +105,27 @@ class IntFilemanagerBlob(models.Model):
         # The SQL below must see pending ORM writes.
         self.env.flush_all()
         grace_hours = self._gc_grace_hours()
+        # Derived files of a blob nothing refers to any more go first; their own
+        # blobs are then unreferenced and follow after their grace period.
+        cr.execute(
+            """
+            DELETE FROM int_filemanager_derivative d
+            USING int_filemanager_blob b
+            WHERE b.id = d.source_blob_id
+              AND NOT EXISTS (
+                  SELECT 1 FROM int_filemanager_revision WHERE blob_id = b.id)
+              AND b.last_used < (now() at time zone 'utc') - make_interval(hours => %s)
+            """,
+            [grace_hours],
+        )
         cr.execute(
             """
             SELECT id, sha256 FROM int_filemanager_blob b
             WHERE NOT EXISTS (
                 SELECT 1 FROM int_filemanager_revision WHERE blob_id = b.id
+            ) AND NOT EXISTS (
+                SELECT 1 FROM int_filemanager_derivative
+                WHERE source_blob_id = b.id OR derived_blob_id = b.id
             ) AND last_used < (now() at time zone 'utc') - make_interval(hours => %s)
             """,
             [grace_hours],

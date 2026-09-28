@@ -39,6 +39,7 @@
         "data/int_filemanager_upload_cron.xml",
         "data/int_filemanager_zip_cron.xml",
         "data/int_filemanager_node_cron.xml",
+        "data/int_filemanager_derivative_cron.xml",
     ],
     "assets": {
         "web.assets_backend": [

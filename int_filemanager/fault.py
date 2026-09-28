@@ -34,7 +34,8 @@ def fault_point(stage):
 
     - ``<stage>``: raise FaultInjected
     - ``<stage>:exit``: os._exit(137)
-    - ``<stage>:barrier:<n>``: wait until ``n`` processes reached this stage
+    - ``<stage>:barrier:<n>[:<seconds>]``: wait until ``n`` processes reached this
+      stage (at most that long, 30 s by default)
     - ``<stage>:hold:<seconds>``: the first process to arrive sleeps that long
       (or until ``<fault file>.release.<stage>`` exists); later ones pass
     """
@@ -56,8 +57,9 @@ def fault_point(stage):
     if mode == "exit":
         os._exit(137)
     elif mode.startswith("barrier:"):
-        count = int(mode.split(":", 2)[1])
-        wait_at_barrier(f"{path}.barrier.{stage}", count)
+        parts = mode.split(":")
+        kwargs = {"timeout": float(parts[2])} if len(parts) > 2 else {}
+        wait_at_barrier(f"{path}.barrier.{stage}", int(parts[1]), **kwargs)
     elif mode.startswith("hold:"):
         seconds = float(mode.split(":", 2)[1])
         try:

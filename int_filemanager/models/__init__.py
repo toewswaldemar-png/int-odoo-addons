@@ -16,6 +16,7 @@ from . import int_filemanager_scope
 from . import int_filemanager_node
 from . import int_filemanager_blob
 from . import int_filemanager_revision
+from . import int_filemanager_derivative
 from . import int_filemanager_operation
 from . import int_filemanager_upload
 from . import int_filemanager_zip_job

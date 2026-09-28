@@ -11,6 +11,7 @@ deleted under it.
 """
 
 import base64
+import contextlib
 import hashlib
 import os
 
@@ -72,6 +73,12 @@ def mark_for_gc(env, sha256):
     path = os.path.join(checklist_dir(env), sha256)
     open(path, "ab").close()
     os.utime(path, None)
+
+
+def remove_if_exists(path):
+    """Delete a temp file; a file that is already gone is the goal, not an error."""
+    with contextlib.suppress(FileNotFoundError):
+        os.unlink(path)
 
 
 def hash_file(path):

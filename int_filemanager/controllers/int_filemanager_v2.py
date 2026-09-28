@@ -19,6 +19,9 @@ from .. import blobstore, zip_stream
 # The client sends 4 MiB chunks (bigger ones make the workers grow too much); the
 # route accepts a little more than that and nothing beyond.
 CHUNK_MAX_BYTES = 5 * 1024 * 1024
+# A revision never changes, so a thumbnail may stay in the browser for a while.
+PREVIEW_MAX_AGE_S = 3600
+PREVIEW_KINDS = ("tile",)
 
 
 class IntFilemanagerV2Controller(http.Controller):
@@ -63,6 +66,48 @@ class IntFilemanagerV2Controller(http.Controller):
         # The checks above authorise the blob; blobs have no rights of their own.
         stream = self._blob_stream(node, revision)
         return stream.get_response(as_attachment=disposition != "inline")
+
+    @http.route(
+        "/int_filemanager/v2/preview/<int:revision_id>/<string:kind>",
+        type="http",
+        auth="user",
+        methods=["GET"],
+    )
+    def preview(self, revision_id, kind):
+        """Serve a finished thumbnail of a revision.
+
+        The rights on the revision decide; the derived file itself has no rights
+        (users cannot read that model). Without a finished result: 404, the
+        explorer shows its icon.
+        """
+        if kind not in PREVIEW_KINDS:
+            raise NotFound
+        revision = request.env["int_filemanager.revision"].browse(revision_id).exists()
+        if not revision:
+            raise NotFound
+        revision.check_access("read")
+        # The check above authorises the blob and what was derived from it.
+        derivative = request.env["int_filemanager.derivative"]._tile_for_blob(
+            revision.sudo().blob_id
+        )
+        if not derivative:
+            raise NotFound
+        blob = derivative.derived_blob_id
+        stream = http.Stream(
+            type="path",
+            path=blobstore.blob_path(request.env, blob.sha256),
+            mimetype=derivative.mime,
+            size=int(blob.size),
+            last_modified=derivative.finished_at.replace(
+                tzinfo=timezone.utc
+            ).timestamp(),
+            etag=blob.sha256,
+            max_age=PREVIEW_MAX_AGE_S,
+            public=False,
+        )
+        response = stream.get_response(as_attachment=False)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
 
     @http.route(
         "/int_filemanager/v2/upload/<int:upload_id>/chunk",
