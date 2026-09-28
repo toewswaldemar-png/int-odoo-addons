@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+  <t t-name="int_filemanager.v2.PartnerDialog">
+    <Record
+      resModel="'int_filemanager.node'"
+      resId="props.nodeId"
+      fields="fields"
+      activeFields="activeFields"
+      mode="'edit'"
+      t-slot-scope="data"
+    >
+      <Dialog title="'Link to a contact'" size="'md'">
+        <div class="p-2">
+          <Field name="'partner_id'" record="data.record" type="'many2one'" />
+        </div>
+        <t t-set-slot="footer">
+          <button
+            class="btn btn-primary"
+            t-on-click="() => this.onSave(data.record)"
+          >Save</button>
+          <button
+            t-if="data.record.data.partner_id"
+            class="btn btn-link text-danger"
+            t-on-click="() => this.onClear(data.record)"
+          >Remove link</button>
+          <button
+            class="btn btn-secondary"
+            t-on-click="() => this.props.close()"
+          >Cancel</button>
+        </t>
+      </Dialog>
+    </Record>
+  </t>
+</templates>

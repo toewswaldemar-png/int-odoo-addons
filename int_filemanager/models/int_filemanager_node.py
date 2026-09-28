@@ -102,15 +102,74 @@ class IntFilemanagerNode(models.Model):
         "int_filemanager.share", "node_id", domain=[("revoked_at", "=", False)]
     )
 
+    # A root, or a folder whose rights scope differs from its parent's: the places where
+    # a user's access can begin. Kept as a stored flag so that "what is the top of this
+    # user's tree" only has to look at these few rows, not at every node.
+    is_scope_root = fields.Boolean(
+        compute="_compute_is_scope_root", store=True, index=True
+    )
+    # True for what the caller sees at the top of the tree: a real root, or a scope root
+    # whose parent the caller cannot read (a scope that starts below the real root).
+    # Searchable, so the explorer's "nothing selected" view is one plain domain.
+    is_visible_top = fields.Boolean(
+        compute="_compute_is_visible_top", search="_search_is_visible_top"
+    )
+
+    @api.depends("parent_id", "scope_id", "parent_id.scope_id")
+    def _compute_is_scope_root(self):
+        for node in self:
+            node.is_scope_root = (
+                not node.parent_id or node.parent_id.scope_id != node.scope_id
+            )
+
+    @api.model
+    def _readable_scope_ids(self):
+        Scope = self.env["int_filemanager.scope"].sudo()
+        groups = self.env.user.all_group_ids.ids
+        return Scope.search([("read_group_ids", "in", groups)]).ids
+
+    @api.depends_context("uid")
+    def _compute_is_visible_top(self):
+        readable = set(self._readable_scope_ids())
+        for node in self:
+            node.is_visible_top = (
+                not node.parent_id or node.parent_id.sudo().scope_id.id not in readable
+            )
+
+    def _search_is_visible_top(self, operator, value):
+        if operator not in ("=", "!=") or not isinstance(value, bool):
+            raise UserError(self.env._("Unsupported search on the top of the tree."))
+        # Raw SQL below: what the ORM still holds back must reach the database first.
+        self.flush_model()
+        cr = self.env.cr
+        cr.execute(
+            SQL(
+                """
+                SELECT n.id FROM int_filemanager_node n
+                LEFT JOIN int_filemanager_node p ON p.id = n.parent_id
+                WHERE n.is_scope_root
+                  AND (n.parent_id IS NULL OR p.scope_id <> ALL(%s))
+                """,
+                self._readable_scope_ids() or [0],
+            )
+        )
+        top_ids = [row[0] for row in cr.fetchall()]
+        # search() applies the caller's rights on top of this list of candidates.
+        return [("id", "in" if (operator == "=") == value else "not in", top_ids)]
+
     @api.model
     def tree_children(self, parent_id):
-        """The sub-FOLDERS directly below *parent_id* (the roots for a falsy id) that
-        the caller can see, for the sidebar tree - one level per call, so what it
-        costs grows with the level that is opened, not with the size of the tree.
-        has_children needs one more query for the whole level, not one per folder."""
-        folders = self.search(
-            [("parent_id", "=", parent_id or False), ("is_dir", "=", True)]
+        """The sub-FOLDERS directly below *parent_id* (the top of what the caller can
+        see for a falsy id) that the caller can see, for the sidebar tree - one level
+        per call, so what it costs grows with the level that is opened, not with the
+        size of the tree. has_children needs one more query for the whole level, not
+        one per folder."""
+        level = (
+            [("parent_id", "=", parent_id)]
+            if parent_id
+            else [("is_visible_top", "=", True)]
         )
+        folders = self.search([*level, ("is_dir", "=", True)])
         with_children = set()
         if folders:
             grouped = self._read_group(
@@ -148,6 +207,7 @@ class IntFilemanagerNode(models.Model):
             return []
         if parent_id:
             self.browse(parent_id).check_access("read")
+        self.flush_model()
         cr = self.env.cr
         cr.execute(
             SQL(

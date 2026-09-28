@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+  <t t-name="int_filemanager.v2.ConflictDialog">
+    <Dialog title="'Names already in use'" size="'md'">
+      <div class="p-2">
+        <p class="text-muted">
+          These names already exist in the folder. Choose what happens to each file.
+        </p>
+        <div class="d-flex gap-2 mb-3 flex-wrap">
+          <button
+            type="button"
+            class="btn btn-sm btn-secondary"
+            t-on-click="() => this.setAll(actions.replace)"
+          >Replace all</button>
+          <button
+            type="button"
+            class="btn btn-sm btn-secondary"
+            t-on-click="() => this.setAll(actions.keepBoth)"
+          >Keep both for all</button>
+          <button
+            type="button"
+            class="btn btn-sm btn-secondary"
+            t-on-click="() => this.setAll(actions.skip)"
+          >Skip all</button>
+        </div>
+        <div class="o_int_filemanager_conflict_list">
+          <t t-foreach="props.conflicts" t-as="conflict" t-key="conflict_index">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span
+                class="text-truncate flex-grow-1"
+                t-att-title="conflict.name"
+                t-esc="conflict.name"
+              />
+              <select
+                class="form-select form-select-sm w-auto"
+                t-on-change="(ev) => this.setChoice(conflict_index, ev.target.value)"
+              >
+                <option
+                  t-att-value="actions.replace"
+                  t-att-disabled="conflict.isDir"
+                  t-att-selected="state.choices[conflict_index] === actions.replace"
+                >
+                  Replace (new version)
+                </option>
+                <option
+                  t-att-value="actions.keepBoth"
+                  t-att-selected="state.choices[conflict_index] === actions.keepBoth"
+                >Keep both</option>
+                <option
+                  t-att-value="actions.skip"
+                  t-att-selected="state.choices[conflict_index] === actions.skip"
+                >Skip</option>
+              </select>
+            </div>
+          </t>
+        </div>
+      </div>
+      <t t-set-slot="footer">
+        <button class="btn btn-primary" t-on-click="onConfirm">Continue</button>
+        <button class="btn btn-secondary" t-on-click="onCancel">Cancel upload</button>
+      </t>
+    </Dialog>
+  </t>
+</templates>

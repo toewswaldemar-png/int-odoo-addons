@@ -125,3 +125,37 @@ export function errorMessage(error) {
     String(error)
   );
 }
+
+/**
+ * URL of the download route for a node (current revision) or one of its revisions.
+ * @param {Number} nodeId
+ * @param {{revisionId?: number, inline?: boolean}} [options]
+ * @returns {String}
+ */
+export function downloadUrl(nodeId, {revisionId, inline} = {}) {
+  const params = new URLSearchParams();
+  if (revisionId) {
+    params.set("revision_id", String(revisionId));
+  }
+  if (inline) {
+    params.set("disposition", "inline");
+  }
+  const query = params.toString();
+  return `/int_filemanager/v2/download/${nodeId}${query ? `?${query}` : ""}`;
+}
+
+/**
+ * UTF-8 text as base64, the way binary content travels over JSON-RPC. Done in slices:
+ * spreading a big byte array into one String.fromCharCode call overflows the stack.
+ * @param {String} text
+ * @returns {String}
+ */
+export function textToBase64(text) {
+  const bytes = new TextEncoder().encode(text);
+  const step = 0x8000;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += step) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + step));
+  }
+  return btoa(binary);
+}

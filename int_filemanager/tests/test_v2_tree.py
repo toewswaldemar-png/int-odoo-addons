@@ -395,6 +395,55 @@ class TestTreeNavigation(TransactionCase):
         self.assertEqual([r["name"] for r in result], ["Root"])
         self.assertTrue(result[0]["has_children"])
 
+    def test_a_scope_that_starts_below_the_root_is_the_top_of_that_users_tree(self):
+        narrow_only = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Nav narrow only",
+                    "read_group_ids": [(4, self.narrow_group.id)],
+                }
+            )
+        )
+        island = self._folder("island", self.root, narrow_only)
+        result = self._as(self.narrow_user).tree_children(False)
+        # Root itself is not readable for this user; its two narrow-readable folders are
+        # the top, as is the island below.
+        self.assertEqual(sorted(r["name"] for r in result), ["island", "private"])
+        self.assertTrue(
+            self._as(self.narrow_user).search_count(
+                [("is_visible_top", "=", True), ("id", "=", island.id)]
+            )
+        )
+        self.assertFalse(
+            self._as(self.narrow_user).search_count(
+                [("is_visible_top", "=", True), ("id", "=", self.private_child.id)]
+            )
+        )
+
+    def test_scope_root_flag_follows_the_tree(self):
+        self.assertTrue(self.root.is_scope_root)
+        self.assertFalse(self.beta.is_scope_root)  # same scope as its parent
+        self.assertTrue(self.private.is_scope_root)  # own scope
+        self.assertFalse(self.private_child.is_scope_root)
+        moved = self._folder("mover", self.root)
+        self.assertFalse(moved.is_scope_root)
+        moved.write({"scope_id": self.narrow_scope.id})
+        self.assertTrue(moved.is_scope_root)
+        moved.write({"scope_id": self.scope.id})
+        self.assertFalse(moved.is_scope_root)
+
+    def test_is_visible_top_can_be_computed_and_negated(self):
+        nodes = self._as(self.user).search([("id", "in", (self.root + self.beta).ids)])
+        self.assertEqual(
+            {n.name: n.is_visible_top for n in nodes}, {"Root": True, "beta": False}
+        )
+        not_top = self._as(self.user).search(
+            [("is_visible_top", "!=", True), ("id", "in", (self.root + self.beta).ids)]
+        )
+        self.assertEqual(not_top.name, "beta")
+
     def test_children_are_sorted_without_case_and_flag_their_own_children(self):
         result = self._as(self.user).tree_children(self.root.id)
         # the narrow scope lists self.group too, so "private" is visible here; the

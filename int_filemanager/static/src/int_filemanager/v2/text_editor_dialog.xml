@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+  <t t-name="int_filemanager.v2.TextEditorDialog">
+    <Dialog title="props.title" size="'lg'">
+      <CodeEditor value="state.value" onChange.bind="onChange" maxLines="30" />
+      <t t-set-slot="footer">
+        <button
+          class="btn btn-primary"
+          t-on-click="onSave"
+          t-att-disabled="state.saving"
+        >Save</button>
+        <button
+          class="btn btn-secondary"
+          t-on-click="() => this.props.close()"
+        >Cancel</button>
+      </t>
+    </Dialog>
+  </t>
+</templates>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+  <t t-name="int_filemanager.v2.UploadPanel">
+    <div
+      class="o_int_filemanager_upload_panel card shadow"
+      t-if="visibleItems.length or props.unfinishedCount"
+    >
+      <div class="card-header d-flex align-items-center gap-2 py-2">
+        <i class="fa fa-cloud-upload" />
+        <strong class="flex-grow-1">
+          Uploads <span class="text-muted" t-esc="title" />
+        </strong>
+        <button
+          type="button"
+          class="btn btn-sm btn-link p-0"
+          t-on-click="props.onClear"
+          t-if="visibleItems.length and !activeCount"
+        >Clear</button>
+        <button
+          type="button"
+          class="btn btn-sm btn-link p-0"
+          t-on-click="toggle"
+          t-att-aria-label="ui.collapsed ? 'Expand' : 'Collapse'"
+        >
+          <i t-att-class="ui.collapsed ? 'fa fa-chevron-up' : 'fa fa-chevron-down'" />
+        </button>
+      </div>
+      <div t-if="!ui.collapsed" class="card-body p-2 o_int_filemanager_upload_list">
+        <div
+          t-if="props.unfinishedCount and !visibleItems.length"
+          class="text-muted small p-1"
+          t-esc="unfinishedMessage"
+        />
+        <div t-foreach="visibleItems" t-as="item" t-key="item.id" class="mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <span
+              class="text-truncate flex-grow-1"
+              t-att-title="item.name"
+              t-esc="item.name"
+            />
+            <span class="text-muted small text-nowrap" t-esc="formatSize(item.size)" />
+            <button
+              t-if="canPause(item)"
+              type="button"
+              class="btn btn-sm btn-link p-0"
+              aria-label="Pause"
+              t-on-click="() => props.onPause(item.id)"
+            >
+              <i class="fa fa-pause" />
+            </button>
+            <button
+              t-if="canRetry(item)"
+              type="button"
+              class="btn btn-sm btn-link p-0"
+              aria-label="Continue"
+              t-on-click="() => props.onRetry(item.id)"
+            >
+              <i class="fa fa-play" />
+            </button>
+            <button
+              t-if="canRename(item)"
+              type="button"
+              class="btn btn-sm btn-link p-0"
+              aria-label="Rename"
+              t-on-click="() => props.onRename(item)"
+            >
+              <i class="fa fa-pencil" />
+            </button>
+            <button
+              t-if="canCancel(item)"
+              type="button"
+              class="btn btn-sm btn-link p-0 text-danger"
+              aria-label="Cancel"
+              t-on-click="() => props.onCancel(item.id)"
+            >
+              <i class="fa fa-times" />
+            </button>
+          </div>
+          <div class="progress" style="height: 4px">
+            <div
+              class="progress-bar"
+              t-att-class="{'bg-success': item.state === 'done', 'bg-danger': item.state === 'failed'}"
+              t-attf-style="width: {{percent(item)}}%"
+            />
+          </div>
+          <div
+            class="small"
+            t-att-class="item.state === 'failed' ? 'text-danger' : 'text-muted'"
+          >
+            <t t-if="item.state === 'queued'">Waiting…</t>
+            <t t-elif="item.state === 'running'"><t t-esc="percent(item)" />%</t>
+            <t t-elif="item.state === 'finishing'">Finishing…</t>
+            <t t-elif="item.state === 'paused'">Paused</t>
+            <t
+              t-elif="item.state === 'interrupted'"
+            >Connection lost - continue to resume</t>
+            <t t-elif="item.state === 'failed'" t-esc="item.error" />
+            <t t-elif="item.state === 'done'">Done</t>
+          </div>
+        </div>
+      </div>
+    </div>
+  </t>
+</templates>

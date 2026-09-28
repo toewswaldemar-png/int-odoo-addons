@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+  <t t-name="int_filemanager.v2.FolderTree">
+    <div class="o_int_filemanager_tree_root">
+      <div class="o_int_filemanager_tree" role="tree">
+        <t t-call="int_filemanager.v2.FolderTreeNode">
+          <t t-set="node" t-value="this.nodes['root']" />
+          <t t-set="depth" t-value="0" />
+        </t>
+      </div>
+      <!-- Fixed foot: opens the trash list, not a folder. -->
+      <div
+        class="o_int_filemanager_tree_trash d-flex align-items-center"
+        role="treeitem"
+        t-on-click="onClickTrash"
+      >
+        <span class="o_int_filemanager_tree_caret_spacer" />
+        <i class="fa fa-trash-o o_int_filemanager_tree_folder_icon text-muted" />
+        <span>Trash</span>
+      </div>
+    </div>
+  </t>
+
+  <!-- Recursive: t-call shares "this" with the caller, so this.onClickNode works here. -->
+  <t t-name="int_filemanager.v2.FolderTreeNode">
+    <!-- The top ("All folders") is no drop target: only real folders carry the id. -->
+    <div
+      class="o_int_filemanager_tree_node"
+      t-att-data-int-filemanager-tree-id="node.id or false"
+    >
+      <header
+        class="o_int_filemanager_tree_node_header d-flex align-items-center"
+        t-attf-style="padding-left: {{depth * 16 + 4}}px"
+        t-att-class="{ 'o_int_filemanager_tree_node_active': isActive(node) }"
+        t-on-click="() => this.onClickNode(node)"
+      >
+        <!-- Only visual: the click is taken by the header (onClickNode). -->
+        <button
+          t-if="node.hasChildren"
+          type="button"
+          class="btn btn-sm p-0 o_int_filemanager_tree_caret"
+          t-att-aria-label="node.expanded ? 'Collapse folder' : 'Expand folder'"
+        >
+          <i t-if="node.loading" class="fa fa-spin fa-spinner" />
+          <i t-elif="node.expanded" class="fa fa-caret-down" />
+          <i t-else="" class="fa fa-caret-right" />
+        </button>
+        <span t-else="" class="o_int_filemanager_tree_caret_spacer" />
+        <i class="fa fa-folder o_int_filemanager_tree_folder_icon text-primary" />
+        <span
+          class="text-truncate"
+          t-att-data-tooltip="node.name"
+          data-tooltip-delay="1000"
+          t-esc="node.name"
+        />
+      </header>
+      <div t-if="node.expanded" class="o_int_filemanager_tree_children">
+        <t t-foreach="node.children" t-as="childKey" t-key="childKey">
+          <t t-call="int_filemanager.v2.FolderTreeNode">
+            <t t-set="node" t-value="this.nodes[childKey]" />
+            <t t-set="depth" t-value="depth + 1" />
+          </t>
+        </t>
+      </div>
+    </div>
+  </t>
+
+</templates>
