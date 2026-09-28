@@ -67,7 +67,7 @@ class TestV2Translations(BaseCase):
             (os.path.basename(path), message)
             for path in V2_PY
             for message in python_messages(path)
-            if entries.get(message.replace('"', '\\"')) is None
+            if entries.get(message.replace("\\", "\\\\").replace('"', '\\"')) is None
         }
         self.assertEqual(missing, set())
 

@@ -130,8 +130,7 @@ class _Sink:
         self._parts = []
 
     # A plain class, not a model: nothing to call super() on.
-    # pylint: disable-next=unknown-option-value,method-required-super
-    def write(self, data):
+    def write(self, data):  # pylint: disable=unknown-option-value,method-required-super
         self._parts.append(bytes(data))
         return len(data)
 
