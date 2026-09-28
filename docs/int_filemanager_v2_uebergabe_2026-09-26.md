@@ -1,6 +1,7 @@
 # Übergabe: int_filemanager 2 – Stand und nächste Schritte
 
-Stand 2026-09-26, ergänzt 2026-09-27 (Code-Prüfung eingearbeitet, **Konzept freigegeben, Schritt 3 begonnen**).
+Stand 2026-09-26, ergänzt 2026-09-27 (Code-Prüfung eingearbeitet, Konzept freigegeben) und **2026-09-28: Schritt 3
+und 4a fertig, 4b (Oberfläche) gebaut, Abnahme von Schritt 4 läuft** – offene Punkte in Abschnitt 4, Punkt 9.
 Für eine neue Sitzung: zuerst dieses Dokument, dann Kern und Konzept lesen. **Gearbeitet wird auf dem Branch
 `feature/int-filemanager-v2`** (master = Stand `int_filemanager-v1` plus Dokumente).
 
@@ -44,6 +45,7 @@ gebaut wird nur, wo Odoo nachweislich begrenzt ist. Der Bestand wird **kopiert**
 | 2026-09-27 | Eingangsordner: Datei gilt nach **2 Minuten** ohne Änderung als fertig; ZIP-Download bis **ca. 500 MB** direkt, darüber Hintergrundjob; Blob-Speicher auf **disk2 + disk3** (Konzept, Entscheidungen 6–8) |
 | 2026-09-27 | Kern-Änderungen aus der Code-Prüfung übernommen; Zusatzpunkte aus dem externen Review (Import-Manifest, Outbox-Regel, B-Invarianten, Versionen festnageln) **nicht** aufgenommen |
 | 2026-09-27 | **Konzept und Kern freigegeben.** Umsetzung **im Modul `int_filemanager`** (19.0.2.0.0) auf Branch `feature/int-filemanager-v2`, heutiger Stand als Tag `int_filemanager-v1`; Test-Image `odoo:19.0-hm-test` (Live-Tag unberührt); pre-commit auf dem Arbeitsrechner (Konzept, Entscheidungen 9–10) |
+| 2026-09-28 | Kommentare und Docstrings **ohne Verweise auf Dokumente** (keine Kürzel `I…`/`A…`, keine Konzept-Abschnitte), Docstrings kurz wie im Odoo-Kern; ersetzt die Hausregel "Grundregeln benennen" (Konventionen Abschnitt 3); Zuordnung Grundregel → Test nur noch im Konzept 16.1 |
 
 Vorgabe des Nutzers für den Umbau: **erst vollständig durchplanen, keine Zeile Modul-Code vor Freigabe des
 Konzepts.** Prototypen auf der Testinstanz sind erlaubt. **Freigabe von Konzept und Kern erteilt am 2026-09-27.**
@@ -59,6 +61,10 @@ Konzepts.** Prototypen auf der Testinstanz sind erlaubt. **Freigabe von Konzept 
 | **WebDAV im Odoo-Prozess** (Nachprüfung 19.6, Prototyp 19.7) | Strom in Odoo-Route lesbar, 25-ms-Grundlast war Konfiguration; WsgiDAV hinter Odoo-Route: litmus 100 %, schneller als der Dienst, eigener Odoo-Prozess für `/dav/` nötig | `fm_proto/dav_inproc.py` |
 | **WebDAV-Prototyp (Explorer-Zugriff, Konzept 11 A)** | Abschnitt 19.4 des Konzepts; litmus 100 %, Windows-WebClient, LibreOffice, Identitätsregel für Word/Excel-Speichermuster | `docs/prototypes/fm2/fmdav/`, `fm_proto/dav.py` |
 | **Code-Prüfung des Konzepts** (2026-09-26/27) | 194 Behauptungen gegen Odoo 19 geprüft, 21 Befunde; hoch: Regeln für Neben-Modelle (A1), `call_kw` (A2), `retrying()` wiederholt keine Namens-/Sperrkonflikte (A3), Aufräumjob-Wettlauf (A4); in Konzept (u. a. 2, 4–6, 12, 16, 19.17) und Kern eingearbeitet; Plattengrenzen-Test für disk2 + disk3 bestanden | `docs/review/konzept_codepruefung_2026-09-26.md` |
+| **Schritt 3 Fundament** (2026-09-27) | Datenmodell (Knoten, Revision, Blob, Bereich, Upload, Vorgang), Blob-Speicher, alle Schreibwege, Rechte; Tests für A1–A4 zuerst; Wettlauf- und Absturzszenarien mit echten Prozessen auf Tower grün (`tools/v2check/race.sh`), dabei zwei echte Fehler gefunden und behoben (`sudo` bei kaltem Cache, Verschieben gegen Löschen) | Commits `c0cf442` … `7f06431` |
+| **Schritt 4a Server** (2026-09-28) | Ordnerbaum, Download (Rechte, Range, `x_sendfile`), Upload in Stücken mit Fortsetzen, ZIP direkt/als Job, Papierkorb-Frist, Freigabe-Links und Kundenportal; Abnahme **3 GB mit Abbruch und Fortsetzen** auf Tower bestanden | Commits `af0c9fc` … `55549be` |
+| **Schritt 4b Oberfläche gebaut** (2026-09-28) | Explorer auf `int_filemanager.node` (Liste, Kacheln, Baum, Breadcrumb, Uploads, Kontextmenü, Tastatur, Verschieben/Kopieren/Drag & Drop, Versionen, Freigabe-Dialog, Details-Dialog), Upload-Logik mit 45 Node-Tests, `de.po` vollständig; **Handtest und Abnahme offen** | Commits `78f8e99`, `8279772`, `27b2a11`, `01e5793` |
+| **Kommentare bereinigt** (2026-09-28) | Verweise auf Dokumente entfernt, Docstrings gekürzt; nur Kommentare geändert (AST-Vergleich), 305 Odoo-Tests + 45 Node-Tests grün auf HM-SRV | Commit `d0d5c94` |
 
 **Wichtigste Prototyp-Befunde (Details: Konzept 19):**
 - Blob-Speicher, Upload in 4-MB-Stücken, Fortsetzen, Idempotenz, Deduplizierung, Absturzsicherheit und Aufräumjob
@@ -102,18 +108,36 @@ Konzepts.** Prototypen auf der Testinstanz sind erlaubt. **Freigabe von Konzept 
      läuft bei jedem Commit), `.gitattributes` mit LF für `int_filemanager`, Manifest mit Autor, `README.rst`.
    - Prüfskript `tools/v2check/v2check.sh [--quick]` für odoo-ls und Odoos `test_lint` (Konventionen 9): scheitert
      nur an Befunden in seit `int_filemanager-v1` geänderten/neuen Dateien; der v1-Code hat 12 Altbefunde.
-8. **Nächster Schritt: Tests für A1–A4 zuerst schreiben** (Konzept 16, Kern 11 Schritt 3), danach Modelle,
-   Blob-Speicher, Schreibwege, Rechte. Vorab zu klären (Vorschlag machen, Nutzer entscheidet):
-   - **Testform:** A1/A2 (Rechte über `call_kw`, JSON-2, `search_read`/`read_group` auf jedem Modell) passen in
-     Odoo-Tests (`TransactionCase`/`HttpCase`). A3/A4 brauchen echte Transaktionen, Überlappung per Barriere oder
-     Fehlerinjektion und echten Prozessabbruch – `TransactionCase` committet nicht und führt keine Post-Commit-Hooks
-     aus. Vorbild: der Durchstich mit `os._exit` im DB-Vorrang-Konzept (Abschnitt 20) und `fm_proto`
-     (`blobstore.fault`, `controllers.py`).
-   - **Reihenfolge im Modul:** neue Modelle (`int_filemanager.node`/`.revision`/`.blob`/`.scope`/`.upload`/
-     `.operation`) neben den alten; Version 19.0.2.0.0 erst, wenn das Datenmodell steht.
-   - Nach jedem Teil: pre-commit grün, `tools/v2check/v2check.sh` grün, `i18n/de.po` gepflegt, Gegenlesen mit
-     `codex -p review`; Commit nur nach Rückfrage.
-   Update der Live-Instanz ist eine eigene Entscheidung.
+8. ~~Schritt 3 und 4a~~ – **erledigt** (2026-09-27/28, siehe Abschnitt 3). Nach jedem Teil weiterhin: pre-commit
+   grün, `tools/v2check/v2check.sh` grün, `i18n/de.po` gepflegt, Gegenlesen mit `codex -p review`; Commit nur nach
+   Rückfrage. Update der Live-Instanz ist eine eigene Entscheidung.
+9. **Nächster Schritt: Abnahme von Schritt 4** (Plan `docs/int_filemanager_v2_schritt4_plan_2026-09-28.md`).
+   Offene Punkte aus dem ersten Handtest am 2026-09-28 (Test-Instanz auf HM-SRV, Abschnitt 5a):
+   - **`rememberBase` wird nie aufgerufen** (`static/src/int_filemanager/v2/uploads_service.js`): beim Download wird
+     die Ausgangsfassung nicht gemerkt, "Neue Fassung" nimmt deshalb die beim Seitenladen aktuelle Fassung als Basis –
+     eine Änderung eines anderen zwischen Download und Upload wird nach einem Neuladen der Seite ohne Hinweis
+     überschrieben (bleibt in den Versionen). Verdrahten und in Node testen.
+   - **Meldung "frühere Uploads wurden unterbrochen" veraltet:** `upload_manager.js` vergisst einen Upload nur bei
+     Fertig oder Abbruch; endgültig gescheiterte (Namenskonflikt, Rechte) bleiben in `localStorage` und zählen nach
+     dem Neuladen als unterbrochen, obwohl der Server nichts Offenes kennt; die Meldung hat keinen Verwerfen-Knopf.
+     Vorschlag: Gescheiterte vergessen, beim Laden gegen den Server abgleichen, Knopf "Verwerfen".
+   - **Namensprüfung ohne Windows-Regeln:** `_clean_name` verbietet nur `/ \ NUL` und `.`/`..`. Zusätzlich
+     `: * ? " < > |`, Punkt/Leerzeichen am Ende und reservierte Namen (`CON`, `NUL`, `COM1` …) ablehnen, damit Export
+     und späteres Netzlaufwerk unter Windows immer möglich bleiben.
+   - ~~Checkliste für den Handtest~~ entfällt (Entscheidung 2026-09-28): der Nutzer testet die Oberfläche frei und
+     meldet, was auffällt.
+   - pylint-odoo, `test_lint` und odoo-ls für den Stand `d0d5c94` auf Tower laufen lassen (nur dort eingerichtet).
+10. **Vor Schritt 8 (Übernahme) festlegen** – Ergebnisse vom 2026-09-28:
+   - **Notfall-Export ohne Odoo** ist möglich: rekursive SQL-Abfrage über `parent_id` + Kopie aus
+     `blobs/ab/cd/<sha256>` ergab auf der HM-SRV-Instanz 33 Ordner, 219 Dateien, 0 Prüfsummenfehler. Als festes
+     Werkzeug ins Repo (kopieren statt Hardlink – ein bearbeiteter Hardlink würde den Blob verändern; Änderungsdatum
+     übernehmen; Prüfsumme je Datei) und Probelauf gegen das Backup in die Abnahme von Schritt 8 aufnehmen.
+   - **Blob-Prüflauf:** `adopt_hashed` vertraut beim Zusammenlegen einer vorhandenen Datei unter dem Hash, ohne sie
+     nachzurechnen – ein beschädigter Blob (Bitfäule, XFS erkennt das nicht) würde eine frisch hochgeladene gute Kopie
+     verdrängen. Regelmäßiger Cron, der Blobs nachrechnet und meldet (Kern 9 "Prüfsummenfehler"), plus Ersetzen eines
+     als beschädigt bekannten Blobs durch eine gute neue Kopie.
+   - **ONLYOFFICE-Zertifikat** vor Schritt 6 lösen (heute nur auf einem Rechner vertraut); ohne ONLYOFFICE auf allen
+     Rechnern oder Netzlaufwerk ist V2 für Word/Excel ein Rückschritt gegenüber V1.
 
 ## 5. Testumgebung auf Tower (lokaler Unraid, `ssh unraid`)
 

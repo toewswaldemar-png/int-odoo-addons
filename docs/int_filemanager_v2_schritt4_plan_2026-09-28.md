@@ -17,7 +17,7 @@ funktioniert – zusätzlich pre-commit, `test_lint`, odoo-ls ohne Befund, `i18n
 3. **Alles Schreibende läuft über die Modellmethoden aus Schritt 3** (`create_file`, `rename_or_move`, …), nie über
    `write()` aus dem Browser; Vorgangsnummer (UUID) je Nutzeraktion, Wiederholung ist harmlos (I9).
 4. **Frontend wird nicht per Browser-Automatik getestet** (Nutzerregel): Serverseite vollständig mit Odoo-Tests und
-   Echtprozess-Skripten, Frontend mit `eslint`/`prettier` (pre-commit) und Nutzertest anhand einer Checkliste je Scheibe.
+   Echtprozess-Skripten, Frontend mit `eslint`/`prettier` (pre-commit) und freiem Nutzertest (keine Checkliste; Entscheidung 2026-09-28).
 
 ## Scheiben
 
