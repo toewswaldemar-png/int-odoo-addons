@@ -21,7 +21,7 @@ from .. import blobstore, zip_stream
 CHUNK_MAX_BYTES = 5 * 1024 * 1024
 # A revision never changes, so a thumbnail may stay in the browser for a while.
 PREVIEW_MAX_AGE_S = 3600
-PREVIEW_KINDS = ("tile",)
+PREVIEW_KINDS = ("tile", "preview", "preview_pdf")
 
 
 class IntFilemanagerV2Controller(http.Controller):
@@ -74,7 +74,7 @@ class IntFilemanagerV2Controller(http.Controller):
         methods=["GET"],
     )
     def preview(self, revision_id, kind):
-        """Serve a finished thumbnail of a revision.
+        """Serve a finished thumbnail or preview image of a revision.
 
         The rights on the revision decide; the derived file itself has no rights
         (users cannot read that model). Without a finished result: 404, the
@@ -87,8 +87,8 @@ class IntFilemanagerV2Controller(http.Controller):
             raise NotFound
         revision.check_access("read")
         # The check above authorises the blob and what was derived from it.
-        derivative = request.env["int_filemanager.derivative"]._tile_for_blob(
-            revision.sudo().blob_id
+        derivative = request.env["int_filemanager.derivative"]._result_for_blob(
+            revision.sudo().blob_id, kind
         )
         if not derivative:
             raise NotFound

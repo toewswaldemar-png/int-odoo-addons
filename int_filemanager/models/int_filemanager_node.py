@@ -14,6 +14,7 @@ from odoo.tools import SQL
 from odoo.tools.mimetypes import guess_mimetype
 
 from .. import blobstore, fault
+from .. import derivative_plan as plan
 from . import int_filemanager_derivative as derivative
 
 _logger = logging.getLogger(__name__)
@@ -27,6 +28,13 @@ TRASH_RETENTION_PARAM = "int_filemanager.trash_retention_days"
 # refuses, so that an export or a network drive works for every name in the tree.
 _INVALID_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
 _WINDOWS_RESERVED_NAME = re.compile(r"(con|prn|aux|nul|(com|lpt)[0-9¹²³])(\..*)?", re.I)
+
+PREVIEW_STATES = [
+    ("ready", "Ready"),
+    ("pending", "Pending"),
+    ("failed", "Failed"),
+    ("none", "None"),
+]
 
 
 def _remove_if_exists(path):
@@ -84,15 +92,11 @@ class IntFilemanagerNode(models.Model):
     )
     # Set by trash() for the whole subtree; the trash purge counts from it.
     trashed_at = fields.Datetime(index=True)
-    # Only the state: the explorer builds the thumbnail URL from the revision itself.
-    preview_state = fields.Selection(
-        [
-            ("ready", "Ready"),
-            ("pending", "Pending"),
-            ("failed", "Failed"),
-            ("none", "None"),
-        ],
-        compute="_compute_preview_state",
+    # Only the states: the explorer builds the picture URLs from the revision itself.
+    # Thumbnail and large preview image.
+    preview_state = fields.Selection(PREVIEW_STATES, compute="_compute_preview_states")
+    full_preview_state = fields.Selection(
+        PREVIEW_STATES, compute="_compute_preview_states"
     )
 
     # Names are unique per folder regardless of case, like on Windows. NULLS NOT
@@ -130,29 +134,35 @@ class IntFilemanagerNode(models.Model):
                 not node.parent_id or node.parent_id.scope_id != node.scope_id
             )
 
-    def _compute_preview_state(self):
+    def _compute_preview_states(self):
         blobs = self.sudo().current_revision_id.blob_id
-        states = {
-            d.source_blob_id.id: d.state
-            for d in self.env["int_filemanager.derivative"]
+        # Only the columns that are needed: a job row can carry a long text.
+        jobs = (
+            self.env["int_filemanager.derivative"]
             .sudo()
-            .search([("source_blob_id", "in", blobs.ids), ("kind", "=", "tile")])
-        }
+            .search_fetch(
+                [("source_blob_id", "in", blobs.ids)],
+                ["source_blob_id", "kind", "state"],
+            )
+        )
+        states = {(job.source_blob_id.id, job.kind): job.state for job in jobs}
         for node in self:
             blob = node.sudo().current_revision_id.blob_id
-            if node.is_dir or not blob:
-                node.preview_state = "none"
-                continue
-            state = states.get(blob.id)
-            if state == "done":
-                node.preview_state = "ready"
-            elif state == "failed":
-                node.preview_state = "failed"
-            elif state == "not_applicable" or node.mime not in derivative.TILE_MIMES:
-                node.preview_state = "none"
-            else:
-                # No row yet: the cron has not queued it, but it will.
-                node.preview_state = "pending"
+            file_like = not node.is_dir and blob
+            for field_name, kind in (
+                ("preview_state", "tile" if plan.has_tile(node.name) else None),
+                ("full_preview_state", plan.full_preview_kind(node.name)),
+            ):
+                state = states.get((blob.id, kind))
+                if not file_like or kind is None or state == "not_applicable":
+                    node[field_name] = "none"
+                elif state == "done":
+                    node[field_name] = "ready"
+                elif state == "failed":
+                    node[field_name] = "failed"
+                else:
+                    # No row yet: the cron has not queued it, but it will.
+                    node[field_name] = "pending"
 
     @api.model
     def request_previews(self, node_ids):

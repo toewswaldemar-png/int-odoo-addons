@@ -18,7 +18,7 @@ _logger = logging.getLogger(__name__)
 CONNECT_TIMEOUT_S = 5
 # What the converter may declare as the type of a result; anything else is refused
 # so that a result is never served with a type of the converter's choosing.
-ALLOWED_MIMES = {"image/jpeg", "image/png", "application/pdf", "text/plain"}
+ALLOWED_MIMES = {"image/jpeg", "application/pdf", "text/plain", "application/json"}
 
 
 class ConverterUnavailable(Exception):
@@ -53,8 +53,10 @@ class ConversionResult:
 
 
 @contextlib.contextmanager
-def convert(url, sha256, kind, spec, timeout):
+def convert(url, sha256, kind, spec, ext, timeout):
     """Ask the converter for ``kind``/``spec`` of the blob ``sha256``.
+
+    ``ext`` is the file name extension the caller knows: a hint for the converter.
 
     Yields a ConversionResult; for state "done" its ``stream`` is a file-like
     object that is only valid inside the ``with`` block.
@@ -62,7 +64,7 @@ def convert(url, sha256, kind, spec, timeout):
     try:
         response = requests.post(
             f"{url.rstrip('/')}/convert",
-            json={"sha256": sha256, "kind": kind, "spec": spec},
+            json={"sha256": sha256, "kind": kind, "spec": spec, "ext": ext},
             stream=True,
             timeout=(CONNECT_TIMEOUT_S, timeout),
         )

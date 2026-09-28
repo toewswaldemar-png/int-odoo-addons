@@ -1,3 +1,5 @@
+import contextlib
+import json
 import logging
 import time
 import uuid
@@ -7,7 +9,7 @@ import psycopg2
 
 from odoo import api, fields, models
 
-from .. import blobstore, converter_client, fault
+from .. import blobstore, converter_client, derivative_plan, fault
 
 _logger = logging.getLogger(__name__)
 
@@ -22,20 +24,26 @@ LEASE_MINUTES = 10
 MAX_ATTEMPTS = 3
 MAX_CLAIM_CONFLICTS = 5
 ENQUEUE_BATCH = 500
-TILE_SPEC = "400x300"
 # What the explorer shows first: the rows of the folder the user is looking at.
 VISIBLE_PRIORITY = 100
 MAX_REQUESTED_NODES = 200
-# The converter is asked for JPEG tiles of these types only (for now).
-TILE_MIMES = ("image/jpeg",)
+EXTENSION_SQL = r"substring(lower(n.name) from '\.([a-z0-9]{1,8})$')"
+# The converter caps text at 2 million characters (up to 4 bytes each is more than
+# it sends); its metadata is a few hundred bytes.
+MAX_TEXT_BYTES = 8 * 1024 * 1024
+MAX_META_BYTES = 256 * 1024
+INT4_MAX = 2**31 - 1
+META_STRING_MAX = 200
+META_KEYS_MAX = 40
 
 
 class IntFilemanagerDerivative(models.Model):
-    """Something derived from a blob: a thumbnail, later previews, text, metadata.
+    """Something derived from a blob: a picture, a PDF, the text or the facts of a file.
 
     Users have no access rights: the result is only served by the preview
     route, after the rights on the revision were checked. Odoo only stores and
-    serves the result; the converter is the only one that opens the bytes.
+    serves the converter's result; the converter is the only one that opens the
+    bytes of the file.
     """
 
     _name = "int_filemanager.derivative"
@@ -45,8 +53,21 @@ class IntFilemanagerDerivative(models.Model):
     source_blob_id = fields.Many2one(
         "int_filemanager.blob", required=True, index=True, ondelete="restrict"
     )
-    kind = fields.Selection([("tile", "Thumbnail")], required=True)
+    kind = fields.Selection(
+        [
+            ("tile", "Thumbnail"),
+            ("preview", "Preview image"),
+            ("preview_pdf", "Preview PDF"),
+            ("text", "Text"),
+            ("meta", "Metadata"),
+        ],
+        required=True,
+    )
     spec = fields.Char(required=True)
+    # The job whose result this one is made from (an office file's PDF).
+    depends_on_id = fields.Many2one(
+        "int_filemanager.derivative", index=True, ondelete="cascade"
+    )
     state = fields.Selection(
         [
             ("pending", "Pending"),
@@ -59,11 +80,14 @@ class IntFilemanagerDerivative(models.Model):
         required=True,
         index=True,
     )
-    # May be the source blob itself (a tiny JPEG can be its own thumbnail).
+    # May be the source blob itself (a browser shows a JPEG as its own large preview).
+    # Empty for text and metadata: those are stored in this row.
     derived_blob_id = fields.Many2one(
         "int_filemanager.blob", index=True, ondelete="restrict"
     )
     mime = fields.Char()
+    # The extension the queuing file name had: a hint for the converter.
+    hint_ext = fields.Char()
     priority = fields.Integer(default=0)
     attempts = fields.Integer()
     next_try_at = fields.Datetime()
@@ -74,6 +98,20 @@ class IntFilemanagerDerivative(models.Model):
     tool_version = fields.Char()
     # Technical text, for administrators only (no user has access to this model).
     error = fields.Char()
+    # The text of a document (kind "text"); empty text means "none found", the
+    # trigger for character recognition later.
+    text = fields.Text()
+    # The facts of a file (kind "meta"): everything the converter found, and the
+    # ones worth filtering and sorting by as columns.
+    meta = fields.Json()
+    taken_at = fields.Datetime()
+    camera = fields.Char()
+    width = fields.Integer()
+    height = fields.Integer()
+    duration = fields.Float()
+    gps_lat = fields.Float(digits=(9, 6))
+    gps_lon = fields.Float(digits=(9, 6))
+    pages = fields.Integer()
 
     _source_kind_spec_uniq = models.Constraint(
         "UNIQUE(source_blob_id, kind, spec)",
@@ -92,6 +130,7 @@ class IntFilemanagerDerivative(models.Model):
         if not url:
             return
         self._enqueue_missing()
+        self._drop_jobs_without_input()
         timeout = int(
             params.get_param(CONVERTER_TIMEOUT_PARAM, DEFAULT_CONVERTER_TIMEOUT_S)
         )
@@ -119,14 +158,12 @@ class IntFilemanagerDerivative(models.Model):
                 break
             # Everything the calls need is read before the commit: no statement, and so
             # no open transaction, while the converter works.
-            plan = [
-                (job, job.source_blob_id.sha256, job.kind, job.spec) for job in jobs
-            ]
+            plan = [job._call_args() for job in jobs]
             self.env["ir.cron"]._commit_progress()
             fault.fault_point("derivative_after_claim")
-            for position, (job, sha256, kind, spec) in enumerate(plan):
+            for position, (job, sha256, kind, spec, ext) in enumerate(plan):
                 try:
-                    done_any |= job._run(url, timeout, sha256, kind, spec)
+                    done_any |= job._run(url, timeout, sha256, kind, spec, ext)
                 except converter_client.ConverterUnavailable as exc:
                     _logger.warning("converter not available: %s", exc)
                     # The rest of this batch was taken but not started: free it now
@@ -142,36 +179,96 @@ class IntFilemanagerDerivative(models.Model):
 
     @api.model
     def _enqueue_missing(self):
-        """Create jobs for current revisions that have none yet.
+        """Create the jobs of current revisions that do not have all of theirs yet.
 
-        Done here, not in the write paths, so those stay untouched. Only
-        current revisions: an old revision had its thumbnail when it was current.
+        Done here, not in the write paths, so those stay untouched. Only current
+        revisions: an old revision had its results when it was current. A new kind of
+        job for a kind of file is caught up the same way: "fewer rows than planned".
         """
         self.env.flush_all()
         cr = self.env.cr
+        extensions = derivative_plan.ALL_EXTENSIONS
+        planned = [len(derivative_plan.job_plan(f"x.{ext}")) for ext in extensions]
         cr.execute(
-            """
-            SELECT DISTINCT b.id
+            f"""
+            SELECT DISTINCT ON (b.id) b.id, n.name
             FROM int_filemanager_node n
             JOIN int_filemanager_revision r ON r.id = n.current_revision_id
             JOIN int_filemanager_blob b ON b.id = r.blob_id
-            WHERE n.active AND n.mime IN %s AND b.size > 0
-              AND NOT EXISTS (
-                  SELECT 1 FROM int_filemanager_derivative d
-                  WHERE d.source_blob_id = b.id AND d.kind = 'tile' AND d.spec = %s)
+            JOIN unnest(%s::text[], %s::int[]) AS want(ext, n)
+                 ON want.ext = {EXTENSION_SQL}
+            WHERE n.active AND b.size > 0
+              AND (SELECT count(*) FROM int_filemanager_derivative d
+                   WHERE d.source_blob_id = b.id) < want.n
+            ORDER BY b.id, n.id
             LIMIT %s
-            """,
-            [TILE_MIMES, TILE_SPEC, ENQUEUE_BATCH],
+            """,  # noqa: S608 - EXTENSION_SQL is a constant
+            [extensions, planned, ENQUEUE_BATCH],
         )
-        for (blob_id,) in cr.fetchall():
-            try:
-                with cr.savepoint():
-                    self.create(
-                        {"source_blob_id": blob_id, "kind": "tile", "spec": TILE_SPEC}
+        for blob_id, name in cr.fetchall():
+            self._queue_jobs(blob_id, name)
+
+    @api.model
+    def _queue_jobs(self, blob_id, name):
+        """Create the missing job rows of one blob, by what its file name says it is."""
+        ext = derivative_plan.file_extension(name)
+        rows = {
+            (job.kind, job.spec): job
+            for job in self.search_fetch(
+                [("source_blob_id", "=", blob_id)], ["kind", "spec"]
+            )
+        }
+        by_kind = {}
+        for item in derivative_plan.job_plan(name):
+            job = rows.get((item.kind, item.spec))
+            if not job:
+                values = {
+                    "source_blob_id": blob_id,
+                    "kind": item.kind,
+                    "spec": item.spec,
+                    "hint_ext": ext,
+                    "priority": item.priority,
+                }
+                if item.after:
+                    values["depends_on_id"] = by_kind[item.after].id
+                if item.original_mime:
+                    # The original is the result; nothing to convert.
+                    values.update(
+                        state="done",
+                        derived_blob_id=blob_id,
+                        mime=item.original_mime,
+                        finished_at=fields.Datetime.now(),
                     )
-            except psycopg2.errors.UniqueViolation:
-                # Another run queued it at the same time: nothing to do.
-                continue
+                try:
+                    with self.env.cr.savepoint():
+                        job = self.create(values)
+                except psycopg2.errors.UniqueViolation:
+                    # Another run queued it at the same time: use its row.
+                    job = self.search(
+                        [
+                            ("source_blob_id", "=", blob_id),
+                            ("kind", "=", item.kind),
+                            ("spec", "=", item.spec),
+                        ]
+                    )
+            by_kind[item.kind] = job
+
+    @api.model
+    def _drop_jobs_without_input(self):
+        """A job made from another job's result cannot run if that one gave none."""
+        self.env.flush_all()
+        self.env.cr.execute(
+            """
+            UPDATE int_filemanager_derivative d
+            SET state = 'not_applicable', error = 'the PDF it is made from is missing',
+                finished_at = (now() at time zone 'utc')
+            FROM int_filemanager_derivative dependency
+            WHERE dependency.id = d.depends_on_id
+              AND d.state = 'pending'
+              AND dependency.state IN ('failed', 'not_applicable')
+            """
+        )
+        self.env.invalidate_all()
 
     @api.model
     def _claim_jobs(self):
@@ -179,12 +276,16 @@ class IntFilemanagerDerivative(models.Model):
         self.env.flush_all()
         self.env.cr.execute(
             """
-            SELECT id FROM int_filemanager_derivative
-            WHERE (state = 'pending' AND (
-                       next_try_at IS NULL
-                       OR next_try_at <= (now() at time zone 'utc')))
-               OR (state = 'running'
-                   AND lease_until < (now() at time zone 'utc'))
+            SELECT id FROM int_filemanager_derivative d
+            WHERE ((state = 'pending' AND (
+                        next_try_at IS NULL
+                        OR next_try_at <= (now() at time zone 'utc')))
+                   OR (state = 'running'
+                       AND lease_until < (now() at time zone 'utc')))
+              AND (depends_on_id IS NULL OR EXISTS (
+                       SELECT 1 FROM int_filemanager_derivative dependency
+                       WHERE dependency.id = d.depends_on_id
+                         AND dependency.state = 'done'))
             ORDER BY priority DESC, id
             LIMIT %s
             FOR UPDATE SKIP LOCKED
@@ -203,7 +304,27 @@ class IntFilemanagerDerivative(models.Model):
             )
         return jobs
 
-    def _run(self, url, timeout, sha256, kind, spec):
+    def _call_args(self):
+        """What to ask the converter: (job, blob hash, kind, spec, extension hint)."""
+        self.ensure_one()
+        if self.depends_on_id:
+            # Made from the result of another job (an office file's PDF).
+            return (
+                self,
+                self.depends_on_id.derived_blob_id.sha256,
+                self.kind,
+                self.spec,
+                "pdf",
+            )
+        return (
+            self,
+            self.source_blob_id.sha256,
+            self.kind,
+            self.spec,
+            self.hint_ext or "",
+        )
+
+    def _run(self, url, timeout, sha256, kind, spec, ext):
         """Convert one blob; return True if a result was stored.
 
         The arguments are read by the caller before its commit, so that no query
@@ -211,8 +332,12 @@ class IntFilemanagerDerivative(models.Model):
         """
         self.ensure_one()
         try:
-            with converter_client.convert(url, sha256, kind, spec, timeout) as result:
+            with converter_client.convert(
+                url, sha256, kind, spec, ext, timeout
+            ) as result:
                 if result.state == "done":
+                    if kind in ("text", "meta"):
+                        return self._store_value(kind, result)
                     return self._store_result(result)
                 self._finish(result)
         except converter_client.ConverterUnavailable:
@@ -280,6 +405,93 @@ class IntFilemanagerDerivative(models.Model):
         finally:
             blobstore.remove_if_exists(tmp_path)
 
+    @staticmethod
+    def _read_limited(stream, limit):
+        """Read the converter's answer, refusing an unreasonably long one."""
+        chunks, total = [], 0
+        while chunk := stream.read(64 * 1024):
+            total += len(chunk)
+            if total > limit:
+                raise converter_client.ConverterUnavailable(
+                    "the converter's answer is longer than allowed"
+                )
+            chunks.append(chunk)
+        return b"".join(chunks)
+
+    def _store_value(self, kind, result):
+        """Keep the text or the facts the converter found in this row.
+
+        Its own protocol, not a foreign file: plain UTF-8 text and a small JSON object.
+        """
+        if kind == "text":
+            data = self._read_limited(result.stream, MAX_TEXT_BYTES)
+            values = {
+                "text": data.decode("utf-8", errors="replace").replace("\x00", "")
+            }
+        else:
+            data = self._read_limited(result.stream, MAX_META_BYTES)
+            values = self._meta_values(data)
+        if not self.exists():
+            return False
+        self.write(
+            {
+                **values,
+                "state": "done",
+                "mime": result.mime,
+                "tool": result.tool,
+                "tool_version": result.tool_version,
+                "error": False,
+                "lease_until": False,
+                "finished_at": fields.Datetime.now(),
+            }
+        )
+        return True
+
+    @staticmethod
+    def _meta_values(data):
+        """The values of the meta columns from the converter's JSON; junk is dropped."""
+        try:
+            found = json.loads(data.decode("utf-8", errors="replace"))
+        except ValueError:
+            found = {}
+        if not isinstance(found, dict):
+            found = {}
+        clean = {}
+        for key, value in list(found.items())[:META_KEYS_MAX]:
+            if isinstance(value, bool) or not isinstance(value, str | int | float):
+                continue
+            if isinstance(value, str):
+                value = value[:META_STRING_MAX]
+            clean[str(key)[:40]] = value
+
+        def integer(key):
+            value = clean.get(key)
+            ok = isinstance(value, int) and 0 <= value <= INT4_MAX
+            return value if ok else False
+
+        def number(key):
+            value = clean.get(key)
+            return float(value) if isinstance(value, int | float) else False
+
+        taken = clean.get("taken_at")
+        values = {
+            "meta": clean,
+            "camera": clean.get("camera")
+            if isinstance(clean.get("camera"), str)
+            else False,
+            "width": integer("width"),
+            "height": integer("height"),
+            "pages": integer("pages"),
+            "duration": number("duration"),
+            "gps_lat": number("gps_lat"),
+            "gps_lon": number("gps_lon"),
+            "taken_at": False,
+        }
+        if isinstance(taken, str):
+            with contextlib.suppress(ValueError):
+                values["taken_at"] = fields.Datetime.to_datetime(taken)
+        return values
+
     @api.model
     def _notify_ready(self, done_any):
         """Tell open explorers to look again; carries no data of its own."""
@@ -295,12 +507,12 @@ class IntFilemanagerDerivative(models.Model):
     # ------------------------------------------------------------------
 
     @api.model
-    def _tile_for_blob(self, blob):
-        """Return the finished tile job of ``blob``, or an empty recordset."""
+    def _result_for_blob(self, blob, kind):
+        """Return the finished job of ``blob`` for ``kind``, or an empty recordset."""
         return self.sudo().search(
             [
                 ("source_blob_id", "=", blob.id),
-                ("kind", "=", "tile"),
+                ("kind", "=", kind),
                 ("state", "=", "done"),
                 ("derived_blob_id", "!=", False),
             ],
