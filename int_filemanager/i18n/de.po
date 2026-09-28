@@ -212,6 +212,12 @@ msgstr "Für diesen Upload wurden noch keine Daten empfangen."
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_upload.py:0
+msgid "This upload is already being processed; it cannot be cancelled."
+msgstr "Dieser Upload wird bereits verarbeitet und kann nicht mehr abgebrochen werden."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
 msgid "This upload is not open."
 msgstr "Dieser Upload ist nicht offen."
 

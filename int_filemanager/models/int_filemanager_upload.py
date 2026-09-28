@@ -208,6 +208,27 @@ class IntFilemanagerUpload(models.Model):
         }
 
     @api.model
+    def cancel_upload(self, upload_id):
+        """The client gave up: the row and its partial temp file go away now instead
+        of at the expiry cron. Deleting only the row would leave the file behind for
+        good (the cron finds files through the rows)."""
+        upload = self.browse(upload_id).exists()
+        if not upload:
+            return True
+        upload.check_access("unlink")
+        if upload.state == "processing":
+            raise UserError(
+                self.env._(
+                    "This upload is already being processed; it cannot be cancelled."
+                )
+            )
+        temp_file = upload.temp_file
+        upload.unlink()
+        if temp_file:
+            self.env.cr.postcommit.add(lambda: _remove_if_exists(temp_file))
+        return True
+
+    @api.model
     def finish_upload(self, upload_id, operation_key, target_name=None):
         """Konzept 7 "finish": hash the received temp file, then attach it
         the same way a single-request write would - unless it is large

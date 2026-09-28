@@ -283,6 +283,32 @@ class TestUploadFlow(TransactionCase):
         self.assertEqual(status["state"], "done")
         self.assertEqual(status["result"]["node_id"], finish["node_id"])
 
+    def test_cancel_removes_the_row_and_its_temp_file(self):
+        init = self._init_new_file(name="cancel.bin", key="op-cancel")
+        self._upload_env().upload_chunk(init["upload_id"], 0, b"partial")
+        upload = self.env["int_filemanager.upload"].sudo().browse(init["upload_id"])
+        temp_file = upload.temp_file
+        self.assertTrue(os.path.exists(temp_file))
+
+        self._upload_env().cancel_upload(init["upload_id"])
+
+        self.assertFalse(upload.exists())
+        # postcommit hooks do not run inside a test cursor; run what was registered
+        for hook in list(self.env.cr.postcommit._funcs):
+            hook()
+        self.assertFalse(os.path.exists(temp_file))
+
+    def test_cancel_of_something_gone_is_fine_and_of_others_is_denied(self):
+        self.assertTrue(self._upload_env().cancel_upload(999999999))
+        init = self._init_new_file(name="not-yours.bin", key="op-cancel-denied")
+        with self.assertRaises(AccessError):
+            self._upload_env(self.outsider).cancel_upload(init["upload_id"])
+
+    def test_a_processing_upload_cannot_be_cancelled(self):
+        upload = self._large_pending_upload("busy.bin", "op-cancel-busy")
+        with self.assertRaises(UserError):
+            self._upload_env().cancel_upload(upload.id)
+
     def test_status_of_someone_elses_upload_is_denied(self):
         init = self._init_new_file(name="mine.bin", key="op-status-mine")
 

@@ -194,6 +194,23 @@ const config = [{
     },
 
 }, {
+    // int_filemanager's JS is written as native ES modules (Odoo 19 transpiles them).
+    files: ["int_filemanager/static/**/*.js", "int_filemanager/static/**/*.mjs"],
+
+    languageOptions: {
+        ecmaVersion: 2024,
+        sourceType: "module",
+    },
+}, {
+    // Node runs these tests (node --test), so Node's globals exist.
+    files: ["int_filemanager/static/tests/**/*.mjs"],
+
+    languageOptions: {
+        globals: {
+            Buffer: "readonly",
+        },
+    },
+}, {
     files: ["**/*.esm.js", "**/*test.js"],
 
     languageOptions: {
