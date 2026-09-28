@@ -411,6 +411,9 @@ class IntFilemanagerNode(models.Model):
         # create() above already checked the caller against the scope.
         blob = self.env["int_filemanager.blob"].sudo()._get_or_create(sha256, size)
         blobstore.ensure_on_disk(self.env, sha256, tmp_path)
+        if content and not blob.mime:
+            # The bytes are in hand: no need to read the file again.
+            blob.mime = guess_mimetype(content) or False
         revision = self.env["int_filemanager.revision"].create(
             {
                 "node_id": node.id,
@@ -535,7 +538,17 @@ class IntFilemanagerNode(models.Model):
                 "size": size,
             }
         )
-        node.write({"current_revision_id": revision.id, "size": size})
+        # What the content is decides the node's type, not its name; a new revision
+        # can be another kind of file than the one before.
+        blob = self.env["int_filemanager.blob"].sudo().browse(blob_id)
+        blob._ensure_mime()
+        node.write(
+            {
+                "current_revision_id": revision.id,
+                "size": size,
+                "mime": blob.mime or False,
+            }
+        )
         return {"node_id": node.id, "revision_id": revision.id}
 
     @api.model

@@ -156,8 +156,11 @@ export class IntFilemanagerV2NameField extends Component {
   }
 
   get pseudoMimetype() {
+    // "octet-stream" is what the content check says when it knows nothing: the
+    // extension is the better guess then.
+    const mime = this.props.record.data.mime;
     return (
-      this.props.record.data.mime ||
+      (mime !== "application/octet-stream" && mime) ||
       EXT_TO_PSEUDO_MIMETYPE[extOf(this.value || "")] ||
       ""
     );

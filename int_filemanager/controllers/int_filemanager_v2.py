@@ -22,6 +22,8 @@ CHUNK_MAX_BYTES = 5 * 1024 * 1024
 # A revision never changes, so a thumbnail may stay in the browser for a while.
 PREVIEW_MAX_AGE_S = 3600
 PREVIEW_KINDS = ("tile", "preview", "preview_pdf")
+# Types a browser would run or render as a page when opened inline.
+ACTIVE_TYPES = ("text/html", "application/xhtml+xml")
 
 
 class IntFilemanagerV2Controller(http.Controller):
@@ -193,12 +195,19 @@ class IntFilemanagerV2Controller(http.Controller):
     def _blob_stream(self, node, revision):
         """Return the content of ``revision`` as a Stream; the caller checked access."""
         blob = revision.sudo().blob_id
+        mimetype = (
+            node.mime
+            or mimetypes.guess_type(node.name)[0]
+            or "application/octet-stream"
+        )
+        if mimetype in ACTIVE_TYPES:
+            # The type now comes from the content: a page inside "notes.txt" must not
+            # be shown as a page. Served as plain text it can only be read.
+            mimetype = "text/plain"
         return http.Stream(
             type="path",
             path=blobstore.blob_path(request.env, blob.sha256),
-            mimetype=node.mime
-            or mimetypes.guess_type(node.name)[0]
-            or "application/octet-stream",
+            mimetype=mimetype,
             size=int(blob.size),
             download_name=node.name,
             last_modified=revision.create_date.replace(tzinfo=timezone.utc).timestamp(),

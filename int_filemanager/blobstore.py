@@ -81,6 +81,12 @@ def remove_if_exists(path):
         os.unlink(path)
 
 
+def read_head(env, sha256, size=2048):
+    """The first bytes of a blob, enough to tell what kind of content it is."""
+    with open(blob_path(env, sha256), "rb") as f:
+        return f.read(size)
+
+
 def hash_file(path):
     hasher = hashlib.sha256()
     size = 0

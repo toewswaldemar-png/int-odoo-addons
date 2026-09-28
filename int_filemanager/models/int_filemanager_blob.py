@@ -5,6 +5,7 @@ import time
 import psycopg2
 
 from odoo import api, fields, models
+from odoo.tools.mimetypes import guess_mimetype
 
 from .. import blobstore, fault
 
@@ -29,6 +30,9 @@ class IntFilemanagerBlob(models.Model):
     sha256 = fields.Char(required=True, index=True)
     # Float, not Integer: an int4 column overflows for files above 2 GiB.
     size = fields.Float(required=True)
+    # What the content is, from its first bytes; set when the first revision is
+    # attached. The same hash is always the same type, so it is found once.
+    mime = fields.Char()
     state = fields.Selection([("present", "Present")], default="present", required=True)
     # Renewed whenever a write uses this blob; the cleanup job only removes rows
     # unused for longer than its grace period.
@@ -59,6 +63,16 @@ class IntFilemanagerBlob(models.Model):
             blob = self.search([("sha256", "=", sha256)], limit=1)
             blob.write({"last_used": fields.Datetime.now()})
             return blob
+
+    def _ensure_mime(self):
+        """Find the content type of blobs that have none yet, from their first bytes.
+
+        Only the head of the file is read, and only by libmagic's byte patterns: nothing
+        is parsed or decoded. An empty blob has no type.
+        """
+        for blob in self.filtered(lambda b: not b.mime and b.size):
+            head = blobstore.read_head(self.env, blob.sha256)
+            blob.mime = guess_mimetype(head) or False
 
     def _gc_grace_hours(self):
         return int(
