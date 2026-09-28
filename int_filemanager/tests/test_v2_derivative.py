@@ -9,6 +9,7 @@ import contextlib
 import hashlib
 import importlib
 import io
+import json
 import os
 from unittest.mock import patch
 
@@ -19,6 +20,7 @@ from odoo.tests.common import TransactionCase, tagged
 from odoo.tools import image as odoo_image
 
 from .. import blobstore, converter_client
+from .. import derivative_plan as plan
 from ..models import int_filemanager_derivative as derivative_module
 
 # Only the magic bytes matter: nothing in Odoo decodes the file, the fake converter
@@ -44,17 +46,67 @@ def refused(state, error="nope"):
     return converter_client.ConversionResult(state, error=error, tool="fake")
 
 
-class FakeConverter:
-    """Stands in for converter_client.convert; ``answer`` decides per call."""
+PDF = b"%PDF-1.4 fake"
+TEXT = "Hello text \u00e4\u00f6\u00fc"
+META = {
+    "taken_at": "2019-07-04 12:30:00",
+    "camera": "ACME Cam 1",
+    "width": 640,
+    "height": 480,
+    "duration": 12.5,
+    "gps_lat": 49.5,
+    "gps_lon": 6.25,
+    "pages": 3,
+}
 
-    def __init__(self, answer=None):
-        self.answer = answer or (lambda sha256: done())
+
+def answer_for(kind):
+    """What the converter would send for a kind, if nothing else is arranged."""
+    if kind == "preview_pdf":
+        return converter_client.ConversionResult(
+            "done", stream=io.BytesIO(PDF), mime="application/pdf", tool="fake"
+        )
+    if kind == "text":
+        return converter_client.ConversionResult(
+            "done",
+            stream=io.BytesIO(TEXT.encode()),
+            mime="text/plain",
+            tool="fake",
+        )
+    if kind == "meta":
+        return converter_client.ConversionResult(
+            "done",
+            stream=io.BytesIO(json.dumps(META).encode()),
+            mime="application/json",
+            tool="fake",
+        )
+    return done()
+
+
+class FakeConverter:
+    """Stands in for converter_client.convert.
+
+    ``answer`` (a function of the blob hash) decides for every kind; ``by_kind`` maps a
+    kind to such a function for that kind alone; else the kind's usual answer is given.
+    """
+
+    def __init__(self, answer=None, by_kind=None):
+        self.answer = answer
+        self.by_kind = by_kind or {}
         self.calls = []
 
+    def of_kind(self, kind):
+        return [call for call in self.calls if call[2] == kind]
+
     @contextlib.contextmanager
-    def __call__(self, url, sha256, kind, spec, timeout):
-        self.calls.append((url, sha256, kind, spec))
-        yield self.answer(sha256)
+    def __call__(self, url, sha256, kind, spec, ext, timeout):
+        self.calls.append((url, sha256, kind, spec, ext))
+        if kind in self.by_kind:
+            yield self.by_kind[kind](sha256)
+        elif self.answer:
+            yield self.answer(sha256)
+        else:
+            yield answer_for(kind)
 
 
 class DerivativeCase(TransactionCase):
@@ -119,9 +171,12 @@ class DerivativeCase(TransactionCase):
         )
         return self.env["int_filemanager.node"].sudo().browse(result["node_id"])
 
-    def _job_of(self, node):
+    def _job_of(self, node, kind="tile"):
         return self.Derivative.search(
-            [("source_blob_id", "=", node.current_revision_id.blob_id.id)]
+            [
+                ("source_blob_id", "=", node.current_revision_id.blob_id.id),
+                ("kind", "=", kind),
+            ]
         )
 
     def _run(self, converter=None):
@@ -136,14 +191,14 @@ class TestDerivativeQueue(DerivativeCase):
     def test_current_jpeg_gets_one_job_and_others_none(self):
         photo = self._file("a.jpg", JPEG)
         twin = self._file("b.jpg", JPEG)
-        self._file("c.png", PNG)
+        self._file("c.xyz", b"plain text")
         self._file("empty.jpg", b"")
         self.Derivative._enqueue_missing()
         self.Derivative._enqueue_missing()
         jobs = self._job_of(photo)
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs.kind, "tile")
-        self.assertEqual(jobs.spec, derivative_module.TILE_SPEC)
+        self.assertEqual(jobs.spec, plan.TILE_SPEC)
         self.assertEqual(jobs.state, "pending")
         self.assertEqual(self._job_of(twin), jobs, "same content, one job")
         self.assertEqual(
@@ -152,7 +207,7 @@ class TestDerivativeQueue(DerivativeCase):
                     (
                         "source_blob_id.revision_ids.node_id.name",
                         "in",
-                        ["c.png", "empty.jpg"],
+                        ["c.xyz", "empty.jpg"],
                     )
                 ]
             ),
@@ -175,10 +230,10 @@ class TestDerivativeQueue(DerivativeCase):
         self.assertEqual(job.state, "done")
         self.assertEqual(job.mime, "image/jpeg")
         self.assertEqual(job.tool, "fake")
-        self.assertEqual(len(converter.calls), 1)
+        self.assertEqual(len(converter.of_kind("tile")), 1)
         self.assertEqual(
-            converter.calls[0][1:],
-            (photo.current_revision_id.blob_id.sha256, "tile", "400x300"),
+            converter.of_kind("tile")[0][1:],
+            (photo.current_revision_id.blob_id.sha256, "tile", "400x300", "jpg"),
         )
         with open(blobstore.blob_path(self.env, job.derived_blob_id.sha256), "rb") as f:
             self.assertEqual(f.read(), TILE)
@@ -224,14 +279,14 @@ class TestDerivativeQueue(DerivativeCase):
         self.assertEqual((job.state, job.attempts), ("failed", 3))
         self.assertEqual(job.error, "bad jpeg")
         self._run(converter)
-        self.assertEqual(len(converter.calls), 3, "failed is not tried again")
+        self.assertEqual(len(converter.of_kind("tile")), 3, "failed is not tried again")
 
     def test_a_job_waits_for_its_retry_time(self):
         photo = self._file("a.jpg", JPEG)
         self.Derivative._enqueue_missing()
         self._job_of(photo).next_try_at = "2999-01-01 00:00:00"
         converter = self._run()
-        self.assertFalse(converter.calls)
+        self.assertFalse(converter.of_kind("tile"))
 
     def test_not_applicable_is_final(self):
         photo = self._file("a.jpg", JPEG)
@@ -240,7 +295,7 @@ class TestDerivativeQueue(DerivativeCase):
         self._run(converter)
         job = self._job_of(photo)
         self.assertEqual(job.state, "not_applicable")
-        self.assertEqual(len(converter.calls), 1)
+        self.assertEqual(len(converter.of_kind("tile")), 1)
 
     def test_visible_files_are_converted_first(self):
         first = self._file("a.jpg", JPEG)
@@ -282,9 +337,9 @@ class TestDerivativeQueue(DerivativeCase):
         self.Derivative._enqueue_missing()
         job = self._job_of(photo)
         job.write({"state": "running", "lease_until": "2999-01-01 00:00:00"})
-        self.assertFalse(self.Derivative._claim_jobs(), "lease still valid")
+        self.assertNotIn(job, self.Derivative._claim_jobs(), "lease still valid")
         job.lease_until = "2000-01-01 00:00:00"
-        self.assertEqual(self.Derivative._claim_jobs(), job)
+        self.assertIn(job, self.Derivative._claim_jobs())
 
     def test_a_result_for_a_job_that_vanished_is_dropped_quietly(self):
         photo = self._file("a.jpg", JPEG)
@@ -316,6 +371,92 @@ class TestDerivativeQueue(DerivativeCase):
 
 
 @tagged("post_install", "-at_install")
+class TestImageKinds(DerivativeCase):
+    def test_the_class_follows_the_extension_only(self):
+        for name, expected in (
+            ("a.jpg", "browser"),
+            ("A.JPEG", "browser"),
+            ("b.png", "browser"),
+            ("c.webp", "browser"),
+            ("d.tif", "converted"),
+            ("e.HEIC", "converted"),
+            ("f.bmp", "converted"),
+            ("g.CR2", "converted"),
+            ("h.txt", None),
+            ("noextension", None),
+            ("photo.jpg.bak", None),
+            (".jpg", "browser"),
+            ("archive.tar.gz", None),
+        ):
+            with self.subTest(name=name):
+                self.assertEqual(plan.image_class(name), expected)
+
+    def test_a_browser_image_gets_a_tile_job_and_is_its_own_large_preview(self):
+        photo = self._file("a.jpg", JPEG)
+        self.Derivative._enqueue_missing()
+        tile = self._job_of(photo)
+        preview = self._job_of(photo, "preview")
+        self.assertEqual((tile.state, tile.hint_ext), ("pending", "jpg"))
+        self.assertEqual(preview.state, "done")
+        self.assertEqual(preview.derived_blob_id, preview.source_blob_id)
+        self.assertEqual(preview.mime, "image/jpeg")
+        self.assertEqual(preview.spec, plan.PREVIEW_SPEC)
+
+    def test_a_converted_format_gets_two_jobs_and_the_preview_waits(self):
+        raw = self._file("IMG_0001.CR2", b"raw sensor data" * 10)
+        self.Derivative._enqueue_missing()
+        tile, preview = self._job_of(raw), self._job_of(raw, "preview")
+        self.assertEqual((tile.state, preview.state), ("pending", "pending"))
+        self.assertEqual(tile.hint_ext, "cr2")
+        self.assertLess(preview.priority, tile.priority)
+
+    def test_the_converter_is_asked_with_the_extension_hint(self):
+        self._file("scan.TIFF", b"tiff-ish" * 20)
+        converter = self._run()
+        kinds = sorted((call[2], call[3], call[4]) for call in converter.calls)
+        self.assertEqual(
+            kinds,
+            [
+                ("meta", "v1", "tiff"),
+                ("preview", "1920x1920", "tiff"),
+                ("tile", "400x300", "tiff"),
+            ],
+        )
+
+    def test_other_files_get_no_job(self):
+        note = self._file("notes.xyz", b"hello")
+        self.Derivative._enqueue_missing()
+        self.assertFalse(
+            self.Derivative.search(
+                [("source_blob_id", "=", note.current_revision_id.blob_id.id)]
+            )
+        )
+
+    def test_the_large_preview_state_follows_its_job(self):
+        raw = self._file("IMG_0002.NEF", b"raw" * 30)
+        self.Derivative._enqueue_missing()
+
+        def state():
+            raw.invalidate_recordset(["full_preview_state", "preview_state"])
+            node = raw.with_user(self.writer)
+            return node.preview_state, node.full_preview_state
+
+        self.assertEqual(state(), ("pending", "pending"))
+        self._job_of(raw).write({"state": "done"})
+        self.assertEqual(state(), ("ready", "pending"))
+        self._job_of(raw, "preview").write({"state": "failed"})
+        self.assertEqual(state(), ("ready", "failed"))
+
+    def test_a_browser_image_needs_no_large_preview_of_its_own(self):
+        """The viewer shows the original; its "preview" job is the original itself."""
+        photo = self._file("a.png", PNG)
+        self.Derivative._enqueue_missing()
+        photo.invalidate_recordset(["full_preview_state"])
+        self.assertEqual(photo.with_user(self.writer).full_preview_state, "none")
+        self.assertEqual(self._job_of(photo, "preview").state, "done")
+
+
+@tagged("post_install", "-at_install")
 class TestPreviewState(DerivativeCase):
     def _state(self, node):
         # Computed per request in real use; inside one test transaction it is cached.
@@ -336,7 +477,7 @@ class TestPreviewState(DerivativeCase):
 
     def test_folders_and_other_types_have_none(self):
         self.assertEqual(self._state(self.folder), "none")
-        self.assertEqual(self._state(self._file("c.png", PNG)), "none")
+        self.assertEqual(self._state(self._file("c.xyz", b"plain text")), "none")
 
     def test_request_previews_ignores_what_the_caller_cannot_read(self):
         photo = self._file("a.jpg", JPEG)
@@ -494,12 +635,37 @@ class TestOdooNeverDecodesResults(DerivativeCase):
                 [photo.id]
             )
             self.assertEqual(photo.with_user(self.writer).preview_state, "ready")
-            self.Derivative._tile_for_blob(job.source_blob_id)
+            self.Derivative._result_for_blob(job.source_blob_id, "tile")
             job.derived_blob_id.last_used = "2000-01-01 00:00:00"
             self.Blob._gc_blobs_unsafe()
         for name, watcher in watchers.items():
             with self.subTest(watched=name):
                 watcher.assert_not_called()
+
+    def test_every_kind_of_result_is_stored_without_decoding(self):
+        made = [
+            self._file("letter.docx", b"docx bytes"),
+            self._file("paper.pdf", b"pdf bytes"),
+            self._file("song.mp3", b"mp3 bytes"),
+            self._file("note.txt", b"text bytes"),
+            self._file("photo.jpg", JPEG),
+        ]
+        stack, watchers = self._watch()
+        with stack:
+            self._run()
+            self._run()
+        for name, watcher in watchers.items():
+            with self.subTest(watched=name):
+                watcher.assert_not_called()
+        states = {
+            (node.name, job.kind): job.state
+            for node in made
+            for job in self.Derivative.search(
+                [("source_blob_id", "=", node.current_revision_id.blob_id.id)]
+            )
+        }
+        self.assertEqual(set(states.values()), {"done"}, states)
+        self.assertEqual(len(states), 4 + 4 + 2 + 1 + 3)
 
     def test_the_watch_would_notice_an_attachment_being_decoded(self):
         """Counter-check: the same watchers do fire for an ordinary attachment."""

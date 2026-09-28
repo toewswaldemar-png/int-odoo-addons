@@ -17,6 +17,8 @@ IMAGE=odoo:19.0-hm-test
 DB=fmv2_race
 SERVER=fmv2_race_odoo
 CONVERTER=fmv2_race_conv
+# Built once: docker build -t fmconverter:dev tools/fmconverter (on Tower)
+CONVERTER_IMAGE=fmconverter:dev
 NET=fmtest-net
 
 cd "$(git rev-parse --show-toplevel)"
@@ -62,10 +64,10 @@ for _ in $(seq 1 60); do
 done
 
 echo "== start converter (blob store read-only, no published port)"
-# The real converter service, run from the Odoo image (which has Pillow) instead of its own image.
+# The real converter service (its own image; the code is mounted from the working tree).
 ssh "$HOST" "mkdir -p $R/data/filestore/$DB/blobs && chmod -R 777 $R/data/filestore && docker rm -f $CONVERTER >/dev/null 2>&1 || true; \
   docker run -d --name $CONVERTER --network $NET --user 10001 -v $R/data/filestore/$DB/blobs:/blobs:ro \
-  -v $R/tools/fmconverter:/app:ro --entrypoint python3 $IMAGE /app/server.py >/dev/null"
+  -v $R/tools/fmconverter:/app:ro --entrypoint python3 $CONVERTER_IMAGE /app/server.py >/dev/null"
 
 echo "== scenarios"
 status=0

@@ -22,4 +22,5 @@ from . import test_v2_share
 from . import test_v2_assets
 from . import test_v2_i18n
 from . import test_v2_derivative
+from . import test_v2_derivative_kinds
 from . import test_v2_preview_http

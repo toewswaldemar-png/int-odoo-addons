@@ -12,7 +12,7 @@ from odoo.tools import config
 
 from .. import converter_client
 from ..models import int_filemanager_derivative as derivative_module
-from .test_v2_derivative import JPEG, TILE, FakeConverter
+from .test_v2_derivative import JPEG, PDF, TILE, FakeConverter
 
 
 @tagged("post_install", "-at_install")
@@ -84,7 +84,10 @@ class TestV2PreviewHttp(HttpCase):
         with patch.object(converter_client, "convert", FakeConverter()):
             self.Derivative._cron_run()
         self.job = self.Derivative.search(
-            [("source_blob_id", "=", self.node.current_revision_id.blob_id.id)]
+            [
+                ("source_blob_id", "=", self.node.current_revision_id.blob_id.id),
+                ("kind", "=", "tile"),
+            ]
         )
 
     def _url(self, revision_id=None, kind="tile"):
@@ -133,6 +136,51 @@ class TestV2PreviewHttp(HttpCase):
         )
         self.assertNotIn("attachment", response.headers.get("Content-Disposition", ""))
 
+    def test_a_browser_image_is_served_as_its_own_large_preview(self):
+        self._convert()
+        self.authenticate("preview_reader", "irrelevant")
+        response = self.url_open(self._url(kind="preview"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, JPEG)
+        self.assertEqual(response.headers["Content-Type"], "image/jpeg")
+        self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+
+    def test_the_large_preview_is_protected_like_the_tile(self):
+        self._convert()
+        self.authenticate("preview_outsider", "irrelevant")
+        response = self.url_open(self._url(kind="preview"))
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn(JPEG, response.content)
+
+    def test_an_office_document_is_served_as_its_pdf_and_thumbnail(self):
+        folder = self.node.parent_id
+        made = (
+            self.env["int_filemanager.node"]
+            .with_user(self.reader)
+            .create_file(folder.id, "letter.docx", b"docx bytes", "op-preview-docx")
+        )
+        self._convert()
+        self.authenticate("preview_reader", "irrelevant")
+        pdf = self.url_open(self._url(made["revision_id"], "preview_pdf"))
+        self.assertEqual(pdf.status_code, 200)
+        self.assertEqual(pdf.content, PDF)
+        self.assertEqual(pdf.headers["Content-Type"], "application/pdf")
+        self.assertEqual(pdf.headers["X-Content-Type-Options"], "nosniff")
+        tile = self.url_open(self._url(made["revision_id"], "tile"))
+        self.assertEqual((tile.status_code, tile.content), (200, TILE))
+        self.authenticate("preview_outsider", "irrelevant")
+        self.assertEqual(
+            self.url_open(self._url(made["revision_id"], "preview_pdf")).status_code,
+            403,
+        )
+
+    def test_text_and_facts_have_no_route(self):
+        self._convert()
+        self.authenticate("preview_reader", "irrelevant")
+        for kind in ("text", "meta"):
+            with self.subTest(kind=kind):
+                self.assertEqual(self.url_open(self._url(kind=kind)).status_code, 404)
+
     def test_range_and_conditional_requests_work(self):
         self._convert()
         self.authenticate("preview_reader", "irrelevant")
@@ -164,7 +212,7 @@ class TestV2PreviewHttp(HttpCase):
         self._convert()
         self.authenticate("preview_reader", "irrelevant")
         self.assertEqual(self.url_open(self._url(revision_id=999999)).status_code, 404)
-        for kind in ("preview", "text", "TILE", "../tile"):
+        for kind in ("text", "TILE", "../tile", "meta"):
             with self.subTest(kind=kind):
                 self.assertEqual(self.url_open(self._url(kind=kind)).status_code, 404)
 
@@ -264,6 +312,7 @@ class TestV2PreviewHttp(HttpCase):
             "int_filemanager.node", "request_previews", [[self.node.id]]
         ).json()
         self.assertEqual(asked["result"], 0)
-        self.assertEqual(
-            self.Derivative.search([("state", "=", "pending")]).mapped("priority"), [0]
+        priorities = self.Derivative.search([("state", "=", "pending")]).mapped(
+            "priority"
         )
+        self.assertNotIn(derivative_module.VISIBLE_PRIORITY, priorities)

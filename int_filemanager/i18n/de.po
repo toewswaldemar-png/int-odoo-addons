@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260908\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 14:14+0000\n"
-"PO-Revision-Date: 2026-09-28 14:14+0000\n"
+"POT-Creation-Date: 2026-09-28 15:18+0000\n"
+"PO-Revision-Date: 2026-09-28 15:18+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -133,6 +133,11 @@ msgstr "Blob"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
 msgid "By"
 msgstr "Von"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__camera
+msgid "Camera"
+msgstr "Kamera"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -288,6 +293,11 @@ msgid "Deleted on"
 msgstr "Gelöscht am"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__depends_on_id
+msgid "Depends On"
+msgstr "Abhängig von"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__derived_blob_id
 msgid "Derived Blob"
 msgstr "Abgeleiteter Blob"
@@ -364,6 +374,11 @@ msgid "Drop files or folders here to upload"
 msgstr "Dateien oder Ordner hier ablegen zum Hochladen"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__duration
+msgid "Duration"
+msgstr "Dauer"
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.js:0
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_revision__origin__edit
@@ -404,6 +419,7 @@ msgstr "Läuft ab am"
 
 #. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__failed
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__full_preview_state__failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_upload__state__failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__failed
@@ -548,10 +564,35 @@ msgid "Followers (Partners)"
 msgstr "Follower (Partner)"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__full_preview_state
+msgid "Full Preview State"
+msgstr "Status der großen Vorschau"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__gps_lat
+msgid "Gps Lat"
+msgstr "GPS Breitengrad"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__gps_lon
+msgid "Gps Lon"
+msgstr "GPS Längengrad"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__has_message
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__has_message
 msgid "Has Message"
 msgstr "Hat Nachricht"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__height
+msgid "Height"
+msgstr "Höhe"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__hint_ext
+msgid "Hint Ext"
+msgstr "Endungshinweis"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__id
@@ -741,6 +782,16 @@ msgid "Messages"
 msgstr "Nachrichten"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__meta
+msgid "Meta"
+msgstr "Metadaten (Rohdaten)"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__meta
+msgid "Metadata"
+msgstr "Metadaten"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__mime
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__mime
 msgid "Mime"
@@ -869,6 +920,7 @@ msgid "Node Ids Json"
 msgstr "Knoten-IDs (JSON)"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__full_preview_state__none
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__none
 msgid "None"
 msgstr "Keine"
@@ -965,6 +1017,11 @@ msgid "Original location"
 msgstr "Ursprünglicher Ort"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__pages
+msgid "Pages"
+msgstr "Seiten"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__parent_id
 msgid "Parent"
 msgstr "Übergeordneter Ordner"
@@ -995,6 +1052,7 @@ msgstr "Pausiert"
 
 #. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__pending
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__full_preview_state__pending
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__pending
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__pending
 msgid "Pending"
@@ -1006,9 +1064,19 @@ msgid "Present"
 msgstr "Vorhanden"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__preview_pdf
+msgid "Preview PDF"
+msgstr "Vorschau-PDF"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__preview_state
 msgid "Preview State"
 msgstr "Vorschau-Status"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__preview
+msgid "Preview image"
+msgstr "Vorschaubild (groß)"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__priority
@@ -1037,6 +1105,7 @@ msgid "Read groups"
 msgstr "Lesen erlaubt für"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__full_preview_state__ready
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__ready
 msgid "Ready"
 msgstr "Bereit"
@@ -1275,6 +1344,12 @@ msgid "Tags, status, contact"
 msgstr "Tags, Status, Kontakt"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__taken_at
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__taken_at
+msgid "Taken At"
+msgstr "Aufgenommen am"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__target_name
 msgid "Target Name"
 msgstr "Zielname"
@@ -1293,6 +1368,12 @@ msgstr "Zielordner"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__temp_file
 msgid "Temp File"
 msgstr "Temporäre Datei"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__text
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__text
+msgid "Text"
+msgstr "Text"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -1553,6 +1634,11 @@ msgstr "Website-Nachrichten"
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__website_message_ids
 msgid "Website communication history"
 msgstr "Website-Kommunikationsverlauf"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__width
+msgid "Width"
+msgstr "Breite"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search

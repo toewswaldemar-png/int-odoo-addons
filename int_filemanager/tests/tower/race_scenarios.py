@@ -893,10 +893,10 @@ from odoo.addons.int_filemanager import converter_client
 real = converter_client.convert
 
 @contextlib.contextmanager
-def logged(url, sha256, kind, spec, timeout):
+def logged(url, sha256, kind, spec, ext, timeout):
     with open({log!r}, "a") as f:
-        f.write(str(os.getpid()) + " " + sha256 + "\\n")
-    with real(url, sha256, kind, spec, timeout) as result:
+        f.write(str(os.getpid()) + " " + sha256 + " " + kind + "\\n")
+    with real(url, sha256, kind, spec, ext, timeout) as result:
         yield result
 
 converter_client.convert = logged
@@ -912,7 +912,7 @@ out = {{}}
 for sha in shas:
     blob = env["int_filemanager.blob"].sudo().search([("sha256", "=", sha)])
     jobs = env["int_filemanager.derivative"].sudo().search(
-        [("source_blob_id", "in", blob.ids)])
+        [("source_blob_id", "in", blob.ids), ("kind", "=", "tile")])
     entry = {{"jobs": len(jobs), "state": jobs.state if len(jobs) == 1 else None}}
     if len(jobs) == 1 and jobs.derived_blob_id:
         derived = jobs.derived_blob_id
@@ -1013,12 +1013,12 @@ seen = []
 own_pid = env.cr._cnx.get_backend_pid()
 
 @contextlib.contextmanager
-def probing(url, sha256, kind, spec, timeout):
+def probing(url, sha256, kind, spec, ext, timeout):
     # From a second connection: what does the worker's own connection do right now?
     with sql_db.db_connect(env.cr.dbname).cursor() as cr:
         cr.execute("SELECT state FROM pg_stat_activity WHERE pid = %s", [own_pid])
         seen.append(cr.fetchone()[0])
-    with real(url, sha256, kind, spec, timeout) as result:
+    with real(url, sha256, kind, spec, ext, timeout) as result:
         yield result
 
 converter_client.convert = probing
@@ -1080,8 +1080,9 @@ def scenario_crash_derivative_after_link(base_url, api_key, fault_file, fixtures
     state = _run_odoo_shell(shell_cmd, _STATE_SCRIPT.format(shas=shas))
     if state[shas[0]] != {"jobs": 1, "state": "running"}:
         raise ScenarioFailed(f"a dead worker must leave a running job: {state}")
-    if _run_odoo_shell(shell_cmd, _EXPIRE_LEASES_SCRIPT.format(shas=shas)) != 1:
-        raise ScenarioFailed("expected exactly one running job to expire")
+    # The thumbnail job, and the facts job that was taken in the same batch.
+    if _run_odoo_shell(shell_cmd, _EXPIRE_LEASES_SCRIPT.format(shas=shas)) < 1:
+        raise ScenarioFailed("expected the running jobs of the dead worker to expire")
     _run_odoo_shell(shell_cmd, _RUN_QUEUE_SCRIPT.format(log=_CONVERT_LOG))
     state = _run_odoo_shell(shell_cmd, _STATE_SCRIPT.format(shas=shas))
     if state[shas[0]] != {
@@ -1125,11 +1126,13 @@ def scenario_two_workers_take_different_jobs(base_url, api_key, fault_file, fixt
         raise ScenarioFailed(f"a queue run failed: {[r.error for r in results]}")
     log = [entry for entry in _convert_log() if entry[1] in shas]
     per_job = {}
-    for _pid, sha in log:
-        per_job[sha] = per_job.get(sha, 0) + 1
-    if sorted(per_job) != sorted(shas) or set(per_job.values()) != {1}:
+    for _pid, sha, kind in log:
+        per_job[(sha, kind)] = per_job.get((sha, kind), 0) + 1
+    # A photo has a thumbnail job and a facts job (its large preview is the original).
+    wanted = sorted((sha, kind) for sha in shas for kind in ("tile", "meta"))
+    if sorted(per_job) != wanted or set(per_job.values()) != {1}:
         raise ScenarioFailed(f"jobs must be converted exactly once: {per_job}")
-    if len({pid for pid, _sha in log}) != 2:
+    if len({pid for pid, _sha, _kind in log}) != 2:
         raise ScenarioFailed(f"both runs should have worked: {log}")
     state = _run_odoo_shell(shell_cmd, _STATE_SCRIPT.format(shas=shas))
     if any(state[sha].get("state") != "done" for sha in shas):
