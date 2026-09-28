@@ -11,6 +11,10 @@ Start ohne Explorer-Zugriff, WebDAV/SMB vorbereitet); **freigegeben am 2026-09-2
 **Überarbeitet am 2026-09-27:** Befunde A1–A21 der Code-Prüfung (`docs/review/konzept_codepruefung_2026-09-26.md`)
 und die Entscheidungen 6–8 eingearbeitet; neue Tests und Messungen in 19.17.
 
+**Überarbeitet am 2026-09-28:** Abschnitt 8 (abgeleitete Dateien: Vorschau, Text, Metadaten, Umwandler) neu gefasst;
+Entscheidungen 11–15; neue Grundregel I13; Modell `int_filemanager.derivative` (4), Rechte (12), Tests (16),
+Reihenfolge (18). Grundlage: Prüfung des Odoo-19-Cores (Klon `8d05257d`), Vergleich mit FileRun und Cloudreve.
+
 **Entscheidungen des Nutzers (2026-09-26):**
 1. Der Dateimanager wird **vollständig als Odoo-Addon** gebaut. Odoo-Bausteine werden genutzt; **selbst gebaut wird
    nur dort, wo Odoo nachweislich an Grenzen stößt.**
@@ -37,6 +41,14 @@ und die Entscheidungen 6–8 eingearbeitet; neue Tests und Messungen in 19.17.
    Umstellung) (Entscheidung 2026-09-27).
 10. **Test-Image** mit eigenem Tag `odoo:19.0-hm-test` (Live-Tag `odoo:19.0-hm` unberührt); **pre-commit** läuft auf
    dem Arbeitsrechner (Entscheidung 2026-09-27).
+11. **Abgeleitete Dateien** (Vorschaubilder, Vorschau-PDFs, Text, Metadaten) liegen im **eigenen Blob-Speicher**,
+    nicht in `ir.attachment`; Odoo dekodiert sie nie (8.1, 8.9; Entscheidung 2026-09-28).
+12. **Erzeugung als Mischform:** dauerhafte Warteschlange in der Datenbank, gedrosselt im Hintergrund; was gerade auf
+    dem Bildschirm steht, kommt zuerst (8.4; Entscheidung 2026-09-28).
+13. **Zwei Bildgrößen:** Kachel und Vorschau (8.3; Entscheidung 2026-09-28).
+14. **Werterkennung** (Muster, extrahierte Werte) bleibt in Odoo, arbeitet nur auf dem Text (9; Entscheidung 2026-09-28).
+15. **Umfang Schritt 5 = Kern** (Bilder inklusive HEIC/RAW/TIFF, Video-Standbild, Office, PDF, Scans mit Texterkennung,
+    Metadaten, Verwalter-Diagnose); E-Book, 3D, Kontaktbögen u. a. als spätere Erweiterung (8.8; Entscheidung 2026-09-28).
 
 **Grundlage:** Live-Prüfungen auf Tower und Code-Prüfungen im Odoo-19-Core, dokumentiert in
 `int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitte 19 und 20). Dort ist belegt, dass fast alle Fehler
@@ -75,6 +87,7 @@ jede Änderung wird dagegen geprüft; jede Invariante hat Tests (Abschnitt 16).
 | I10 | **Der Odoo-Core wird nicht verändert oder gepatcht.** Erweiterung nur über dokumentierte Mechanismen (Vererbung, Hooks, Routen, Auth-Methoden, CLI-Befehle aus Addons). | Update-Brüche |
 | I11 | **Native Bibliotheken für fremde Dateiformate laufen außerhalb des Odoo-Prozesses.** | Abstürze und Speicherfresser im Odoo-Prozess, Pillow-Beschränkung |
 | I12 | **Keine Dateibytes im RAM des Odoo-Prozesses** über eine feste Grenze hinaus; Übertragung per Streaming und `x_sendfile`. | 128-MiB-Grenze, RAM |
+| I13 | **Odoo öffnet und dekodiert keine Dateibytes fremder Herkunft** – weder Originale noch Ergebnisse des Umwandlers. Abgeleitete Dateien werden nur gespeichert und ausgeliefert; sie liegen im Blob-Speicher, nicht in `ir.attachment` (8.9). | Bild- und PDF-Parser im Odoo-Prozess (Pillow in `_check_contents`, `_index`, `image_width`, `/web/image`, `pdf_first_page`) |
 
 ## 3. Architektur
 
@@ -93,13 +106,13 @@ jede Änderung wird dagegen geprüft; jede Invariante hat Tests (Abschnitt 16).
  │  ONLYOFFICE-Callback                    │
  ├─ Crons: Vorschau/OCR, Aufräumen         │
  │  (Blobs, Uploads, Temp-Dateien)         │
- └─ Modelle + Rechte ─────────── gemeinsam: int_filemanager.node, int_filemanager.revision, int_filemanager.blob, int_filemanager.scope, int_filemanager.upload,
+ └─ Modelle + Rechte ─────────── gemeinsam: int_filemanager.node, int_filemanager.revision, int_filemanager.blob, int_filemanager.derivative, int_filemanager.scope, int_filemanager.upload,
                                   (mit WebDAV: .dav_lock, .dav_prop), Tags, Status, OCR-Werte; ir.model.access + ir.rule
         │                               │
         ▼                               ▼
  PostgreSQL (C-Kollation)        Blob-Speicher (Array-Share, nur Odoo-Prozesse schreiben)
                                         ▲
- Umwandler-Container (vips, ffmpeg, LibreOffice, Pillow voll, OCR) ── liest Blobs, liefert PNG/JPEG/Text an Odoo
+ Umwandler-Container (vips, ffmpeg, LibreOffice, Pillow voll, OCR) ── liest Blobs, liefert Vorschaubilder, Text und Metadaten an Odoo
 ```
 
 ## 4. Datenmodell
@@ -112,6 +125,7 @@ Entscheidung 2026-09-26). In den Prototypen (Abschnitt 19) hießen die Modelle n
 | `int_filemanager.node` | Ordner und Dateien (Verzeichniseintrag) | `name`, `parent_id` (`_parent_store`), `is_dir`, `active`, `removal_reason` (`trash`), `scope_id`, `current_revision_id`, `size`, `mime`, `tag_ids`, `status_id`, `partner_id`, `mail.thread`; für WebDAV `vacated_parent_id`/`vacated_name`/`vacated_at`/`vacated_uid` und `shadow_of_id` (Identitätsregel, 11). **Teil-Unique-Index** `(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active` über `models.UniqueIndex`: Name je Ordner **ohne Rücksicht auf Groß/Klein** eindeutig wie unter Windows (19.4; geprüft: `größe.TXT` neben `Größe.txt` abgelehnt, `GRÖSSE.txt` erlaubt wie auf NTFS), Papierkorb blockiert nicht. `NULLS NOT DISTINCT`, weil PostgreSQL leere Eltern sonst als verschieden zählt und gleichnamige Wurzelknoten zuließe (19.17, A6). Namenssuchen nutzen denselben Ausdruck, damit der Index greift. Pfad nur berechnet/zur Anzeige. **Jede Datei hat eine aktuelle Revision, auch eine leere** (Revision auf den 0-Byte-Blob, A7); die Sonderregel für den leeren Vorab-`PUT` des Windows-Explorers gehört in die WebDAV-Schicht (11.2). |
 | `int_filemanager.revision` | eine Fassung einer Datei | `node_id`, `revision_no`, `blob_id`, `size` (`Float`, 19.2), `origin` (`upload`, `webdav`, `office`, `edit`, `restore`, `import`), `create_uid`, `create_date`, `operation_id`. Nie verändert. |
 | `int_filemanager.blob` | Inhalt | `sha256` (eindeutig), `size` (**`Float`**, weil `fields.Integer` `int4` ist, 19.2), `state` (`present`), `last_used` (bei jeder Verwendung im Abschluss-Commit gesetzt; Grundlage der Schonfrist, 5). Anlegen im Savepoint, bei `UniqueViolation` die vorhandene Zeile nehmen (zwei Worker mit gleichem Inhalt, 6). Speicherort aus dem Hash abgeleitet, nicht gespeichert. |
+| `int_filemanager.derivative` | abgeleitete Daten zu einem Blob (Vorschaubild, Vorschau-PDF, Text, Metadaten) | Einzelheiten 8.3. Für Nutzer **kein** Zugriff. |
 | `int_filemanager.scope` | Rechte-Bereich | `name`, `read_group_ids`, `write_group_ids`, `manage_group_ids`, `purge_group_ids`. Knoten erben den Bereich des nächsten Ordners mit eigenem Bereich (gespeichert, beim Verschieben per ORM für den Teilbaum gesetzt). |
 | `int_filemanager.upload` | laufender Upload in Stücken | `operation_id` (eindeutig), `create_uid`, Zielordner/-datei, erwartete Größe (`Float`, unbekannt erlaubt), bisherige Größe, Temp-Datei, `state` (`open`, `processing`, `done`, `failed`), Ablauf. |
 | `int_filemanager.dav_lock` (erst mit WebDAV) | WebDAV-Sperren | `token` (eindeutig), `root` (Pfad, wie WsgiDAV sperrt), `data` (Sperre als JSON), `expire`; zusätzlich `node_id` für die Anzeige in der Oberfläche ("wird in Word bearbeitet") und ONLYOFFICE. In der DB, damit alle Prozesse sie sehen und ein Neustart sie nicht verliert (19.7, 19.10). LOCK/UNLOCK über `pg_advisory_xact_lock` serialisiert. |
@@ -133,7 +147,8 @@ liefern könnten).
 großen Dateibestand. Konkret: Inhalte nur als Bytes im Speicher (`_set_attachment_data`), `store_fname` nicht setzbar
 (`write`/`create` entfernen es), Prüfsumme SHA-1 (`_compute_checksum`), kein `fsync` beim Schreiben (`_file_write`),
 Rechte hängen am Elterndatensatz. Große Dateien, Streaming und fortsetzbare Uploads sind damit nicht möglich
-(Code-Prüfung Nr. 33–35). `ir.attachment` bleibt für Vorschaubilder und Anhänge an Geschäftsdatensätzen.
+(Code-Prüfung Nr. 33–35). `ir.attachment` bleibt Odoos Anhangssystem für Geschäftsdatensätze; für Dateiinhalte **und**
+für abgeleitete Dateien (Vorschau, Text) wird es nicht genutzt (8.9, I13).
 
 **Aufbau:** Nachbildung des Filestore-Musters, erweitert um Streaming.
 - **Ablage:** `<blobroot>/<sha[0:2]>/<sha[2:4]>/<sha>`. `<blobroot>` ist ein **Unraid-Share unter `/mnt/user/<name>`**;
@@ -239,20 +254,182 @@ API ganz in den RAM (19.2); das Streamen ginge nur über ein internes Attribut (
   unter der Identität des anfordernden Nutzers in eine Temp-Datei **unterhalb von `<data_dir>/filestore`** (sonst
   kein `x_sendfile`), der Nutzer bekommt eine Benachrichtigung, ausgeliefert wird per nginx; Temp-ZIPs nach 24 h
   löschen (A9). Rechte je enthaltener Datei.
-- **Vorschaubilder:** `fields.Image` am Knoten bzw. an der Revision (Größen nach dem `image.mixin`-Muster), Auslieferung
-  über `/web/image` (Rechte greifen nativ, geprüft in 19.2).
-- **Umwandler als eigener Container (I11):** kleiner HTTP-Dienst ohne Internetzugang, liest Blobs schreibgeschützt und
-  liefert PNG/JPEG bzw. Text zurück. Werkzeuge: Pillow mit allen Plugins (WebP, AVIF, TIFF), vips, libheif, libraw,
-  ffmpeg (Standbild), Ghostscript (PDF), LibreOffice (Office → PDF → Bild). Odoos eigene Pillow-Beschränkung
-  (`tools/image.py:26-28`) bleibt unberührt.
-- **Auslösung:** Cron in Batches mit Zeitbudget, gebunden an die **Revision** (veraltete Ergebnisse werden verworfen),
-  Zeit- und Größenlimits je Format, Fehlerzustand sichtbar.
-- **Nachholen im Bestand:** gedrosselt über Tage (209.429 Bilder auf Tower, 20.3).
+
+### 8.1 Abgeleitete Dateien: Ziel und Umfang (Entscheidungen 11–15, 2026-09-28)
+
+Zu jedem Blob entstehen automatisch **abgeleitete Daten**: Vorschaubilder, Vorschau-PDFs (Office), Text (aus dem
+Dokument, aus Scans per Texterkennung) und Metadaten. Sie werden nur im Umwandler (8.2) erzeugt. Odoo speichert und
+liefert sie aus, öffnet oder dekodiert sie nie (I13). Fehler sind sichtbar; eine defekte Datei stört Odoo nicht.
+
+**Umfang von Schritt 5 (Entscheidung 15):**
+
+- Bilder: JPEG, PNG, GIF, BMP, WebP, AVIF, TIFF, HEIC/HEIF und Kamera-RAW.
+- Video: Standbild; die Wiedergabe läuft im Browser über den Stream mit Range (oben).
+- Office (Word, Excel, PowerPoint, ODF, RTF): Vorschau-PDF und Vorschaubild. PDF: Seite 1 als Bild.
+- Text: eingebetteter Text aus PDF und Office, Text aus Scans per Texterkennung, Textdateien.
+- Audio: Cover aus den Tags.
+- Metadaten (8.7), Verwalter-Diagnose (8.6).
+
+Spätere Erweiterungen: 8.8.
+
+### 8.2 Umwandler (I11)
+
+Eigener Container aus einem eigenen Image, **kein zweites Odoo**: kleiner HTTP-Dienst ohne Internetzugang. Der
+Blob-Speicher ist **schreibgeschützt** eingebunden; der Umwandler liest über den Hash-Pfad. Odoo schickt einen Auftrag
+(Blob, Art, Spezifikation, Grenzen), der Umwandler liefert das Ergebnis (Datenstrom oder JSON) und **schreibt selbst
+nichts** (I1). Die OCR-Werkzeuge des heutigen Moduls (Tesseract mit deutschem Sprachpaket, OCRmyPDF, Ghostscript,
+qpdf) ziehen aus dem Odoo-Image in den Umwandler. Fällt er aus oder ist er nicht erreichbar, bleiben die Aufträge
+offen; die Oberfläche zeigt Symbole.
+
+**Kette von Bausteinen** (Muster aus Cloudreve, `pkg/thumb`): Jeder Baustein hat eine Liste von Dateiendungen bzw.
+Typen, eine Größengrenze, ein Zeitlimit, einen Ein/Aus-Schalter, eine Reihenfolge und eine Grenze für gleichzeitige
+Aufträge. Ein Baustein darf ein **Zwischenergebnis** an den nächsten weiterreichen (Office → PDF → Bild →
+Vorschaubild). Passt keiner oder scheitert er, geht der Auftrag an den nächsten; sonst wird das Ergebnis
+`not_applicable` bzw. `failed` (8.4).
+
+| Baustein | Dateiarten | Ergebnis |
+|---|---|---|
+| Bild (Pillow mit allen Plugins, vips, libheif, libraw) | JPEG, PNG, GIF, BMP, WebP, AVIF, TIFF, HEIC/HEIF, RAW | Kachel, Vorschau, Metadaten |
+| Video (ffmpeg, ffprobe) | gängige Videoformate | Standbild (weiter an Bild), Metadaten |
+| Office (LibreOffice) | Word, Excel, PowerPoint, ODF, RTF | Vorschau-PDF (weiter an PDF) |
+| PDF (Ghostscript) | PDF | Seite 1 als Bild, eingebetteter Text |
+| Texterkennung (OCRmyPDF, Tesseract) | Scans, Bilder mit Text | Text |
+| Audio (Tags) | MP3, M4A, OGG, FLAC | Cover, Musik-Metadaten |
+| Text | txt, md, csv, log, json u. a. | Text |
+
+**Schutzgrenzen** (Startwerte nach Cloudreve, auf Tower zu messen): Größe je Baustein (Bild, Office, RAW 75 MB; Video
+großzügiger, bei Cloudreve 10 GB), Obergrenze für Bildpunkte gegen Bildbomben (64 Megapixel), Zeitlimit je
+Auftrag, **LibreOffice höchstens 1–2 gleichzeitig** (Cloudreve dokumentiert Startfehler bei mehr). Werkzeuge werden
+über Argumentlisten gestartet (keine Shell), in einem eigenen Arbeitsordner je Auftrag, der danach gelöscht wird.
+
+### 8.3 Datenmodell `int_filemanager.derivative`
+
+Eine Zeile je Quell-Blob, Art und Spezifikation. Die Rolle "Original" oder "abgeleitet" hängt am **Verweis**, nicht am
+Blob: derselbe Hash kann Original einer Revision und Ergebnis eines Derivats sein (z. B. ein kleines JPEG, dessen
+Vorschau es selbst ist).
+
+| Feld | Bedeutung |
+|---|---|
+| `source_blob_id` | Quelle (Many2one Blob, `ondelete="restrict"`) |
+| `kind` | `tile` (Kachel), `preview` (Vorschaubild), `preview_pdf`, `text`, `meta` |
+| `spec` | Größe bzw. Werkzeugversion; **Eindeutigkeit** `(source_blob_id, kind, spec)` |
+| `state` | `pending`, `running`, `done`, `failed`, `not_applicable` |
+| `derived_blob_id` | Ergebnis im Blob-Speicher (leer bei Text und Metadaten); darf gleich `source_blob_id` sein |
+| `text` | extrahierter Text (Suche, 9) |
+| `meta`, dazu Spalten | Metadaten als Sammelfeld (JSON); zum Filtern und Sortieren eigene Spalten: Aufnahmezeit, Kamera, GPS, Breite, Höhe, Dauer |
+| `attempts`, `tool`, `tool_version`, `started_at`, `finished_at`, `priority` | Ablauf, Diagnose |
+| `error` | technischer Fehlertext, **nur für Verwalter** (12) |
+
+- **Zwei Bildgrößen (Entscheidung 13):** Kachel (Listen, Kacheln) und Vorschau (große Ansicht). Startwerte 400 × 300
+  und 1920 × 1920, an der Oberfläche zu prüfen. **Browserfähige Formate** (JPEG, PNG, WebP, AVIF, GIF) zeigt die große
+  Ansicht direkt vom Original: `preview` ist dort `done` mit `derived_blob_id = source_blob_id`; nur die Kachel wird
+  erzeugt.
+- Ergebnisse gehören zum **Blob**: gleicher Inhalt wird nur einmal umgewandelt, alte Fassungen behalten ihre Vorschau,
+  ein "veraltetes Ergebnis" gibt es nicht (I2).
+- Der Dateityp (Foto, Video, Audio, Dokument, Archiv, Sonstiges) am Knoten wird aus `mime` berechnet (gespeichert,
+  zum Filtern).
+
+### 8.4 Auslösung und Warteschlange (Entscheidung 12)
+
+- **Dauerhaft in der Datenbank:** offene Aufträge sind Zeilen mit `state = pending`; sie überstehen Neustarts (anders
+  als Cloudreves Warteschlange im Arbeitsspeicher). Ein Cron legt die fehlenden Zeilen an (Blobs mit Revision ohne
+  Derivat); **die Schreibwege bleiben unberührt** (6).
+- **Mischform:** Der Cron arbeitet gedrosselt im Hintergrund (Zeitbudget je Lauf, Grenze je Baustein). Was der Nutzer
+  gerade in einem Ordner sieht, kommt **vorn** in die Reihenfolge: eine öffentliche, rechtegeprüfte Methode
+  `request_previews(node_ids)` (begrenzte Anzahl) setzt nur `priority` der offenen Zeilen. Die Anfrage wartet **nicht**;
+  bis das Bild da ist, zeigt die Oberfläche das Symbol, danach kommt eine Meldung über den Bus, und das Bild erscheint.
+- **Übernehmen eines Auftrags:** `SELECT … FOR UPDATE SKIP LOCKED`, `state = running` mit Ablaufzeit (stirbt ein Lauf,
+  wird der Auftrag nach Ablauf wieder frei). Der Umwandler wird erst **nach dem Commit** aufgerufen (I3).
+- **Ergebnis übernehmen:** Bytes als Datenstrom in den Blob-Speicher (SHA-256, `fsync`, Markierung, `link`) wie in 5;
+  danach in einer kurzen Transaktion `derived_blob_id` und `last_used` setzen (Schutz gegen den Aufräumjob wie bei
+  Revisionen, A4), Commit, Bus-Meldung. Ist die Quelle inzwischen gelöscht, verwirft der Fremdschlüssel den Auftrag.
+- **Fehler:** Versuche mit wachsendem Abstand (Startwert 3), danach `failed`. `failed` bleibt bestehen, bis sich die
+  Werkzeugversion oder die Bausteinliste ändert oder ein Verwalter neu anstößt (8.6). `not_applicable`: kein passender
+  Baustein, Format unbekannt oder zu groß; wird bei geänderter Bausteinliste neu bewertet. Neuer Inhalt = neuer Blob =
+  neuer Zustand.
+- **Altbestand:** dieselbe Warteschlange mit niedriger Priorität, gedrosselt über Tage (209.429 Bilder auf Tower, 20.3);
+  ein Nachtfenster ist möglich. Der Verwalter sieht den Fortschritt.
+
+### 8.5 Auslieferung und Rechte
+
+- **Eigene Route** `/int_filemanager/v2/preview/<revision_id>/<kind>`: prüft das Leserecht der **Revision** (deren
+  `ir.rule`) unter der Nutzeridentität, sucht das Derivat über `revision.blob_id` und `kind` und streamt den Ergebnis-Blob
+  (`http.Stream` vom Typ `path`, ETag = SHA-256, `x_sendfile`) wie die Download-Route. Ohne fertiges Ergebnis: 404, die
+  Oberfläche zeigt das Symbol. Freigabe-Links und Portal nutzen dieselbe Route mit ihrem Token.
+- **Kein `/web/image`, kein `/web/content`:** `int_filemanager.derivative` hat für Nutzer **keinen** Zugriff (12). Die
+  Oberfläche erhält nur den Zustand (`preview_state`, berechnet, gestapelt über die geladene Seite) und baut daraus die
+  URL. Fehlertexte sind damit für Nutzer nicht lesbar.
+- **Verwalter** (Gruppe "Verwalter") lesen das Derivat einschließlich `error` (8.6).
+
+### 8.6 Verwalter-Werkzeuge
+
+- **Diagnose je Datei:** Zustand je Art, Werkzeug mit Version, Dauer, Versuche, Fehlertext (Muster: FileRun, Cloudreve).
+- **Liste** der fehlgeschlagenen Umwandlungen mit Filter (Art, Format, Fehler); **"Neu erzeugen"** für Datei, Ordner oder
+  Bestand; Fortschritt des Nachholens.
+- **Konfiguration** der Bausteine (Ein/Aus, Endungen, Grenzen, gleichzeitige Aufträge) über `ir.config_parameter` und
+  `res.config.settings`.
+
+### 8.7 Metadaten
+
+Aus dem Umwandler, je Blob: Bild (Aufnahmezeit, Kamera, Objektiv, Belichtung, GPS, Ausrichtung, Software, Urheber,
+Breite, Höhe), Audio (Titel, Interpret, Album, Komponist, Genre), Video (Dauer, Bitrate, Bildrate, Codec, Tonspuren,
+Kapitel), Dokument (Seitenzahl). Sie dienen der Suche, den Filtern, der Detailleiste und dem Player. Odoo hat dafür
+keinen Baustein (nur die EXIF-Ausrichtung in `image_fix_orientation`). **Keine Auflösung von Ortsnamen über
+Onlinedienste** (Koordinaten verlassen das Haus nicht); ein lokaler Dienst wäre eine spätere Erweiterung.
+
+### 8.8 Bewusst später (Entscheidung 15)
+
+E-Book-Leser (EPUB), 3D-Modelle (OBJ, STL, GLTF u. a.), Kontaktbögen, PSD und EPS (ImageMagick), Bildeditor mit
+Speichern, PDF zusammenfügen und teilen (`odoo.tools.pdf` bietet die Werkzeuge), Archive entpacken. CAD nur über
+Onlinedienste – für uns wegen der Kundendaten ausgeschlossen. Die Bausteinstruktur (8.2) erlaubt jede Ergänzung ohne
+Umbau.
+
+### 8.9 Warum nicht `ir.attachment` (Prüfung des Odoo-19-Cores, 2026-09-28)
+
+Die Prüfung ging über alle 26 Erweiterungen von `ir.attachment`, alle 15 Controller mit Attachment-Bezug und alle
+Stellen, die Bilder dekodieren oder PDFs parsen. Ergebnis: Odoo öffnet Anhangsinhalt an vielen Stellen selbst, und ein
+später installiertes Modul kann weitere ergänzen. Eine Wache je Stelle wäre nie abgeschlossen.
+
+| Stelle | Was passiert |
+|---|---|
+| `_check_contents` → `_postprocess_contents` (`ir.attachment`, `create`/`write`, auch `force_storage`) | Pillow öffnet PNG, JPEG, BMP, TIFF; Verkleinern ab 1920 × 1920 (nur `image_no_postprocess` schaltet ab) |
+| `_index`, `attachment_indexation` | pdfminer, openpyxl, ZIP-XML; Fehler werden verschluckt; Aufrufer erhält nur die Menge, nicht `res_model` |
+| `fields.Image` (`create`/`write`) | `image_process` im Prozess |
+| `html_editor`: `image_width`/`image_height` | berechnetes Feld mit `base64_to_image`, per RPC lesbar |
+| `/web/image` (`_get_image_stream_from`) | bei `width`/`height`/`crop` (Pfad oder Query) oder bei Feldnamen mit Endzahl liest es die Datei, wechselt von `path` auf `data`, `image_process`; kein `x_sendfile` |
+| `/mail/attachment/pdf_first_page/<id>` | `extract_page`: pypdf, bei Bildern Pillow |
+| `html_editor` `modify_image`, `image_shape` | Kopie mit Pillow; `image_shape` dekodiert (nur über XML-ID erreichbar) |
+
+`groups=NO_ACCESS` an den Feldern schließt viele Lesewege, ist aber keine lückenlose Sperre (`sudo()`, `is_system()`,
+`public`, Zugriffstoken). Weg A (`ir.attachment` mit Sperren) würde zusätzlich Überschreibungen von `create`/`write`
+(mit `default_get` und Zuordnungswechsel), `_index` über Kontext, ein Integrationsmodul für die Ladereihenfolge und
+das ORM-Löschen der Derivate vor dem Blob verlangen, und die Auslieferung liefe trotzdem über eine eigene Route. Der
+eigene Blob-Speicher braucht nichts davon. Der Aufräumjob für Blobs (5) löscht Zeilen per SQL und würde Anhänge
+hinterlassen; mit Derivat-Zeilen ohne Anhänge ist das unkritisch.
+
+Unser bisheriges `int_filemanager/models/ir_attachment.py` (Synchronisieren auf die Platte, v1) entfällt mit v1
+(Reihenfolge, Schritt 8).
+
+### 8.10 Aufräumen und Sicherung
+
+- **Aufräumjob** (5) erweitert, in einer Transaktion mit Sperre auf Blob, Revision **und** Derivat: (1) Derivat-Zeilen
+  löschen, deren Quell-Blob keine Revision mehr hat; (2) Blobs löschen ohne Revision **und** ohne Verweis eines Derivats,
+  nach der Schonfrist. Bei `derived_blob_id = source_blob_id` verschwinden Zeile und Blob nach der Frist gemeinsam.
+- **`last_used`** wird auch gesetzt, wenn ein Derivat auf einen Blob verweist.
+- **Sicherung:** alles sichern (Original und Ergebnis lassen sich nicht sauber trennen, weil ein Blob beides sein kann).
+  Ob ein Ausschluss reiner Ergebnis-Blobs lohnt, hängt von ihrer Größe ab; sie ist noch nicht gemessen.
 
 ## 9. Suche, OCR, Geschäftsbezug
 
-- Namenssuche mit Trigram-Index; Volltext über den Text aus dem Umwandler bzw. `attachment_indexation`-Logik.
-- OCR und Werterkennung aus `int_filemanager` bleiben fachlich gleich, laufen aber als Batch über den Umwandler.
+- Namenssuche mit Trigram-Index; Volltext über `int_filemanager.derivative.text` (Art `text`, 8.3) in PostgreSQL – kein
+  Elasticsearch, kein Tika, keine `attachment_indexation`-Logik in Odoo (I13). Trigram- oder Volltextindex wird bei der
+  Umsetzung gemessen. Treffer-Ausschnitte aus dem Text.
+- **Reihenfolge der Texterkennung:** zuerst eingebetteter Text (PDF-Textebene, Office); nur wenn er fehlt oder zu
+  kurz ist (heute: weniger als 20 Zeichen je Seite), startet OCR als **eigene, gedrosselte, abschaltbare Stufe**
+  (Deutsch), weil sie langsam ist. Sie läuft im Umwandler (8.2).
+- **Werterkennung bleibt in Odoo** (Entscheidung 14): Muster und extrahierte Werte arbeiten nur auf dem fertigen Text,
+  öffnen keine fremde Datei und behalten Rechte und Vorschlagsdialog. Sie hängen wie bisher am Knoten bzw. an der
+  Revision.
 - Die heutigen öffentlichen Methoden `action_analyze_document`/`action_apply_extracted_values` (N1) werden privat
   und prüfen Rechte selbst.
 - Geschäftsbezug generisch über das Verknüpfungs-Mixin (4), Smart-Button und Dateiliste am Datensatz.
@@ -403,8 +580,9 @@ Word/Excel auf Wunsch des Nutzers entfallen, HTTPS am Windows-Client ungetestet)
 
   | Modell | Zugriff für Nutzer |
   |---|---|
-  | `int_filemanager.revision`, Vorschau- und OCR-Werte | eigene Regeln über den Knoten (`[('node_id.scope_id.read_group_ids', 'in', user.all_group_ids.ids)]`, schreibend entsprechend) |
+  | `int_filemanager.revision`, extrahierte Werte (Werterkennung) | eigene Regeln über den Knoten (`[('node_id.scope_id.read_group_ids', 'in', user.all_group_ids.ids)]`, schreibend entsprechend) |
   | `int_filemanager.blob` | **keine** ACL für Nutzer; Zugriff nur über Methoden, die vorher den Knoten unter der Nutzeridentität geprüft haben |
+  | `int_filemanager.derivative` | **keine** ACL für Nutzer (wie der Blob); Zugriff nur über die Vorschau-Route (8.5), die vorher die **Revision** unter der Nutzeridentität geprüft hat. Verwalter dürfen lesen, damit die Fehlertexte nur dort sichtbar sind; Schreiben nur über den internen Weg. |
   | `int_filemanager.upload`, `int_filemanager.operation` | nur eigene Datensätze (`create_uid` = Nutzer) |
   | `int_filemanager.scope` | lesen für interne Nutzer, ändern nur mit dem Recht "verwalten" |
   | `int_filemanager.dav_lock`, `.dav_prop` (mit WebDAV) | wie Revision, über `node_id` |
@@ -430,7 +608,12 @@ Word/Excel auf Wunsch des Nutzers entfallen, HTTPS am Windows-Client ungetestet)
   Live-Datenbankdateien liegen).
   Das Tower-Image 19.0-20260817 enthält einen späteren Sicherheits-Fix noch nicht (Zugriffsprüfung bei
   Relations-Befehlen in `create`/`write`, A5). Das Update der Live-Instanz ist eine eigene Entscheidung.
-- Überwachung: Upload-Reste, fehlerhafte Vorschauen, Hash-Prüffehler, Platz im Blob-Speicher.
+- Überwachung: Upload-Reste, fehlerhafte Vorschauen (Zahl der `failed`-Derivate, Alter der ältesten offenen), Hash-Prüffehler,
+  Platz im Blob-Speicher.
+- **Umwandler-Container:** eigenes Image (Python, vips, libheif, libraw, ffmpeg, LibreOffice, Ghostscript, Tesseract mit
+  Deutsch, OCRmyPDF), im internen Netz mit Odoo, **ohne Internet**, Blob-Speicher schreibgeschützt, Grenzen für
+  Prozessor und Arbeitsspeicher, Neustart-Richtlinie, eigener Arbeitsordner. Lässt sich unabhängig von Odoo
+  aktualisieren. Das Odoo-Image verliert die OCR-Bibliotheken.
 - **Konfiguration:** nur `db_name` setzen, **kein `dbfilter` zusätzlich** – sonst baut Odoo bei jedem Request ohne
   Sitzung (API-Schlüssel, `/web/health`) eine neue Verbindung zur `postgres`-DB auf (~20 ms, 19.6).
 - **Eingangsordner (11.1):** Samba-Freigabe auf Tower über `/boot/config/smb-extra.conf`, nur für die einliefernden
@@ -500,6 +683,20 @@ von Tower sind ca. 3,6 TB frei (2026-09-27), davon 3,2 TB auf disk2 + disk3 (Ent
     (A7).
 - **Rechte:** Nicht-Admins, Portal-Nutzer und anonyme Freigaben gegen **alle** Zugriffswege: Listen, Suche,
   Gruppierung, `/web/image`, Download-Route, RPC (`call_kw`) auf jede öffentliche Methode, WebDAV.
+- **Abgeleitete Dateien (I13):**
+  - **Odoo dekodiert nichts:** `image_process`, `ImageProcess` und die PDF-Parser (`pdfminer`, `pypdf`) patchen und mit
+    `assert_not_called()` prüfen (`_index_pdf` fängt jede Ausnahme, auch `AssertionError`; eine Ausnahme allein
+    beweist nichts). Index-Cache leeren, Gegenprobe mit einem normalen Anhang (der Test darf nicht nur einen
+    unbenutzten Pfad bestätigen). Wege: Ergebnis übernehmen, Route ausliefern, Blob-Aufräumjob, alle Rechte-Wege.
+  - **Rechte:** Nutzer ohne Leserecht der Revision bekommt nichts; `int_filemanager.derivative` ist für Nicht-Admins über
+    `call_kw`, JSON-2, `/web/image` und `/web/content` nicht lesbar; Portal und Freigabe-Link; Fehlertext nur für
+    Verwalter.
+  - **Aufräumen:** Wettlauf zwischen Aufräumjob und neuem Derivat (wie A4), `derived_blob_id = source_blob_id`, Löschen der
+    Quelle, Absturz (`os._exit`) nach dem Ablegen des Ergebnisses vor dem Commit → kein Verlust, Auftrag wird wieder frei.
+  - **Warteschlange:** zwei Läufe gleichzeitig (`SKIP LOCKED`), abgelaufene Übernahme, "sichtbares zuerst", Neustart.
+  - **Umwandler:** defekte, leere, passwortgeschützte, riesige Datei (Bildbombe), Zeitüberschreitung, Absturz des
+    Umwandlers, Umwandler nicht erreichbar → `failed` bzw. Aufträge bleiben offen, Odoo bleibt stabil.
+  - **Formate:** Testdateien aus dem echten Bestand je Baustein (Tower).
 - **Gleichzeitigkeit:** zwei Saves derselben Basisrevision, Doppelklick, Timeout nach Commit, Verschieben gegen Save.
 - **Migration:** Probelauf auf der Testinstanz mit Teilbestand und Vollbestand (Kopie der Live-DB wie in 19.1),
   Zählung und Hash-Abgleich.
@@ -544,6 +741,7 @@ stehen in `int_filemanager/tests/tower/race_scenarios.py` (echte Prozesse, nur a
 | I6 | `test_v2_write_paths`: `test_stale_base_revision_raises_conflict_not_silent_overwrite`; `scenario_same_base_revision_twice`, `scenario_crash_new_revision` |
 | I7 | `test_v2_upload`: `test_cron_finish_uses_the_uploaders_rights_not_the_crons`; `test_v2_access`, `test_v2_access_http` |
 | I9 | `scenario_crash_create_file`, `scenario_crash_new_revision`, `scenario_crash_rename_and_trash` |
+| I13 | folgen mit Schritt 5 (Abschnitt 16, "Abgeleitete Dateien") |
 
 ## 17. Entscheidungen (Stand 2026-09-26; 17.7 fällt später)
 
@@ -573,7 +771,11 @@ Abnahmekriterien je Schritt ("fertig, wenn …") und Gegenlesen durch eine zweit
    für A1–A4 schreiben** (16: erzwungene Überlappung, echter Prozessabbruch), dann Modelle, Blob-Speicher,
    Schreibwege, Rechte, Tests je Invariante.
 4. **Oberfläche** auf das neue Modell umstellen.
-5. **Vorschau/OCR** über den Umwandler.
+5. **Vorschau, Text und Metadaten** über den Umwandler (8): **(a)** Testdateien je Format aus dem Bestand sammeln;
+   **(b)** dünner Durchstich (JPEG von der Revision bis zur Anzeige, mit Aufräumen, Rechten und den Tests zu I13);
+   **(c)** Bausteine parallel (Bild/RAW, Video, Office, PDF und OCR, Metadaten, Text); **(d)** Zusammenspiel und Last
+   (Nachholen des Bestands gedrosselt, Absturz- und Wettlauftests auf Tower); **(e)** Gegenlesen, Abnahme mit echten
+   Dateien.
 6. **Office:** ONLYOFFICE im Browser auf Revisionen umstellen ("Lokal öffnen" erst mit Netzlaufwerk, 10).
 7. **Eingangsordner** (11.1): Samba-Freigabe, Import-Cron, Fehlerablage.
 8. **Migration:** Probelauf, dann Umstellung Tower. HM-SRV später (17.6).

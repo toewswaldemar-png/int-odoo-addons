@@ -45,6 +45,7 @@ gebaut wird nur, wo Odoo nachweislich begrenzt ist. Der Bestand wird **kopiert**
 | 2026-09-27 | Eingangsordner: Datei gilt nach **2 Minuten** ohne Änderung als fertig; ZIP-Download bis **ca. 500 MB** direkt, darüber Hintergrundjob; Blob-Speicher auf **disk2 + disk3** (Konzept, Entscheidungen 6–8) |
 | 2026-09-27 | Kern-Änderungen aus der Code-Prüfung übernommen; Zusatzpunkte aus dem externen Review (Import-Manifest, Outbox-Regel, B-Invarianten, Versionen festnageln) **nicht** aufgenommen |
 | 2026-09-27 | **Konzept und Kern freigegeben.** Umsetzung **im Modul `int_filemanager`** (19.0.2.0.0) auf Branch `feature/int-filemanager-v2`, heutiger Stand als Tag `int_filemanager-v1`; Test-Image `odoo:19.0-hm-test` (Live-Tag unberührt); pre-commit auf dem Arbeitsrechner (Konzept, Entscheidungen 9–10) |
+| 2026-09-28 | **Schritt 5 festgelegt** (Konzept 8, 9, Entscheidungen 11–15): abgeleitete Dateien im eigenen Blob-Speicher statt `ir.attachment` (Prüfung des Odoo-Cores: Odoo dekodiert Anhänge an vielen Stellen selbst), Mischform bei der Erzeugung, zwei Bildgrößen, Werterkennung in Odoo, Umfang = Kern, Erweiterungen später |
 | 2026-09-28 | Kommentare und Docstrings **ohne Verweise auf Dokumente** (keine Kürzel `I…`/`A…`, keine Konzept-Abschnitte), Docstrings kurz wie im Odoo-Kern; ersetzt die Hausregel "Grundregeln benennen" (Konventionen Abschnitt 3); Zuordnung Grundregel → Test nur noch im Konzept 16.1 |
 
 Vorgabe des Nutzers für den Umbau: **erst vollständig durchplanen, keine Zeile Modul-Code vor Freigabe des

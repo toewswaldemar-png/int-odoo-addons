@@ -31,6 +31,7 @@ Diese Regeln gelten immer, auch bei Absturz und Last. Jede hat Tests (→ K 2).
 | I10 | Odoo selbst wird nicht verändert. | Updates bleiben möglich. |
 | I11 | Fremde Dateiformate werden außerhalb von Odoo verarbeitet. | Vorschaubilder/OCR in einem eigenen Container. |
 | I12 | Keine ganzen großen Dateien im Arbeitsspeicher. | Hoch- und Herunterladen als Datenstrom. |
+| I13 | Odoo öffnet keine fremden Dateibytes, auch nicht die Ergebnisse des Umwandlers. | Vorschaubilder und Text liegen im Dateispeicher und werden nur ausgeliefert, nicht von Odoo gelesen. |
 
 ## 3. Aufbau
 
@@ -43,12 +44,13 @@ Diese Regeln gelten immer, auch bei Absturz und Last. Jede hat Tests (→ K 2).
         ▼                                              ▼
  Odoo (Prefork) ── Datenbank (PostgreSQL) ── Dateispeicher (nur Odoo schreibt)
         │
-        └── Umwandler-Container (Vorschaubilder, Texterkennung)
+        └── Umwandler-Container (Vorschaubilder, Texterkennung, Metadaten)
 ```
 
 - **Datenbank:** Ordner, Dateien, Versionen, Rechte, Tags, Status, Texterkennung (→ K 4).
 - **Dateispeicher:** eigener Ordner auf dem Array; jede Fassung einmal, benannt nach ihrer SHA-256-Prüfsumme; gleiche
-  Inhalte werden nur einmal gespeichert (→ K 5). `ir.attachment` reicht dafür nicht (kein Datenstrom, → K 5).
+  Inhalte werden nur einmal gespeichert (→ K 5). `ir.attachment` reicht dafür nicht (kein Datenstrom, → K 5). Auch Vorschaubilder und Text liegen im
+  Dateispeicher (→ K 8.1).
 - **nginx** liefert Downloads direkt von der Platte, Odoo prüft nur die Rechte (→ K 8).
 
 ## 4. Was man damit tun kann – zum Start
@@ -61,6 +63,7 @@ Diese Regeln gelten immer, auch bei Absturz und Last. Jede hat Tests (→ K 2).
 | Office-Dateien bearbeiten | im Browser mit ONLYOFFICE (→ K 10) |
 | Andere Dateien bearbeiten | herunterladen, lokal bearbeiten, hochladen – wird eine neue Version; wer inzwischen geändert hat, bekommt einen Hinweis statt stillem Überschreiben |
 | Versionen | jede Fassung bleibt, wiederherstellbar (unbegrenzt) |
+| Ansehen | Vorschaubilder für Fotos (auch HEIC, RAW), Video, Office und PDF; Scans werden per Texterkennung durchsuchbar. Erzeugt im Hintergrund, was auf dem Bildschirm steht, kommt zuerst (→ K 8.1–8.4) |
 | Suchen | nach Namen, nach Inhalt (Texterkennung), nach Tags/Status/Kontakt |
 | Einliefern | Scanner, Handy, Kopien in den Eingangsordner legen; Odoo übernimmt eine Datei, wenn sie sich 2 Minuten nicht mehr ändert (→ K 11.1) |
 | Teilen | Freigabe-Links mit Ablauf, Kundenportal |
@@ -76,6 +79,7 @@ entschieden; zwei Wege sind vorbereitet (→ K 11, K 19.10, K 19.14).
 | **Knoten** (`int_filemanager.node`) | ein Ordner oder eine Datei: Name, übergeordneter Ordner, Rechte-Bereich, aktuelle Fassung, Tags, Status. Namen je Ordner eindeutig, **ohne Rücksicht auf Groß/Klein** (wie Windows). Auch eine leere Datei hat eine Fassung. |
 | **Fassung** (`int_filemanager.revision`) | eine Version einer Datei; wird nie verändert |
 | **Inhalt** (`int_filemanager.blob`) | eine Datei im Dateispeicher (Prüfsumme, Größe) |
+| **Abgeleitete Daten** (`int_filemanager.derivative`) | Vorschaubild, Vorschau-PDF, Text oder Metadaten zu einem Inhalt; erzeugt vom Umwandler, für Nutzer nicht direkt lesbar, ausgeliefert über eine eigene Route mit den Rechten der Fassung (→ K 8.3, 8.5) |
 | **Rechte-Bereich** (`int_filemanager.scope`) | wer lesen, schreiben, verwalten, endgültig löschen darf; gilt für einen Ordner samt Inhalt |
 
 → Einzelheiten K 4.
@@ -146,6 +150,9 @@ Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
 | 2026-09-27 | Eingangsordner: Datei gilt nach 2 Minuten ohne Änderung als fertig |
 | 2026-09-27 | ZIP-Download bis ca. 500 MB direkt, darüber im Hintergrund |
 | 2026-09-27 | Dateispeicher als Share unter `/mnt/user`, Plattenauswahl disk2 + disk3, ohne Cache (Tower) |
+| 2026-09-28 | Abgeleitete Dateien (Vorschau, Text, Metadaten) im eigenen Dateispeicher statt in `ir.attachment`; Odoo dekodiert sie nie (K 8.9) |
+| 2026-09-28 | Erzeugung als Mischform: dauerhafte Warteschlange, gedrosselt im Hintergrund, Sichtbares zuerst (K 8.4) |
+| 2026-09-28 | Zwei Bildgrößen (Kachel, Vorschau); Werterkennung bleibt in Odoo; Umfang von Schritt 5 = Kern, Erweiterungen später (K 8.1, 8.8) |
 
 ## 11. Reihenfolge mit Abnahme
 
@@ -159,7 +166,7 @@ am 2026-09-27 verbindlich.)*
 |---|---|---|
 | 3 | **Fundament:** Test-Image aktualisieren, Prüfwerkzeuge einrichten, **zuerst die Tests für die vier schweren Befunde der Code-Prüfung (A1–A4)**, dann Datenmodell, Dateispeicher, Schreibwege, Rechte | je Grundregel ein grüner Test, für I1–I6 und I9 auch mit Abbruch mitten im Vorgang; die Tests für A1–A4 erzwingen die Überschneidung (zweiter Vorgang wird angehalten) und brechen echte Prozesse ab – nicht nur "gleichzeitig starten"; Rechte-Tests für Nicht-Admins über alle Wege **und alle Tabellen**; kein `sudo` auf Nutzereingaben |
 | 4 | **Oberfläche** auf das neue Modell | alle Funktionen aus Abschnitt 4 (außer Office/Einliefern) in der Oberfläche bedienbar; Upload 3 GB mit Abbruch und Fortsetzen |
-| 5 | **Vorschau/Texterkennung** im Umwandler | Vorschau für die häufigen Formate; Fehler sichtbar statt still; Odoo-Prozess bleibt bei defekten Dateien stabil |
+| 5 | **Vorschau, Texterkennung und Metadaten** im Umwandler | Vorschau für die häufigen Formate (Bilder inklusive HEIC/RAW/TIFF, Video-Standbild, Office, PDF, Scans mit Texterkennung); Metadaten; Fehler sichtbar statt still; Odoo-Prozess bleibt bei defekten Dateien stabil; Test, dass Odoo Ergebnisse nie dekodiert (I13) |
 | 6 | **Office** (ONLYOFFICE im Browser) | Speichern ergibt neue Fassung; zwei gleichzeitige Bearbeitungen führen zu Hinweis statt Verlust |
 | 7 | **Eingangsordner** | Scanner-Datei wird erst nach Fertigschreiben übernommen; kein Duplikat nach Abbruch; Fehlerablage funktioniert |
 | 8 | **Übernahme** des Bestands | Probelauf auf der Testinstanz vollständig; Zählung und Prüfsummen stimmen; Rückweg geprobt |
