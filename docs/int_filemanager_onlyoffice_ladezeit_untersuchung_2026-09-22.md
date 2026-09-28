@@ -60,7 +60,7 @@ bloßen Öffnen zum Bearbeiten (noch) gar nichts geändert wurde:
    zum bereits auf der Platte liegenden Inhalt ist, gefolgt von `os.replace()` und einem
    `chmod`-Aufruf (`make_shareable`). `fsync()` erzwingt einen echten Schreibvorgang bis zum
    Datenträger — bei den in diesem Repo dokumentierten CIFS-Netzlaufwerken (siehe
-   `int_filemanager_external_change_watcher_regression.md`) potenziell spürbar langsamer als bei
+   `archiv/int_filemanager_external_change_watcher_regression.md`) potenziell spürbar langsamer als bei
    lokalem Speicher.
 
 **Alles davon läuft synchron innerhalb der `/int_filemanager/open_editor`-Anfrage, bevor der

@@ -1,6 +1,6 @@
 # Liedanzeige als Odoo-Modul — Spezifikation
 
-Status: **Konzept/Analyse, noch nicht umgesetzt.** Dieses Dokument fasst die Architekturentscheidungen zusammen, die für eine mögliche Portierung des eigenständigen Go/React-Systems ([README.md](../../Liedanzeige/README.md), [CLAUDE.md](../../Liedanzeige/CLAUDE.md), separates Repo `Liedanzeige`) auf ein Odoo-Modul getroffen wurden. Keine der Entscheidungen ist final umgesetzt.
+Status: **Konzept/Analyse, noch nicht umgesetzt.** Dieses Dokument fasst die Architekturentscheidungen zusammen, die für eine mögliche Portierung des eigenständigen Go/React-Systems ([README.md](../../../Liedanzeige/README.md), [CLAUDE.md](../../../Liedanzeige/CLAUDE.md), separates Repo `Liedanzeige`) auf ein Odoo-Modul getroffen wurden. Keine der Entscheidungen ist final umgesetzt.
 
 ## 1. Ziel und Abgrenzung
 
@@ -20,7 +20,7 @@ Neu hinzu kommt eine **dritte, nicht-öffentliche Rolle**: eine Dirigenten-Ansic
 
 ### `liedanzeige.state` — laufender Anzeigezustand (Singleton)
 
-Ersetzt den In-Memory-`Hub` aus [hub.go](../../Liedanzeige/Development/server/hub.go) durch einen persistierten Odoo-Datensatz. Bei jeder Aktion (`input`/`backspace`/`reset`/`settings`) erfolgt ein normales ORM-`write()`, gefolgt von einem `bus.bus`-Push an die betroffenen Kanäle.
+Ersetzt den In-Memory-`Hub` aus [hub.go](../../../Liedanzeige/Development/server/hub.go) durch einen persistierten Odoo-Datensatz. Bei jeder Aktion (`input`/`backspace`/`reset`/`settings`) erfolgt ein normales ORM-`write()`, gefolgt von einem `bus.bus`-Push an die betroffenen Kanäle.
 
 ```python
 class LiedanzeigeState(models.Model):
@@ -39,7 +39,7 @@ class LiedanzeigeState(models.Model):
     reset_delay = fields.Integer(default=5)
 ```
 
-Feldnamen/Defaults sind 1:1 aus [config.go](../../Liedanzeige/Development/server/config.go) und [types.ts](../../Liedanzeige/Development/frontend/src/lib/types.ts) übernommen (`DisplaySettings`/`DEFAULTS`), damit keine Bedeutung verloren geht.
+Feldnamen/Defaults sind 1:1 aus [config.go](../../../Liedanzeige/Development/server/config.go) und [types.ts](../../../Liedanzeige/Development/frontend/src/lib/types.ts) übernommen (`DisplaySettings`/`DEFAULTS`), damit keine Bedeutung verloren geht.
 
 ### `liedanzeige.lied` — Liedtext-Datenbank (neu, nicht im Go-System vorhanden)
 
@@ -115,7 +115,7 @@ def action(self, **kw):
 
 ## 5. Echtzeit-Kommunikation (`bus.bus` statt eigenem WebSocket-Hub)
 
-Ersetzt [hub.go](../../Liedanzeige/Development/server/hub.go) `broadcast()`. Kanäle (als einfache String-Kanäle, kein recordset-gebundener Kanal mit Leserechteprüfung — funktional äquivalent zur heutigen Origin-Check-basierten Offenheit):
+Ersetzt [hub.go](../../../Liedanzeige/Development/server/hub.go) `broadcast()`. Kanäle (als einfache String-Kanäle, kein recordset-gebundener Kanal mit Leserechteprüfung — funktional äquivalent zur heutigen Origin-Check-basierten Offenheit):
 
 | Kanal | Payload | Abonnenten |
 |---|---|---|
@@ -139,7 +139,7 @@ Transport: Odoos eingebautes `/websocket` (kein eigener Server-Prozess nötig). 
 
 ## 7. Frontend (OWL statt React)
 
-Kein automatischer Port — Konzepte aus [Liedanzeige.tsx](../../Liedanzeige/Development/frontend/src/pages/Liedanzeige.tsx) / [Steuerung.tsx](../../Liedanzeige/Development/frontend/src/pages/Steuerung.tsx) müssen in OWL 2 neu geschrieben werden:
+Kein automatischer Port — Konzepte aus [Liedanzeige.tsx](../../../Liedanzeige/Development/frontend/src/pages/Liedanzeige.tsx) / [Steuerung.tsx](../../../Liedanzeige/Development/frontend/src/pages/Steuerung.tsx) müssen in OWL 2 neu geschrieben werden:
 
 - Rescale-Hook (Text auf 100vw messen, Skalierung berechnen) — reine DOM-Logik, 1:1 übertragbar.
 - Reset-Timer-Logik, Numpad-Sperre zwischen Lied/Chor — Zustandsmaschine bleibt gleich, nur React-Hooks → OWL-`useState`/`onWillUpdateProps`-Äquivalente.
@@ -166,7 +166,7 @@ Wichtige Klarstellung, die die Entscheidung in Abschnitt 4/7 trägt:
 
 ## 10. Kiosk-Anpassung (bleibt natives Go/Win32-Programm)
 
-Bestätigt: Fernsteuerung (Vollbild/Fenster, Reload, Monitor-Tausch, Beenden) und der fokus-unabhängige Numpad-Hook werden weiterhin gebraucht (Fenster kann Fokus verlieren) → der native Kiosk aus [Development/kiosk/](../../Liedanzeige/Development/kiosk) im Liedanzeige-Repo bleibt vollständig erhalten, nur die Transport-Schicht wird ausgetauscht:
+Bestätigt: Fernsteuerung (Vollbild/Fenster, Reload, Monitor-Tausch, Beenden) und der fokus-unabhängige Numpad-Hook werden weiterhin gebraucht (Fenster kann Fokus verlieren) → der native Kiosk aus [Development/kiosk/](../../../Liedanzeige/Development/kiosk) im Liedanzeige-Repo bleibt vollständig erhalten, nur die Transport-Schicht wird ausgetauscht:
 
 - **Anzeige-Navigation:** WebView2 → `https://odoo-host/lied` / `/chor` statt `localhost:1980/...`.
 - **Kiosk-Befehle empfangen:** Odoo-Websocket-Client (`subscribe`-Handshake) auf Kanal `liedanzeige_kiosk` statt eigenem WS-Kanal; Nachrichtenformat inhaltlich unverändert (`fullscreen`/`windowed`/`reload`/`move_to`/`quit`).

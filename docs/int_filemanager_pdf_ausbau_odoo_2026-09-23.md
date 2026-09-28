@@ -113,7 +113,7 @@ das versteht sich von selbst mit dem Papierkorb-Entwurf aus
   `int_filemanager_ocr_selbstdefinierte_felder.md`) — ein Schreib-Pfad würde erlauben, ein
   Formular-PDF direkt in `int_filemanager` auszufüllen, nicht nur auszulesen.
 - **Eingebettete Anhänge extrahieren** (`OdooPdfFileReader.getAttachments()`) — direkt relevant
-  für die in `erp-odoo-modulvergleich.md` gefundene `LeitwegID`/`XRechnung`-Thematik: moderne
+  für die in `erp/erp-odoo-modulvergleich.md` gefundene `LeitwegID`/`XRechnung`-Thematik: moderne
   PDF/A-3-E-Rechnungen betten die strukturierte XML-Rechnung direkt in die PDF-Datei ein — diese
   Funktion könnte sie automatisch herausziehen (z.B. für eine künftige Buchhaltungs-Integration).
 - **PDF-Signatur** (`PdfSigner`) — technisch vollständig vorhanden, aber mit echter

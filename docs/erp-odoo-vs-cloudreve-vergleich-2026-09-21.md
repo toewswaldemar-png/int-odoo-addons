@@ -1,7 +1,7 @@
 # Odoo vs. Cloudreve — detaillierter Vergleich
 
 Stand 2026-09-21. Ergänzt die bisherige Odoo-Recherche dieser Session
-([`erp-odoo-plattform-analyse-2026-09-21.md`](erp-odoo-plattform-analyse-2026-09-21.md),
+([`erp/erp-odoo-plattform-analyse-2026-09-21.md`](erp/erp-odoo-plattform-analyse-2026-09-21.md),
 [`int_filemanager_feature_ideen_2026-09-21.md`](int_filemanager_feature_ideen_2026-09-21.md),
 [`int_filemanager_odoo_native_integration_2026-09-21.md`](int_filemanager_odoo_native_integration_2026-09-21.md))
 um einen Vergleich mit **Cloudreve**, der zweiten, unabhängig vom `int-odoo-addons`-Repo laufenden
@@ -103,7 +103,7 @@ das in `int_filemanager` ein grundlegender Umbau, in Cloudreve eine reine Konfig
 
 Cloudreve ist **vollständig** GPL v3, jede im README genannte Funktion ist frei nutzbar — es gibt
 keine Enterprise-Variante, keine bezahlpflichtige Funktionsstufe. Odoo dagegen hat, wie in
-`erp-odoo-plattform-analyse-2026-09-21.md` (Abschnitt 2) bereits detailliert hergeleitet, eine
+`erp/erp-odoo-plattform-analyse-2026-09-21.md` (Abschnitt 2) bereits detailliert hergeleitet, eine
 harte Trennung zwischen kostenloser Community Edition und kostenpflichtiger Enterprise Edition,
 wobei ausgerechnet die native Dokumentenverwaltung (Documents-App) zu den Enterprise-exklusiven
 Apps zählt — der eigentliche Grund, warum `int_filemanager` überhaupt als Eigenentwicklung
@@ -166,7 +166,7 @@ müsste, solange die Datei physisch liegen bleibt und nur der Index sie als gel�
 
 ## Verweis
 
-Zusammen mit `erp-odoo-plattform-analyse-2026-09-21.md` (Odoo allgemein),
+Zusammen mit `erp/erp-odoo-plattform-analyse-2026-09-21.md` (Odoo allgemein),
 `int_filemanager_feature_ideen_2026-09-21.md` (Feature-Ideen) und
 `int_filemanager_odoo_native_integration_2026-09-21.md` (native Odoo-Verzahnung) ergibt sich aus
 diesem Dokument ein vollständigeres Bild: was Odoo/`int_filemanager` bereits kann, was nativ noch

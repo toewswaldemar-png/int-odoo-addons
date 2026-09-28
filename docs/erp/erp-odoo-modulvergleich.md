@@ -215,7 +215,7 @@ Kartei-Tab wie hier.
 ## Detailvergleich: Artikel
 
 Abgleich der `ARTIKEL`-Tabelle (2011-Schema, 130 Spalten) gegen die bereits
-bestehenden Testballon-Felder aus [`int_legacy_erp_import`](../int_legacy_erp_import/models/product_template.py)
+bestehenden Testballon-Felder aus [`int_legacy_erp_import`](../../int_legacy_erp_import/models/product_template.py)
 (`x_alt_artnr`, `x_alt_kurzbezeichnung`, `x_alt_bestellnr`, `x_alt_hauptlieferant`,
 `x_alt_gruppe`, `x_alt_einheit`, `x_alt_hersteller_ref_ids`), plus Gegenprobe
 über die aktuelle EXE.

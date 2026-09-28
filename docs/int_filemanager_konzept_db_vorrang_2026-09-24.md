@@ -360,11 +360,11 @@ Eigenbau und braucht die meisten Tests.**
 
 | Doc | Einordnung |
 |---|---|
-| `int_filemanager_wahrheitsmodell_watcher_reduktion_2026-09-24.md` | Idee "Schnitt lokal/CIFS" trägt nicht (Daten liegen fast nur auf CIFS-Testfreigaben, lokal nur `Test`); Zeile "App-Schreibvorgänge sind DB-geführt" trifft nicht zu (B4) |
-| `int_filemanager_filebrowser_scan_architektur_2026-09-23.md` | Bezieht sich auf `_shallow_reconcile()`, der nicht existiert; CIFS-Scanstrategie ist Testbetrieb und niedrig priorisiert |
+| `archiv/int_filemanager_wahrheitsmodell_watcher_reduktion_2026-09-24.md` | Idee "Schnitt lokal/CIFS" trägt nicht (Daten liegen fast nur auf CIFS-Testfreigaben, lokal nur `Test`); Zeile "App-Schreibvorgänge sind DB-geführt" trifft nicht zu (B4) |
+| `archiv/int_filemanager_filebrowser_scan_architektur_2026-09-23.md` | Bezieht sich auf `_shallow_reconcile()`, der nicht existiert; CIFS-Scanstrategie ist Testbetrieb und niedrig priorisiert |
 | `int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` | Papierkorb ist bereits mit `trashed`-Feld umgesetzt (Commit `b53fed2`), nicht mit `active`; Watcher-Guard-Argument überholt |
-| `int_filemanager_watcher_stille_fehlschlaege_2026-09-23.md` | Funde bleiben gültig, Bewertung ändert sich (`max_user_watches` unkritisch; Watchdog wichtig, aber Watcher wird zum Zulieferer) |
-| `int_filemanager_grundsatz_explorer_ausbau_2026-09-23.md` | Roadmap bleibt; Reihenfolge Abschnitt 10 dieses Docs hat Vorrang für das Fundament |
+| `archiv/int_filemanager_watcher_stille_fehlschlaege_2026-09-23.md` | Funde bleiben gültig, Bewertung ändert sich (`max_user_watches` unkritisch; Watchdog wichtig, aber Watcher wird zum Zulieferer) |
+| `archiv/int_filemanager_grundsatz_explorer_ausbau_2026-09-23.md` | Roadmap bleibt; Reihenfolge Abschnitt 10 dieses Docs hat Vorrang für das Fundament |
 | `int_filemanager_bildvorschau_bearbeitung_odoo_2026-09-23.md` | Recherchebasis; die Empfehlung "Cropper.js selbst einbinden, Filterfunktionen kopieren, Rotation per Pillow" ist durch Abschnitt 17 (nativer Bauplan) **ersetzt** |
 | Externes Review (Desktop\SOPRANO) | Weitgehend bestätigt (B1 verifiziert). Eingeschränkt: kein vollständiger Inhaltsspeicher (1,3 TB); Share-Ausführung synchron mit persistentem Zustand statt reiner Hintergrund-Queue |
 
@@ -500,7 +500,7 @@ Samba). Die Live-Instanz blieb unberührt.
 Gelesen wurden FileBrowser Quantum (`gtsteffaniak/filebrowser`, Branch `main`: `internal/web/resource.go`,
 `internal/adapters/fs/files/files.go`, `fileutils/file.go`, `pkg/indexing/*`, `go.mod`) und das Original
 (`filebrowser/filebrowser`, Branch `master`: `http/resource.go`, `go.mod`). Nichts ausgeführt; das
-Scan-Scheduling ist zusätzlich in `int_filemanager_filebrowser_scan_architektur_2026-09-23.md` beschrieben.
+Scan-Scheduling ist zusätzlich in `archiv/int_filemanager_filebrowser_scan_architektur_2026-09-23.md` beschrieben.
 
 | Punkt | FileBrowser | Unser Konzept |
 |---|---|---|
@@ -577,7 +577,7 @@ Indexkosten: `path` 179 MB, `parent_path` 106 MB, Trigram-`name` 64 MB; Bau je ~
 **Ergebnis:**
 1. **`varchar_pattern_ops` auf `path` und `parent_path` bringt die großen Gewinne für alle Präfix-Operationen**
    (30× bis über 1.000×) bei geringem Aufwand. Native Definition: `models.Index("(path varchar_pattern_ops)")`.
-2. **`protected_folder_id` (Plan in `int_filemanager_acl_perf_plan.md`) bringt danach nur noch wenig:** ca.
+2. **`protected_folder_id` (Plan in `archiv/int_filemanager_acl_perf_plan.md`) bringt danach nur noch wenig:** ca.
    200 ms von 520 ms im Vollscan (W1), sonst nichts Messbares — der Vollscan selbst bleibt. Empfehlung:
    zuerst nur die Indizes einführen, den Rest neu bewerten und den Feld-Umbau zurückstellen.
 3. **Namenssuche:** ein Trigram-Index macht selektive Begriffe ~85× schneller (618 → 7 ms); sehr häufige

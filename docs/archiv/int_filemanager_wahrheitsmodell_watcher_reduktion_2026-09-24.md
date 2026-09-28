@@ -8,7 +8,7 @@ und FileBrowser Quantum (`int_filemanager_filebrowser_scan_architektur_2026-09-2
 Planung, nichts umgesetzt.
 
 **Nachtrag 2026-09-24 (noch am selben Tag überholt): Dieses Dokument ist durch
-`int_filemanager_konzept_db_vorrang_2026-09-24.md` (Branch `docs/konzept-db-vorrang`) ersetzt.**
+`../int_filemanager_konzept_db_vorrang_2026-09-24.md` (Branch `docs/konzept-db-vorrang`) ersetzt.**
 Der Nutzer hat dort — live auf HM-SRV getestet, nicht nur konzeptionell — bereits **Variante B: DB
 als Wahrheit** entschieden, das genaue Gegenteil der hier zugrunde gelegten Annahme ("DB ist
 Wahrheit wurde verworfen"). Das Dokument dort benennt den Denkfehler hier explizit (Abschnitt 9):
@@ -93,7 +93,7 @@ Sicherheitsnetz über beide Bereiche hinweg — daran ändert dieser Schnitt nic
   Watcher/Vollscan sichtbar, nicht über die DB-Autorität. Nur der ohnehin schon DB-geführte Anteil
   (Schreibvorgänge über int_filemanager selbst) wird als das benannt, was er bereits ist.
 - **Kein Ersatz für den Papierkorb-Bauplan.** Der Watcher-Guard aus
-  `int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` bleibt unabhängig davon nötig — er
+  `../int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` bleibt unabhängig davon nötig — er
   betrifft die Löschlogik, nicht die Watch-Baum-Aufteilung.
 - **Kein einziger großer Umbau.** Die Trennung der Watch-Bäume, die 3 Watchdog-Fixes und die
   adaptive CIFS-Scan-Umstellung sind drei unabhängig umsetzbare, klar abgegrenzte Schritte — keiner

@@ -3,7 +3,7 @@
 Stand 2026-09-23. Ergebnis eines grundsätzlichen Architektur-Gesprächs (DB- vs. Platte-als-Wahrheit,
 WebDAV, Desktop-Sync-Client) mit einem klaren Zielsatz am Ende: **das Modul massiv so ausbauen,
 dass Explorer/Directory-Opus-artiges Arbeiten möglich ist** — deckt sich mit dem bereits in
-`int_filemanager_native_ui.md` festgehaltenen Ursprungsziel ("Mitarbeiter sollen vom Windows
+`../int_filemanager_native_ui.md` festgehaltenen Ursprungsziel ("Mitarbeiter sollen vom Windows
 Explorer auf die WebUI umsteigen — Parität zu Explorer/Directory Opus als Messlatte"), nicht neu,
 aber jetzt explizit als Leitentscheidung bestätigt statt nur implizit verfolgt. Reine Planung,
 nichts umgesetzt.
@@ -51,14 +51,14 @@ Hash-/Rename-Erkennung aus Phase 1 vollständig im Code erhalten, nur seltener a
 kontinuierlich. **Ergebnis:** der einzige tatsächlich verbleibende Nutzen wäre ein etwas
 einfacherer Papierkorb (kein Watcher-Guard nötig) — zu schmal, um den Explorer-Zugriff
 aufzugeben und einen vollständigen WebDAV-Server neu zu bauen. **Papierkorb wird stattdessen wie
-in `int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` geplant über den Watcher-Guard
+in `../int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` geplant über den Watcher-Guard
 gelöst**, kein Architekturwechsel nötig.
 
 **Nachtrag 2026-09-24 (Entscheidung revidiert): diese Ablehnung gilt nicht mehr.** Nach deutlich
 tieferer, live auf HM-SRV getesteter Prüfung (eigene Testinstanz, echte Postgres-/Dateisystem-
 Experimente, vollständiger Odoo-19-Core-Durchgang) hat der Nutzer am 2026-09-24 das Gegenteil
 entschieden: **Variante B — DB als Wahrheit**, dokumentiert in
-`int_filemanager_konzept_db_vorrang_2026-09-24.md` (Branch `docs/konzept-db-vorrang`). Der
+`../int_filemanager_konzept_db_vorrang_2026-09-24.md` (Branch `docs/konzept-db-vorrang`). Der
 seinerzeitige Ausschlussgrund ("Erstellen/Umbenennen/Löschen/Verschieben von extern wären
 unsichtbar") gilt dort nicht mehr, weil ein eigens gebauter, auf einen Zulieferer reduzierter
 Watcher plus Abgleich-Cron genau diese externen Änderungen weiterhin einsammelt — nur die
@@ -74,22 +74,22 @@ Watcher/Abgleich-Cron — erst danach CIFS-Optimierung).
 Kein neuer Katalog — alles bereits einzeln recherchiert und dokumentiert, hier nur nach
 Explorer/Directory-Opus-Parität geordnet:
 
-**Navigation & Bedienung** (`int_filemanager_feature_ideen_2026-09-21.md`, Abschnitt C):
+**Navigation & Bedienung** (`../int_filemanager_feature_ideen_2026-09-21.md`, Abschnitt C):
 Adressleiste ("Gehe zu Pfad"), Zwei-Spalten-/Splitview, Favoriten/Quick-Access, Zuletzt verwendet,
 Galerie-/Rasteransicht für Bilder, Tastenkürzel (Entf/F2/Strg+C/V/X), Kopieren als eigene
 Operation.
 
-**Sicherheit/Datenintegrität** (`int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md`):
+**Sicherheit/Datenintegrität** (`../int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md`):
 Papierkorb — vollständiger Bauplan bereits steht (Odoo-`active`-Feld, Watcher-Guard,
 Restore-Route, Retention-Cron). Größte bereits gefundene Einzellücke im ganzen Modul.
 
-**Vorschau & Bearbeitung** (`int_filemanager_pdf_ausbau_odoo_2026-09-23.md`,
-`int_filemanager_bildvorschau_bearbeitung_odoo_2026-09-23.md`): PDF-Annotationen bereits im
+**Vorschau & Bearbeitung** (`../int_filemanager_pdf_ausbau_odoo_2026-09-23.md`,
+`../int_filemanager_bildvorschau_bearbeitung_odoo_2026-09-23.md`): PDF-Annotationen bereits im
 Vorschau-Dialog lauffähig, nur ohne Rückschreib-Anbindung; Bildbearbeitung (Zuschneiden, Filter)
 über wiederverwendbare Odoo-Bausteine (Cropper.js, Canvas/WebGL-Filter); Bild-Rotation in der
 Vorschau bereits vorhanden, aber nicht persistiert.
 
-**Auffindbarkeit** (`int_filemanager_feature_ideen_2026-09-21.md`, Abschnitt B):
+**Auffindbarkeit** (`../int_filemanager_feature_ideen_2026-09-21.md`, Abschnitt B):
 Duplikat-Finder (Hash-Infrastruktur existiert schon), gespeicherte Suchen, Office-Dokumente in
 die Volltextsuche einbeziehen, Trefferausschnitte.
 
@@ -103,9 +103,9 @@ LIKE-Klauseln), noch nicht umgesetzt, aktuell ~580ms pro ACL-Auswertung bei 1,38
 (Splitview, Galerie, Schnellsuche) macht die bestehende ACL-Langsamkeit nur spürbarer, nicht
 weniger relevant.
 
-**Unfertige native-UI-Migration** (`int_filemanager_native_ui.md`): alte und neue UI koexistieren
+**Unfertige native-UI-Migration** (`../int_filemanager_native_ui.md`): alte und neue UI koexistieren
 teils noch. Sollte vor massivem Ausbau der neuen UI abgeschlossen werden (inkl. der bereits
-gefundenen `bus.bus`-Live-Refresh-Lücke, siehe `int_filemanager_odoo_native_integration_2026-09-21.md`,
+gefundenen `bus.bus`-Live-Refresh-Lücke, siehe `../int_filemanager_odoo_native_integration_2026-09-21.md`,
 Punkt 1) — sonst wächst der Wartungsaufwand mit jedem neuen Feature doppelt.
 
 **WebDAV-Vollausbau** (aus dem heutigen Architekturgespräch, neu): ein vollständiger, allgemeiner
@@ -127,12 +127,12 @@ reiner Notwendigkeit zurück zu Explorer/lokalen Kopien und unterläuft die gesa
 Grundsatzentscheidung. Die drei bereits vollständig untersuchten, bauplanfertigen Punkte rücken
 damit vor alles andere in Abschnitt 3:
 
-1. `int_filemanager_onlyoffice_ladezeit_untersuchung_2026-09-22.md` — bestätigter
+1. `../int_filemanager_onlyoffice_ladezeit_untersuchung_2026-09-22.md` — bestätigter
    Redundant-Write-Bug bei jedem Öffnen, inkl. der präzisierten Stat-Vergleich-Lösung
    (Nachtrag 2026-09-23).
 2. Dasselbe Dokument, Abschnitt 4 — DocsAPI-Script dateiunabhängig vorladen, größter Einzelgewinn
    bei geringstem Risiko.
-3. `int_filemanager_lokal_oeffnen_warnungen_2026-09-23.md` — Protokoll-Entscheidung (intern HTTP,
+3. `../int_filemanager_lokal_oeffnen_warnungen_2026-09-23.md` — Protokoll-Entscheidung (intern HTTP,
    extern über Reverse-Proxy mit echtem Zertifikat, `proxy_mode` in Odoo aktivieren) plus zwei
    GPO-Verteilungen (Browser-Protokoll-Freigabe, Office-Trusted-Protocols).
 

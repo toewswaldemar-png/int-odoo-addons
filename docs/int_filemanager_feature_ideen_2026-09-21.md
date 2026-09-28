@@ -25,10 +25,10 @@ Blickwinkel explizit markiert): digitale Signatur (Lizenzfrage offen), GoBD-Unve
 NAS-spezifische Integrationen, LLM-basierte Erkennung (Kosten/Datenschutz).
 
 **Bereits geplant, aber noch nicht umgesetzt** (siehe jeweiliges Dokument, hier nicht
-wiederholt): ACL-Performance-Fix bei 1,38 Mio. Zeilen (`int_filemanager_acl_perf_plan.md`),
+wiederholt): ACL-Performance-Fix bei 1,38 Mio. Zeilen (`archiv/int_filemanager_acl_perf_plan.md`),
 Abschluss der nativen ListView-Migration inkl. Löschen des alten UI-Pfads
 (`int_filemanager_native_ui.md`), Optimierung des CIFS-Reconciliation-Scans (`~289s` unabhängig
-von der tatsächlichen Änderungsmenge, `int_filemanager_external_change_watcher_regression.md`).
+von der tatsächlichen Änderungsmenge, `archiv/int_filemanager_external_change_watcher_regression.md`).
 
 Die folgenden Ideen sind nach Bereich sortiert, nicht nach Priorität — ein Priorisierungsvorschlag
 steht ganz am Ende.
@@ -335,11 +335,11 @@ Ziel.
 
 ## L. Bereits an anderer Stelle geplant — hier nur referenziert, nicht dupliziert
 
-- ACL-Performance-Fix bei großem Datenbestand: `int_filemanager_acl_perf_plan.md`.
+- ACL-Performance-Fix bei großem Datenbestand: `archiv/int_filemanager_acl_perf_plan.md`.
 - Abschluss der nativen-ListView-Migration (alten UI-Pfad löschen): `int_filemanager_native_ui.md`,
   "Empfohlene Reihenfolge".
 - CIFS-Reconciliation-Scan-Optimierung (Laufzeit unabhängig von tatsächlicher Änderungsmenge):
-  `int_filemanager_external_change_watcher_regression.md`.
+  `archiv/int_filemanager_external_change_watcher_regression.md`.
 - Selbstdefinierte Extraktionsfelder (Phase A–C): bereits vollständig umgesetzt
   (`int_filemanager_ocr_selbstdefinierte_felder.md`).
 
