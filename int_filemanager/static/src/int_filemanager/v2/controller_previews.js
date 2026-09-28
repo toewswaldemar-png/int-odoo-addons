@@ -38,7 +38,11 @@ export const previewsMixin = (Base) =>
 
     _pendingPreviewIds() {
       return (this.model.root?.records || [])
-        .filter((record) => record.data.preview_state === "pending")
+        .filter(
+          (record) =>
+            record.data.preview_state === "pending" ||
+            record.data.full_preview_state === "pending"
+        )
         .map((record) => record.resId);
     }
 

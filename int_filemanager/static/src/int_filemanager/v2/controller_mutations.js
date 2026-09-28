@@ -52,6 +52,35 @@ const PREVIEWABLE_EXTENSIONS = new Set([
 
 export const isPreviewable = (name) => PREVIEWABLE_EXTENSIONS.has(extOf(name));
 
+// Formats the browser cannot show have a large preview made by the server, there once
+// full_preview_state says so: a picture for TIFF, HEIC and camera RAW, a PDF for office
+// documents.
+const OFFICE_EXTENSIONS = new Set([
+  "doc",
+  "docx",
+  "odt",
+  "rtf",
+  "xls",
+  "xlsx",
+  "ods",
+  "ppt",
+  "pptx",
+  "odp",
+]);
+const isOffice = (name) => OFFICE_EXTENSIONS.has(extOf(name));
+
+export const largePreviewUrl = (record) => {
+  const revision = record.data.current_revision_id;
+  if (record.data.full_preview_state !== "ready" || !revision) {
+    return "";
+  }
+  const kind = isOffice(record.data.name) ? "preview_pdf" : "preview";
+  return `/int_filemanager/v2/preview/${revision.id}/${kind}`;
+};
+
+const canPreview = (record) =>
+  isPreviewable(record.data.name) || Boolean(largePreviewUrl(record));
+
 export const mutationsMixin = (Base) =>
   class extends Base {
     setup() {
@@ -427,7 +456,7 @@ export const mutationsMixin = (Base) =>
         this.onEditText(record);
       } else if (AUDIO_EXTENSIONS.has(ext)) {
         this.onPlayAudio(record);
-      } else if (isPreviewable(name)) {
+      } else if (canPreview(record)) {
         this.onPreview(record);
       } else {
         window.open(this._urlToDownload(record), "_blank");
@@ -453,6 +482,22 @@ export const mutationsMixin = (Base) =>
     }
 
     toViewerFile(record) {
+      const converted = !isPreviewable(record.data.name) && largePreviewUrl(record);
+      if (converted) {
+        const isPdf = isOffice(record.data.name);
+        return {
+          resId: record.resId,
+          name: record.data.name,
+          downloadUrl: downloadUrl(record.resId),
+          isImage: !isPdf,
+          isPdf,
+          isVideo: false,
+          isViewable: true,
+          defaultSource: isPdf
+            ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(converted)}#pagemode=none`
+            : converted,
+        };
+      }
       const url = downloadUrl(record.resId, {inline: true});
       const ext = extOf(record.data.name);
       const isPdf = ext === "pdf";
@@ -475,7 +520,7 @@ export const mutationsMixin = (Base) =>
 
     onPreview(record) {
       const files = this.model.root.records
-        .filter((r) => !r.data.is_dir && isPreviewable(r.data.name))
+        .filter((r) => !r.data.is_dir && canPreview(r))
         .map((r) => this.toViewerFile(r));
       const file = files.find((f) => f.resId === record.resId);
       this.fileViewer.open(file, files);

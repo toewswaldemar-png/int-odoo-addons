@@ -62,6 +62,7 @@
         <field name="parent_id" column_invisible="1" />
         <field name="current_revision_id" column_invisible="1" />
         <field name="preview_state" column_invisible="1" />
+        <field name="full_preview_state" column_invisible="1" />
         <field name="status_color" column_invisible="1" />
         <field
           name="status_id"
@@ -94,6 +95,7 @@
         <field name="parent_id" />
         <field name="current_revision_id" />
         <field name="preview_state" />
+        <field name="full_preview_state" />
         <field name="status_color" />
         <templates>
           <t t-name="card">
