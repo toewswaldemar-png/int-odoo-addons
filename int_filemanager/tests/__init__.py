@@ -16,3 +16,4 @@ from . import test_v2_blobstore
 from . import test_v2_write_paths
 from . import test_v2_upload
 from . import test_v2_tree
+from . import test_v2_download

@@ -38,5 +38,5 @@ ssh "$HOST" "docker exec fmtest_pg dropdb -U odoo --if-exists $DB && docker run 
   -v $R/config:/etc/odoo:ro -v $R/addons:/mnt/extra-addons:ro -v $R/data:/var/lib/odoo $IMAGE \
   odoo -c /etc/odoo/odoo.conf -d $DB -i int_filemanager --test-tags '$TAGS' --stop-after-init --workers=0 \
   --max-cron-threads=0 --no-http --log-level=test >$R/tests.log 2>&1" || status=$?
-ssh "$HOST" "grep -E 'FAIL:|ERROR: Test|tests in|failed, ' $R/tests.log | tail -40"
+ssh "$HOST" "grep -E -A14 'FAIL:|ERROR: Test' $R/tests.log | head -120; grep -E 'tests in|failed, ' $R/tests.log | tail -3"
 exit $status
