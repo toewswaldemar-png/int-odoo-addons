@@ -48,7 +48,12 @@ writer = (
         {
             "name": "Race driver writer",
             "login": "race_driver_writer",
-            "group_ids": [(6, 0, [base_group.id, write_group.id])],
+            "password": "race_driver_pw_1",
+            # base.group_user: a real file manager user is an internal user; without it
+            # the web client sends the login to the portal (/my).
+            "group_ids": [
+                (6, 0, [env.ref("base.group_user").id, base_group.id, write_group.id])
+            ],
         }
     )
 )
@@ -112,6 +117,8 @@ env.cr.commit()  # pylint: disable=unknown-option-value,invalid-commit
 
 fixtures = {
     "api_key": api_key,
+    "login": "race_driver_writer",
+    "password": "race_driver_pw_1",
     "parent_id": parent.id,
     "revision_node_id": revision_node_id,
     "revision_base_revision_id": revision_base_revision_id,

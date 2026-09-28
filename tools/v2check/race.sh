@@ -31,7 +31,7 @@ ssh "$HOST" "docker rm -f $SERVER >/dev/null 2>&1 || true; rm -rf $R && mkdir -p
 tar -c --exclude=__pycache__ int_filemanager onlyoffice_odoo | ssh "$HOST" "tar -x -C $R/addons"
 scp -q int_filemanager/tests/tower/race_scenarios.py int_filemanager/tests/tower/bootstrap_fixtures.py "$HOST:$R/work/"
 ssh "$HOST" "sed -e 's/^db_name = .*/db_name = $DB/' -e 's#^addons_path = .*#addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons#' \
-  -e 's#^data_dir = .*#data_dir = /var/lib/odoo#' -e 's/^max_cron_threads = .*/max_cron_threads = 0/' -e 's/^workers = .*/workers = 2/' \
+  -e 's#^data_dir = .*#data_dir = /var/lib/odoo#' -e 's/^max_cron_threads = .*/max_cron_threads = 0/' -e 's/^x_sendfile = .*/x_sendfile = False/' -e 's/^workers = .*/workers = 2/' \
   $BASE/config_v2/odoo.conf > $R/config/odoo.conf"
 
 MOUNTS="-v $R/config:/etc/odoo:ro -v $R/addons:/mnt/extra-addons:ro -v $R/data:/var/lib/odoo"

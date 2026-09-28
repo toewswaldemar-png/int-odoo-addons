@@ -12,14 +12,19 @@ installed.
 import argparse
 import base64
 import glob
+import hashlib
+import http.client
+import http.cookiejar
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 _logger = logging.getLogger(__name__)
@@ -586,6 +591,190 @@ def scenario_crash_rename_and_trash(base_url, api_key, fault_file, fixtures):
         raise ScenarioFailed(f"the retried trash did not take effect: {row}")
 
 
+# --------------------------------------------------------------------------
+# Big upload with an abort and a resume (Kern 11, step 4: "Upload 3 GB mit Abbruch und
+# Fortsetzen"). The client here is the same protocol the browser speaks: init_upload /
+# finish_upload / upload_status over JSON-2, the chunks as raw bodies over a real login
+# session with its CSRF token.
+# --------------------------------------------------------------------------
+
+_BLOCK = 1024 * 1024
+CHUNK_BYTES = 4 * 1024 * 1024
+
+
+def _pattern(seed, start, length):
+    """Deterministic pseudo-random bytes [start, start+length) of an endless stream, so
+    the expected hash of gigabytes needs no gigabytes of memory or disk on the
+    client."""
+    out = bytearray()
+    index = start // _BLOCK
+    skip = start % _BLOCK
+    while len(out) < length:
+        block = hashlib.shake_256(f"{seed}:{index}".encode()).digest(_BLOCK)
+        out += block[skip:]
+        skip = 0
+        index += 1
+    return bytes(out[:length])
+
+
+def _pattern_sha256(seed, total):
+    hasher = hashlib.sha256()
+    for start in range(0, total, _BLOCK):
+        hasher.update(_pattern(seed, start, min(_BLOCK, total - start)))
+    return hasher.hexdigest()
+
+
+def http_login(base_url, login, password):
+    jar = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+    html = opener.open(f"{base_url}/web/login", timeout=30).read().decode()
+    csrf = re.search(r'name="csrf_token" value="(\w+)"', html).group(1)
+    form = urllib.parse.urlencode(
+        {"login": login, "password": password, "csrf_token": csrf, "redirect": ""}
+    ).encode()
+    opener.open(f"{base_url}/web/login", form, timeout=30)
+    page = opener.open(f"{base_url}/odoo", timeout=30).read().decode()
+    token = re.search(r'csrf_token: "(\w+)"', page)
+    if not token:
+        raise ScenarioFailed("login did not give a web client page with a CSRF token")
+    return opener, jar, token.group(1)
+
+
+def post_chunk(base_url, opener, csrf, upload_id, offset, data):
+    query = urllib.parse.urlencode({"offset": offset, "csrf_token": csrf})
+    req = urllib.request.Request(
+        f"{base_url}/int_filemanager/v2/upload/{upload_id}/chunk?{query}",
+        data=data,
+        headers={"Content-Type": "application/octet-stream"},
+        method="POST",
+    )
+    with opener.open(req, timeout=120) as resp:
+        return json.loads(resp.read())
+
+
+def send_cut_off_chunk(base_url, jar, csrf, upload_id, offset):
+    """A client that dies in the middle of a chunk: the headers promise 4 MiB, one
+    MiB arrives, the connection drops."""
+    parsed = urllib.parse.urlparse(base_url)
+    conn = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=30)
+    query = urllib.parse.urlencode({"offset": offset, "csrf_token": csrf})
+    conn.putrequest("POST", f"/int_filemanager/v2/upload/{upload_id}/chunk?{query}")
+    conn.putheader("Content-Type", "application/octet-stream")
+    conn.putheader("Content-Length", str(CHUNK_BYTES))
+    conn.putheader("Cookie", "; ".join(f"{c.name}={c.value}" for c in jar))
+    conn.endheaders()
+    conn.send(b"\xff" * _BLOCK)
+    conn.close()
+
+
+def _upload_call(base_url, api_key, method, params):
+    return json2_call(
+        base_url, api_key, "int_filemanager.upload", method, params, timeout=120
+    )
+
+
+def scenario_upload_large_resume(base_url, api_key, fault_file, fixtures):
+    """init -> ~40 % of the chunks -> one chunk cut off in the middle -> the client
+    "restarts" (new login, init again with the SAME operation key, ask the server how
+    much it really has) -> a chunk sent twice -> the rest -> finish. Above the
+    threshold (256 MB) finish is asynchronous, so the job that finishes it runs in a
+    second real process (`odoo shell`), like the cron would. Finally the bytes come
+    back through the download route and must hash to what was sent."""
+    shell_cmd = fixtures.get("_odoo_shell_cmd")
+    if not shell_cmd:
+        raise NotImplementedError("needs --odoo-shell-cmd (finishing job runs there)")
+    total = int(fixtures.get("_upload_mb") or 300) * 1024 * 1024
+    seed = f"race-upload-{time.monotonic_ns()}"
+    key = f"race-upload-large-{seed}"
+    name = f"{seed}.bin"
+    expected_sha = _pattern_sha256(seed, total)
+    _logger.info("uploading %d MiB, expected sha256 %s", total >> 20, expected_sha)
+
+    init_params = {
+        "target_parent_id": fixtures["parent_id"],
+        "target_name": name,
+        "target_node_id": False,
+        "base_revision_id": False,
+        "expected_size": total,
+        "operation_key": key,
+    }
+    upload_id = _upload_call(base_url, api_key, "init_upload", init_params)["upload_id"]
+
+    opener, jar, csrf = http_login(base_url, fixtures["login"], fixtures["password"])
+    stop_at = (total * 4 // 10) // CHUNK_BYTES * CHUNK_BYTES
+    offset = 0
+    while offset < stop_at:
+        data = _pattern(seed, offset, min(CHUNK_BYTES, total - offset))
+        post_chunk(base_url, opener, csrf, upload_id, offset, data)
+        offset += len(data)
+
+    send_cut_off_chunk(base_url, jar, csrf, upload_id, offset)
+    time.sleep(1)
+
+    # The client is gone. A new one only knows the operation key and the file.
+    opener, jar, csrf = http_login(base_url, fixtures["login"], fixtures["password"])
+    again = _upload_call(base_url, api_key, "init_upload", init_params)
+    if again["upload_id"] != upload_id:
+        raise ScenarioFailed(f"init with the same key gave another upload: {again}")
+    status = _upload_call(base_url, api_key, "upload_status", {"upload_id": upload_id})
+    received = int(status["received_size"])
+    _logger.info(
+        "server has %d of %d bytes after the abort (cut-off chunk %s)",
+        received,
+        total,
+        "kept its prefix" if received > stop_at else "dropped",
+    )
+    if received < stop_at or received > stop_at + _BLOCK:
+        raise ScenarioFailed(f"unexpected received_size after the abort: {status}")
+
+    # A chunk the server already has, sent again: harmless.
+    if received > 0:
+        redo_from = max(0, received - CHUNK_BYTES)
+        redo = post_chunk(
+            base_url,
+            opener,
+            csrf,
+            upload_id,
+            redo_from,
+            _pattern(seed, redo_from, min(CHUNK_BYTES, received - redo_from)),
+        )
+        if int(redo["received_size"]) != received:
+            raise ScenarioFailed(f"a repeated chunk changed the size: {redo}")
+
+    offset = received
+    while offset < total:
+        data = _pattern(seed, offset, min(CHUNK_BYTES, total - offset))
+        post_chunk(base_url, opener, csrf, upload_id, offset, data)
+        offset += len(data)
+
+    finish = _upload_call(
+        base_url,
+        api_key,
+        "finish_upload",
+        {"upload_id": upload_id, "operation_key": f"{key}-finish"},
+    )
+    if finish.get("state") == "processing":
+        _run_odoo_shell(shell_cmd, _FINISH_SCRIPT.format(upload_id=upload_id))
+    status = _upload_call(base_url, api_key, "upload_status", {"upload_id": upload_id})
+    if status["state"] != "done":
+        raise ScenarioFailed(f"the upload did not finish: {status}")
+    result = status["result"]
+    if result["sha256"] != expected_sha:
+        raise ScenarioFailed(f"stored hash differs from what was sent: {result}")
+
+    hasher = hashlib.sha256()
+    length = 0
+    with opener.open(
+        f"{base_url}/int_filemanager/v2/download/{result['node_id']}", timeout=600
+    ) as resp:
+        while chunk := resp.read(_BLOCK):
+            hasher.update(chunk)
+            length += len(chunk)
+    if length != total or hasher.hexdigest() != expected_sha:
+        raise ScenarioFailed(f"the download is not what was uploaded: {length} bytes")
+    _logger.info("uploaded and downloaded %d bytes, hashes match", length)
+
+
 _GC_SCRIPT = """
 import json
 sha256 = {sha256!r}
@@ -610,6 +799,15 @@ print("RESULT " + json.dumps({{
     "revisions": len(blob.revision_ids),
     "file_ok": file_ok,
 }}))
+"""
+
+
+_FINISH_SCRIPT = """
+import json
+upload = env["int_filemanager.upload"].sudo().browse({upload_id})
+env["int_filemanager.upload"].sudo()._finish_pending_one(upload)
+env.cr.commit()
+print("RESULT " + json.dumps({{"state": upload.state}}))
 """
 
 
@@ -704,6 +902,7 @@ SCENARIOS = {
     "move_against_delete": scenario_move_against_delete,
     "lock_timeout_triggers_retry": scenario_lock_timeout_triggers_retry,
     "blob_gc_against_reuse": scenario_blob_gc_against_reuse,
+    "upload_large_resume": scenario_upload_large_resume,
     "crash_create_file": scenario_crash_create_file,
     "crash_new_revision": scenario_crash_new_revision,
     "crash_rename_and_trash": scenario_crash_rename_and_trash,
@@ -726,6 +925,13 @@ def main():
         " on stdin); needed for blob_gc_against_reuse, which runs the cleanup job in"
         " its own process. The scenario stays PENDING without it.",
     )
+    parser.add_argument(
+        "--upload-mb",
+        type=int,
+        default=300,
+        help="size of the file upload_large_resume sends; above 256 the finish is"
+        " asynchronous (300 by default, 3072 for the step 4 acceptance run)",
+    )
     parser.add_argument("--scenario", default="all", choices=["all", *SCENARIOS])
     parser.add_argument(
         "--cleanup", action="store_true", help="remove stale barrier dirs and exit"
@@ -744,6 +950,7 @@ def main():
     fixtures = load_fixtures(args.fixtures_json)
     api_key = fixtures["api_key"]
     fixtures["_odoo_shell_cmd"] = args.odoo_shell_cmd
+    fixtures["_upload_mb"] = args.upload_mb
 
     names = list(SCENARIOS) if args.scenario == "all" else [args.scenario]
     failures = []

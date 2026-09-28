@@ -88,6 +88,23 @@ msgid "Filemanager v2 write operation (idempotency key)"
 msgstr "Dateimanager v2 Schreibvorgang (Idempotenzschlüssel)"
 
 #. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_zip_job
+msgid "Filemanager v2 ZIP download job"
+msgstr "Dateimanager v2 ZIP-Download-Auftrag"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_zip_job.py:0
+msgid "Internal error."
+msgstr "Interner Fehler."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/zip_stream.py:0
+msgid "Nothing to download."
+msgstr "Nichts zum Herunterladen."
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "Restoring would collide with an existing file or folder of the same name."
@@ -116,6 +133,12 @@ msgstr "Das Ziel ist kein Ordner."
 #: code:addons/int_filemanager/models/int_filemanager_upload.py:0
 msgid "This chunk does not continue where the upload left off."
 msgstr "Dieses Stück setzt nicht dort an, wo der Upload aufgehört hat."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_zip_job.py:0
+msgid "This download does not exist any more."
+msgstr "Dieser Download existiert nicht mehr."
 
 #. module: int_filemanager
 #. odoo-python
@@ -156,6 +179,12 @@ msgstr "Dieser Vorgangsschlüssel wurde bereits verwendet."
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "This revision does not belong to this file."
 msgstr "Diese Revision gehört nicht zu dieser Datei."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
+msgid "This upload does not exist any more."
+msgstr "Dieser Upload existiert nicht mehr."
 
 #. module: int_filemanager
 #. odoo-python

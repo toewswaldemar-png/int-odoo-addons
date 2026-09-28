@@ -5,7 +5,7 @@ from datetime import timedelta
 import psycopg2
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 from odoo.tools import SQL
 
 from .. import blobstore
@@ -72,6 +72,10 @@ class IntFilemanagerUpload(models.Model):
         required=True,
     )
     expires_at = fields.Datetime()
+    # What the client needs once the upload is over (node/revision ids, hash) or why it
+    # failed; the async path has no request left to return them in (Konzept 7).
+    result = fields.Json()
+    error = fields.Char()
 
     _operation_id_uniq = models.Constraint(
         "UNIQUE(operation_id)", "This operation already has an upload in progress."
@@ -187,12 +191,30 @@ class IntFilemanagerUpload(models.Model):
         return {"received_size": upload.received_size}
 
     @api.model
-    def finish_upload(self, upload_id, operation_key):
+    def upload_status(self, upload_id):
+        """What a client needs to resume, to poll an asynchronous finish and to show
+        the outcome. Only the uploader's own uploads are visible (ir.rule)."""
+        upload = self.browse(upload_id).exists()
+        if not upload:
+            raise UserError(self.env._("This upload does not exist any more."))
+        upload.check_access("read")
+        return {
+            "upload_id": upload.id,
+            "state": upload.state,
+            "received_size": upload.received_size,
+            "expected_size": upload.expected_size,
+            "result": upload.result,
+            "error": upload.error,
+        }
+
+    @api.model
+    def finish_upload(self, upload_id, operation_key, target_name=None):
         """Konzept 7 "finish": hash the received temp file, then attach it
         the same way a single-request write would - unless it is large
         enough that doing so now would hold this request open too long, in
         which case a cron finishes it instead and the caller polls
-        upload.state."""
+        upload_status(). *target_name* lets the client retry under another
+        name after a name conflict, without re-sending a byte."""
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -205,6 +227,8 @@ class IntFilemanagerUpload(models.Model):
             raise UserError(self.env._("This upload is not open."))
         if not upload.temp_file:
             raise UserError(self.env._("This upload has not received any data yet."))
+        if target_name and upload.target_parent_id:
+            upload.write({"target_name": target_name})
 
         if upload.received_size > self._large_file_threshold_bytes():
             upload.write({"state": "processing"})
@@ -229,6 +253,8 @@ class IntFilemanagerUpload(models.Model):
         Node = self.env["int_filemanager.node"]
         if upload.target_node_id:
             node = upload.target_node_id
+            # Rights can change between init and finish (an upload may take hours).
+            node.check_access("write")
             current = Node._lock_and_check_base_revision(
                 node, upload.base_revision_id.id or False
             )
@@ -265,8 +291,8 @@ class IntFilemanagerUpload(models.Model):
                 new_node, None, blob.id, size, "upload", operation
             )
 
-        upload.write({"state": "done"})
         attach_result["sha256"] = sha256
+        upload.write({"state": "done", "result": attach_result, "error": False})
         self.env.cr.postcommit.add(lambda: _remove_if_exists(upload.temp_file))
         return attach_result
 
@@ -289,11 +315,20 @@ class IntFilemanagerUpload(models.Model):
             self.env["ir.cron"]._commit_progress(processed=1)
 
     def _finish_pending_one(self, upload):
+        """The cron runs as superuser, but the upload is finished with the UPLOADER's
+        rights (I7): whoever may no longer write there gets a failed upload, not a file.
+        A savepoint keeps whatever a failing attempt half-wrote out of the commit."""
+        as_uploader = upload.with_user(upload.create_uid)
         try:
-            self._finish_now(upload, upload.operation_id)
+            with self.env.cr.savepoint():
+                as_uploader._finish_now(as_uploader, upload.operation_id)
+        except (UserError, AccessError) as exc:
+            upload.sudo().write({"state": "failed", "error": str(exc)})
         except Exception:
             _logger.exception("failed to finish upload %s", upload.id)
-            upload.write({"state": "failed"})
+            upload.sudo().write(
+                {"state": "failed", "error": self.env._("Internal error.")}
+            )
 
     @api.model
     def _cron_expire_orphaned_uploads(self):

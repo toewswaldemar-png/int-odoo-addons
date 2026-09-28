@@ -1,0 +1,14 @@
+<odoo>
+  <!-- A ZIP job is one user's own download; nobody reads someone else's (Konzept 12).
+         Users only read: the jobs are created and changed by the code (sudo), because a
+         writable file_name would make the download route serve any file. -->
+  <record id="rule_zip_job_own_records" model="ir.rule">
+    <field name="name">Filemanager v2: ZIP job own records only</field>
+    <field name="model_id" ref="model_int_filemanager_zip_job" />
+    <field name="domain_force">[('create_uid', '=', user.id)]</field>
+    <field name="perm_read">True</field>
+    <field name="perm_write">True</field>
+    <field name="perm_create">True</field>
+    <field name="perm_unlink">True</field>
+  </record>
+</odoo>

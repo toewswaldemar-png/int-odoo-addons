@@ -14,6 +14,7 @@
         "security/int_filemanager_node_security.xml",
         "security/int_filemanager_revision_security.xml",
         "security/int_filemanager_upload_security.xml",
+        "security/int_filemanager_zip_job_security.xml",
         "security/int_filemanager_operation_security.xml",
         "security/int_filemanager_scope_security.xml",
         "data/filemanager_status.xml",
@@ -34,6 +35,7 @@
         "views/portal_templates.xml",
         "data/ir_cron.xml",
         "data/int_filemanager_upload_cron.xml",
+        "data/int_filemanager_zip_cron.xml",
     ],
     "assets": {
         "web.assets_backend": [

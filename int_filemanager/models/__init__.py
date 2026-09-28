@@ -18,3 +18,4 @@ from . import int_filemanager_blob
 from . import int_filemanager_revision
 from . import int_filemanager_operation
 from . import int_filemanager_upload
+from . import int_filemanager_zip_job

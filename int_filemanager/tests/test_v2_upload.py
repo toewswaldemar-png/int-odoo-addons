@@ -222,6 +222,103 @@ class TestUploadFlow(TransactionCase):
             .search([("parent_id", "=", self.folder.id), ("name", "=", "huge.bin")])
         )
         self.assertTrue(found)
+        self.assertEqual(found.create_uid, self.writer)
+        self.assertEqual(upload.result["node_id"], found.id)
+        self.assertFalse(upload.error)
+
+    def _large_pending_upload(self, name, key):
+        self.env["ir.config_parameter"].sudo().set_param(
+            "int_filemanager.upload_large_file_threshold_mb", "0"
+        )
+        result = self._init_new_file(name=name, key=key)
+        self._upload_env().upload_chunk(result["upload_id"], 0, b"payload")
+        self._upload_env().finish_upload(result["upload_id"], f"{key}-done")
+        return self.env["int_filemanager.upload"].sudo().browse(result["upload_id"])
+
+    def test_cron_finish_uses_the_uploaders_rights_not_the_crons(self):
+        """The cron runs as superuser; a user whose write right was revoked while the
+        upload sat in the queue must get a failed upload, not a file (I7)."""
+        upload = self._large_pending_upload("revoked.bin", "op-revoked")
+        self.writer.sudo().write({"group_ids": [(3, self.write_group.id)]})
+
+        self.env["int_filemanager.upload"].sudo()._finish_pending_one(upload)
+
+        upload.invalidate_recordset()
+        self.assertEqual(upload.state, "failed")
+        self.assertTrue(upload.error)
+        self.assertFalse(
+            self.env["int_filemanager.node"]
+            .sudo()
+            .search([("parent_id", "=", self.folder.id), ("name", "=", "revoked.bin")])
+        )
+
+    def test_cron_finish_failure_is_recorded_with_its_reason(self):
+        self.env["int_filemanager.node"].with_user(self.writer).create_file(
+            self.folder.id, "clash.bin", b"x", "op-clash-setup"
+        )
+        upload = self._large_pending_upload("clash.bin", "op-clash")
+
+        self.env["int_filemanager.upload"].sudo()._finish_pending_one(upload)
+
+        upload.invalidate_recordset()
+        self.assertEqual(upload.state, "failed")
+        self.assertIn("clash.bin", upload.error)
+
+    def test_status_reports_progress_and_the_final_result(self):
+        init = self._init_new_file(name="status.bin", key="op-status", size=10)
+        upload_id = init["upload_id"]
+        self.assertEqual(
+            self._upload_env().upload_status(upload_id)["received_size"], 0
+        )
+
+        self._upload_env().upload_chunk(upload_id, 0, b"12345")
+        status = self._upload_env().upload_status(upload_id)
+        self.assertEqual(status["received_size"], 5)
+        self.assertEqual(status["state"], "open")
+        self.assertEqual(status["expected_size"], 10)
+
+        self._upload_env().upload_chunk(upload_id, 5, b"67890")
+        finish = self._upload_env().finish_upload(upload_id, "op-status-done")
+        status = self._upload_env().upload_status(upload_id)
+        self.assertEqual(status["state"], "done")
+        self.assertEqual(status["result"]["node_id"], finish["node_id"])
+
+    def test_status_of_someone_elses_upload_is_denied(self):
+        init = self._init_new_file(name="mine.bin", key="op-status-mine")
+
+        with self.assertRaises(AccessError):
+            self._upload_env(self.outsider).upload_status(init["upload_id"])
+
+    def test_finish_with_a_new_name_after_a_conflict(self):
+        self.env["int_filemanager.node"].with_user(self.writer).create_file(
+            self.folder.id, "taken2.txt", b"x", "op-taken2-setup"
+        )
+        result = self._init_new_file(name="taken2.txt", key="op-rename-finish")
+        self._upload_env().upload_chunk(result["upload_id"], 0, b"y")
+        with self.assertRaises(UserError):
+            self._upload_env().finish_upload(result["upload_id"], "op-rename-finish-1")
+
+        finish = self._upload_env().finish_upload(
+            result["upload_id"], "op-rename-finish-2", "taken2 (1).txt"
+        )
+
+        node = self.env["int_filemanager.node"].sudo().browse(finish["node_id"])
+        self.assertEqual(node.name, "taken2 (1).txt")
+
+    def test_finish_of_a_new_revision_rechecks_the_write_right(self):
+        created = (
+            self.env["int_filemanager.node"]
+            .with_user(self.writer)
+            .create_file(self.folder.id, "recheck.txt", b"v1", "op-recheck-setup")
+        )
+        init = self._upload_env().init_upload(
+            False, False, created["node_id"], created["revision_id"], 2, "op-recheck"
+        )
+        self._upload_env().upload_chunk(init["upload_id"], 0, b"v2")
+        self.writer.sudo().write({"group_ids": [(3, self.write_group.id)]})
+
+        with self.assertRaises(AccessError):
+            self._upload_env().finish_upload(init["upload_id"], "op-recheck-done")
 
 
 @tagged("post_install", "-at_install")

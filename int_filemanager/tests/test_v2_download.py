@@ -3,6 +3,7 @@ old revisions, Range, and the x_sendfile hand-over below data_dir/filestore."""
 
 from unittest.mock import patch
 
+from odoo import http
 from odoo.tests.common import HttpCase, tagged
 from odoo.tools import config
 
@@ -148,3 +149,121 @@ class TestV2Download(HttpCase):
             redirect,
         )
         self.assertEqual(res.content, b"")
+
+
+@tagged("post_install", "-at_install")
+class TestV2UploadChunkRoute(HttpCase):
+    """The chunk route (Schritt 4a-3): raw body, CSRF token in the query string, size
+    limit, and a complete init -> chunks -> finish -> download round trip."""
+
+    def setUp(self):
+        super().setUp()
+        self.enterContext(patch.dict(config.options, {"x_sendfile": False}))
+        base_group = self.env.ref("int_filemanager.group_filemanager_user")
+        group = self.env["res.groups"].sudo().create({"name": "Chunk group"})
+        scope = (
+            self.env["int_filemanager.scope"]
+            .sudo()
+            .create(
+                {
+                    "name": "Chunk scope",
+                    "read_group_ids": [(4, group.id)],
+                    "write_group_ids": [(4, group.id)],
+                }
+            )
+        )
+        self.folder = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "chunks", "scope_id": scope.id, "is_dir": True})
+        )
+        Users = self.env["res.users"].sudo()
+        self.writer = Users.create(
+            {
+                "name": "Chunk writer",
+                "login": "chunk_writer",
+                "password": "chunk_writer_pw_1",
+                "group_ids": [(6, 0, [base_group.id, group.id])],
+            }
+        )
+        self.other = Users.create(
+            {
+                "name": "Chunk other",
+                "login": "chunk_other",
+                "password": "chunk_other_pw_1",
+                "group_ids": [(6, 0, [base_group.id, group.id])],
+            }
+        )
+
+    def _post_chunk(self, upload_id, offset, data, csrf=True, login="chunk_writer"):
+        self.authenticate(login, f"{login}_pw_1")
+        params = {"offset": offset}
+        if csrf:
+            params["csrf_token"] = http.Request.csrf_token(self)
+        return self.url_open(
+            f"/int_filemanager/v2/upload/{upload_id}/chunk",
+            data=data,
+            params=params,
+            headers={"Content-Type": "application/octet-stream"},
+        )
+
+    def _init(self, name="round.bin", size=None):
+        return (
+            self.env["int_filemanager.upload"]
+            .with_user(self.writer)
+            .init_upload(self.folder.id, name, False, False, size, f"op-init-{name}")
+        )["upload_id"]
+
+    def test_chunks_arrive_in_order_and_the_file_downloads_back(self):
+        upload_id = self._init(size=12)
+
+        first = self._post_chunk(upload_id, 0, b"hello ")
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.json()["received_size"], 6)
+        again = self._post_chunk(upload_id, 0, b"hello ")  # a retried piece
+        self.assertEqual(again.json()["received_size"], 6)
+        second = self._post_chunk(upload_id, 6, b"world!")
+        self.assertEqual(second.json()["received_size"], 12)
+
+        finish = (
+            self.env["int_filemanager.upload"]
+            .with_user(self.writer)
+            .finish_upload(upload_id, "op-finish-round")
+        )
+        res = self.url_open(f"/int_filemanager/v2/download/{finish['node_id']}")
+        self.assertEqual(res.content, b"hello world!")
+
+    def test_a_gap_is_refused(self):
+        upload_id = self._init()
+        res = self._post_chunk(upload_id, 100, b"gap")
+        self.assertNotEqual(res.status_code, 200)
+
+    def test_without_csrf_token_nothing_is_written(self):
+        upload_id = self._init()
+        res = self._post_chunk(upload_id, 0, b"data", csrf=False)
+        self.assertEqual(res.status_code, 400)
+        upload = self.env["int_filemanager.upload"].sudo().browse(upload_id)
+        self.assertEqual(upload.received_size, 0)
+
+    def test_oversized_chunk_is_rejected(self):
+        upload_id = self._init()
+        res = self._post_chunk(upload_id, 0, b"x" * (5 * 1024 * 1024 + 1))
+        self.assertEqual(res.status_code, 413)
+
+    def test_a_chunk_at_the_limit_is_accepted(self):
+        upload_id = self._init()
+        res = self._post_chunk(upload_id, 0, b"x" * (4 * 1024 * 1024))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["received_size"], 4 * 1024 * 1024)
+
+    def test_someone_elses_upload_cannot_be_written_to(self):
+        upload_id = self._init()
+        res = self._post_chunk(upload_id, 0, b"data", login="chunk_other")
+        self.assertIn(res.status_code, (403, 404))
+        upload = self.env["int_filemanager.upload"].sudo().browse(upload_id)
+        self.assertEqual(upload.received_size, 0)
+
+    def test_non_numeric_offset_is_400(self):
+        upload_id = self._init()
+        res = self._post_chunk(upload_id, "abc", b"data")
+        self.assertEqual(res.status_code, 400)
