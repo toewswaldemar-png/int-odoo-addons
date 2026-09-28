@@ -2,6 +2,9 @@
 folder creation, name rules, copying a whole folder, and the "never into yourself"
 rules for move and copy."""
 
+from datetime import timedelta
+
+from odoo import fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import TransactionCase, tagged
 
@@ -228,3 +231,101 @@ class TestNodeTree(TransactionCase):
         self._node().restore(folder.id, "op-stamp-restore")
         self.assertFalse(folder.trashed_at)
         self.assertFalse(child.trashed_at)
+
+
+@tagged("post_install", "-at_install")
+class TestTrashPurge(TransactionCase):
+    """The 30-day purge (Konzept 17.4): rows only, blobs stay for the blob cleanup."""
+
+    def setUp(self):
+        super().setUp()
+        Scope = self.env["int_filemanager.scope"].sudo()
+        self.scope = Scope.create({"name": "Purge scope"})
+        self.Node = self.env["int_filemanager.node"].sudo()
+        self.root = self.Node.create(
+            {"name": "purge-root", "scope_id": self.scope.id, "is_dir": True}
+        )
+
+    def _file(self, parent, name, content=b"x"):
+        node = self.Node.create(
+            {"name": name, "scope_id": self.scope.id, "parent_id": parent.id}
+        )
+        self.Node.create_new_revision(node.id, False, content, f"op-purge-{name}")
+        return node
+
+    def _age(self, nodes, days):
+        nodes.with_context(active_test=False).write(
+            {"trashed_at": fields.Datetime.now() - timedelta(days=days)}
+        )
+
+    def test_expired_trash_is_purged_with_its_whole_subtree(self):
+        folder = self.Node.create(
+            {
+                "name": "old",
+                "scope_id": self.scope.id,
+                "parent_id": self.root.id,
+                "is_dir": True,
+            }
+        )
+        child = self._file(folder, "child.txt", b"old bytes")
+        sha = child.current_revision_id.blob_id.sha256
+        self.Node.trash(folder.id, "op-purge-trash-old")
+        self._age(folder + child, 31)
+
+        self.Node._purge_expired_trash()
+
+        self.assertFalse((folder + child).exists())
+        self.assertFalse(
+            self.env["int_filemanager.revision"].search([("node_id", "=", child.id)])
+        )
+        # the blob is not touched here: the blob cleanup job owns that (I4)
+        self.assertTrue(self.env["int_filemanager.blob"].search([("sha256", "=", sha)]))
+
+    def test_recent_trash_stays(self):
+        node = self._file(self.root, "recent.txt")
+        self.Node.trash(node.id, "op-purge-trash-recent")
+        self._age(node, 29)
+
+        self.Node._purge_expired_trash()
+
+        self.assertTrue(node.with_context(active_test=False).exists())
+
+    def test_nodes_that_are_not_trashed_are_never_purged(self):
+        node = self._file(self.root, "alive.txt")
+        node.write({"trashed_at": fields.Datetime.now() - timedelta(days=400)})
+
+        self.Node._purge_expired_trash()
+
+        self.assertTrue(node.exists())
+
+    def test_a_node_trashed_on_its_own_earlier_expires_before_its_folder(self):
+        folder = self.Node.create(
+            {
+                "name": "mixed",
+                "scope_id": self.scope.id,
+                "parent_id": self.root.id,
+                "is_dir": True,
+            }
+        )
+        early = self._file(folder, "early.txt")
+        late = self._file(folder, "late.txt")
+        self.Node.trash(early.id, "op-purge-early")
+        self._age(early, 40)
+        self.Node.trash(late.id, "op-purge-late")
+
+        self.Node._purge_expired_trash()
+
+        self.assertFalse(early.with_context(active_test=False).exists())
+        self.assertTrue(late.with_context(active_test=False).exists())
+
+    def test_retention_is_configurable(self):
+        node = self._file(self.root, "short.txt")
+        self.Node.trash(node.id, "op-purge-short")
+        self._age(node, 8)
+        self.env["ir.config_parameter"].sudo().set_param(
+            "int_filemanager.trash_retention_days", "7"
+        )
+
+        self.Node._purge_expired_trash()
+
+        self.assertFalse(node.with_context(active_test=False).exists())

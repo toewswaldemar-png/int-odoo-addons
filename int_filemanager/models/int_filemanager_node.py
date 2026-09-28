@@ -2,6 +2,7 @@ import io
 import logging
 import os
 import unicodedata
+from datetime import timedelta
 
 import psycopg2
 
@@ -14,6 +15,10 @@ from .. import blobstore, fault
 
 _logger = logging.getLogger(__name__)
 
+
+# Konzept 17.4: 30 days in the trash, then gone.
+DEFAULT_TRASH_RETENTION_DAYS = 30
+TRASH_RETENTION_PARAM = "int_filemanager.trash_retention_days"
 
 # A name never carries a path: "/" and "\\" would make it one, NUL is never valid.
 _INVALID_NAME_CHARS = ("/", "\\", "\x00")
@@ -62,6 +67,16 @@ class IntFilemanagerNode(models.Model):
     status_id = fields.Many2one("int_filemanager.status", ondelete="set null")
     partner_id = fields.Many2one("res.partner", ondelete="set null", index=True)
     revision_ids = fields.One2many("int_filemanager.revision", "node_id")
+    # Portal contacts who may download this file from /my/files, independent of any
+    # link. The portal routes check membership explicitly; portal users have no rights
+    # on the node model itself.
+    shared_partner_ids = fields.Many2many(
+        "res.partner",
+        "int_filemanager_node_shared_partner_rel",
+        "node_id",
+        "partner_id",
+        string="Shared with",
+    )
     # Set by trash() for the whole subtree; the 30-day purge (Konzept 17.4) counts
     # from it.
     trashed_at = fields.Datetime(index=True)
@@ -76,6 +91,13 @@ class IntFilemanagerNode(models.Model):
         '(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active',
         "A file or folder with this name already exists here.",
     )
+
+    def _display_path(self):
+        """ "/root/sub/file.txt" for logs and messages. Ancestors are read with sudo:
+        the caller may see a node without being allowed to read its parents' rows."""
+        self.ensure_one()
+        ids = [int(i) for i in (self.parent_path or "").split("/") if i]
+        return "/" + "/".join(self.sudo().browse(ids).mapped("name"))
 
     @api.model
     def _clean_name(self, name):
@@ -647,12 +669,57 @@ class IntFilemanagerNode(models.Model):
         node = self.browse(node_id)
         node.check_access("unlink")
 
-        subtree = self.with_context(active_test=False).search(
-            [("id", "child_of", node_id)]
-        )
-        subtree.write({"current_revision_id": False})
-        subtree.unlink()
+        self._unlink_subtree(node)
 
         result = {"node_id": node_id}
         operation.write({"result": result})
         return result
+
+    @api.model
+    def _unlink_subtree(self, root):
+        subtree = self.with_context(active_test=False).search(
+            [("id", "child_of", root.id)]
+        )
+        subtree.write({"current_revision_id": False})
+        subtree.unlink()
+        return len(subtree)
+
+    @api.model
+    def _trash_retention_days(self):
+        return int(
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param(TRASH_RETENTION_PARAM, DEFAULT_TRASH_RETENTION_DAYS)
+        )
+
+    @api.model
+    def _expired_trash_roots(self):
+        """Top nodes of trashed subtrees whose stamp is older than the retention
+        (Konzept 17.4: 30 days). A trashed node below another expired one goes with
+        that one; one trashed on its own earlier expires on its own."""
+        cutoff = fields.Datetime.now() - timedelta(days=self._trash_retention_days())
+        expired = self.with_context(active_test=False).search(
+            [("removal_reason", "=", "trash"), ("trashed_at", "<", cutoff)]
+        )
+        return expired.filtered(lambda n: n.parent_id not in expired)
+
+    @api.model
+    def _purge_expired_trash(self, limit=200):
+        """Konzept 17.4: what stays in the trash for more than the retention is deleted
+        for good, rows only - the blobs are swept later by the blob cleanup job once
+        nothing references them (I4). One subtree per savepoint, so one that cannot be
+        deleted does not keep the others from being purged (or the cron from ever
+        committing anything). Returns how many trash roots were purged."""
+        purged = 0
+        for root in self._expired_trash_roots()[:limit]:
+            try:
+                with self.env.cr.savepoint():
+                    self._unlink_subtree(root)
+                purged += 1
+            except Exception:
+                _logger.exception("could not purge trashed node %s", root.id)
+        return purged
+
+    @api.model
+    def _cron_purge_trash(self):
+        self._purge_expired_trash()

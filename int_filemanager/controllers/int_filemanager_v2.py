@@ -60,21 +60,7 @@ class IntFilemanagerV2Controller(http.Controller):
 
         # The rights check above is what authorises the blob; the blob itself has no
         # ACL of its own (Konzept 12/A1).
-        blob = revision.sudo().blob_id
-        path = blobstore.blob_path(request.env, blob.sha256)
-        stream = http.Stream(
-            type="path",
-            path=path,
-            mimetype=node.mime
-            or mimetypes.guess_type(node.name)[0]
-            or "application/octet-stream",
-            size=int(blob.size),
-            download_name=node.name,
-            last_modified=revision.create_date.replace(tzinfo=timezone.utc).timestamp(),
-            # Content is immutable and named by its hash, so the hash is the ETag.
-            etag=blob.sha256,
-            public=False,
-        )
+        stream = self._blob_stream(node, revision)
         return stream.get_response(as_attachment=disposition != "inline")
 
     @http.route(
@@ -152,3 +138,87 @@ class IntFilemanagerV2Controller(http.Controller):
             public=False,
         )
         return stream.get_response(as_attachment=True)
+
+    # ------------------------------------------------------------------
+    # sharing: anonymous links and the customer portal
+    # ------------------------------------------------------------------
+
+    def _blob_stream(self, node, revision):
+        """The file of *revision* as a Stream. Callers have already decided that the
+        requester may have it (rights, share token or portal membership)."""
+        blob = revision.sudo().blob_id
+        return http.Stream(
+            type="path",
+            path=blobstore.blob_path(request.env, blob.sha256),
+            mimetype=node.mime
+            or mimetypes.guess_type(node.name)[0]
+            or "application/octet-stream",
+            size=int(blob.size),
+            download_name=node.name,
+            last_modified=revision.create_date.replace(tzinfo=timezone.utc).timestamp(),
+            etag=blob.sha256,
+            public=False,
+        )
+
+    @http.route("/int_filemanager/v2/share/<string:token>", type="http", auth="public")
+    def share_download(self, token):
+        """Anonymous download by link. No ir.rule applies to an anonymous caller, so
+        everything is checked here explicitly (int_filemanager.share._find_active);
+        unknown, expired, revoked and trashed all answer the same 404."""
+        share = request.env["int_filemanager.share"]._find_active(token)
+        if not share:
+            raise NotFound
+        node = share.node_id
+        share._log("downloaded")
+        share.download_count += 1
+        response = self._blob_stream(node, node.current_revision_id).get_response(
+            as_attachment=True
+        )
+        response.headers["Cache-Control"] = "private, no-store"
+        return response
+
+    def _portal_node(self, node_id):
+        node = request.env["int_filemanager.node"].sudo().browse(node_id).exists()
+        partner = request.env.user.partner_id
+        if (
+            not node
+            or not node.active
+            or node.is_dir
+            or not node.current_revision_id
+            or partner not in node.shared_partner_ids
+        ):
+            raise NotFound
+        return node
+
+    @http.route("/my/files", type="http", auth="user", website=True)
+    def portal_files(self, **_kwargs):
+        partner = request.env.user.partner_id
+        nodes = (
+            request.env["int_filemanager.node"]
+            .sudo()
+            .search(
+                [("shared_partner_ids", "in", [partner.id]), ("is_dir", "=", False)],
+                order="name",
+            )
+        )
+        return request.render(
+            "int_filemanager.portal_files", {"page_name": "files", "files": nodes}
+        )
+
+    @http.route("/my/files/<int:node_id>/download", type="http", auth="user")
+    def portal_file_download(self, node_id, **_kwargs):
+        node = self._portal_node(node_id)
+        request.env["int_filemanager.share_log"].sudo().create(
+            {
+                "node_id": node.id,
+                "path": node._display_path(),
+                "filename": node.name,
+                "event_type": "downloaded",
+                "partner_id": request.env.user.partner_id.id,
+            }
+        )
+        response = self._blob_stream(node, node.current_revision_id).get_response(
+            as_attachment=True
+        )
+        response.headers["Cache-Control"] = "private, no-store"
+        return response

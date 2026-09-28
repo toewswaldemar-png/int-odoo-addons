@@ -83,6 +83,11 @@ msgid "Filemanager v2 rights scope"
 msgstr "Dateimanager v2 Rechte-Bereich"
 
 #. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_share
+msgid "Filemanager v2 share link"
+msgstr "Dateimanager v2 Freigabe-Link"
+
+#. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_int_filemanager_operation
 msgid "Filemanager v2 write operation (idempotency key)"
 msgstr "Dateimanager v2 Schreibvorgang (Idempotenzschlüssel)"
@@ -103,6 +108,12 @@ msgstr "Interner Fehler."
 #: code:addons/int_filemanager/zip_stream.py:0
 msgid "Nothing to download."
 msgstr "Nichts zum Herunterladen."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_share.py:0
+msgid "Only single files with content can be shared by link."
+msgstr "Nur einzelne Dateien mit Inhalt können per Link freigegeben werden."
 
 #. module: int_filemanager
 #. odoo-python
@@ -163,6 +174,12 @@ msgstr "Das ist kein gültiger Datei- oder Ordnername."
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "This item is in the trash; restore it before moving it."
 msgstr "Dieses Element liegt im Papierkorb; bitte vor dem Verschieben wiederherstellen."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_share.py:0
+msgid "This link does not exist any more."
+msgstr "Dieser Link existiert nicht mehr."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_upload_operation_id_uniq

@@ -19,3 +19,5 @@ from . import int_filemanager_revision
 from . import int_filemanager_operation
 from . import int_filemanager_upload
 from . import int_filemanager_zip_job
+from . import int_filemanager_share
+from . import int_filemanager_share_log
