@@ -20,7 +20,7 @@
           type="button"
           class="btn btn-sm btn-link p-0"
           t-on-click="toggle"
-          t-att-aria-label="ui.collapsed ? 'Expand' : 'Collapse'"
+          t-att-aria-label="toggleLabel"
         >
           <i t-att-class="ui.collapsed ? 'fa fa-chevron-up' : 'fa fa-chevron-down'" />
         </button>

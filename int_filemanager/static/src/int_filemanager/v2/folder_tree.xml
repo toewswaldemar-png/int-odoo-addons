@@ -40,7 +40,7 @@
           t-if="node.hasChildren"
           type="button"
           class="btn btn-sm p-0 o_int_filemanager_tree_caret"
-          t-att-aria-label="node.expanded ? 'Collapse folder' : 'Expand folder'"
+          t-att-aria-label="caretLabel(node)"
         >
           <i t-if="node.loading" class="fa fa-spin fa-spinner" />
           <i t-elif="node.expanded" class="fa fa-caret-down" />

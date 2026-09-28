@@ -73,6 +73,10 @@ export class IntFilemanagerV2UploadPanel extends Component {
     return !["done", "cancelled"].includes(item.state);
   }
 
+  get toggleLabel() {
+    return this.ui.collapsed ? _t("Expand") : _t("Collapse");
+  }
+
   toggle() {
     this.ui.collapsed = !this.ui.collapsed;
   }

@@ -2,6 +2,7 @@
 
 import {Component, useState} from "@odoo/owl";
 import {Dialog} from "@web/core/dialog/dialog";
+import {_t} from "@web/core/l10n/translation";
 import {CONFLICT_ACTIONS} from "./upload_plan.js";
 
 // One question for the whole drop: what to do with each file whose name is taken.
@@ -22,6 +23,10 @@ export class IntFilemanagerV2ConflictDialog extends Component {
     this.state = useState({
       choices: this.props.conflicts.map(() => CONFLICT_ACTIONS.keepBoth),
     });
+  }
+
+  get title() {
+    return _t("Names already in use");
   }
 
   setChoice(index, action) {

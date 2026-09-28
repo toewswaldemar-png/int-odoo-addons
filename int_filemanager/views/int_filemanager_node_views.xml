@@ -231,6 +231,48 @@
     <field name="target">new</field>
   </record>
 
+  <!-- Tags, status and contact of one file or folder, edited in a dialog. -->
+  <record id="int_filemanager_node_details_form" model="ir.ui.view">
+    <field name="name">int_filemanager.node.details.form</field>
+    <field name="model">int_filemanager.node</field>
+    <field name="arch" type="xml">
+      <form string="Details">
+        <sheet>
+          <group>
+            <field name="name" readonly="1" />
+            <field
+              name="size"
+              readonly="1"
+              invisible="is_dir"
+              widget="int_filemanager_v2_size"
+            />
+            <field name="mtime" readonly="1" invisible="is_dir" string="Modified" />
+            <field name="is_dir" invisible="1" />
+            <field name="status_id" options="{'no_create': True}" />
+            <field
+              name="tag_ids"
+              widget="many2many_tags"
+              options="{'color_field': 'color'}"
+            />
+            <field name="partner_id" />
+          </group>
+        </sheet>
+        <footer>
+          <button string="Save" special="save" class="btn-primary" />
+          <button string="Cancel" special="cancel" />
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_int_filemanager_node_details" model="ir.actions.act_window">
+    <field name="name">Details</field>
+    <field name="res_model">int_filemanager.node</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="int_filemanager_node_details_form" />
+    <field name="target">new</field>
+  </record>
+
   <menuitem
     id="menu_int_filemanager_v2_root"
     name="Files"

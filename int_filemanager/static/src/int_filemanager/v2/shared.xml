@@ -12,7 +12,7 @@
         type="button"
         class="btn btn-primary text-nowrap o-dropdown-caret"
         t-att-disabled="!canCreateHere"
-        t-att-data-tooltip="canCreateHere ? undefined : 'Open a folder first'"
+        t-att-data-tooltip="createTooltip"
       >
         New
       </button>
@@ -104,12 +104,10 @@
       <div class="o_int_filemanager_chatter_panel_header">
         <span
           class="text-truncate fw-bold"
-          t-att-data-tooltip="chatterRecord ? chatterRecord.data.name : 'Notes / activities'"
+          t-att-data-tooltip="chatterTitle"
           data-tooltip-delay="1000"
-        >
-          <t t-if="chatterRecord" t-esc="chatterRecord.data.name" />
-          <t t-else="">Notes / activities</t>
-        </span>
+          t-esc="chatterTitle"
+        />
         <button
           type="button"
           class="btn-close"

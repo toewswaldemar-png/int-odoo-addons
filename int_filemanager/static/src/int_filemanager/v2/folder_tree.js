@@ -162,6 +162,10 @@ export class IntFilemanagerV2FolderTree extends Component {
     }
   }
 
+  caretLabel(node) {
+    return node.expanded ? _t("Collapse folder") : _t("Expand folder");
+  }
+
   isActive(node) {
     return node.id === this.props.activeId || (!node.id && !this.props.activeId);
   }

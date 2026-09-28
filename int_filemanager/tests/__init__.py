@@ -20,3 +20,4 @@ from . import test_v2_download
 from . import test_v2_zip
 from . import test_v2_share
 from . import test_v2_assets
+from . import test_v2_i18n

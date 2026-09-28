@@ -13,7 +13,6 @@ import {useFileViewer} from "@web/core/file_viewer/file_viewer_hook";
 import {useService} from "@web/core/utils/hooks";
 import {NODE_MODEL} from "./controller_navigation.js";
 import {IntFilemanagerV2MoveDialog} from "./move_dialog.js";
-import {IntFilemanagerV2PartnerDialog} from "./partner_dialog.js";
 import {IntFilemanagerV2TextEditorDialog} from "./text_editor_dialog.js";
 import {IntFilemanagerV2TextInputDialog} from "./text_input_dialog.js";
 import {IntFilemanagerV2VersionsDialog} from "./versions_dialog.js";
@@ -393,11 +392,16 @@ export const mutationsMixin = (Base) =>
       });
     }
 
-    onLinkRecord(record) {
-      this.dialog.add(IntFilemanagerV2PartnerDialog, {
-        nodeId: record.resId,
-        onSaved: () => this.reload(),
-      });
+    // Tags, status and contact: a plain Odoo form in a dialog, saved through the ORM (these
+    // fields carry no naming or rights rules of their own beyond the record rules).
+    onEditDetails(record) {
+      this.actionService.doAction(
+        "int_filemanager.action_int_filemanager_node_details",
+        {
+          props: {resId: record.resId},
+          onClose: () => this.reload(),
+        }
+      );
     }
 
     // ---------------------------------------------------------------- opening
@@ -512,12 +516,12 @@ export const mutationsMixin = (Base) =>
           description: _t("Upload new version"),
           callback: () => this.triggerNewVersionUpload(selection[0]),
         },
-        int_link: {
+        int_details: {
           isAvailable: single,
           sequence: 10,
-          icon: "fa fa-link",
-          description: _t("Link to a contact"),
-          callback: () => this.onLinkRecord(selection[0]),
+          icon: "fa fa-tags",
+          description: _t("Tags, status, contact"),
+          callback: () => this.onEditDetails(selection[0]),
         },
         int_share: {
           isAvailable: () => single() && !selection[0].data.is_dir,

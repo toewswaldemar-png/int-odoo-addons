@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
   <t t-name="int_filemanager.v2.ConflictDialog">
-    <Dialog title="'Names already in use'" size="'md'">
+    <Dialog title="title" size="'md'">
       <div class="p-2">
         <p class="text-muted">
           These names already exist in the folder. Choose what happens to each file.

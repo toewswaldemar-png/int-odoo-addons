@@ -103,6 +103,16 @@ export const navigationMixin = (Base) =>
       return Boolean(this.currentFolderId);
     }
 
+    get createTooltip() {
+      return this.canCreateHere ? undefined : _t("Open a folder first");
+    }
+
+    get chatterTitle() {
+      return this.chatterRecord
+        ? this.chatterRecord.data.name
+        : _t("Notes / activities");
+    }
+
     onToggleChatterPanel() {
       this.chatterState.open = !this.chatterState.open;
     }
