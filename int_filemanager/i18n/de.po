@@ -36,6 +36,18 @@ msgid "A file or folder with this name already exists here."
 msgstr "Eine Datei oder ein Ordner mit diesem Namen existiert hier bereits."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "A folder cannot be copied into itself."
+msgstr "Ein Ordner kann nicht in sich selbst kopiert werden."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "A folder cannot be moved into itself."
+msgstr "Ein Ordner kann nicht in sich selbst verschoben werden."
+
+#. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_revision_revision_no_uniq
 msgid "A node cannot have two revisions with the same number."
 msgstr "Ein Knoten kann nicht zwei Revisionen mit derselben Nummer haben."
@@ -95,6 +107,12 @@ msgstr "Der Zielordner liegt im Papierkorb; bitte zuerst wiederherstellen."
 
 #. module: int_filemanager
 #. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "The target is not a folder."
+msgstr "Das Ziel ist kein Ordner."
+
+#. module: int_filemanager
+#. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_upload.py:0
 msgid "This chunk does not continue where the upload left off."
 msgstr "Dieses Stück setzt nicht dort an, wo der Upload aufgehört hat."
@@ -110,6 +128,12 @@ msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneu
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "This file has no content yet; nothing to copy."
 msgstr "Diese Datei hat noch keinen Inhalt; nichts zu kopieren."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "This is not a valid file or folder name."
+msgstr "Das ist kein gültiger Datei- oder Ordnername."
 
 #. module: int_filemanager
 #. odoo-python

@@ -794,15 +794,26 @@ class TestNodeCopy(TransactionCase):
                 self.source.id, self.folder_a.id, "late-copy.txt", "op-copy-in-trash"
             )
 
-    def test_copy_directory_without_content_raises_user_error(self):
+    def test_copy_empty_folder_copies_just_the_folder(self):
         empty_folder = (
             self.env["int_filemanager.node"]
             .sudo()
             .create({"name": "empty_dir", "scope_id": self.scope_a.id, "is_dir": True})
         )
+        result = self._node_env().copy_node(
+            empty_folder.id, self.folder_a.id, "empty_dir_copy", "op-copy-nodir"
+        )
+        self.assertEqual(result["copied"], 1)
+
+    def test_copy_file_without_content_raises_user_error(self):
+        contentless = (
+            self.env["int_filemanager.node"]
+            .sudo()
+            .create({"name": "no_rev", "scope_id": self.scope_a.id, "is_dir": False})
+        )
         with self.assertRaises(UserError):
             self._node_env().copy_node(
-                empty_folder.id, self.folder_a.id, "empty_dir_copy", "op-copy-nodir"
+                contentless.id, self.folder_a.id, "no_rev_copy", "op-copy-norev"
             )
 
     def test_repeated_operation_key_is_idempotent(self):

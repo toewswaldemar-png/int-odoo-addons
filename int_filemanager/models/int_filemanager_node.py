@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import unicodedata
 
 import psycopg2
 
@@ -12,6 +13,10 @@ from odoo.tools.mimetypes import guess_mimetype
 from .. import blobstore, fault
 
 _logger = logging.getLogger(__name__)
+
+
+# A name never carries a path: "/" and "\\" would make it one, NUL is never valid.
+_INVALID_NAME_CHARS = ("/", "\\", "\x00")
 
 
 def _remove_if_exists(path):
@@ -47,6 +52,19 @@ class IntFilemanagerNode(models.Model):
     # Float, not Integer (int4 overflows above ~2 GiB, Pruefbericht Nr. 33-35/19.2).
     size = fields.Float()
     mime = fields.Char()
+    tag_ids = fields.Many2many(
+        "int_filemanager.tag",
+        "int_filemanager_node_tag_rel",
+        "node_id",
+        "tag_id",
+        string="Tags",
+    )
+    status_id = fields.Many2one("int_filemanager.status", ondelete="set null")
+    partner_id = fields.Many2one("res.partner", ondelete="set null", index=True)
+    revision_ids = fields.One2many("int_filemanager.revision", "node_id")
+    # Set by trash() for the whole subtree; the 30-day purge (Konzept 17.4) counts
+    # from it.
+    trashed_at = fields.Datetime(index=True)
 
     # Same (parent_id, lower(name)) uniqueness Windows Explorer enforces
     # (case-insensitive, NTFS-like: "Groesse.txt" next to "GROESSE.txt" is
@@ -58,6 +76,32 @@ class IntFilemanagerNode(models.Model):
         '(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active',
         "A file or folder with this name already exists here.",
     )
+
+    @api.model
+    def _clean_name(self, name):
+        """One place for what a name may be, for every path that sets it (write paths,
+        ORM create/write). NFC because nobody but Odoo writes names any more (Konzept
+        4), so "e" + combining accent and the precomposed letter must not coexist."""
+        name = unicodedata.normalize("NFC", name or "").strip()
+        if (
+            not name
+            or name in (".", "..")
+            or any(c in name for c in _INVALID_NAME_CHARS)
+        ):
+            raise UserError(self.env._("This is not a valid file or folder name."))
+        return name
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if "name" in vals:
+                vals["name"] = self._clean_name(vals["name"])
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if "name" in vals:
+            vals = dict(vals, name=self._clean_name(vals["name"]))
+        return super().write(vals)
 
     @api.model
     def create_file(self, parent_id, name, content, operation_key):
@@ -151,6 +195,8 @@ class IntFilemanagerNode(models.Model):
         after the caller's rights on the destination were checked."""
         if not parent:
             return
+        if not parent.is_dir:
+            raise UserError(self.env._("The target is not a folder."))
         cr = self.env.cr
         cr.execute("SET LOCAL lock_timeout TO '5s'")
         cr.execute(
@@ -165,6 +211,40 @@ class IntFilemanagerNode(models.Model):
             raise UserError(
                 self.env._("The target folder is in the trash; restore it first.")
             )
+
+    @api.model
+    def create_folder(self, parent_id, name, operation_key):
+        """Konzept 6 "Anlegen" for a folder: same order as create_file - the
+        rights-checked create() first, then the destination folder's row, no
+        filesystem involved."""
+        operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
+            operation_key
+        )
+        if not is_new:
+            return operation.result
+
+        parent = self.browse(parent_id)
+        try:
+            with self.env.cr.savepoint():
+                node = self.with_context(mail_create_nolog=True).create(
+                    {
+                        "name": name,
+                        "parent_id": parent_id,
+                        "scope_id": parent.scope_id.id,
+                        "is_dir": True,
+                    }
+                )
+        except psycopg2.errors.UniqueViolation:
+            raise UserError(
+                self.env._(
+                    "A file or folder named %(name)s already exists here.", name=name
+                )
+            ) from None
+        self._touch_active_parent(parent)
+
+        result = {"node_id": node.id}
+        operation.write({"result": result})
+        return result
 
     def _lock_and_check_base_revision(self, node, base_revision_id):
         """Konzept 6 "Zeilen wartend sperren ... und Basisrevision pruefen"
@@ -309,12 +389,12 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def copy_node(self, node_id, target_parent_id, new_name, operation_key):
-        """Konzept 6 "Kopieren": a new node with a new revision on the SAME
-        blob - no bytes copied. Runs the node create() (rights-checked,
-        Konzept 6 "Rechte pruefen" first) before anything else, same
-        ordering fix as create_file. revision_no always starts at 1 on the
-        new node, so no lock/base-revision check is needed here (nobody
-        else can know about a node that does not exist yet)."""
+        """Konzept 6 "Kopieren": new nodes with new revisions on the SAME blobs - no
+        bytes copied. A folder is copied with everything below it that the caller can
+        see. The top node's create() (rights-checked, Konzept 6 "Rechte pruefen"
+        first) runs before anything else, same ordering fix as create_file.
+        revision_no always starts at 1 on a new node, so no lock/base-revision check
+        is needed here (nobody else can know about a node that does not exist yet)."""
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -323,24 +403,20 @@ class IntFilemanagerNode(models.Model):
 
         source = self.browse(node_id)
         source.check_access("read")
-        if not source.current_revision_id:
+        if not source.is_dir and not source.current_revision_id:
             raise UserError(
                 self.env._("This file has no content yet; nothing to copy.")
             )
 
         target_parent = self.browse(target_parent_id)
+        if source.is_dir and target_parent.parent_path.startswith(source.parent_path):
+            raise UserError(self.env._("A folder cannot be copied into itself."))
         scope_id = target_parent.scope_id.id
 
         try:
             with self.env.cr.savepoint():
                 new_node = self.with_context(mail_create_nolog=True).create(
-                    {
-                        "name": new_name,
-                        "parent_id": target_parent_id,
-                        "scope_id": scope_id,
-                        "is_dir": False,
-                        "mime": source.mime,
-                    }
+                    self._copy_vals(source, new_name, target_parent_id, scope_id)
                 )
         except psycopg2.errors.UniqueViolation:
             raise UserError(
@@ -351,7 +427,30 @@ class IntFilemanagerNode(models.Model):
             ) from None
         self._touch_active_parent(target_parent)
 
-        result = self._attach_revision(
+        result = self._attach_copy_content(source, new_node, operation)
+        if source.is_dir:
+            copied = self._copy_children(source, new_node, scope_id, operation)
+            result = {"node_id": new_node.id, "copied": copied + 1}
+        operation.write({"result": result})
+        return result
+
+    @api.model
+    def _copy_vals(self, source, name, parent_id, scope_id):
+        return {
+            "name": name,
+            "parent_id": parent_id,
+            "scope_id": scope_id,
+            "is_dir": source.is_dir,
+            "mime": source.mime,
+            "tag_ids": [(6, 0, source.tag_ids.ids)],
+            "status_id": source.status_id.id,
+            "partner_id": source.partner_id.id,
+        }
+
+    def _attach_copy_content(self, source, new_node, operation):
+        if source.is_dir or not source.current_revision_id:
+            return {"node_id": new_node.id}
+        return self._attach_revision(
             new_node,
             None,
             source.current_revision_id.blob_id.id,
@@ -359,8 +458,28 @@ class IntFilemanagerNode(models.Model):
             "restore",
             operation,
         )
-        operation.write({"result": result})
-        return result
+
+    def _copy_children(self, source, new_top, scope_id, operation):
+        """Parents before children (parent_path order), so every child's new parent
+        exists when it is created. Only what the caller can see is copied (plain
+        search(), no sudo - I7). Names cannot collide below a brand-new folder."""
+        mapping = {source.id: new_top.id}
+        copied = 0
+        descendants = self.search(
+            [("id", "child_of", source.id), ("id", "!=", source.id)],
+            order="parent_path",
+        )
+        for old in descendants:
+            new_parent_id = mapping.get(old.parent_id.id)
+            if not new_parent_id:
+                continue  # parent was not visible to the caller, so neither is this
+            new = self.with_context(mail_create_nolog=True).create(
+                self._copy_vals(old, old.name, new_parent_id, scope_id)
+            )
+            mapping[old.id] = new.id
+            self._attach_copy_content(old, new, operation)
+            copied += 1
+        return copied
 
     @api.model
     def rename_or_move(self, node_id, new_parent_id, new_name, operation_key):
@@ -387,6 +506,8 @@ class IntFilemanagerNode(models.Model):
         if new_parent_id and new_parent_id != node.parent_id.id:
             new_parent = self.browse(new_parent_id)
             new_parent.check_access("write")
+            if new_parent.parent_path.startswith(node.parent_path):
+                raise UserError(self.env._("A folder cannot be moved into itself."))
             vals["parent_id"] = new_parent_id
             if new_parent.scope_id != node.scope_id:
                 new_scope_id = new_parent.scope_id.id
@@ -458,7 +579,13 @@ class IntFilemanagerNode(models.Model):
 
         subtree = self.search([("id", "child_of", node_id)])
         fault.fault_point("node_tree_before_write")
-        subtree.write({"active": False, "removal_reason": "trash"})
+        subtree.write(
+            {
+                "active": False,
+                "removal_reason": "trash",
+                "trashed_at": fields.Datetime.now(),
+            }
+        )
 
         result = {"node_id": node.id}
         operation.write({"result": result})
@@ -488,7 +615,9 @@ class IntFilemanagerNode(models.Model):
         self._touch_active_parent(node.parent_id)
         try:
             with self.env.cr.savepoint():
-                subtree.write({"active": True, "removal_reason": False})
+                subtree.write(
+                    {"active": True, "removal_reason": False, "trashed_at": False}
+                )
         except psycopg2.errors.UniqueViolation:
             raise UserError(
                 self.env._(
