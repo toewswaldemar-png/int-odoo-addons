@@ -34,6 +34,8 @@ genaueren Suchen doch eine native Entsprechung:
 
 ### Suchraster (immer alle Punkte, nicht nur den ersten Treffer)
 
+0. **Zuerst `docs/int_filemanager_odoo_bausteine.md` lesen:** dort stehen die Ergebnisse früherer Suchen (Navigation,
+   Listen, Bilder, PDF, Papierkorb, `core/`-Bausteine) mit Fundstellen; die Suche nicht wiederholen, sondern ergänzen.
 1. **Core-Grep im laufenden Container:** `docker exec Odoo19 grep -rn "<Begriff>"
    /usr/lib/python3/dist-packages/odoo/` (Core-Quellcode liegt dort, nicht im eigenen Repo).
 2. **Vergleichbare andere Odoo-Module** auf dasselbe Muster prüfen (z.B. `documents`, `mail`,
@@ -73,6 +75,7 @@ eine belastbare Aussage.
   v2-Code nur auf Branch `feature/int-filemanager-v2` (Tag `int_filemanager-v1` = heutiges Modul). Prüfungen:
   pre-commit (`py -3.13 -m pre_commit`, Hook installiert) und `tools/v2check/v2check.sh [--quick]` (odoo-ls +
   `test_lint` auf Tower, Konventionen Abschnitt 9).
+  Übersicht aller Dokumente: `docs/README.md` (lebende Dokumente vs. `docs/archiv/`).
 - `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher (Konzept 19.5, N5). Workaround:
   vorher `int_filemanager.watcher_enabled` auf `false`, danach zurück auf `true` (der laufende Server prüft den
   Schalter nur beim Start, sein Watcher läuft weiter).

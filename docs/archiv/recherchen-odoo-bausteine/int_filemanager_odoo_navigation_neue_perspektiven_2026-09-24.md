@@ -104,7 +104,7 @@ Nutzer bekannte Tastatur-Palette einhängen — keine eigene Such-UI nötig, nur
 **Einordnung:** kein Ersatz für `FolderTree` (Browsen/Struktur-Überblick bleibt dessen Aufgabe),
 sondern eine **komplementäre**, bisher komplett fehlende zweite Navigationsart ("ich weiß, wonach
 ich suche" vs. "ich will mich durchklicken") — beide zusammen decken sich mit dem in
-`int_filemanager_feature_ideen_2026-09-21.md` (Abschnitt C) skizzierten Wunsch nach einer
+`../../int_filemanager_feature_ideen_2026-09-21.md` (Abschnitt C) skizzierten Wunsch nach einer
 "Adressleiste"/Schnellzugriff, jetzt mit einem konkreten, nativen Umsetzungsweg statt einer
 offenen Idee.
 

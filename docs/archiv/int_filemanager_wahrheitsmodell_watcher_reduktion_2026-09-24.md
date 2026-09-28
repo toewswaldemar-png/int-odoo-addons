@@ -93,7 +93,7 @@ Sicherheitsnetz über beide Bereiche hinweg — daran ändert dieser Schnitt nic
   Watcher/Vollscan sichtbar, nicht über die DB-Autorität. Nur der ohnehin schon DB-geführte Anteil
   (Schreibvorgänge über int_filemanager selbst) wird als das benannt, was er bereits ist.
 - **Kein Ersatz für den Papierkorb-Bauplan.** Der Watcher-Guard aus
-  `../int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` bleibt unabhängig davon nötig — er
+  `recherchen-odoo-bausteine/int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` bleibt unabhängig davon nötig — er
   betrifft die Löschlogik, nicht die Watch-Baum-Aufteilung.
 - **Kein einziger großer Umbau.** Die Trennung der Watch-Bäume, die 3 Watchdog-Fixes und die
   adaptive CIFS-Scan-Umstellung sind drei unabhängig umsetzbare, klar abgegrenzte Schritte — keiner

@@ -129,7 +129,7 @@ formatierte Notiz als `.html` ablegen", nicht "beliebige HTML-Dateien editieren"
 ## 4. Vergleich zum Status quo: warum `CodeEditor` für alle fünf heutigen Formate die richtige Wahl bleibt
 
 Der aktuelle Ansatz (`CodeEditor`, Odoos ACE-basierter Editor, derselbe, den Odoo für
-View-XML-Bearbeitung im Entwicklermodus nutzt, siehe `int_filemanager_native_ui.md`, Punkt 9) hat
+View-XML-Bearbeitung im Entwicklermodus nutzt, siehe `../../int_filemanager_native_ui.md`, Punkt 9) hat
 gegenüber dem Rich-Text-Editor für **genau diese** Formate strukturelle Vorteile, die kein
 Implementierungsdetail sind: kein Konvertierungsschritt (Inhalt = Inhalt, keine
 Formatverlust-Gefahr), Syntax-Highlighting passend zum jeweiligen Format (u.a. für `json`
@@ -144,7 +144,7 @@ Editor wäre hier ein Rückschritt, kein Upgrade — unabhängig vom Implementie
 Falls der eigentliche Bedarf hinter der Fragestellung "ich möchte formatierten Text zu/an einer
 Datei erfassen können" ist (nicht zwingend "die Datei selbst soll HTML enthalten"): **das gibt es
 bereits, ganz ohne die Text-Dateien anzufassen.** `int_filemanager.file` erbt seit Baustein 2
-(`int_filemanager_paperoffice_recherche.md`) von `mail.thread` — der Chatter jeder Datei hat
+(`../../int_filemanager_paperoffice_recherche.md`) von `mail.thread` — der Chatter jeder Datei hat
 damit bereits eine "Notiz protokollieren"-Funktion, die **intern exakt denselben Rich-Text-Editor
 nutzt** (Odoos Mail-Message-Composer ist ebenfalls ein `fields.Html`-Feld mit Wysiwyg-Widget).
 Ein Nutzer kann heute schon zu jeder Datei eine formatierte Notiz (fett, Listen, Links) im Chatter
@@ -158,7 +158,7 @@ nötig, nur Sichtbarkeit/Bewusstsein für eine bereits vorhandene Fähigkeit.
 ## 6. Nachtrag: wie Cloudreve und OpenCloud dasselbe Problem lösen, plus MDXEditor-Alternativen
 
 Direkt am Code des zweiten Nutzer-Projekts geprüft (`cloudreve/assets/src/component/Viewers/MarkdownEditor/`,
-siehe auch `erp-odoo-vs-cloudreve-vergleich-2026-09-21.md`). **Wichtige Klarstellung zuerst:**
+siehe auch `../../erp-odoo-vs-cloudreve-vergleich-2026-09-21.md`). **Wichtige Klarstellung zuerst:**
 Cloudreve nutzt für `.md`-Dateien **nicht** einen generischen HTML-Rich-Text-Editor (wie Odoos
 OdooEditor), sondern eine dedizierte, **Markdown-native** Komponente
 (`@mdxeditor/editor`/`MDXEditor`) — deren internes Datenmodell ist Markdown selbst (AST), nicht

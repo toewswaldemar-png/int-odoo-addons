@@ -1,8 +1,8 @@
 # int_filemanager: Papierkorb — optimale Umsetzung, geprüft am echten Odoo-19-Quellcode
 
-Stand 2026-09-23. Ergänzt [`int_filemanager_feature_ideen_2026-09-21.md`](int_filemanager_feature_ideen_2026-09-21.md)
+Stand 2026-09-23. Ergänzt [`../../int_filemanager_feature_ideen_2026-09-21.md`](../../int_filemanager_feature_ideen_2026-09-21.md)
 (dort Punkt A1: fehlender Papierkorb als auffälligster Fund) und
-[`erp-odoo-vs-cloudreve-vergleich-2026-09-21.md`](erp-odoo-vs-cloudreve-vergleich-2026-09-21.md)
+[`../../erp-odoo-vs-cloudreve-vergleich-2026-09-21.md`](../../erp-odoo-vs-cloudreve-vergleich-2026-09-21.md)
 (dort die erste, noch grobe Skizze "`active`/`deleted_at`-Feld statt `.trash`-Unterordner"). Dieses
 Dokument prüft diese Skizze **direkt am lokal geklonten Odoo-19-Quellcode**
 (`C:\Users\Admin\Documents\GitHub\odoo`, Branch `19.0`) nach — mit Datei-/Zeilenangaben, nicht nur
@@ -17,7 +17,7 @@ tatsächlich noch offene, echte Lücke: der tägliche Vollscan prüft beim Stale
 `trashed`/`.trash`-Präfix und läuft mit `sudo()` (an `rule_file_trash_visibility` vorbei) — ein in
 den Papierkorb verschobener Eintrag kann dadurch beim nächsten 03:00-Lauf **endgültig** gelöscht
 werden statt erst nach der Aufbewahrungsfrist (Fund B1). Vollständige Analyse inkl. Migrationsplan
-`trashed` → natives `active` in `int_filemanager_konzept_db_vorrang_2026-09-24.md`
+`trashed` → natives `active` in `../../int_filemanager_konzept_db_vorrang_2026-09-24.md`
 (Branch `docs/konzept-db-vorrang`), Abschnitte 16.1 und 16.2. Der Rest dieses Dokuments bleibt nur
 als Beleg stehen, wie Odoos `active`-Mechanismus grundsätzlich funktioniert — nicht als gültiger
 Bauplan.
@@ -104,7 +104,7 @@ Duplikat-/Volltextsuche. Bei einem Custom-Feld müsste **jede** dieser Stellen e
 `('is_deleted', '=', False)` ergänzt werden — fehleranfällig und sicherheitsrelevant (eine
 vergessene Stelle könnte gelöschte Dateien in ACL-Auswertungen oder Suchergebnissen wieder
 auftauchen lassen). Das ist exakt das Risiko, das der etablierte Sorgfaltsgrad dieses Moduls
-(Multi-Kontext-Selbsttest bei jeder ACL-Änderung, siehe `int_filemanager_ausbau.md` Phase 2)
+(Multi-Kontext-Selbsttest bei jeder ACL-Änderung, siehe `../../int_filemanager_ausbau.md` Phase 2)
 konsequent vermeiden will.
 
 ---
@@ -189,7 +189,7 @@ Bausteine.
    Sonderparameter/`active_test`-Trick nötig. "Wiederherstellen"/"Endgültig löschen" als
    `ActionMenus`-Einträge, demselben Muster folgend, das `int_filemanager`s native UI bereits für
    Freigeben/Verknüpfen/Umbenennen nutzt.
-6. **Retention-Cron:** wie in `int_filemanager_feature_ideen_2026-09-21.md` (Punkt I2) bereits
+6. **Retention-Cron:** wie in `../../int_filemanager_feature_ideen_2026-09-21.md` (Punkt I2) bereits
    skizziert — ein `ir.cron`, der Papierkorb-Einträge älter als X Tage endgültig entfernt (echtes
    `unlink()` **und** physisches Löschen aus `.trash/`), demselben etablierten Cron-Muster
    folgend, das bereits für Version-Pruning existiert.

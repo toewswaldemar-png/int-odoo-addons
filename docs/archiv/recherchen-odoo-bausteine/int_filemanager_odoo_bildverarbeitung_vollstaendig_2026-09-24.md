@@ -3,7 +3,7 @@
 Stand 2026-09-24. Auf ausdrücklichen Wunsch **vollständig, nicht stichprobenartig** geprüft — jede
 Datei mit Bildbezug im lokal geklonten Odoo-19-Kern (`C:\Users\Admin\Documents\GitHub\odoo`, auf
 `origin/19.0` aktualisiert, Commit `2e2acfd6`, 2026-09-08) wurde identifiziert und gelesen, nicht nur
-die bereits aus `int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitt 17) bekannten Stellen.
+die bereits aus `../../int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitt 17) bekannten Stellen.
 Ziel: für jeden Baustein, den `int_filemanager` für Bildvorschau/-bearbeitung bräuchte, verbindlich
 klären, ob er nativ existiert, bevor irgendetwas selbst gebaut wird (entspricht Umbau-Regel 7 /
 Suchraster 16.4 des Konzeptdokuments). Reine Recherche, nichts umgesetzt.
@@ -86,7 +86,7 @@ image_512  = fields.Image(..., related="image_1920", max_width=512,  ..., store=
 Eine Quelle, mehrere `related`+`store=True`-Ableitungen — jede Größe wird automatisch beim
 Schreiben der Quelle neu berechnet (`_inverse_related`/`_process_related` in `fields_binary.py`).
 Kein eigener Cron/Cache-Invalidierungscode nötig. Genau das Muster, das
-`int_filemanager_konzept_db_vorrang_2026-09-24.md` Abschnitt 17.3 bereits für `preview`/`thumbnail`
+`../../int_filemanager_konzept_db_vorrang_2026-09-24.md` Abschnitt 17.3 bereits für `preview`/`thumbnail`
 vorschlägt — hier am Original bestätigt, nicht nur nacherzählt.
 
 ---

@@ -83,7 +83,7 @@ Long-Press-Block (Zeilen 357-406) noch gebraucht wird**, bevor er als notwendige
 `computeAggregates()` (`list_renderer.js:692-786`) wertet pro Spalte ein `sum`/`avg`/`max`/`min`-
 Attribut im Arch aus und zeigt automatisch eine Fußzeile mit dem Ergebnis — **umgerechnet neu bei
 jeder Auswahl** (nur ausgewählte Zeilen) **und pro Gruppe**, wenn gruppiert wird. Für die in
-`int_filemanager_feature_ideen_2026-09-21.md` (Abschnitt D) skizzierte Idee
+`../../int_filemanager_feature_ideen_2026-09-21.md` (Abschnitt D) skizzierte Idee
 "Speicherplatz-Dashboard" bedeutet das: ein `sum="Gesamtgröße"`-Attribut auf der bestehenden
 `size`-Spalte liefert bereits "Summe der markierten Dateien" und "Summe je Ordner (bei Gruppierung
 nach Ordner)" **ganz ohne eigenen Code** — kein Dashboard-View nötig für diesen Teilaspekt, nur ein
@@ -98,7 +98,7 @@ nicht-editierbare Listen wie `int_filemanager` relevante Zweig). Abgedeckt: Pfei
 Grid-Navigation), Tab/Shift+Tab (Gruppenknopf-Navigation), Shift+Pfeil (Tastatur-Bereichsauswahl),
 Shift+Leertaste (Auswahl umschalten), Enter (öffnen bzw. Inline-Bearbeitung starten bzw. das native
 Lösch-Icon in der Zelle auslösen, `o_list_record_remove`). **Kein `case` für eine reine Entf-Taste,
-kein `case` für F2.** Bestätigt exakt die in `int_filemanager_feature_ideen_2026-09-21.md`
+kein `case` für F2.** Bestätigt exakt die in `../../int_filemanager_feature_ideen_2026-09-21.md`
 (Abschnitt C) skizzierte Lücke "Tastenkürzel (Entf/F2/Strg+C/V/X)" als echten, nicht durch native
 Bordmittel abgedeckten Aufwand — hier also zu Recht noch offen, kein Eigenbau-Vermeidungsfund.
 
@@ -114,7 +114,7 @@ selbst wird in `int_filemanager` bereits genutzt (`native_list_renderer.js` refe
 `.o_cp_action_menus` explizit in den Rubberband-/Deselect-Ausnahmeregeln).
 
 **Das ist ein unabhängiger, zusätzlicher Fund** zu der bereits in
-`int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitt 16.1) vorgeschlagenen Migration von
+`../../int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitt 16.1) vorgeschlagenen Migration von
 `trashed` (eigenes Boolean) zu nativem `active` — dort war die Begründung Fund B1 (Vollscan löscht
 Papierkorb-Einträge versehentlich endgültig). Über die Listenansicht-Prüfung kommt jetzt ein
 zweiter, eigenständiger Vorteil derselben Migration hinzu: **"In den Papierkorb verschieben" und

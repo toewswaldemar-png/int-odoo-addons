@@ -873,7 +873,7 @@ Ab hier auf Basis eines selbstgebauten Decoders für das binäre Delphi-DFM-
 Format (`docs/legacy-schema/dfm-tool/`), nicht mehr auf `strings`-Textsuche
 gestützt. Details zum Werkzeug: [`dfm-tool/README.md`](dfm-tool/README.md).
 Alle 471 Formulare aus `Herrmann.exe` liegen dekodiert unter
-[`forms-dfm/`](../../legacy-schema/forms-dfm).
+[`forms-dfm/`](forms-dfm/).
 
 ### Korrektur 1: "Kommision"-Tab, echte FieldNames
 

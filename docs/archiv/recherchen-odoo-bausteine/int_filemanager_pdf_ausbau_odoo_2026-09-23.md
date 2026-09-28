@@ -44,7 +44,7 @@ müsste aber direkt aufgerufen werden, nicht über eine vorgefertigte Odoo-Funkt
 bereits für jeden Dateityp inkl. PDF — nichts PDF-Spezifisches fehlt strukturell. Zwei native
 Bausteine aus Abschnitt 1 passen aber direkt auf bereits im Feature-Katalog offen gelassene Punkte:
 
-- **Wasserzeichen bei externem Teilen** (`int_filemanager_feature_ideen_2026-09-21.md`, Punkt J3,
+- **Wasserzeichen bei externem Teilen** (`../../int_filemanager_feature_ideen_2026-09-21.md`, Punkt J3,
   dort noch als "eher niedrigere Priorität, generisch über `pypdf`" eingeordnet) — mit
   `odoo.tools.pdf.add_banner()` bereits **fertig vorhanden**, kein Aufbau einer eigenen Lösung
   nötig: beim externen Download über `share_download()` (`controllers/main.py`) könnte für PDFs
@@ -89,7 +89,7 @@ heruntergeladene Datei, die Originaldatei im Filemanager bleibt unverändert.
 
 **Der Anschlusspunkt ist ebenfalls bereits im Code vorbereitet:** pdf.js exponiert sich selbst
 global (`viewer.js:15163`: `window.PDFViewerApplication = PDFViewerApplication`) — und
-`int_filemanager` reicht laut `int_filemanager_native_ui.md` bereits heute aktiv in das iframe
+`int_filemanager` reicht laut `../../int_filemanager_native_ui.md` bereits heute aktiv in das iframe
 hinein (der dokumentierte ESC-Tastatur-Fix hängt einen eigenen Listener direkt auf
 `iframe.contentWindow`). Genau dasselbe, bereits etablierte Cross-Frame-Muster ließe sich nutzen,
 um `PDFViewerApplication.save` abzufangen bzw. `pdfDocument.saveDocument()` selbst aufzurufen und
@@ -110,7 +110,7 @@ das versteht sich von selbst mit dem Papierkorb-Entwurf aus
   externes Werkzeug.
 - **Formularfelder ausfüllen** (`fill_form_fields_pdf`) — Ergänzung zur bereits bestehenden
   Lese-Seite (`fulltext.py` liest AcroForm-Werte für die Volltextsuche/Werterkennung aus, siehe
-  `int_filemanager_ocr_selbstdefinierte_felder.md`) — ein Schreib-Pfad würde erlauben, ein
+  `../../int_filemanager_ocr_selbstdefinierte_felder.md`) — ein Schreib-Pfad würde erlauben, ein
   Formular-PDF direkt in `int_filemanager` auszufüllen, nicht nur auszulesen.
 - **Eingebettete Anhänge extrahieren** (`OdooPdfFileReader.getAttachments()`) — direkt relevant
   für die in `erp/erp-odoo-modulvergleich.md` gefundene `LeitwegID`/`XRechnung`-Thematik: moderne

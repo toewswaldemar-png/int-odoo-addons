@@ -51,7 +51,7 @@ Hash-/Rename-Erkennung aus Phase 1 vollständig im Code erhalten, nur seltener a
 kontinuierlich. **Ergebnis:** der einzige tatsächlich verbleibende Nutzen wäre ein etwas
 einfacherer Papierkorb (kein Watcher-Guard nötig) — zu schmal, um den Explorer-Zugriff
 aufzugeben und einen vollständigen WebDAV-Server neu zu bauen. **Papierkorb wird stattdessen wie
-in `../int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` geplant über den Watcher-Guard
+in `recherchen-odoo-bausteine/int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` geplant über den Watcher-Guard
 gelöst**, kein Architekturwechsel nötig.
 
 **Nachtrag 2026-09-24 (Entscheidung revidiert): diese Ablehnung gilt nicht mehr.** Nach deutlich
@@ -79,12 +79,12 @@ Adressleiste ("Gehe zu Pfad"), Zwei-Spalten-/Splitview, Favoriten/Quick-Access, 
 Galerie-/Rasteransicht für Bilder, Tastenkürzel (Entf/F2/Strg+C/V/X), Kopieren als eigene
 Operation.
 
-**Sicherheit/Datenintegrität** (`../int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md`):
+**Sicherheit/Datenintegrität** (`recherchen-odoo-bausteine/int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md`):
 Papierkorb — vollständiger Bauplan bereits steht (Odoo-`active`-Feld, Watcher-Guard,
 Restore-Route, Retention-Cron). Größte bereits gefundene Einzellücke im ganzen Modul.
 
-**Vorschau & Bearbeitung** (`../int_filemanager_pdf_ausbau_odoo_2026-09-23.md`,
-`../int_filemanager_bildvorschau_bearbeitung_odoo_2026-09-23.md`): PDF-Annotationen bereits im
+**Vorschau & Bearbeitung** (`recherchen-odoo-bausteine/int_filemanager_pdf_ausbau_odoo_2026-09-23.md`,
+`recherchen-odoo-bausteine/int_filemanager_bildvorschau_bearbeitung_odoo_2026-09-23.md`): PDF-Annotationen bereits im
 Vorschau-Dialog lauffähig, nur ohne Rückschreib-Anbindung; Bildbearbeitung (Zuschneiden, Filter)
 über wiederverwendbare Odoo-Bausteine (Cropper.js, Canvas/WebGL-Filter); Bild-Rotation in der
 Vorschau bereits vorhanden, aber nicht persistiert.
@@ -105,7 +105,7 @@ weniger relevant.
 
 **Unfertige native-UI-Migration** (`../int_filemanager_native_ui.md`): alte und neue UI koexistieren
 teils noch. Sollte vor massivem Ausbau der neuen UI abgeschlossen werden (inkl. der bereits
-gefundenen `bus.bus`-Live-Refresh-Lücke, siehe `../int_filemanager_odoo_native_integration_2026-09-21.md`,
+gefundenen `bus.bus`-Live-Refresh-Lücke, siehe `recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md`,
 Punkt 1) — sonst wächst der Wartungsaufwand mit jedem neuen Feature doppelt.
 
 **WebDAV-Vollausbau** (aus dem heutigen Architekturgespräch, neu): ein vollständiger, allgemeiner

@@ -13,7 +13,7 @@ aber wie bei PDF/Rich-Text bereits mehrfach in dieser Session festgestellt, ist 
 
 ## 1. Bildvorschau — was `int_filemanager` heute schon (kostenlos) nutzt
 
-`int_filemanager`s Vorschau läuft laut `int_filemanager_native_ui.md` bereits vollständig über
+`int_filemanager`s Vorschau läuft laut `../../int_filemanager_native_ui.md` bereits vollständig über
 Odoos natives `FileViewer`/`useFileViewer` (`addons/web/static/src/core/file_viewer/file_viewer.js`).
 Direkt am Quellcode bestätigt, was dieser Baustein **bereits mitbringt**, unabhängig von
 `int_filemanager`s eigenem Code:

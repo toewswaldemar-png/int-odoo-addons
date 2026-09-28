@@ -362,10 +362,10 @@ Eigenbau und braucht die meisten Tests.**
 |---|---|
 | `archiv/int_filemanager_wahrheitsmodell_watcher_reduktion_2026-09-24.md` | Idee "Schnitt lokal/CIFS" trägt nicht (Daten liegen fast nur auf CIFS-Testfreigaben, lokal nur `Test`); Zeile "App-Schreibvorgänge sind DB-geführt" trifft nicht zu (B4) |
 | `archiv/int_filemanager_filebrowser_scan_architektur_2026-09-23.md` | Bezieht sich auf `_shallow_reconcile()`, der nicht existiert; CIFS-Scanstrategie ist Testbetrieb und niedrig priorisiert |
-| `int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` | Papierkorb ist bereits mit `trashed`-Feld umgesetzt (Commit `b53fed2`), nicht mit `active`; Watcher-Guard-Argument überholt |
+| `archiv/recherchen-odoo-bausteine/int_filemanager_papierkorb_odoo_umsetzung_2026-09-23.md` | Papierkorb ist bereits mit `trashed`-Feld umgesetzt (Commit `b53fed2`), nicht mit `active`; Watcher-Guard-Argument überholt |
 | `archiv/int_filemanager_watcher_stille_fehlschlaege_2026-09-23.md` | Funde bleiben gültig, Bewertung ändert sich (`max_user_watches` unkritisch; Watchdog wichtig, aber Watcher wird zum Zulieferer) |
 | `archiv/int_filemanager_grundsatz_explorer_ausbau_2026-09-23.md` | Roadmap bleibt; Reihenfolge Abschnitt 10 dieses Docs hat Vorrang für das Fundament |
-| `int_filemanager_bildvorschau_bearbeitung_odoo_2026-09-23.md` | Recherchebasis; die Empfehlung "Cropper.js selbst einbinden, Filterfunktionen kopieren, Rotation per Pillow" ist durch Abschnitt 17 (nativer Bauplan) **ersetzt** |
+| `archiv/recherchen-odoo-bausteine/int_filemanager_bildvorschau_bearbeitung_odoo_2026-09-23.md` | Recherchebasis; die Empfehlung "Cropper.js selbst einbinden, Filterfunktionen kopieren, Rotation per Pillow" ist durch Abschnitt 17 (nativer Bauplan) **ersetzt** |
 | Externes Review (Desktop\SOPRANO) | Weitgehend bestätigt (B1 verifiziert). Eingeschränkt: kein vollständiger Inhaltsspeicher (1,3 TB); Share-Ausführung synchron mit persistentem Zustand statt reiner Hintergrund-Queue |
 
 ---

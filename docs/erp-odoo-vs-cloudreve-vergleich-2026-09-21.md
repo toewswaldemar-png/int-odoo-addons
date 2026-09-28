@@ -3,7 +3,7 @@
 Stand 2026-09-21. Ergänzt die bisherige Odoo-Recherche dieser Session
 ([`erp/erp-odoo-plattform-analyse-2026-09-21.md`](erp/erp-odoo-plattform-analyse-2026-09-21.md),
 [`int_filemanager_feature_ideen_2026-09-21.md`](int_filemanager_feature_ideen_2026-09-21.md),
-[`int_filemanager_odoo_native_integration_2026-09-21.md`](int_filemanager_odoo_native_integration_2026-09-21.md))
+[`archiv/recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md`](archiv/recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md))
 um einen Vergleich mit **Cloudreve**, der zweiten, unabhängig vom `int-odoo-addons`-Repo laufenden
 Eigenentwicklung/Anpassung des Nutzers (`cloudreve-custom`, siehe dortiges
 `assets/UI_CUSTOMIZATIONS.md`). Reine Analyse, keine Entscheidung vorweggenommen.
@@ -125,7 +125,7 @@ gezielter dafür gebaute Werkzeug.
 Werterkennung (Cloudreve hat das schlicht nicht), vor allem aber die **Einbettung in einen echten
 Geschäftskontext** — eine Datei ist nicht nur eine Datei, sondern kann an einen Kunden, einen
 Reparaturauftrag, eine Aktivität mit Frist gekoppelt sein, samt Audit-Trail, ACL entlang der
-Organisationsstruktur und (potenziell, siehe `int_filemanager_odoo_native_integration_2026-09-21.md`)
+Organisationsstruktur und (potenziell, siehe `archiv/recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md`)
 weiteren Odoo-Apps. Das ist kein Funktionsumfang, den Cloudreve grundsätzlich nachrüsten könnte,
 ohne selbst zu einem ERP zu werden.
 
@@ -168,7 +168,7 @@ müsste, solange die Datei physisch liegen bleibt und nur der Index sie als gel�
 
 Zusammen mit `erp/erp-odoo-plattform-analyse-2026-09-21.md` (Odoo allgemein),
 `int_filemanager_feature_ideen_2026-09-21.md` (Feature-Ideen) und
-`int_filemanager_odoo_native_integration_2026-09-21.md` (native Odoo-Verzahnung) ergibt sich aus
+`archiv/recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md` (native Odoo-Verzahnung) ergibt sich aus
 diesem Dokument ein vollständigeres Bild: was Odoo/`int_filemanager` bereits kann, was nativ noch
 näher an Odoo heranrücken könnte, und — hier neu — wo ein bereits vorhandenes, komplett anderes
 System (Cloudreve) zeigt, wie derselbe Problemraum architektonisch anders und in Teilen bereits

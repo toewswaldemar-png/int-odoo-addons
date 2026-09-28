@@ -1,7 +1,7 @@
 # int_filemanager: tiefere Verzahnung mit Odoo-Bordmitteln — Analyse
 
 Stand 2026-09-21. Separates Dokument, ergänzt
-[int_filemanager_feature_ideen_2026-09-21.md](int_filemanager_feature_ideen_2026-09-21.md)
+[../../int_filemanager_feature_ideen_2026-09-21.md](../../int_filemanager_feature_ideen_2026-09-21.md)
 (dort: Features allgemein) — hier ausschließlich die Frage: **wo lässt sich das Modul noch enger
 an echte Odoo-Bordmittel anschließen statt eigene Mechanik zu pflegen**, betrachtet aus dem
 weiteren Kontext des gesamten Repos (`int-odoo-addons`, nicht nur `int_filemanager` isoliert) und
@@ -11,7 +11,7 @@ der Odoo-19-Plattform insgesamt. Reine Analyse, nichts umgesetzt oder beauftragt
 Geschwister-Module im selben Repo) plus gezielte Web-Recherche zu Odoo-19-Bordmitteln
 (Quellen am Ende jedes Abschnitts, wo relevant). **Keine Live-Verifikation gegen HM-SRV/Tower in
 dieser Session** — anders als der sonst in diesem Repo etablierte Standard ("live am
-Quellcode/an der Instanz geprüft, nicht angenommen", siehe `int_filemanager_native_ui.md`).
+Quellcode/an der Instanz geprüft, nicht angenommen", siehe `../../int_filemanager_native_ui.md`).
 Jede Aussage, die von der tatsächlichen Odoo-Edition (Community vs. Enterprise) oder vom
 Lizenzstand abhängt, ist unten explizit als **vor Umsetzung zu verifizieren** markiert — genau
 das Muster, das bei Baustein 5 der PaperOffice-Recherche (Odoo Sign) bereits einmal nötig war.
@@ -55,7 +55,7 @@ manuellen Refresh.
 `native_list_view.js` (die **neue**, aktiv weiterentwickelte UI) hat **keine** entsprechende
 `busService`-Subscription — geprüft per Grep, kein Treffer. Solange beide UIs parallel existieren
 ist das nur ein Komfortverlust in der neuen UI. Laut
-`int_filemanager_native_ui.md` ("Empfohlene Reihenfolge", Schritt 3) ist aber geplant, die alte
+`../../int_filemanager_native_ui.md` ("Empfohlene Reihenfolge", Schritt 3) ist aber geplant, die alte
 UI + den `/int_filemanager/list`-Endpunkt **zu löschen, sobald Funktionsparität erreicht ist** —
 und genau diese eine Parität fehlt noch. Kein neuer Vorschlag, sondern eine konkrete
 Nachtrag-Position für die ohnehin laufende Migration: `busService.subscribe(...)` +
@@ -115,7 +115,7 @@ zeitgesteuert **oder** als Button/Menüpunkt auslösen, **ohne** dass jede Regel
 sein muss (der Server-Aktions-Editor kann einfache Python-Snippets im UI halten). Genau dieses
 Muster nutzt das Modul bereits an einer Stelle (`res_config_settings.action_scan_now()` ruft
 einen Cron-Entry-Point manuell auf). Eine konkrete Anwendung: die in
-`int_filemanager_feature_ideen_2026-09-21.md` (Punkt I1) skizzierten Ordner-Regeln
+`../../int_filemanager_feature_ideen_2026-09-21.md` (Punkt I1) skizzierten Ordner-Regeln
 ("neue Datei unter Pfad X → Tag Y") ließen sich als **Daten** (eine kleine
 `int_filemanager.folder_rule`-Tabelle, editierbar ohne Code) mit einer **festen**, einmalig
 geschriebenen Auswertungslogik im bestehenden Scan-/Watcher-Cron umsetzen — das ist ohnehin der
@@ -245,7 +245,7 @@ Kein neuer Vorschlag, sondern ein zusätzliches Argument für ein bereits geplan
 solange `/int_filemanager/list` rohe Dicts statt echter ORM-Records liefert (alte UI), fehlt der
 native Excel-/CSV-Export und Druck, den jede normale Odoo-Liste automatisch hat. Die auf
 `experiment/native-listview` bereits verifizierte Umstellung auf echte `int_filemanager.file`-
-Records (siehe `int_filemanager_native_ui.md`) bringt diesen Export/Druck **automatisch mit**,
+Records (siehe `../../int_filemanager_native_ui.md`) bringt diesen Export/Druck **automatisch mit**,
 ohne dass dafür je etwas Eigenes gebaut werden müsste — ein zusätzlicher, bisher nicht genannter
 Nutzen der ohnehin laufenden Migration, der die Priorität dieses Abschlusses eher noch erhöht.
 
@@ -266,7 +266,7 @@ Produkt" wie bereits erfolgreich bei der PaperOffice-Recherche praktiziert. Nur 
 kein ausgearbeiteter Plan.
 
 Approvals (Enterprise) und Automation Rules/Studio (Enterprise) wurden in Punkt 3 bereits
-eingeordnet. Odoo Sign bleibt wie in `int_filemanager_paperoffice_recherche.md` (Baustein 5)
+eingeordnet. Odoo Sign bleibt wie in `../../int_filemanager_paperoffice_recherche.md` (Baustein 5)
 festgehalten: Lizenzstatus vor jeder weiteren Prüfung erst verifizieren.
 
 **Quelle:** [Documents — Odoo 19.0 documentation](https://www.odoo.com/documentation/19.0/applications/productivity/documents.html)

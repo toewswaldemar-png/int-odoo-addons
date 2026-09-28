@@ -94,7 +94,7 @@ ohne zusätzliches Modul direkt importierbar.
 **Einordnung:** kein Ersatz für den nativen Pager (der bleibt für "wie viele Dateien insgesamt,
 gezielt zu Seite X springen" besser geeignet), sondern eine zusätzliche, bisher nicht betrachtete
 Option für eine andere Anzeigeart (z. B. eine Galerie-/Kachelansicht mit Endlos-Scroll statt
-Seiten) — passt zur in `int_filemanager_feature_ideen_2026-09-21.md` (Abschnitt C) ohnehin schon
+Seiten) — passt zur in `../../int_filemanager_feature_ideen_2026-09-21.md` (Abschnitt C) ohnehin schon
 gewünschten "Galerie-/Rasteransicht für Bilder".
 
 ---

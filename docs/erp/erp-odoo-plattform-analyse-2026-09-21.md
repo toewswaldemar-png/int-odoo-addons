@@ -26,7 +26,7 @@ Modelle (`models.Model`), Views (XML), Sicherheitsregeln (`ir.rule`/`ir.model.ac
 mitbringt und sich per `depends` in andere Apps einhängt — exakt das Muster, das dieses Repo für
 seine eigenen `int_*`-Module bereits konsequent nutzt. Zentrale, immer wiederkehrende Bausteine, die
 in praktisch jeder App vorkommen (und die auch `int_filemanager` bereits mehrfach nutzt, siehe
-`../int_filemanager_odoo_native_integration_2026-09-21.md`):
+`../archiv/recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md`):
 
 - **ORM + PostgreSQL**: ein Modell = eine Tabelle, Felder = Spalten, `Many2one`/`One2many`/
   `Many2many` = Fremdschlüssel-Beziehungen — der direkte strukturelle Gegenpart zu den im Altsystem
@@ -36,7 +36,7 @@ in praktisch jeder App vorkommen (und die auch `int_filemanager` bereits mehrfac
   Altsystem-`BERECHTIGUNG`-Tabelle (`USERID`/`MODULID`/`FORMID`/`STATUS`/`MANDANTID`).
 - **`company_id` + Multi-Company**: siehe Abschnitt 7, direkter Bezug zum Altsystem-Feld
   `BENUTZER.MANDANT`.
-- **Automatisierte Aktionen, Cron, Server-Aktionen**: siehe bereits `../int_filemanager_odoo_native_integration_2026-09-21.md`, Punkt 3.
+- **Automatisierte Aktionen, Cron, Server-Aktionen**: siehe bereits `../archiv/recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md`, Punkt 3.
 
 ---
 
@@ -71,7 +71,7 @@ Schweiz) über 1000 produktionsreife Module unter LGPL-3/AGPL-3, in über 250 Gi
 mit Code-Review-Pflicht vor Aufnahme. Praktisch relevant für dieses Projekt: **wo eine
 Enterprise-App fehlt (Community-Edition, Abschnitt 2), lohnt sich vor jedem Eigenbau ein Blick in
 die OCA**, ob es dort bereits eine geprüfte, freie Alternative gibt — genau das Prinzip, das
-`../int_filemanager_odoo_native_integration_2026-09-21.md` bereits für den Automatisierungs-Ersatz
+`../archiv/recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md` bereits für den Automatisierungs-Ersatz
 (`ir.actions.server` statt `base_automation`) vorschlägt, hier verallgemeinert. Konkret für die
 in Abschnitt 2 genannten Enterprise-Lücken existieren OCA-Pendants für u.a. Field Service
 (`OCA/field-service`), Quality-ähnliche QMS-Module und diverse Approval-Engines — vor jeder
@@ -231,7 +231,7 @@ auch auf einen Reparaturauftrag, da `repair.order` ebenfalls analytisch verbuchb
 Abschnitt 5). Der generische `ModulID`+`ObjektID`-Polymorphie-Mechanismus
 (`PROZESSOBJEKTE`, aber auch `InfoDokumente`/`InfoNotizen` bei Reparatur) ist strukturell exakt
 das, was `ir.attachment`s `res_model`/`res_id`-Paar nativ leistet — bereits in
-`../int_filemanager_odoo_native_integration_2026-09-21.md` (Punkt 2) als Anschlusspunkt
+`../archiv/recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md` (Punkt 2) als Anschlusspunkt
 identifiziert, hier zusätzlich bestätigt durch einen weiteren, unabhängigen Fund im Altsystem
 selbst (das Altsystem hat also bereits **zwei separate** Ad-hoc-Umsetzungen desselben Polymorphie-
 Bedarfs: `InfoDokumente`/`InfoNotizen` UND `PROZESSOBJEKTE`, jeweils eigenständig statt geteilt
