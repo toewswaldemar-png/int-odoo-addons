@@ -3,6 +3,7 @@
 # v2 explorer by hand in a browser (DB fmv2_ui on fmtest_pg, container fmv2_ui, port 8085).
 # Run again to update it to the latest working tree (the database is kept; the module is
 # upgraded). `ui_instance.sh reset` drops the database and starts from scratch.
+# Also starts the converter container fmv2_ui_conv for thumbnails (blob store mounted read-only).
 # Never touches the live Odoo. The test login is written to $R/LOGIN.txt on Tower.
 set -euo pipefail
 
@@ -65,5 +66,13 @@ echo "== upgrade + start"
 ssh "$HOST" "docker run --rm --network fmtest-net $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB -u int_filemanager \
   --stop-after-init --workers=0 --no-http --log-level=warn >$R/upgrade.log 2>&1"
 ssh "$HOST" "docker run -d --name $NAME --network fmtest-net -p $PORT:8069 $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB --log-level=info >/dev/null"
+
+echo "== converter (thumbnails): read-only blob store, same code as tools/fmconverter"
+CONV=fmv2_ui_conv
+ssh "$HOST" "mkdir -p $R/tools $R/data/filestore/$DB/blobs && chmod 777 $R/data/filestore $R/data/filestore/$DB 2>/dev/null; rm -rf $R/tools/fmconverter"
+tar -c tools/fmconverter | ssh "$HOST" "tar -x -C $R"
+ssh "$HOST" "docker rm -f $CONV >/dev/null 2>&1 || true; docker run -d --name $CONV --network fmtest-net --user 10001 \
+  -v $R/data/filestore/$DB/blobs:/blobs:ro -v $R/tools/fmconverter:/app:ro --entrypoint python3 $IMAGE /app/server.py >/dev/null"
+ssh "$HOST" "docker exec fmtest_pg psql -U odoo -d $DB -qAtc \"insert into ir_config_parameter(key,value,create_date,write_date) values('int_filemanager.converter_url','http://$CONV:8090',now(),now()) on conflict (key) do update set value='http://$CONV:8090'\""
 ip="$(ssh "$HOST" "hostname -I | awk '{print \$1}'")"
 echo "http://$ip:$PORT/odoo/action-int_filemanager.action_int_filemanager_node   (login: cat $R/LOGIN.txt on Tower)"
