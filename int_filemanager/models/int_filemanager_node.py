@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import re
 import unicodedata
 import uuid
 from datetime import timedelta
@@ -21,8 +22,10 @@ _logger = logging.getLogger(__name__)
 DEFAULT_TRASH_RETENTION_DAYS = 30
 TRASH_RETENTION_PARAM = "int_filemanager.trash_retention_days"
 
-# A name never carries a path: "/" and "\\" would make it one, NUL is never valid.
-_INVALID_NAME_CHARS = ("/", "\\", "\x00")
+# A name never carries a path: "/" and "\\" would make it one. The rest is what Windows
+# refuses, so that an export or a network drive works for every name in the tree.
+_INVALID_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
+_WINDOWS_RESERVED_NAME = re.compile(r"(con|prn|aux|nul|(com|lpt)[0-9¹²³])(\..*)?", re.I)
 
 
 def _remove_if_exists(path):
@@ -265,12 +268,20 @@ class IntFilemanagerNode(models.Model):
         side by side as two different names.
         """
         name = unicodedata.normalize("NFC", name or "").strip()
-        if (
-            not name
-            or name in (".", "..")
-            or any(c in name for c in _INVALID_NAME_CHARS)
-        ):
+        if not name or name in (".", ".."):
             raise UserError(self.env._("This is not a valid file or folder name."))
+        if (
+            _INVALID_NAME_CHARS.search(name)
+            or name.endswith(".")
+            or _WINDOWS_RESERVED_NAME.fullmatch(name)
+        ):
+            raise UserError(
+                self.env._(
+                    'A name must not contain / \\ : * ? " < > | or control characters, '
+                    "end with a dot, or be a reserved Windows name such as CON, NUL "
+                    "or COM1 (with or without an extension)."
+                )
+            )
         return name
 
     @api.model_create_multi

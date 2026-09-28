@@ -70,6 +70,18 @@ msgid "A folder cannot be moved into itself."
 msgstr "Ein Ordner kann nicht in sich selbst verschoben werden."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid ""
+"A name must not contain / \\ : * ? \" < > | or control characters, end with a "
+"dot, or be a reserved Windows name such as CON, NUL or COM1 (with or without "
+"an extension)."
+msgstr ""
+"Ein Name darf keines der Zeichen / \\ : * ? \" < > | oder Steuerzeichen "
+"enthalten, nicht mit einem Punkt enden und kein reservierter Windows-Name "
+"wie CON, NUL oder COM1 sein (auch nicht mit Dateiendung)."
+
+#. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_revision_revision_no_uniq
 msgid "A node cannot have two revisions with the same number."
 msgstr "Ein Knoten kann nicht zwei Revisionen mit derselben Nummer haben."

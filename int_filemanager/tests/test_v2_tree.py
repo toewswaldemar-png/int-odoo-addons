@@ -120,6 +120,23 @@ class TestNodeTree(TransactionCase):
         with self.assertRaises(UserError):
             self._node().rename_or_move(sub.id, False, "../evil", "op-bad-rename")
 
+    def test_names_windows_would_refuse_are_rejected(self):
+        bad_names = (
+            "a:b", "a*b", "a?b", 'a"b', "a<b", "a>b", "a|b", "a\tb", "a\nb",
+            "report.", "CON", "nul", "Aux.txt", "COM1", "lpt9.log", "COM¹",
+            "prn.tar.gz",
+        )  # fmt: skip
+        for bad in bad_names:
+            with self.subTest(name=bad):
+                with self.assertRaises(UserError):
+                    self._node().create_folder(self.root.id, bad, f"op-win-{bad!r}")
+
+    def test_names_that_only_look_like_windows_names_are_accepted(self):
+        good_names = ("console", "CON1", "COM10", "comma.txt", "a.b.c", ".hidden")
+        for good in good_names:
+            with self.subTest(name=good):
+                self._folder(good)
+
     def test_name_is_normalised_to_nfc_and_trimmed(self):
         decomposed = "Rückblick "  # "u" + combining diaeresis, trailing blank
         folder = self._folder(decomposed)
