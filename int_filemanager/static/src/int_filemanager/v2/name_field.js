@@ -145,6 +145,16 @@ export class IntFilemanagerV2NameField extends Component {
     return this.props.record.data.parent_id?.display_name || "";
   }
 
+  // A finished thumbnail replaces the type icon; the revision in the URL never changes,
+  // so the browser may keep the picture.
+  get previewUrl() {
+    const {preview_state: state, current_revision_id: revision} =
+      this.props.record.data;
+    return state === "ready" && revision
+      ? `/int_filemanager/v2/preview/${revision.id}/tile`
+      : "";
+  }
+
   get pseudoMimetype() {
     return (
       this.props.record.data.mime ||

@@ -11,6 +11,13 @@
           role="img"
           aria-label="Folder"
         />
+        <img
+          t-elif="previewUrl"
+          class="o_int_filemanager_thumb"
+          t-att-src="previewUrl"
+          loading="lazy"
+          alt=""
+        />
         <span
           t-else=""
           class="o_image"
