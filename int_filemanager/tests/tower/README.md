@@ -54,6 +54,17 @@ down again (about 1.5 minutes). Result:
   deleted row shows up in the log as a serialization failure. The same invariant is also
   covered deterministically in `test_v2_blobstore.py`.
 
+- `crash_create_file`, `crash_new_revision`, `crash_rename_and_trash` - **pass** (Kern
+  11, step 3: "I1-I6 and I9 also with an abort in the middle of the operation"). The
+  fault file arms `<stage>:exit`: the worker `os._exit(137)`s inside the write path
+  (after the rows were written, before the commit), the client sees the connection die,
+  and the scenario checks that nothing is visible afterwards (no node, no extra
+  revision, name and activity unchanged - one transaction, all or nothing) and that
+  repeating the request with the SAME operation key then works exactly once. The dead
+  worker's row lock is released with its connection, so the retry does not hang. Not
+  covered yet: a crash in the middle of `finish_upload` / the upload cron (no fault
+  points there).
+
 The barrier mechanics themselves are covered for real (not simulated) processes by
 `int_filemanager/tests/test_v2_fault.py::TestCrossProcessBarrier`.
 

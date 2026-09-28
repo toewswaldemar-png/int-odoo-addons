@@ -129,7 +129,13 @@ def run_concurrent(fn_a, fn_b):
 
 
 def perform_create_node(
-    base_url, api_key, parent_id, name, content=b"race", timeout=30
+    base_url,
+    api_key,
+    parent_id,
+    name,
+    content=b"race",
+    timeout=30,
+    operation_key=None,
 ):
     return json2_call(
         base_url,
@@ -140,13 +146,16 @@ def perform_create_node(
             "parent_id": parent_id,
             "name": name,
             "content": _b64(content),
-            "operation_key": f"race-create-{name}-{time.monotonic_ns()}",
+            "operation_key": operation_key
+            or f"race-create-{name}-{time.monotonic_ns()}",
         },
         timeout=timeout,
     )
 
 
-def perform_new_revision(base_url, api_key, node_id, base_revision_id, content):
+def perform_new_revision(
+    base_url, api_key, node_id, base_revision_id, content, operation_key=None
+):
     return json2_call(
         base_url,
         api_key,
@@ -156,12 +165,15 @@ def perform_new_revision(base_url, api_key, node_id, base_revision_id, content):
             "node_id": node_id,
             "base_revision_id": base_revision_id,
             "content": _b64(content),
-            "operation_key": f"race-revise-{node_id}-{time.monotonic_ns()}",
+            "operation_key": operation_key
+            or f"race-revise-{node_id}-{time.monotonic_ns()}",
         },
     )
 
 
-def perform_rename(base_url, api_key, node_id, new_name, new_parent_id=False):
+def perform_rename(
+    base_url, api_key, node_id, new_name, new_parent_id=False, operation_key=None
+):
     return json2_call(
         base_url,
         api_key,
@@ -171,7 +183,8 @@ def perform_rename(base_url, api_key, node_id, new_name, new_parent_id=False):
             "node_id": node_id,
             "new_parent_id": new_parent_id,
             "new_name": new_name,
-            "operation_key": f"race-rename-{node_id}-{time.monotonic_ns()}",
+            "operation_key": operation_key
+            or f"race-rename-{node_id}-{time.monotonic_ns()}",
         },
     )
 
@@ -180,7 +193,7 @@ def perform_move(base_url, api_key, node_id, new_parent_id, new_name):
     return perform_rename(base_url, api_key, node_id, new_name, new_parent_id)
 
 
-def perform_trash(base_url, api_key, node_id):
+def perform_trash(base_url, api_key, node_id, operation_key=None):
     return json2_call(
         base_url,
         api_key,
@@ -188,7 +201,8 @@ def perform_trash(base_url, api_key, node_id):
         "trash",
         {
             "node_id": node_id,
-            "operation_key": f"race-trash-{node_id}-{time.monotonic_ns()}",
+            "operation_key": operation_key
+            or f"race-trash-{node_id}-{time.monotonic_ns()}",
         },
     )
 
@@ -419,6 +433,159 @@ def scenario_lock_timeout_triggers_retry(base_url, api_key, fault_file, fixtures
         raise ScenarioFailed(f"a racer needed more than 30s: {results}")
 
 
+def _search_read(base_url, api_key, model, domain, fields):
+    return json2_call(
+        base_url,
+        api_key,
+        model,
+        "search_read",
+        {
+            "domain": domain,
+            "fields": fields,
+            "context": {"active_test": False},
+        },
+    )
+
+
+def _crash_then_retry(fault_file, stage, call):
+    """Arm `<stage>:exit` (os._exit(137) in the worker, no cleanup - the real
+    thing, not an exception), run *call* with a fixed operation key, and
+    return once the client saw the connection die. Then disarm the fault."""
+    set_fault(fault_file, f"{stage}:exit")
+    try:
+        try:
+            call()
+        except OSError:
+            return  # URLError/RemoteDisconnected/timeout: the worker really died
+        raise ScenarioFailed(f"the request survived a crash at {stage}")
+    finally:
+        clear_fault(fault_file)
+
+
+def scenario_crash_create_file(base_url, api_key, fault_file, fixtures):
+    """I3/I9: the worker dies right after the node and revision rows were
+    written but before the commit. Nothing may be visible afterwards (one
+    transaction, all or nothing), and repeating the request with the SAME
+    operation key must give exactly one node - also when repeated a third time."""
+    parent_id = fixtures["parent_id"]
+    name = "race-crash-create.txt"
+    key = "race-crash-create-op"
+
+    _crash_then_retry(
+        fault_file,
+        "node_create_after_insert",
+        lambda: perform_create_node(
+            base_url, api_key, parent_id, name, operation_key=key
+        ),
+    )
+    found = _search_read(
+        base_url, api_key, "int_filemanager.node", [["name", "=", name]], ["id"]
+    )
+    if found:
+        raise ScenarioFailed(f"a crashed create left a node behind: {found}")
+
+    first = perform_create_node(base_url, api_key, parent_id, name, operation_key=key)
+    again = perform_create_node(base_url, api_key, parent_id, name, operation_key=key)
+    found = _search_read(
+        base_url, api_key, "int_filemanager.node", [["name", "=", name]], ["id"]
+    )
+    if len(found) != 1 or first != again:
+        raise ScenarioFailed(f"retry after a crash is not exactly-once: {found}")
+
+
+def scenario_crash_new_revision(base_url, api_key, fault_file, fixtures):
+    """I3/I6/I9: the worker dies after the new revision row exists, before the
+    commit. The node must still point at its old revision with no new one
+    added; the retry with the same key then adds exactly one."""
+    parent_id = fixtures["parent_id"]
+    seed = perform_create_node(base_url, api_key, parent_id, "race-crash-rev.txt")
+    node_id, base_revision_id = seed["node_id"], seed["revision_id"]
+    key = "race-crash-revision-op"
+
+    _crash_then_retry(
+        fault_file,
+        "revision_write_after_insert",
+        lambda: perform_new_revision(
+            base_url, api_key, node_id, base_revision_id, b"new content", key
+        ),
+    )
+    node = _search_read(
+        base_url,
+        api_key,
+        "int_filemanager.node",
+        [["id", "=", node_id]],
+        ["current_revision_id"],
+    )[0]
+    revisions = _search_read(
+        base_url,
+        api_key,
+        "int_filemanager.revision",
+        [["node_id", "=", node_id]],
+        ["id"],
+    )
+    if node["current_revision_id"][0] != base_revision_id or len(revisions) != 1:
+        raise ScenarioFailed(f"a crashed revision left traces: {node} / {revisions}")
+
+    perform_new_revision(
+        base_url, api_key, node_id, base_revision_id, b"new content", key
+    )
+    revisions = _search_read(
+        base_url,
+        api_key,
+        "int_filemanager.revision",
+        [["node_id", "=", node_id]],
+        ["id"],
+    )
+    if len(revisions) != 2:
+        raise ScenarioFailed(f"expected exactly two revisions after retry: {revisions}")
+
+
+def scenario_crash_rename_and_trash(base_url, api_key, fault_file, fixtures):
+    """I9: a crash in the middle of a rename and of a trash changes nothing
+    (the row lock the dead worker held is released with its connection, so
+    the retry does not hang), and the retries then go through."""
+    parent_id = fixtures["parent_id"]
+    seed = perform_create_node(base_url, api_key, parent_id, "race-crash-tree.txt")
+    node_id = seed["node_id"]
+
+    _crash_then_retry(
+        fault_file,
+        "node_rename_before_check",
+        lambda: perform_rename(
+            base_url,
+            api_key,
+            node_id,
+            "race-crash-tree-renamed.txt",
+            operation_key="k1",
+        ),
+    )
+    row = _search_read(
+        base_url, api_key, "int_filemanager.node", [["id", "=", node_id]], ["name"]
+    )[0]
+    if row["name"] != "race-crash-tree.txt":
+        raise ScenarioFailed(f"a crashed rename changed the name: {row}")
+    perform_rename(
+        base_url, api_key, node_id, "race-crash-tree-renamed.txt", operation_key="k1"
+    )
+
+    _crash_then_retry(
+        fault_file,
+        "node_tree_before_write",
+        lambda: perform_trash(base_url, api_key, node_id, operation_key="k2"),
+    )
+    row = _search_read(
+        base_url, api_key, "int_filemanager.node", [["id", "=", node_id]], ["active"]
+    )[0]
+    if not row["active"]:
+        raise ScenarioFailed(f"a crashed trash deactivated the node: {row}")
+    perform_trash(base_url, api_key, node_id, operation_key="k2")
+    row = _search_read(
+        base_url, api_key, "int_filemanager.node", [["id", "=", node_id]], ["active"]
+    )[0]
+    if row["active"]:
+        raise ScenarioFailed(f"the retried trash did not take effect: {row}")
+
+
 _GC_SCRIPT = """
 import json
 sha256 = {sha256!r}
@@ -537,6 +704,9 @@ SCENARIOS = {
     "move_against_delete": scenario_move_against_delete,
     "lock_timeout_triggers_retry": scenario_lock_timeout_triggers_retry,
     "blob_gc_against_reuse": scenario_blob_gc_against_reuse,
+    "crash_create_file": scenario_crash_create_file,
+    "crash_new_revision": scenario_crash_new_revision,
+    "crash_rename_and_trash": scenario_crash_rename_and_trash,
 }
 
 
