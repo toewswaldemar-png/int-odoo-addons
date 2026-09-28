@@ -17,7 +17,7 @@ from .. import blobstore, fault
 _logger = logging.getLogger(__name__)
 
 
-# Konzept 17.4: 30 days in the trash, then gone.
+# Days a node stays in the trash before it is deleted for good.
 DEFAULT_TRASH_RETENTION_DAYS = 30
 TRASH_RETENTION_PARAM = "int_filemanager.trash_retention_days"
 
@@ -35,9 +35,8 @@ def _remove_if_exists(path):
 
 
 class IntFilemanagerNode(models.Model):
-    """A folder or file entry (Konzept 4). Content lives in
-    int_filemanager.revision/.blob; a node only carries identity, position
-    and rights (I1: Odoo is the sole writer of the tree this describes)."""
+    """A folder or a file. The content lives in its revisions and their
+    blobs; the node carries identity, position in the tree and rights."""
 
     _name = "int_filemanager.node"
     _description = "Filemanager v2 node (folder or file)"
@@ -55,7 +54,7 @@ class IntFilemanagerNode(models.Model):
     current_revision_id = fields.Many2one(
         "int_filemanager.revision", index=True, ondelete="restrict"
     )
-    # Float, not Integer (int4 overflows above ~2 GiB, Pruefbericht Nr. 33-35/19.2).
+    # Float, not Integer: an int4 column overflows for files above 2 GiB.
     size = fields.Float()
     mime = fields.Char()
     tag_ids = fields.Many2many(
@@ -79,16 +78,11 @@ class IntFilemanagerNode(models.Model):
         "partner_id",
         string="Shared with",
     )
-    # Set by trash() for the whole subtree; the 30-day purge (Konzept 17.4) counts
-    # from it.
+    # Set by trash() for the whole subtree; the trash purge counts from it.
     trashed_at = fields.Datetime(index=True)
 
-    # Same (parent_id, lower(name)) uniqueness Windows Explorer enforces
-    # (case-insensitive, NTFS-like: "Groesse.txt" next to "GROESSE.txt" is
-    # rejected, "GRÖSSE.txt" is not),
-    # over the trashed subtree too (active=False keeps its own namespace). NULLS NOT
-    # DISTINCT because two root nodes (parent_id IS NULL) would otherwise both pass as
-    # "distinct nulls" and bypass the uniqueness entirely (A6, Konzept 4/19.17).
+    # Names are unique per folder regardless of case, like on Windows. NULLS NOT
+    # DISTINCT: otherwise two roots (parent_id IS NULL) would never collide.
     _unique_name_per_parent = models.UniqueIndex(
         '(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active',
         "A file or folder with this name already exists here.",
@@ -159,11 +153,11 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def tree_children(self, parent_id):
-        """The sub-FOLDERS directly below *parent_id* (the top of what the caller can
-        see for a falsy id) that the caller can see, for the sidebar tree - one level
-        per call, so what it costs grows with the level that is opened, not with the
-        size of the tree. has_children needs one more query for the whole level, not
-        one per folder."""
+        """Return the visible sub-folders of ``parent_id`` for the sidebar tree.
+
+        Without ``parent_id``, return the top of what the caller can see. One level
+        per call, so the cost depends on the opened level, not on the whole tree.
+        """
         level = (
             [("parent_id", "=", parent_id)]
             if parent_id
@@ -185,9 +179,10 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def breadcrumb(self, node_id):
-        """[{id, name}] from the topmost folder the caller can see down to the node
-        itself. A caller whose scope starts below the real root simply gets a shorter
-        chain - ancestors they cannot read are left out, not revealed."""
+        """Return ``[{id, name}]`` from the topmost visible folder down to the node.
+
+        Ancestors the caller cannot read are left out, not revealed.
+        """
         node = self.browse(node_id).exists()
         if not node:
             return []
@@ -199,9 +194,11 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def existing_names(self, parent_id, names):
-        """Which of *names* are already taken below *parent_id*, compared the way the
-        unique index does (without case, NFC), for the upload conflict dialog. The raw
-        query only finds candidates; what the caller may see is decided by search()."""
+        """Return which of ``names`` are already taken below ``parent_id``.
+
+        Compared like the unique index (case-insensitive, NFC). The SQL query only
+        finds candidates; search() then applies the caller's rights.
+        """
         names = [unicodedata.normalize("NFC", n) for n in names or []]
         if not names:
             return []
@@ -234,35 +231,39 @@ class IntFilemanagerNode(models.Model):
         ]
 
     def action_restore(self):
-        """Button of the trash list; one operation key per click (I9)."""
+        """Restore the selected nodes from the trash."""
         for node in self:
             self.restore(node.id, f"ui-restore-{uuid.uuid4().hex}")
         return True
 
     def action_delete_permanently(self):
-        """Button of the trash list (asks first); needs the purge right (Konzept 12)."""
+        """Delete the selected nodes for good; needs the purge right."""
         for node in self:
             self.delete_permanently(node.id, f"ui-delete-{uuid.uuid4().hex}")
         return True
 
     def action_create_share_link(self):
-        """Button of the share dialog form; the right is checked by create_link."""
+        """Create a share link for this file."""
         self.ensure_one()
         self.env["int_filemanager.share"].create_link(self.id)
         return True
 
     def _display_path(self):
-        """ "/root/sub/file.txt" for logs and messages. Ancestors are read with sudo:
-        the caller may see a node without being allowed to read its parents' rows."""
+        """Return the node's path, e.g. ``/root/sub/file.txt``, for logs and messages.
+
+        Ancestors are read with sudo: the caller may not be allowed to read them.
+        """
         self.ensure_one()
         ids = [int(i) for i in (self.parent_path or "").split("/") if i]
         return "/" + "/".join(self.sudo().browse(ids).mapped("name"))
 
     @api.model
     def _clean_name(self, name):
-        """One place for what a name may be, for every path that sets it (write paths,
-        ORM create/write). NFC because nobody but Odoo writes names any more (Konzept
-        4), so "e" + combining accent and the precomposed letter must not coexist."""
+        """Normalize and validate a file or folder name.
+
+        NFC, so that "e" + combining accent and the precomposed letter cannot exist
+        side by side as two different names.
+        """
         name = unicodedata.normalize("NFC", name or "").strip()
         if (
             not name
@@ -286,15 +287,12 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def create_file(self, parent_id, name, content, operation_key):
-        """Konzept 6 "Hochladen (neu)" for small files (Konzept 7: content that
-        fits in a single request/commit) - runs as the calling user, not sudo
-        (I7): ir.rule on create already enforces the parent's scope, and the
-        node create() below runs BEFORE any filesystem write so a denied
-        request never touches the blob store (Konzept 6 "Rechte pruefen"
-        first in the generic flow). A name collision raises instead of
-        silently replacing anything (I1); an empty file still gets a
-        revision, on the 0-byte blob (A7) - nothing special-cased for that
-        here, hashing b"" already lands on it."""
+        """Create a file from content small enough for one request.
+
+        The node is created first, as the calling user, so the record rules
+        reject a denied request before anything reaches the blob store. A name
+        collision raises instead of replacing the existing file.
+        """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -308,10 +306,8 @@ class IntFilemanagerNode(models.Model):
         fault.fault_point("node_create_before_check")
         try:
             with self.env.cr.savepoint():
-                # mail.thread's own creation-logging chatter message is not wanted for
-                # every single file (volume, and it runs un-sudo'd - mail_thread.py
-                # _message_log_batch/_notify_get_reply_to_batch - so it can fail on a
-                # company/reply-to lookup this user has no reason to need for this).
+                # No "created" chatter message per file: too many of them, and it
+                # can fail on a reply-to lookup the user has no rights for.
                 node = self.with_context(mail_create_nolog=True).create(
                     {
                         "name": name,
@@ -335,9 +331,8 @@ class IntFilemanagerNode(models.Model):
         sha256, size = blobstore.hash_file(tmp_path)
         blobstore.adopt_hashed(self.env, tmp_path, sha256, keep_tmp=True)
 
-        # Blob has no user-facing ACL at all (Konzept 12/A1) - sudo() only reaches
-        # it after the node create() above already checked this user's identity
-        # against the scope (I7 "sudo() nur nach abgeschlossener Pruefung").
+        # Blobs have no user rights at all; sudo() is safe here because the node
+        # create() above already checked the caller against the scope.
         blob = self.env["int_filemanager.blob"].sudo()._get_or_create(sha256, size)
         blobstore.ensure_on_disk(self.env, sha256, tmp_path)
         revision = self.env["int_filemanager.revision"].create(
@@ -355,25 +350,19 @@ class IntFilemanagerNode(models.Model):
 
         result = {"node_id": node.id, "revision_id": revision.id, "sha256": sha256}
         operation.write({"result": result})
-        # Only after the surrounding request commits (cr.postcommit never runs on
-        # rollback, sql_db.py) - the content is already durable via the hardlink
-        # onto its hash, this is just the working copy cleanup (Konzept 5).
+        # The blob is already linked under its hash; the temp file goes only once
+        # the transaction has committed (postcommit does not run on rollback).
         self.env.cr.postcommit.add(lambda: _remove_if_exists(tmp_path))
         return result
 
     def _touch_active_parent(self, parent):
-        """Materialises the conflict between "put something under this folder"
-        and "trash this folder": both must UPDATE the folder's row. Odoo runs
-        REPEATABLE READ, so without a shared written row the two transactions
-        are a plain write skew - trash() decided its subtree from a snapshot
-        that cannot see the newcomer, the newcomer decided the folder was
-        active from a snapshot that cannot see the trash, and both commit
-        (active node under a trashed folder). Written in ONE statement with
-        `AND active`: a folder already trashed in our snapshot matches no row
-        (-> UserError), one trashed after it fails the UPDATE with a
-        serialization error, which retrying() turns into a fresh attempt that
-        then sees the trash. Raw SQL does not go through ir.rule - call it only
-        after the caller's rights on the destination were checked."""
+        """Write the target folder's row before putting something below it.
+
+        Trashing the folder writes the same row, so the two operations conflict
+        and the later one is retried, instead of both committing under
+        REPEATABLE READ and leaving an active node below a trashed folder.
+        Bypasses record rules: call it only after the rights were checked.
+        """
         if not parent:
             return
         if not parent.is_dir:
@@ -395,9 +384,7 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def create_folder(self, parent_id, name, operation_key):
-        """Konzept 6 "Anlegen" for a folder: same order as create_file - the
-        rights-checked create() first, then the destination folder's row, no
-        filesystem involved."""
+        """Create a folder below ``parent_id``."""
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -428,13 +415,12 @@ class IntFilemanagerNode(models.Model):
         return result
 
     def _lock_and_check_base_revision(self, node, base_revision_id):
-        """Konzept 6 "Zeilen wartend sperren ... und Basisrevision pruefen"
-        (shared by create_new_revision and restore_version): SET LOCAL
-        lock_timeout + SELECT ... FOR UPDATE instead of lock_for_update()
-        (A3: the latter is SKIP LOCKED and raises LockError immediately);
-        LockNotAvailable propagates uncaught so retrying() retries the
-        whole request (Konzept 6/19.17). Returns the node's current
-        revision (possibly empty) as it stands AFTER the lock is held."""
+        """Lock the node and check it did not change since ``base_revision_id``.
+
+        Waits for the lock: lock_for_update() skips locked rows and fails at
+        once. A lock timeout propagates so that the request is retried.
+        Returns the current revision as seen under the lock.
+        """
         fault.fault_point("node_lock_before_wait")
         cr = self.env.cr
         cr.execute("SET LOCAL lock_timeout TO '5s'")
@@ -454,11 +440,11 @@ class IntFilemanagerNode(models.Model):
         return current
 
     def _attach_revision(self, node, current, blob_id, size, origin, operation):
-        """Creates the new revision and re-points current_revision_id,
-        unless blob_id already matches the current one (no new revision at
-        all then, Konzept 6). Shared by create_new_revision, restore_version
-        and copy_node (which passes current=None: revision_no always starts
-        at 1 for a brand-new node, nothing to compare against)."""
+        """Add a revision on ``blob_id`` and make it current.
+
+        Does nothing if ``blob_id`` is already the current content. ``current``
+        is None for a new node.
+        """
         if current and current.blob_id.id == blob_id:
             return {"node_id": node.id, "revision_id": current.id, "unchanged": True}
 
@@ -480,14 +466,12 @@ class IntFilemanagerNode(models.Model):
     def create_new_revision(
         self, node_id, base_revision_id, content, operation_key, origin="edit"
     ):
-        """Konzept 6 "Neue Fassung": the base revision travels with every
-        write (WebDAV: lock/ETag) so a stale write becomes a conflict
-        instead of a silent overwrite (I6) - the old version is never
-        touched, only a new row is added. Same content as the current
-        revision -> no new revision at all. check_access() runs before the
-        row lock and before any filesystem write (Konzept 6 "Rechte
-        pruefen" first) - the raw SQL lock below does not go through
-        ir.rule on its own."""
+        """Store new content for a file as a new revision.
+
+        ``base_revision_id`` is the revision the caller started from; if the file
+        changed since, this raises instead of silently overwriting. The same
+        content as the current revision adds nothing.
+        """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -506,9 +490,7 @@ class IntFilemanagerNode(models.Model):
         )
         sha256, size = blobstore.hash_file(tmp_path)
 
-        # .sudo() here only reaches the blob's own sha256 field (I7, same reasoning
-        # as the blob touches below) - current itself was already read un-sudo'd via
-        # the rights-checked node above, this is not a new access-check bypass.
+        # sudo() only to read the blob's hash; the node's rights were checked above.
         if current and current.sudo().blob_id.sha256 == sha256:
             os.remove(tmp_path)
             result = {
@@ -534,10 +516,7 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def restore_version(self, node_id, revision_id, base_revision_id, operation_key):
-        """Konzept 6 "Version wiederherstellen": a new revision on the OLD
-        blob - no bytes copied, the blob is content-addressed and already
-        on disk. Restoring the revision that is already current is the same
-        no-op _attach_revision already gives create_new_revision."""
+        """Make an old revision current again, as a new revision on its blob."""
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -570,12 +549,11 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def copy_node(self, node_id, target_parent_id, new_name, operation_key):
-        """Konzept 6 "Kopieren": new nodes with new revisions on the SAME blobs - no
-        bytes copied. A folder is copied with everything below it that the caller can
-        see. The top node's create() (rights-checked, Konzept 6 "Rechte pruefen"
-        first) runs before anything else, same ordering fix as create_file.
-        revision_no always starts at 1 on a new node, so no lock/base-revision check
-        is needed here (nobody else can know about a node that does not exist yet)."""
+        """Copy a file or folder to ``target_parent_id`` as ``new_name``.
+
+        The copies point to the same blobs, no bytes are copied. A folder is
+        copied with everything below it that the caller can see.
+        """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -641,9 +619,10 @@ class IntFilemanagerNode(models.Model):
         )
 
     def _copy_children(self, source, new_top, scope_id, operation):
-        """Parents before children (parent_path order), so every child's new parent
-        exists when it is created. Only what the caller can see is copied (plain
-        search(), no sudo - I7). Names cannot collide below a brand-new folder."""
+        """Copy what the caller can see below ``source`` into ``new_top``.
+
+        Parents come before their children, so every new parent exists in time.
+        """
         mapping = {source.id: new_top.id}
         copied = 0
         descendants = self.search(
@@ -664,14 +643,12 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def rename_or_move(self, node_id, new_parent_id, new_name, operation_key):
-        """Konzept 6 "Umbenennen, Verschieben": a pure node write, no disk
-        operation at all (no blob touched, so none of the B2/B7 failure
-        modes from the old module apply here). Moving into a different
-        scope updates the whole subtree's scope_id in the same commit;
-        moving into a scope this user cannot write to is checked against
-        the DESTINATION parent explicitly (ir.rule only re-validates a
-        write against the record's own scope, not a value being assigned
-        to a related field)."""
+        """Rename a node and/or move it below ``new_parent_id``.
+
+        Only rows change, no file is touched. Moving into another scope moves
+        the whole subtree along. The write right on the destination is checked
+        explicitly: record rules only check the node's current scope.
+        """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -725,9 +702,7 @@ class IntFilemanagerNode(models.Model):
             # write() above recomputed parent_path (its own _parent_store logic)
             # but this recordset's cached value predates that - refetch it.
             node.invalidate_recordset(["parent_path"])
-            # Whole subtree moves scope together, in this same commit (Konzept 6);
-            # node's own row is included (harmless no-op re-write of what write()
-            # above already set) since parent_path always starts with itself.
+            # The whole subtree, the node included, changes scope in this transaction.
             cr.execute(
                 SQL(
                     "UPDATE int_filemanager_node SET scope_id = %s"
@@ -744,11 +719,7 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def trash(self, node_id, operation_key):
-        """Konzept 6 "Loeschen": active=False + removal_reason='trash' over
-        the WHOLE subtree - never just the node itself, or its children
-        would keep showing up active under a parent that no longer does.
-        Only descendants this user can already see are included (plain
-        search(), no sudo - I7); child_of also matches node_id itself."""
+        """Move a node and everything visible below it to the trash."""
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -774,9 +745,10 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def restore(self, node_id, operation_key):
-        """Konzept 6 "Wiederherstellen": active=True over the trashed
-        subtree; a name collision in the target folder is a UserError, not
-        an automatic rename."""
+        """Restore a node and its subtree from the trash.
+
+        A name collision raises instead of renaming automatically.
+        """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -813,12 +785,11 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def delete_permanently(self, node_id, operation_key):
-        """Konzept 6 "Endgueltig loeschen": rows only - the blob a deleted
-        revision pointed to is swept later by the cleanup job once nothing
-        references it any more (I4), never deleted here directly. Clearing
-        current_revision_id first breaks its own ondelete=restrict link to
-        revision before the cascade delete, rather than relying on unlink()
-        ordering its own cascade simulation the same way."""
+        """Delete a node and its subtree for good.
+
+        Only rows are deleted; the blob cleanup job removes the content later,
+        once nothing refers to it any more.
+        """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -839,6 +810,7 @@ class IntFilemanagerNode(models.Model):
         subtree = self.with_context(active_test=False).search(
             [("id", "child_of", root.id)]
         )
+        # current_revision_id is ondelete=restrict: clear it before the delete.
         subtree.write({"current_revision_id": False})
         subtree.unlink()
         return len(subtree)
@@ -853,9 +825,7 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def _expired_trash_roots(self):
-        """Top nodes of trashed subtrees whose stamp is older than the retention
-        (Konzept 17.4: 30 days). A trashed node below another expired one goes with
-        that one; one trashed on its own earlier expires on its own."""
+        """Return the top nodes of trashed subtrees older than the retention."""
         cutoff = fields.Datetime.now() - timedelta(days=self._trash_retention_days())
         expired = self.with_context(active_test=False).search(
             [("removal_reason", "=", "trash"), ("trashed_at", "<", cutoff)]
@@ -864,11 +834,10 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def _purge_expired_trash(self, limit=200):
-        """Konzept 17.4: what stays in the trash for more than the retention is deleted
-        for good, rows only - the blobs are swept later by the blob cleanup job once
-        nothing references them (I4). One subtree per savepoint, so one that cannot be
-        deleted does not keep the others from being purged (or the cron from ever
-        committing anything). Returns how many trash roots were purged."""
+        """Delete trashed subtrees older than the retention; return how many.
+
+        One savepoint per subtree, so one that fails does not block the others.
+        """
         purged = 0
         for root in self._expired_trash_roots()[:limit]:
             try:

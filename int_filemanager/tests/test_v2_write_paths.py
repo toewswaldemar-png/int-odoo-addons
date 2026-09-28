@@ -1,6 +1,4 @@
-"""Tests for the v2 write paths (Konzept 6). Covers int_filemanager.node.
-create_file() - Konzept 6 "Hochladen (neu)" for content that fits a single
-request/commit (Konzept 7)."""
+"""Tests for the write paths of int_filemanager.node."""
 
 import base64
 
@@ -79,8 +77,7 @@ class TestNodeCreateFile(TransactionCase):
             self.assertEqual(f.read(), b"hello world")
 
     def test_accepts_base64_text_content_same_as_raw_bytes(self):
-        """JSON-2/call_kw cannot carry binary data at all (Konzept 12/19.16)
-        - a caller going through either route must send base64 text."""
+        """RPC callers send the content as base64 text."""
         encoded = base64.b64encode(b"hello world").decode()
 
         result = self._node_env().create_file(
@@ -234,7 +231,7 @@ class TestNodeCreateNewRevision(TransactionCase):
             self.assertEqual(f.read(), b"version two")
 
     def test_stale_base_revision_raises_conflict_not_silent_overwrite(self):
-        """I6: a write from a stale base revision must not overwrite silently."""
+        """A write from a stale base revision must not overwrite silently."""
         with self.assertRaises(UserError):
             self._node_env().create_new_revision(
                 self.node.id,
@@ -267,17 +264,12 @@ class TestNodeCreateNewRevision(TransactionCase):
         self.assertEqual(len(revisions), 1)
 
     def test_dedup_check_works_without_a_warm_cache(self):
-        """Regression: the same-content dedup check (`current.blob_id.sha256`)
-        read the blob's own field un-sudo'd, which passed every existing test
-        here only because setUp's create_file() already warmed this
-        transaction's shared field cache for that exact blob row via a sudo'd
-        create() - so the later non-sudo read never actually needed a fresh
-        fetch, and ir.rule (blob has zero user-facing ACL, Konzept 12/A1)
-        never got a chance to reject it. A real HTTP request never shares
-        that cache with anything before it (found this way: a real two-worker
-        run over JSON-2 on Tower raised AccessError on 'Filemanager v2 blob'
-        for every writer, every time - not a race, a plain per-request bug).
-        invalidate_all() reproduces that cold-cache condition here."""
+        """The same-content check must read the blob's hash with sudo.
+
+        With a warm cache the check passed without sudo, but a real request
+        starts with a cold cache and got an access error; invalidate_all()
+        reproduces that.
+        """
         self.env.invalidate_all()
 
         result = self._node_env().create_new_revision(

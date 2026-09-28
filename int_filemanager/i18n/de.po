@@ -424,28 +424,28 @@ msgstr "Dateimanager v2 Schreibvorgang (Idempotenzschlüssel)"
 
 #. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_build_zips_ir_actions_server
-msgid "Filemanager v2: build big ZIP downloads (Konzept 8)"
-msgstr "Dateimanager v2: große ZIP-Downloads erstellen (Konzept 8)"
+msgid "Filemanager v2: build big ZIP downloads"
+msgstr "Dateimanager v2: große ZIP-Downloads erstellen"
 
 #. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_expire_orphaned_uploads_ir_actions_server
-msgid "Filemanager v2: clean up orphaned uploads (Konzept 7)"
-msgstr "Dateimanager v2: verwaiste Uploads aufräumen (Konzept 7)"
+msgid "Filemanager v2: clean up orphaned uploads"
+msgstr "Dateimanager v2: verwaiste Uploads aufräumen"
 
 #. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_finish_pending_uploads_ir_actions_server
-msgid "Filemanager v2: finish large uploads (Konzept 7)"
-msgstr "Dateimanager v2: große Uploads abschließen (Konzept 7)"
+msgid "Filemanager v2: finish large uploads"
+msgstr "Dateimanager v2: große Uploads abschließen"
 
 #. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_purge_trash_ir_actions_server
-msgid "Filemanager v2: purge the trash after 30 days (Konzept 17.4)"
-msgstr "Dateimanager v2: Papierkorb nach 30 Tagen leeren (Konzept 17.4)"
+msgid "Filemanager v2: purge expired trash"
+msgstr "Dateimanager v2: abgelaufene Papierkorb-Einträge löschen"
 
 #. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_expire_zips_ir_actions_server
-msgid "Filemanager v2: remove old ZIP downloads (Konzept 8)"
-msgstr "Dateimanager v2: alte ZIP-Downloads entfernen (Konzept 8)"
+msgid "Filemanager v2: remove old ZIP downloads"
+msgstr "Dateimanager v2: alte ZIP-Downloads entfernen"
 
 #. module: int_filemanager
 #: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node

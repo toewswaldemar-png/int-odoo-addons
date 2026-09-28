@@ -1,15 +1,7 @@
-"""ORM-level rights tests for the v2 side models (Konzept 12/16, Pruefbericht
-A1): `ir.rule` is evaluated per model and only inherits from `_inherits`
-parents, so `int_filemanager.revision`/`.blob`/`.upload`/`.operation`/`.scope`
-need their OWN rules - inheriting the node's rule was the wrong assumption
-the review disproved (Nr. 94, A1).
+"""Access rights of the v2 models, checked through the ORM.
 
-Written before the models exist (Kern 11, Schritt 3): expected to fail on
-`self.env["int_filemanager.node"]` etc. until the data model lands, then
-turn green one model at a time. Not a placeholder to relax later - this file
-IS the rights specification for those models.
-
-Konzept 12 access table this file encodes:
+Record rules apply per model and are not inherited from a related model, so
+every model needs its own. The rights this file specifies:
     node               - own rule via scope_id.{read,write}_group_ids
     revision            - own rule via node_id.scope_id.{read,write}_group_ids
     blob                - no user ACL at all; only reachable via vetted methods
@@ -117,9 +109,7 @@ class TestV2SideModelAccess(TransactionCase):
         self.assertTrue(found)
 
     def test_revision_has_own_rule_not_inherited_from_node(self):
-        """A1: `ir.rule` does not cascade from node to revision via a normal
-        Many2one - without an explicit rule on `int_filemanager.revision`,
-        a plain read ACL would expose every revision to every user."""
+        """Without its own rule, every user could read every revision."""
         reader_group = self._make_group("Scope C Reader")
         scope = self._make_scope("Scope C", read_group=reader_group)
         node = self._make_node("versioned.txt", scope)
@@ -162,10 +152,7 @@ class TestV2SideModelAccess(TransactionCase):
     # -- blob: no user ACL at all, whatever the scope ----------------------
 
     def test_blob_not_readable_by_any_non_admin_user(self):
-        """A1: blobs carry no scope of their own; a scoped rule would still
-        leak content-addressed hashes across scopes, so the model gets NO
-        user-facing ACL - access only via methods that already checked the
-        node under the caller's identity."""
+        """Blobs have no user access at all, only through checked methods."""
         blob = self._make_blob(sha256="3" * 64)
         member = self._make_user()
         with self.assertRaises(AccessError):
@@ -174,8 +161,7 @@ class TestV2SideModelAccess(TransactionCase):
             )
 
     def test_blob_search_denied_for_non_admin(self):
-        """No group grants any access at all (Konzept 12), so search() itself must
-        raise rather than come back with an empty, easy-to-miss result set."""
+        """search() raises instead of returning an easy-to-miss empty result."""
         self._make_blob(sha256="4" * 64)
         member = self._make_user()
         with self.assertRaises(AccessError):

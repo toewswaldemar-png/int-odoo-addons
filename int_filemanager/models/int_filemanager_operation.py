@@ -4,10 +4,11 @@ from odoo import api, fields, models
 
 
 class IntFilemanagerOperation(models.Model):
-    """Idempotency-key ledger for the write path (Konzept 4/6): "Vorgangs-ID
-    pruefen" before any disk or DB write, so a retried request (Odoo's own
-    retrying(), a client retry, a double-click) finds the stored result
-    instead of repeating the write (I9)."""
+    """One write operation, identified by the client's operation key.
+
+    A repeated request (retry, double-click) finds the stored result instead
+    of writing a second time.
+    """
 
     _name = "int_filemanager.operation"
     _description = "Filemanager v2 write operation (idempotency key)"
@@ -19,11 +20,11 @@ class IntFilemanagerOperation(models.Model):
 
     @api.model
     def _get_or_create(self, key):
-        """Returns (operation, is_new). When not new, operation.result
-        already holds the original request's outcome (I9) - the caller must
-        return it as-is instead of repeating the write. Same savepoint
-        pattern as int_filemanager.blob._get_or_create (A3: retrying() does
-        not retry a UniqueViolation)."""
+        """Return ``(operation, is_new)`` for ``key``.
+
+        If the operation is not new, the caller returns ``operation.result``
+        instead of writing again.
+        """
         operation = self.search([("key", "=", key)], limit=1)
         if operation:
             return operation, False

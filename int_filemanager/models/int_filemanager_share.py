@@ -10,11 +10,11 @@ SHARE_DAYS_PARAM = "int_filemanager.share_default_days"
 
 
 class IntFilemanagerShare(models.Model):
-    """An anonymous download link for ONE file (Kern 4 "Teilen"): a random token, an
-    expiry, and a log of what happened. Links are created and revoked only through
-    the methods below - users can read the rows their scope lets them write to, but
-    never write them, so nobody can plant a token of their own choosing or stretch
-    an expiry."""
+    """A download link for one file that works without login.
+
+    Created and revoked only through the methods below; users cannot write
+    the rows, so nobody can choose a token or extend an expiry.
+    """
 
     _name = "int_filemanager.share"
     _description = "Filemanager v2 share link"
@@ -56,9 +56,7 @@ class IntFilemanagerShare(models.Model):
 
     @api.model
     def create_link(self, node_id, days=None):
-        """A new link for a file the caller may write to (the same right that lets them
-        change who else may read it). Several links per file are fine; each has its own
-        expiry and can be revoked on its own."""
+        """Create a share link for a file; needs the write right on it."""
         node = self.env["int_filemanager.node"].browse(node_id)
         node.check_access("write")
         if node.is_dir or not node.current_revision_id:
@@ -88,7 +86,7 @@ class IntFilemanagerShare(models.Model):
         }
 
     def action_revoke(self):
-        """Button in the share dialog's list of links."""
+        """Revoke the selected links."""
         for share in self:
             self.revoke_link(share.id)
         return True
@@ -106,9 +104,11 @@ class IntFilemanagerShare(models.Model):
 
     @api.model
     def _find_active(self, token):
-        """For the anonymous download route: the active share of a token, or nothing.
-        Unknown, expired, revoked and trashed are deliberately indistinguishable - a
-        difference would tell a guesser whether a token ever existed."""
+        """Return the active share for ``token``, or an empty recordset.
+
+        Unknown, expired, revoked and trashed look the same on purpose, so a
+        guesser cannot tell whether a token ever existed.
+        """
         if not token:
             return self.browse()
         share = self.sudo().search([("token", "=", token)], limit=1)

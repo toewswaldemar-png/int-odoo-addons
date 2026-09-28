@@ -58,7 +58,7 @@ eine belastbare Aussage.
   Commits `[TAG] modul: …`), Oberflächentexte englisch + `i18n/de.po`; **pre-commit** (OCA-Vorlage, nur neuer
   Code), Odoos **`test_lint`** und **odoo-ls** (Parse-Modus, Konventionen Abschnitt 9) müssen grün sein; keine GitHub Action;
   Migrationsskripte mit `odoo/upgrade-util`. Bestehende Module nicht umformatieren.
-  Kommentare: Hausregeln in Abschnitt 3 "Kommentare und Docstrings" (Warum statt Was, Invarianten-Kürzel, Odoo-Stellen
+  Kommentare: Hausregeln in Abschnitt 3 "Kommentare und Docstrings" (Warum statt Was, keine Kürzel/Verweise auf Dokumente, kurze Docstrings wie im Odoo-Kern, Odoo-Stellen
   per Funktionsname statt Zeilennummer).
 
 - **Claims immer verifizieren**, nie "sollte sicher funktionieren" — im Code/Container nachsehen,

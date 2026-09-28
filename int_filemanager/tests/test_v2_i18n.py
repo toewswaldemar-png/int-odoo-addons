@@ -1,7 +1,8 @@
-"""The German translation of the v2 code is complete (Kern 11: de.po vollstaendig).
-de.po is generated from Odoo's own export (tools/v2check/i18n_export.sh + po_tool.py);
-this test guards what that export would find in the code, so a new message cannot
-slip in untranslated."""
+"""The German translation of the v2 code is complete.
+
+de.po is generated with tools/v2check/i18n_export.sh; this test makes sure a new
+message cannot slip in untranslated.
+"""
 
 import ast
 import glob

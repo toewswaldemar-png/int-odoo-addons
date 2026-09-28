@@ -1,10 +1,9 @@
-"""ZIP download of a selection of nodes (Konzept 8): the entries are collected with the
-CALLER's rights (only nodes the caller can read appear), and the archive is written as a
-stream - never held in memory (I12) and never needing a seekable output, so the same
-generator serves the direct download and the background job that writes it to a file.
+"""ZIP download of a selection of nodes.
 
-Entries are stored, not compressed: the file manager runs on a LAN, and compressing
-would hold a worker for the whole download (Konzept 8: "belegt einen Worker").
+Only what the caller can read goes into the archive. The archive is written as
+a stream, never held in memory, so the same code serves the direct download and
+the background job. Entries are stored, not compressed: compressing would hold
+a worker much longer, for little gain on the local network.
 """
 
 import os
@@ -41,8 +40,10 @@ def _mtime(dt):
 
 
 def _unique_name(name, used):
-    """Two selected items can share a name; the archive must not hold two entries with
-    one name (extractors overwrite silently). Compared without case, like the tree."""
+    """Return ``name``, numbered if it is already in ``used`` (case-insensitive).
+
+    Two entries with one name would silently overwrite each other on extraction.
+    """
     candidate, n = name, 1
     while unicodedata.normalize("NFC", candidate).casefold() in used:
         n += 1
@@ -53,10 +54,11 @@ def _unique_name(name, used):
 
 
 def collect_entries(env, node_ids):
-    """(entries, total_bytes, archive_name). Raises AccessError for a selected node the
-    caller may not read; below a selected folder only what the caller can read is
-    included (plain search under the caller's rights, no sudo - I7). Trashed nodes are
-    skipped (search() is active-only)."""
+    """Return (entries, total_bytes, archive_name) for the selected nodes.
+
+    Raises AccessError for a selected node the caller may not read; below a
+    selected folder, what the caller cannot read is left out.
+    """
     Node = env["int_filemanager.node"]
     tops = Node.browse(node_ids).exists()
     if not tops:
@@ -77,8 +79,7 @@ def collect_entries(env, node_ids):
         subtree = Node.search(
             [("id", "child_of", top.id), ("id", "!=", top.id)], order="parent_path"
         )
-        # One sudo'd read for all blob hashes instead of one query per file - only
-        # reached after the search above already applied the caller's rights.
+        # One read for all blob hashes; the search above applied the caller's rights.
         shas = {
             rev.id: rev.blob_id.sha256
             for rev in subtree.current_revision_id.sudo()  # rights checked above
@@ -123,8 +124,7 @@ def _file_entry(env, arcname, revision):
 
 
 class _Sink:
-    """Write-only, unseekable target: ZipFile then streams (data descriptors) instead
-    of seeking back to patch headers. drain() hands over what was written so far."""
+    """Write-only target, so that ZipFile streams instead of seeking back."""
 
     def __init__(self):
         self._parts = []
@@ -144,8 +144,10 @@ class _Sink:
 
 
 def stream_zip(entries):
-    """Generator of the archive's bytes. Touches only the filesystem, never the ORM, so
-    it can run after the request's cursor is gone (a streamed response body)."""
+    """Yield the archive's bytes.
+
+    Uses no ORM, so it still works after the request's cursor is closed.
+    """
     sink = _Sink()
     with zipfile.ZipFile(sink, "w", zipfile.ZIP_STORED, allowZip64=True) as archive:
         for entry in entries:
@@ -171,8 +173,7 @@ def stream_zip(entries):
 
 
 def write_zip(entries, path):
-    """The same archive into a file (background job), fsynced before it is renamed
-    into place by the caller."""
+    """Write the archive to ``path`` (for the background job)."""
     with open(path, "wb") as out:
         for piece in stream_zip(entries):
             out.write(piece)
@@ -181,8 +182,10 @@ def write_zip(entries, path):
 
 
 def zips_dir(env):
-    """Below data_dir/filestore on purpose: only there does x_sendfile hand the file to
-    nginx (Konzept 8, 19.2)."""
+    """Return the folder for finished ZIPs.
+
+    Below the filestore, because only there does x_sendfile hand files to nginx.
+    """
     path = os.path.join(config.filestore(env.cr.dbname), "zips")
     os.makedirs(path, exist_ok=True)
     return path

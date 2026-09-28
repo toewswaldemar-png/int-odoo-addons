@@ -527,6 +527,24 @@ von Tower sind ca. 3,6 TB frei (2026-09-27), davon 3,2 TB auf disk2 + disk3 (Ent
   `_search`-Signatur); ein Image-Update erst nach
   grünem Testlauf auf der Testinstanz.
 
+### 16.1 Zuordnung Grundregeln und Befunde → Tests (Stand 2026-09-28)
+
+Code, Kommentare und Docstrings enthalten keine Kürzel und keine Verweise auf dieses Konzept (Entscheidung
+2026-09-28, `docs/odoo_konventionen_2026-09-26.md` Abschnitt 3); die Zuordnung steht nur hier. Testnamen ohne Datei
+stehen in `int_filemanager/tests/tower/race_scenarios.py` (echte Prozesse, nur auf der Testinstanz).
+
+| | Tests |
+|---|---|
+| A1 | `test_v2_access`: `test_revision_has_own_rule_not_inherited_from_node`, `test_blob_not_readable_by_any_non_admin_user`; `test_v2_write_paths`: `test_dedup_check_works_without_a_warm_cache` |
+| A2 | `test_v2_access_http` (ganze Datei: `call_kw` und JSON-2) |
+| A3 | `scenario_same_new_name_twice`, `scenario_same_base_revision_twice`, `scenario_rename_to_same_name`, `scenario_move_against_delete`, `scenario_lock_timeout_triggers_retry`; `test_v2_blobstore`: `test_recovers_from_concurrent_unique_violation`; `test_v2_fault`: `TestCrossProcessBarrier` |
+| A4 | `scenario_blob_gc_against_reuse`; `test_v2_blobstore`: `test_mark_for_gc_renews_mtime_on_existing_marker`, `test_blob_without_revision_past_grace_is_removed`, `test_blob_without_revision_within_grace_survives` |
+| I3 | `scenario_crash_create_file`, `scenario_crash_new_revision` |
+| I4 | `test_v2_tree`: `test_expired_trash_is_purged_with_its_whole_subtree` |
+| I6 | `test_v2_write_paths`: `test_stale_base_revision_raises_conflict_not_silent_overwrite`; `scenario_same_base_revision_twice`, `scenario_crash_new_revision` |
+| I7 | `test_v2_upload`: `test_cron_finish_uses_the_uploaders_rights_not_the_crons`; `test_v2_access`, `test_v2_access_http` |
+| I9 | `scenario_crash_create_file`, `scenario_crash_new_revision`, `scenario_crash_rename_and_trash` |
+
 ## 17. Entscheidungen (Stand 2026-09-26; 17.7 fällt später)
 
 1. **Explorer-Zugriff:** → **entschieden 2026-09-26: Start ohne Explorer-Zugriff (C) plus Eingangsordner (11.1).**

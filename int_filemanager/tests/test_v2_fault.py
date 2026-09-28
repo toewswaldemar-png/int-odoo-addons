@@ -1,8 +1,7 @@
-"""Unit tests for fault.py itself (Konzept 16, Pruefbericht A3/A4): the
-barrier/fault-injection primitive that the v2 write-path tests will use to
-force two real processes to overlap at a precise point. No model, no DB row
-and no second OS process needed here - just the primitive's own logic
-(threads stand in for "a second process reached this point")."""
+"""Tests for fault.py, the fault injection used by the write-path tests.
+
+Threads stand in for a second process, except in TestCrossProcessBarrier.
+"""
 
 import os
 import subprocess
@@ -215,10 +214,7 @@ class TestFaultPointBarrierMode(BaseCase):
 
 @tagged("post_install", "-at_install")
 class TestCrossProcessBarrier(BaseCase):
-    """A3/A4 need two REAL OS processes to overlap, not two threads sharing
-    one GIL and one filesystem view by accident. Prove wait_at_barrier()
-    actually works across a process boundary before the write-path tests
-    rely on it."""
+    """wait_at_barrier() works across real processes, not only threads."""
 
     def test_two_real_processes_meet_at_the_barrier(self):
         barrier_dir = tempfile.mkdtemp(prefix="int_filemanager_barrier_proc_test_")

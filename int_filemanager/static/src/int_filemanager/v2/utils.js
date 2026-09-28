@@ -5,7 +5,7 @@
 
 /**
  * One key per user action; the server answers a repeated key with the stored result
- * instead of doing the work twice (I9), so a retry after a lost response is harmless.
+ * instead of doing the work twice, so a retry after a lost response is harmless.
  * @returns {String}
  */
 export function newOperationKey() {

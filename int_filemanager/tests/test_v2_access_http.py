@@ -1,15 +1,10 @@
-"""HTTP-level rights tests for the v2 side models (Konzept 12/16, Pruefbericht
-A1/A2): the same access rules as test_v2_access.py, but exercised over the
-TWO real reachable routes instead of the ORM directly -
+"""Access rights of the v2 models, checked over both RPC routes.
 
-    /web/dataset/call_kw   - auth="user": every logged-in internal user,
-                              no API key needed (A2's core finding)
-    /json/2/<model>/<method> - auth="bearer": needs an API key, scope "rpc"
+    /web/dataset/call_kw       - auth="user": every logged-in internal user
+    /json/2/<model>/<method>   - auth="bearer": needs an API key
 
-Both dispatch through the same odoo.service.model.get_public_method /
-ir.rule machinery, so a rule missing on a side model leaks over BOTH routes,
-not just one - Konzept 16 requires testing both. Written before the v2
-models exist (Kern 11, Schritt 3): expected to fail until they land."""
+A rule missing on a model leaks over both routes, so both are tested.
+"""
 
 import datetime
 
@@ -172,9 +167,7 @@ class TestV2AccessHttp(HttpCase):
         self.assertIn(self.revision.id, ids)
 
     def test_call_kw_blob_never_readable_even_with_scope_group(self):
-        """No group_id at all is granted access to blob (Konzept 12), so even a
-        reader who can see the node/revision gets a hard error here, not an empty
-        result - the ACL layer blocks it before any row-level rule even runs."""
+        """Even a reader of the node gets an access error on its blob."""
         self.authenticate("v2_http_reader", "irrelevant")
         resp = self._call_kw(
             "int_filemanager.blob",

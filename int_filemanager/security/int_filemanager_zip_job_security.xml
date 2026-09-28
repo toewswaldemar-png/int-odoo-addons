@@ -1,5 +1,5 @@
 <odoo>
-  <!-- A ZIP job is one user's own download; nobody reads someone else's (Konzept 12).
+  <!-- A ZIP job is one user's own download; nobody reads someone else's.
          Users only read: the jobs are created and changed by the code (sudo), because a
          writable file_name would make the download route serve any file. -->
   <record id="rule_zip_job_own_records" model="ir.rule">

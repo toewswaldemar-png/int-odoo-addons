@@ -10,7 +10,7 @@ from .. import zip_stream
 
 _logger = logging.getLogger(__name__)
 
-# Konzept 8: a finished archive is kept for a day, then removed with its row.
+# A finished archive is kept this long, then removed with its row.
 DEFAULT_KEEP_HOURS = 24
 
 
@@ -24,9 +24,11 @@ def _remove_if_exists(path):
 
 
 class IntFilemanagerZipJob(models.Model):
-    """A big ZIP download built in the background (Konzept 8): above the direct limit a
-    cron packs the selection with the REQUESTER's rights, the user is told over the bus,
-    and the finished archive is delivered like any other file (x_sendfile)."""
+    """A large ZIP download, packed in the background.
+
+    A cron packs the selection with the requester's rights and notifies the
+    requester over the bus when it is ready.
+    """
 
     _name = "int_filemanager.zip_job"
     _description = "Filemanager v2 ZIP download job"
@@ -55,10 +57,10 @@ class IntFilemanagerZipJob(models.Model):
 
     @api.model
     def request_zip(self, node_ids, operation_key):
-        """One entry point for the UI: small selections come back as a URL to stream
-        right away, big ones as a job (the caller then waits for the bus message or
-        polls zip_job_status). The direct route enforces the same limit on its own, so
-        this decision cannot be bypassed by skipping this call."""
+        """Return a direct download URL for a small selection, or start a job.
+
+        For a job the caller waits for the bus message or polls zip_job_status().
+        """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -97,16 +99,13 @@ class IntFilemanagerZipJob(models.Model):
 
     @api.model
     def _cron_build_zips(self):
-        """One job at a time, each in its own transaction (Odoo's per-item progress
-        commit), so one broken selection cannot hold the others back."""
+        """Build pending ZIPs, committing after each so one failure blocks nothing."""
         for job in self.search([("state", "=", "pending")], limit=5):
             self._build_one(job)
             self.env["ir.cron"]._commit_progress(processed=1)
 
     def _build_one(self, job):
-        """Packs with the requester's rights (I7): the cron is superuser, the archive
-        must not be. A savepoint keeps a failed attempt out of the commit; the temp file
-        is renamed into place only when complete."""
+        """Pack one job with the requester's rights, not the cron's."""
         as_user = job.with_user(job.create_uid)
         tmp_path = None
         try:
@@ -147,7 +146,7 @@ class IntFilemanagerZipJob(models.Model):
 
     @api.model
     def _cron_expire_zips(self):
-        """Finished and failed archives go away after a day (Konzept 8, A9)."""
+        """Remove expired jobs and their archives."""
         for job in self.search([("expires_at", "<", fields.Datetime.now())]):
             if job.file_name:
                 _remove_if_exists(job._path())

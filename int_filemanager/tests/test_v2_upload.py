@@ -1,5 +1,4 @@
-"""Tests for the v2 chunked upload (Konzept 7): init/chunk/finish, the
-large-file async path, and orphaned-upload cleanup."""
+"""Tests for the chunked upload: init, chunks, finish, large files, cleanup."""
 
 import os
 
@@ -237,7 +236,7 @@ class TestUploadFlow(TransactionCase):
 
     def test_cron_finish_uses_the_uploaders_rights_not_the_crons(self):
         """The cron runs as superuser; a user whose write right was revoked while the
-        upload sat in the queue must get a failed upload, not a file (I7)."""
+        upload sat in the queue must get a failed upload, not a file."""
         upload = self._large_pending_upload("revoked.bin", "op-revoked")
         self.writer.sudo().write({"group_ids": [(3, self.write_group.id)]})
 

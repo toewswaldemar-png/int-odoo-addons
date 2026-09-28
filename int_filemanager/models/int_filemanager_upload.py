@@ -12,13 +12,11 @@ from .. import blobstore
 
 _logger = logging.getLogger(__name__)
 
-# Konzept 7: "ab einer Grenze (z. B. 256 MB) setzt finish den Upload auf
-# 'processing'" - re-hashing a huge file (19.1: ~51-56s for 3 GB) is too slow
-# for one request.
+# Above this size finish_upload() hands the upload to a cron: hashing a large
+# file (about a minute for 3 GB) takes too long for one request.
 DEFAULT_LARGE_FILE_THRESHOLD_MB = 256
 LARGE_FILE_THRESHOLD_PARAM = "int_filemanager.upload_large_file_threshold_mb"
-# Konzept 7 "Verwaiste Uploads raeumt ein Cron nach Ablauf auf" - no exact
-# number given there; matches the blob GC's own grace-period order of size.
+# Unfinished uploads are removed after this time.
 DEFAULT_EXPIRY_HOURS = 24
 EXPIRY_PARAM = "int_filemanager.upload_expiry_hours"
 
@@ -31,21 +29,21 @@ def _remove_if_exists(path):
 
 
 class IntFilemanagerUpload(models.Model):
-    """An in-progress chunked upload (Konzept 6/7): survives across the
-    several requests one upload takes (init/chunk/finish) so any of them can
-    be retried or resumed without losing what was already received."""
+    """A chunked upload in progress.
+
+    Lives across the requests of one upload (init, chunks, finish), so each of
+    them can be retried or resumed without losing what was already received.
+    """
 
     _name = "int_filemanager.upload"
     _description = "Filemanager v2 chunked upload in progress"
 
-    # One upload per idempotency key (Konzept 4 "operation_id (eindeutig)"): a repeated
-    # chunk/finish request for the same key must find this same row, not create another.
+    # One upload per operation key, so a repeated request finds the same row.
     operation_id = fields.Many2one(
         "int_filemanager.operation", required=True, index=True
     )
-    # Exactly one of the two is set: a new file (target_parent_id + target_name) or
-    # a new revision of an existing one (target_node_id) - Konzept 6 "Hochladen (neu)"
-    # / "Neue Fassung".
+    # Either a new file (target_parent_id + target_name) or a new revision of an
+    # existing one (target_node_id).
     target_parent_id = fields.Many2one(
         "int_filemanager.node", index=True, ondelete="cascade"
     )
@@ -53,11 +51,10 @@ class IntFilemanagerUpload(models.Model):
     target_node_id = fields.Many2one(
         "int_filemanager.node", index=True, ondelete="cascade"
     )
-    # Only meaningful with target_node_id: the same I6 base-revision protection a
-    # single-request create_new_revision() already has (Konzept 6).
+    # With target_node_id: the revision the client started from (conflict check).
     base_revision_id = fields.Many2one("int_filemanager.revision", index=True)
-    # Float and nullable: the client may not know the size upfront (Konzept 7), and
-    # Float avoids the int4 ceiling (19.2) other size fields in this module work around.
+    # Optional: the client may not know the size upfront. Float, not Integer: an
+    # int4 column overflows above 2 GiB.
     expected_size = fields.Float()
     received_size = fields.Float(default=0.0)
     temp_file = fields.Char()
@@ -72,8 +69,8 @@ class IntFilemanagerUpload(models.Model):
         required=True,
     )
     expires_at = fields.Datetime()
-    # What the client needs once the upload is over (node/revision ids, hash) or why it
-    # failed; the async path has no request left to return them in (Konzept 7).
+    # Outcome for the client (node and revision ids, hash) or why it failed; an
+    # upload finished by the cron has no request left to return it in.
     result = fields.Json()
     error = fields.Char()
 
@@ -106,10 +103,11 @@ class IntFilemanagerUpload(models.Model):
         expected_size,
         operation_key,
     ):
-        """Konzept 7 "init": Vorgangs-ID, Groesse, Ziel. Exactly one target
-        shape - a new file (parent + name) or a new revision of an existing
-        one (node + its base revision, same I6 protection a single-request
-        create_new_revision() already has)."""
+        """Start a chunked upload.
+
+        The target is either a new file (``target_parent_id`` and ``target_name``)
+        or a new revision of ``target_node_id`` based on ``base_revision_id``.
+        """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -148,11 +146,12 @@ class IntFilemanagerUpload(models.Model):
 
     @api.model
     def upload_chunk(self, upload_id, offset, data):
-        """Konzept 7 "chunk": append at the exact next offset. A chunk that
-        repeats one already received is a no-op (idempotent retry, Konzept
-        19.1); a chunk with a gap is rejected rather than silently accepted
-        out of order. Locked the same way as any other multi-request write
-        (Konzept 6) - two chunks for the same upload must not race."""
+        """Append ``data`` at ``offset`` to the upload.
+
+        A chunk already received is ignored, so a retry is harmless; a chunk
+        that leaves a gap is rejected. The upload row is locked, so two chunks
+        of the same upload cannot interleave.
+        """
         data = blobstore.decode_content(data)
         upload = self.browse(upload_id)
         cr = self.env.cr
@@ -192,8 +191,7 @@ class IntFilemanagerUpload(models.Model):
 
     @api.model
     def upload_status(self, upload_id):
-        """What a client needs to resume, to poll an asynchronous finish and to show
-        the outcome. Only the uploader's own uploads are visible (ir.rule)."""
+        """Return the upload's progress and outcome, to resume or poll it."""
         upload = self.browse(upload_id).exists()
         if not upload:
             raise UserError(self.env._("This upload does not exist any more."))
@@ -209,9 +207,7 @@ class IntFilemanagerUpload(models.Model):
 
     @api.model
     def cancel_upload(self, upload_id):
-        """The client gave up: the row and its partial temp file go away now instead
-        of at the expiry cron. Deleting only the row would leave the file behind for
-        good (the cron finds files through the rows)."""
+        """Cancel the upload and remove its partial temp file right away."""
         upload = self.browse(upload_id).exists()
         if not upload:
             return True
@@ -230,12 +226,12 @@ class IntFilemanagerUpload(models.Model):
 
     @api.model
     def finish_upload(self, upload_id, operation_key, target_name=None):
-        """Konzept 7 "finish": hash the received temp file, then attach it
-        the same way a single-request write would - unless it is large
-        enough that doing so now would hold this request open too long, in
-        which case a cron finishes it instead and the caller polls
-        upload_status(). *target_name* lets the client retry under another
-        name after a name conflict, without re-sending a byte."""
+        """Turn the received data into a file or a new revision.
+
+        Large uploads are handed to a cron; the client then polls upload_status().
+        ``target_name`` retries under another name after a name conflict,
+        without sending the data again.
+        """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
         )
@@ -262,10 +258,7 @@ class IntFilemanagerUpload(models.Model):
         return result
 
     def _finish_now(self, upload, operation):
-        """The actual attach step, shared by finish_upload's synchronous
-        path and _cron_finish_pending's asynchronous one. Runs as the
-        recordset's own user (never sudo on the node/revision side, only
-        the blob side - I7, same as create_file/create_new_revision)."""
+        """Store the upload's data as a blob and attach it to its target node."""
         sha256, size = blobstore.hash_file(upload.temp_file)
         blobstore.adopt_hashed(self.env, upload.temp_file, sha256, keep_tmp=True)
         blob = self.env["int_filemanager.blob"].sudo()._get_or_create(sha256, size)
@@ -294,13 +287,8 @@ class IntFilemanagerUpload(models.Model):
                         }
                     )
             except psycopg2.errors.UniqueViolation:
-                # Not upload.write({"state": "failed"}): a real request that raises
-                # rolls back its whole transaction (Odoo's own dispatch layer does
-                # this - odoo.tests.common._assertRaises models it faithfully, which
-                # is how this was actually found), so a write made right before this
-                # raise would never persist anyway. The upload stays "open" with its
-                # bytes intact - the client can finish it again once the name is
-                # free, and the orphan-expiry cron is the fallback if it never does.
+                # No state change: the request is rolled back anyway. The upload
+                # stays open, so the client can finish it under another name.
                 raise UserError(
                     self.env._(
                         "A file or folder named %(name)s already exists here.",
@@ -319,26 +307,23 @@ class IntFilemanagerUpload(models.Model):
 
     @api.model
     def _cron_finish_pending(self):
-        """Konzept 7: uploads finish_upload marked 'processing' because they
-        were too large to hash within that request get attached here
-        instead, one at a time so a single bad upload cannot block the
-        others behind it. Split from _finish_pending_one the same way
-        int_filemanager.blob splits _gc_blobs/_gc_blobs_unsafe: tests call
-        the latter directly, since TestCursor forbids the per-item commit
-        here (Odoo's own test framework, not just TransactionCase's
-        isolation convention)."""
+        """Finish the uploads that were too large to finish in their request.
+
+        One at a time with a commit after each, so one bad upload does not
+        block the others. Tests call _finish_pending_one() directly, because
+        the test cursor does not allow the commit.
+        """
         pending = self.search([("state", "=", "processing")], limit=20)
         for upload in pending:
             self._finish_pending_one(upload)
-            # Odoo's own per-item progress commit (v1 precedent: filemanager_file.py
-            # _cron_compute_hashes) instead of a raw cr.commit() - one bad upload must
-            # not roll back the ones already finished earlier in this same run.
+            # Commit per upload, so a later failure does not undo the earlier ones.
             self.env["ir.cron"]._commit_progress(processed=1)
 
     def _finish_pending_one(self, upload):
-        """The cron runs as superuser, but the upload is finished with the UPLOADER's
-        rights (I7): whoever may no longer write there gets a failed upload, not a file.
-        A savepoint keeps whatever a failing attempt half-wrote out of the commit."""
+        """Finish one upload with the uploader's rights, not the cron's.
+
+        Whoever may no longer write there gets a failed upload, not a file.
+        """
         as_uploader = upload.with_user(upload.create_uid)
         try:
             with self.env.cr.savepoint():
@@ -353,9 +338,7 @@ class IntFilemanagerUpload(models.Model):
 
     @api.model
     def _cron_expire_orphaned_uploads(self):
-        """Konzept 7 "Verwaiste Uploads raeumt ein Cron nach Ablauf auf": an
-        upload nobody ever finished (or that failed) past its expiry is
-        removed, along with whatever partial temp file it left behind."""
+        """Remove expired unfinished or failed uploads and their temp files."""
         expired = self.search(
             [
                 ("state", "in", ["open", "failed"]),

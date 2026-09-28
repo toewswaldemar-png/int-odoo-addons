@@ -1,15 +1,9 @@
-"""Fixture bootstrap for race_scenarios.py (Konzept 16, Pruefbericht A3).
+"""Create the fixtures for race_scenarios.py and print their ids as JSON.
 
-Not a test module, not imported by anything - meant to be piped into
-`odoo shell -d <db>` against the disposable fmtest database race_scenarios.py
-targets (see README "Prerequisites"), once with `int_filemanager.watcher_enabled`
-already flipped to false (Konzept 19.5, N5 - a shell session against the watcher
-DB starts a second watcher otherwise).
-
-Creates one scope, one write group, one writer user + API key, one
-dedicated node per A3 scenario (never shared - see load_fixtures() in
-race_scenarios.py for why) and one stale blob for A4, then prints the resulting ids
-as JSON on stdout so `--fixtures-json` can load them straight through.
+Not a test module: pipe it into `odoo shell` against a throwaway database,
+with `int_filemanager.watcher_enabled` set to false first (otherwise the shell
+starts a second watcher). Creates a scope, a write group, a writer with an API
+key, one node per scenario and one stale blob for the cleanup scenario.
 
 Usage:
     cat bootstrap_fixtures.py | odoo shell -d fmtest_pg --no-http > fixtures.json
@@ -98,7 +92,7 @@ rename_node_b_id, _ = _seed_file("race-rename-b-seed.txt")
 move_node_id, _ = _seed_file("race-move-seed.txt")
 lock_node_id, lock_base_revision_id = _seed_file("race-lock-seed.txt")
 
-# A4: a blob that is past the cleanup job's grace period and referenced by no revision
+# A blob that is past the cleanup job's grace period and referenced by no revision
 # (exactly what the job deletes), with its file present on disk. The scenario then has a
 # writer reuse this very content while the job runs.
 a4_content = b"a4-stale-blob-content"

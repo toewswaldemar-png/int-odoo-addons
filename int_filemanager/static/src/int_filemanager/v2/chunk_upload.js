@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-// One file on its way to the server (Konzept 7): small files in a single request,
+// One file on its way to the server: small files in a single request,
 // bigger ones as 4 MiB pieces that can be resumed after any interruption.
 //
 // Everything that touches the outside world is injected (`deps`), so the protocol is

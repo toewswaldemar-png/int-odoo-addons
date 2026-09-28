@@ -1,6 +1,5 @@
 <odoo>
-  <!-- Operation rows are working state of a single write attempt, never a shared
-         business record - "own records only" is the whole rule (Konzept 12). -->
+  <!-- Operations are the working state of one user's request: own records only. -->
   <record id="rule_operation_own_records" model="ir.rule">
     <field name="name">Filemanager v2: operation own records only</field>
     <field name="model_id" ref="model_int_filemanager_operation" />

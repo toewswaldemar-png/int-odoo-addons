@@ -1,6 +1,8 @@
-"""Browser-facing HTTP routes of the v2 file manager (Konzept 7/8). Everything here
-runs as the logged-in user: rights come from the ORM (ir.rule on node/revision),
-never from a path, and `sudo()` only reaches the blob AFTER that check (I7)."""
+"""HTTP routes of the v2 file manager.
+
+Everything runs as the logged-in user; sudo() only reaches the blob after the
+node's rights were checked.
+"""
 
 import mimetypes
 import os
@@ -14,15 +16,14 @@ from odoo.http import request
 
 from .. import blobstore, zip_stream
 
-# Konzept 7: chunks are 4 MiB (bigger ones let the workers grow up to 1.9 GB, 19.2); the
+# The client sends 4 MiB chunks (bigger ones make the workers grow too much); the
 # route accepts a little more than that and nothing beyond.
 CHUNK_MAX_BYTES = 5 * 1024 * 1024
 
 
 class IntFilemanagerV2Controller(http.Controller):
     def _node_for_read(self, node_id):
-        """The node, or 404. check_access raises AccessError (-> 403) for a node this
-        user may not read; a node that does not exist at all is a plain 404."""
+        """Return the node if the user may read it (else 404 or 403)."""
         node = request.env["int_filemanager.node"].browse(node_id).exists()
         if not node:
             raise NotFound
@@ -36,9 +37,10 @@ class IntFilemanagerV2Controller(http.Controller):
         methods=["GET"],
     )
     def download(self, node_id, revision_id=None, disposition="attachment"):
-        """One file, current or a given older revision. Range requests work through
-        Odoo's own Stream; with `x_sendfile` on, nginx delivers the bytes (the blob
-        store lives below data_dir/filestore for exactly that, Konzept 5)."""
+        """Download a file, or one of its older revisions.
+
+        Range requests and x_sendfile are handled by ``http.Stream``.
+        """
         node = self._node_for_read(node_id)
         if node.is_dir:
             raise BadRequest
@@ -58,8 +60,7 @@ class IntFilemanagerV2Controller(http.Controller):
             if not revision:
                 raise NotFound
 
-        # The rights check above is what authorises the blob; the blob itself has no
-        # ACL of its own (Konzept 12/A1).
+        # The checks above authorise the blob; blobs have no rights of their own.
         stream = self._blob_stream(node, revision)
         return stream.get_response(as_attachment=disposition != "inline")
 
@@ -71,11 +72,10 @@ class IntFilemanagerV2Controller(http.Controller):
         max_content_length=CHUNK_MAX_BYTES,
     )
     def upload_chunk(self, upload_id, offset, **_kwargs):
-        """One piece of an upload as the raw request body (Content-Type
-        application/octet-stream, no base64 inflation): `offset` is where it starts.
-        Repeating a piece already received is harmless; a gap is refused
-        (int_filemanager.upload.upload_chunk, Konzept 7). The csrf_token travels in
-        the query string because the body is the data."""
+        """Receive one chunk of an upload as the raw request body.
+
+        The CSRF token is in the query string because the body is the data.
+        """
         try:
             offset = int(offset)
         except ValueError:
@@ -88,9 +88,11 @@ class IntFilemanagerV2Controller(http.Controller):
 
     @http.route("/int_filemanager/v2/zip", type="http", auth="user", methods=["GET"])
     def zip_direct(self, ids=""):
-        """A selection as one ZIP, streamed while it is packed. Only up to the direct
-        limit (500 MB by default, Konzept 8): a stream holds a worker for its whole
-        duration; bigger selections go through int_filemanager.zip_job.request_zip."""
+        """Stream the selected nodes as one ZIP.
+
+        Only up to the direct limit, because the stream holds a worker for its
+        whole duration; bigger selections go through int_filemanager.zip_job.
+        """
         try:
             node_ids = [int(i) for i in ids.split(",") if i]
         except ValueError:
@@ -144,8 +146,7 @@ class IntFilemanagerV2Controller(http.Controller):
     # ------------------------------------------------------------------
 
     def _blob_stream(self, node, revision):
-        """The file of *revision* as a Stream. Callers have already decided that the
-        requester may have it (rights, share token or portal membership)."""
+        """Return the content of ``revision`` as a Stream; the caller checked access."""
         blob = revision.sudo().blob_id
         return http.Stream(
             type="path",
@@ -162,9 +163,10 @@ class IntFilemanagerV2Controller(http.Controller):
 
     @http.route("/int_filemanager/v2/share/<string:token>", type="http", auth="public")
     def share_download(self, token):
-        """Anonymous download by link. No ir.rule applies to an anonymous caller, so
-        everything is checked here explicitly (int_filemanager.share._find_active);
-        unknown, expired, revoked and trashed all answer the same 404."""
+        """Download a file through a share link, without login.
+
+        Unknown, expired, revoked and trashed links all answer the same 404.
+        """
         share = request.env["int_filemanager.share"]._find_active(token)
         if not share:
             raise NotFound

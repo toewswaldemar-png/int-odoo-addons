@@ -1,6 +1,4 @@
-"""Tests for the blob store (Konzept 5): content-addressed writes, dedup,
-the checklist-based cleanup job, and the A4 regression (a reused blob's
-cleanup marker must have its mtime renewed, not just be re-opened)."""
+"""Tests for the blob store: writes, deduplication and the cleanup job."""
 
 import io
 import os
@@ -52,9 +50,7 @@ class TestBlobstorePrimitives(TransactionCase):
         self.assertTrue(os.path.isfile(marker))
 
     def test_mark_for_gc_renews_mtime_on_existing_marker(self):
-        """A4 regression: the review found the prototype's marker renewal
-        (open in "ab" mode, write nothing) does not reliably bump an
-        EXISTING marker's mtime - `mark_for_gc` must force it via os.utime."""
+        """Opening an existing marker in append mode alone does not renew its mtime."""
         sha256 = "c" * 64
         blobstore.mark_for_gc(self.env, sha256)
         marker = os.path.join(blobstore.checklist_dir(self.env), sha256)
@@ -114,12 +110,11 @@ class TestBlobGetOrCreate(TransactionCase):
         self.assertNotEqual(second.last_used, "2020-01-01 00:00:00")
 
     def test_recovers_from_concurrent_unique_violation(self):
-        """A3: retrying() does not retry a UniqueViolation, so _get_or_create
-        must catch it itself. Simulated race: search() reports "not found"
-        once (as if a concurrent writer had not committed yet at the time of
-        that check), then the real create() collides with a row that already
-        exists by the time it runs - _get_or_create must recover instead of
-        letting the IntegrityError escape."""
+        """Odoo does not retry a unique violation, so _get_or_create handles it.
+
+        Simulated race: search() finds nothing, then create() collides with a
+        row a concurrent writer committed in between.
+        """
         Blob = self.env["int_filemanager.blob"].sudo()
         sha256 = "f" * 64
         existing = Blob.create(
@@ -195,13 +190,8 @@ class TestBlobGc(TransactionCase):
         self.assertTrue(os.path.exists(blobstore.blob_path(self.env, sha256)))
 
     def test_blob_without_revision_past_grace_is_removed(self):
-        """Two runs, like the fm_proto precedent this mirrors: the first
-        removes the DB row but also renews the checklist marker as part of
-        marking it for a check (so a writer that raced the GC and is about
-        to commit still gets one more grace period); only a SECOND run,
-        after that marker has itself aged past the grace period, removes
-        the file - matching `_get_or_create`/A4: a marker renewal must never
-        make the file's own removal happen sooner, only later."""
+        """The first run removes the row and renews the marker; the file goes only
+        in a later run, once the marker has aged past the grace period too."""
         Blob = self.env["int_filemanager.blob"].sudo()
         sha256, size = self._adopt(b"never referenced, old")
         Blob._get_or_create(sha256, size).write({"last_used": "2000-01-01 00:00:00"})
@@ -222,9 +212,7 @@ class TestBlobGc(TransactionCase):
         self.assertFalse(os.path.exists(blobstore.blob_path(self.env, sha256)))
 
     def test_blob_without_revision_within_grace_survives(self):
-        """The grace period exists precisely for A4: a blob a concurrent
-        writer just linked (or reused) must not be swept before it has had a
-        chance to commit its revision."""
+        """A blob a writer just linked is kept until it could commit its revision."""
         Blob = self.env["int_filemanager.blob"].sudo()
         sha256, size = self._adopt(b"just written")
         Blob._get_or_create(sha256, size)  # row created, no revision yet - like

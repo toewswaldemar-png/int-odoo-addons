@@ -1,12 +1,10 @@
-"""Driver for the A3/A4 real-process race tests (Konzept 16, Pruefbericht
-A3/A4). See README.md in this directory for prerequisites, the stage-name
-contract the write path must implement, and why this cannot be an Odoo
-TransactionCase. Runs against a real, running Odoo instance (workers=2) on
-the Tower test environment - never against fmv2/fmreal or the live DB.
+"""Race and crash tests with real processes against a running Odoo.
 
-Standard library only (matches docs/prototypes/fm2/tests_block_a/tlib.py):
-this runs in a small helper container that need not have `requests`
-installed.
+See README.md in this directory for prerequisites, the stage names the write
+paths implement, and why this cannot be an Odoo TransactionCase. Never run it
+against a live database.
+
+Standard library only: it runs in a helper container without `requests`.
 """
 
 import argparse
@@ -54,7 +52,7 @@ class CallResult:
 
 
 def json2_call(base_url, api_key, model, method, params, timeout=30):
-    """POST /json/2/<model>/<method> with a bearer API key (Konzept 19.16).
+    """POST /json/2/<model>/<method> with a bearer API key.
     Returns the raw result on success, raises urllib.error.HTTPError (with
     the JSON error body already read into .body) on a non-2xx response."""
     body = json.dumps(params).encode("utf-8")
@@ -127,9 +125,8 @@ def run_concurrent(fn_a, fn_b):
 
 # --------------------------------------------------------------------------
 # Thin wrappers around the real write-path methods (int_filemanager.node),
-# called over JSON-2 with a bearer API key (Konzept 19.16). Content always
-# travels as base64 (JSON cannot carry binary data, Konzept 12/19.16) -
-# blobstore.decode_content() on the server side accepts that transparently.
+# called over JSON-2 with a bearer API key. Content travels as base64, because
+# JSON cannot carry binary data.
 # --------------------------------------------------------------------------
 
 
@@ -212,31 +209,22 @@ def perform_trash(base_url, api_key, node_id, operation_key=None):
     )
 
 
-# A4's cleanup job is @api.autovacuum: private, and no ir.cron record of its own, so
-# there is no HTTP trigger for it (and adding one only for tests would be
-# test-only production code). The driver runs it as what it really is - a SECOND
-# real OS process, `odoo shell` calling the method (see scenario_blob_gc_against_reuse).
+# The blob cleanup job is @api.autovacuum, with no HTTP trigger; the driver runs it
+# in a second real process through `odoo shell` (see scenario_blob_gc_against_reuse).
 
 
 def load_fixtures(fixtures_path):
-    """Fixture ids come from a separate odoo-shell bootstrap step
-    (bootstrap_fixtures.py in this directory, see README "Prerequisites"),
-    not from calling the write paths themselves: a scope and its root
-    folder are administrative setup (creating a scope needs "manage"
-    rights nobody has by default, Konzept 12), not something a normal
-    write-path caller ever does. Each scenario gets its OWN node fixture
-    (never shared) so running --scenario all does not make a later
-    scenario's outcome depend on an earlier one having won its race a
-    particular way. That script's JSON output - api_key, parent_id,
-    revision_node_id/revision_base_revision_id, rename_node_a_id/
-    rename_node_b_id, move_node_id/move_new_parent_id, lock_node_id - is
-    passed straight through here."""
+    """Load the fixture ids written by bootstrap_fixtures.py.
+
+    Every scenario has its own nodes, so the outcome of one race does not
+    depend on how an earlier one ended.
+    """
     with open(fixtures_path, encoding="utf-8") as f:
         return json.load(f)
 
 
 # --------------------------------------------------------------------------
-# A3 scenarios (Konzept 16 "A3 Wettlaeufe"). Every scenario takes the same
+# Race scenarios. Every scenario takes the same
 # (base_url, api_key, fault_file, fixtures) signature so main() can dispatch
 # uniformly; each pulls the ids it needs out of `fixtures`.
 # --------------------------------------------------------------------------
@@ -244,7 +232,7 @@ def load_fixtures(fixtures_path):
 
 def scenario_same_new_name_twice(base_url, api_key, fault_file, fixtures):
     """Two racers create a node with the SAME new name under the same
-    parent. Expectation (A3): exactly one node survives with one revision -
+    parent. Expectation: exactly one node survives with one revision -
     NOT a second silent row, and NOT a lost update; the loser gets a defined
     error (existing-name / retry), not a crash."""
     parent_id = fixtures["parent_id"]
@@ -271,20 +259,12 @@ def scenario_same_new_name_twice(base_url, api_key, fault_file, fixtures):
 
 
 def scenario_same_base_revision_twice(base_url, api_key, fault_file, fixtures):
-    """Two racers save a new revision of the same node from the same base
-    revision (double-click / two tabs). Expectation (I6/A3): one wins, the
-    other gets a base-revision conflict - never a silently dropped edit.
+    """Two racers save a new revision from the same base revision.
 
-    Barrier on node_lock_before_wait, not revision_write_before_check: the
-    latter fires AFTER `SELECT ... FOR UPDATE` succeeds, which Postgres
-    itself already serializes on this node's row - a barrier there can
-    never be satisfied by both racers at once (found empirically on Tower:
-    both threads hung for the full 30s and then both timed out, since
-    racer B's own lock attempt blocks on racer A, who in turn is parked at
-    a barrier waiting for an arrival that structurally cannot happen).
-    node_lock_before_wait fires BEFORE either racer attempts the row lock,
-    so both reach it freely; only afterwards does Postgres serialize them,
-    which is the real thing being tested."""
+    Expectation: one wins, the other gets a base-revision conflict. The
+    barrier sits before the row lock: after it, the lock already serializes
+    the racers and both could never reach the barrier.
+    """
     node_id = fixtures["revision_node_id"]
     base_revision_id = fixtures["revision_base_revision_id"]
     set_fault(fault_file, "node_lock_before_wait:barrier:2")
@@ -311,7 +291,7 @@ def scenario_same_base_revision_twice(base_url, api_key, fault_file, fixtures):
 
 def scenario_rename_to_same_name(base_url, api_key, fault_file, fixtures):
     """Two different existing nodes are renamed to the SAME target name at
-    the same time. Expectation (A3): one rename succeeds, the other is
+    the same time. Expectation: one rename succeeds, the other is
     rejected with a name-conflict error - never two nodes ending up with the
     same (parent, name)."""
     node_id = fixtures["rename_node_a_id"]
@@ -344,15 +324,11 @@ def _is_defined_error(result):
 
 
 def scenario_move_against_delete(base_url, api_key, fault_file, fixtures):
-    """One racer moves a file INTO a folder while the other trashes that folder.
-    Odoo runs REPEATABLE READ, so without an explicit shared write the two are a
-    write skew: trash() decided its subtree from a snapshot that cannot see the
-    newcomer, the move decided the folder was active from one that cannot see
-    the trash. Expectation: whatever the order, no ACTIVE node ends up under a
-    trashed folder.
+    """One racer moves a file into a folder while the other trashes that folder.
 
-    Both racers meet at node_tree_before_write (after their own checks, before
-    their writes), so the interleaving is forced instead of hoped for."""
+    Expectation: whatever the order, no active node ends up below a trashed
+    folder. Both racers meet after their checks and before their writes.
+    """
     file_id = fixtures["move_node_id"]
     folder_id = fixtures["move_new_parent_id"]
     set_fault(fault_file, "node_tree_before_write:barrier:2")
@@ -398,14 +374,12 @@ def scenario_move_against_delete(base_url, api_key, fault_file, fixtures):
 
 
 def scenario_lock_timeout_triggers_retry(base_url, api_key, fault_file, fixtures):
-    """One racer HOLDS the row lock past `lock_timeout` (5 s) while the other
-    saves a new revision from the same base. Expectation (A3, Konzept 6): the
-    waiting racer is not left hanging and does not overwrite anything - its lock
-    wait ends in LockNotAvailable after the 5 s timeout, retrying() runs the
-    request again, and by then it sees the winner's revision and gets the
-    base-revision conflict. So: exactly one success, one defined error, and the
-    loser waited for at least the lock timeout (otherwise the lock was never
-    contended and this proves nothing)."""
+    """One racer holds the row lock past the lock timeout; the other waits.
+
+    Expectation: the waiting request times out, is retried, then sees the
+    winner's revision and gets the base-revision conflict. The loser must have
+    waited at least the timeout, otherwise the lock was never contended.
+    """
     node_id = fixtures["lock_node_id"]
     base_revision_id = fixtures["lock_base_revision_id"]
     lock_timeout_s = 5
@@ -468,7 +442,7 @@ def _crash_then_retry(fault_file, stage, call):
 
 
 def scenario_crash_create_file(base_url, api_key, fault_file, fixtures):
-    """I3/I9: the worker dies right after the node and revision rows were
+    """The worker dies right after the node and revision rows were
     written but before the commit. Nothing may be visible afterwards (one
     transaction, all or nothing), and repeating the request with the SAME
     operation key must give exactly one node - also when repeated a third time."""
@@ -499,7 +473,7 @@ def scenario_crash_create_file(base_url, api_key, fault_file, fixtures):
 
 
 def scenario_crash_new_revision(base_url, api_key, fault_file, fixtures):
-    """I3/I6/I9: the worker dies after the new revision row exists, before the
+    """The worker dies after the new revision row exists, before the
     commit. The node must still point at its old revision with no new one
     added; the retry with the same key then adds exactly one."""
     parent_id = fixtures["parent_id"]
@@ -546,7 +520,7 @@ def scenario_crash_new_revision(base_url, api_key, fault_file, fixtures):
 
 
 def scenario_crash_rename_and_trash(base_url, api_key, fault_file, fixtures):
-    """I9: a crash in the middle of a rename and of a trash changes nothing
+    """A crash in the middle of a rename and of a trash changes nothing
     (the row lock the dead worker held is released with its connection, so
     the retry does not hang), and the retries then go through."""
     parent_id = fixtures["parent_id"]
@@ -592,8 +566,7 @@ def scenario_crash_rename_and_trash(base_url, api_key, fault_file, fixtures):
 
 
 # --------------------------------------------------------------------------
-# Big upload with an abort and a resume (Kern 11, step 4: "Upload 3 GB mit Abbruch und
-# Fortsetzen"). The client here is the same protocol the browser speaks: init_upload /
+# Big upload with an abort and a resume, in the browser's protocol: init_upload /
 # finish_upload / upload_status over JSON-2, the chunks as raw bodies over a real login
 # session with its CSRF token.
 # --------------------------------------------------------------------------
@@ -833,15 +806,12 @@ def _run_odoo_shell(shell_cmd, script):
 
 
 def scenario_blob_gc_against_reuse(base_url, api_key, fault_file, fixtures):
-    """A4: the cleanup job deletes a stale blob row while a writer has just
-    decided to REUSE that very content. Expectation: the writer still ends with a
-    live revision on a live blob row and an intact file - nothing the writer
-    committed points at a blob the job took away.
+    """The cleanup job deletes a stale blob while a writer reuses its content.
 
-    The writer is parked right after it found the file already on disk
-    (blob_write_after_dedup_found, hold mode) - the claim of the fault file is the
-    signal that it is parked. Only then does the job run, in its own process, to
-    completion. Only then is the writer released."""
+    The writer is held right after finding the file on disk, the job runs to
+    completion in its own process, then the writer continues. Expectation:
+    the writer ends with a revision on an existing blob and an intact file.
+    """
     shell_cmd = fixtures.get("_odoo_shell_cmd")
     if not shell_cmd:
         raise NotImplementedError("needs --odoo-shell-cmd (second real process)")

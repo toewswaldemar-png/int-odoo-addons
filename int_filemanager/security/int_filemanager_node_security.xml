@@ -1,10 +1,8 @@
 <odoo>
-  <!-- Konzept 12 access table / Pruefbericht A1: ir.rule is evaluated per model, not
-         inherited from a related model (base/models/ir_rule.py _compute_domain only
-         follows _inherits) - node, revision and scope each need their own rules here.
-         No groups field on any of these -> Odoo treats them as global rules, ANDed
-         with each other rather than ORed (A10); each rule below only ever sets ONE
-         perm_* bit to True, so they never fight each other on the same operation. -->
+  <!-- Record rules apply per model; a related model's rules are not inherited, so
+         node, revision and scope each have their own. These are global rules (no
+         groups), which Odoo ANDs together: each sets exactly one perm_* flag, so two
+         of them never apply to the same operation. -->
   <record id="rule_node_scope_read" model="ir.rule">
     <field name="name">Filemanager v2: node visible in its scope</field>
     <field name="model_id" ref="model_int_filemanager_node" />
@@ -29,9 +27,8 @@
     <field name="perm_unlink">False</field>
   </record>
 
-  <!-- Permanent delete (Konzept 6 "Endgueltig loeschen") is unlink(); the regular
-         trash ("Loeschen") is a write() of active/removal_reason and stays under the
-         write rule above - purge_group_ids exists on scope specifically for this. -->
+  <!-- Permanent delete is unlink() and needs the purge right; moving to the trash is
+         a write() and falls under the write rule above. -->
   <record id="rule_node_scope_purge" model="ir.rule">
     <field name="name">Filemanager v2: node permanent delete in its scope</field>
     <field name="model_id" ref="model_int_filemanager_node" />

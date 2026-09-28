@@ -92,10 +92,16 @@ umformatieren, Diffs klein halten; größere Umstellungen erst als reiner Versch
 
 **Hausregeln dieses Repos** (ergänzend, Entscheidung 2026-09-26):
 1. **Warum statt Was:** der Kommentar nennt den Grund, nicht was der Code ohnehin sagt
-   (schlecht: `# increase counter`; gut: `# Blob must be on disk before its row is committed (I3/I4); a crash leaves
-   only an orphan the GC removes.`).
-2. **Grundregeln benennen:** wo Code eine Invariante absichert, steht ihr Kürzel dabei (`I1` … `I12`, Konzept
-   int_filemanager 2, Abschnitt 2) – damit bei Änderungen sichtbar ist, was nicht brechen darf.
+   (schlecht: `# increase counter`; gut: `# Blob must be on disk before its row is committed; a crash leaves only an
+   orphan the GC removes.`).
+2. **Keine Verweise auf Dokumente** (Entscheidung 2026-09-28, ersetzt die frühere Regel "Grundregeln benennen"):
+   keine Kürzel (`I1`, `A3` …), keine Konzept-Abschnitte, keine Prüfbericht-Nummern, keine Fundgeschichte ("found on
+   Tower …"). Der Kommentar muss ohne das Konzept verständlich sein; wo Code eine Grundregel absichert, steht der Grund
+   im Klartext. Die Zuordnung Grundregel → Test steht nur im Konzept (Abschnitt 16.1). Verweise auf Dateien im selben
+   Repo-Ordner (z. B. eine README daneben) sind erlaubt.
+2a. **Docstrings wie im Odoo-Kern:** eine Zeile, was die Funktion tut (Imperativ: "Return …", "Create …"); nur wenn
+   nötig danach wenige Zeilen zu Randbedingungen. Kein Ablaufprotokoll, keine Aufzählung der Aufrufer, kein Docstring
+   bei selbsterklärenden Methoden (im Odoo-Kern hat gut ein Drittel der Methoden einen, Median 3 Zeilen).
 3. **Odoo-Stellen per Funktionsname, nicht per Zeilennummer** (`# odoo.http.Stream.get_response only uses X-Accel
    below data_dir/filestore`, nicht `# see http.py:665`) – Zeilennummern verschieben sich mit jedem Update.
 4. **Kein auskommentierter Code, keine Autor-/Datumszeilen** (steht in Git); `TODO` nur mit Begründung.

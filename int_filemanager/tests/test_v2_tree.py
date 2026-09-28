@@ -235,7 +235,7 @@ class TestNodeTree(TransactionCase):
 
 @tagged("post_install", "-at_install")
 class TestTrashPurge(TransactionCase):
-    """The 30-day purge (Konzept 17.4): rows only, blobs stay for the blob cleanup."""
+    """The trash purge deletes rows only; blobs are left to the blob cleanup."""
 
     def setUp(self):
         super().setUp()
@@ -278,7 +278,7 @@ class TestTrashPurge(TransactionCase):
         self.assertFalse(
             self.env["int_filemanager.revision"].search([("node_id", "=", child.id)])
         )
-        # the blob is not touched here: the blob cleanup job owns that (I4)
+        # the blob is not touched here: the blob cleanup job owns that
         self.assertTrue(self.env["int_filemanager.blob"].search([("sha256", "=", sha)]))
 
     def test_recent_trash_stays(self):

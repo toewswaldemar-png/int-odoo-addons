@@ -1,21 +1,13 @@
-"""Content-addressed blob storage (Konzept 5): each file's bytes live once,
-named by their SHA-256, under a share mounted below <data_dir>/filestore/<db>/
-so Odoo's own x_sendfile path check (`http.Stream.get_response`, "unterhalb
-von data_dir/filestore") accepts it later when reading (I11/A19).
+"""Content-addressed blob storage.
 
-`ir.attachment` cannot do this job (Pruefbericht Nr. 33-35): content only via
-`_set_attachment_data` (fully in memory), `store_fname` not settable (create/
-write strip it), checksum is SHA-1, no `fsync` on write, rights tied to the
-parent record.
+Each content is stored once, named by its SHA-256, below
+``<data_dir>/filestore/<db>/blobs`` - only below the filestore does
+``http.Stream`` hand a file to nginx via x_sendfile. ir.attachment is not
+used: it holds the content in memory, uses SHA-1 and ties rights to a record.
 
-Same checklist/spooldir pattern as Odoo's own `ir.attachment._mark_for_gc`/
-`_gc_file_store` (base/models/ir_attachment.py:158-252), adapted with a grace
-period: a bare "does anything still reference this file" check would race a
-writer that already linked the file but has not committed its DB row yet
-(A4). Matches the fm_proto prototype (`docs/prototypes/fm2/fm_proto/
-blobstore.py`), with its one confirmed bug fixed: `mark_for_gc` renewing an
-existing marker via `open(path, "ab")` alone does not reliably bump its mtime
-(A4), so an explicit `os.utime` follows it.
+Cleanup uses the same checklist as ``ir.attachment._gc_file_store``, plus a
+grace period, so a blob a writer has linked but not yet committed is not
+deleted under it.
 """
 
 import base64
@@ -32,12 +24,7 @@ BLOBS_DIRNAME = "blobs"
 
 
 def decode_content(content):
-    """Normalise a write path's content argument: a direct Python caller
-    passes real bytes, but JSON-2/call_kw cannot carry binary data at all
-    (Konzept 12/19.16: "Binaerdaten nur base64 im Speicher") - a caller going
-    through either route must send base64 text instead, which this decodes
-    transparently so create_file/create_new_revision/upload_chunk work
-    unchanged for both."""
+    """Return ``content`` as bytes; RPC callers send it as base64 text."""
     if isinstance(content, str):
         return base64.b64decode(content)
     return content
@@ -76,13 +63,12 @@ def _fsync_dir(path):
 
 
 def mark_for_gc(env, sha256):
-    """Add sha256 to the cleanup job's checklist (Konzept 5 "Aufraeum-
-    Markierung"). Called both when a blob is newly linked (in case the
-    surrounding transaction never commits) and whenever an existing one is
-    reused (A4: the cleanup job must not delete a blob a concurrent writer is
-    about to reference) - `os.utime` after the open is the actual renewal:
-    "ab" on an already-existing, zero-byte-appended file does not reliably
-    bump its mtime on its own."""
+    """Put ``sha256`` on the cleanup checklist, or renew its mark.
+
+    Called for new and for reused blobs, so the cleanup job does not delete a
+    blob a writer is about to use. os.utime() renews the mark: opening an
+    existing file in append mode does not reliably update its mtime.
+    """
     path = os.path.join(checklist_dir(env), sha256)
     open(path, "ab").close()
     os.utime(path, None)
@@ -99,10 +85,10 @@ def hash_file(path):
 
 
 def write_stream_to_temp(env, fileobj, name):
-    """Read a file-like object into a temp file on the SAME filesystem as
-    the blob store (so the later `os.link` is a same-filesystem hardlink,
-    never a copy). Caller hashes separately (`hash_file`) or already knows
-    the hash from streaming it (`adopt_hashed`)."""
+    """Write ``fileobj`` to a temp file next to the blobs and return its path.
+
+    Same filesystem as the blobs, so adopt_hashed() can hardlink it.
+    """
     tmp_path = os.path.join(tmp_dir(env), name)
     with open(tmp_path, "wb") as out:
         while chunk := fileobj.read(CHUNK_SIZE):
@@ -113,13 +99,11 @@ def write_stream_to_temp(env, fileobj, name):
 
 
 def adopt_hashed(env, tmp_path, sha256, keep_tmp=False):
-    """Link an already-fsynced, already-hashed temp file onto its content
-    address. Returns True if this hash was already present (deduplication) -
-    the temp file's bytes are identical either way, so no overwrite is ever
-    needed (I2). The temp file is only removed here if `keep_tmp` is False;
-    Konzept 5 keeps it until after the DB commit that follows, so a crash in
-    between leaves at most an orphan the cleanup job removes, never a lost
-    upload (I3/I4)."""
+    """Hardlink a hashed temp file under its hash; return True if it existed.
+
+    An existing blob is never overwritten. Callers pass ``keep_tmp=True`` to
+    keep the temp file until their transaction has committed.
+    """
     final_path = blob_path(env, sha256)
     os.makedirs(os.path.dirname(final_path), exist_ok=True)
     mark_for_gc(env, sha256)
@@ -136,9 +120,7 @@ def adopt_hashed(env, tmp_path, sha256, keep_tmp=False):
 
 
 def ensure_on_disk(env, sha256, tmp_path):
-    """Re-link the blob file from a still-kept temp file if the cleanup job
-    won the race and removed it between this writer linking it and its DB
-    row committing (A4). No-op if the file is already there."""
+    """Link the blob again from the temp file if the cleanup job removed it."""
     final_path = blob_path(env, sha256)
     if os.path.exists(final_path):
         return
@@ -148,8 +130,7 @@ def ensure_on_disk(env, sha256, tmp_path):
 
 
 def ensure_empty_blob(env):
-    """A node without content still has a revision, on the 0-byte blob
-    (A7) - never a node with no revision at all."""
+    """Make sure the empty blob exists; empty files have a revision on it."""
     final_path = blob_path(env, EMPTY_SHA256)
     if os.path.exists(final_path):
         return

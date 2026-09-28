@@ -1,8 +1,6 @@
 <odoo>
-  <!-- perm_write stays False in ir.model.access.csv for every user - a revision is
-         never modified after creation (Konzept 4 "Nie veraendert"), so there is nothing
-         for a write-scoped rule to gate here, only who may read an existing one and who
-         may create a new one. -->
+  <!-- Revisions are never changed after creation (no write access for anyone), so
+         the rules only cover reading and creating. -->
   <record id="rule_revision_scope_read" model="ir.rule">
     <field name="name">Filemanager v2: revision visible in its node's scope</field>
     <field name="model_id" ref="model_int_filemanager_revision" />

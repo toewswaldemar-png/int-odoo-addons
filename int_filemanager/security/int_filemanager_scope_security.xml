@@ -1,6 +1,5 @@
 <odoo>
-  <!-- Read stays ungated (every internal user may see every scope, Konzept 12); only
-         changing one (write/create/unlink) needs manage_group_ids membership. -->
+  <!-- Every internal user may read every scope; changing one needs the manage right. -->
   <record id="rule_scope_manage_write" model="ir.rule">
     <field name="name">Filemanager v2: scope change needs manage right</field>
     <field name="model_id" ref="model_int_filemanager_scope" />

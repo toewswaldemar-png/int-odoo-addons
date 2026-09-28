@@ -2,12 +2,11 @@ from odoo import fields, models
 
 
 class IntFilemanagerScope(models.Model):
-    """Rights scope for a subtree of int_filemanager.node (Konzept 4/12).
+    """Who may read, write, manage and purge a subtree of nodes.
 
-    Every node stores the scope of the nearest ancestor folder that has one
-    (I7); ir.rule on node/revision/... reads read_group_ids/write_group_ids
-    from here rather than from path prefixes, so a rule stays one indexed
-    join instead of a generated per-folder domain (A1, A10)."""
+    Every node stores its scope, so the record rules are a plain join on the
+    scope's groups instead of a generated domain per folder.
+    """
 
     _name = "int_filemanager.scope"
     _description = "Filemanager v2 rights scope"
