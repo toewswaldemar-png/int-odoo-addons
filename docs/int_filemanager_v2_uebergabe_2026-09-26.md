@@ -165,8 +165,8 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    - **Einstieg neue Sitzung – Oberfläche mit Kasten-Auswahl:** Nutzer-Befund „viele gelesene Werte sind nicht
      relevant, stärker mit selbst auswählen verbinden“, Vorschlag „grob einen Kasten aufziehen, darin wie bisher über
      Stichwörter lesen“. Konzept: `docs/int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`
-     (Entscheidungen K1–K5, Vorbilder, geprüfte Odoo-Bausteine, Scheiben U-1…U-6). **Noch nicht freigegeben, nichts
-     umgesetzt** – zuerst offene Entscheidungen U1–U6 mit dem Nutzer klären.
+     (Entscheidungen K1–K5, Vorbilder, geprüfte Odoo-Bausteine, Scheiben U-1…U-8, Nachtrag PaperOffice AI). **Noch nicht freigegeben, nichts
+     umgesetzt** – zuerst offene Entscheidungen U1–U9 mit dem Nutzer klären.
    - Im Downloads-Ordner des Nutzers liegen noch `werterkennung_runde1*.json` (10 Zwischenstände, private Werte) – der
      Nutzer löscht sie selbst; die maßgebliche Fassung liegt auf Tower.
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.

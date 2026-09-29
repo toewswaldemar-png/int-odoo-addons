@@ -235,11 +235,55 @@ Eingangsordner neu entscheiden. Vorschlag:
 - **U6** Nur PDF im Prüf-Fenster, oder auch Bilder (JPG/TIFF-Scans haben heute keine Wortliste, Lücke aus dem
   Werterkennungs-Plan)?
 
+## 9. Nachtrag: PaperOffice AI (Cloud-Plattform) – Wissensgraph, Entitäten, Kontakte, Suche
+
+Recherche 2026-09-29 auf Nutzerwunsch. **Wichtig zur Einordnung:** die Seiten beschreiben **PaperOffice AI**
+(paperoffice.ai), eine Cloud-Plattform mit Sprachmodellen, Vision und Embeddings in eigenen EU-Rechenzentren,
+abgerechnet **je verarbeiteter Seite** (0,02–0,30 € je Seite, dazu Tarife 39 € bis 14.999 € im Monat; Wissensgraph ab
+„Premium“, LLM-Verknüpfung und Logo-Erkennung erst „Ultra“). Das Vorlagen-Einlernen aus Abschnitt 2 gehört zu
+**PaperOffice Classic** (Windows, lokal). Für uns gilt weiter: lokal, keine Kosten je Seite, KI erst wenn nötig (E12) –
+übernommen werden deshalb die **Ideen**, umgesetzt mit Odoo-Bordmitteln und der vorhandenen Erkennung.
+
+| PaperOffice AI | Wie es dort funktioniert | Übertragung auf int_filemanager 2 (Odoo-nativ) | Einschätzung |
+|---|---|---|---|
+| **Wissensgraph / Vorgänge** – Bestellung → Lieferschein → Rechnung → Vertrag als „ein Vorgang statt vier Dateien“; Ansichten Universum, Partner, Vorgang; jede Verbindung zeigt ihre Quelle | Kanten aus Metafeldern (Referenznummern, Parteien), Embedding-Ähnlichkeit, LLM-Schlüsse (Ultra) | (a) **Gleiche Nummer = gleicher Vorgang:** unsere Felder Bestell-, Auftrags-, Lieferschein-, Rechnungs-, Vertragsnummer liegen typisiert in `field_value` (`value_text` mit Trigram-Index) → im Prüf-Fenster und im Details-Dialog eine Liste **„Zum selben Vorgang“** (andere Dateien mit derselben Nummer), Quelle der Verbindung sichtbar („gleiche Bestellnummer“). (b) **Odoos eigener Vorgang:** `purchase`, `sale`, `stock`, `account` sind installierbar (Community); eine erkannte „Ihre Bestellung P00012“ lässt sich per `name_search` der Bestellung zuordnen – Odoo verknüpft Bestellung, Lieferung und Rechnung dann **selbst**, der Graph kommt aus dem ERP statt aus eigener Technik. (c) Absender: Kontakt-Smartbutton „Dokumente“. Eine Netz-Grafik baut Odoo nicht (`web_hierarchy` zeigt nur Bäume) – Listen reichen | (a) klein, gleich mit dem Prüf-Fenster; (b) sobald Odoo als ERP genutzt wird (Schritt 8 hängt Verknüpfungen um); Grafik nicht |
+| **Zeitleiste** – bis zu 7 Datumsfelder (Rechnung, Fälligkeit, Lieferung, Gültigkeit …) plus alle Ereignisse; **„Attention Queue“** je Partei mit Fristen nach Fälligkeit | Datumsfelder aus der Extraktion, Ereignisse aus dem Protokoll | **Kalender- und Listenansicht über `field_value`** (`value_date`, `value_date_to` sind echte Datumsspalten) – reine Odoo-Ansichten ohne eigenes JS, gruppierbar nach Absender, Feld, Monat. **Fristen:** Knoten um `mail.activity.mixin` erweitern (heute nur `mail.thread`); beim Speichern für Felder wie „Fällig am“, „Kündigungsfrist“, „Ende Mindestlaufzeit“ auf Wunsch eine **Odoo-Aktivität** mit Termin anlegen → erscheint in „Meine Aktivitäten“, mit Erinnerung – das ist Odoos „Attention Queue“ | klein, hoher Alltagsnutzen (Kündigungsfristen!) |
+| **Auswertung** (Analytics-Dashboard) | Kennzahlen aus extrahierten Werten | **Pivot- und Diagrammansicht über `field_value`** (Beträge je Absender und Monat, z. B. Nebenkosten je Jahr) – Odoo-Bordmittel | klein |
+| **Entitäten (NER)** – Personen, Firmen (mit Logo), Beträge, Daten, Orte, Bankdaten, Referenznummern; kanonische Namen mit Aliasen; Fundstelle, Konfidenz und Modellversion je Fund; Korrekturen fließen zurück | Sprachmodell „liest im Kontext“, Vision, Musterprüfung | Haben wir in anderer Form: **Wertarten** (W-3) statt freier Entitäten, **Fundstelle + Stufe** je Wert (Stufe ≈ Konfidenz), Lernen aus Bestätigungen (W-5). Neu übernehmen: (1) **abweichende Bankverbindung** – IBAN im Dokument ≠ bekannte Konten des Kontakts (`res.partner.bank`) → deutlicher Hinweis im Prüf-Fenster (Schutz vor gefälschten Rechnungen); (2) **Aliase** – gedruckter Firmenname, unter dem ein Kontakt bestätigt wurde, als gelernter Name des Absenders merken (wie `extraction_hint`), damit „Nordlicht Energie“ und „NE GmbH“ beim nächsten Mal denselben Kontakt finden | (1) klein, sehr nützlich; (2) klein |
+| **Kontakt-Extraktion** – Firma, Person, Adresse, USt-IdNr., E-Mail, Telefon, Bankdaten, Rollen (Absender, Unterzeichner, Empfänger); Dubletten über Name/E-Mail/USt-IdNr./Logo; Partei-Register mit allen Dokumenten | IDP + Vision, automatisch ohne Bestätigung | Wir finden **vorhandene** Kontakte (W-4: USt-IdNr. → IBAN → Mail → Domain → Name). Neu: **„Kontakt aus Dokument anlegen“** – Odoos Kontaktformular öffnen, vorbelegt über `default_*`-Kontext mit Name, Anschrift (aus Absenderzeile/Briefkopf bzw. einem Kasten), USt-IdNr. (geprüft durch Odoos `base_vat`, auf Wunsch gegen VIES), E-Mail, Telefon, IBAN als Bankkonto. Nutzer bestätigt im gewohnten Formular. Rollen: Absender = Kontakt der Datei, Adressat/Ansprechpartner = unsere Felder. `partner_autocomplete` (Odoo-IAP, Cloud) nicht | mittel, gut abgegrenzt |
+| **Intelligente Suche** – semantisch (Embeddings je Zusammenfassung/Seite/Absatz), hybrid mit Volltext, exakt für Nummern, Filter nach Partei/Typ/Zeitraum/Entitäten, sprachübergreifend, Antwort mit Quellen (Graph-RAG) | Embeddings + Vektorsuche + LLM | **Zuerst die Lücke schließen:** die v2-Suche findet heute **nur Namen, Tags, Status, Kontakt** – der gelesene Text (`derivative.text`) ist nicht durchsuchbar (v1 konnte das). Dann **Suche nach erkannten Werten** mit Odoo-Bordmitteln: Suchfelder/Filter über `field_value_ids` („Gesamtbetrag > 500“, „Absender = …“, „Rechnungsdatum im 3. Quartal“), Gruppieren, gespeicherte Favoriten. **Semantische Suche** braucht Vektoren: Odoo 19 Community hat keinen Vektor-Feldtyp, der Test-Postgres keine `vector`-Erweiterung (nur `pg_trgm`, `unaccent`) → eigener späterer KI-Schritt mit lokalem Modell (E12) | Volltext + Wertefilter: klein, wichtig; semantisch: später |
+| **Human-in-the-loop** – „Jedes Feld trägt Konfidenz und Fundstelle, damit die Kontrolle schnell geht“; unsichere Felder zur Prüfung, „Bild und Text nebeneinander“; Plausibilität (Summen, Steuer, IBAN, Dubletten) | – | Genau unser Prüf-Fenster (Abschnitt 4). Ergänzen: **unsichere Werte zuerst** (Stufe „enthält“, „ähnlich“, „ohne Beschriftung“ farblich markiert, sichere gedämpft); **Plausibilität** als Hinweise: Netto + Steuer = Brutto, Fälligkeit nach Rechnungsdatum, gleiche Rechnungsnummer beim selben Absender schon vorhanden (**Dublette?**), abweichende IBAN | mittel, gehört in U-2/U-3 |
+
+**Was daraus für die Scheiben folgt** (Ergänzung zu Abschnitt 7, noch nicht freigegeben):
+
+- **U-2 erweitern:** unsichere Werte zuerst, Plausibilitäts- und Dubletten-Hinweise, abweichende IBAN.
+- **Neue kleine Scheibe U-7 „Werte nutzen“:** Volltextsuche im gelesenen Text wieder anbinden, Suchfilter über erkannte
+  Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, Fristen als Odoo-Aktivitäten (`mail.activity.mixin` am
+  Knoten), „Zum selben Vorgang“.
+- **Neue Scheibe U-8 „Kontakt aus Dokument“:** vorbelegtes Kontaktformular, Aliase je Kontakt.
+- **Später/eigene Entscheidung:** Verknüpfung mit Odoo-Bestellungen/-Rechnungen (mit Schritt 8), semantische Suche und
+  Sprachmodell (E12).
+
+Weitere offene Entscheidungen dazu:
+
+- **U7** Fristen als Odoo-Aktivitäten: automatisch für bestimmte Felder (Fällig am, Kündigungsfrist) oder nur auf
+  Knopfdruck im Prüf-Fenster? Wer bekommt die Aktivität (der Prüfende, ein fester Verantwortlicher)?
+- **U8** Kontakte aus Dokumenten: darf jeder Nutzer neue Kontakte anlegen, oder nur Vorschlag an einen Verwalter?
+- **U9** Reihenfolge: U-7 (Werte nutzen – Suche, Kalender, Fristen) **vor** dem Prüf-Fenster, weil es sofort mit den
+  bereits gespeicherten Werten nutzt, oder danach?
+
 ## Quellen
 
 - PaperOffice: [Dokumentvorlagen einlernen](https://portal.paperoffice.ai/paperoffice/de/kb/paperoffice-classic-dms/wie_lerne_ich_die_dokumentvorlagen_in_paperoffice_ein),
   [PIA Ablagedialog](https://portal.paperoffice.ai/paperoffice/de/kb/paperoffice-classic-dms/pia_ablagedialog_detailliert_erklaert);
   frühere allgemeine Recherche: `docs/int_filemanager_paperoffice_recherche.md`
+- PaperOffice AI (Cloud): [Wissensgraph](https://paperoffice.ai/de/ki-knowledge-graph-wissensgraph/),
+  [Entitäten/NER](https://paperoffice.ai/de/ki-entities-named-entity-recognition-ner-extraktion/),
+  [Kontakt-Extraktion](https://paperoffice.ai/de/ki-kontakt-extraktion-beziehungsmanagement/),
+  [Intelligente Suche](https://paperoffice.ai/de/ki-smart-search-intelligente-suche-semantische-dokumentensuche/),
+  [Zeitleiste](https://paperoffice.ai/de/ki-timeline-dokument-zeitleiste-chronologische-ansicht/),
+  [Dokumenttypen](https://paperoffice.ai/de/loesungen/dokumenttypen/), [Rechnungsverarbeitung](https://paperoffice.ai/de/idp/rechnung/),
+  [Preise](https://paperoffice.ai/de/preise/)
 - Paperless-ngx: `docs/usage.md` im Repository (Custom Fields, Workflows, Suggestions);
   [PR #13043 „OCR Templates“](https://github.com/paperless-ngx/paperless-ngx/pull/13043) (Branch
   `feature/ocr-templates`, `src/documents/zone_ocr.py`, `src-ui/src/app/data/ocr-template.ts`)
