@@ -499,6 +499,29 @@ def _separator(previous, word):
     return " "
 
 
+def _dedupe_chars(page):
+    """``page.dedupe_chars()`` with the same rules, in n log n.
+
+    Some programs draw bold text twice, slightly shifted; read it once, or "Sehr"
+    comes out as "SSeehhrr". pdfplumber's own version restores the order of the
+    kept characters with ``list.index`` for each of them, which takes over a minute
+    on a page of a few ten thousand characters. Here the order is kept by filtering
+    the page instead.
+    """
+    import itertools
+    from operator import itemgetter
+
+    from pdfplumber.utils import cluster_objects
+
+    same = itemgetter("upright", "text", "fontname", "size")
+    keep = set()
+    for _key, group in itertools.groupby(sorted(page.chars, key=same), key=same):
+        for line in cluster_objects(list(group), itemgetter("doctop"), 1):
+            for spot in cluster_objects(line, itemgetter("x0"), 1):
+                keep.add(id(min(spot, key=itemgetter("doctop", "x0"))))
+    return page.filter(lambda obj: obj.get("object_type") != "char" or id(obj) in keep)
+
+
 def _read_pdf(pdf_path):
     """Read a PDF's own text layer.
 
@@ -528,6 +551,7 @@ def _read_pdf(pdf_path):
                 chunks.append("\f")
                 offset += 1
             previous = None
+            page = _dedupe_chars(page)
             for w in page.extract_words(use_text_flow=False):
                 if previous is not None:
                     separator = _separator(previous, w)

@@ -13,7 +13,8 @@ PREVIEW_SPEC = "1920x1920"
 PDF_SPEC = "pdf"
 TEXT_SPEC = "embedded"
 # v2: lines, column gaps, each word's place in the text, page sizes; scans OCR'd anew.
-WORDS_SPEC = "v2"
+# v3: text drawn twice for bold is read once.
+WORDS_SPEC = "v3"
 META_SPEC = "v1"
 
 # Order in the queue: what is seen first, then what is only looked up. "words" can mean

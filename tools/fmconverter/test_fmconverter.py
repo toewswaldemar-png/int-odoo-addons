@@ -381,6 +381,28 @@ class ConverterTest(unittest.TestCase):
         self.assert_ranges_match_the_text(result)
         self.assertIn("Kundennummer\t12345\nDatum", result["text"])
 
+    def test_text_drawn_twice_for_bold_is_read_once(self):
+        pdf = self.make_pdf(
+            "Sehr geehrte", (72.5, 700, "Sehr geehrte"), (72, 600, "Normal")
+        )
+        _pages, text, _words, _scanned = worker._read_pdf(self.save(pdf))
+        self.assertEqual(text, "Sehr geehrte\nNormal")
+
+    def test_bold_is_read_once_like_pdfplumber_does_but_fast(self):
+        import pdfplumber
+
+        pdf = self.make_pdf(
+            "Sehr geehrte", (72.5, 700, "Sehr geehrte"), (72, 600, "Normal Normal")
+        )
+        with pdfplumber.open(self.save(pdf)) as doc:
+            page = doc.pages[0]
+            ours = worker._dedupe_chars(page)
+            theirs = page.dedupe_chars()
+            self.assertEqual(
+                [(c["text"], c["x0"], c["top"]) for c in ours.chars],
+                [(c["text"], c["x0"], c["top"]) for c in theirs.chars],
+            )
+
     def test_close_words_stay_on_one_line_with_a_space(self):
         result = self.words(self.make_pdf("Zaehlernummer 44 450 7-5 148 621"))
         self.assertEqual(result["ocr"], "none")
