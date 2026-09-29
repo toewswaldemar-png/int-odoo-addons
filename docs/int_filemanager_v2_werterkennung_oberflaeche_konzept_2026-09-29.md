@@ -204,7 +204,7 @@ Der Nutzer wünscht **beides**: Vorschlag *und* automatisch. E7 sagt: nichts ohn
 Eingangsordner neu entscheiden. Vorschlag:
 
 - **Standard je Absender: vorschlagen.** Gemerkte Kästen erscheinen gestrichelt, Werte vorbelegt, Speichern bestätigt.
-- **„Künftig automatisch übernehmen“** als Schalter je Absender, erst mit dem Eingangsordner (Schritt 7) wirksam,
+- **„Künftig automatisch übernehmen“** als Schalter je Absender (setzt nur ein Verwalter, U3), erst mit dem Eingangsordner (Schritt 7) wirksam,
   nur wenn *alle* Werte aus gemerkten Kästen eindeutig gelesen wurden und die Anker gefunden wurden; sonst fällt die
   Datei in „ungeprüft“. Übernommene Werte tragen die Herkunft „automatisch“ und bleiben filterbar („automatisch
   übernommen, nie angesehen“); Notiz im Verlauf wie heute.
@@ -230,8 +230,9 @@ Eingangsordner neu entscheiden. Vorschlag:
   eindeutig, Vermerk „automatisch übernommen“ + Filter „automatisch, nie angesehen“ + Notiz).
 - ~~**U2**~~ **entschieden (Nutzer 2026-09-29): nur Verwalter** legen Felder direkt an; normale Nutzer „Feld
   vorschlagen“ (5.4). Katalog bleibt sauber, Wertart wird von jemandem gewählt, der die Folgen kennt.
-- **U3** Gilt das Gemerkte (Kästen, Feldliste) je Absender **für alle Nutzer** wie heute die Beschriftungen (W-5,
-  bewusst so) oder je Nutzer?
+- ~~**U3**~~ **entschieden (Nutzer 2026-09-29): für alle Nutzer** (wie die gelernten Beschriftungen seit W-5) – es
+  sind nur Vorschläge, eine falsche Vorbelegung korrigiert die nächste Bestätigung. **Ausnahme:** den Schalter
+  „automatisch übernehmen“ (U1) setzt nur ein Verwalter.
 - **U4** Feldliste: nur Felder mit Vorschlag + beim Absender benutzte + angeheftete (4.4) – oder zusätzlich
   **Dokumentarten** mit festen Feldgruppen (Rechnung, Bescheid, Kontoauszug)? Vorschlag: zuerst ohne Dokumentarten,
   die Feldliste je Absender deckt das meiste ab.
