@@ -2,16 +2,22 @@
 
 Usage: worker.py <source> <kind> <spec> <ext> <output>
 
-kind   tile / preview   a JPEG picture that fits the box ``spec`` ("<w>x<h>")
+kind   tile / preview   a JPEG picture that fits the box ("<w>x<h>")
        preview_pdf      a PDF made from an office document
-       text             the text of a PDF or a text file, UTF-8
+       text             the text of a plain text file, UTF-8
+       words            the text and word positions of a PDF (with OCR if it turns
+                         out to be a scan); a JSON object, not a foreign file format
        meta             a JSON object with the facts about the file
 ext    the lower case file name extension the caller knows: a hint that picks the
        kind of file, not trusted (pictures are recognised by looking into the file);
        camera RAW and office formats are found by it, as there is nothing else to go by.
+       "words" is only ever asked of PDF bytes (a real PDF, or an office file's own
+       generated preview_pdf), so its ext is always "pdf".
 
 Exit codes: 0 done, 10 not applicable, 11 failed. One JSON line on stdout says why.
 A crash, a decoder bug or a limit hit only kills this process, never the server.
+This process itself may run a long time for "words" on a scan (server.py gives it
+its own, generous timeout) - everything else is expected to finish in a few seconds.
 """
 
 import io
@@ -19,6 +25,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 
 from PIL import Image, ImageOps
 
@@ -59,24 +66,45 @@ TEXT_EXTENSIONS = {
 # libraw's "flip" value -> degrees to turn a PIL image (counter-clockwise) to upright
 RAW_FLIP_DEGREES = {3: 180, 5: 90, 6: 270}
 
+# A PDF with less embedded text than this per page is treated as a scan (v1's own
+# threshold, kept): OCR is slow, so it only runs when there is truly nothing to read.
+MIN_CHARS_PER_PAGE = 20
+# A document longer than this is refused rather than OCR'd for hours.
+MAX_OCR_PAGES = int(os.environ.get("CONVERTER_MAX_OCR_PAGES", "2000"))
+MAX_WORDS = 500_000
+OCR_LANGUAGES = os.environ.get("CONVERTER_OCR_LANGUAGES", "deu+eng")
+# OCRmyPDF parallelises across pages itself; capped so two OCR runs (unlikely, but
+# possible after a restart) or other jobs still get a fair share of the machine.
+OCR_INTERNAL_JOBS = int(os.environ.get("CONVERTER_OCR_INTERNAL_JOBS", "4"))
+# How long the OCR tool itself may take; separate from TOOL_TIMEOUT_S (the quick
+# helper calls: pdfinfo, ffprobe, ...), which stays short.
+OCR_TOOL_TIMEOUT_S = int(os.environ.get("CONVERTER_OCR_TOOL_TIMEOUT_S", str(TOOL_TIMEOUT_S)))
+
 
 class NotApplicable(Exception):
     pass
 
 
-def say(state, error=""):
+def say(state, error="", tool=None):
     print(
-        json.dumps({"state": state, "error": error, "tool_version": Image.__version__})
+        json.dumps(
+            {
+                "state": state,
+                "error": error,
+                "tool": tool,
+                "tool_version": Image.__version__,
+            }
+        )
     )
 
 
-def run_tool(args, **kwargs):
+def run_tool(args, timeout=None, **kwargs):
     """Run an external tool with an argument list (no shell) and a time limit."""
     try:
         return subprocess.run(
             args,
             capture_output=True,
-            timeout=TOOL_TIMEOUT_S,
+            timeout=timeout or TOOL_TIMEOUT_S,
             check=False,
             **kwargs,
         )
@@ -343,7 +371,7 @@ def picture_meta(source):
     if info.get("Error"):
         # ExifTool exits 0 for a file it cannot read and says so in the result.
         raise RuntimeError(f"exiftool: {info['Error']}")
-    camera =" ".join(
+    camera = " ".join(
         str(part) for part in (info.get("Make"), info.get("Model")) if part
     )
     meta = {
@@ -437,6 +465,88 @@ def pdf_meta(source):
     return meta
 
 
+# ---------------------------------------------------------------- word positions (OCR)
+
+
+def _pdfplumber_words(pdf_path):
+    """(page count, text, word boxes) of a PDF, straight from its own text layer."""
+    import pdfplumber
+
+    with pdfplumber.open(pdf_path) as pdf:
+        pages = len(pdf.pages)
+        chunks = []
+        boxes = []
+        for page_no, page in enumerate(pdf.pages, start=1):
+            for w in page.extract_words(use_text_flow=False):
+                chunks.append(w["text"])
+                chunks.append(" ")
+                if len(boxes) < MAX_WORDS:
+                    boxes.append(
+                        {
+                            "text": w["text"],
+                            "page": page_no,
+                            "x0": round(w["x0"], 2),
+                            "top": round(w["top"], 2),
+                            "x1": round(w["x1"], 2),
+                            "bottom": round(w["bottom"], 2),
+                        }
+                    )
+            chunks.append("\n")
+    return pages, "".join(chunks), boxes
+
+
+def _pdf_page_count(source):
+    result = run_tool(["pdfinfo", source])
+    if result.returncode != 0:
+        raise RuntimeError("pdfinfo: " + result.stderr.decode()[-200:])
+    for line in result.stdout.decode("utf-8", errors="replace").splitlines():
+        key, _, value = line.partition(":")
+        if key == "Pages" and value.strip().isdigit():
+            return int(value)
+    return 0
+
+
+def _run_ocr(source, workdir):
+    """OCR the whole document in one run; return the path to the searchable copy."""
+    output = os.path.join(workdir, "ocr.pdf")
+    result = run_tool(
+        [
+            "ocrmypdf", "--force-ocr", "-l", OCR_LANGUAGES, "--output-type", "pdf",
+            "--jobs", str(OCR_INTERNAL_JOBS), "--optimize", "0", "--fast-web-view", "0",
+            source, output,
+        ],
+        timeout=OCR_TOOL_TIMEOUT_S,
+    )  # fmt: skip
+    if result.returncode != 0 or not os.path.exists(output):
+        raise RuntimeError("ocrmypdf: " + (result.stderr or result.stdout).decode()[-200:])
+    return output
+
+
+def make_words(source, ext, output):
+    """Text and word positions of a PDF; OCRs it first if it looks like a scan.
+
+    Digital PDFs (the majority) are done at once, straight from their own text
+    layer - no external tool beyond reading the file. A scan (too little embedded
+    text) is OCR'd whole: this can take a long time for a long document, which is
+    why the server answers such a request asynchronously instead of waiting.
+    """
+    if ext != "pdf":
+        raise NotApplicable("words are only taken from PDF bytes")
+    pages, text, words = _pdfplumber_words(source)
+    tool = "pdfplumber"
+    if pages and len(text) / pages < MIN_CHARS_PER_PAGE:
+        page_count = _pdf_page_count(source) or pages
+        if page_count > MAX_OCR_PAGES:
+            raise NotApplicable(f"too many pages for OCR ({page_count})")
+        with tempfile.TemporaryDirectory(dir=os.path.dirname(output)) as workdir:
+            ocr_path = _run_ocr(source, workdir)
+            pages, text, words = _pdfplumber_words(ocr_path)
+        tool = "ocrmypdf+pdfplumber"
+    with open(output, "w", encoding="utf-8") as f:
+        json.dump({"pages": pages, "text": text[:MAX_TEXT_CHARS], "words": words}, f)
+    return tool
+
+
 def make_meta(source, ext, output):
     if ext == "pdf":
         meta = pdf_meta(source)
@@ -458,6 +568,7 @@ def make_meta(source, ext, output):
 def main(argv):
     source, kind, spec, ext, output = argv[1:6]
     workdir = os.path.dirname(os.path.abspath(output))
+    tool = None
     try:
         if kind in QUALITY:
             make_picture(source, kind, spec, ext, output, workdir)
@@ -465,12 +576,14 @@ def main(argv):
             office_to_pdf(source, ext, output, workdir)
         elif kind == "text":
             make_text(source, ext, output)
+        elif kind == "words":
+            tool = make_words(source, ext, output)
         elif kind == "meta":
             make_meta(source, ext, output)
         else:
             raise NotApplicable(f"unknown kind {kind}")
     except NotApplicable as exc:
-        say("not_applicable", str(exc))
+        say("not_applicable", str(exc), tool=tool)
         return EXIT_NOT_APPLICABLE
     except Image.DecompressionBombError as exc:
         # Pillow's own guard fires while opening, before our pixel check gets to run.
@@ -478,9 +591,9 @@ def main(argv):
         return EXIT_NOT_APPLICABLE
     except Exception as exc:  # noqa: BLE001 - every decoder has its own error types
         # A broken, truncated or unreadable file; the process ends here either way.
-        say("failed", f"{type(exc).__name__}: {exc}"[:300])
+        say("failed", f"{type(exc).__name__}: {exc}"[:300], tool=tool)
         return EXIT_FAILED
-    say("done")
+    say("done", tool=tool)
     return EXIT_DONE
 
 

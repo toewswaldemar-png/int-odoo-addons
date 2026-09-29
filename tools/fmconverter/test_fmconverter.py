@@ -67,6 +67,15 @@ class ConverterTest(unittest.TestCase):
         conn.close()
         return response.status, headers, data
 
+    def get(self, path):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=60)
+        conn.request("GET", path)
+        response = conn.getresponse()
+        data = response.read()
+        headers = dict(response.getheaders())
+        conn.close()
+        return response.status, headers, data
+
     def tile(self, sha256, spec="400x300", kind="tile", ext=""):
         return self.post({"sha256": sha256, "kind": kind, "spec": spec, "ext": ext})
 
@@ -90,6 +99,31 @@ class ConverterTest(unittest.TestCase):
         self.assertEqual(status, 200, data)
         self.assertTrue(headers["Content-Type"].startswith("text/plain"))
         return data.decode("utf-8")
+
+    def words(self, content, wait=True):
+        """Convert a PDF's text and word positions; waits out an async job if given one."""
+        status, headers, data = self.tile(store(content), "v1", "words", "pdf")
+        if status == 202:
+            if not wait:
+                return json.loads(data)["job_id"]
+            status, headers, data = self.poll_until_done(json.loads(data)["job_id"])
+        self.assertEqual(status, 200, data)
+        self.assertEqual(headers["Content-Type"], "application/json")
+        return json.loads(data)
+
+    def poll(self, job_id):
+        return self.get(f"/convert/{job_id}")
+
+    def poll_until_done(self, job_id, deadline=30):
+        import time as _time
+
+        end = _time.monotonic() + deadline
+        while _time.monotonic() < end:
+            status, headers, data = self.poll(job_id)
+            if status != 202:
+                return status, headers, data
+            _time.sleep(0.05)
+        raise AssertionError(f"job {job_id} did not finish within {deadline}s")
 
     def make_video(self, ext):
         path = os.path.join(BLOB_ROOT, f"make_video.{ext}")
@@ -129,6 +163,19 @@ class ConverterTest(unittest.TestCase):
         )  # fmt: skip
         with open(path, "rb") as f:
             return f.read()
+
+    def make_scanned_pdf(self, text, size=(1000, 300)):
+        """A PDF with no text layer, only a picture of ``text`` - what a scan looks like."""
+        from PIL import ImageDraw, ImageFont
+
+        image = Image.new("RGB", size, "white")
+        font = ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48
+        )
+        ImageDraw.Draw(image).text((20, 100), text, fill="black", font=font)
+        buf = io.BytesIO()
+        image.save(buf, "PDF", resolution=150.0)
+        return buf.getvalue()
 
     def make_docx(self, text):
         source = os.path.join(BLOB_ROOT, "make_docx.txt")
@@ -274,17 +321,64 @@ class ConverterTest(unittest.TestCase):
         self.assertEqual(meta["artist"], "Test Artist")
         self.assertAlmostEqual(meta["duration"], 1.0, delta=0.3)
 
-    def test_pdf_page_text_and_facts(self):
+    def test_pdf_page_text_and_word_positions(self):
         pdf = self.make_pdf("Hello converter")
         image = self.converted(pdf, ext="pdf")
         self.assertLessEqual(image.width, 400)
-        self.assertIn("Hello converter", self.text(pdf, "pdf"))
+        result = self.words(pdf)
+        self.assertIn("Hello converter", result["text"])
+        self.assertEqual(result["pages"], 1)
+        hello = next(w for w in result["words"] if w["text"] == "Hello")
+        self.assertEqual(hello["page"], 1)
+        self.assertLess(hello["x0"], hello["x1"])
+        self.assertLess(hello["top"], hello["bottom"])
         self.assertEqual(self.meta(pdf, "pdf")["pages"], 1)
 
-    def test_a_scan_has_empty_text(self):
+    def test_a_blank_scan_is_ocrd_and_has_no_text(self):
         buf = io.BytesIO()
         Image.new("RGB", (200, 300), "white").save(buf, "PDF")
-        self.assertEqual(self.text(buf.getvalue(), "pdf").strip(), "")
+        result = self.words(buf.getvalue())
+        self.assertEqual(result["text"].strip(), "")
+        self.assertEqual(result["words"], [])
+
+    def test_a_real_scan_is_ocrd_with_word_positions(self):
+        pdf = self.make_scanned_pdf("SCANNEDTEXT")
+        result = self.words(pdf)
+        self.assertIn("SCANNEDTEXT", result["text"].upper())
+        found = next(w for w in result["words"] if w["text"].upper() == "SCANNEDTEXT")
+        self.assertEqual(found["page"], 1)
+        self.assertGreater(found["x1"], found["x0"])
+
+    def test_a_digital_pdf_is_not_ocrd(self):
+        pdf = self.make_pdf("No OCR needed here")
+        status, headers, data = self.tile(store(pdf), "v1", "words", "pdf")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["X-Converter-Tool"], "pdfplumber")
+
+    def test_a_scan_is_ocrd_with_the_ocr_tool(self):
+        pdf = self.make_scanned_pdf("OCRTOOLCHECK")
+        status, headers, data = self.tile(store(pdf), "v1", "words", "pdf")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["X-Converter-Tool"], "ocrmypdf+pdfplumber")
+
+    def test_a_document_over_the_page_ceiling_is_refused(self):
+        # worker.py reads its limits from the environment at each (subprocess) start,
+        # so the override has to travel that way, not as a patch on the imported module.
+        pdf = self.make_scanned_pdf("TOOLONG")
+        with mock.patch.dict(os.environ, {"CONVERTER_MAX_OCR_PAGES": "0"}):
+            self.assert_refused(
+                store(pdf),
+                "not_applicable",
+                "too many pages",
+                kind="words",
+                spec="v1",
+                ext="pdf",
+            )
+
+    def test_words_is_only_for_pdf_bytes(self):
+        self.assert_refused(
+            store(b"not a pdf"), "not_applicable", "PDF", kind="words", spec="v1", ext="txt"
+        )
 
     def test_an_office_document_becomes_a_pdf_with_its_text(self):
         docx = self.make_docx("Office says hello")
@@ -293,7 +387,7 @@ class ConverterTest(unittest.TestCase):
         )
         self.assertEqual((status, headers["Content-Type"]), (200, "application/pdf"))
         self.assertTrue(data.startswith(b"%PDF"))
-        self.assertIn("Office says hello", self.text(data, "pdf"))
+        self.assertIn("Office says hello", self.words(data)["text"])
         self.assertLessEqual(self.converted(data, ext="pdf").width, 400)
 
     def test_office_kinds_other_than_the_pdf_are_not_applicable(self):
@@ -408,6 +502,64 @@ class ConverterTest(unittest.TestCase):
         sha256 = store(jpeg(100, 100))
         with mock.patch.object(server, "slots", threading.BoundedSemaphore(0)):
             self.assertEqual(self.tile(sha256)[0], 503)
+
+    def test_a_job_whose_whole_timeout_is_short_fails_synchronously_not_as_a_job(self):
+        """A patched-down timeout must not eat the whole wait budget and then still
+        hand the job to the background - there is nothing left to give it."""
+        slow = os.path.join(BLOB_ROOT, "slow_short.py")
+        with open(slow, "w") as f:
+            f.write("import time\ntime.sleep(60)\n")
+        sha256 = store(jpeg(100, 100))
+        with (
+            mock.patch.object(server, "WORKER", slow),
+            mock.patch.object(server, "JOB_TIMEOUT_S", 1),
+        ):
+            status, _headers, _data = self.tile(sha256)
+        self.assertEqual(status, 422)
+
+    def _slow_worker_script(self, name, seconds, tool="slowtool"):
+        """A stand-in worker.py: sleeps, then writes its result like the real one does."""
+        script = os.path.join(BLOB_ROOT, name)
+        with open(script, "w") as f:
+            f.write(
+                "import json, sys, time\n"
+                f"time.sleep({seconds})\n"
+                "with open(sys.argv[5], 'w') as out:\n"
+                "    out.write('ok')\n"
+                f'print(json.dumps({{"state": "done", "tool": "{tool}", '
+                '"tool_version": "1"}))\n'
+            )
+        return script
+
+    def test_a_slow_job_is_answered_with_a_job_id_and_can_be_polled(self):
+        sha256 = store(jpeg(100, 100))
+        # A tiny wait budget makes even a quick script exceed it, without having to
+        # wait out a real multi-minute OCR run in the test.
+        with (
+            mock.patch.object(server, "WORKER", self._slow_worker_script("slow1.py", 0.3)),
+            mock.patch.object(server, "WAIT_BUDGET_S", 0.05),
+        ):
+            status, _headers, data = self.tile(sha256)
+            self.assertEqual(status, 202, data)
+            job_id = json.loads(data)["job_id"]
+            self.assertEqual(self.poll(job_id)[0], 202)
+            status, headers, data = self.poll_until_done(job_id)
+        self.assertEqual((status, data), (200, b"ok"))
+        self.assertEqual(headers["X-Converter-Tool"], "slowtool")
+
+    def test_polling_an_unknown_job_id_is_404(self):
+        self.assertEqual(self.poll("0" * 32)[0], 404)
+        self.assertEqual(self.poll("not-a-valid-id")[0], 404)
+
+    def test_a_job_is_only_delivered_once(self):
+        with (
+            mock.patch.object(server, "WORKER", self._slow_worker_script("slow2.py", 0.2)),
+            mock.patch.object(server, "WAIT_BUDGET_S", 0.05),
+        ):
+            _status, _headers, data = self.tile(store(jpeg(100, 100)))
+            job_id = json.loads(data)["job_id"]
+            self.poll_until_done(job_id)
+        self.assertEqual(self.poll(job_id)[0], 404)
 
     def test_health(self):
         conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)

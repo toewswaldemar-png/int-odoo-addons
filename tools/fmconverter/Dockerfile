@@ -13,7 +13,7 @@ RUN apt-get update \
       libreoffice-writer libreoffice-calc libreoffice-impress \
       fonts-dejavu fonts-liberation libimage-exiftool-perl \
  && rm -rf /var/lib/apt/lists/*
-RUN pip install --no-cache-dir pillow==12.3.0 pillow-heif rawpy mutagen ocrmypdf \
+RUN pip install --no-cache-dir pillow==12.3.0 pillow-heif rawpy mutagen ocrmypdf pdfplumber \
  && useradd --create-home --uid 10001 converter
 COPY server.py worker.py /app/
 USER converter

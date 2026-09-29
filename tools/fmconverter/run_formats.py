@@ -23,6 +23,7 @@ import worker
 TILE = ("tile", "400x300")
 PREVIEW = ("preview", "1920x1920")
 TEXT = ("text", "embedded")
+WORDS = ("words", "v1")
 META = ("meta", "v1")
 PDF = ("preview_pdf", "pdf")
 
@@ -51,7 +52,7 @@ NO_PICTURE = {"Lied f"}
 def kinds_for(ext):
     """What the system asks the converter for, by the extension of the file name."""
     if ext == "pdf":
-        return [TILE, PREVIEW, TEXT, META]
+        return [TILE, PREVIEW, WORDS, META]
     if ext in worker.OFFICE_EXTENSIONS:
         return [PDF]  # the rest is taken from the PDF, see main()
     if ext in worker.AUDIO_EXTENSIONS:
@@ -81,9 +82,11 @@ def expected(category, name, kind):
 
 def convert(path, kind, spec, ext):
     started = time.monotonic()
-    state, error, _version, result, workdir = server.run_worker(path, kind, spec, ext)
+    state, error, _version, tool, result, workdir = server.run_worker(
+        path, kind, spec, ext
+    )
     size = os.path.getsize(result) if result else 0
-    return state, error, size, time.monotonic() - started, result, workdir
+    return state, error, tool, size, time.monotonic() - started, result, workdir
 
 
 def main(root, categories):
@@ -100,14 +103,14 @@ def main(root, categories):
             kept = []
             while todo:
                 source, source_ext, kind, spec = todo.pop(0)
-                state, error, size, seconds, result, workdir = convert(
+                state, error, tool, size, seconds, result, workdir = convert(
                     source, kind, spec, source_ext
                 )
                 if kind == "preview_pdf" and state == "done":
                     # The chain: what is made from the office document is made from
                     # its PDF, which has to outlive this conversion.
                     kept.append(workdir)
-                    todo += [(result, "pdf", k, s) for k, s in (TILE, PREVIEW, TEXT)]
+                    todo += [(result, "pdf", k, s) for k, s in (TILE, PREVIEW, WORDS)]
                 else:
                     shutil.rmtree(workdir, ignore_errors=True)
                 want = expected(category, name, kind)
@@ -117,7 +120,7 @@ def main(root, categories):
                 note = "  <-- expected " + "/".join(sorted(want)) if bad else ""
                 print(
                     f"{category:11} {kind:11} {state:14} {seconds:5.1f}s {size:8} "
-                    f"{name[:52]:52} {error[:60]}{note}",
+                    f"{(tool or ''):18} {name[:40]:40} {error[:50]}{note}",
                     flush=True,
                 )
             for workdir in kept:
