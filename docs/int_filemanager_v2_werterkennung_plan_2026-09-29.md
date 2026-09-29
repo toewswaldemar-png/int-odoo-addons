@@ -647,7 +647,7 @@ vorgemerkt; kein Einzeichnen von Feldern auf dem PDF.
 | E4 | Wortliste v2 jetzt (5.4)? | ja, jetzt |
 | E5 | Kontakt- und Tag-Vorschlag gehören zu Punkt 1? | ja (v1 hatte sie; Suchplan statt 2000-Kontakte-Schleife) |
 | E6 | Ein Wert je Feld und Knoten? | ja; mehrere Werte je Feld später bei Bedarf |
-| E7 | Automatisch übernehmen ohne Prüfung (wie Paperless beim Einlesen)? | nein, Prüfung wie v1; frühestens mit dem Eingangsordner neu entscheiden |
+| E7 | Automatisch übernehmen ohne Prüfung (wie Paperless beim Einlesen)? | nein, Prüfung wie v1; frühestens mit dem Eingangsordner neu entscheiden. **Ergänzt 2026-09-29 (U1, Oberflächen-Konzept 6.3):** Ausnahme nur per Schalter je Absender, erst mit dem Eingangsordner, nur wenn alle gemerkten Kästen gefunden und alle Werte eindeutig gelesen sind |
 
 | E8 | Einfacher **Stichwort-Modus** für eigene Felder (Stichwörter + Art eintragen, das System baut das Suchmuster), Regex nur für Sonderfälle | ja – ohne ihn kann ein Nicht-Programmierer keine eigenen Felder anlegen |
 | E9 | Vorhandene Textebenen gescannter PDFs neu erkennen (OCRmyPDF `--redo-ocr`, ersetzt nur unsichtbaren Scanner-Text, echter Text bleibt) statt ihnen zu vertrauen | ja (siehe 8) |

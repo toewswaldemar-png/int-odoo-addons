@@ -206,7 +206,9 @@ Eingangsordner neu entscheiden. Vorschlag:
   nur wenn *alle* Werte aus gemerkten Kästen eindeutig gelesen wurden und die Anker gefunden wurden; sonst fällt die
   Datei in „ungeprüft“. Übernommene Werte tragen die Herkunft „automatisch“ und bleiben filterbar („automatisch
   übernommen, nie angesehen“); Notiz im Verlauf wie heute.
-- **Braucht eine ausdrückliche Nutzerentscheidung**, weil sie E7 aufhebt (8, Frage U1).
+- **Entschieden (U1, Nutzer 2026-09-29): genau so** – Standard Vorschlag; automatisch nur per bewusst eingeschaltetem
+  Schalter je Absender, erst mit dem Eingangsordner, nur wenn alles eindeutig ist; Vermerk, Filter, Notiz. E7 gilt
+  damit weiter für alles andere.
 
 ## 7. Umsetzung in Scheiben (Vorschlag, noch nicht freigegeben)
 
@@ -222,7 +224,8 @@ Eingangsordner neu entscheiden. Vorschlag:
 
 ## 8. Offene Entscheidungen
 
-- **U1** Automatisch übernehmen je Absender (6.3) – E7 dafür aufheben, und erst mit dem Eingangsordner?
+- ~~**U1**~~ **entschieden:** automatisch übernehmen wie in 6.3 (Schalter je Absender, erst mit Eingangsordner, nur
+  eindeutig, Vermerk „automatisch übernommen“ + Filter „automatisch, nie angesehen“ + Notiz).
 - **U2** Wer darf aus dem Prüf-Fenster **neue Felder** anlegen – jeder mit Schreibrecht auf die Datei oder nur
   Verwalter (dann „Feld vorschlagen“ für Nutzer)?
 - **U3** Gilt das Gemerkte (Kästen, Feldliste) je Absender **für alle Nutzer** wie heute die Beschriftungen (W-5,
