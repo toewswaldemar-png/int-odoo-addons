@@ -291,3 +291,12 @@ wurde danach auf Tower gelöscht; hier stehen bewusst keine persönlichen Daten.
   „@“ vor der Suche entfernen.
 - Das Dokument trägt einen **QR-Code**; ob er strukturierte Daten enthält (z. B. Überweisungsdaten), ist offen –
   Auslesen wäre ein späterer Baustein im Umwandler.
+
+**Zweite Probe: digital erzeugte Telefonrechnung** (3 Seiten, ohne eingebettete E-Rechnung; Kopie danach gelöscht):
+fehlerfreie Textebene, 0,2 s. Ein nachgebauter **Stichwort-Modus** (Stichwörter + Art Nummer/Datum/Betrag, Nummer muss
+eine Ziffer enthalten) fand alle sieben Probefelder richtig: Rechnungs-, Kunden-, Vertragsnummer, Mandatsreferenz,
+Rechnungsdatum, Abbuchungsdatum, Gesamtbetrag. Prüfziffern: Firmen-IBAN und USt-IdNr. gültig, Gläubiger-ID erkannt,
+die **gekürzt gedruckte Kunden-IBAN** („DE** 5625 ****…“) richtig verworfen. Die alten v1-Muster lagen hier zufällig
+richtig (erstes Datum = Rechnungsdatum, erster Betrag = Gesamtbetrag) – beim Gebührenbescheid nicht. **Grenze des
+Stichwort-Modus:** Werte in Tabellen (Kopfzeile „Netto Steuer Brutto“, Zahlen darunter) findet er nicht; dafür
+bräuchte es eine Option „n-ter Betrag nach dem Stichwort“ oder ein Regex-Muster.
