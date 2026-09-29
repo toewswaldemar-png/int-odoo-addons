@@ -12,7 +12,7 @@ Stand 2026-09-28. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde g
 | [`int_filemanager_v2_konzept_2026-09-26.md`](int_filemanager_v2_konzept_2026-09-26.md) | Leitfaden mit allen Einzelheiten (gilt bei Widerspruch) |
 | [`int_filemanager_v2_schritt4_plan_2026-09-28.md`](int_filemanager_v2_schritt4_plan_2026-09-28.md) | Plan der Oberfläche (Schritt 4) |
 | [`int_filemanager_v2_werterkennung_plan_2026-09-29.md`](int_filemanager_v2_werterkennung_plan_2026-09-29.md) | Plan der Werterkennung (Schritt 5, Punkt 1) mit Befund Odoo 19 und Paperless-ngx |
-| [`int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`](int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md) | Konzept Prüf-Fenster mit Kasten-Auswahl (Entscheidungen getroffen, Freigabe offen): Vorbilder PaperOffice/Paperless-ngx/Odoo, geprüfte Odoo-Bausteine, Nachtrag PaperOffice AI, Scheiben U-1…U-9 |
+| [`int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`](int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md) | Konzept Prüf-Fenster mit Kasten-Auswahl (U1–U9 entschieden, Vollständigkeitsrunde mit neuen Fragen N1–N8, Freigabe offen): Vorbilder PaperOffice/Paperless-ngx/Odoo, geprüfte Odoo-Bausteine, Nachtrag PaperOffice AI, Scheiben U-1…U-9 |
 | [`review/konzept_codepruefung_2026-09-26.md`](review/konzept_codepruefung_2026-09-26.md) | Code-Prüfung des Konzepts (194 Behauptungen) |
 | [`odoo_konventionen_2026-09-26.md`](odoo_konventionen_2026-09-26.md) | Code-Konventionen für neuen Code |
 | [`int_filemanager_konzept_db_vorrang_2026-09-24.md`](int_filemanager_konzept_db_vorrang_2026-09-24.md) | Hintergrund: Abschnitte 19 und 20 (Live-Prüfungen auf Tower) |

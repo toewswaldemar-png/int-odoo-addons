@@ -1,6 +1,7 @@
 # int_filemanager 2: Werterkennung – Oberfläche mit Kasten-Auswahl (Konzept)
 
-Stand 2026-09-29, **Konzept, nichts umgesetzt; alle Fragen entschieden (K1–K5, U1–U9), wartet auf Freigabe**. Baut auf dem
+Stand 2026-09-29, **Konzept, nichts umgesetzt.** K1–K5 und U1–U9 entschieden; nach der Vollständigkeitsrunde
+(Abschnitt 10: Abdeckung, Versuche mit echten Dokumenten, kritische Gegenlese) **neue Fragen N1–N8 offen**, danach Freigabe. Baut auf dem
 Werterkennungs-Plan (`int_filemanager_v2_werterkennung_plan_2026-09-29.md`, W-1…W-6) auf; der Server liefert heute
 schon Vorschläge je Feld mit Fundstelle, bestätigt, lernt je Absender – es fehlt die Oberfläche.
 
@@ -205,8 +206,11 @@ Bestehend bleibt: `suggest_field_values`, `apply_field_values`, `value_suggest.s
 
 ### 6.2 Verrutschte Layouts
 
-Kasten nicht an Pixel binden: Anker-Beschriftung plus relative Verschiebung; zusätzlich ist ein Kasten nur Vorrang,
-nie Pflicht (K1) – ein falsch sitzender gemerkter Kasten kostet höchstens den Vorrang, nicht den Wert.
+Kasten nicht an Pixel binden: Anker-Beschriftung plus relative Verschiebung. **Korrigiert (Gegenlese 10.4):** die
+frühere Aussage „ein falsch sitzender gemerkter Kasten kostet höchstens den Vorrang, nicht den Wert“ war falsch – weil
+Werte im Kasten Vorrang haben, kann ein verrutschter Kasten einen falschen Wert nach vorne holen. Deshalb: ein
+**gemerkter** Kasten bekommt nur Vorrang, wenn seine Anker-Beschriftung im neuen Dokument **eindeutig** gefunden wird;
+sonst wird er nur gestrichelt angezeigt, ohne Vorrang. Ein vom Nutzer gerade gezogener Kasten behält den Vorrang.
 
 ### 6.3 Automatisch übernehmen (K3) – Konflikt mit E7
 
@@ -218,6 +222,10 @@ Eingangsordner neu entscheiden. Vorschlag:
   nur wenn *alle* Werte aus gemerkten Kästen eindeutig gelesen wurden und die Anker gefunden wurden; sonst fällt die
   Datei in „ungeprüft“. Übernommene Werte tragen die Herkunft „automatisch“ und bleiben filterbar („automatisch
   übernommen, nie angesehen“); Notiz im Verlauf wie heute.
+- **Ergänzt nach Gegenlese (10.4):** „eindeutig“ wird messbar – ein Absender kommt für die Automatik erst in Frage, wenn
+  seine letzten Dokumente (Zahl beim Bau festlegen) **ohne jede Korrektur** bestätigt wurden; eine Korrektur setzt das
+  zurück. Automatisch übernommene Werte werden bei späterem Speichern nie wieder automatisch überschrieben
+  (Paperless-Lehre).
 - **Entschieden (U1, Nutzer 2026-09-29): genau so** – Standard Vorschlag; automatisch nur per bewusst eingeschaltetem
   Schalter je Absender, erst mit dem Eingangsordner, nur wenn alles eindeutig ist; Vermerk, Filter, Notiz. E7 gilt
   damit weiter für alles andere.
@@ -237,7 +245,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 | U-9 | Messung: **Prüfteil** (16 unbekannte Absender, bisher unverbraucht) ohne und mit Lernen, dazu Zeit je Dokument | Zahlen gegen die 86 % des Übungsteils |
 | (später) | Automatisch übernehmen (6.3, U1) mit dem Eingangsordner; Bilder automatisch je Ordner (U6); E-Rechnung; Dokumentarten (U4); Verknüpfung mit Odoo-Bestellungen/-Rechnungen; semantische Suche/Sprachmodell (E12) | eigene Entscheidungen bzw. Schritte |
 
-## 8. Entscheidungen (alle getroffen)
+## 8. Entscheidungen (U1–U9 getroffen; neue Fragen N1–N8 in 10.5)
 
 - ~~**U1**~~ **entschieden:** automatisch übernehmen wie in 6.3 (Schalter je Absender, erst mit Eingangsordner, nur
   eindeutig, Vermerk „automatisch übernommen“ + Filter „automatisch, nie angesehen“ + Notiz).
@@ -289,6 +297,100 @@ Entscheidungen dazu:
   Text liegt für jede Datei schon vor), dann das Prüf-Fenster, danach „Werte nutzen“ (Filter, Kalender, Auswertung,
   Vorgang): diese brauchen gespeicherte Werte, und die entstehen erst durch das Prüfen – heute gibt es außer in
   Testdatenbanken praktisch keine.
+
+## 10. Vollständigkeitsrunde (2026-09-29): Abdeckung, Versuche, Gegenlese
+
+Anlass: Nutzer-Sorge „zu schnell, Stichproben statt vollständig lesen, nicht alle Möglichkeiten gezeigt“. Die erste
+Fassung (Abschnitte 2–9) beruhte zum Teil auf Zusammenfassungen und Stichproben, ohne das zu sagen. Dieser Abschnitt legt
+offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsch herausstellte.
+
+### 10.1 Abdeckung
+
+| Quelle | Vollständig gelesen | Nur teilweise | Nicht gelesen (Grund) |
+|---|---|---|---|
+| Paperless-ngx PR #13043 „OCR Templates“ | Kern `zone_ocr.py` (757 Z.), Modell, Schnittstelle `views.py`, Auslöser, Editor (HTML 414 + TS 997 Z.), Dokumentansicht, Übersicht, Datentypen | Tests (903 Z.) nur Namen und Prüfinhalte; Serialisierer per Suche | Migration (gleich dem Modell) |
+| Paperless-ngx Doku | `docs/usage.md`: Custom Fields, Workflows, Vorschläge, KI, Dokumentansicht | – | übrige Kapitel (Installation, Suche-Syntax, API) |
+| PaperOffice Classic Handbuch | Inhaltsverzeichnis (277 Artikel) nach Titel gefiltert; **21 relevante Artikel im Originaltext** (Vorlagen, Ablagemasken, Ablagedialog, Ablagemodi, Felder, Texterkennung, SmartSpell, Suche, Kontakte, QR, Stapel) | – | 256 Artikel zu Installation, NAS, Lizenz, Fehlerbehebung, Workflows im Detail, Videos |
+| PaperOffice AI (Cloud) | 8 Produktseiten (Graph, Entitäten, Kontakte, Suche, Zeitleiste, Dokumenttypen, Rechnung, Preise) | **nur als Zusammenfassung** eines Hilfsmodells (WebFetch), nicht im Originaltext | Entwickler-Doku, Blog |
+| Odoo 19 Community (Image `odoo:19.0-hm-test`) | **Suche über alle 692 Module / 3.700 JS-Dateien** nach: pdf.js-Nutzung, Textebene, Rahmen ziehen, Barcode-Lesen, `Record`-Nutzung, Vorschau-neben-Formular, Beleg-Hochladen, Server-Texterkennung; gelesen: `utils/pdfjs.js`, `pdf_thumbnail.js`, `crop_overlay.js`, `analytic_distribution` (Record+Field), `multi_create_popover`, `document_file_uploader`, Formular-Compiler/-Renderer der Anhang-Vorschau, `properties_field.onPropertyCreate`, Rechte `res.partner` | `image_crop.js` nur Anfang | Odoo Enterprise (nicht im Image: Documents, Extract, Sign) – nur Doku |
+| Odoo Doku | Digitalisierung, Extract API (Kandidaten-Format im Originaltext), AI-Felder | – | – |
+
+### 10.2 Versuche mit deinen echten Dokumenten (Tower, Wegwerf-Container, alle 513 PDFs)
+
+- **Seitengeometrie** (alle 1.512 Seiten): 4 gedrehte Seiten (3 Dokumente), keine mit Beschnitt oder verschobenem
+  Ursprung.
+- **Wortlage passt:** Wortkästen aus der Wortliste auf die gerenderte Seite gezeichnet (poppler, wie pdf.js mit
+  Seitenbox und Drehung) – deckungsgleich bei allen 4 gedrehten Seiten, bei digitalen PDFs, bei Scans mit neuer und mit
+  erzwungener Texterkennung und bei einer Seite mit 1860 × 2630 Punkten. **Nicht geprüft:** pdf.js selbst im Browser.
+- **Neue Lücke gefunden – Formularfelder:** ausgefüllte PDF-Formulare (z. B. Elterngeld-Antrag) – die eingetragenen
+  Werte fehlen in der v2-Wortliste. Der Umwandler hat dafür keinen Code; v1 hatte eine Lösung (19.09.,
+  `fulltext._pdf_form_field_words`). **Mindestens 30 von 513 PDFs** mit ausgefüllten Textfeldern, **999 Werte**
+  (10 Dateien konnte der Schnelltest nicht lesen). Betrifft Werterkennung **und** Volltextsuche.
+- **QR-Codes** (zxing-cpp, alle Seiten): Überweisungs-QR nur in **2 von 513** Dokumenten; andere QR 34, DataMatrix 86
+  (vermutlich Post-Frankierung), ITF 33, Code 128 12. In der privaten Sammlung also selten – bei Geschäftsrechnungen
+  vermutlich häufiger, nicht gemessen.
+- **Felder ohne echtes Modell (`Record` + `Field`):** kein Versuch nötig – Odoo nutzt genau das im Kern
+  (`analytic_distribution`: Kontakt, Betrag mit Währung, Prozent). Restrisiko: keine offizielle Schnittstelle, kann sich
+  zwischen Odoo-Versionen ändern.
+- **Nicht geprüft** (braucht Browser, Nutzer testet selbst): Ziehen/Anfassen der Kästen, zweites Fenster, Pager in der
+  Client-Aktion – erst mit U-3/U-4.
+
+### 10.3 Neue Befunde aus der vollständigen Lektüre
+
+- **PaperOffice:** Ablagemasken sind **Ablageregeln** (Dokumentname mit Platzhaltern, Zielordner mit Jahr/Monat,
+  Status, Typ, Schlüsselwörter, Notiz) – Vorbild für „Dateiname und Ablageort aus erkannten Werten“; Automatik ist dort
+  **global** (4 Ablagemodi), unsere je Absender (U1) ist feiner; **Dublettenwarnung schon beim Hinzufügen**; „Text aus
+  OCR einfügen“ = unser Anklicken; Feldarten auch **Auswahlliste** und **Ankreuzfeld**; Felder je Dokumenttyp
+  sichtbar; **Korrekturwörterbuch** für Lesefehler; erkannter Text je Seite ansehbar, im Dokument durchsuchbar, von Hand
+  korrigierbar; Suchergebnis mit Trefferzahl und Textstelle; Export PDF + Excel mit Links; Speichern „als neue Version
+  des markierten Dokuments“.
+- **Paperless:** mehrere Zonen zu **einem Feld zusammensetzen** (`{Zone A} - {Zone B}`); Seite „−1 = letzte Seite“;
+  Werte werden **nicht bei jedem Speichern neu geschrieben**, weil das Korrekturen des Nutzers überschreiben würde (nur
+  beim Einlesen und bei Typwechsel) – gilt auch für unsere Automatik; Schnellanlage eines Felds nutzt ein gleichnamiges
+  vorhandenes; „Zone testen“ ohne zu speichern; Editor-Details (Ziehen auf freier Fläche, Umschalt+Ziehen über
+  vorhandener Zone, 8 Anfasser, Mindestgröße gegen Fehlklicks). Sicherheitslücke dort: Seitenbild-Endpunkt ohne
+  Rechteprüfung am Dokument – bei uns jede Seitenausgabe über die Knotenrechte.
+- **Odoo:** fertiger Lader `loadPDFJSAssets()` statt eigener Pfade (v1-Viewer umgeht ihn); das Beleg-Hochladen der
+  Buchhaltung (`FileUploader` → `create_document_from_attachment` → Liste öffnet sich, Meldung je Datei) ist das
+  Vorbild für den Eingangsordner; **exakte Dubletten** erkennt v2 ohnehin (inhaltsadressierter Blob-Speicher, gleicher
+  Hash).
+
+### 10.4 Kritische Gegenlese (Codex) – und meine Bewertung
+
+| Einwand (Codex) | Bewertung nach Prüfung | Folge |
+|---|---|---|
+| Verrutschter gemerkter Kasten kann einen falschen Wert nach vorne holen – Aussage in 6.2 falsch | **stimmt** | 6.2 korrigiert: Vorrang nur bei eindeutig gefundenem Anker |
+| Herkunft geht verloren: `source` kennt nur „rule/manual“, Fundstelle wird beim Speichern neu gesucht | **stimmt** (geprüft: `field_value.source`; Neusuche nahe der angeklickten Stelle mildert es) | Herkunft erweitern (Stichwort, gelernt, Kasten, Formularfeld, QR, Hand, automatisch); gewählte Fundstelle mitschicken und auf dem Server gegen die Wortliste prüfen statt neu suchen |
+| Tabellen/mehrere Werte je Feld fehlen | stimmt, bewusst (E6) | ausdrücklich **außerhalb** dieses Konzepts |
+| Prüfstatus je Dokument/Feld, Pflichtfelder, „fertig“-Definition fehlen | stimmt – ohne Status kein Filter „ungeprüft“ bzw. „automatisch, nie angesehen“ (U1 setzt ihn voraus) | Frage N4 |
+| Lernen ohne Gegensteuer („letzte Bestätigung gewinnt“, für alle) | stimmt (geprüft: `_learn_labels`); U3 bleibt, braucht aber Gegensteuer | Frage N5 |
+| Automatik erst nach gemessener Fehlübernahme-Quote | stimmt – die 86 % sind aus dem Übungsteil, nicht entscheidungsreif | U1 ergänzt: Automatik je Absender erst nach mehreren Bestätigungen **ohne Korrektur**; Prüfteil messen |
+| QR ist nicht automatisch der „sicherste“ Geschäftswert | stimmt teilweise (Abschlag ≠ Gesamtbetrag) | QR-Werte als starke Kandidaten, bei Abweichung zum Gedruckten Hinweis statt Vorrang; Frage N2 |
+| QR und Nachlesen brauchen Grenzen | stimmt | Seiten-, Zeit- und Parallelitätsgrenzen wie beim Umwandler bereits üblich |
+| Kasten wird zum Produkt statt Ausnahme-Werkzeug | teilweise – der Nutzer will den Kasten ausdrücklich; die Reihenfolge (erst Anklicken/Vorschläge in U-3, Kasten in U-4) passt bereits | gemerkte Kästen: Frage N3 |
+| Frei definierte Felder über `Record` sind fragil, lieber echtes (transientes) Modell | teilweise – ein echtes Modell kann keine vom Nutzer definierten Spalten; Odoo nutzt `Record` so im Kern | bleibt; Rückfallplan: eigene einfache Eingabefelder |
+| Farbe je Feld wird unruhig | plausibel | Frage N6 |
+| Feldanlage gehört nicht ins Prüf-Fenster | abweichend von U2 (Nutzerentscheidung) | U2 bleibt |
+| Absender allein zu grob (ein Absender, mehrere Belegarten) | stimmt als Risiko | Anker-Pflicht (6.2) mildert; Dokumentarten nach Nutzung (U4) |
+| Mit Odoo-Geschäftsdatensätzen verknüpfen statt eigener Auswertung | Richtung stimmt | bereits „später“ (Abschnitt 9) |
+| Entwurf/Rückgängig, Warteschlange mit Zuständigkeit, zwei gleichzeitige Prüfer | teilweise: Knotensperre und Fassungsprüfung schützen die Datei; „letzte Speicherung gewinnt“ je Feld bleibt | Warnung bei ungespeicherten Änderungen in U-3; Zuständigkeit später mit dem Eingangsordner |
+
+### 10.5 Neue Fragen an den Nutzer
+
+- **N1** Formularfeld-Werte (10.2) in Wortliste und Suche aufnehmen (v1-Lösung in den Umwandler)? *Empfehlung: ja,
+  zusammen mit U-1 Volltextsuche.*
+- **N2** Überweisungs-QR (U5) neu bewerten: nur 2 von 513 Dokumenten. *Empfehlung: zurückstellen bis zum Eingangsordner
+  / Geschäftsbelegen, dort erst zählen.*
+- **N3** Gemerkte Kästen je Absender (U-5) sofort oder erst, wenn die Nutzung zeigt, dass sie gebraucht werden?
+- **N4** Prüfstatus je Dokument („ungeprüft / geprüft von … am … / automatisch übernommen“) einführen? Pflichtfelder?
+  *Empfehlung: Status ja (U1 braucht ihn), Pflichtfelder später.*
+- **N5** Gegensteuer beim Lernen: Häkchen „daraus nicht lernen“ beim Speichern und eine Verwalter-Liste des Gelernten
+  (ansehen, löschen)? *Empfehlung: ja.*
+- **N6** Eine Farbe je Feld oder nur die gerade aktive Stelle hervorheben (Vorschläge dezent umrandet)?
+  *Empfehlung: nur aktive Stelle kräftig, übrige dezent.*
+- **N7** Neu entdeckt: **Ablageregeln** nach PaperOffice-Vorbild – aus erkannten Werten Dateiname (z. B.
+  „2025-01-23 Jahresbescheid Wasser.pdf“), Zielordner und Tags vorschlagen? *Empfehlung: später, mit dem Eingangsordner.*
+- **N8** Feldarten **Auswahlliste** und **Ankreuzfeld** ergänzen? *Empfehlung: bei Bedarf.*
 
 ## Quellen
 
