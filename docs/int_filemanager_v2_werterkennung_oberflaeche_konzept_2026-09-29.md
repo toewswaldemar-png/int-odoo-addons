@@ -1,7 +1,7 @@
 # int_filemanager 2: Werterkennung – Oberfläche mit Kasten-Auswahl (Konzept)
 
 Stand 2026-09-29, **Konzept, nichts umgesetzt.** K1–K5 und U1–U9 entschieden; nach der Vollständigkeitsrunde
-(Abschnitt 10: Abdeckung, Versuche mit echten Dokumenten, kritische Gegenlese) neue Fragen N1–N8 **entschieden**; es fehlt nur noch die **Freigabe**. Baut auf dem
+(Abschnitt 10: Abdeckung, Versuche mit echten Dokumenten, kritische Gegenlese) neue Fragen N1–N8 **entschieden**; offen **N9** (Speicherform, 10.7), dann **Freigabe**. Baut auf dem
 Werterkennungs-Plan (`int_filemanager_v2_werterkennung_plan_2026-09-29.md`, W-1…W-6) auf; der Server liefert heute
 schon Vorschläge je Feld mit Fundstelle, bestätigt, lernt je Absender – es fehlt die Oberfläche.
 
@@ -415,7 +415,9 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
 
 Gelesen: [Studio – Felder und Widgets](https://www.odoo.com/documentation/19.0/de/applications/studio/fields.html)
 vollständig im Originaltext. **Studio ist Enterprise** (`web_studio` nicht im Image); die Feldtypen dahinter sind
-Odoo-Grundgerüst. Die Community-Entsprechung für vom Nutzer definierte Felder sind **Properties**; im Quellcode
+Odoo-Grundgerüst. **Korrigiert (10.7):** Odoo unterscheidet reguläre Felder (echte Spalten; in Community ohne Studio
+auch über Einstellungen → Technisch → Felder als `x_`-Felder anlegbar) und **Eigenschaftsfelder** (Properties,
+keine Spalten, an einen übergeordneten Datensatz gebunden oder global). Typen der Eigenschaften im Quellcode
 (`odoo/orm/fields_properties.py`, `ALLOWED_TYPES`): `boolean, integer, float, text, char, html, date, datetime,
 monetary, many2one, many2many, selection, tags, separator`.
 
@@ -439,6 +441,32 @@ monetary, many2one, many2many, selection, tags, separator`.
 Feldeigenschaften aus Studio, die auch für unsere Felder passen: **Hilfe-Tooltipp**, **Platzhalter**, **Standardwert**,
 **Sichtbarkeit nur für bestimmte Gruppen** (z. B. Gehaltsfelder), **Pflicht** (N4: später), bei Daten **Warnung für
 Zukunft** und **früheste/späteste Grenze**.
+
+### 10.7 Speicherform der Werte: eigene Modelle, Eigenschaftsfelder oder reguläre Felder?
+
+Anlass: Hinweis des Nutzers auf [Eigenschaftsfelder](https://www.odoo.com/documentation/19.0/de/applications/essentials/property_fields.html)
+(vollständig im Originaltext gelesen). Geprüft im Odoo-19-Quellcode:
+
+- Eigenschaften sind **keine Datenbankspalten** (JSON am Datensatz), die Definition hängt an einem **übergeordneten
+  Datensatz** (Projekt → Aufgaben). **Neu in Odoo 19:** `properties.base.definition.mixin` für **globale**
+  Eigenschaften ohne übergeordneten Datensatz – genutzt von `res.partner` und `mailing.contact`; Definition anlegen oder
+  löschen dürfen nur Odoo-Administratoren (`base.group_system`).
+- Definition erlaubt nur feste Angaben (`ALLOWED_KEYS`: Name, Typ, Standardwert, Suffix, Auswahl, Stichwörter, Domain,
+  „In Karten anzeigen“, Einklappen, Währung); Erweiterung nur über einen Haken, der für **alle** Eigenschaften in Odoo
+  gilt (`_additional_allowed_keys_properties_definition`).
+- **Suchen und Gruppieren** nach Eigenschaften: vorhanden (Suchmodell, `_read_group_groupby_properties`).
+  **Summieren/Aggregieren: nicht möglich** (`_read_group_select`: „this dot notation is not supported“).
+- Eine Eigenschaft löschen entfernt ihre Werte bei **allen** Datensätzen.
+- Reguläre Zusatzfelder (`x_`) über `ir.model.fields` gibt es auch in Community (so arbeitet Studio).
+
+| Weg | Vorteile | Nachteile | Bewertung |
+|---|---|---|---|
+| **A – eigene Modelle** (heute: `extraction_field` + `field_value` mit typisierten Spalten) | volle Kontrolle über Wertarten (IBAN, USt-IdNr., Zeitraum, Menge, neue Arten aus U-7), **Herkunft und Fundstelle je Wert**, Lernen, eigene Rechte (U2), **Summen und Pivot** über typisierte Spalten | Werte erscheinen nicht von selbst als Spalte oder Filter an der Datei; dafür eigene Oberfläche (Prüf-Fenster, U-9 „Werte nutzen“) | **bleibt Grundlage** |
+| **B – globale Eigenschaften** an der Datei (wie `res.partner`) | Odoo-eigene Anzeige im Formular, „In Karten anzeigen“, Filter und Gruppieren je Eigenschaft ohne Eigenbau | **keine Summen**; keine Herkunft/Fundstelle je Wert; Wertarten zu grob (keine Prüfziffern, kein Zeitraum/Menge/Telefon/Prozent/Monat); Erkennungseinstellungen passen nicht in die Definition; Löschen einer Eigenschaft löscht alle Werte; Lernen und Regeln bräuchten trotzdem eigene Modelle → zwei Wahrheiten | als alleinige Speicherform **verworfen** |
+| **C – reguläre `x_`-Felder** je Katalogfeld (wie Studio) | alles nativ: Listenspalten, Filter, Gruppieren, **Summen**, Export, echte Typen | jedes neue Feld ändert zur Laufzeit das Datenbankschema der großen Dateitabelle und lädt die Odoo-Registry in allen Prozessen neu; Typwechsel und Löschen schwierig (Spalte fällt weg); Herkunft/Lernen bräuchten trotzdem eigene Modelle | **verworfen** (Aufwand und Risiko zu hoch) |
+| **D – A plus Spiegel in globale Eigenschaften** (bestätigte Werte zusätzlich als Eigenschaft an der Datei) | native Anzeige in Karten und Filter je Feld | doppelte Speicherung, Abgleich in beide Richtungen nötig (Bearbeiten im Formular würde am Prüfweg vorbeischreiben), Löschrisiko | **nicht empfohlen**; die Vorteile holt U-9 mit Odoo-Bordmitteln über `field_value` (Filter, Gruppieren, Pivot mit Summen) |
+
+- **N9** Speicherform: bei **A** bleiben (Empfehlung) – oder eine der Alternativen?
 
 ## Quellen
 
