@@ -58,7 +58,7 @@ Reihenfolge = Priorität. Kästchen `[ ]` offen, `[x]` fertig (mit Commit-Hash u
   Sicherheits-Fix aus 19.0? Auswirkungen und Vorschlag für Update-Weg (nicht ausführen).
 - [x] **A8 Doku auf Stand bringen.** `docs/README.md` und Übergabe 4.0 gegen den tatsächlichen Repo-Stand abgleichen
   (Konzept-Commits bis c94cac1, neue Entwurfs-Dokumente), Widersprüche auflisten und beheben, wo es nur Nachtragen ist.
-  **Ergebnis (Probelauf, COMMITHASH):** Alle Links in README, Übergabe und CLAUDE.md gültig; nachgetragen: Aufgabenliste und `prototypes/werterkennung/` im README, Stand-Zeile 2026-09-30 in der Übergabe. Keine inhaltlichen Widersprüche offen.
+  **Ergebnis (Probelauf, 88c2aec):** Alle Links in README, Übergabe und CLAUDE.md gültig; nachgetragen: Aufgabenliste und `prototypes/werterkennung/` im README, Stand-Zeile 2026-09-30 in der Übergabe. Keine inhaltlichen Widersprüche offen.
 - [ ] **A9 Lebende v2-Dokumente in Unterordner umziehen (nur Umzug, kein Inhalt).** Die im Abschnitt „int_filemanager 2 (lebend)“ von
   `docs/README.md` aufgeführten Dokumente per `git mv` nach `docs/int_filemanager_v2/` verschieben (Dateinamen unverändert; `review/`,
   `prototypes/`, `archiv/`, `erp/`, `sonstiges/` bleiben, wo sie sind; `odoo_konventionen` bleibt in `docs/`). Danach alle Verweise anpassen: `docs/README.md`,
