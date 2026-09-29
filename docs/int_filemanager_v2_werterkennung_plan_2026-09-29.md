@@ -506,6 +506,35 @@ Differenz zeigt, was das Lernen bringt.
   (4). Die Testbasen `FieldValueCase` und `AccessHttpCase` sind aus den bestehenden Testklassen herausgezogen, damit
   deren Tests nicht doppelt laufen.
 
+**Stand W-6 (2026-09-29, Runde 1 von 4):** Werkzeuge und Ablauf in `docs/prototypes/werterkennung/README.md`
+(Abschnitt W-6); private Daten nur auf Tower unter `/mnt/user/test/werterkennung_w6/`.
+- **Aufteilung nach Absendern** (Nutzerentscheidung): Absender je Dokument über USt-IdNr., dann IBAN (IBANs in ≥ 20
+  Dokumenten übergangen – eine steht in 97 Dokumenten, das eigene Konto, und hätte fremde Absender vermischt), dann
+  Mail-Domain, sonst Ordner: 129 Absender-Gruppen, 77 Übung / 52 Prüf (Zufall mit festem Startwert). Stichprobe 24 +
+  16 Dokumente mit ≥ 2 vorgeschlagenen Feldern, **40 verschiedene Absender**; bleibt ab jetzt fest.
+- **Abhaken** über eine lokale Seite (Original links, Vorschläge rechts, ✓/✗/„steht nicht drin“, fehlende Werte
+  nachtragen), nicht veröffentlicht.
+- **Runde 1 (Übungsteil, 10 Dokumente, 50 Vorschläge):** 38 richtig, 3 falsch, 4 vorgeschlagen obwohl nicht im Dokument,
+  5 nicht bewertet; 7 Werte nachgetragen, davon 1 zweite E-Mail-Adresse (kein Fehler, E6). **Genauigkeit 38 / 45 = 84 %**
+  der bewerteten Vorschläge, **gefunden ≈ 38 / 47 = 81 %** der vorhandenen Werte. Sicher: E-Mail 8/8, Dokumentdatum 6/6,
+  Kundennummer 5/5, IBAN 5/5, USt-IdNr. 3/3. Zwei Dokumente vom Nutzer als schwierig vermerkt (Kreditvertrag,
+  handschriftlich).
+- **Während der Runde behoben** (Übungsteil, allgemeine Regeln): Suchmuster des Start-Felds E-Mail ohne Leerzeichen vor
+  „@“ (Texterkennung „name @domain“); neue Felder **Ansprechpartner** und **Empfänger** (Art „Wort“, Nutzerwunsch);
+  Wort-Werte dürfen an jedem Wort beginnen, sonst schluckte „Herrn Max Muster“ seine eigene Beschriftung.
+- **Befunde für die nächste Runde** (noch nicht umgesetzt, erst nach Runde 2 als allgemeine Regeln):
+  1. **Ganze Sätze als Beschriftung „darunter“** mit der Stufe „enthält Stichwort“ ergeben Fehltreffer (3 von 4):
+     ein Satz mit „…angeboten hat.“ → Angebotsnummer, „Steuernummer des Empfängers: …“ → Empfänger, ein Hinweissatz
+     mit „Auftragsbestätigung“ → Auftragsnummer „4“. Kandidaten: Beschriftung, die selbst einen Wert enthält oder mit
+     Satzzeichen endet, ist Fließtext; „enthält“ nur, wenn das Stichwort einen großen Teil der Beschriftung ausmacht;
+     Nummern mit nur einer Ziffer nie.
+  2. **Empfänger:** die Art „Wort“ greift mit „Herr/Frau“ zu leicht daneben (zweimal ein Wort aus dem Brieftext). Kandidat:
+     Lage im **Anschriftenfeld** (DIN 5008: Seite 1, links oben) als Bedingung oder Vorrang.
+  3. **Werte ohne Beschriftung fehlen** (IBAN, zweimal Rechnungsnummer, zweimal Dokumentdatum, Gesamtbetrag). Kandidat:
+     IBAN/USt-IdNr. auch ohne Beschriftung vorschlagen (Prüfziffer ist Beweis genug), nachrangig zu beschrifteten.
+  4. Einzelfälle: zwei Zählernummern im Dokument, die falsche gewählt; eine Rechnungsnummer abgeschnitten (Texterkennung
+     trennt den letzten Ziffernblock ab); „Gesamt-Betrag“ über einer Tabellenspalte lieferte einen Steuersatz-Betrag.
+
 ## 7. Entscheidungen
 
 **Alle Empfehlungen E1–E9 vom Nutzer übernommen (2026-09-29, „dann leg los“).** Ergänzend aus den Proben (8):

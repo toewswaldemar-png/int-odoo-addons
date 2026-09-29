@@ -118,7 +118,7 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    (2026-09-29, „dann leg los“)**; Plan-Abschnitt 4 geändert: **eigene neue v2-Modelle** statt Erweiterung der
    v1-Modelle (Gründe dort).
 
-   **Stand 2026-09-29 mittags – hier weitermachen:**
+   **Stand 2026-09-29 abends – hier weitermachen:**
    - **W-1 fertig** (Wortliste v2, neue Texterkennung für Scans mit Scanner-Text, Spec-Wechsel-Fehler in
      `_enqueue_missing` behoben, Text in `derivative.text`): 55 Umwandler-Tests, **400 Odoo-Tests** grün, pre-commit
      grün; Einzelheiten Plan Abschnitt 6 „Stand W-1“. Image `fmconverter:dev` auf Tower ist neu gebaut (enthält v2);
@@ -142,10 +142,19 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    - **W-5 fertig** (Plan 6 „Stand W-5“): `node.apply_field_values` (Schreibrecht, aktuelle Fassung, jeder Wert neu
      gelesen, je Feld ersetzen, Kontakt/Tags, Notiz), Lernen pro Absender (`int_filemanager.extraction_hint`, Beschriftung
      vom Server aus der Wortliste abgeleitet), **N1 in v2 zu** (Test über `call_kw` und JSON-2). Version 19.0.1.17.0.
-   - **Nächster Schritt W-6** (Messung, braucht den Nutzer): Sammlung nach Absendern in Übungs- und Prüfteil teilen
-     (E12-Nachtrag in Plan 7), für 30–50 Dokumente Sollwerte mit dem Nutzer abhaken (TSV nur auf Tower), Grenzwerte
-     (6 Wörter, 20 pt, 10 Zeilen) am Übungsteil einstellen, Quote je Feld am Prüfteil messen – ohne und mit Lernen.
-     Danach Punkt 3 unten (Oberfläche: Hervorhebungs-Viewer, Prüf-Dialog, „Werte erkennen“).
+   - **W-6 läuft – Runde 1 von 4 fertig** (Plan 6 „Stand W-6“): Übungsteil 10 Dokumente, 84 % der bewerteten Vorschläge
+     richtig, ≈ 81 % der vorhandenen Werte gefunden; vier allgemeine Befunde notiert, noch nicht umgesetzt.
+   - **Einstieg neue Sitzung – Runde 2:** (1) Befunde 1–3 aus Plan 6 „Stand W-6“ als allgemeine Regeln umsetzen, mit
+     Tests; (2) Vorschläge der festen Stichprobe neu berechnen (`w6_sample.py`, Aufruf in
+     `docs/prototypes/werterkennung/README.md`, Abschnitt W-6); (3) Runde 1 automatisch nachprüfen: dieselben 10
+     Dokumente gegen `runde1.json` – nichts, was dort richtig war, darf falsch werden; (4) Seite für Runde 2 bauen
+     (`w6_review.py <temp>/w6_sample.json 2 10 10`, Übungsdokumente 11–20) und dem Nutzer den Pfad geben; nach dem
+     Speichern `werterkennung_runde2.json` aus Downloads als `runde2.json` nach Tower, lokale Kopien löschen.
+     Runde 3 = Übungsdokumente 21–24 + ggf. Nachschärfen, **Runde 4 = Prüfteil (16 Dokumente, `check`) erst ganz am
+     Ende, ohne danach etwas einzustellen** – deren Quote ist die ehrliche Erwartung für neue Absender (ohne und mit
+     Lernen messen).
+   - Im Downloads-Ordner des Nutzers liegen noch `werterkennung_runde1*.json` (10 Zwischenstände, private Werte) – der
+     Nutzer löscht sie selbst; die maßgebliche Fassung liegt auf Tower.
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
 2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
    `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`). **Für die Werterkennung**
