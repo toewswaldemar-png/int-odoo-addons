@@ -58,6 +58,14 @@ Reihenfolge = Priorität. Kästchen `[ ]` offen, `[x]` fertig (mit Commit-Hash u
   Sicherheits-Fix aus 19.0? Auswirkungen und Vorschlag für Update-Weg (nicht ausführen).
 - [ ] **A8 Doku auf Stand bringen.** `docs/README.md` und Übergabe 4.0 gegen den tatsächlichen Repo-Stand abgleichen
   (Konzept-Commits bis c94cac1, neue Entwurfs-Dokumente), Widersprüche auflisten und beheben, wo es nur Nachtragen ist.
+- [ ] **A9 Lebende v2-Dokumente in Unterordner umziehen (nur Umzug, kein Inhalt).** Die im Abschnitt „int_filemanager 2 (lebend)“ von
+  `docs/README.md` aufgeführten Dokumente per `git mv` nach `docs/int_filemanager_v2/` verschieben (Dateinamen unverändert; `review/`,
+  `prototypes/`, `archiv/`, `erp/`, `sonstiges/` bleiben, wo sie sind; `odoo_konventionen` bleibt in `docs/`). Danach alle Verweise anpassen: `docs/README.md`,
+  `CLAUDE.md`, die Dokumente untereinander, Skripte unter `tools/` und Kommentare im Code (`grep -rn` nach jedem alten Dateinamen im ganzen Repo), sowie
+  den Pfad in dieser Liste. Prüfen mit einem kleinen Skript, das alle relativen Markdown-Links in `docs/` und `CLAUDE.md` auflöst.
+  Nicht anfassen: den Inhalt der Konzepte, den Text der Nutzerentscheidungen. Memory-Dateien außerhalb des Repos meldet der Lauf nur im
+  Bericht (der Nutzer bzw. die nächste interaktive Sitzung zieht sie nach). Fertig, wenn: 0 kaputte Links, `git status` zeigt nur Umzüge/Verweis-Änderungen,
+  pre-commit grün. Das Aufteilen des Konzepts in Themen-Dateien ist **nicht** Teil dieser Aufgabe (erst nach Freigabe des Prüf-Fenster-Konzepts).
 
 ## Ablauf je Lauf
 
