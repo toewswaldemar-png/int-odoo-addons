@@ -184,6 +184,8 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
 4. Danach wie im Kern (Abschnitt 11) vorgesehen: Schritt 6 (Office/ONLYOFFICE), Schritt 7 (Eingangsordner),
    Schritt 8 (Übernahme des Bestands) – siehe Punkt 10 unten für schon gesammelte Vorüberlegungen dazu.
 
+**Stand 2026-09-30:** Das Prüf-Fenster-Konzept ist bis Commit `c94cac1` fertig durchentschieden (U1–U9, N1–N9), aber weiterhin ohne Freigabe. Für unbeaufsichtigte Läufe gibt es die Aufgabenliste `docs/int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md` (nur Aufgaben ohne offene Entscheidung; Fortschritt steht dort).
+
 **Offene Kleinigkeiten aus Schritt 5, nicht blockierend:**
 - Verwalter-Werkzeuge (Diagnose je Datei, Liste fehlgeschlagener Umwandlungen, „neu erzeugen", Konfiguration der
   Bausteine, Konzept 8.6) sind noch nicht gebaut.

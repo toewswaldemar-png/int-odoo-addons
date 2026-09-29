@@ -1,6 +1,6 @@
 # docs/ – Wegweiser
 
-Stand 2026-09-28. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde gelöscht; was überholt ist, liegt in
+Stand 2026-09-30. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde gelöscht; was überholt ist, liegt in
 [`archiv/`](archiv/) und in der Git-Historie.
 
 ## int_filemanager 2 (lebend)
@@ -13,6 +13,7 @@ Stand 2026-09-28. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde g
 | [`int_filemanager_v2_schritt4_plan_2026-09-28.md`](int_filemanager_v2_schritt4_plan_2026-09-28.md) | Plan der Oberfläche (Schritt 4) |
 | [`int_filemanager_v2_werterkennung_plan_2026-09-29.md`](int_filemanager_v2_werterkennung_plan_2026-09-29.md) | Plan der Werterkennung (Schritt 5, Punkt 1) mit Befund Odoo 19 und Paperless-ngx |
 | [`int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`](int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md) | Konzept Prüf-Fenster mit Kasten-Auswahl (U1–U9 und N1–N9 entschieden, Freigabe offen): Vorbilder PaperOffice/Paperless-ngx/Odoo, geprüfte Odoo-Bausteine, Nachtrag PaperOffice AI, Scheiben U-1…U-10 |
+| [`int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md`](int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md) | Aufgabenliste für den unbeaufsichtigten Dauerlauf (Regeln, Grenzen, Fortschritt je Aufgabe) |
 | [`review/konzept_codepruefung_2026-09-26.md`](review/konzept_codepruefung_2026-09-26.md) | Code-Prüfung des Konzepts (194 Behauptungen) |
 | [`odoo_konventionen_2026-09-26.md`](odoo_konventionen_2026-09-26.md) | Code-Konventionen für neuen Code |
 | [`int_filemanager_konzept_db_vorrang_2026-09-24.md`](int_filemanager_konzept_db_vorrang_2026-09-24.md) | Hintergrund: Abschnitte 19 und 20 (Live-Prüfungen auf Tower) |
@@ -42,6 +43,7 @@ Der v1-Code zitiert diese Dokumente in Kommentaren. Sie wandern ins Archiv, wenn
 - [`erp/`](erp/) – Reverse Engineering des Legacy-ERP und Vergleich mit Odoo (`legacy-schema/` mit den DFM-Formularen)
 - [`sonstiges/`](sonstiges/) – Liedanzeige als Odoo-Modul
 - [`prototypes/fm2/`](prototypes/fm2/) – Prototypen von int_filemanager 2
+- [`prototypes/werterkennung/`](prototypes/werterkennung/) – Prototyp-Skripte der Werterkennung (ohne persönliche Daten)
 
 ## Archiv
 

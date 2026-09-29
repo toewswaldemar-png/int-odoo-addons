@@ -56,8 +56,9 @@ Reihenfolge = Priorität. Kästchen `[ ]` offen, `[x]` fertig (mit Commit-Hash u
   `docs/review/` ablegen. Nichts ändern. Fertig, wenn: Liste liegt, mit „bestätigt / nicht bestätigt“ je Befund.
 - [ ] **A7 Tower-Image und Sicherheitsstand (Befund A5).** Nur Analyse: fehlt `odoo:19.0-hm-test` (19.0-20260908) noch ein
   Sicherheits-Fix aus 19.0? Auswirkungen und Vorschlag für Update-Weg (nicht ausführen).
-- [ ] **A8 Doku auf Stand bringen.** `docs/README.md` und Übergabe 4.0 gegen den tatsächlichen Repo-Stand abgleichen
+- [x] **A8 Doku auf Stand bringen.** `docs/README.md` und Übergabe 4.0 gegen den tatsächlichen Repo-Stand abgleichen
   (Konzept-Commits bis c94cac1, neue Entwurfs-Dokumente), Widersprüche auflisten und beheben, wo es nur Nachtragen ist.
+  **Ergebnis (Probelauf, COMMITHASH):** Alle Links in README, Übergabe und CLAUDE.md gültig; nachgetragen: Aufgabenliste und `prototypes/werterkennung/` im README, Stand-Zeile 2026-09-30 in der Übergabe. Keine inhaltlichen Widersprüche offen.
 - [ ] **A9 Lebende v2-Dokumente in Unterordner umziehen (nur Umzug, kein Inhalt).** Die im Abschnitt „int_filemanager 2 (lebend)“ von
   `docs/README.md` aufgeführten Dokumente per `git mv` nach `docs/int_filemanager_v2/` verschieben (Dateinamen unverändert; `review/`,
   `prototypes/`, `archiv/`, `erp/`, `sonstiges/` bleiben, wo sie sind; `odoo_konventionen` bleibt in `docs/`). Danach alle Verweise anpassen: `docs/README.md`,
