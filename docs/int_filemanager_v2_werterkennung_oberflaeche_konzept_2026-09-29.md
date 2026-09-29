@@ -285,7 +285,9 @@ Weitere offene Entscheidungen dazu:
 
 - ~~**U7** Fristen als Odoo-Aktivitäten~~ – **entfällt** (Nutzer 2026-09-29: „U7 weglassen“); keine Erinnerungen aus
   erkannten Daten.
-- **U8** Kontakte aus Dokumenten: darf jeder Nutzer neue Kontakte anlegen, oder nur Vorschlag an einen Verwalter?
+- ~~**U8**~~ **entschieden (Nutzer 2026-09-29): Odoos eigenes Recht gilt** – „Kontakt aus Dokument anlegen“ sieht nur,
+  wer in Odoo Kontakte anlegen darf (`base.group_partner_manager`, „Kontakte: Anlegen“; normale interne Benutzer dürfen
+  `res.partner` laut `base/security/ir.model.access.csv` nur lesen). Keine eigene Regel, kein Vorschlagsknopf.
 - **U9** Reihenfolge: U-7 (Werte nutzen – Suche, Kalender, Auswertung) **vor** dem Prüf-Fenster, weil es sofort mit den
   bereits gespeicherten Werten nutzt, oder danach?
 
