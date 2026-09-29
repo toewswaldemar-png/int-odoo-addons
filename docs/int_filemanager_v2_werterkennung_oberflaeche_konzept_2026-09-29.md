@@ -192,8 +192,9 @@ Bestehend bleibt: `suggest_field_values`, `apply_field_values`, `value_suggest.s
 6. **Überweisungs-QR (GiroCode) automatisch** (U5): der Umwandler sucht beim Erzeugen der Wortliste auf jeder Seite
    nach QR-Codes (Bibliothek `zxing-cpp` im Umwandler-Image nachinstallieren, wie Paperless' OCR-Templates) und
    liefert gefundene Inhalte mit Lage mit. Ein GiroCode (EPC-Format, beginnt mit „BCD“) ergibt Empfänger, IBAN, BIC,
-   Betrag und Verwendungszweck; diese Werte sind die **höchste Stufe** (maschinenlesbar, nicht aus Text erraten),
-   geprüft wie jeder Wert (IBAN-Prüfziffer, Betrag). Eigene Firmendaten (E10) werden auch hier übersprungen. Neue
+   Betrag und Verwendungszweck; diese Werte sind **starke Kandidaten** (maschinenlesbar, nicht aus Text erraten),
+   geprüft wie jeder Wert (IBAN-Prüfziffer, Betrag) – sie überstimmen gedruckte, beschriftete Werte aber nicht; weichen
+   sie ab (z. B. Abschlag statt Gesamtbetrag), zeigt das Prüf-Fenster einen Hinweis (N2, 10.4). Eigene Firmendaten (E10) werden auch hier übersprungen. Neue
    Spec-Version der Wortliste, damit vorhandene Dokumente beim nächsten Durchlauf nachgelesen werden. Vorher an der
    Sammlung zählen, wie viele Dokumente einen GiroCode tragen.
 
@@ -381,8 +382,10 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
   (Text- und Auswahlfelder, wie v1 `fulltext._pdf_form_field_words`) mit ihrer Lage auf der Seite und hängt sie an die
   Wortliste; Ankreuzfelder vorerst nicht (Wert ist kein Text, Zuordnung zur Beschriftung unsicher). Neue Spec-Version der
   Wortliste, damit vorhandene Dokumente im Hintergrund neu gelesen werden.
-- **N2** Überweisungs-QR (U5) neu bewerten: nur 2 von 513 Dokumenten. *Empfehlung: zurückstellen bis zum Eingangsordner
-  / Geschäftsbelegen, dort erst zählen.*
+- ~~**N2**~~ **entschieden (Nutzer 2026-09-29): trotzdem jetzt bauen (U5 bleibt), damit die Werterkennung vollständig
+  ist** – obwohl nur 2 von 513 privaten Dokumenten einen Überweisungs-QR tragen (Geschäftsrechnungen vermutlich öfter,
+  nicht gemessen). Mit den Einschränkungen aus 10.4: QR-Werte sind starke Kandidaten, überstimmen Gedrucktes aber nicht –
+  bei Abweichung Hinweis im Prüf-Fenster; Seiten-/Zeitgrenzen wie im Umwandler üblich.
 - **N3** Gemerkte Kästen je Absender (U-5) sofort oder erst, wenn die Nutzung zeigt, dass sie gebraucht werden?
 - **N4** Prüfstatus je Dokument („ungeprüft / geprüft von … am … / automatisch übernommen“) einführen? Pflichtfelder?
   *Empfehlung: Status ja (U1 braucht ihn), Pflichtfelder später.*
