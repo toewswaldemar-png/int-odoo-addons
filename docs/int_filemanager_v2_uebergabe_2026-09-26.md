@@ -139,11 +139,13 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
      (`int_filemanager/value_suggest.py`, `node.suggest_field_values`), eigene Firma übersprungen, Absender und Tags;
      Startkatalog 27 Felder (Geschäftsbelege); Umwandler liest Fettdruck einmal (Spec `v3`). Neue Wortlisten der
      Sammlung: `/mnt/user/test/werterkennung_words_v3/` (Aufruf siehe `docs/prototypes/werterkennung/README.md`).
-   - **Nächster Schritt W-5** (Übernehmen, Plan 5.2 und 5a „Lernen“): Methode am Knoten schreibt bestätigte Werte
-     (Schreibrecht, aktuelle Fassung, erneutes Prüfen mit `value_types.parse`, je Feld ersetzen, Chatter-Notiz),
-     neues Modell `int_filemanager.extraction_hint` (Lernen pro Absender wie `base_import.mapping`), N1-Test per
-     `call_kw` und JSON-2. Danach W-6: Sammlung nach Absendern in Übungs- und Prüfteil teilen, Sollwerte mit dem
-     Nutzer abhaken, Grenzwerte am Übungsteil einstellen, Quote am Prüfteil messen (ohne/mit Lernen).
+   - **W-5 fertig** (Plan 6 „Stand W-5“): `node.apply_field_values` (Schreibrecht, aktuelle Fassung, jeder Wert neu
+     gelesen, je Feld ersetzen, Kontakt/Tags, Notiz), Lernen pro Absender (`int_filemanager.extraction_hint`, Beschriftung
+     vom Server aus der Wortliste abgeleitet), **N1 in v2 zu** (Test über `call_kw` und JSON-2). Version 19.0.1.17.0.
+   - **Nächster Schritt W-6** (Messung, braucht den Nutzer): Sammlung nach Absendern in Übungs- und Prüfteil teilen
+     (E12-Nachtrag in Plan 7), für 30–50 Dokumente Sollwerte mit dem Nutzer abhaken (TSV nur auf Tower), Grenzwerte
+     (6 Wörter, 20 pt, 10 Zeilen) am Übungsteil einstellen, Quote je Feld am Prüfteil messen – ohne und mit Lernen.
+     Danach Punkt 3 unten (Oberfläche: Hervorhebungs-Viewer, Prüf-Dialog, „Werte erkennen“).
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
 2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
    `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`). **Für die Werterkennung**

@@ -470,6 +470,42 @@ Differenz zeigt, was das Lernen bringt.
 - **Offen:** Trefferquote (W-6, Übungs-/Prüfteil nach Absendern); Lernen pro Absender (W-5, `extraction_hint`); die
   Grenzwerte (6 Wörter, 20 pt, 10 Zeilen) sind noch Schätzwerte aus den Proben und werden am Übungsteil eingestellt.
 
+**Stand W-5 (2026-09-29):** gebaut, ohne Oberfläche. Modulversion 19.0.1.17.0.
+- `int_filemanager.node.apply_field_values(node_id, revision_id, values, partner_id=False, tag_ids=None)`:
+  Schreibrecht auf den Knoten (als Nutzer, vor jedem `sudo`); `revision_id` muss die aktuelle Fassung sein, sonst
+  `UserError` und nichts gespeichert; jeder Text wird auf dem Server mit der Art des Felds neu gelesen
+  (`value_types.parse`; eine getippte Zahl ohne Einheit/Währung wird mit der des Felds gelesen, Betrag ohne Währung
+  mit der Währung des Felds), sonst `UserError`; ersetzt wird **je Feld** (alle typisierten Spalten neu gesetzt),
+  ein leerer Text entfernt den Wert; Herkunft „rule“ nur mit Regel des Felds (Prüfung am Modell), sonst „manual“.
+  Fundstelle (Seite, Kasten) ermittelt der Server selbst aus der Wortliste, nicht der Client. Kontakt und Tags nur,
+  wenn der Nutzer sie lesen darf, geschrieben als Nutzer. Notiz im Verlauf („Werte bestätigt“, je Feld Wert oder
+  „entfernt“) mit dem Nutzer als Autor.
+- **Lernen** (E12, Muster `base_import.mapping`): neues Modell `int_filemanager.extraction_hint` (`partner_id`
+  Pflicht, `label` normalisiert, `field_id`, `direction`, Lage der Beschriftung, `hit_count`, `last_date`; eindeutig
+  je Absender und Beschriftung, die letzte Bestätigung gewinnt). Die Beschriftung leitet der **Server** aus der
+  Wortliste ab (`value_suggest.label_of_value`: der bestätigte Wert wird im Text gesucht, die Beschriftung wie bei
+  Vorschlägen bestimmt; davor nur die Wörter nach der letzten Zahl) – ein Client kann keine Beschriftung
+  unterschieben. Gelernt wird für den Kontakt der Datei (bestätigt oder schon gesetzt), nie für eine eigene Firma.
+  Beim Vorschlagen gilt eine gelernte Beschriftung des Absenders (Kontakt der Datei, sonst vorgeschlagener
+  Absender) als höchste Stufe, auch als Teil einer längeren Beschriftung („Ihr Vertragskonto“). Nutzer lesen
+  Hinweise nicht einmal: nur Verwalter dürfen sie lesen, die Vorschläge lesen sie intern.
+- **Gegengelesen mit Codex, 3 Befunde:** (1) die Fassungsprüfung lief ohne Sperre – eine gleichzeitig gespeicherte
+  neue Fassung hätte durchrutschen können; jetzt unter der Knotensperre wie beim Hochladen
+  (`_lock_and_check_base_revision`); (2) die Liste der gelernten Beschriftungen war für alle Nutzer lesbar und
+  verriet, von welchen Absendern es Dokumente gibt, auch in fremden Bereichen – jetzt nur Verwalter; (3) **bewusst
+  so gelassen:** das Gelernte gilt je Absender für alle Nutzer (wie `base_import.mapping` für alle Importe), wer
+  schreiben darf, beeinflusst damit die Vorschläge der anderen. Es sind nur Vorschläge, die jeder vor dem Speichern
+  prüft (E7); ein Client kann dabei nur zwischen gedruckten Stellen desselben Werts wählen, keine Beschriftung
+  erfinden.
+- **N1 in v2 zu:** `test_v2_field_value_http.py` ruft `apply_field_values` und `suggest_field_values` als fremder
+  Nutzer über `/web/dataset/call_kw` und `/json/2` auf (AccessError bzw. 403, nichts gespeichert), als reiner Leser
+  `apply_field_values` (AccessError), und `field_value.create` direkt per JSON-2 (403).
+- Tests: `test_v2_field_value_apply.py` (11, dazu: Nutzer lesen keine Hinweise; neu lesen und speichern mit Fundstelle, ungültiger Text, getippte Zahl
+  ohne Währung, je Feld ersetzen/entfernen, alte Fassung, Lesen reicht nicht, Kontakt/Tags/Notiz, Lernen und
+  Nutzen beim nächsten Dokument, letzte Bestätigung gewinnt, eigene Firma lernt nichts), `test_v2_field_value_http.py`
+  (4). Die Testbasen `FieldValueCase` und `AccessHttpCase` sind aus den bestehenden Testklassen herausgezogen, damit
+  deren Tests nicht doppelt laufen.
+
 ## 7. Entscheidungen
 
 **Alle Empfehlungen E1–E9 vom Nutzer übernommen (2026-09-29, „dann leg los“).** Ergänzend aus den Proben (8):
