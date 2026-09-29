@@ -131,11 +131,14 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
      (Stichwort- und Regex-Modus), `.field_value` mit typisierten Spalten, Rechte (Werte nur lesen entlang des
      Knoten-Bereichs, niemand schreibt sie über das ORM), Startbelegung (21 Felder, `noupdate`), `de.po`;
      Modulversion 19.0.1.16.0.
-   - **Nächster Schritt W-3** (Umwandeln/Prüfen je Wertart als reine Funktionen, Plan 5.1 Punkt 4 und die Befunde
-     der Proben in Plan 8: gruppierte Nummern, Einheit vor/nach der Zahl, Zeitraum oder Dauer, Reparatur typischer
-     OCR-Verwechslungen nur bei Prüfziffer-Typen). Danach W-4 (Vorschlagen: Suche im Text **und** nach Seitenlage
-     über `\t`/`\n` und die Wortpositionen der v2-Liste; Rechenzeit je Muster messen), W-5 (Übernehmen, N1-Test),
-     W-6 (Sollwerte für 30–50 Dokumente der Sammlung mit dem Nutzer abhaken, feste Testsammlung).
+   - **W-3 fertig** (Plan 6 „Stand W-3“): `int_filemanager/value_types.py` findet und prüft Werte je Art ohne
+     Datenbank (`find`/`parse`), mit Reparatur von Lesefehlern nur bei Prüfziffer-Arten. Befund: `stdnum.iban` ist in
+     Odoo wegen Odoos eigenem Import-Haken nicht ladbar – IBAN-Prüfung deshalb über `numdb.read` + Modulo 97.
+   - **Nächster Schritt W-4** (Vorschlagen, Plan 5.1): je Feld die Regeln anwenden – Stichwort-Modus sucht den Wert
+     im Text hinter dem Stichwort **und** nach Seitenlage (rechts daneben, direkt darunter) über die Wortpositionen
+     der v2-Liste; Regex-Modus mit Gruppe; dann `value_types.find` auf dem Ausschnitt; Position je Kandidat aus der
+     Wortliste; Kontakt- und Tag-Vorschlag; Rechenzeit je Muster messen. Danach W-5 (Übernehmen, N1-Test), W-6
+     (Sollwerte für 30–50 Dokumente der Sammlung mit dem Nutzer abhaken, feste Testsammlung).
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
 2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
    `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`). **Für die Werterkennung**

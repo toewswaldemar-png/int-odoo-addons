@@ -328,6 +328,49 @@ Entscheidung E3.
 - Aus 5.5 offen für W-4: Rechenzeit je Muster messen und über 1 s melden (gehört zur Ausführung, nicht zum
   Speichern).
 
+**Stand W-3 (2026-09-29):** gebaut, ohne Datenbankzugriff in `int_filemanager/value_types.py`.
+- `find(value_type, text, pos, endpos, unit=, currencies=, default_currency=, default_country=, today=)` liefert
+  alle gültigen Kandidaten einer Art von links nach rechts (Anfang, Ende, gedruckter Text, Spalten für
+  `field_value` mit Währung als ISO-Code); `parse(value_type, text)` nimmt nur einen Text, der ganz ein Wert ist
+  (für das erneute Prüfen auf dem Server in W-5). Ein Wert überschreitet nie Tabulator, Zeilen- oder Seitenumbruch.
+- Je Art: **Nummer** (Gruppen mit Leerzeichen „836 585 797 780“ vor Einzelwort, gespeichert ohne Leerzeichen,
+  mindestens eine Ziffer), **Wort** (bis 5 Wörter einer Zeile/Spalte, beginnt mit Buchstaben), **Datum** (T.M.J mit
+  `.`/`/`/`-`, ISO, Monatsnamen deutsch und englisch aus babel; zweistellige Jahre bis heute + 10 im 21.
+  Jahrhundert), **Zeitraum** (zwei Daten mit „-“, „–“, „bis (zum)“; das erste Datum darf ohne Jahr sein und nimmt
+  es vom zweiten, über den Jahreswechsel eins zurück) **oder Dauer** („12 Monate“ → 12 months), **Betrag**
+  (Trennzeichen nach `base_import._infer_separators`, Tausendergruppen müssen dreistellig sein; Währung vor oder
+  hinter der Zahl, auch „EUR/Monat 10,90“ und „13,40 €/Monat“; Minus vorn oder hinten; ohne Währung nur mit genau
+  zwei Nachkommastellen, dann Standardwährung; normales Leerzeichen trennt nie Tausender, damit „Pos. 3 250,00“ nicht
+  verschmilzt), **Menge** (Einheit des Felds vor oder hinter der Zahl, Schreibweisen wie „Cent / kWh“ für ct/kWh),
+  **IBAN** und **USt-IdNr.** (Prüfziffer; ein folgendes Wort wie „BIC …“ wird abgeschnitten; USt-IdNr. ohne
+  Länderkürzel bekommt `default_country`), **E-Mail** (Leerzeichen um „@“ entfernt, `email_normalize`).
+- **Reparatur von Lesefehlern** (O→0, I/l/|→1, S→5, B→8, Z→2, G→6, D/Q→0) nur bei IBAN und USt-IdNr., nur an
+  Stellen, an denen das Länderformat eine Ziffer verlangt, und nur übernommen, wenn die Prüfziffer danach stimmt.
+- **Befund Odoo (live geprüft):** `stdnum.iban` lässt sich **innerhalb von Odoo nicht importieren**. Odoos
+  Import-Haken für `stdnum` (`odoo/_monkeypatches/__init__.py`, `PatchImportHook`) ersetzt den Lader des Pakets,
+  danach kann `importlib.resources` die Datei `iban.dat` nicht öffnen („Can't open orphan path“); Odoo selbst
+  nutzt `stdnum.iban` nirgends. Deshalb liest `value_types` dieselbe Datei über ihren Pfad mit dem öffentlichen
+  `stdnum.numdb.read` und prüft wie `stdnum.iban.is_valid` (Länderformat + Modulo 97). `stdnum.eu.vat` ist nicht
+  betroffen.
+- **Abweichung von 5.1:** Daten werden erst verworfen, wenn sie vor 1900 oder **mehr als 30 Jahre** in der Zukunft
+  liegen (nicht schon nach einem Jahr) – Verträge in der Sammlung nennen Laufzeit- und Preisgarantie-Enden Jahre
+  voraus; die Grenze fängt Lesefehler wie „2924“.
+- **Gegengelesen mit Codex, 8 Befunde, alle behoben:** Suchfenster schnitt Werte ab (jetzt: Kandidaten, die im
+  Fenster **beginnen**, dürfen darüber hinausgehen); `parse` machte aus Tabulator/Zeilenumbruch ein Leerzeichen
+  (jetzt nur Leerzeichen aufgeräumt); Datum in Kennungen wie „INV-01-02-2024-A“; Absturz bei ungewöhnlichen
+  Großbuchstaben im Monatsnamen; „12 kWh/Tag“ als kWh; 29.02. ohne Jahr im Zeitraum; formal ungültige E-Mail-Adressen;
+  400-stellige Zahl als „unendlich“ (jetzt höchstens 15 Ziffern). Die erste Fassung der Datumsgrenze war zu streng:
+  an der Sammlung gemessen fielen 730 Daten weg, davon 441 echte, an die PDF-Text das nächste Wort ohne Leerzeichen
+  hängt („01.02.2024Seite“), und 156 mit Uhrzeit („2024-01-01T12:00“); jetzt sind Buchstaben direkt daneben erlaubt,
+  abgelehnt wird nur die Verkettung mit Bindestrich – danach fallen 101 weg, fast alle Kennungen.
+- Tests `tests/test_v2_value_types.py` (22, Tabellen mit Grenzfällen aus den Proben: Zahlenschreibweisen, OCR-Fehler,
+  Monatsnamen, Zeitraum über den Jahreswechsel, IBAN mit „O“/„l“, maskierte IBAN, Gläubiger-ID, USt-IdNr. ohne
+  Präfix und mit „l“, Offsets).
+- **Lauf über die Sammlung** (alle Suchen über die 513 Wortlisten, 3,7 Mio. Zeichen, im Container ohne Netz):
+  0 Fehler, langsamste Suche 26 ms je Dokument. Für W-4: Suchen über den **ganzen** Text liefern bei USt-IdNr.
+  ohne Präfix Fehltreffer (etwa jede zehnte 9-stellige Zahl hat eine gültige deutsche Prüfziffer) – USt-IdNr. und
+  Nummern nur in der Nähe eines Stichworts suchen.
+
 ## 7. Entscheidungen
 
 **Alle Empfehlungen E1–E9 vom Nutzer übernommen (2026-09-29, „dann leg los“).** Ergänzend aus den Proben (8):
