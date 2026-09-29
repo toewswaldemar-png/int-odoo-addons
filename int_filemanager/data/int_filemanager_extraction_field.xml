@@ -14,7 +14,8 @@
 Rechnungsnr.
 Rechnungs-Nr.
 Belegnummer
-Beleg-Nr.</field>
+Beleg-Nr.
+Rechnung</field>
   </record>
   <record
     id="extraction_field_customer_number"
@@ -60,6 +61,8 @@ Vertragskontonummer</field>
     <field name="mode">keyword</field>
     <field name="keywords">Rechnungsdatum
 Datum
+Erstellungsdatum
+Ausstellungsdatum
 Bescheiddatum
 Belegdatum
 Anfrage
@@ -419,6 +422,7 @@ Kontaktperson</field>
     <field name="name">Recipient</field>
     <field name="sequence">290</field>
     <field name="value_type">word</field>
+    <field name="page_area">address</field>
   </record>
   <record id="extraction_rule_recipient" model="int_filemanager.extraction_rule">
     <field name="field_id" ref="extraction_field_recipient" />
@@ -426,6 +430,8 @@ Kontaktperson</field>
     <field name="keywords">Herrn
 Herr
 Frau
+Herrn und Frau
+Herr und Frau
 Familie
 Eheleute
 Empfänger</field>

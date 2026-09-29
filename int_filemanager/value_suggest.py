@@ -44,6 +44,20 @@ MIN_CONTAINED_SHARE = 0.3
 # Kundennummer bei uns"); more words make it the subject of a sentence
 # ("Auftragsbestätigung gilt gleichzeitig als Rechnung").
 MAX_WORDS_AFTER_KEYWORD = 3
+# The last part of a compound names what it is, but a short, general keyword there
+# is narrowed to something else: a "Geburtsdatum" is no document date, a
+# "Dauerauftrag" no order, an "Ehefrau" no addressee. A longer one keeps its
+# meaning ("Fälligkeitszeitraum" is a period).
+MIN_COMPOUND_KEYWORD = 8
+
+# The address window of a letter, as shares of the first page's width and height:
+# the value starts left of the first share, ends left of the second, and lies
+# between the top and bottom ones. DIN 5008 puts it 27-90 mm from the top edge on
+# the left; in the test collection the addressee's name sits there in three of four
+# letters, and starts that far left in 370 of 374. Right of it, on the same lines,
+# is the information block of the sender.
+ADDRESS_WINDOW = (0.45, 0.6, 0.08, 0.33)
+_A4 = (595.0, 842.0)
 
 # A number of one digit is a position, a count or a footnote, not a reference.
 MIN_NUMBER_DIGITS = 2
@@ -88,9 +102,12 @@ def _is_number(word):
 
 
 def _word_ends(label):
-    """Offsets in normalize(label) at which a word of the label ends."""
+    """Offsets in normalize(label) at which a word of the label ends.
+
+    A digit read into a word ("1Herrn") is a word of its own.
+    """
     ends, length = set(), 0
-    for word in re.split(r"[\s/-]+", label):
+    for word in re.split(r"[\s/-]+|(?<=\d)(?=[^\W\d_])|(?<=[^\W\d_])(?=\d)", label):
         length += len(normalize(word))
         ends.add(length)
     return ends
@@ -109,6 +126,9 @@ class FieldSpec:
     patterns: list = field(default_factory=list)
     # normalized label -> hint id, learned for the sender of this document
     hints: dict = field(default_factory=dict)
+    # where on the page the value is printed: None anywhere, "address" in the
+    # address window
+    area: str = None
 
 
 @dataclass
@@ -138,8 +158,15 @@ class Label:
 class Page:
     """The text of a document with the position of every word."""
 
-    def __init__(self, text, words=None):
+    def __init__(self, text, words=None, pages=None):
         self.text = text
+        # page number -> (width, height) in the unit of the word positions
+        self.sizes = {}
+        for number, size in enumerate(pages or [], 1):
+            if isinstance(size, dict):
+                width, height = size.get("width"), size.get("height")
+                if isinstance(width, int | float) and isinstance(height, int | float):
+                    self.sizes[number] = (float(width), float(height))
         self.words = sorted(words or [], key=lambda w: w[5])
         self._starts = [w[5] for w in self.words]
         self.segments = []
@@ -179,6 +206,22 @@ class Page:
             min(w[2] for w in words),
             max(w[3] for w in words),
             max(w[4] for w in words),
+        )
+
+    def in_area(self, start, end, area):
+        """Whether text[start:end] is printed in area; without positions it is not."""
+        if not area:
+            return True
+        box = self.box(start, end)
+        if not box or box[0] != 1:
+            return False
+        width, height = self.sizes.get(1, _A4)
+        start, end, top, bottom = ADDRESS_WINDOW
+        return (
+            box[1] <= start * width
+            and box[3] <= end * width
+            and box[2] >= top * height
+            and box[4] <= bottom * height
         )
 
     def segment_at(self, pos):
@@ -284,12 +327,15 @@ def _contains(norm, keyword, ends):
     start = norm.find(keyword)
     while start >= 0:
         end = start + len(keyword)
+        whole = start == 0 or start in ends
         if end in ends:
             if (
-                len(keyword) >= MIN_CONTAINED_SHARE * len(norm)
+                (whole or len(keyword) >= MIN_COMPOUND_KEYWORD)
+                and len(keyword) >= MIN_CONTAINED_SHARE * len(norm)
                 and sum(e > end for e in ends) <= MAX_WORDS_AFTER_KEYWORD
             ):
                 return True
+            # Not close either: an "Eilauftrag" is not a misread "Auftrag".
             found = False
         start = norm.find(keyword, start + 1)
     return found
@@ -321,11 +367,15 @@ def _match(norm, spec, ends):
             # The larger the part of the label the keyword covers, the better.
             found = (TIER_CONTAINS, 1 - len(kw) / len(norm))
         else:
-            # An inflected keyword ("Kundennummern") is still close to it. The
-            # quick upper bounds of difflib rule out most pairs before the
-            # exact ratio is worked out. The limit is strict and kept clear of
-            # rounding: 1 - 0.8 is 0.19999999999999996 in floating point, which
-            # would let "Betrag" (a table column) pass as close to "Endbetrag".
+            # An inflected or misread keyword ("Kundennummern", "Kundennumer") is
+            # still close to it. A label shorter by more than a letter is not: a
+            # bare "Nr." would be close to "Kd.-Nr.". The quick upper bounds of
+            # difflib rule out most pairs before the exact ratio is worked out.
+            # The limit is strict and kept clear of rounding: 1 - 0.8 is
+            # 0.19999999999999996 in floating point, which would let "Betrag" (a
+            # table column) pass as close to "Endbetrag".
+            if len(norm) < len(kw) - 1:
+                continue
             matcher = difflib.SequenceMatcher(None, norm, kw)
             if any(
                 ratio() <= _FUZZY_MIN_RATIO
@@ -396,63 +446,89 @@ def suggest(page, specs, skip=None, slow=None, **options):
     }
     for value_type, unit in sorted(kinds, key=lambda k: (k[0], k[1] or "")):
         fitting = [s for s in specs if (s.value_type, s.unit) == (value_type, unit)]
-        cache = {}
         candidates = [
             c
             for c in value_types.find(value_type, page.text, unit=unit, **options)
             if not skip(value_type, c.value)
         ]
-        starts = [c.start for c in candidates]
-        for c in candidates:
-            if value_type == "number" and _digits(c) < MIN_NUMBER_DIGITS:
-                continue
-            for label in page.labels_of(c.start, c.end, starts):
-                # The same label stands next to many values: match it once.
-                if label.text not in cache:
-                    norm, ends = normalize(label.text), _word_ends(label.text)
-                    cache[label.text] = [
-                        (spec, _match(norm, spec, ends)) for spec in fitting
-                    ]
-                matches = [(spec, m) for spec, m in cache[label.text] if m]
-                for spec, (tier, score) in matches:
-                    key = (
-                        tier,
-                        _DIRECTION_RANK[label.direction],
-                        label.rows_skipped,
-                        score,
-                        label.distance,
-                        c.start,
-                    )
-                    rule_id = None if tier == TIER_HINT else spec.rule_id
-                    pairs.append((key, spec, c, label, rule_id))
-                if not matches and value_type != "word":
-                    unassigned.append((label, value_type, c))
+        _labelled_pairs(page, value_type, fitting, candidates, pairs, unassigned)
         # Without a label, the value could belong to any field of its type.
         if value_type in SELF_EVIDENT_TYPES and len({s.id for s in fitting}) == 1:
             rank = _DIRECTION_RANK["unlabelled"]
             for c in candidates:
+                if not page.in_area(c.start, c.end, fitting[0].area):
+                    continue
                 key = (TIER_UNLABELLED, rank, 0, 0.0, 0.0, c.start)
                 label = Label("", "unlabelled", c.start, c.start)
                 pairs.append((key, fitting[0], c, label, None))
     for spec in specs:
         for rule_id, pattern, group in spec.patterns:
             started = time.perf_counter()
-            for m in pattern.finditer(page.text):
-                start, end = m.span(group)
-                if start < 0:
-                    continue
-                value = value_types.parse(
-                    spec.value_type, page.text[start:end], unit=spec.unit, **options
-                )
-                if value is None or skip(spec.value_type, value):
-                    continue
-                c = value_types.Candidate(start, end, page.text[start:end], value)
-                key = (TIER_EXACT, 0, 0, 0.0, 0.0, start)
-                pairs.append((key, spec, c, Label("", "regex", start, start), rule_id))
+            pairs += _pattern_pairs(page, spec, rule_id, pattern, group, skip, options)
             seconds = time.perf_counter() - started
             if slow and seconds > SLOW_PATTERN_SECONDS:
                 slow(rule_id, seconds)
     return _assign(page, pairs), _unassigned(unassigned)
+
+
+def _labelled_pairs(page, value_type, fitting, candidates, pairs, unassigned):
+    """Add a pair for every label of a candidate that names one of the fitting
+    fields to pairs, and the labels no field took to unassigned."""
+    cache = {}
+    # Every line starts a word value, so for words the line above is the label
+    # (no table of values to look through: "Herrn" above "Max Muster").
+    starts = [] if value_type == "word" else [c.start for c in candidates]
+    for c in candidates:
+        if value_type == "number" and _digits(c) < MIN_NUMBER_DIGITS:
+            continue
+        # A name starts with a capital letter; "und Frau Muster" does not.
+        if value_type == "word" and not c.source_text[:1].isupper():
+            continue
+        for label in page.labels_of(c.start, c.end, starts):
+            # The same label stands next to many values: match it once.
+            if label.text not in cache:
+                norm, ends = normalize(label.text), _word_ends(label.text)
+                cache[label.text] = [
+                    (spec, _match(norm, spec, ends)) for spec in fitting
+                ]
+            matches = [(spec, m) for spec, m in cache[label.text] if m]
+            for spec, (tier, score) in matches:
+                if not page.in_area(c.start, c.end, spec.area):
+                    continue
+                key = (
+                    tier,
+                    _DIRECTION_RANK[label.direction],
+                    label.rows_skipped,
+                    score,
+                    label.distance,
+                    c.start,
+                )
+                rule_id = None if tier == TIER_HINT else spec.rule_id
+                pairs.append((key, spec, c, label, rule_id))
+            if not matches and value_type != "word":
+                unassigned.append((label, value_type, c))
+
+
+def _pattern_pairs(page, spec, rule_id, pattern, group, skip, options):
+    """The pairs of a rule's regular expression: each match that is a whole value."""
+    pairs = []
+    for m in pattern.finditer(page.text):
+        start, end = m.span(group)
+        if start < 0:
+            continue
+        value = value_types.parse(
+            spec.value_type, page.text[start:end], unit=spec.unit, **options
+        )
+        if (
+            value is None
+            or skip(spec.value_type, value)
+            or not page.in_area(start, end, spec.area)
+        ):
+            continue
+        c = value_types.Candidate(start, end, page.text[start:end], value)
+        key = (TIER_EXACT, 0, 0, 0.0, 0.0, start)
+        pairs.append((key, spec, c, Label("", "regex", start, start), rule_id))
+    return pairs
 
 
 def _assign(page, pairs):

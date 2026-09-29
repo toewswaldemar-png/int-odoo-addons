@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260908\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 12:48+0000\n"
-"PO-Revision-Date: 2026-09-29 12:48+0000\n"
+"POT-Creation-Date: 2026-09-29 15:04+0000\n"
+"PO-Revision-Date: 2026-09-29 15:04+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -136,6 +136,11 @@ msgid "Active"
 msgstr "Aktiv"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__page_area__address
+msgid "Address window"
+msgstr "Adressfenster"
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_navigation.js:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/folder_tree.js:0
@@ -151,6 +156,11 @@ msgstr "Betrag"
 #: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_annual_consumption
 msgid "Annual consumption"
 msgstr "Jahresverbrauch"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__page_area__anywhere
+msgid "Anywhere"
+msgstr "Überall"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_attachment_count
@@ -1350,6 +1360,11 @@ msgid "Page"
 msgstr "Seite"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__page_area
+msgid "Page Area"
+msgstr "Stelle auf der Seite"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__pages
 msgid "Pages"
 msgstr "Seiten"
@@ -2146,6 +2161,13 @@ msgstr "Website-Nachrichten"
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__website_message_ids
 msgid "Website communication history"
 msgstr "Website-Kommunikationsverlauf"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_extraction_field__page_area
+msgid ""
+"Where the value is printed. The address window is the addressee's address on"
+" the first page of a letter, top left."
+msgstr "Wo der Wert abgedruckt ist. Das Adressfenster ist die Anschrift des Adressaten auf der ersten Seite eines Briefs, links oben."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__width

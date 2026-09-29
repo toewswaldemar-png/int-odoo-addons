@@ -42,6 +42,10 @@ def _website_host(website):
     return host.split("/")[0].removeprefix("www.")
 
 
+def _area(field):
+    return None if field.page_area == "anywhere" else field.page_area
+
+
 PREVIEW_STATES = [
     ("ready", "Ready"),
     ("pending", "Pending"),
@@ -1065,7 +1069,9 @@ class IntFilemanagerNode(models.Model):
         if words_job:
             words = self._read_word_list(words_job.derived_blob_id)
             if words is not None:
-                return "ready", value_suggest.Page(words["text"], words["words"])
+                return "ready", value_suggest.Page(
+                    words["text"], words["words"], words.get("pages")
+                )
         text_job = done.filtered(lambda j: j.kind == "text" and j.text)[:1]
         if text_job:
             return "ready", value_suggest.Page(text_job.text)
@@ -1136,6 +1142,7 @@ class IntFilemanagerNode(models.Model):
                     field.value_type,
                     unit=field.unit or None,
                     hints={h.label: h.id for h in hints if h.field_id == field},
+                    area=_area(field),
                 )
             )
         rules = self.env["int_filemanager.extraction_rule"].search(
@@ -1144,7 +1151,7 @@ class IntFilemanagerNode(models.Model):
         for rule in rules:
             f = rule.field_id
             spec = value_suggest.FieldSpec(
-                f.id, f.value_type, unit=f.unit or None, rule_id=rule.id
+                f.id, f.value_type, unit=f.unit or None, rule_id=rule.id, area=_area(f)
             )
             if rule.mode == "keyword":
                 spec.keywords = rule._keyword_list()

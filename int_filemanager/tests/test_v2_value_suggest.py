@@ -283,6 +283,45 @@ class TestV2ValueSuggest(BaseCase):
         found, _ = run(vs.Page("Eingetragen unter DE136695976"), [pattern])
         self.assertEqual(texts(found), {24: ["DE136695976"]})
 
+    def test_a_short_keyword_ending_a_compound_names_something_else(self):
+        found, _ = run(vs.Page("Geburtsdatum: 04.02.1986"), [DOCUMENT_DATE])
+        self.assertEqual(found, {})
+        found, _ = run(vs.Page("Rg.-Datum: 12.03.2024"), [DOCUMENT_DATE])
+        self.assertEqual(texts(found), {6: ["2024-03-12"]})
+        period = spec(25, "period", "Zeitraum")
+        found, _ = run(
+            vs.Page("Fälligkeitszeitraum: 01.01.2024 - 31.12.2024"), [period]
+        )
+        self.assertEqual(found[25][0].tier, vs.TIER_CONTAINS)
+
+    def test_a_compound_with_another_meaning_is_not_close_either(self):
+        order = spec(28, "number", "Auftrag")
+        self.assertIsNone(vs.match_label("Eilauftrag", order))
+        # A digit read into a word is no part of a compound.
+        salutation = spec(29, "word", "Herrn")
+        self.assertEqual(vs.match_label("1Herrn", salutation)[0], vs.TIER_CONTAINS)
+
+    def test_a_bare_number_word_is_not_close_to_a_keyword(self):
+        short = spec(26, "number", "Kd.-Nr.")
+        self.assertEqual(run(vs.Page("Nr. 4711"), [short])[0], {})
+
+    def test_the_addressee_only_in_the_address_window(self):
+        recipient = spec(27, "word", "Herrn", "Herr", "Frau", "Herrn und Frau")
+        recipient.area = "address"
+        page = layout(
+            (150, [(57, "Herrn")]),
+            (162, [(57, "Max Muster")]),
+            (400, [(57, "Herr"), (150, "Paul Beispiel")]),
+        )
+        found, _ = run(page, [recipient])
+        self.assertEqual(found[27][0].value["value_text"], "Max Muster")
+        self.assertNotIn("Paul Beispiel", texts(found)[27])
+        # A name starts with a capital letter: "und Frau Max Muster" is none.
+        page = layout((150, [(57, "Herrn und Frau Max Muster")]))
+        self.assertEqual(texts(run(page, [recipient])[0])[27][0], "Max Muster")
+        # Without positions nothing is known to be in the window.
+        self.assertEqual(run(vs.Page("Herrn Max Muster"), [recipient])[0], {})
+
     def test_an_iban_needs_a_label(self):
         # Without one it is mostly the reader's own account.
         iban = spec(13, "iban", "IBAN")

@@ -40,6 +40,13 @@ class IntFilemanagerExtractionField(models.Model):
         default=lambda self: self.env.company.currency_id,
         help="Currency of an amount printed without one.",
     )
+    page_area = fields.Selection(
+        [("anywhere", "Anywhere"), ("address", "Address window")],
+        required=True,
+        default="anywhere",
+        help="Where the value is printed. The address window is the addressee's "
+        "address on the first page of a letter, top left.",
+    )
     rule_ids = fields.One2many("int_filemanager.extraction_rule", "field_id")
 
     @api.constrains("name")
