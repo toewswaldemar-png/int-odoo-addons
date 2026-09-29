@@ -177,7 +177,7 @@ class TestV2PreviewHttp(HttpCase):
     def test_text_and_facts_have_no_route(self):
         self._convert()
         self.authenticate("preview_reader", "irrelevant")
-        for kind in ("text", "meta"):
+        for kind in ("text", "words", "meta"):
             with self.subTest(kind=kind):
                 self.assertEqual(self.url_open(self._url(kind=kind)).status_code, 404)
 
@@ -212,7 +212,7 @@ class TestV2PreviewHttp(HttpCase):
         self._convert()
         self.authenticate("preview_reader", "irrelevant")
         self.assertEqual(self.url_open(self._url(revision_id=999999)).status_code, 404)
-        for kind in ("text", "TILE", "../tile", "meta"):
+        for kind in ("text", "words", "TILE", "../tile", "meta"):
             with self.subTest(kind=kind):
                 self.assertEqual(self.url_open(self._url(kind=kind)).status_code, 404)
 

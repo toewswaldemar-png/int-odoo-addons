@@ -60,6 +60,15 @@ META = {
 }
 
 
+WORDS = {
+    "pages": 1,
+    "text": "Hello converter",
+    "words": [
+        {"text": "Hello", "page": 1, "x0": 10.0, "top": 5.0, "x1": 40.0, "bottom": 15.0}
+    ],
+}
+
+
 def answer_for(kind):
     """What the converter would send for a kind, if nothing else is arranged."""
     if kind == "preview_pdf":
@@ -71,6 +80,13 @@ def answer_for(kind):
             "done",
             stream=io.BytesIO(TEXT.encode()),
             mime="text/plain",
+            tool="fake",
+        )
+    if kind == "words":
+        return converter_client.ConversionResult(
+            "done",
+            stream=io.BytesIO(json.dumps(WORDS).encode()),
+            mime="application/json",
             tool="fake",
         )
     if kind == "meta":

@@ -1,14 +1,18 @@
 """Derived files beyond thumbnails: the plan per kind of file, the chain from an office
 document through its PDF, and the text and facts kept in the job rows."""
 
+import contextlib
 import datetime
 import hashlib
 import io
+import json
+from datetime import timedelta
 from unittest.mock import patch
 
+from odoo import fields
 from odoo.tests.common import BaseCase, tagged
 
-from .. import converter_client
+from .. import blobstore, converter_client
 from .. import derivative_plan as plan
 from ..models import int_filemanager_derivative as derivative_module
 from .test_v2_derivative import (
@@ -16,8 +20,10 @@ from .test_v2_derivative import (
     META,
     PDF,
     TEXT,
+    WORDS,
     DerivativeCase,
     FakeConverter,
+    answer_for,
     refused,
 )
 
@@ -39,9 +45,9 @@ class TestJobPlan(BaseCase):
             ("a.heic", ["tile", "preview", "meta"]),
             ("a.CR2", ["tile", "preview", "meta"]),
             ("a.mp4", ["tile", "preview", "meta"]),
-            ("a.pdf", ["tile", "preview", "text", "meta"]),
-            ("a.docx", ["preview_pdf", "tile", "preview", "text"]),
-            ("a.xlsx", ["preview_pdf", "tile", "preview", "text"]),
+            ("a.pdf", ["tile", "preview", "words", "meta"]),
+            ("a.docx", ["preview_pdf", "tile", "preview", "words"]),
+            ("a.xlsx", ["preview_pdf", "tile", "preview", "words"]),
             ("a.mp3", ["tile", "meta"]),
             ("a.flac", ["tile", "meta"]),
             ("a.txt", ["text"]),
@@ -113,10 +119,10 @@ class TestKindsQueue(DerivativeCase):
             got,
             {
                 "a.jpg": ["meta", "preview", "tile"],
-                "d.docx": ["preview", "preview_pdf", "text", "tile"],
+                "d.docx": ["preview", "preview_pdf", "tile", "words"],
                 "s.mp3": ["meta", "tile"],
                 "v.mp4": ["meta", "preview", "tile"],
-                "p.pdf": ["meta", "preview", "text", "tile"],
+                "p.pdf": ["meta", "preview", "tile", "words"],
                 "t.txt": ["text"],
             },
         )
@@ -136,7 +142,7 @@ class TestKindsQueue(DerivativeCase):
         self.Derivative._enqueue_missing()
         rows = self._rows(doc)
         self.assertFalse(rows["preview_pdf"].depends_on_id)
-        for kind in ("tile", "preview", "text"):
+        for kind in ("tile", "preview", "words"):
             self.assertEqual(rows[kind].depends_on_id, rows["preview_pdf"])
         with self.subTest("only the PDF can be taken at first"):
             self.assertEqual(self.Derivative._claim_jobs(), rows["preview_pdf"])
@@ -152,7 +158,7 @@ class TestKindsQueue(DerivativeCase):
             by_kind["preview_pdf"][1:],
             (doc.current_revision_id.blob_id.sha256, "preview_pdf", "pdf", "docx"),
         )
-        for kind in ("tile", "preview", "text"):
+        for kind in ("tile", "preview", "words"):
             self.assertEqual(by_kind[kind][1], pdf_sha, kind)
             self.assertEqual(by_kind[kind][4], "pdf", kind)
 
@@ -170,7 +176,7 @@ class TestKindsQueue(DerivativeCase):
                 "preview_pdf": "not_applicable",
                 "tile": "not_applicable",
                 "preview": "not_applicable",
-                "text": "not_applicable",
+                "words": "not_applicable",
             },
         )
         self.assertEqual([call[2] for call in converter.calls], ["preview_pdf"])
@@ -191,12 +197,21 @@ class TestKindsQueue(DerivativeCase):
         )
         self.assertEqual(self._rows(note)["text"].text, "ab")
 
-    def test_no_text_found_is_a_result_too(self):
-        scan = self._file("scan.pdf", b"pdf bytes")
-        self._run(FakeConverter(by_kind={"text": lambda sha256: text_result(b"")}))
-        job = self._rows(scan)["text"]
+    def test_words_of_a_pdf_are_stored_as_a_blob_not_a_row(self):
+        """Unlike plain text, a PDF's text and word positions can be sizeable: they go
+        into the blob store like a thumbnail, not into a database column."""
+        paper = self._file("paper.pdf", b"pdf bytes")
+        blobs_before = self.Blob.search_count([])
+        self._run()
+        job = self._rows(paper)["words"]
         self.assertEqual(job.state, "done")
+        self.assertTrue(job.derived_blob_id)
         self.assertFalse(job.text)
+        self.assertGreater(self.Blob.search_count([]), blobs_before)
+        with open(
+            blobstore.blob_path(self.env, job.derived_blob_id.sha256), encoding="utf-8"
+        ) as f:
+            self.assertEqual(json.loads(f.read()), WORDS)
 
     def test_an_answer_longer_than_allowed_is_not_taken(self):
         note = self._file("note.txt", b"some text")
@@ -305,3 +320,144 @@ class TestKindsQueue(DerivativeCase):
         self.Blob._gc_blobs_unsafe()
         self.assertFalse(self.Derivative.browse([r.id for r in rows]).exists())
         self.assertFalse(blobs.exists())
+
+
+def running(job_id="job-1"):
+    return converter_client.ConversionResult("running", job_id=job_id)
+
+
+class FakePoller:
+    """Stands in for converter_client.poll; ``answers`` maps a job id to a function
+    of no arguments, called once per poll (a list is consumed in order)."""
+
+    def __init__(self, answers):
+        self.answers = answers
+        self.calls = []
+
+    @contextlib.contextmanager
+    def __call__(self, url, job_id, timeout):
+        self.calls.append(job_id)
+        queue = self.answers[job_id]
+        answer = queue.pop(0) if isinstance(queue, list) else queue()
+        yield answer
+
+
+@tagged("post_install", "-at_install")
+class TestAsyncJobs(DerivativeCase):
+    """A job the converter answers "still working" to: Odoo polls instead of
+    blocking the one cron thread for however long OCR on a scan takes."""
+
+    def _job_of(self, node, kind="words"):
+        return self.Derivative.search(
+            [
+                ("source_blob_id", "=", node.current_revision_id.blob_id.id),
+                ("kind", "=", kind),
+            ]
+        )
+
+    def test_a_running_answer_is_remembered_without_a_result(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self._run(FakeConverter(by_kind={"words": lambda sha256: running("job-1")}))
+        job = self._job_of(paper)
+        self.assertEqual(job.state, "running")
+        self.assertEqual(job.converter_job_id, "job-1")
+        self.assertFalse(job.derived_blob_id)
+        self.assertGreater(job.lease_until, fields.Datetime.now())
+
+    def test_polling_still_running_renews_the_lease_and_changes_nothing_else(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self._run(FakeConverter(by_kind={"words": lambda sha256: running("job-2")}))
+        job = self._job_of(paper)
+        job.lease_until = "2000-01-01 00:00:00"
+        with patch.object(
+            converter_client, "poll", FakePoller({"job-2": [running("job-2")]})
+        ):
+            done_any = self.Derivative._poll_running_jobs("http://x", 5)
+        self.assertFalse(done_any)
+        self.assertEqual(job.state, "running")
+        self.assertEqual(job.converter_job_id, "job-2")
+        self.assertGreater(job.lease_until, fields.Datetime.now())
+
+    def test_polling_done_stores_the_result_and_clears_the_job_id(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self._run(FakeConverter(by_kind={"words": lambda sha256: running("job-3")}))
+        job = self._job_of(paper)
+        with patch.object(
+            converter_client,
+            "poll",
+            FakePoller({"job-3": [answer_for("words")]}),
+        ):
+            done_any = self.Derivative._poll_running_jobs("http://x", 5)
+        self.assertTrue(done_any)
+        self.assertEqual(job.state, "done")
+        self.assertFalse(job.converter_job_id)
+        self.assertTrue(job.derived_blob_id)
+
+    def test_polling_a_failure_finishes_the_job_like_any_other_failure(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self._run(FakeConverter(by_kind={"words": lambda sha256: running("job-4")}))
+        job = self._job_of(paper)
+        with patch.object(
+            converter_client,
+            "poll",
+            FakePoller({"job-4": [refused("not_applicable", "too many pages")]}),
+        ):
+            self.Derivative._poll_running_jobs("http://x", 5)
+        self.assertEqual(job.state, "not_applicable")
+        self.assertFalse(job.converter_job_id)
+
+    def test_the_converter_being_unreachable_while_polling_changes_nothing(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self._run(FakeConverter(by_kind={"words": lambda sha256: running("job-5")}))
+        job = self._job_of(paper)
+        before = job.lease_until
+
+        def unavailable(url, job_id, timeout):
+            raise converter_client.ConverterUnavailable("down")
+
+        with patch.object(converter_client, "poll", unavailable):
+            done_any = self.Derivative._poll_running_jobs("http://x", 5)
+        self.assertFalse(done_any)
+        self.assertEqual((job.state, job.converter_job_id), ("running", "job-5"))
+        self.assertEqual(job.lease_until, before)
+
+    def test_giving_up_after_too_long_counts_as_a_failure_and_is_retried(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self._run(FakeConverter(by_kind={"words": lambda sha256: running("job-6")}))
+        job = self._job_of(paper)
+        job.started_at = fields.Datetime.now() - timedelta(
+            minutes=derivative_module.MAX_JOB_AGE_MINUTES + 1
+        )
+        with patch.object(converter_client, "poll", FakePoller({})):
+            self.Derivative._poll_running_jobs("http://x", 5)
+        self.assertFalse(job.converter_job_id)
+        self.assertEqual((job.state, job.attempts), ("pending", 1))
+        self.assertGreater(job.next_try_at, fields.Datetime.now())
+
+    def test_a_job_still_within_its_lease_is_not_reclaimed_while_running_async(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self._run(FakeConverter(by_kind={"words": lambda sha256: running("job-7")}))
+        job = self._job_of(paper)
+        self.assertNotIn(job, self.Derivative._claim_jobs())
+
+    def test_end_to_end_through_two_cron_runs(self):
+        """The shape a real OCR job takes: one cron run submits and gets "running",
+        the next one polls and gets the finished result."""
+        paper = self._file("paper.pdf", b"pdf bytes")
+        converter = FakeConverter(by_kind={"words": lambda sha256: running("job-8")})
+        with patch.object(converter_client, "convert", converter):
+            self.Derivative._cron_run()
+        job = self._job_of(paper)
+        self.assertEqual(job.state, "running")
+        with (
+            patch.object(converter_client, "convert", converter),
+            patch.object(
+                converter_client,
+                "poll",
+                FakePoller({"job-8": [answer_for("words")]}),
+            ),
+        ):
+            self.Derivative._cron_run()
+        self.assertEqual(job.state, "done")
+        # The queue never re-submitted a fresh "words" job while it was in flight.
+        self.assertEqual(len(converter.of_kind("words")), 1)

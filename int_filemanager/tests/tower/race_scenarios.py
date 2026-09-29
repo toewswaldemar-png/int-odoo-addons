@@ -1056,6 +1056,85 @@ def scenario_derivative_converter_down_then_up(base_url, api_key, fault_file, fi
         raise ScenarioFailed(f"jobs were not done once the converter was back: {state}")
 
 
+_MAKE_SCAN_SCRIPT = """
+import base64, io, json, os
+from PIL import Image
+# Random pixel noise, not a blank page: OCRmyPDF recognises a blank page as empty
+# almost immediately, which would never take long enough to exercise the async path.
+pages = [
+    Image.frombytes("RGB", (600, 800), os.urandom(600 * 800 * 3))
+    for _ in range({pages!r})
+]
+buf = io.BytesIO()
+pages[0].save(buf, "PDF", save_all=True, append_images=pages[1:])
+print("RESULT " + json.dumps(base64.b64encode(buf.getvalue()).decode()))
+"""
+
+_WORDS_STATE_SCRIPT = """
+import json
+from odoo.addons.int_filemanager import blobstore
+sha = {sha!r}
+blob = env["int_filemanager.blob"].sudo().search([("sha256", "=", sha)])
+job = env["int_filemanager.derivative"].sudo().search(
+    [("source_blob_id", "in", blob.ids), ("kind", "=", "words")])
+out = {{"jobs": len(job)}}
+if len(job) == 1:
+    out.update(
+        state=job.state,
+        has_job_id=bool(job.converter_job_id),
+        tool=job.tool,
+    )
+    if job.derived_blob_id:
+        with open(blobstore.blob_path(env, job.derived_blob_id.sha256)) as f:
+            out["pages_in_result"] = json.load(f)["pages"]
+print("RESULT " + json.dumps(out))
+"""
+
+
+def scenario_derivative_ocr_is_polled_not_blocked(
+    base_url, api_key, fault_file, fixtures
+):
+    """A scan too long to OCR within the converter's inline wait budget: the first
+    cron run gets "running" and a job id instead of blocking, a later run collects
+    the finished result by polling - the queue never resubmits it meanwhile.
+    """
+    shell_cmd = _deriv_setup(fixtures)
+    scan_pdf = base64.b64decode(
+        _run_odoo_shell(shell_cmd, _MAKE_SCAN_SCRIPT.format(pages=300))
+    )
+    perform_create_node(
+        base_url,
+        api_key,
+        fixtures["parent_id"],
+        f"race-scan-{time.monotonic_ns()}.pdf",
+        scan_pdf,
+    )
+    sha = hashlib.sha256(scan_pdf).hexdigest()
+    _run_odoo_shell(shell_cmd, _RUN_QUEUE_SCRIPT.format(log=_CONVERT_LOG))
+    running = _run_odoo_shell(shell_cmd, _WORDS_STATE_SCRIPT.format(sha=sha))
+    if running.get("state") != "running" or not running.get("has_job_id"):
+        raise ScenarioFailed(f"expected the first run to still be running: {running}")
+
+    deadline = time.monotonic() + 300
+    state = running
+    while time.monotonic() < deadline and state.get("state") == "running":
+        _run_odoo_shell(shell_cmd, _RUN_QUEUE_SCRIPT.format(log=_CONVERT_LOG))
+        state = _run_odoo_shell(shell_cmd, _WORDS_STATE_SCRIPT.format(sha=sha))
+    if state.get("state") != "done":
+        raise ScenarioFailed(f"OCR job did not finish in time: {state}")
+    if state.get("tool") != "ocrmypdf+pdfplumber":
+        raise ScenarioFailed(f"expected OCR to have run: {state}")
+    if state.get("pages_in_result") != 300:
+        raise ScenarioFailed(f"page count in the result is wrong: {state}")
+    # Only ever submitted once: the "running" answer stopped the queue resubmitting it
+    # (later checks went through poll(), which this log does not even see).
+    submitted = [
+        entry for entry in _convert_log() if entry[1] == sha and entry[2] == "words"
+    ]
+    if len(submitted) != 1:
+        raise ScenarioFailed(f"the scan was submitted more than once: {submitted}")
+
+
 def scenario_crash_derivative_after_link(base_url, api_key, fault_file, fixtures):
     """The worker dies after linking the result file, before the row is committed.
 
@@ -1153,6 +1232,7 @@ SCENARIOS = {
     "derivative_end_to_end": scenario_derivative_end_to_end,
     "derivative_idle_while_converting": scenario_derivative_idle_while_converting,
     "derivative_converter_down_then_up": scenario_derivative_converter_down_then_up,
+    "derivative_ocr_polled": scenario_derivative_ocr_is_polled_not_blocked,
     "crash_derivative_after_link": scenario_crash_derivative_after_link,
     "two_workers_take_different_jobs": scenario_two_workers_take_different_jobs,
 }
