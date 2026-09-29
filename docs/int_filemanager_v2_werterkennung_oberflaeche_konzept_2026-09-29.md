@@ -239,7 +239,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 | U-2 | Server: Kästen beim Vorschlagen, Paare je Kasten mit Lage, Wert aus Markierung | Tests je Richtung wie W-4; Jahresbescheid-Beispiel liefert Infoblock-Paare |
 | U-3 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern, **Prüfstatus** je Dokument (N4); **unsichere Werte zuerst**, Plausibilitäts-/Dubletten-Hinweise, **abweichende IBAN** (Abschnitt 9) | eine Datei prüfen und speichern ohne Kasten |
 | U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Farben/Hover | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
-| U-5 | Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument; N3: Vorrang nur mit eindeutigem Anker, „gemerkte Kästen verwerfen“), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
+| U-5 | „daraus nicht lernen“ und Verwalter-Übersicht des Gelernten (N5); Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument; N3: Vorrang nur mit eindeutigem Anker, „gemerkte Kästen verwerfen“), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
 | U-6 | Nachlesen (Umwandler), QR automatisch je Dokument (U5, 5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
 | U-7 | **Kontakt aus Dokument** (vorbelegtes Odoo-Kontaktformular, nur mit Odoos Recht „Kontakte: Anlegen“, U8), Namensvarianten je Kontakt | neuer Absender wird mit zwei Klicks Kontakt, Varianten finden ihn wieder |
 | U-8 | **Werte nutzen**, sobald durch das Prüfen echte Werte entstehen (U9): Suchfilter über erkannte Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, „Zum selben Vorgang“ | „Gesamtbetrag > 500 €“ und „Nebenkosten je Jahr“ funktionieren mit Odoo-Bordmitteln |
@@ -392,8 +392,10 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
   Merkmal am Knoten: ungeprüft / geprüft (von, am) / automatisch übernommen – getrennt vom Freigabestatus (`status_id`).
   Grundlage für den Filter „automatisch, nie angesehen“ (U1), die Abarbeitungsliste und „Speichern und weiter“ zum
   nächsten ungeprüften Dokument. Pflichtfelder erst mit Dokumentarten (U4), sonst gälten sie für jedes Dokument.
-- **N5** Gegensteuer beim Lernen: Häkchen „daraus nicht lernen“ beim Speichern und eine Verwalter-Liste des Gelernten
-  (ansehen, löschen)? *Empfehlung: ja.*
+- ~~**N5**~~ **entschieden (Nutzer 2026-09-29):** (1) Häkchen **„daraus nicht lernen“** beim Speichern (Werte speichern,
+  nichts merken); (2) **Verwalter-Übersicht des Gelernten** je Absender (Beschriftungen und Kästen, Datum, Anzahl
+  Bestätigungen, zuletzt von wem) als normale Odoo-Liste, Einträge einzeln löschbar. **Nicht:** verzögertes Umlernen erst
+  nach zweimaliger Abweichung (schwer nachvollziehbar; mit 1 und 2 lassen sich Fehler beheben).
 - **N6** Eine Farbe je Feld oder nur die gerade aktive Stelle hervorheben (Vorschläge dezent umrandet)?
   *Empfehlung: nur aktive Stelle kräftig, übrige dezent.*
 - **N7** Neu entdeckt: **Ablageregeln** nach PaperOffice-Vorbild – aus erkannten Werten Dateiname (z. B.
