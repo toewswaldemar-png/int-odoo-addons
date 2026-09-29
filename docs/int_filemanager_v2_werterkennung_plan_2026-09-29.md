@@ -252,6 +252,53 @@ Worker blockieren. Odoo selbst nimmt das bei Admin-Regex hin (2.1). Vorschlag: M
 gegen einen Beispieltext testen. Die Grenze des Workers (`limit_time_real`) bleibt das Netz. Alternativen stehen in
 Entscheidung E3.
 
+## 5a. Allgemeine Erkennung (E12, verbindlich statt 5.1 Punkt 3 und 5)
+
+Nutzerentscheidung 2026-09-29: nicht mehr Stichwort für Stichwort suchen („von Dokument zu Dokument hangeln“),
+sondern **(1) erst alle Beschriftung-Wert-Paare über das Layout finden, dann unscharf den Feldern zuordnen** und
+**(2) aus jeder Bestätigung pro Absender lernen**; (3) ein lokales KI-Modell erst, wenn die Quote auf dem Prüfteil
+nicht reicht.
+
+**Vorbild im Odoo-Kern (nachgesehen):** `base_import` ordnet Spaltenüberschriften einer Importdatei Feldern zu –
+dasselbe Problem. `_get_mapping_suggestion`: (a) zuerst eine **gemerkte Zuordnung** aus `base_import.mapping`
+(`res_model`, `column_name` → `field_name`; nach jedem erfolgreichen Import gespeichert, die zuletzt gewählte
+gewinnt), (b) exakter Treffer auf technischen Namen, Bezeichnung oder Übersetzung (`casefold`), (c) **unscharf**:
+`1 - difflib.SequenceMatcher(None, a, b).ratio()` < `FUZZY_MATCH_DISTANCE = 0.2`, aber **nur gegen Felder, deren Art
+zum Inhalt der Spalte passt** (`_filter_fields_by_types`), (d) je Feld bleibt nur der nächste Treffer
+(`_deduplicate_mapping_suggestions`). Die Methode ist an Import-Spalten gebunden und nicht aufrufbar; nachgebaut wird
+das Muster, `difflib` (Standardbibliothek) wie dort.
+
+**Ablauf je Dokument (W-4):**
+1. **Wert-Kandidaten** aller Arten, die in aktiven Feldern vorkommen, über den ganzen Text (`value_types.find`).
+   Nummern und Wörter nur als Wert eines Paars, nie allein (sie stehen überall).
+2. **Beschriftung zu jedem Kandidaten**, in fester Reihenfolge der Richtungen: (a) Text **davor** im selben
+   Abschnitt (bis zum Tabulator/Zeilenanfang, höchstens 6 Wörter, endet oft mit „:“), (b) Abschnitt **links**
+   daneben in derselben Zeile, (c) Abschnitt **darüber** (linksbündig, nächste Zeile), (d) Abschnitt **darunter**
+   (Briefkopf-Informationsblock, fünfte Probe), (e) **Spaltenkopf** einer Tabelle. Bezugspunkt ist immer der Anfang
+   des Beschriftungs-Abschnitts, nicht ein einzelnes Wort darin. Abstände werden am Übungsteil eingestellt.
+3. **Zuordnung Beschriftung → Feld** wie `base_import`: (a) gelernter Hinweis für diesen Absender, (b) exakt nach
+   Normalisierung (casefold, Satzzeichen/Bindestriche weg, „nr“/„no“ → „nummer“), auch wenn das Stichwort ein Teil
+   der Beschriftung ist („unsere Kundennummer bei Ihnen“ enthält „kundennummer“), (c) unscharf (`difflib`, Abstand
+   < 0,2) gegen alle Stichwörter der Felder, **deren Art zum Kandidaten passt**. Ein Kandidat gehört höchstens zu
+   einem Feld, ein Feld bekommt den besten Kandidaten, die nächsten bis zu 4 als Alternativen.
+4. **Eigene Firmendaten überspringen (E10):** USt-IdNr., Bankkonten (`res.partner.bank.sanitized_acc_number`) und
+   E-Mail-Domain der Partner aller `res.company` – nie als Wert, nie für den Kontakt-Vorschlag.
+5. **Absender (Kontakt-Vorschlag):** Suchplan wie `account` `_import_retrieve_customer` (USt-IdNr. → Bankkonto →
+   E-Mail/Domain → Name), ohne eigene Firmen.
+6. **Nicht zugeordnete Paare** werden mit ausgegeben („gefunden: *Vorgangsnummer 4711* – welches Feld?“), damit die
+   Oberfläche daraus später ein Stichwort lernen kann.
+
+**Lernen (W-5), Muster `base_import.mapping`:** neues Modell `int_filemanager.extraction_hint`: `partner_id`
+(Absender; leer = für alle), `field_id`, `label` (normalisierte Beschriftung), `direction`, Position der Beschriftung
+auf der Seite (für Dokumente, die immer gleich aussehen), `hit_count`, `last_date`. Beim Übernehmen eines Werts, der
+über eine Beschriftung gefunden wurde, wird der Hinweis angelegt oder aktualisiert (die letzte Bestätigung gewinnt,
+wie in `base_import`); ein von Hand korrigierter Wert legt einen Hinweis mit der Beschriftung an, die neben dem
+korrigierten Wert steht, falls es eine gibt. Rechte wie Felder/Regeln (lesen alle, schreiben nur über die Methode).
+
+**Messen:** Trefferquote je Feld am Übungsteil (einstellen) und am Prüfteil (andere Absender, erst am Ende), jeweils
+**ohne** und **mit** gelernten Hinweisen (zweiter Durchlauf nach Bestätigung des ersten Dokuments je Absender) – die
+Differenz zeigt, was das Lernen bringt.
+
 ## 6. Scheiben und Abnahme
 
 | # | Inhalt | Abnahme |
@@ -259,8 +306,8 @@ Entscheidung E3.
 | W-1 | Umwandler: Wortliste v2 (5.4), Text in `derivative.text` | Umwandler-Tests; `run_formats.py` über die 95 Testdateien ohne Unerwartetes; Zeichenbereiche stimmen mit dem Text überein (Test über alle Wörter) |
 | W-2 | Datenmodell 4 (geänderte Fassung), Rechte, Startbelegung, `de.po` | Frischinstallation + Update von 19.0.1.15.0; A1-Test (Nicht-Admin sieht Werte fremder Bereiche nicht) |
 | W-3 | Umwandeln/Prüfen je Typ als reine Funktionen | Tabellentests mit Grenzfällen (OCR-Fehler, `1.234,56`/`1,234.56`/`1234,5`, Monatsnamen, IBAN mit Leerzeichen, USt-IdNr. ohne Präfix) |
-| W-4 | Vorschlagen (5.1) inkl. Kontakt/Tags | Odoo-Tests; kalter Cache (`invalidate_all`, Lehre aus dem `sudo`-Fehler in Schritt 3) |
-| W-5 | Übernehmen (5.2), N1 | HttpCase: Nicht-Admin per `call_kw` und JSON-2 auf fremden Knoten → Zugriff verweigert; alte `revision_id` → Fehler |
+| W-4 | Vorschlagen nach 5a (Paare über Layout, unscharfe Zuordnung, eigene Firma überspringen) inkl. Kontakt/Tags | Odoo-Tests; kalter Cache (`invalidate_all`, Lehre aus dem `sudo`-Fehler in Schritt 3) |
+| W-5 | Übernehmen (5.2), N1, Lernen pro Absender (5a, `extraction_hint`) | HttpCase: Nicht-Admin per `call_kw` und JSON-2 auf fremden Knoten → Zugriff verweigert; alte `revision_id` → Fehler |
 | W-6 | **Messung an echten Dokumenten**: 20–30 echte Rechnungen/Briefe mit Sollwerten in einer TSV-Datei (Ablage nur auf Tower, nicht im Repo – Kundendaten) | Trefferquote je Feld dokumentiert; Zielwert legt der Nutzer nach der ersten Messung fest |
 
 **Stand W-1 (2026-09-29):** gebaut und getestet.
@@ -371,6 +418,58 @@ Entscheidung E3.
   ohne Präfix Fehltreffer (etwa jede zehnte 9-stellige Zahl hat eine gültige deutsche Prüfziffer) – USt-IdNr. und
   Nummern nur in der Nähe eines Stichworts suchen.
 
+**Stand W-4 (2026-09-29):** gebaut nach 5a, ohne Oberfläche, nichts wird gespeichert.
+- `int_filemanager/value_suggest.py` (ohne Datenbank): `Page` (Text + Wörter, Abschnitte zwischen Tabulator/
+  Zeilenumbruch, je Seite gruppiert), Beschriftungen je Wert aus allen Richtungen (davor bis 6 Wörter, Abschnitt links,
+  darüber – durch Tabellenzeilen mit Werten derselben Art bis zum Spaltenkopf –, darunter; ausgerichtet am linken Rand
+  des Abschnitts oder überlappend; Abstand bis 20 pt), Zuordnung wie `base_import` (gelernt → exakt → enthalten →
+  unscharf `difflib` < 0,2, nur Felder passender Art), `suggest()` vergibt gierig nach (Stufe, Richtung, übersprungene
+  Zeilen, Güte, Abstand, Stelle): ein Wert ist höchstens bei **einem** Feld bester Vorschlag, bei anderen darf er
+  Alternative sein; bis 4 Alternativen je Feld; nicht zugeordnete Paare (bis 30) werden mitgeliefert. Regex-Regeln
+  laufen über den ganzen Text, ihr Treffer muss ganz ein Wert der Art sein; Muster über 1 s werden gemeldet.
+- `int_filemanager.node.suggest_field_values(node_id)`: Leserecht auf den Knoten (als Nutzer), Text der **aktuellen**
+  Fassung aus der Wortliste (`words`, aktuelle Spec) oder dem Text (`text`, ohne Lage); `state` „pending“, solange
+  gelesen wird, „none“ ohne Text (Bild, kaputte Wortliste – wird geprüft und fällt zurück statt abzustürzen). Eigene
+  Firmen (E10): USt-IdNr., Bankkonten, Mail- und Website-Domains aller `res.company` werden übersprungen. Absender:
+  USt-IdNr. (auch ohne Länderkürzel gespeichert) → Bankkonto → Mailadresse → Domain = Website einer Firma (ein
+  Mail-Anbieter ist niemandes Website) → ganzer Firmenname im Briefkopf (erste Seite, ein SQL-Vergleich mit den
+  Wortfolgen statt Name für Name); zurückgegeben nur eine Firma, die der Nutzer lesen darf. Tags: Name als ganzes Wort
+  oder ganze Wortfolge, ein Durchlauf, höchstens 10. Einstellungen (Währungen, Firma) mit `sudo`.
+- Startkatalog nach E11 um Anfrage-, Angebots-, Bestell-, Auftrags-, Lieferschein- und Gutschriftnummer ergänzt (27
+  Felder), Dokumentdatum kennt diese Belegwörter.
+- Nebenbei behoben (fünfte Probe): W-3 erkennt IBAN mit Leerzeichen nach dem Länderkürzel, ein Datum zählt nicht als
+  Nummer; Umwandler liest doppelt gedruckten Fettdruck einmal (`dedupe_chars`, Wortliste Spec `v3`, 56 Umwandler-Tests).
+- **Gegengelesen mit Codex, 5 Befunde, alle behoben:** Kontakt-Vorschlag prüfte die Rechte am gefundenen Kontakt statt
+  an der zurückgegebenen Firma und las Namen vor der Rechteprüfung (jetzt: Firma prüfen, dann lesen); Tags und
+  Firmennamen liefen je Eintrag über den ganzen Text; kaputte Wortliste führte zum Absturz; Suchplan ohne USt-IdNr.
+  ohne Präfix und ohne Domain; Beschreibung „ein Wert gehört zu einem Feld“ präzisiert.
+- **Laufzeit über die Sammlung** (alte Wortlisten, 513 Dokumente): erste Fassung im Median 0,23 s, **Ausreißer 120 s**
+  bei 1970 Wörtern – Profil: 843.000 `difflib`-Vergleiche mit langen Fließtext-Abschnitten als „Beschriftung“. Jetzt
+  Beschriftungen höchstens 6 Wörter, Vergleich je Beschriftung nur einmal, schnelle Obergrenzen von `difflib` vorweg:
+  **Median 0,03 s, höchstens 1,6 s**, 0 Fehler.
+- **Fettdruck-Bereinigung war langsam:** pdfplumbers `Page.dedupe_chars()` stellt die Reihenfolge mit
+  `list.index` je Zeichen wieder her (quadratisch) – 68 s für ein digitales 5-Seiten-PDF mit 76.000 Zeichen (im
+  Lauf über die Sammlung 138 s unter Last). Eigene `_dedupe_chars` im Umwandler mit denselben Regeln aus pdfplumbers
+  `cluster_objects`, Reihenfolge über `page.filter`: an den drei langsamsten Dateien **Zeichen für Zeichen gleich**,
+  0,3 s statt 68 s; Test vergleicht mit pdfplumbers Ergebnis (57 Umwandler-Tests). Wortlisten `v3` der Sammlung:
+  513 PDFs, 0 Fehler, 0 kaputte Zeichenbereiche.
+- **Rundungsfalle bei der unscharfen Grenze:** `1 - 0.8` ist in Gleitkomma 0,19999999999999996 < 0,2, damit galt
+  „Betrag“ als nah an „Endbetrag“ (Ähnlichkeit genau 0,8) – in 113 Dokumenten war das der Spaltenkopf einer
+  Postentabelle, also ein Einzelposten statt des Gesamtbetrags (die Falle der ersten Probe). Aufgefallen, weil ein
+  Vorfilter die Zahl änderte; jetzt ist die Grenze streng und rundungssicher, Test hält „Betrag“ ≠ „Endbetrag“ fest.
+  `base_import` rechnet genauso (`_get_distance` < `FUZZY_MATCH_DISTANCE`) und hat dieselbe Grenzunschärfe.
+- **Abdeckung über die Sammlung** (Wortlisten `v3`, nur Anzahl Dokumente mit einem Vorschlag, noch nicht ob er
+  stimmt): Dokumentdatum 206, E-Mail 152, IBAN 142, Kundennummer 131, USt-IdNr. 130, Rechnungsnummer 93, Gesamtbetrag
+  85, Abrechnungszeitraum 84, Fällig am 60, Mandatsreferenz 47, Vertragsnummer 45, Auftragsnummer 40, Lieferbeginn 38;
+  Energiefelder und Geschäftsbelege selten (die Sammlung ist überwiegend privat). Im Schnitt 27,6 nicht zugeordnete
+  Paare je Dokument (Telefon, Postleitzahl, Hausnummer …) – für die Oberfläche später filtern.
+- Fünfte Probe (Einkaufsanfrage) danach: Kundennummer, Dokumentdatum, Anfragenummer richtig, eigene IBAN/USt-IdNr./
+  E-Mail übersprungen, „Unsere Bezugsnummer“ als nicht zugeordnetes Paar.
+- Tests: `test_v2_value_suggest.py` (18, nachgebaute Seiten je Richtung), `test_v2_field_value_suggest.py` (14,
+  Rechte, Zustände, eigene Firma, Absender, Tags, Codex-Befunde); gesamt 467 Odoo-Tests grün, `v2check` ohne Befund.
+- **Offen:** Trefferquote (W-6, Übungs-/Prüfteil nach Absendern); Lernen pro Absender (W-5, `extraction_hint`); die
+  Grenzwerte (6 Wörter, 20 pt, 10 Zeilen) sind noch Schätzwerte aus den Proben und werden am Übungsteil eingestellt.
+
 ## 7. Entscheidungen
 
 **Alle Empfehlungen E1–E9 vom Nutzer übernommen (2026-09-29, „dann leg los“).** Ergänzend aus den Proben (8):
@@ -389,6 +488,14 @@ vorgemerkt; kein Einzeichnen von Feldern auf dem PDF.
 
 | E8 | Einfacher **Stichwort-Modus** für eigene Felder (Stichwörter + Art eintragen, das System baut das Suchmuster), Regex nur für Sonderfälle | ja – ohne ihn kann ein Nicht-Programmierer keine eigenen Felder anlegen |
 | E9 | Vorhandene Textebenen gescannter PDFs neu erkennen (OCRmyPDF `--redo-ocr`, ersetzt nur unsichtbaren Scanner-Text, echter Text bleibt) statt ihnen zu vertrauen | ja (siehe 8) |
+| E10 | Eigene Firmendaten (IBAN, USt-IdNr., E-Mail einer eigenen Firma in Odoo) im Dokument | **überspringen** – nie als Feldwert vorschlagen, nie für den Kontakt-Vorschlag nutzen (Nutzer 2026-09-29, nach fünfter Probe) |
+| E11 | Geschäftsbelege im Startkatalog | **ja, getrennte Felder je Belegart** (Anfrage-, Angebots-, Bestell-, Auftrags-, Lieferschein-, Gutschriftnummer), Dokumentdatum sucht auch neben diesen Wörtern (Nutzer 2026-09-29) |
+| E12 | Erkennung verallgemeinern statt Stichwort für Stichwort | **(1) Paare über Layout + unscharfe Zuordnung und (2) Lernen pro Absender jetzt**, (3) lokales KI-Modell erst, wenn die Quote auf dem Prüfteil nicht reicht (Nutzer 2026-09-29; Tower: i7-4770K, 16 GB, keine Grafikkarte – ein kleines Modell bräuchte grob 0,5–3 min je Dokument) |
+
+**Messung an der Sammlung (Nutzer 2026-09-29):** Einstellungen (Suchweite, Abstände, Reihenfolge der Richtungen)
+nur als allgemeine Regeln, nie für ein einzelnes Dokument. Für W-6 wird die Sammlung **nach Absendern** in einen
+Übungsteil (daran einstellen) und einen Prüfteil (erst am Ende messen, vorher nicht ansehen) geteilt; die Quote des
+Prüfteils gilt als Erwartung für neue Dokumente.
 
 **Bewusst nicht in Punkt 1:** Oberfläche und Hervorhebungs-Viewer; E-Rechnungs-XML (2.5); Zuordnungsregeln an Tags
 nach Paperless-Art; Lernen/KI; OCR für Bilddateien (JPG/TIFF-Scans bekommen heute keine `words` und damit keine
@@ -466,3 +573,19 @@ IBAN mit falsch gesetzter Lücke); neue Erkennung 7 s für 2 Seiten.
   innerhalb einer Zeile markieren (z. B. als Tabulator), damit auch die Textsuche Spaltengrenzen kennt. (3) Die
   Korrekturen entstanden nach Ansicht dieses Dokuments; die ersten drei Proben sind gelöscht und konnten nicht erneut
   geprüft werden → für W-6 eine **feste Testsammlung auf Tower** anlegen, gegen die jede Regeländerung läuft.
+**Fünfte Probe: Einkaufsanfrage der eigenen Firma an einen Lieferanten** (digital, 1 Seite, 2026-09-29, erste Probe
+eines Geschäftsbelegs; Kopie nur zeitweise auf Tower). Umwandler 4 s, Text fehlerfrei bis auf Fettdruck. Mit W-3 und
+einem Wegwerf-Prototyp von W-4 (Startkatalog, Richtungen dahinter/rechts/darunter/darüber): Kundennummer **falsch**
+(„1“ statt der richtigen Nummer), Dokumentdatum und Anfragenummer nicht gefunden, IBAN/USt-IdNr./E-Mail gefunden, aber
+alle von der **eigenen** Firma. Ursachen, alle allgemein:
+- **Beschriftung unter dem Wert:** der Informationsblock des Briefkopfs druckt den Wert und darunter klein die
+  Beschriftung („unsere Kundennummer bei Ihnen“, „Unser Bearbeiter“), gleich linksbündig. Der Prototyp suchte
+  darüber, richtete sich aber am Stichwort („Kundennummer“, zweites Wort) statt am Anfang der Beschriftung
+  („unsere …“) aus und landete bei „Seite 1 von 1“. → W-4 sucht auch **darüber**, ausgerichtet am Anfang des
+  Beschriftungs-Abschnitts (bis zum nächsten Tabulator), und nur in dessen Breite.
+- **IBAN mit Leerzeichen nach dem Länderkürzel** („DE 73 5605 …“) erkennt W-3 nicht. → W-3 korrigieren.
+- **Fettdruck doppelt:** das PDF druckt fette Schrift zweimal leicht versetzt, die Wortliste enthält „SSeehhrr
+  ggeeeehhrrttee“. pdfplumber 0.11.10 im Umwandler bringt `Page.dedupe_chars()` mit (live geprüft: danach „Sehr
+  geehrte Damen und Herren,“, 1818 → 1665 Zeichen). → Umwandler korrigieren, Wortliste neu erzeugen.
+- **Eigene Firmendaten im Fuß** (Bankverbindungen, USt-IdNr., E-Mail) → E10.
+- **Geschäftsbelege fehlen im Katalog**, das Datum steht ohne Beschriftung neben „ANFRAGE <Nummer>“ → E11.

@@ -134,11 +134,16 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    - **W-3 fertig** (Plan 6 „Stand W-3“): `int_filemanager/value_types.py` findet und prüft Werte je Art ohne
      Datenbank (`find`/`parse`), mit Reparatur von Lesefehlern nur bei Prüfziffer-Arten. Befund: `stdnum.iban` ist in
      Odoo wegen Odoos eigenem Import-Haken nicht ladbar – IBAN-Prüfung deshalb über `numdb.read` + Modulo 97.
-   - **Nächster Schritt W-4** (Vorschlagen, Plan 5.1): je Feld die Regeln anwenden – Stichwort-Modus sucht den Wert
-     im Text hinter dem Stichwort **und** nach Seitenlage (rechts daneben, direkt darunter) über die Wortpositionen
-     der v2-Liste; Regex-Modus mit Gruppe; dann `value_types.find` auf dem Ausschnitt; Position je Kandidat aus der
-     Wortliste; Kontakt- und Tag-Vorschlag; Rechenzeit je Muster messen. Danach W-5 (Übernehmen, N1-Test), W-6
-     (Sollwerte für 30–50 Dokumente der Sammlung mit dem Nutzer abhaken, feste Testsammlung).
+   - **W-4 fertig** (Plan 5a und 6 „Stand W-4“, Nutzerentscheidungen E10–E12): allgemeine Erkennung über
+     Beschriftung-Wert-Paare aus allen Richtungen und unscharfe Zuordnung wie `base_import`
+     (`int_filemanager/value_suggest.py`, `node.suggest_field_values`), eigene Firma übersprungen, Absender und Tags;
+     Startkatalog 27 Felder (Geschäftsbelege); Umwandler liest Fettdruck einmal (Spec `v3`). Neue Wortlisten der
+     Sammlung: `/mnt/user/test/werterkennung_words_v3/` (Aufruf siehe `docs/prototypes/werterkennung/README.md`).
+   - **Nächster Schritt W-5** (Übernehmen, Plan 5.2 und 5a „Lernen“): Methode am Knoten schreibt bestätigte Werte
+     (Schreibrecht, aktuelle Fassung, erneutes Prüfen mit `value_types.parse`, je Feld ersetzen, Chatter-Notiz),
+     neues Modell `int_filemanager.extraction_hint` (Lernen pro Absender wie `base_import.mapping`), N1-Test per
+     `call_kw` und JSON-2. Danach W-6: Sammlung nach Absendern in Übungs- und Prüfteil teilen, Sollwerte mit dem
+     Nutzer abhaken, Grenzwerte am Übungsteil einstellen, Quote am Prüfteil messen (ohne/mit Lernen).
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
 2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
    `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`). **Für die Werterkennung**
