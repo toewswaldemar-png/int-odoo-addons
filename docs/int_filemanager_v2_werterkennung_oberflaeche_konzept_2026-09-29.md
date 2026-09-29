@@ -125,8 +125,9 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 - **Links das Dokument** (alle Seiten untereinander, Zoom, Seitenleiste), **rechts die Felder**; Trennlinie ziehbar
   (`ResizablePanel`); auf schmalen Bildschirmen Reiter „Dokument / Werte“; Knopf „eigenes Fenster“ legt das
   Dokument auf einen zweiten Bildschirm.
-- **Farben:** jedes Feld hat eine Farbe (wie PaperOffice); sein Wert ist im Dokument in derselben Farbe umrandet,
-  Alternativen gestrichelt. Hover über eine Zeile rechts hebt die Stelle links hervor und umgekehrt.
+- **Markierung (N6):** alle gefundenen Werte im Dokument dezent umrandet; das gerade gezeigte oder gewählte Feld wird
+  kräftig hervorgehoben, das Dokument scrollt dorthin (auch auf eine andere Seite); Hover im Dokument hebt umgekehrt
+  die Zeile rechts hervor. Keine feste Farbe je Feld.
 
 ### 4.3 Die drei Werkzeuge im Dokument
 
@@ -238,7 +239,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 | U-1 | **Volltextsuche** im gelesenen Text (`derivative.text`) in der Dateisuche wieder anbinden, dazu **Formularfeld-Werte** in Wortliste und Text (N1) – die v2-Suche findet heute nur Name, Tags, Status, Kontakt (v1 konnte den Inhalt durchsuchen) | ein Wort, das nur im Dokument steht, findet die Datei; Suche bleibt bei großen Ordnern schnell |
 | U-2 | Server: Kästen beim Vorschlagen, Paare je Kasten mit Lage, Wert aus Markierung | Tests je Richtung wie W-4; Jahresbescheid-Beispiel liefert Infoblock-Paare |
 | U-3 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern, **Prüfstatus** je Dokument (N4); **unsichere Werte zuerst**, Plausibilitäts-/Dubletten-Hinweise, **abweichende IBAN** (Abschnitt 9) | eine Datei prüfen und speichern ohne Kasten |
-| U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Farben/Hover | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
+| U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Hervorheben aktive Stelle ↔ Feld (N6) | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
 | U-5 | „daraus nicht lernen“ und Verwalter-Übersicht des Gelernten (N5); Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument; N3: Vorrang nur mit eindeutigem Anker, „gemerkte Kästen verwerfen“), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
 | U-6 | Nachlesen (Umwandler), QR automatisch je Dokument (U5, 5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
 | U-7 | **Kontakt aus Dokument** (vorbelegtes Odoo-Kontaktformular, nur mit Odoos Recht „Kontakte: Anlegen“, U8), Namensvarianten je Kontakt | neuer Absender wird mit zwei Klicks Kontakt, Varianten finden ihn wieder |
@@ -396,8 +397,9 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
   nichts merken); (2) **Verwalter-Übersicht des Gelernten** je Absender (Beschriftungen und Kästen, Datum, Anzahl
   Bestätigungen, zuletzt von wem) als normale Odoo-Liste, Einträge einzeln löschbar. **Nicht:** verzögertes Umlernen erst
   nach zweimaliger Abweichung (schwer nachvollziehbar; mit 1 und 2 lassen sich Fehler beheben).
-- **N6** Eine Farbe je Feld oder nur die gerade aktive Stelle hervorheben (Vorschläge dezent umrandet)?
-  *Empfehlung: nur aktive Stelle kräftig, übrige dezent.*
+- ~~**N6**~~ **entschieden (Nutzer 2026-09-29): nur die aktive Stelle kräftig**, alle übrigen Funde dezent umrandet,
+  gegenseitiges Hervorheben Feld ↔ Stelle mit Mitscrollen. Umschalter „alle farbig anzeigen“ nur, falls er beim
+  Ausprobieren fehlt.
 - **N7** Neu entdeckt: **Ablageregeln** nach PaperOffice-Vorbild – aus erkannten Werten Dateiname (z. B.
   „2025-01-23 Jahresbescheid Wasser.pdf“), Zielordner und Tags vorschlagen? *Empfehlung: später, mit dem Eingangsordner.*
 - **N8** Feldarten **Auswahlliste** und **Ankreuzfeld** ergänzen? *Empfehlung: bei Bedarf.*
