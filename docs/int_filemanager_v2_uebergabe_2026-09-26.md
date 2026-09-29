@@ -184,6 +184,8 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
 4. Danach wie im Kern (Abschnitt 11) vorgesehen: Schritt 6 (Office/ONLYOFFICE), Schritt 7 (Eingangsordner),
    Schritt 8 (Übernahme des Bestands) – siehe Punkt 10 unten für schon gesammelte Vorüberlegungen dazu.
 
+**Rennszenarien 2026-09-30 (Dauerlauf A1):** `race.sh` auf Tower in Wegwerf-Umgebung `dl_race` (Zwei-Worker-Odoo) nachgelaufen: alle 17 Szenarien grün (u. a. `move_against_delete`, `lock_timeout_triggers_retry`, `upload_large_resume`, `crash_*`, `derivative_*`, `two_workers_take_different_jobs`), Laufzeit ca. 3 min 45 s; Container, Datenbank und Verzeichnis danach entfernt.
+
 **Stand 2026-09-30:** Das Prüf-Fenster-Konzept ist bis Commit `c94cac1` fertig durchentschieden (U1–U9, N1–N9), aber weiterhin ohne Freigabe. Für unbeaufsichtigte Läufe gibt es die Aufgabenliste `docs/int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md` (nur Aufgaben ohne offene Entscheidung; Fortschritt steht dort).
 
 **Offene Kleinigkeiten aus Schritt 5, nicht blockierend:**

@@ -36,9 +36,10 @@ Aufgabenrunde, sonst gezielte Tests.
 
 Reihenfolge = Priorität. Kästchen `[ ]` offen, `[x]` fertig (mit Commit-Hash und einem Satz Ergebnis).
 
-- [ ] **A1 Rennszenarien nachlaufen lassen.** `tools/v2check/race.sh` ist seit W-1 nicht mehr gelaufen. Zwei-Worker-Instanz
+- [x] **A1 Rennszenarien nachlaufen lassen.** `tools/v2check/race.sh` ist seit W-1 nicht mehr gelaufen. Zwei-Worker-Instanz
   auf Tower aufsetzen (Präfix `dl_`), Szenarien laufen lassen, Ergebnis in Übergabe 4.0 eintragen, aufräumen.
   Fertig, wenn: alle Szenarien grün oder jede rote Stelle mit Ursache dokumentiert.
+  **Ergebnis (Commit siehe Log, Basis 1eec795):** Alle 17 Szenarien grün (Kopie von `race.sh` mit `dl_`-Namen, ca. 3 min 45 s), aufgeräumt, in Übergabe eingetragen.
 - [ ] **A2 Testlücken Schritt 3 klären.** `lock_timeout_triggers_retry` (fehlende „Sperre halten“-Stufe in `tests/tower/fault.py`)
   und `move_against_delete` (`trash()` ohne `fault_point`) sowie A4 (Aufräumjob ohne Auslöser): je Lücke Lösung mit
   Alternativen und Aufwand als Entwurf beschreiben. Nur reinen Testcode (`fault.py`, Treiber) darf Claude ändern; alles, was
