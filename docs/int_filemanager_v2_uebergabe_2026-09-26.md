@@ -144,15 +144,18 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
      vom Server aus der Wortliste abgeleitet), **N1 in v2 zu** (Test über `call_kw` und JSON-2). Version 19.0.1.17.0.
    - **W-6 läuft – Runde 1 von 4 fertig** (Plan 6 „Stand W-6“): Übungsteil 10 Dokumente, 84 % der bewerteten Vorschläge
      richtig, ≈ 81 % der vorhandenen Werte gefunden; vier allgemeine Befunde notiert, noch nicht umgesetzt.
-   - **Einstieg neue Sitzung – Runde 2:** (1) Befunde 1–3 aus Plan 6 „Stand W-6“ als allgemeine Regeln umsetzen, mit
-     Tests; (2) Vorschläge der festen Stichprobe neu berechnen (`w6_sample.py`, Aufruf in
-     `docs/prototypes/werterkennung/README.md`, Abschnitt W-6); (3) Runde 1 automatisch nachprüfen: dieselben 10
-     Dokumente gegen `runde1.json` – nichts, was dort richtig war, darf falsch werden; (4) Seite für Runde 2 bauen
-     (`w6_review.py <temp>/w6_sample.json 2 10 10`, Übungsdokumente 11–20) und dem Nutzer den Pfad geben; nach dem
-     Speichern `werterkennung_runde2.json` aus Downloads als `runde2.json` nach Tower, lokale Kopien löschen.
-     Runde 3 = Übungsdokumente 21–24 + ggf. Nachschärfen, **Runde 4 = Prüfteil (16 Dokumente, `check`) erst ganz am
-     Ende, ohne danach etwas einzustellen** – deren Quote ist die ehrliche Erwartung für neue Absender (ohne und mit
-     Lernen messen).
+   - **Vor Runde 2 erledigt (2026-09-29, Plan 6 „Stand W-6 vor Runde 2“):** Befund 1 (Stichwort nur am Wortende, ≥ 30 %,
+     ≤ 3 Wörter danach, Beschriftung vor dem Wert nach der letzten Zahl, keine einstelligen Nummern) und Befund 3
+     (USt-IdNr. ohne Beschriftung; **IBAN nicht**, Nutzerentscheidung) umgesetzt, 491 Tests grün; **Befund 2
+     (Anschriftenfeld) auf Nutzerwunsch zurückgestellt**. Runde 1 automatisch nachgeprüft (`w6_recheck.py 1`):
+     84 % → 90 %, nichts Richtiges falsch geworden. Vorschläge neu berechnet, Seite Runde 2 gebaut
+     (`%TEMP%\w6r2\werterkennung_runde2.html` auf dem Arbeitsrechner, Übungsdokumente 11–20).
+   - **Einstieg neue Sitzung – Runde 2 auswerten:** sobald der Nutzer gespeichert hat, `werterkennung_runde2.json` aus
+     Downloads als `runde2.json` nach Tower (`/mnt/user/test/werterkennung_w6/`), lokale Kopien (Downloads,
+     `%TEMP%\w6r2`) löschen; Zahlen wie Runde 1, Befunde notieren, als allgemeine Regeln umsetzen, dann
+     `w6_recheck.py 1 2`. Runde 3 = Übungsdokumente 21–24 + ggf. Nachschärfen, **Runde 4 = Prüfteil (16 Dokumente,
+     `check`) erst ganz am Ende, ohne danach etwas einzustellen** – deren Quote ist die ehrliche Erwartung für neue
+     Absender (ohne und mit Lernen messen).
    - Im Downloads-Ordner des Nutzers liegen noch `werterkennung_runde1*.json` (10 Zwischenstände, private Werte) – der
      Nutzer löscht sie selbst; die maßgebliche Fassung liegt auf Tower.
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.

@@ -535,6 +535,45 @@ Differenz zeigt, was das Lernen bringt.
   4. Einzelfälle: zwei Zählernummern im Dokument, die falsche gewählt; eine Rechnungsnummer abgeschnitten (Texterkennung
      trennt den letzten Ziffernblock ab); „Gesamt-Betrag“ über einer Tabellenspalte lieferte einen Steuersatz-Betrag.
 
+**Stand W-6 vor Runde 2 (2026-09-29):** Befund 1 und 3 als allgemeine Regeln umgesetzt, **Befund 2 (Anschriftenfeld)
+auf Nutzerwunsch zurückgestellt** („Anschrift erstmal weglassen“), Befund 4 unverändert offen.
+- **Gemessen statt geschätzt:** über alle 513 Wortlisten jede Beschriftung der Stufe „enthält Stichwort“ nach Anteil des
+  Stichworts gezählt. Hauptquelle der Fehltreffer war nicht Fließtext, sondern das Stichwort **mitten in einem anderen
+  Wort**: „Herr“ in „Herrmann“, „Familie“ in „Familienkasse“, „Auftrag“ in „Freistellungsauftrag“ (allein ~1.500 Paare).
+- **Regeln (value_suggest.py):**
+  1. „Enthält Stichwort“ nur, wenn das Stichwort **ein Wort der Beschriftung beendet** – das letzte Glied eines
+     zusammengesetzten Worts sagt, was es ist („Telekom-Kundennummer“ ja, „Familienkasse“ nein, „angeboten“ nein);
+     Wortgrenzen sind Leerzeichen, „/“ und „-“. Ein gebeugtes Stichwort („Kundennummern“) fällt auf die unscharfe
+     Stufe zurück.
+  2. Das Stichwort muss **mindestens 30 %** der Beschriftung ausmachen, und **höchstens 3 Wörter** dürfen ihm folgen
+     („Gesamtbetrag in Höhe von“, „Ihre Kundennummer bei uns“ ja; „Auftragsbestätigung gilt gleichzeitig als
+     Rechnung“, „Ansprechpartner in Datenschutzfragen entnehmen Sie“ nein). Beides aus der Verteilung über die
+     Sammlung gewählt, nicht an einem Dokument.
+  3. Die Beschriftung **vor** einem Wert beginnt nach dem letzten Wort, das überwiegend aus Ziffern besteht
+     („Zurückzuzahlender Gesamtbetrag: 359. 642,08“ hat keine; „1Herrn“ mit eingelesener Ziffer bleibt ein Wort) –
+     vorher galt das nur beim Lernen (`label_of_value`), jetzt überall.
+  4. **Nummern mit nur einer Ziffer** werden nie vorgeschlagen (Position, Anzahl, Fußnote).
+  5. **USt-IdNr. auch ohne Beschriftung** (neue Stufe „ohne Beschriftung“, nach allen beschrifteten), nur wenn es genau
+     ein Feld dieser Art gibt. **IBAN nicht** (Nutzerentscheidung 2026-09-29): ohne Beschriftung wäre es in 112 von 136
+     Dokumenten das eigene Konto des Nutzers gewesen („wir buchen von Ihrem Konto … ab“), das Odoo nicht als eigene
+     Firmendaten kennt.
+- **Verworfen:** „Beschriftung mit Ziffer ist keine Beschriftung“ – bricht E11 („ANFRAGE 190023 | 29.01.2019“, Belegart
+  mit Nummer links neben dem Datum) und wird für keinen Fehler aus Runde 1 gebraucht.
+- **Runde 1 automatisch nachgeprüft** (`w6_recheck.py`, gleiche 10 Dokumente, Antworten aus `runde1.json`): Genauigkeit
+  **84 % → 90 %** (38 / 42), gefunden 84 % (je Feld gezählt; Runde 1 zählte je Wert, daher 47 statt 45 vorhandene).
+  Drei Fehlvorschläge weg (Angebotsnummer aus Satz, Empfänger aus „Steuernummer des Empfängers“, Auftragsnummer „4“),
+  **nichts, was richtig war, ist falsch geworden.** Übrig: ein Empfänger aus dem Brieftext (Befund 2).
+- Laufzeit über die Sammlung unverändert (Median 0,10 s, höchstens 3,2 s); der Anstieg gegenüber W-4 (0,03 s) kam
+  schon mit den Namensfeldern der Art „Wort“ in Runde 1.
+- **Gegengelesen mit Codex, 3 Befunde:** (1) ein als Fließtext abgelehntes Stichwort konnte über die unscharfe Stufe
+  doch durchrutschen (langes Stichwort + kurze Wörter) – jetzt unscharf nur, wenn das Stichwort nicht als Wortende
+  vorkommt; (2) USt-IdNr. ohne Beschriftung fehlte bei einem Feld nur mit Suchmuster – behoben; (3) **bewusst so
+  gelassen:** eigene Suchmuster dürfen einstellige Nummern liefern, das Muster legt der Verwalter ausdrücklich fest.
+- Tests: `test_v2_value_suggest.py` +9 (Zusammensetzung, Satz, Beschriftung nach Zahl, einstellige Nummer, USt-IdNr.
+  ohne / IBAN mit Beschriftung, Codex-Befunde); **491 Odoo-Tests grün**, `v2check` ohne neuen Befund.
+- **Runde 2 vorbereitet:** Vorschläge der festen Stichprobe neu berechnet (`w6_sample.json`, Stand vor der Änderung als
+  `w6_sample_runde1.json` auf Tower), Abhak-Seite Übungsdokumente 11–20.
+
 ## 7. Entscheidungen
 
 **Alle Empfehlungen E1–E9 vom Nutzer übernommen (2026-09-29, „dann leg los“).** Ergänzend aus den Proben (8):

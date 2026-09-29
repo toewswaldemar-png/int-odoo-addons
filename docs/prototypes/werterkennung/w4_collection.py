@@ -62,7 +62,7 @@ print(f"{docs} Dokumente, Fehler {errors}")
 print(f"Zeit: Median {times[len(times) // 2][0]:.3f} s, max {times[-1][0]:.2f} s "
       f"({times[-1][1]} Wörter)")
 print(f"nicht zugeordnete Paare im Schnitt: {unassigned / max(docs, 1):.1f}")
-tier_names = {0: "gelernt", 1: "exakt", 2: "enthalten", 3: "unscharf"}
+tier_names = {0: "gelernt", 1: "exakt", 2: "enthalten", 3: "unscharf", 4: "ohne Beschriftung"}
 for i, name in names.items():
     t = ", ".join(f"{tier_names[k]} {v}" for k, v in sorted(tiers[i].items()))
     d = ", ".join(f"{k} {v}" for k, v in directions[i].most_common())
