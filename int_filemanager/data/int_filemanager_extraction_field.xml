@@ -281,10 +281,11 @@ Umsatzsteuer-Identifikationsnummer</field>
     <field name="sequence">210</field>
     <field name="value_type">email</field>
   </record>
+  <!-- OCR puts a space on either side of the @ now and then ("name @domain.de"). -->
   <record id="extraction_rule_email" model="int_filemanager.extraction_rule">
     <field name="field_id" ref="extraction_field_email" />
     <field name="mode">regex</field>
-    <field name="pattern">[\w.+-]+@[\w-]+(?:\.[\w-]+)+</field>
+    <field name="pattern">[\w.+-]+ ?@ ?[\w-]+(?:\.[\w-]+)+</field>
   </record>
   <record id="extraction_field_inquiry_number" model="int_filemanager.extraction_field">
     <field name="name">Inquiry number</field>
@@ -392,5 +393,41 @@ Lieferschein</field>
 Gutschriftsnummer
 Gutschrift-Nr.
 Gutschrift</field>
+  </record>
+  <record id="extraction_field_contact_person" model="int_filemanager.extraction_field">
+    <field name="name">Contact person</field>
+    <field name="sequence">280</field>
+    <field name="value_type">word</field>
+  </record>
+  <record id="extraction_rule_contact_person" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_contact_person" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Ansprechpartner
+Ansprechpartnerin
+Ihr Ansprechpartner
+Ihre Ansprechpartnerin
+Sachbearbeiter
+Sachbearbeiterin
+Bearbeiter
+Bearbeiterin
+Unser Bearbeiter
+Auskunft erteilt
+Ihr Kontakt
+Kontaktperson</field>
+  </record>
+  <record id="extraction_field_recipient" model="int_filemanager.extraction_field">
+    <field name="name">Recipient</field>
+    <field name="sequence">290</field>
+    <field name="value_type">word</field>
+  </record>
+  <record id="extraction_rule_recipient" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_recipient" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Herrn
+Herr
+Frau
+Familie
+Eheleute
+Empfänger</field>
   </record>
 </odoo>

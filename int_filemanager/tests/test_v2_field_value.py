@@ -5,6 +5,8 @@ write for anyone); fields and rules are read by every user and changed by
 administrators only.
 """
 
+import re
+
 import psycopg2
 
 from odoo.exceptions import AccessError, UserError, ValidationError
@@ -282,5 +284,9 @@ class TestV2FieldValue(TransactionCase):
             self.assertTrue(field.rule_ids, field.name)
         amount = self.env.ref("int_filemanager.extraction_field_total_amount")
         self.assertEqual(amount.currency_id, self.env.ref("base.EUR"))
+        # The mail rule also takes an address OCR split at the @.
+        mail = self.env.ref("int_filemanager.extraction_rule_email")
+        found = re.findall(mail.pattern, "an max @example.de oder info@example.de")
+        self.assertEqual(found, ["max @example.de", "info@example.de"])
         rule = self.env.ref("int_filemanager.extraction_rule_customer_number")
         self.assertIn("Geschäftspartnernummer", rule._keyword_list())

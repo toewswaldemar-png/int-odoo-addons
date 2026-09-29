@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260908\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 11:28+0000\n"
-"PO-Revision-Date: 2026-09-29 11:28+0000\n"
+"POT-Creation-Date: 2026-09-29 12:48+0000\n"
+"PO-Revision-Date: 2026-09-29 12:48+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -263,6 +263,11 @@ msgstr "Farbe"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
 msgid "Connection lost - continue to resume"
 msgstr "Verbindung verloren - fortsetzen, um weiterzumachen"
+
+#. module: int_filemanager
+#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_contact_person
+msgid "Contact person"
+msgstr "Ansprechpartner"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -1468,6 +1473,11 @@ msgstr "Bereit"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__received_size
 msgid "Received Size"
 msgstr "Empfangene Größe"
+
+#. module: int_filemanager
+#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_recipient
+msgid "Recipient"
+msgstr "Empfänger"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__pattern

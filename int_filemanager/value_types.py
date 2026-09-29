@@ -328,10 +328,13 @@ _DATE_TOKEN = re.compile(_date_re(1))
 
 def _find_word(text, pos, endpos, ctx):
     # Up to five words of one line and column, starting with a letter: a
-    # name such as a tariff. Longer or freer texts need a regular expression.
-    pattern = re.compile(r"(?<!\w)[^\W\d_][\w\-&+.']*(?:[ ][\w\-&+.']+){0,4}")
+    # name such as a tariff or a person. Longer or freer texts need a regular
+    # expression. A value may start at every word, so that the words in front
+    # of it stay free to be its label ("Herrn Max Muster": "Herrn", "Max Muster").
+    pattern = re.compile(r"(?<!\w)(?=([^\W\d_][\w\-&+.']*(?:[ ][\w\-&+.']+){0,4}))")
     for m in pattern.finditer(text, pos, endpos):
-        yield m.start(), m.end(), {"value_text": m.group().rstrip(".")}
+        value = m.group(1).rstrip(".")
+        yield m.start(), m.start() + len(value), {"value_text": value}
 
 
 # A date is not part of an identifier joined by dashes ("INV-01-02-2024-A"). A

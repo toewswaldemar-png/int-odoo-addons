@@ -79,6 +79,12 @@ class TestV2ValueTypes(BaseCase):
         self.assertEqual(first("number", "Nr.4711").value["value_text"], "Nr.4711")
         self.assertEqual(first("number", "Nr.4711", 3).value["value_text"], "4711")
 
+    def test_a_word_value_may_start_at_every_word(self):
+        found = [
+            c.value["value_text"] for c in value_types.find("word", "Herrn Max Muster")
+        ]
+        self.assertEqual(found, ["Herrn Max Muster", "Max Muster", "Muster"])
+
     def test_word(self):
         self.check(
             "word",
