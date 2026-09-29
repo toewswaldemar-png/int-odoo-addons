@@ -159,12 +159,14 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    - **Runde 3 ausgewertet (2026-09-29, Plan 6 „Stand W-6 nach Runde 3“):** 80 % roh, mit neuer Regel (Ziffern einer
      IBAN/USt-IdNr. sind keine eigene Nummer) 84 %; alle drei Runden **86 % richtig / 88 % gefunden**. `runde3.json` auf
      Tower, lokale Kopien gelöscht. Übungsteil fertig.
-   - **Einstieg neue Sitzung – vor Runde 4:** Nutzer fragen, ob vorher noch die offenen Ideen umgesetzt werden
-     (E-Rechnung/Überweisungs-QR in der Sammlung zählen, gemerkte Lage je Absender aus `extraction_hint` nutzen,
-     Plausibilität zwischen Werten) – nach Runde 4 wird nichts mehr eingestellt. Dann Runde 4 = Prüfteil: `w6_review.py
-     <temp>/w6_sample.json 4 0 16 check`, neueste `werterkennung_runde4*.json` als `runde4.json` nach Tower, lokale
-     Kopien löschen, `w6_recheck.py 4` (ohne Lernen); mit Lernen messen (Absender-Hinweise aus den Antworten der
-     Runden 1–3 bzw. je Absender die erste Bestätigung) – Verfahren dafür noch festzulegen.
+   - **Runde 4 (Prüfteil) bewertet, aber bewusst nicht ausgewertet** (Nutzer 2026-09-29: „lohnt nicht“): `runde4.json`
+     und die dazu eingefrorenen Vorschläge `w6_sample_pruefteil.json` liegen auf Tower; der Prüfteil bleibt
+     **unverbraucht** für die Messung des neuen Ansatzes. Lokale private Kopien alle gelöscht.
+   - **Einstieg neue Sitzung – Oberfläche mit Kasten-Auswahl:** Nutzer-Befund „viele gelesene Werte sind nicht
+     relevant, stärker mit selbst auswählen verbinden“, Vorschlag „grob einen Kasten aufziehen, darin wie bisher über
+     Stichwörter lesen“. Konzept: `docs/int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`
+     (Entscheidungen K1–K5, Vorbilder, geprüfte Odoo-Bausteine, Scheiben U-1…U-6). **Noch nicht freigegeben, nichts
+     umgesetzt** – zuerst offene Entscheidungen U1–U6 mit dem Nutzer klären.
    - Im Downloads-Ordner des Nutzers liegen noch `werterkennung_runde1*.json` (10 Zwischenstände, private Werte) – der
      Nutzer löscht sie selbst; die maßgebliche Fassung liegt auf Tower.
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
