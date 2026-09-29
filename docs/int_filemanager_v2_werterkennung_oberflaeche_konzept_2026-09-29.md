@@ -176,8 +176,10 @@ Bestehend bleibt: `suggest_field_values`, `apply_field_values`, `value_suggest.s
    Auflösung → `tesseract` → Wörter mit Lage, zurückgerechnet auf die Seite). Ergebnis als eigenes Derivat je Fassung
    und Kasten (wie Kacheln/Wortliste), fließt beim nächsten Vorschlag in die Seite ein. Oberfläche wartet mit
    Ladeanzeige; Benachrichtigung über den Odoo-Bus, wenn fertig.
-4. **Neues Feld aus Paar:** `create_field_from_pair(label, value_type)` → `extraction_field` + Stichwort-Regel. **Rechte
-   offen** (heute legen nur Verwalter Felder an) – siehe 8.
+4. **Neues Feld aus Paar:** `create_field_from_pair(label, value_type)` → `extraction_field` + Stichwort-Regel, **nur
+   Verwalter** (U2). Normale Nutzer: **„Feld vorschlagen“** → Nachricht an die Verwalter mit Beschriftung, Beispielwert,
+   Wertart und Link zum Dokument (Odoo-Bordmittel, genaue Form bei der Umsetzung); der Verwalter legt mit einem Klick an
+   oder lehnt ab.
 5. **Kästen merken** (neues Modell, Vorschlag `int_filemanager.extraction_area`): Absender (Pflicht), Seite (auch
    „letzte Seite“ für Summen), Lage relativ, **Anker** = die Beschriftung im Kasten, die beim Speichern Werte lieferte
    (wie PaperOffice' Positionslogik „zwischen zwei Containern“), bestätigte Felder, Zähler, zuletzt benutzt, Modus
@@ -226,8 +228,8 @@ Eingangsordner neu entscheiden. Vorschlag:
 
 - ~~**U1**~~ **entschieden:** automatisch übernehmen wie in 6.3 (Schalter je Absender, erst mit Eingangsordner, nur
   eindeutig, Vermerk „automatisch übernommen“ + Filter „automatisch, nie angesehen“ + Notiz).
-- **U2** Wer darf aus dem Prüf-Fenster **neue Felder** anlegen – jeder mit Schreibrecht auf die Datei oder nur
-  Verwalter (dann „Feld vorschlagen“ für Nutzer)?
+- ~~**U2**~~ **entschieden (Nutzer 2026-09-29): nur Verwalter** legen Felder direkt an; normale Nutzer „Feld
+  vorschlagen“ (5.4). Katalog bleibt sauber, Wertart wird von jemandem gewählt, der die Folgen kennt.
 - **U3** Gilt das Gemerkte (Kästen, Feldliste) je Absender **für alle Nutzer** wie heute die Beschriftungen (W-5,
   bewusst so) oder je Nutzer?
 - **U4** Feldliste: nur Felder mit Vorschlag + beim Absender benutzte + angeheftete (4.4) – oder zusätzlich
