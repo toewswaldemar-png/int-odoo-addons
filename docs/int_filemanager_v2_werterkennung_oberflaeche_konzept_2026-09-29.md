@@ -237,7 +237,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 |---|---|---|
 | U-1 | **Volltextsuche** im gelesenen Text (`derivative.text`) in der Dateisuche wieder anbinden, dazu **Formularfeld-Werte** in Wortliste und Text (N1) – die v2-Suche findet heute nur Name, Tags, Status, Kontakt (v1 konnte den Inhalt durchsuchen) | ein Wort, das nur im Dokument steht, findet die Datei; Suche bleibt bei großen Ordnern schnell |
 | U-2 | Server: Kästen beim Vorschlagen, Paare je Kasten mit Lage, Wert aus Markierung | Tests je Richtung wie W-4; Jahresbescheid-Beispiel liefert Infoblock-Paare |
-| U-3 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern; **unsichere Werte zuerst**, Plausibilitäts-/Dubletten-Hinweise, **abweichende IBAN** (Abschnitt 9) | eine Datei prüfen und speichern ohne Kasten |
+| U-3 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern, **Prüfstatus** je Dokument (N4); **unsichere Werte zuerst**, Plausibilitäts-/Dubletten-Hinweise, **abweichende IBAN** (Abschnitt 9) | eine Datei prüfen und speichern ohne Kasten |
 | U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Farben/Hover | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
 | U-5 | Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument; N3: Vorrang nur mit eindeutigem Anker, „gemerkte Kästen verwerfen“), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
 | U-6 | Nachlesen (Umwandler), QR automatisch je Dokument (U5, 5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
@@ -388,8 +388,10 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
   bei Abweichung Hinweis im Prüf-Fenster; Seiten-/Zeitgrenzen wie im Umwandler üblich.
 - ~~**N3**~~ **entschieden (Nutzer 2026-09-29): sofort (U-5)**, mit der Anker-Sicherung aus 6.2 und einem Knopf
   „gemerkte Kästen dieses Absenders verwerfen“ (z. B. bei neuem Briefpapier).
-- **N4** Prüfstatus je Dokument („ungeprüft / geprüft von … am … / automatisch übernommen“) einführen? Pflichtfelder?
-  *Empfehlung: Status ja (U1 braucht ihn), Pflichtfelder später.*
+- ~~**N4**~~ **entschieden (Nutzer 2026-09-29): Prüfstatus jetzt, Pflichtfelder später.** Eigenes, vom System gesetztes
+  Merkmal am Knoten: ungeprüft / geprüft (von, am) / automatisch übernommen – getrennt vom Freigabestatus (`status_id`).
+  Grundlage für den Filter „automatisch, nie angesehen“ (U1), die Abarbeitungsliste und „Speichern und weiter“ zum
+  nächsten ungeprüften Dokument. Pflichtfelder erst mit Dokumentarten (U4), sonst gälten sie für jedes Dokument.
 - **N5** Gegensteuer beim Lernen: Häkchen „daraus nicht lernen“ beim Speichern und eine Verwalter-Liste des Gelernten
   (ansehen, löschen)? *Empfehlung: ja.*
 - **N6** Eine Farbe je Feld oder nur die gerade aktive Stelle hervorheben (Vorschläge dezent umrandet)?
