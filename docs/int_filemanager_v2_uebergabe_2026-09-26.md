@@ -167,8 +167,8 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
      Stichwörter lesen“. Konzept: `docs/int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`
      (Entscheidungen K1–K5 und U1–U9 alle getroffen, Vorbilder, geprüfte Odoo-Bausteine, Scheiben U-1…U-9 beginnend mit der Volltextsuche, Nachtrag PaperOffice AI). **Noch nicht freigegeben, nichts
      umgesetzt** – nächster Schritt: Freigabe des Konzepts durch den Nutzer, dann U-1.
-   - Im Downloads-Ordner des Nutzers liegen noch `werterkennung_runde1*.json` (10 Zwischenstände, private Werte) – der
-     Nutzer löscht sie selbst; die maßgebliche Fassung liegt auf Tower.
+   - Lokale Kopien der Runden (Downloads, `%TEMP%\w6r*`) sind alle gelöscht (2026-09-29); maßgeblich ist Tower
+     `/mnt/user/test/werterkennung_w6/` (`runde1–4.json`, `korrekturen.json`, `w6_sample*.json`).
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
 2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
    `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`). **Für die Werterkennung**
