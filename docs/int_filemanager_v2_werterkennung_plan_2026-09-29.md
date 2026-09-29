@@ -259,6 +259,35 @@ Entscheidung E3.
 | E6 | Ein Wert je Feld und Knoten? | ja; mehrere Werte je Feld später bei Bedarf |
 | E7 | Automatisch übernehmen ohne Prüfung (wie Paperless beim Einlesen)? | nein, Prüfung wie v1; frühestens mit dem Eingangsordner neu entscheiden |
 
+| E8 | Einfacher **Stichwort-Modus** für eigene Felder (Stichwörter + Art eintragen, das System baut das Suchmuster), Regex nur für Sonderfälle | ja – ohne ihn kann ein Nicht-Programmierer keine eigenen Felder anlegen |
+| E9 | Vorhandene Textebenen gescannter PDFs neu erkennen (OCRmyPDF `--redo-ocr`, ersetzt nur unsichtbaren Scanner-Text, echter Text bleibt) statt ihnen zu vertrauen | ja (siehe 8) |
+
 **Bewusst nicht in Punkt 1:** Oberfläche und Hervorhebungs-Viewer; E-Rechnungs-XML (2.5); Zuordnungsregeln an Tags
 nach Paperless-Art; Lernen/KI; OCR für Bilddateien (JPG/TIFF-Scans bekommen heute keine `words` und damit keine
 Werte – Lücke für den Eingangsordner vormerken); Muster nur für bestimmte Ordner/Bereiche.
+
+## 8. Probe an einem echten Dokument (2026-09-29)
+
+Ein vom Nutzer bereitgestellter Gebührenbescheid (2 Seiten, Scan mit eingebetteter Textebene des Scanners) lief durch
+den Umwandler (`fmconverter:dev`, Wegwerf-Container ohne Netz) und durch die geplanten Felder mit Prüfung. Die Kopie
+wurde danach auf Tower gelöscht; hier stehen bewusst keine persönlichen Daten.
+
+- **Die Textebene des Scanners war schlecht**, der Umwandler hat ihr trotzdem vertraut (genug Zeichen je Seite → keine
+  eigene Texterkennung): Datum als „27.0'1 .2025“, Beträge als „152/0 €“ und „231 60 €“, ein Zeichen der
+  Rechnungsnummer falsch, USt-IdNr. mit „l“ statt „I“, Fußzeile als Buchstabensalat. **Erzwungene neue Erkennung**
+  (OCRmyPDF, 8 s für 2 Seiten) las fast alles richtig; die Rechnungsnummer am Bild nachgeprüft. → E9; zu prüfen, wie
+  der Umwandler Scans mit Textebene von echten digitalen PDFs unterscheidet (`--redo-ocr` erkennt das selbst).
+- **„Erstes Datum“/„erster Betrag“ taugen nicht:** der erste Betrag war eine Einzelposition, nicht der Gesamtbetrag.
+  Mit Stichwort („Gesamtbetrag“) kam der richtige Wert. → Standardfelder an Stichwörter binden (Rechnungsdatum,
+  Gesamtbetrag, Fälligkeitsdatum), E8.
+- **Prüfziffern wirken:** USt-IdNr. und zwei Bank-IBANs gültig erkannt; die Gläubiger-ID (sieht aus wie eine IBAN)
+  richtig verworfen (`stdnum.eu.at_02` erkennt sie als Gläubiger-ID); eine IBAN mit „O“ statt „0“ verworfen – nach
+  Tausch ist sie gültig. → **Reparatur typischer Verwechslungen** (O/0, I/l/1, S/5, B/8) nur an Stellen, an denen
+  Ziffern stehen müssen, und nur übernehmen, wenn die Prüfziffer danach stimmt.
+- **Stichwörter brauchen eine Grenze:** „Kundennummer an.“ im Fließtext lieferte „an.“ als Wert. → Im Stichwort-Modus
+  muss ein Nummernfeld mindestens eine Ziffer enthalten, und direkt nach dem Stichwort darf nur „:“ oder Leerraum
+  stehen.
+- Eine E-Mail-Adresse wurde durch ein eingeschobenes Leerzeichen („name @domain“) nicht erkannt → Leerzeichen um
+  „@“ vor der Suche entfernen.
+- Das Dokument trägt einen **QR-Code**; ob er strukturierte Daten enthält (z. B. Überweisungsdaten), ist offen –
+  Auslesen wäre ein späterer Baustein im Umwandler.

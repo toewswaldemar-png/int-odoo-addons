@@ -116,7 +116,7 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    in Odoo"): Muster, erkannte Werte, Position (page/x0/top/x1/bottom) – wie v1, aber an `node_id` statt am alten
    Dateimodell, mit den zwei Methoden zum Vorschlagen/Übernehmen privat und rechtegeprüft (schließt dabei die alte
    Sicherheitslücke N1, siehe Abschnitt 6). Noch **ohne** Oberfläche, wie der Rest von Schritt 5 bisher.
-   **Plan mit Recherche (Odoo 19, Paperless-ngx) und offenen Entscheidungen E1–E7:**
+   **Plan mit Recherche (Odoo 19, Paperless-ngx) und offenen Entscheidungen E1–E9, Probe an einem echten Dokument:**
    `docs/int_filemanager_v2_werterkennung_plan_2026-09-29.md` – vor dem ersten Code die Entscheidungen einholen.
 2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
    `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`); für die Werterkennung
