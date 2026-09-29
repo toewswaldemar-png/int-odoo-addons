@@ -1,9 +1,11 @@
 # Übergabe: int_filemanager 2 – Stand und nächste Schritte
 
-Stand 2026-09-26, ergänzt 2026-09-27 (Code-Prüfung eingearbeitet, Konzept freigegeben) und **2026-09-28: Schritt 3
-und 4a fertig, 4b (Oberfläche) gebaut, Abnahme von Schritt 4 läuft** – offene Punkte in Abschnitt 4, Punkt 9.
-Für eine neue Sitzung: zuerst dieses Dokument, dann Kern und Konzept lesen. **Gearbeitet wird auf dem Branch
-`feature/int-filemanager-v2`** (master = Stand `int_filemanager-v1` plus Dokumente).
+Stand 2026-09-26, ergänzt 2026-09-27 (Code-Prüfung eingearbeitet, Konzept freigegeben), **2026-09-28: Schritt 3
+und 4a fertig, 4b (Oberfläche) gebaut** und **2026-09-29: Schritt 5 (Vorschau, Text, Metadaten, OCR mit
+Wortpositionen) im Server/Datenmodell fertig, noch ohne Oberfläche** – **für eine neue Sitzung: Abschnitt 4.0 zuerst
+lesen, das ist der aktuelle Stand und die nächste Aufgabe.** Der Rest von Abschnitt 4 ist Verlauf (Schritt-4-Themen,
+schon erledigt). Für eine neue Sitzung sonst: zuerst dieses Dokument, dann Kern und Konzept lesen. **Gearbeitet wird
+auf dem Branch `feature/int-filemanager-v2`** (master = Stand `int_filemanager-v1` plus Dokumente).
 
 ## 1. Worum es geht
 
@@ -47,6 +49,10 @@ gebaut wird nur, wo Odoo nachweislich begrenzt ist. Der Bestand wird **kopiert**
 | 2026-09-27 | **Konzept und Kern freigegeben.** Umsetzung **im Modul `int_filemanager`** (19.0.2.0.0) auf Branch `feature/int-filemanager-v2`, heutiger Stand als Tag `int_filemanager-v1`; Test-Image `odoo:19.0-hm-test` (Live-Tag unberührt); pre-commit auf dem Arbeitsrechner (Konzept, Entscheidungen 9–10) |
 | 2026-09-28 | **Schritt 5 festgelegt** (Konzept 8, 9, Entscheidungen 11–15): abgeleitete Dateien im eigenen Blob-Speicher statt `ir.attachment` (Prüfung des Odoo-Cores: Odoo dekodiert Anhänge an vielen Stellen selbst), Mischform bei der Erzeugung, zwei Bildgrößen, Werterkennung in Odoo, Umfang = Kern, Erweiterungen später |
 | 2026-09-28 | Kommentare und Docstrings **ohne Verweise auf Dokumente** (keine Kürzel `I…`/`A…`, keine Konzept-Abschnitte), Docstrings kurz wie im Odoo-Kern; ersetzt die Hausregel "Grundregeln benennen" (Konventionen Abschnitt 3); Zuordnung Grundregel → Test nur noch im Konzept 16.1 |
+| 2026-09-28 | Dateityp (`node.mime`) wird beim Anhängen jeder Fassung (Upload, neue Fassung, Wiederherstellen) aus den ersten Bytes erkannt statt aus der Endung – schließt eine Lücke aus Konzept 8.3; Option A von drei geprüften Wegen |
+| 2026-09-29 | **OCR/Werterkennung volle Ausbaustufe** (Wortpositionen für spätere Hervorhebung, wie v1s Phase A–C), aber **erst Server/Datenmodell, ohne Oberfläche** – modularer Baustein, Anbindung an den Explorer folgt als eigener, späterer Schritt. Gilt auch für Vorschau-PDFs aus Office-Dateien, nicht nur echte PDFs (Erweiterung gegenüber v1) |
+| 2026-09-29 | **Kein Zerstückeln langer OCR-Dokumente in Seiten-Häppchen.** Nach Prüfung von Cloudreve (Quellcode), FileRun, Nextcloud und Amazons/Googles eigenen Umwandler-Diensten: alle trennen langsame Texterkennung vom schnellen Pfad durch **asynchrones Abschicken und Abfragen**, keines zerlegt ein Dokument. Der Umwandler antwortet bei einer Umwandlung über 15 Sekunden sofort mit einer Auftragsnummer statt zu blockieren; Odoo fragt bei späteren Cron-Durchläufen nach. Ein Dokument ist eine Arbeitseinheit, egal wie lange es dauert (Obergrenze 2000 Seiten als Notbremse) |
+| 2026-09-29 | **Umwandler bleibt eigener Container**, aber nicht weil das der verbreitete Standard wäre (Cloudreve/FileRun/Nextcloud brauchen dafür keinen eigenen Container) – sondern weil Odoo, anders als diese Systeme, im selben Prozess auch Buchhaltung und Rechte verwaltet |
 
 Vorgabe des Nutzers für den Umbau: **erst vollständig durchplanen, keine Zeile Modul-Code vor Freigabe des
 Konzepts.** Prototypen auf der Testinstanz sind erlaubt. **Freigabe von Konzept und Kern erteilt am 2026-09-27.**
@@ -66,6 +72,10 @@ Konzepts.** Prototypen auf der Testinstanz sind erlaubt. **Freigabe von Konzept 
 | **Schritt 4a Server** (2026-09-28) | Ordnerbaum, Download (Rechte, Range, `x_sendfile`), Upload in Stücken mit Fortsetzen, ZIP direkt/als Job, Papierkorb-Frist, Freigabe-Links und Kundenportal; Abnahme **3 GB mit Abbruch und Fortsetzen** auf Tower bestanden | Commits `af0c9fc` … `55549be` |
 | **Schritt 4b Oberfläche gebaut** (2026-09-28) | Explorer auf `int_filemanager.node` (Liste, Kacheln, Baum, Breadcrumb, Uploads, Kontextmenü, Tastatur, Verschieben/Kopieren/Drag & Drop, Versionen, Freigabe-Dialog, Details-Dialog), Upload-Logik mit 45 Node-Tests, `de.po` vollständig; **Handtest und Abnahme offen** | Commits `78f8e99`, `8279772`, `27b2a11`, `01e5793` |
 | **Kommentare bereinigt** (2026-09-28) | Verweise auf Dokumente entfernt, Docstrings gekürzt; nur Kommentare geändert (AST-Vergleich), 305 Odoo-Tests + 45 Node-Tests grün auf HM-SRV | Commit `d0d5c94` |
+| **Schritt 4 Nacharbeiten** (2026-09-28) | Drei Fehler aus dem ersten Handtest behoben: Basis-Fassung beim Herunterladen merken, abgelehnte Uploads zählen nicht als unterbrochen (Verwerfen-Knopf), Windows-verbotene Dateinamen | Commits `fc84ff5`, `0515672`, `735abc4` |
+| **Dateityp aus dem Inhalt** (2026-09-28) | `node.mime` und `blob.mime` werden aus den ersten 2048 Bytes erkannt (libmagic), bei jeder neuen Fassung neu; HTML wird beim Download immer als Text ausgeliefert (Absicherung); 10 neue Tests | Commit `6daf929` |
+| **Schritt 5 Umwandler: alle Formate außer OCR** (2026-09-28) | Eigener Container `tools/fmconverter` mit allen Werkzeugen (ffmpeg, Ghostscript, LibreOffice, ExifTool, Tesseract, Pillow+RAW+HEIC); Kacheln/Vorschauen für alle Bildformate des Bestands (inkl. MPO, HEIC, TIFF, RAW), Video-Standbild, PDF-Seite+Text+Metadaten, Office über eigenes Vorschau-PDF, Audio-Cover, Textdateien, Metadaten (EXIF/ffprobe/pdfinfo); Auftragskette mit Abhängigkeiten (`depends_on_id`); Kacheln in Liste/Kacheln-Ansicht des Explorers; 279 Umwandlungen an den 95 echten Testdateien, 0 unerwartet | Commits `5c4d090` … `f177660` |
+| **Schritt 5 OCR mit Wortpositionen, asynchron** (2026-09-29) | Neue Auftragsart `words` ersetzt `text` für PDFs (echt und aus Office): liest zuerst die eingebettete Textebene (`pdfplumber`), bei Scan-Verdacht läuft `OCRmyPDF` über das ganze Dokument, dann wieder `pdfplumber` für Text und Wortpositionen zusammen; Ergebnis liegt wie eine Vorschau im Blob-Speicher. Umwandler antwortet bei über 15 Sekunden Dauer mit einer Auftragsnummer statt zu blockieren (`202` + `GET /convert/<id>`), Odoo fragt bei späteren Cron-Durchläufen nach (`_poll_running_jobs`), gibt nach 40 Minuten als gewöhnlichen, wiederholbaren Fehlschlag auf. Echter Test auf Tower: ein 300-Seiten-Scan mit echtem Bildrauschen läuft korrekt durch `running` → `done`, nur einmal abgeschickt. Noch **ohne** `extraction_pattern`/`extracted_value` (Werterkennung) und ohne Oberfläche | Commits `3e01332`, `09c8ca7`, `3f42304` |
 
 **Wichtigste Prototyp-Befunde (Details: Konzept 19):**
 - Blob-Speicher, Upload in 4-MB-Stücken, Fortsetzen, Idempotenz, Deduplizierung, Absturzsicherheit und Aufräumjob
@@ -90,6 +100,39 @@ Konzepts.** Prototypen auf der Testinstanz sind erlaubt. **Freigabe von Konzept 
   (Standard 50 MB); Namen müssen ohne Groß/Klein eindeutig werden; Sperren in Odoo speichern.
 
 ## 4. Nächste Schritte
+
+### 4.0 Aktueller Stand (2026-09-29) – hier weitermachen
+
+Schritt 5 (Konzept Abschnitt 8/9, Kern Reihenfolge Punkt 5) ist **im Server/Datenmodell fertig, ohne Oberfläche**:
+Kacheln/Vorschauen für alle Formate, Text und Metadaten, dazu OCR mit Wortpositionen für später geplante
+Hervorhebung – siehe die beiden neuesten Zeilen in Abschnitt 3. Getestet: 394 Odoo-Tests, 16 echte
+Prozess-Szenarien auf Tower (`tools/v2check/race.sh`), 50 Umwandler-Tests, alle grün; `v2check` ohne neue Befunde.
+Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln (Liste/Kacheln-Ansicht) und dem
+Öffnen der großen Vorschau für TIFF/HEIC/RAW/Office im Viewer.
+
+**Offen, in dieser Reihenfolge:**
+
+1. **`int_filemanager.extraction_pattern` und `.extracted_value`** (Konzept 9, Entscheidung 14 "Werterkennung bleibt
+   in Odoo"): Muster, erkannte Werte, Position (page/x0/top/x1/bottom) – wie v1, aber an `node_id` statt am alten
+   Dateimodell, mit den zwei Methoden zum Vorschlagen/Übernehmen privat und rechtegeprüft (schließt dabei die alte
+   Sicherheitslücke N1, siehe Abschnitt 6). Noch **ohne** Oberfläche, wie der Rest von Schritt 5 bisher.
+2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
+   `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`); für die Werterkennung
+   reicht das mit.
+3. **Erst danach, als eigener Schritt:** der Hervorhebungs-Viewer (v1s Phase C – eigener `pdf.js`-Renderer mit
+   Markierungs-Kästen) und alles, was Schritt 5 in den Explorer einhängt (Kontroll-Dialog, „Werte erkennen"-Knopf).
+   Bewusst zurückgestellt, damit Server/Datenmodell zuerst geprüft feststehen (Nutzerentscheidung 2026-09-29).
+4. Danach wie im Kern (Abschnitt 11) vorgesehen: Schritt 6 (Office/ONLYOFFICE), Schritt 7 (Eingangsordner),
+   Schritt 8 (Übernahme des Bestands) – siehe Punkt 10 unten für schon gesammelte Vorüberlegungen dazu.
+
+**Offene Kleinigkeiten aus Schritt 5, nicht blockierend:**
+- Verwalter-Werkzeuge (Diagnose je Datei, Liste fehlgeschlagener Umwandlungen, „neu erzeugen", Konfiguration der
+  Bausteine, Konzept 8.6) sind noch nicht gebaut.
+- Das Nachholen des ganzen Bestands (Kacheln für 209k vorhandene Bilder usw.) ist nur gedrosselt über die
+  Warteschlange vorgesehen, noch nicht mit echtem Bestand durchgemessen – nur Hochrechnungen aus Stichproben.
+- Das Umwandler-Docker-Image ist nur auf Tower gebaut (`fmconverter:dev`), noch nicht Teil eines Deployment-Wegs.
+
+**Alter Verlauf ab hier** (Schritt-4-Abnahme, WebDAV, Migrationsvorbereitung – zum großen Teil erledigt):
 
 1. ~~Test mit echtem Word/Excel~~ – **entfällt** (Nutzerentscheidung 2026-09-26). Falls später doch: IP des
    Office-Rechners in `FM_DAV_ANON_IPS` (`/mnt/user/appdata/fmtest/fmdav/env`), `fmv2_dav` neu erstellen, dort

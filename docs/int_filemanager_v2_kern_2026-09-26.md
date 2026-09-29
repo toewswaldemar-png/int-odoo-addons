@@ -153,6 +153,7 @@ Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
 | 2026-09-28 | Abgeleitete Dateien (Vorschau, Text, Metadaten) im eigenen Dateispeicher statt in `ir.attachment`; Odoo dekodiert sie nie (K 8.9) |
 | 2026-09-28 | Erzeugung als Mischform: dauerhafte Warteschlange, gedrosselt im Hintergrund, Sichtbares zuerst (K 8.4) |
 | 2026-09-28 | Zwei Bildgrößen (Kachel, Vorschau); Werterkennung bleibt in Odoo; Umfang von Schritt 5 = Kern, Erweiterungen später (K 8.1, 8.8) |
+| 2026-09-29 | OCR/Werterkennung mit Wortpositionen (Hervorhebung, wie v1s Phase A–C) für die volle Ausbaustufe, auch für Vorschau-PDFs aus Office; erst Server/Datenmodell, Oberfläche folgt als eigener Schritt. Kein Zerstückeln langer Dokumente: der Umwandler antwortet bei einer Umwandlung über 15 s mit einer Auftragsnummer statt zu blockieren, Odoo fragt später nach (Vorbild: FileRun, Nextcloud, Amazon/Google Document-Umwandlung, alle geprüft) |
 
 ## 11. Reihenfolge mit Abnahme
 
