@@ -119,8 +119,12 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    **Plan mit Recherche (Odoo 19, Paperless-ngx) und offenen Entscheidungen E1–E9, Probe an einem echten Dokument:**
    `docs/int_filemanager_v2_werterkennung_plan_2026-09-29.md` – vor dem ersten Code die Entscheidungen einholen.
 2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
-   `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`); für die Werterkennung
-   reicht das mit.
+   `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`). **Für die Werterkennung**
+   liegt seit 2026-09-29 eine eigene Sammlung echter privater Dokumente des Nutzers unter
+   `/mnt/user/test/werterkennung/` auf Tower (528 Dateien, 531 MB, davon 513 PDFs: Immobilie/Rechnungen und Finanzen
+   mit Versicherungen, Hausnebenkosten, Gehalt, Steuer, Bank, Rente/Krankenkasse; Quelle `G:\Meine Ablage\Privat`,
+   ohne `.pfx`-Zertifikate und `.gsheet`-Verknüpfungen). Nur root (`chmod 700`), keine Freigabe; **niemals ins Repo,
+   nicht in Berichte mit persönlichen Daten**. Sollwerte je Dokument (W-6) fehlen noch.
 3. **Erst danach, als eigener Schritt:** der Hervorhebungs-Viewer (v1s Phase C – eigener `pdf.js`-Renderer mit
    Markierungs-Kästen) und alles, was Schritt 5 in den Explorer einhängt (Kontroll-Dialog, „Werte erkennen"-Knopf).
    Bewusst zurückgestellt, damit Server/Datenmodell zuerst geprüft feststehen (Nutzerentscheidung 2026-09-29).
