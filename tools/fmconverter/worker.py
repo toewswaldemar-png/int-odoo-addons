@@ -66,9 +66,19 @@ TEXT_EXTENSIONS = {
 # libraw's "flip" value -> degrees to turn a PIL image (counter-clockwise) to upright
 RAW_FLIP_DEGREES = {3: 180, 5: 90, 6: 270}
 
-# A PDF with less embedded text than this per page is treated as a scan (v1's own
-# threshold, kept): OCR is slow, so it only runs when there is truly nothing to read.
+# A PDF with less embedded text than this per page has nothing worth reading (v1's own
+# threshold, kept): it is OCR'd from scratch.
 MIN_CHARS_PER_PAGE = 20
+# A page mostly covered by one picture is a scanned page. When most pages are, the
+# text already in the file came from the scanner's own OCR - often poor (measured on
+# real scans: 10-53 % clean words, against 47-79 % after our own OCR) - so it is
+# replaced by ours instead of trusted.
+SCANNED_PAGE_IMAGE_SHARE = 0.5
+SCANNED_DOCUMENT_PAGE_SHARE = 0.5
+# Within a line, a gap wider than this many times the text height separates two
+# columns; it becomes a tab in the text so that a value is never read across it.
+COLUMN_GAP_HEIGHTS = 1.5
+WORDS_FORMAT_VERSION = 2
 # A document longer than this is refused rather than OCR'd for hours.
 MAX_OCR_PAGES = int(os.environ.get("CONVERTER_MAX_OCR_PAGES", "2000"))
 MAX_WORDS = 500_000
@@ -468,31 +478,82 @@ def pdf_meta(source):
 # ---------------------------------------------------------------- word positions (OCR)
 
 
-def _pdfplumber_words(pdf_path):
-    """(page count, text, word boxes) of a PDF, straight from its own text layer."""
+def _is_scanned_page(page):
+    """True if one picture covers most of the page (what a scanner produces)."""
+    area = float(page.width * page.height) or 1.0
+    for image in page.images:
+        width = min(image["x1"], page.width) - max(image["x0"], 0)
+        height = min(image["bottom"], page.height) - max(image["top"], 0)
+        if width > 0 and height > 0 and width * height / area >= SCANNED_PAGE_IMAGE_SHARE:
+            return True
+    return False
+
+
+def _separator(previous, word):
+    """What goes between two words: a space, a tab (column gap) or a line break."""
+    height = max(previous["bottom"] - previous["top"], 1.0)
+    if word["x0"] < previous["x0"] or abs(word["top"] - previous["top"]) > max(3.0, height / 2):
+        return "\n"
+    if word["x0"] - previous["x1"] > COLUMN_GAP_HEIGHTS * height:
+        return "\t"
+    return " "
+
+
+def _read_pdf(pdf_path):
+    """Read a PDF's own text layer.
+
+    Returns (pages, text, words, scanned pages): ``pages`` has the size and rotation
+    of each page, ``words`` one ``[page, x0, top, x1, bottom, start, end]`` per word,
+    where ``text[start:end]`` is the word - so positions never have to be worked out
+    again from how the text was put together. Lines are separated by a line break,
+    columns by a tab, pages by a form feed.
+    """
     import pdfplumber
 
+    pages, chunks, words = [], [], []
+    offset = scanned = 0
     with pdfplumber.open(pdf_path) as pdf:
-        pages = len(pdf.pages)
-        chunks = []
-        boxes = []
         for page_no, page in enumerate(pdf.pages, start=1):
+            pages.append(
+                {
+                    "width": round(float(page.width), 2),
+                    "height": round(float(page.height), 2),
+                    "rotation": int(page.rotation or 0) % 360,
+                }
+            )
+            scanned += _is_scanned_page(page)
+            if offset >= MAX_TEXT_CHARS:
+                continue
+            if page_no > 1:
+                chunks.append("\f")
+                offset += 1
+            previous = None
             for w in page.extract_words(use_text_flow=False):
-                chunks.append(w["text"])
-                chunks.append(" ")
-                if len(boxes) < MAX_WORDS:
-                    boxes.append(
-                        {
-                            "text": w["text"],
-                            "page": page_no,
-                            "x0": round(w["x0"], 2),
-                            "top": round(w["top"], 2),
-                            "x1": round(w["x1"], 2),
-                            "bottom": round(w["bottom"], 2),
-                        }
+                if previous is not None:
+                    separator = _separator(previous, w)
+                    chunks.append(separator)
+                    offset += len(separator)
+                # A NUL would be dropped on the way into the database and shift every
+                # position after it; keep the length, lose only the character.
+                word = w["text"].replace("\x00", "�")
+                start, offset = offset, offset + len(word)
+                chunks.append(word)
+                if offset <= MAX_TEXT_CHARS and len(words) < MAX_WORDS:
+                    words.append(
+                        [
+                            page_no,
+                            round(w["x0"], 2),
+                            round(w["top"], 2),
+                            round(w["x1"], 2),
+                            round(w["bottom"], 2),
+                            start,
+                            offset,
+                        ]
                     )
-            chunks.append("\n")
-    return pages, "".join(chunks), boxes
+                previous = w
+                if offset >= MAX_TEXT_CHARS:
+                    break
+    return pages, "".join(chunks)[:MAX_TEXT_CHARS], words, scanned
 
 
 def _pdf_page_count(source):
@@ -506,12 +567,16 @@ def _pdf_page_count(source):
     return 0
 
 
-def _run_ocr(source, workdir):
-    """OCR the whole document in one run; return the path to the searchable copy."""
-    output = os.path.join(workdir, "ocr.pdf")
+def _run_ocr(source, workdir, mode):
+    """OCR the whole document in one run; return the path to the searchable copy.
+
+    ``mode`` is "force-ocr" (read every page as a picture) or "redo-ocr" (replace
+    only the invisible text a scanner put in, keep real text).
+    """
+    output = os.path.join(workdir, f"{mode}.pdf")
     result = run_tool(
         [
-            "ocrmypdf", "--force-ocr", "-l", OCR_LANGUAGES, "--output-type", "pdf",
+            "ocrmypdf", f"--{mode}", "-l", OCR_LANGUAGES, "--output-type", "pdf",
             "--jobs", str(OCR_INTERNAL_JOBS), "--optimize", "0", "--fast-web-view", "0",
             source, output,
         ],
@@ -522,28 +587,59 @@ def _run_ocr(source, workdir):
     return output
 
 
+def _ocr_mode(pages, text, scanned):
+    """Which OCR a document needs, or None if its own text can be used as it is."""
+    if not pages:
+        return None
+    if len(text) / len(pages) < MIN_CHARS_PER_PAGE:
+        return "force-ocr"
+    if scanned / len(pages) >= SCANNED_DOCUMENT_PAGE_SHARE:
+        return "redo-ocr"
+    return None
+
+
 def make_words(source, ext, output):
-    """Text and word positions of a PDF; OCRs it first if it looks like a scan.
+    """Text and word positions of a PDF; OCRs it first if it is a scan.
 
     Digital PDFs (the majority) are done at once, straight from their own text
-    layer - no external tool beyond reading the file. A scan (too little embedded
-    text) is OCR'd whole: this can take a long time for a long document, which is
-    why the server answers such a request asynchronously instead of waiting.
+    layer - no external tool beyond reading the file. A scan is OCR'd whole, also
+    when the scanner already put text in: this can take a long time for a long
+    document, which is why the server answers such a request asynchronously.
     """
     if ext != "pdf":
         raise NotApplicable("words are only taken from PDF bytes")
-    pages, text, words = _pdfplumber_words(source)
+    pages, text, words, scanned = _read_pdf(source)
+    mode = _ocr_mode(pages, text, scanned)
     tool = "pdfplumber"
-    if pages and len(text) / pages < MIN_CHARS_PER_PAGE:
-        page_count = _pdf_page_count(source) or pages
+    if mode:
+        page_count = _pdf_page_count(source) or len(pages)
         if page_count > MAX_OCR_PAGES:
             raise NotApplicable(f"too many pages for OCR ({page_count})")
         with tempfile.TemporaryDirectory(dir=os.path.dirname(output)) as workdir:
-            ocr_path = _run_ocr(source, workdir)
-            pages, text, words = _pdfplumber_words(ocr_path)
-        tool = "ocrmypdf+pdfplumber"
+            try:
+                ocr_path = _run_ocr(source, workdir, mode)
+            except RuntimeError:
+                if mode != "redo-ocr":
+                    raise
+                # Some files defeat the search for the old text (seen on a real
+                # scan); reading every page anew still works on those.
+                mode = "force-ocr"
+                ocr_path = _run_ocr(source, workdir, mode)
+            pages, text, words, _scanned = _read_pdf(ocr_path)
+        tool = "ocrmypdf+pdfplumber" if mode == "force-ocr" else "ocrmypdf-redo+pdfplumber"
     with open(output, "w", encoding="utf-8") as f:
-        json.dump({"pages": pages, "text": text[:MAX_TEXT_CHARS], "words": words}, f)
+        json.dump(
+            {
+                "version": WORDS_FORMAT_VERSION,
+                "ocr": mode or "none",
+                "pages": pages,
+                "text": text,
+                "words": words,
+            },
+            f,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
     return tool
 
 

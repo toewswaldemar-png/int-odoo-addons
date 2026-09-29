@@ -102,7 +102,7 @@ class ConverterTest(unittest.TestCase):
 
     def words(self, content, wait=True):
         """Convert a PDF's text and word positions; waits out an async job if given one."""
-        status, headers, data = self.tile(store(content), "v1", "words", "pdf")
+        status, headers, data = self.tile(store(content), "v2", "words", "pdf")
         if status == 202:
             if not wait:
                 return json.loads(data)["job_id"]
@@ -148,12 +148,14 @@ class ConverterTest(unittest.TestCase):
         with open(path, "rb") as f:
             return f.read()
 
-    def make_pdf(self, text):
+    def make_pdf(self, text, *more):
+        """A digital PDF; ``more`` are further (x, y, text) placed on the same page."""
         source = os.path.join(BLOB_ROOT, "make.ps")
+        placed = "".join(f"{x} {y} moveto ({t}) show " for x, y, t in more)
         with open(source, "w") as f:
             f.write(
                 "/Helvetica findfont 24 scalefont setfont 72 700 moveto "
-                f"({text}) show showpage\n"
+                f"({text}) show {placed}showpage\n"
             )
         path = os.path.join(BLOB_ROOT, "make.pdf")
         subprocess.run(
@@ -175,6 +177,29 @@ class ConverterTest(unittest.TestCase):
         ImageDraw.Draw(image).text((20, 100), text, fill="black", font=font)
         buf = io.BytesIO()
         image.save(buf, "PDF", resolution=150.0)
+        return buf.getvalue()
+
+    def make_scan_with_scanner_text(self, picture_text, hidden_text):
+        """A scan whose scanner already added (wrong) invisible text, like many do."""
+        import pikepdf
+
+        pdf = pikepdf.open(io.BytesIO(self.make_scanned_pdf(picture_text)))
+        page = pdf.pages[0]
+        font = pdf.make_indirect(
+            pikepdf.Dictionary(
+                Type=pikepdf.Name.Font,
+                Subtype=pikepdf.Name.Type1,
+                BaseFont=pikepdf.Name.Helvetica,
+            )
+        )
+        page.add_resource(font, pikepdf.Name.Font, name=pikepdf.Name("/FHidden"))
+        # Text render mode 3: invisible, exactly how OCR text layers are drawn.
+        page.contents_add(
+            pdf.make_stream(f"BT /FHidden 24 Tf 3 Tr 20 60 Td ({hidden_text}) Tj ET".encode()),
+            prepend=False,
+        )
+        buf = io.BytesIO()
+        pdf.save(buf)
         return buf.getvalue()
 
     def make_docx(self, text):
@@ -322,17 +347,67 @@ class ConverterTest(unittest.TestCase):
         self.assertAlmostEqual(meta["duration"], 1.0, delta=0.3)
 
     def test_pdf_page_text_and_word_positions(self):
-        pdf = self.make_pdf("Hello converter")
+        # Long enough (20 characters a page) to count as a page with its own text.
+        pdf = self.make_pdf("Hello converter, digital page")
         image = self.converted(pdf, ext="pdf")
         self.assertLessEqual(image.width, 400)
         result = self.words(pdf)
-        self.assertIn("Hello converter", result["text"])
-        self.assertEqual(result["pages"], 1)
-        hello = next(w for w in result["words"] if w["text"] == "Hello")
-        self.assertEqual(hello["page"], 1)
-        self.assertLess(hello["x0"], hello["x1"])
-        self.assertLess(hello["top"], hello["bottom"])
+        self.assertEqual(result["version"], 2)
+        self.assertEqual(result["ocr"], "none")
+        self.assertIn("Hello converter, digital page", result["text"])
+        self.assertEqual(len(result["pages"]), 1)
+        self.assertEqual(result["pages"][0], {"width": 595.0, "height": 842.0, "rotation": 0})
+        page, x0, top, x1, bottom, start, end = self.word(result, "Hello")
+        self.assertEqual(page, 1)
+        self.assertLess(x0, x1)
+        self.assertLess(top, bottom)
         self.assertEqual(self.meta(pdf, "pdf")["pages"], 1)
+
+    def word(self, result, text):
+        """The entry of the first word that is ``text``, found through its own range."""
+        return next(w for w in result["words"] if result["text"][w[5] : w[6]] == text)
+
+    def assert_ranges_match_the_text(self, result):
+        """Every word's range points at a non-empty piece of the text with no gap in it."""
+        for entry in result["words"]:
+            piece = result["text"][entry[5] : entry[6]]
+            self.assertTrue(piece)
+            self.assertFalse(any(c in piece for c in " \t\n\f"), repr(piece))
+
+    def test_lines_columns_and_word_ranges(self):
+        # Two words on one line far apart (two columns) and one on the next line.
+        pdf = self.make_pdf("Kundennummer", (400, 700, "12345"), (72, 650, "Datum"))
+        result = self.words(pdf)
+        self.assert_ranges_match_the_text(result)
+        self.assertIn("Kundennummer\t12345\nDatum", result["text"])
+
+    def test_close_words_stay_on_one_line_with_a_space(self):
+        result = self.words(self.make_pdf("Zaehlernummer 44 450 7-5 148 621"))
+        self.assertEqual(result["ocr"], "none")
+        self.assertIn("Zaehlernummer 44 450 7-5 148 621", result["text"])
+        self.assert_ranges_match_the_text(result)
+
+    def test_pages_are_separated_by_a_form_feed(self):
+        source = os.path.join(BLOB_ROOT, "two_pages.ps")
+        with open(source, "w") as f:
+            f.write(
+                "/Helvetica findfont 24 scalefont setfont "
+                "72 700 moveto (First page of the letter) show showpage "
+                "72 700 moveto (Second page of the letter) show showpage\n"
+            )
+        path = os.path.join(BLOB_ROOT, "two_pages.pdf")
+        subprocess.run(
+            ["gs", "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=pdfwrite",
+             f"-sOutputFile={path}", source],
+            check=True,
+        )  # fmt: skip
+        with open(path, "rb") as f:
+            result = self.words(f.read())
+        self.assertEqual(
+            result["text"], "First page of the letter\fSecond page of the letter"
+        )
+        self.assertEqual(self.word(result, "Second")[0], 2)
+        self.assertEqual(len(result["pages"]), 2)
 
     def test_a_blank_scan_is_ocrd_and_has_no_text(self):
         buf = io.BytesIO()
@@ -344,20 +419,72 @@ class ConverterTest(unittest.TestCase):
     def test_a_real_scan_is_ocrd_with_word_positions(self):
         pdf = self.make_scanned_pdf("SCANNEDTEXT")
         result = self.words(pdf)
+        self.assertEqual(result["ocr"], "force-ocr")
         self.assertIn("SCANNEDTEXT", result["text"].upper())
-        found = next(w for w in result["words"] if w["text"].upper() == "SCANNEDTEXT")
-        self.assertEqual(found["page"], 1)
-        self.assertGreater(found["x1"], found["x0"])
+        found = next(
+            w for w in result["words"] if result["text"][w[5] : w[6]].upper() == "SCANNEDTEXT"
+        )
+        self.assertEqual(found[0], 1)
+        self.assertGreater(found[3], found[1])
+        self.assert_ranges_match_the_text(result)
+
+    def test_the_scanners_own_text_is_replaced_by_ours(self):
+        pdf = self.make_scan_with_scanner_text(
+            "SCANNEDTEXT", "GARBLEDWORD from the scanners own layer"
+        )
+        # The scanner's text is there and long enough to be trusted by length alone.
+        pages, text, _words, scanned = worker._read_pdf(self.save(pdf))
+        self.assertIn("GARBLEDWORD", text)
+        self.assertEqual((len(pages), scanned), (1, 1))
+        status, headers, data = self.tile(store(pdf), "v2", "words", "pdf")
+        if status == 202:
+            status, headers, data = self.poll_until_done(json.loads(data)["job_id"])
+        self.assertEqual(status, 200, data)
+        self.assertEqual(headers["X-Converter-Tool"], "ocrmypdf-redo+pdfplumber")
+        result = json.loads(data)
+        self.assertEqual(result["ocr"], "redo-ocr")
+        self.assertIn("SCANNEDTEXT", result["text"].upper())
+        self.assertNotIn("GARBLEDWORD", result["text"])
+
+    def test_a_scan_redo_can_not_handle_is_read_anew(self):
+        pdf = self.make_scan_with_scanner_text(
+            "FALLBACKTEXT", "GARBLEDWORD from the scanners own layer"
+        )
+        real_run_ocr = worker._run_ocr
+        modes = []
+
+        def run_ocr(source, workdir, mode):
+            modes.append(mode)
+            if mode == "redo-ocr":
+                raise RuntimeError("ocrmypdf: cannot redo this one")
+            return real_run_ocr(source, workdir, mode)
+
+        output = os.path.join(BLOB_ROOT, "fallback.json")
+        with mock.patch.object(worker, "_run_ocr", run_ocr):
+            tool = worker.make_words(self.save(pdf), "pdf", output)
+        with open(output) as f:
+            result = json.load(f)
+        self.assertEqual(modes, ["redo-ocr", "force-ocr"])
+        self.assertEqual((tool, result["ocr"]), ("ocrmypdf+pdfplumber", "force-ocr"))
+        self.assertIn("FALLBACKTEXT", result["text"].upper())
+
+    def save(self, content, name="saved.pdf"):
+        path = os.path.join(BLOB_ROOT, name)
+        with open(path, "wb") as f:
+            f.write(content)
+        return path
 
     def test_a_digital_pdf_is_not_ocrd(self):
-        pdf = self.make_pdf("No OCR needed here")
-        status, headers, data = self.tile(store(pdf), "v1", "words", "pdf")
+        pdf = self.make_pdf("No OCR needed on this digital page")
+        status, headers, data = self.tile(store(pdf), "v2", "words", "pdf")
         self.assertEqual(status, 200)
         self.assertEqual(headers["X-Converter-Tool"], "pdfplumber")
 
     def test_a_scan_is_ocrd_with_the_ocr_tool(self):
         pdf = self.make_scanned_pdf("OCRTOOLCHECK")
-        status, headers, data = self.tile(store(pdf), "v1", "words", "pdf")
+        status, headers, data = self.tile(store(pdf), "v2", "words", "pdf")
+        if status == 202:
+            status, headers, data = self.poll_until_done(json.loads(data)["job_id"])
         self.assertEqual(status, 200)
         self.assertEqual(headers["X-Converter-Tool"], "ocrmypdf+pdfplumber")
 
@@ -371,13 +498,13 @@ class ConverterTest(unittest.TestCase):
                 "not_applicable",
                 "too many pages",
                 kind="words",
-                spec="v1",
+                spec="v2",
                 ext="pdf",
             )
 
     def test_words_is_only_for_pdf_bytes(self):
         self.assert_refused(
-            store(b"not a pdf"), "not_applicable", "PDF", kind="words", spec="v1", ext="txt"
+            store(b"not a pdf"), "not_applicable", "PDF", kind="words", spec="v2", ext="txt"
         )
 
     def test_an_office_document_becomes_a_pdf_with_its_text(self):

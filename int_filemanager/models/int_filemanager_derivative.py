@@ -40,6 +40,9 @@ EXTENSION_SQL = r"substring(lower(n.name) from '\.([a-z0-9]{1,8})$')"
 # it sends); its metadata is a few hundred bytes.
 MAX_TEXT_BYTES = 8 * 1024 * 1024
 MAX_META_BYTES = 256 * 1024
+# A word list is 2 million characters of text plus at most 500,000 words of about
+# 50 bytes each.
+MAX_WORDS_BYTES = 40 * 1024 * 1024
 INT4_MAX = 2**31 - 1
 META_STRING_MAX = 200
 META_KEYS_MAX = 40
@@ -110,8 +113,8 @@ class IntFilemanagerDerivative(models.Model):
     tool_version = fields.Char()
     # Technical text, for administrators only (no user has access to this model).
     error = fields.Char()
-    # The text of a document (kind "text"); empty text means "none found", the
-    # trigger for character recognition later.
+    # The text of a document (kinds "text" and "words"; for "words" the same text the
+    # word positions in the result blob point into). Empty text means "none found".
     text = fields.Text()
     # The facts of a file (kind "meta"): everything the converter found, and the
     # ones worth filtering and sorting by as columns.
@@ -141,6 +144,7 @@ class IntFilemanagerDerivative(models.Model):
         url = params.get_param(CONVERTER_URL_PARAM)
         if not url:
             return
+        self._drop_outdated_jobs()
         self._enqueue_missing()
         self._drop_jobs_without_input()
         timeout = int(
@@ -195,12 +199,14 @@ class IntFilemanagerDerivative(models.Model):
 
         Done here, not in the write paths, so those stay untouched. Only current
         revisions: an old revision had its results when it was current. A new kind of
-        job for a kind of file is caught up the same way: "fewer rows than planned".
+        job for a kind of file, or a new spec of one, is caught up the same way: "fewer
+        current rows than planned" - rows of an older spec do not count.
         """
         self.env.flush_all()
         cr = self.env.cr
         extensions = derivative_plan.ALL_EXTENSIONS
         planned = [len(derivative_plan.job_plan(f"x.{ext}")) for ext in extensions]
+        kinds, specs = zip(*derivative_plan.CURRENT_JOBS, strict=True)
         cr.execute(
             f"""
             SELECT DISTINCT ON (b.id) b.id, n.name
@@ -211,11 +217,13 @@ class IntFilemanagerDerivative(models.Model):
                  ON want.ext = {EXTENSION_SQL}
             WHERE n.active AND b.size > 0
               AND (SELECT count(*) FROM int_filemanager_derivative d
-                   WHERE d.source_blob_id = b.id) < want.n
+                   WHERE d.source_blob_id = b.id
+                     AND (d.kind, d.spec) IN (
+                         SELECT * FROM unnest(%s::text[], %s::text[]))) < want.n
             ORDER BY b.id, n.id
             LIMIT %s
             """,  # noqa: S608 - EXTENSION_SQL is a constant
-            [extensions, planned, ENQUEUE_BATCH],
+            [extensions, planned, list(kinds), list(specs), ENQUEUE_BATCH],
         )
         for blob_id, name in cr.fetchall():
             self._queue_jobs(blob_id, name)
@@ -264,6 +272,30 @@ class IntFilemanagerDerivative(models.Model):
                         ]
                     )
             by_kind[item.kind] = job
+
+    @api.model
+    def _drop_outdated_jobs(self):
+        """Delete rows of a (kind, spec) the plan no longer makes.
+
+        Their replacement is queued by ``_enqueue_missing``; a result blob that was only
+        theirs is left without a reference and goes with the blob cleanup. Rows still
+        running are left until the converter answered.
+        """
+        self.env.flush_all()
+        kinds, specs = zip(*derivative_plan.CURRENT_JOBS, strict=True)
+        self.env.cr.execute(
+            """
+            DELETE FROM int_filemanager_derivative
+            WHERE id IN (
+                SELECT id FROM int_filemanager_derivative
+                WHERE state != 'running'
+                  AND (kind, spec) NOT IN (
+                      SELECT * FROM unnest(%s::text[], %s::text[]))
+                LIMIT %s)
+            """,
+            [list(kinds), list(specs), ENQUEUE_BATCH],
+        )
+        self.env.invalidate_all()
 
     @api.model
     def _drop_jobs_without_input(self):
@@ -350,7 +382,7 @@ class IntFilemanagerDerivative(models.Model):
                 if result.state == "done":
                     if kind in ("text", "meta"):
                         return self._store_value(kind, result)
-                    return self._store_result(result)
+                    return self._store_result(result, kind)
                 if result.state == "running":
                     self._mark_running(result.job_id)
                     return False
@@ -407,7 +439,7 @@ class IntFilemanagerDerivative(models.Model):
                             done_any |= (
                                 job._store_value(job.kind, result)
                                 if job.kind in ("text", "meta")
-                                else job._store_result(result)
+                                else job._store_result(result, job.kind)
                             )
                         else:
                             job._finish(result)
@@ -438,7 +470,7 @@ class IntFilemanagerDerivative(models.Model):
             values.update(state=result.state, attempts=self.attempts + 1)
         self.write(values)
 
-    def _store_result(self, result):
+    def _store_result(self, result, kind):
         """Store the converter's bytes as a blob and link them to this job.
 
         Same order as a user upload: the file is linked under its hash first,
@@ -450,6 +482,7 @@ class IntFilemanagerDerivative(models.Model):
         )
         try:
             sha256, size = blobstore.hash_file(tmp_path)
+            text = self._words_text(tmp_path, size) if kind == "words" else False
             blobstore.adopt_hashed(self.env, tmp_path, sha256, keep_tmp=True)
             fault.fault_point("derivative_after_link")
             blob = self.env["int_filemanager.blob"]._get_or_create(sha256, size)
@@ -468,12 +501,34 @@ class IntFilemanagerDerivative(models.Model):
                         "error": False,
                         "lease_until": False,
                         "finished_at": fields.Datetime.now(),
+                        "text": text,
                     }
                 )
             self.env["ir.cron"]._commit_progress()
             return stored
         finally:
             blobstore.remove_if_exists(tmp_path)
+
+    @staticmethod
+    def _words_text(path, size):
+        """The text part of the converter's word list, for search and value recognition.
+
+        The word list is the converter's own JSON, not a foreign file. False if it is
+        larger than any answer of the converter can be, or not what it sends; the word
+        list itself is still kept.
+        """
+        if size > MAX_WORDS_BYTES:
+            _logger.warning("word list of %d bytes not read for its text", size)
+            return False
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        except ValueError:
+            return False
+        text = data.get("text") if isinstance(data, dict) else None
+        # A NUL cannot go into the database; the converter already replaces it, so
+        # this keeps every position the same even for a list that slipped through.
+        return text.replace("\x00", "�") if isinstance(text, str) else False
 
     @staticmethod
     def _read_limited(stream, limit):

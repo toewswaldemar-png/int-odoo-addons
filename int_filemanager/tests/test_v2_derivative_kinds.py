@@ -197,21 +197,102 @@ class TestKindsQueue(DerivativeCase):
         )
         self.assertEqual(self._rows(note)["text"].text, "ab")
 
-    def test_words_of_a_pdf_are_stored_as_a_blob_not_a_row(self):
-        """Unlike plain text, a PDF's text and word positions can be sizeable: they go
-        into the blob store like a thumbnail, not into a database column."""
+    def test_words_of_a_pdf_are_a_blob_and_their_text_a_column(self):
+        """The word positions can be sizeable: they go into the blob store like a
+        thumbnail. The text alone is kept in the row as well, for search and value
+        recognition, without reading the word list again."""
         paper = self._file("paper.pdf", b"pdf bytes")
         blobs_before = self.Blob.search_count([])
         self._run()
         job = self._rows(paper)["words"]
         self.assertEqual(job.state, "done")
         self.assertTrue(job.derived_blob_id)
-        self.assertFalse(job.text)
+        self.assertEqual(job.text, WORDS["text"])
         self.assertGreater(self.Blob.search_count([]), blobs_before)
         with open(
             blobstore.blob_path(self.env, job.derived_blob_id.sha256), encoding="utf-8"
         ) as f:
             self.assertEqual(json.loads(f.read()), WORDS)
+
+    def _words_answer(self, data):
+        return FakeConverter(
+            by_kind={"words": lambda sha256: text_result(data, "application/json")}
+        )
+
+    def test_a_word_list_too_large_to_read_keeps_the_list_but_no_text(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        with patch.object(derivative_module, "MAX_WORDS_BYTES", 10):
+            self._run()
+        job = self._rows(paper)["words"]
+        self.assertEqual(job.state, "done")
+        self.assertTrue(job.derived_blob_id)
+        self.assertFalse(job.text)
+
+    def test_a_word_list_that_is_not_one_keeps_the_list_but_no_text(self):
+        for name, data in (
+            ("broken.pdf", b"{not json"),
+            ("array.pdf", b"[1, 2]"),
+            ("number.pdf", json.dumps({"text": 5}).encode()),
+        ):
+            with self.subTest(name=name):
+                paper = self._file(name, name.encode())
+                self._run(self._words_answer(data))
+                job = self._rows(paper)["words"]
+                self.assertEqual(job.state, "done")
+                self.assertFalse(job.text)
+
+    def test_a_nul_in_the_text_of_a_word_list_keeps_the_positions(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        data = json.dumps({"text": "a\x00b", "words": [[1, 0, 0, 1, 1, 2, 3]]})
+        self._run(self._words_answer(data.encode()))
+        text = self._rows(paper)["words"].text
+        self.assertEqual(text, "a�b")
+        self.assertEqual(text[2:3], "b")
+
+    def test_rows_of_an_older_spec_are_replaced(self):
+        """A new word list format (or thumbnail size) must reach files that already
+        have the old one: the old row is dropped and the current one made."""
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self._run()
+        current = self._rows(paper)["words"]
+        old_result = current.derived_blob_id
+        current.spec = "v0-older"
+        self.env.flush_all()
+        with self.subTest("the old row does not count as the planned one"):
+            self.Derivative._enqueue_missing()
+            specs = self.Derivative.search(
+                [
+                    ("source_blob_id", "=", paper.current_revision_id.blob_id.id),
+                    ("kind", "=", "words"),
+                ]
+            ).mapped("spec")
+            self.assertEqual(sorted(specs), sorted([plan.WORDS_SPEC, "v0-older"]))
+        self._run()
+        rows = self.Derivative.search(
+            [
+                ("source_blob_id", "=", paper.current_revision_id.blob_id.id),
+                ("kind", "=", "words"),
+            ]
+        )
+        self.assertEqual(rows.mapped("spec"), [plan.WORDS_SPEC])
+        self.assertEqual(rows.state, "done")
+        self.assertTrue(old_result.exists())  # only the blob cleanup removes blobs
+
+    def test_a_running_row_of_an_older_spec_is_left_until_it_answered(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self.Derivative._enqueue_missing()
+        job = self._rows(paper)["words"]
+        job.write({"spec": "v0-older", "state": "running"})
+        self.Derivative._drop_outdated_jobs()
+        self.assertTrue(job.exists())
+        job.state = "done"
+        self.Derivative._drop_outdated_jobs()
+        self.assertFalse(job.exists())
+
+    def test_every_planned_kind_and_spec_is_current(self):
+        for ext in plan.ALL_EXTENSIONS:
+            for item in plan.job_plan(f"x.{ext}"):
+                self.assertIn((item.kind, item.spec), plan.CURRENT_JOBS, ext)
 
     def test_an_answer_longer_than_allowed_is_not_taken(self):
         note = self._file("note.txt", b"some text")

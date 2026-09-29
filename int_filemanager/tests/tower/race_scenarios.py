@@ -1086,7 +1086,7 @@ if len(job) == 1:
     )
     if job.derived_blob_id:
         with open(blobstore.blob_path(env, job.derived_blob_id.sha256)) as f:
-            out["pages_in_result"] = json.load(f)["pages"]
+            out["pages_in_result"] = len(json.load(f)["pages"])
 print("RESULT " + json.dumps(out))
 """
 

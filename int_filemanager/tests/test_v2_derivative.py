@@ -61,11 +61,12 @@ META = {
 
 
 WORDS = {
-    "pages": 1,
+    "version": 2,
+    "ocr": "none",
+    "pages": [{"width": 595.0, "height": 842.0, "rotation": 0}],
     "text": "Hello converter",
-    "words": [
-        {"text": "Hello", "page": 1, "x0": 10.0, "top": 5.0, "x1": 40.0, "bottom": 15.0}
-    ],
+    # page, x0, top, x1, bottom, start, end - text[start:end] is the word
+    "words": [[1, 10.0, 5.0, 40.0, 15.0, 0, 5], [1, 45.0, 5.0, 110.0, 15.0, 6, 15]],
 }
 
 

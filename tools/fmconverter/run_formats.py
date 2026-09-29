@@ -23,7 +23,7 @@ import worker
 TILE = ("tile", "400x300")
 PREVIEW = ("preview", "1920x1920")
 TEXT = ("text", "embedded")
-WORDS = ("words", "v1")
+WORDS = ("words", "v2")
 META = ("meta", "v1")
 PDF = ("preview_pdf", "pdf")
 

@@ -12,7 +12,8 @@ TILE_SPEC = "400x300"
 PREVIEW_SPEC = "1920x1920"
 PDF_SPEC = "pdf"
 TEXT_SPEC = "embedded"
-WORDS_SPEC = "v1"
+# v2: lines, column gaps, each word's place in the text, page sizes; scans OCR'd anew.
+WORDS_SPEC = "v2"
 META_SPEC = "v1"
 
 # Order in the queue: what is seen first, then what is only looked up. "words" can mean
@@ -146,4 +147,10 @@ ALL_EXTENSIONS = sorted(
     | OFFICE_EXTENSIONS
     | TEXT_EXTENSIONS
     | PDF_EXTENSIONS
+)
+
+# Every (kind, spec) some file would get today. A row with any other pair was made by
+# an older version of this plan (a changed size, a new word list format).
+CURRENT_JOBS = sorted(
+    {(item.kind, item.spec) for ext in ALL_EXTENSIONS for item in job_plan(f"x.{ext}")}
 )
