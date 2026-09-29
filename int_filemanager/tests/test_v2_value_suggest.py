@@ -322,6 +322,13 @@ class TestV2ValueSuggest(BaseCase):
         # Without positions nothing is known to be in the window.
         self.assertEqual(run(vs.Page("Herrn Max Muster"), [recipient])[0], {})
 
+    def test_the_digits_of_a_vat_number_are_no_number(self):
+        page = layout(
+            (100, [(350, "USt-IdNr. DE 136695976")]),
+            (112, [(350, "Rechnungsnummer")]),
+        )
+        self.assertEqual(run(page, [INVOICE])[0], {})
+
     def test_an_iban_needs_a_label(self):
         # Without one it is mostly the reader's own account.
         iban = spec(13, "iban", "IBAN")

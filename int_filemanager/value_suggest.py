@@ -444,12 +444,22 @@ def suggest(page, specs, skip=None, slow=None, **options):
         for s in specs
         if s.keywords or s.hints or s.value_type in SELF_EVIDENT_TYPES
     }
+    # The digits of an IBAN or a VAT number are no number of their own.
+    proven = [
+        (c.start, c.end)
+        for value_type in ("iban", "vat")
+        for c in value_types.find(value_type, page.text, **options)
+    ]
     for value_type, unit in sorted(kinds, key=lambda k: (k[0], k[1] or "")):
         fitting = [s for s in specs if (s.value_type, s.unit) == (value_type, unit)]
         candidates = [
             c
             for c in value_types.find(value_type, page.text, unit=unit, **options)
             if not skip(value_type, c.value)
+            and not (
+                value_type == "number"
+                and any(start < c.end and c.start < end for start, end in proven)
+            )
         ]
         _labelled_pairs(page, value_type, fitting, candidates, pairs, unassigned)
         # Without a label, the value could belong to any field of its type.
