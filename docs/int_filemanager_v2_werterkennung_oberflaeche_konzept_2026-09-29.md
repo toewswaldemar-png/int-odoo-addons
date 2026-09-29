@@ -234,7 +234,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 
 | Scheibe | Inhalt | Fertig, wenn |
 |---|---|---|
-| U-1 | **Volltextsuche** im gelesenen Text (`derivative.text`) in der Dateisuche wieder anbinden – die v2-Suche findet heute nur Name, Tags, Status, Kontakt (v1 konnte den Inhalt durchsuchen) | ein Wort, das nur im Dokument steht, findet die Datei; Suche bleibt bei großen Ordnern schnell |
+| U-1 | **Volltextsuche** im gelesenen Text (`derivative.text`) in der Dateisuche wieder anbinden, dazu **Formularfeld-Werte** in Wortliste und Text (N1) – die v2-Suche findet heute nur Name, Tags, Status, Kontakt (v1 konnte den Inhalt durchsuchen) | ein Wort, das nur im Dokument steht, findet die Datei; Suche bleibt bei großen Ordnern schnell |
 | U-2 | Server: Kästen beim Vorschlagen, Paare je Kasten mit Lage, Wert aus Markierung | Tests je Richtung wie W-4; Jahresbescheid-Beispiel liefert Infoblock-Paare |
 | U-3 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern; **unsichere Werte zuerst**, Plausibilitäts-/Dubletten-Hinweise, **abweichende IBAN** (Abschnitt 9) | eine Datei prüfen und speichern ohne Kasten |
 | U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Farben/Hover | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
@@ -377,8 +377,10 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
 
 ### 10.5 Neue Fragen an den Nutzer
 
-- **N1** Formularfeld-Werte (10.2) in Wortliste und Suche aufnehmen (v1-Lösung in den Umwandler)? *Empfehlung: ja,
-  zusammen mit U-1 Volltextsuche.*
+- ~~**N1**~~ **entschieden (Nutzer 2026-09-29): ja, Teil von U-1.** Der Umwandler liest ausgefüllte Formularfelder
+  (Text- und Auswahlfelder, wie v1 `fulltext._pdf_form_field_words`) mit ihrer Lage auf der Seite und hängt sie an die
+  Wortliste; Ankreuzfelder vorerst nicht (Wert ist kein Text, Zuordnung zur Beschriftung unsicher). Neue Spec-Version der
+  Wortliste, damit vorhandene Dokumente im Hintergrund neu gelesen werden.
 - **N2** Überweisungs-QR (U5) neu bewerten: nur 2 von 513 Dokumenten. *Empfehlung: zurückstellen bis zum Eingangsordner
   / Geschäftsbelegen, dort erst zählen.*
 - **N3** Gemerkte Kästen je Absender (U-5) sofort oder erst, wenn die Nutzung zeigt, dass sie gebraucht werden?
