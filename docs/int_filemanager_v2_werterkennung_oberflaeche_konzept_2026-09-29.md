@@ -230,7 +230,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 | U-2 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern | eine Datei prüfen und speichern ohne Kasten |
 | U-3 | Kasten-Werkzeug, weitere Werte, „als neues Feld“, Farben/Hover | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
 | U-4 | Kästen merken je Absender (Modell, Anker, Vorschlag beim nächsten Dokument), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
-| U-5 | Nachlesen (Umwandler) und QR automatisch je Dokument (Umwandler, 5.6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
+| U-5 | Nachlesen (Umwandler), QR automatisch je Dokument (5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
 | U-6 | Messung: **Prüfteil** (16 unbekannte Absender, bisher unverbraucht) ohne und mit Lernen, dazu Zeit je Dokument | Zahlen gegen die 86 % des Übungsteils |
 | (später) | Automatisch übernehmen (6.3) mit dem Eingangsordner; E-Rechnung; Dokumentart | eigene Entscheidungen |
 
@@ -248,8 +248,10 @@ Eingangsordner neu entscheiden. Vorschlag:
   Felder fehlen. Dokumentarten lassen sich ohne Umbau ergänzen.
 - ~~**U5**~~ **entschieden (Nutzer 2026-09-29): auf dem Server im Umwandler, automatisch für jedes Dokument** (5.6),
   ohne Kasten; funktioniert damit auch für den Eingangsordner und die Automatik aus U1.
-- **U6** Nur PDF im Prüf-Fenster, oder auch Bilder (JPG/TIFF-Scans haben heute keine Wortliste, Lücke aus dem
-  Werterkennungs-Plan)?
+- ~~**U6**~~ **entschieden (Nutzer 2026-09-29): Bilder auf Wunsch jetzt, automatisch später je Ordner.** Im
+  Prüf-Fenster zeigt ein Bild ohne Wortliste den Knopf „Text erkennen“ (Umwandler-Auftrag, danach wie PDF); mit dem
+  Eingangsordner zusätzlich automatisch für Bilder aus bestimmten Ordnern (Eingang, Scans). Nie für alle Bilder
+  (rund 209.000 Fotos). Geraderücken von Handyfotos wäre ein eigener späterer Schritt.
 
 ## 9. Nachtrag: PaperOffice AI (Cloud-Plattform) – Wissensgraph, Entitäten, Kontakte, Suche
 
