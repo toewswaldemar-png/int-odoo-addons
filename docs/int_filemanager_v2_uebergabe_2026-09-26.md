@@ -105,26 +105,45 @@ Konzepts.** Prototypen auf der Testinstanz sind erlaubt. **Freigabe von Konzept 
 
 Schritt 5 (Konzept Abschnitt 8/9, Kern Reihenfolge Punkt 5) ist **im Server/Datenmodell fertig, ohne Oberfläche**:
 Kacheln/Vorschauen für alle Formate, Text und Metadaten, dazu OCR mit Wortpositionen für später geplante
-Hervorhebung – siehe die beiden neuesten Zeilen in Abschnitt 3. Getestet: 394 Odoo-Tests, 16 echte
-Prozess-Szenarien auf Tower (`tools/v2check/race.sh`), 50 Umwandler-Tests, alle grün; `v2check` ohne neue Befunde.
+Hervorhebung – siehe die beiden neuesten Zeilen in Abschnitt 3. Getestet (Stand W-1): 400 Odoo-Tests, 16 echte
+Prozess-Szenarien auf Tower (`tools/v2check/race.sh`, nach W-1 nicht erneut gelaufen), 55 Umwandler-Tests, alle grün.
 Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln (Liste/Kacheln-Ansicht) und dem
 Öffnen der großen Vorschau für TIFF/HEIC/RAW/Office im Viewer.
 
 **Offen, in dieser Reihenfolge:**
 
-1. **`int_filemanager.extraction_pattern` und `.extracted_value`** (Konzept 9, Entscheidung 14 "Werterkennung bleibt
-   in Odoo"): Muster, erkannte Werte, Position (page/x0/top/x1/bottom) – wie v1, aber an `node_id` statt am alten
-   Dateimodell, mit den zwei Methoden zum Vorschlagen/Übernehmen privat und rechtegeprüft (schließt dabei die alte
-   Sicherheitslücke N1, siehe Abschnitt 6). Noch **ohne** Oberfläche, wie der Rest von Schritt 5 bisher.
-   **Plan mit Recherche (Odoo 19, Paperless-ngx) und offenen Entscheidungen E1–E9, Probe an einem echten Dokument:**
-   `docs/int_filemanager_v2_werterkennung_plan_2026-09-29.md` – vor dem ersten Code die Entscheidungen einholen.
+1. **Werterkennung** (Konzept 9, Entscheidung 14 "Werterkennung bleibt in Odoo"), noch **ohne** Oberfläche.
+   **Maßgeblich ist der Plan `docs/int_filemanager_v2_werterkennung_plan_2026-09-29.md`** (Recherche Odoo 19 und
+   Paperless-ngx, 4 Proben an echten Dokumenten, Scheiben W-1…W-6). **Entscheidungen E1–E9 vom Nutzer freigegeben
+   (2026-09-29, „dann leg los“)**; Plan-Abschnitt 4 geändert: **eigene neue v2-Modelle** statt Erweiterung der
+   v1-Modelle (Gründe dort).
+
+   **Stand bei Sitzungsende 2026-09-29 – hier weitermachen:**
+   - **W-1 fertig** (Wortliste v2, neue Texterkennung für Scans mit Scanner-Text, Spec-Wechsel-Fehler in
+     `_enqueue_missing` behoben, Text in `derivative.text`): 55 Umwandler-Tests, **400 Odoo-Tests** grün, pre-commit
+     grün; Einzelheiten Plan Abschnitt 6 „Stand W-1“. Image `fmconverter:dev` auf Tower ist neu gebaut (enthält v2);
+     der laufende Container `fmv2_ui_conv` (UI-Testinstanz) nutzt noch das **alte** Image – bei Bedarf neu erstellen.
+   - **Läuft noch auf Tower:** Container `wk_runall` (entfernt sich **nicht** selbst) wendet die neue Wortliste auf
+     alle 513 PDFs der Sammlung an → `/mnt/user/test/werterkennung_words/NNNN.json` (Wortlisten), `index.json`
+     (Datei → Nummer, OCR-Art, Dauer), `run.log` (Fortschritt und am Ende: Modus-Verteilung, Fehler, kaputte
+     Zeichenbereiche – muss 0 sein –, Qualität vorher/nachher, langsamste Dateien). Dauer grob 1–2 h. Danach:
+     `run.log` auswerten, Ergebnis in Plan 6 eintragen, `docker rm wk_runall`. Der Ordner ist `chmod 700` und
+     enthält persönliche Texte – nie ins Repo.
+   - **Nächster Schritt W-2** (Datenmodell nach Plan 4, geänderte Fassung): `extraction_field`, `extraction_rule`
+     (Stichwort- und Regex-Modus), `field_value` mit typisierten Spalten, Rechte, Startbelegung aus dem
+     Stichwort-Katalog der Proben (`docs/prototypes/werterkennung/keyword_search.py`, Liste `FIELDS`).
+     Danach W-3 (Umwandeln/Prüfen je Wertart), W-4 (Vorschlagen: Suche im Text **und** nach Seitenlage, jetzt über
+     `\t`/`\n` und die Wortpositionen der v2-Liste), W-5 (Übernehmen, N1-Test), W-6 (Sollwerte für 30–50 Dokumente
+     der Sammlung mit dem Nutzer abhaken, feste Testsammlung).
+   - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
 2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
    `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`). **Für die Werterkennung**
    liegt seit 2026-09-29 eine eigene Sammlung echter privater Dokumente des Nutzers unter
    `/mnt/user/test/werterkennung/` auf Tower (528 Dateien, 531 MB, davon 513 PDFs: Immobilie/Rechnungen und Finanzen
    mit Versicherungen, Hausnebenkosten, Gehalt, Steuer, Bank, Rente/Krankenkasse; Quelle `G:\Meine Ablage\Privat`,
    ohne `.pfx`-Zertifikate und `.gsheet`-Verknüpfungen). Nur root (`chmod 700`), keine Freigabe; **niemals ins Repo,
-   nicht in Berichte mit persönlichen Daten**. Sollwerte je Dokument (W-6) fehlen noch.
+   nicht in Berichte mit persönlichen Daten**. Sollwerte je Dokument (W-6) fehlen noch. Abgeleitete Wortlisten:
+   `/mnt/user/test/werterkennung_words/` (ebenfalls `chmod 700`, Skripte in `_tools/`).
 3. **Erst danach, als eigener Schritt:** der Hervorhebungs-Viewer (v1s Phase C – eigener `pdf.js`-Renderer mit
    Markierungs-Kästen) und alles, was Schritt 5 in den Explorer einhängt (Kontroll-Dialog, „Werte erkennen"-Knopf).
    Bewusst zurückgestellt, damit Server/Datenmodell zuerst geprüft feststehen (Nutzerentscheidung 2026-09-29).

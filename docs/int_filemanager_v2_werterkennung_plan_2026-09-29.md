@@ -130,9 +130,25 @@ Titel, Tags, Korrespondent, Dokumenttyp, Ablagepfad und Datum vor. Unsere Muster
 
 ## 4. Vorschlag Datenmodell
 
-Die Modellnamen aus v1 bleiben (Konzept 4: „werden auf den Knoten umgehängt“); Änderungen sind **additiv**, damit
-v1 bis Schritt 8 läuft. Die Dateien bekommen beim Anfassen den vollen Modellnamen
-(`int_filemanager_extraction_pattern.py` usw., Namensregel).
+> **Geändert 2026-09-29 (bei der Vorbereitung von W-2, verbindlich statt 4.2/4.3 unten):** v2 bekommt **eigene,
+> neue Modelle**; die v1-Modelle `extraction_pattern`/`extracted_value` bleiben bis Schritt 8 unverändert und werden
+> dort übernommen (Muster → Regel im Regex-Modus, `target_field` → Feld, Werte → `field_value`) und gelöscht.
+> Gründe, im Code nachgesehen: (1) die generierten v1-Schutzordner-Regeln auf `extracted_value` filtern über
+> `file_id.path` (`acl_rules.py`, `MODELS`) – v2-Zeilen ohne `file_id` wären für Nicht-Admins unsichtbar;
+> (2) v1s `_match_patterns` (`fulltext.py`) liest **alle** aktiven Muster und würde v2-Regeln im v1-Dialog verwenden;
+> (3) der Stichwort-Modus (E8) und die Wertarten aus den Proben (8) passen nicht in v1s „ein Regex je Muster“.
+> Neue Modelle (Namen vorläufig, beim Bau festlegen):
+> - `int_filemanager.extraction_field` wie 4.1, Wertarten nach den Proben: Nummer (auch in Leerzeichen-Gruppen),
+>   Wort, Datum, Zeitraum oder Dauer, Geldbetrag, Menge mit Einheit (ct/kWh, kWh, €/Monat), IBAN, USt-IdNr., E-Mail;
+>   dazu Einheit/Währung als Einstellung des Felds.
+> - `int_filemanager.extraction_rule`: `field_id`, `sequence`, `active`, `mode` (`keyword` | `regex`), `keywords`
+>   (eine Zeile je Stichwort), `pattern`/`group_index`/`ignore_case` für den Regex-Modus.
+> - `int_filemanager.field_value`: wie 4.3, aber `rule_id` statt `pattern_id`, ohne `file_id`; typisierte Spalten
+>   `value_text` (immer, normalisiert), `value_date`, `value_date_to`, `value_number` + `currency_id`/`unit`.
+> - Knoten: `field_value_ids`. Rechte wie 5.3 (Lesen entlang des Knotens, Schreiben nur über die Methode).
+>
+> Ursprünglicher Text (überholt): Die Modellnamen aus v1 bleiben (Konzept 4: „werden auf den Knoten umgehängt“);
+> Änderungen sind additiv, damit v1 bis Schritt 8 läuft.
 
 ### 4.1 `int_filemanager.extraction_field` (neu) – „Was wird gesucht“
 
@@ -247,9 +263,30 @@ Entscheidung E3.
 | W-5 | Übernehmen (5.2), N1 | HttpCase: Nicht-Admin per `call_kw` und JSON-2 auf fremden Knoten → Zugriff verweigert; alte `revision_id` → Fehler |
 | W-6 | **Messung an echten Dokumenten**: 20–30 echte Rechnungen/Briefe mit Sollwerten in einer TSV-Datei (Ablage nur auf Tower, nicht im Repo – Kundendaten) | Trefferquote je Feld dokumentiert; Zielwert legt der Nutzer nach der ersten Messung fest |
 
-## 7. Offene Entscheidungen
+**Stand W-1 (2026-09-29):** gebaut und getestet.
+- Umwandler (`tools/fmconverter/worker.py`): Wortliste **v2** = `{"version": 2, "ocr": "none"|"redo-ocr"|"force-ocr",
+  "pages": [{width, height, rotation}], "text", "words": [[page, x0, top, x1, bottom, start, end]]}`,
+  `text[start:end]` ist das Wort; Zeilen `\n`, Spaltenlücke (> 1,5 × Texthöhe) `\t`, Seiten `\f`. Scans (≥ 50 % der
+  Seiten zu ≥ 50 % von einem Bild bedeckt) werden **auch mit Scanner-Text** neu erkannt (`--redo-ocr`, bei Fehler
+  `--force-ocr`); unter 20 Zeichen je Seite wie bisher `--force-ocr`. 55 Umwandler-Tests grün (neu: Zeilen/Spalten/
+  Zeichenbereiche, Seitenumbruch, Scan mit falscher Scanner-Ebene, Rückfall redo → force).
+- Messung vorab an der Sammlung (513 PDFs): 343 digital, 94 Scans ohne Text, **76 Scans mit Scanner-Text**
+  (v. a. Canon „IJ Scan Utility“, PDF24). Stichprobe 12: `--redo-ocr` nie schlechter als der Scanner-Text, bei
+  Canon-Scans saubere Wörter 10 → 47 %, 33 → 62 %, 53 → 79 %; kein doppelter Text; 1 × Abbruch (PDF24) → Rückfall.
+- Odoo: `WORDS_SPEC = "v2"`; **Fehler behoben:** `_enqueue_missing` zählte alle Zeilen eines Blobs, eine neue Spec
+  (Wortliste, Kachelgröße) wäre nie nachgeholt worden – zählt jetzt nur Zeilen aus `derivative_plan.CURRENT_JOBS`;
+  neu `_drop_outdated_jobs` (löscht Zeilen alter Specs, laufende erst nach Antwort); Text der Wortliste zusätzlich
+  in `derivative.text` (`_words_text`, Grenze `MAX_WORDS_BYTES`). Neue Odoo-Tests in `test_v2_derivative_kinds.py`.
+- Tests: 55 Umwandler-Tests, 400 Odoo-Tests grün, pre-commit grün. Offen: Ergebnis des Laufs über die ganze
+  Sammlung (Übergabe 4.0), `race.sh` nach W-1 nicht erneut gelaufen, dann W-2.
 
-| # | Frage | Empfehlung |
+## 7. Entscheidungen
+
+**Alle Empfehlungen E1–E9 vom Nutzer übernommen (2026-09-29, „dann leg los“).** Ergänzend aus den Proben (8):
+Stichwort-Modus sucht im Text und nach Seitenlage; „Wert anklicken und Stichwort lernen“ für die Oberfläche
+vorgemerkt; kein Einzeichnen von Feldern auf dem PDF.
+
+| # | Frage | Empfehlung (übernommen) |
 |---|---|---|
 | E1 | Feld-Definition als eigenes Modell (4.1) oder bei v1s „ein Muster = ein Wert“ bleiben? | eigenes Modell |
 | E2 | Vorschläge nur bei Bedarf berechnen oder gespeichert (z. B. für eine spätere Liste „ungeprüfte Eingänge“)? | bei Bedarf; Speichern erst, wenn die Liste gebraucht wird (Schritt 7, Eingangsordner) |
