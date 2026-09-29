@@ -12,10 +12,19 @@ TILE_SPEC = "400x300"
 PREVIEW_SPEC = "1920x1920"
 PDF_SPEC = "pdf"
 TEXT_SPEC = "embedded"
+WORDS_SPEC = "v1"
 META_SPEC = "v1"
 
-# Order in the queue: what is seen first, then what is only looked up.
-PRIORITY = {"tile": 0, "preview_pdf": 0, "text": -5, "preview": -10, "meta": -20}
+# Order in the queue: what is seen first, then what is only looked up. "words" can mean
+# OCR on a scan, which is slow - it waits behind everything else, including "text".
+PRIORITY = {
+    "tile": 0,
+    "preview_pdf": 0,
+    "text": -5,
+    "preview": -10,
+    "meta": -20,
+    "words": -25,
+}
 
 # A browser shows these itself: their large preview is the original.
 BROWSER_IMAGE_TYPES = {
@@ -102,13 +111,13 @@ def job_plan(name):
     if klass in ("converted_image", "video"):
         return [tile, preview, meta]
     if klass == "pdf":
-        return [tile, preview, JobPlan("text", TEXT_SPEC), meta]
+        return [tile, preview, JobPlan("words", WORDS_SPEC), meta]
     if klass == "office":
         return [
             JobPlan("preview_pdf", PDF_SPEC),
             dataclasses.replace(tile, after="preview_pdf"),
             dataclasses.replace(preview, after="preview_pdf"),
-            JobPlan("text", TEXT_SPEC, after="preview_pdf"),
+            JobPlan("words", WORDS_SPEC, after="preview_pdf"),
         ]
     if klass == "audio":
         return [tile, meta]

@@ -15,12 +15,20 @@ _logger = logging.getLogger(__name__)
 
 CONVERTER_URL_PARAM = "int_filemanager.converter_url"
 CONVERTER_TIMEOUT_PARAM = "int_filemanager.converter_timeout_s"
+# How long Odoo waits for one HTTP call to answer: comfortably above the converter's
+# own inline wait budget (15s) for the fast kinds, and short for a poll of a slow one -
+# the whole point of the async protocol is that this never has to be a long timeout.
 DEFAULT_CONVERTER_TIMEOUT_S = 60
 # One cron run stops starting new jobs after this long.
 RUN_BUDGET_S = 45
 CLAIM_BATCH = 5
-# A job whose worker died is released this long after it was taken.
+# A job whose worker died is released this long after it was taken; also how long a
+# job that answered "still running" is trusted before the next poll must renew it.
 LEASE_MINUTES = 10
+# A job polled for longer than this without ever finishing is given up on (counts as
+# a failure, so the usual retry applies): a bit above the converter's own OCR ceiling
+# (1800s), which is itself close to Odoo's documented cron real-time limit.
+MAX_JOB_AGE_MINUTES = 40
 MAX_ATTEMPTS = 3
 MAX_CLAIM_CONFLICTS = 5
 ENQUEUE_BATCH = 500
@@ -59,6 +67,7 @@ class IntFilemanagerDerivative(models.Model):
             ("preview", "Preview image"),
             ("preview_pdf", "Preview PDF"),
             ("text", "Text"),
+            ("words", "Text and word positions"),
             ("meta", "Metadata"),
         ],
         required=True,
@@ -88,6 +97,9 @@ class IntFilemanagerDerivative(models.Model):
     mime = fields.Char()
     # The extension the queuing file name had: a hint for the converter.
     hint_ext = fields.Char()
+    # Set while the converter is still working on this job (OCR on a scan): Odoo polls
+    # instead of blocking. Cleared once a final answer (done or not) is stored.
+    converter_job_id = fields.Char()
     priority = fields.Integer(default=0)
     attempts = fields.Integer()
     next_try_at = fields.Datetime()
@@ -124,7 +136,7 @@ class IntFilemanagerDerivative(models.Model):
 
     @api.model
     def _cron_run(self):
-        """Queue the missing jobs and work through the open ones."""
+        """Queue the missing jobs, check on slow ones, and work through the rest."""
         params = self.env["ir.config_parameter"].sudo()
         url = params.get_param(CONVERTER_URL_PARAM)
         if not url:
@@ -134,8 +146,8 @@ class IntFilemanagerDerivative(models.Model):
         timeout = int(
             params.get_param(CONVERTER_TIMEOUT_PARAM, DEFAULT_CONVERTER_TIMEOUT_S)
         )
+        done_any = self._poll_running_jobs(url, timeout)
         deadline = time.monotonic() + RUN_BUDGET_S
-        done_any = False
         claim_conflicts = 0
         while time.monotonic() < deadline:
             # A fresh transaction, so the claim below sees what other runs committed
@@ -339,12 +351,70 @@ class IntFilemanagerDerivative(models.Model):
                     if kind in ("text", "meta"):
                         return self._store_value(kind, result)
                     return self._store_result(result)
+                if result.state == "running":
+                    self._mark_running(result.job_id)
+                    return False
                 self._finish(result)
         except converter_client.ConverterUnavailable:
             # Not the file's fault: hand the job back without counting an attempt.
             self.write({"state": "pending", "lease_until": False})
             raise
         return False
+
+    def _mark_running(self, job_id):
+        """Remember the converter's job id; the lease covers it until the next poll."""
+        if self.exists():
+            self.write(
+                {
+                    "converter_job_id": job_id,
+                    "lease_until": fields.Datetime.now()
+                    + timedelta(minutes=LEASE_MINUTES),
+                }
+            )
+
+    @api.model
+    def _poll_running_jobs(self, url, timeout):
+        """Check on jobs the converter is still working on; return True if any finished.
+
+        Each row is its own request and its own commit, so one gone missing (its
+        source purged, say) or one answer that takes a moment does not hold up the
+        others - and a crash here leaves the rest to the next run, not half-done.
+        """
+        done_any = False
+        for job in self.search(
+            [("converter_job_id", "!=", False), ("state", "=", "running")]
+        ):
+            if fields.Datetime.now() - job.started_at > timedelta(
+                minutes=MAX_JOB_AGE_MINUTES
+            ):
+                job.write({"converter_job_id": False})
+                job._finish(
+                    converter_client.ConversionResult(
+                        "failed", error="gave up waiting for the converter"
+                    )
+                )
+                self.env["ir.cron"]._commit_progress()
+                continue
+            try:
+                with converter_client.poll(
+                    url, job.converter_job_id, timeout
+                ) as result:
+                    if result.state == "running":
+                        job._mark_running(job.converter_job_id)
+                    else:
+                        job.write({"converter_job_id": False})
+                        if result.state == "done":
+                            done_any |= (
+                                job._store_value(job.kind, result)
+                                if job.kind in ("text", "meta")
+                                else job._store_result(result)
+                            )
+                        else:
+                            job._finish(result)
+            except converter_client.ConverterUnavailable as exc:
+                _logger.warning("converter not available while polling: %s", exc)
+            self.env["ir.cron"]._commit_progress()
+        return done_any
 
     def _finish(self, result):
         """Record a failure or "not applicable"; retry a failure a few times."""
