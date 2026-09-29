@@ -56,7 +56,7 @@ Dokumentation: `add_watch()` "**Raises `OSError` on failure**".
 **Konkreter, plausibler Auslöser: Linux' `fs.inotify.max_user_watches`-Grenze** (Standard oft
 8192, je nach Distribution/Konfiguration auch höher) — bei **einem Watch pro Verzeichnis** und den
 bereits dokumentierten Bestandsgrößen (29.121 bzw. 69.188 Verzeichnisse laut
-`../int_filemanager_native_ui.md`/`int_filemanager_external_change_watcher_regression.md`) ist das
+`int_filemanager_native_ui.md`/`int_filemanager_external_change_watcher_regression.md`) ist das
 keine theoretische Grenze, sondern eine, die bei diesem Datenbestand **bereits in Reichweite ist**.
 
 **Einordnung — kein akuter Vorfall, aber ein unbeobachteter Risikofaktor:** die zitierten Log-

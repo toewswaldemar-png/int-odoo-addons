@@ -1,6 +1,6 @@
 # int_filemanager: UI-Modernisierung auf native Odoo-Komponenten — Status
 
-Stand 2026-09-03. Getrenntes Thema von [int_filemanager_ausbau.md](int_filemanager_ausbau.md)
+Stand 2026-09-03. Getrenntes Thema von [int_filemanager_ausbau.md](../int_filemanager_ausbau.md)
 (dort: Backend-Phasen Scan-Identität/ACL/Versionierung/Vorschau/Freigaben). Hier: UI/UX
 so nativ wie möglich an echten Odoo-Bausteinen statt eigenem Code.
 
@@ -626,7 +626,7 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     (kein N+1, eine einzelne indizierte `GROUP BY parent_id`-Query).
 
     **Patch (chirurgisch, am bestehenden, bereits genutzten Erweiterungspunkt, kein Core-Patch):**
-    [filemanager_file.py](../int_filemanager/models/filemanager_file.py) - der bestehende
+    [filemanager_file.py](../../int_filemanager/models/filemanager_file.py) - der bestehende
     `search_panel_select_range`-Override wird um `_search_panel_parent_id_counters()` ergänzt: Baum
     weiterhin unverändert nativ per `super()` mit `enable_counters=False` holen (bereits schnell),
     lokale Zählung selbst per `self._read_group(...)` nachladen, danach Odoos **eigene**
@@ -879,7 +879,7 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Implementierungspunkt mehr.
 
 21. **Drag&Drop-Upload umgesetzt (2026-09-05) - Baustein 0 aus
-    [int_filemanager_paperoffice_recherche.md](int_filemanager_paperoffice_recherche.md).**
+    [int_filemanager_paperoffice_recherche.md](../int_filemanager_paperoffice_recherche.md).**
     Auslöser: aktuelle Erfassungs-Praxis (PDF per Drag&Drop aus dem Dateisystem, Anhang aus
     Outlook ziehen, direkt scannen) soll beim Umstieg von PaperOffice nicht verloren gehen.
 
@@ -921,7 +921,7 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     sich nur mit einem echten Nutzer-Test klären.
 
 22. **Baustein 1 umgesetzt (2026-09-05): Volltextsuche (OCR/Textlayer) + interaktiver
-    Kontroll-Dialog** ([int_filemanager_paperoffice_recherche.md](int_filemanager_paperoffice_recherche.md)).
+    Kontroll-Dialog** ([int_filemanager_paperoffice_recherche.md](../int_filemanager_paperoffice_recherche.md)).
     Auslöser: bei PaperOffice wird eine reingezogene Datei direkt per OCR erkannt, die erkannten
     Werte lassen sich vor der Übernahme kontrollieren - reines Hintergrund-Volltextindizieren
     (der ursprüngliche Baustein-1-Entwurf) hätte das nicht abgebildet.
@@ -992,7 +992,7 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     failed, 0 error(s) of 66 tests** - keine Regression durch die neuen Felder/Route/Cron.
 
 23. **Baustein 2 umgesetzt (2026-09-06): `mail.thread`/`mail.activity.mixin`-Vererbung**
-    ([int_filemanager_paperoffice_recherche.md](int_filemanager_paperoffice_recherche.md)).
+    ([int_filemanager_paperoffice_recherche.md](../int_filemanager_paperoffice_recherche.md)).
     Günstigster Baustein im ganzen Vorschlag - drei PaperOffice-Features (Aufgabenverwaltung mit
     Fristen, Notizen, Audit-Trail) auf einmal, rein durch Odoo-Bordmittel: `_inherit =
     ["mail.thread", "mail.activity.mixin"]` auf `int_filemanager.file` (`filemanager_file.py`),
@@ -1072,7 +1072,7 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     bewusst nicht Teil dieses Fixes (kein gemeldeter Fehlerfall dafür).
 
 24. **Baustein 4 umgesetzt (2026-09-06): Ampel-Freigabe über `state_selection`**
-    ([int_filemanager_paperoffice_recherche.md](int_filemanager_paperoffice_recherche.md)). Neues
+    ([int_filemanager_paperoffice_recherche.md](../int_filemanager_paperoffice_recherche.md)). Neues
     Feld `state` auf `int_filemanager.file` (`fields.Selection`, Werte `normal`/`blocked`/`done` -
     bewusst Odoos eigene `kanban_state`-Konvention übernommen, nicht frei erfunden: das native
     `state_selection`-Widget (`web/static/src/views/fields/state_selection/
@@ -1492,7 +1492,7 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
 
 36. **Redundante Neuextraktion bei wiederholtem "Werte erkennen" behoben (2026-09-07),
     Nutzerfeedback ("aktuell nicht sehr effizient").** Analyse der gesamten OCR-Bedienung ergab:
-    `_extract_fulltext_for_record()` ([filemanager_file.py:494](../int_filemanager/models/filemanager_file.py))
+    `_extract_fulltext_for_record()` ([filemanager_file.py:494](../../int_filemanager/models/filemanager_file.py))
     rief bei **jedem** Klick auf "Werte erkennen" bedingungslos die volle Extraktion (bei
     Scan-PDFs inkl. teurer Tesseract-OCR) neu auf - auch wenn `ocr_state` bereits `"done"` war
     und sich die Datei seit der letzten Extraktion nicht geändert hatte (z.B. beim erneuten
@@ -1607,7 +1607,7 @@ anzeigen") gewünscht wird. Für die Sidebar-Navigation bleibt es bei `SearchPan
     Nutzer selbst durchgeklickt und nach der Nachbesserung bestätigt.
 
 39. **Verschieben zwischen Ordnern per Drag&Drop (2026-09-07), Nutzerwunsch.** Der Server
-    konnte das schon lange (`/int_filemanager/move`, [main.py:154](../int_filemanager/controllers/main.py),
+    konnte das schon lange (`/int_filemanager/move`, [main.py:154](../../int_filemanager/controllers/main.py),
     mit eigener Autorisierungsprüfung `authz.require_rename_or_move_allowed`), es gab dafür nur
     keine UI. Zwei Design-Entscheidungen vorab mit dem Nutzer geklärt: Drop-Ziele sind bewusst
     **nur Ordner-Zeilen/-Karten der aktuell offenen Ansicht** (nicht der Seitenleisten-

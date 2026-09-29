@@ -3,7 +3,7 @@
 Stand 2026-09-23. Ergebnis eines grundsätzlichen Architektur-Gesprächs (DB- vs. Platte-als-Wahrheit,
 WebDAV, Desktop-Sync-Client) mit einem klaren Zielsatz am Ende: **das Modul massiv so ausbauen,
 dass Explorer/Directory-Opus-artiges Arbeiten möglich ist** — deckt sich mit dem bereits in
-`../int_filemanager_native_ui.md` festgehaltenen Ursprungsziel ("Mitarbeiter sollen vom Windows
+`int_filemanager_native_ui.md` festgehaltenen Ursprungsziel ("Mitarbeiter sollen vom Windows
 Explorer auf die WebUI umsteigen — Parität zu Explorer/Directory Opus als Messlatte"), nicht neu,
 aber jetzt explizit als Leitentscheidung bestätigt statt nur implizit verfolgt. Reine Planung,
 nichts umgesetzt.
@@ -103,7 +103,7 @@ LIKE-Klauseln), noch nicht umgesetzt, aktuell ~580ms pro ACL-Auswertung bei 1,38
 (Splitview, Galerie, Schnellsuche) macht die bestehende ACL-Langsamkeit nur spürbarer, nicht
 weniger relevant.
 
-**Unfertige native-UI-Migration** (`../int_filemanager_native_ui.md`): alte und neue UI koexistieren
+**Unfertige native-UI-Migration** (`int_filemanager_native_ui.md`): alte und neue UI koexistieren
 teils noch. Sollte vor massivem Ausbau der neuen UI abgeschlossen werden (inkl. der bereits
 gefundenen `bus.bus`-Live-Refresh-Lücke, siehe `recherchen-odoo-bausteine/int_filemanager_odoo_native_integration_2026-09-21.md`,
 Punkt 1) — sonst wächst der Wartungsaufwand mit jedem neuen Feature doppelt.

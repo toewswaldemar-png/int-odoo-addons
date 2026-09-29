@@ -1,7 +1,7 @@
 # int_filemanager: Recherche PaperOffice DMS — elegante Ausbaumöglichkeiten
 
 Stand 2026-09-04. Getrennt von [int_filemanager_ausbau.md](int_filemanager_ausbau.md) (Backend-
-Phasen 1-5, alle umgesetzt) und [int_filemanager_native_ui.md](int_filemanager_native_ui.md)
+Phasen 1-5, alle umgesetzt) und [int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md)
 (UI-Migration). Hier: Recherche zu [PaperOffice](https://start.paperoffice.com/de/dms-dokumentenmanagement-system/)
 (kommerzielles, KI-gestütztes DMS, on-premise/NAS/Windows-Linux-Server) und wie sich dessen
 Kernfunktionen **elegant** — d.h. durch Erweiterung bestehender Muster statt neuer Baustellen —
@@ -74,7 +74,7 @@ per Drag & Drop direkt aus dem Dateisystem, ziehen Anhänge direkt aus Outlook, 
 in PaperOffice. Alle drei Fälle einzeln der bestehenden Architektur zugeordnet:
 
 - **Drag & Drop aus dem Dateisystem — umgesetzt und live verifiziert** (Details:
-  [int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 21): `window`-weite Drag-
+  [int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md), Punkt 21): `window`-weite Drag-
   Events statt einer einzelnen Drop-Zone, derselbe bestehende Upload-Pfad wie der "Hochladen"-
   Button. Dabei einen echten, vorbestehenden Bug in `controllers/main.py` gefunden und behoben
   (`FileStorage.save()` erwartete in diesem Odoo-Build ein offenes Dateiobjekt, kein Pfad-String -
@@ -105,7 +105,7 @@ reine Konfiguration, keine Entwicklung - kann parallel eingerichtet werden.
 **War die größte fehlende Fähigkeit.** Details der tatsächlichen Umsetzung (Umfang enger als hier
 ursprünglich skizziert, plus ein interaktiver Kontroll-Dialog analog PaperOffice - siehe
 Konversation 2026-09-05):
-[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 22.
+[int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md), Punkt 22.
 
 Kurzfassung der tatsächlichen Umsetzung ggü. diesem ursprünglichen Entwurf:
 - **v1 bewusst nur PDF + reine Textformate**, nicht Office-Dokumente/Bilder (siehe dort für die
@@ -130,7 +130,7 @@ Kurzfassung der tatsächlichen Umsetzung ggü. diesem ursprünglichen Entwurf:
 Tower-Testinstanz verifiziert (Notiz geloggt, Aktivität geplant) - Details, inklusive einer
 aufgeklärten Verwirrung um fehlenden Chatter im Formular-Dialog (Odoo-Kernverhalten, kein Bug) und
 eines dabei entdeckten unabhängigen Bugs (Hash-Cron/int4-Overflow bei Dateien >2GB, separat
-geflaggt): [int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 23.
+geflaggt): [int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md), Punkt 23.
 
 `int_filemanager.file` erbte zuvor nur von
 `models.Model`. Odoo bringt mit `mail.thread` + `mail.activity.mixin` **nativ** genau das mit, was
@@ -145,10 +145,10 @@ PaperOffice als eigene Features verkauft:
 
 Aufwand: eine Zeile (`_inherit`) plus ein `<chatter/>`-Element in der bestehenden
 `filemanager_file_form_view.xml` (dem Formular-Dialog, den der Pfeil-Button in der Liste schon
-öffnet, siehe Punkt 6 in [int_filemanager_native_ui.md](int_filemanager_native_ui.md)). Kein
+öffnet, siehe Punkt 6 in [int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md)). Kein
 neues Modell, kein neuer Controller, keine neue UI-Komponente — vier PaperOffice-Funktionen
 "kostenlos nativ", derselbe Grundsatz, der die gesamte UI-Migration in
-[int_filemanager_native_ui.md](int_filemanager_native_ui.md) geleitet hat.
+[int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md) geleitet hat.
 
 ## Baustein 3 ⚠️ größtenteils durch Baustein 1 erledigt — nur noch "Regex → LLM" offen
 
@@ -156,7 +156,7 @@ neues Modell, kein neuer Controller, keine neue UI-Komponente — vier PaperOffi
 anders als ursprünglich skizziert: der interaktive Kontroll-Dialog dort schreibt Tags (aus
 Bestandsabgleich, nicht LLM) bereits in `tag_ids`, und Werte (Datum/Rechnungsnr./Betrag) bereits in
 feste Felder (nicht `fields.Properties` - siehe Begründung in
-[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 22: ein `Properties`-Feld ist
+[int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md), Punkt 22: ein `Properties`-Feld ist
 für dynamische, pro Dokumenttyp wechselnde Schemata gedacht, die Regex-Erkennung liefert aber ein
 festes, kleines Set). **Kein eigener Baustein mehr, nur noch eine mögliche spätere Erweiterung:**
 
@@ -181,7 +181,7 @@ verworfenen reicheren Alternativ-Widgets (`project_task_state_selection` - sieht
 echte Ampel mit Icons, ist aber hart auf `project.task`s eigene Statuswerte kodiert), der
 bewusst in Kauf genommenen Read-only-Einschränkung des `badge`-Widgets in der Liste, und der
 Datenmigration der ~87k Bestandszeilen:
-[int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkte 24-25.
+[int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md), Punkte 24-25.
 
 ## Baustein 5 ❌ verworfen (2026-09-06): Digitale Signatur
 
@@ -269,11 +269,11 @@ offenen Voraussetzungen (Odoo Sign-Lizenzierung, GoBD-Anforderung, fetchmail.ser
 geändert hat, nicht einfach hier weitermachen.
 
 **Behoben (2026-09-09):** der Hash-Cron-Bug bei Dateien >2GB (`hash_size` int4-Overflow) ist
-gefixt - siehe [int_filemanager_native_ui.md](int_filemanager_native_ui.md), Punkt 23, letzter
+gefixt - siehe [int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md), Punkt 23, letzter
 Absatz.
 
 **Bevor an einem der offenen Bausteine weitergearbeitet wird, unbedingt zuerst lesen:**
-[int_filemanager_native_ui.md](int_filemanager_native_ui.md) (Punkte 15-22) - dort steht die
+[int_filemanager_native_ui.md](archiv/int_filemanager_native_ui.md) (Punkte 15-22) - dort steht die
 tatsächliche Arbeitsweise, die sich in dieser Session bewährt hat, nicht nur das Ergebnis:
 
 - **Änderungen live gegen die Odoo-19-Testinstanz auf Tower verifizieren, nicht nur Code schreiben

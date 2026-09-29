@@ -11,7 +11,7 @@ der Odoo-19-Plattform insgesamt. Reine Analyse, nichts umgesetzt oder beauftragt
 Geschwister-Module im selben Repo) plus gezielte Web-Recherche zu Odoo-19-Bordmitteln
 (Quellen am Ende jedes Abschnitts, wo relevant). **Keine Live-Verifikation gegen HM-SRV/Tower in
 dieser Session** — anders als der sonst in diesem Repo etablierte Standard ("live am
-Quellcode/an der Instanz geprüft, nicht angenommen", siehe `../../int_filemanager_native_ui.md`).
+Quellcode/an der Instanz geprüft, nicht angenommen", siehe `../int_filemanager_native_ui.md`).
 Jede Aussage, die von der tatsächlichen Odoo-Edition (Community vs. Enterprise) oder vom
 Lizenzstand abhängt, ist unten explizit als **vor Umsetzung zu verifizieren** markiert — genau
 das Muster, das bei Baustein 5 der PaperOffice-Recherche (Odoo Sign) bereits einmal nötig war.
@@ -55,7 +55,7 @@ manuellen Refresh.
 `native_list_view.js` (die **neue**, aktiv weiterentwickelte UI) hat **keine** entsprechende
 `busService`-Subscription — geprüft per Grep, kein Treffer. Solange beide UIs parallel existieren
 ist das nur ein Komfortverlust in der neuen UI. Laut
-`../../int_filemanager_native_ui.md` ("Empfohlene Reihenfolge", Schritt 3) ist aber geplant, die alte
+`../int_filemanager_native_ui.md` ("Empfohlene Reihenfolge", Schritt 3) ist aber geplant, die alte
 UI + den `/int_filemanager/list`-Endpunkt **zu löschen, sobald Funktionsparität erreicht ist** —
 und genau diese eine Parität fehlt noch. Kein neuer Vorschlag, sondern eine konkrete
 Nachtrag-Position für die ohnehin laufende Migration: `busService.subscribe(...)` +
@@ -245,7 +245,7 @@ Kein neuer Vorschlag, sondern ein zusätzliches Argument für ein bereits geplan
 solange `/int_filemanager/list` rohe Dicts statt echter ORM-Records liefert (alte UI), fehlt der
 native Excel-/CSV-Export und Druck, den jede normale Odoo-Liste automatisch hat. Die auf
 `experiment/native-listview` bereits verifizierte Umstellung auf echte `int_filemanager.file`-
-Records (siehe `../../int_filemanager_native_ui.md`) bringt diesen Export/Druck **automatisch mit**,
+Records (siehe `../int_filemanager_native_ui.md`) bringt diesen Export/Druck **automatisch mit**,
 ohne dass dafür je etwas Eigenes gebaut werden müsste — ein zusätzlicher, bisher nicht genannter
 Nutzen der ohnehin laufenden Migration, der die Priorität dieses Abschlusses eher noch erhöht.
 

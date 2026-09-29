@@ -32,7 +32,6 @@ Stand 2026-09-28. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde g
 Der v1-Code zitiert diese Dokumente in Kommentaren. Sie wandern ins Archiv, wenn der v1-Code mit Schritt 8 gelöscht wird
 (dort auch das Zusammenführen der Ideen-Dokumente):
 
-- `int_filemanager_native_ui.md` – v1-Oberfläche (Status und Punkte 1–25)
 - `int_filemanager_ausbau.md` – v1-Backend-Phasen 1–5
 - `int_filemanager_papierkorb_konzept.md` – v1-Papierkorb
 - `int_filemanager_paperoffice_recherche.md` – PaperOffice-Recherche
@@ -46,7 +45,7 @@ Der v1-Code zitiert diese Dokumente in Kommentaren. Sie wandern ins Archiv, wenn
 
 ## Archiv
 
-- [`archiv/`](archiv/): v1-Watcher-, Scan- und ACL-Dokumente sowie die frühe Explorer-Roadmap, alle von v2 ersetzt.
+- [`archiv/`](archiv/): v1-Watcher-, Scan- und ACL-Dokumente sowie die frühe Explorer-Roadmap, alle von v2 ersetzt; dazu [`int_filemanager_native_ui.md`](archiv/int_filemanager_native_ui.md) (v1-Oberfläche, Status und Punkte 1–25, seit 2026-09-30 im Archiv – der v1-Code verweist in Kommentaren darauf).
 - [`archiv/recherchen-odoo-bausteine/`](archiv/recherchen-odoo-bausteine/): 18 Recherchen zu nativen Odoo-Bausteinen
   (Navigation, Listenansicht, Bilder, PDF, Papierkorb, `core/`), für das v1-Modul geschrieben. Nachschlagewerk, nicht Teil
   des v2-Konzepts.

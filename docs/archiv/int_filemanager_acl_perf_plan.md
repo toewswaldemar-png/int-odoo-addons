@@ -137,4 +137,4 @@ gelassen.
 ## Nächster Schritt
 
 Umsetzung + Deploy + Live-Test (EXPLAIN ANALYZE wie beim Ordnerbaum-Fix, siehe
-`../int_filemanager_native_ui.md`/Commit `89e0c9c`) auf ausdrücklichen Auftrag hin.
+`int_filemanager_native_ui.md`/Commit `89e0c9c`) auf ausdrücklichen Auftrag hin.

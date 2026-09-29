@@ -89,7 +89,7 @@ heruntergeladene Datei, die Originaldatei im Filemanager bleibt unverändert.
 
 **Der Anschlusspunkt ist ebenfalls bereits im Code vorbereitet:** pdf.js exponiert sich selbst
 global (`viewer.js:15163`: `window.PDFViewerApplication = PDFViewerApplication`) — und
-`int_filemanager` reicht laut `../../int_filemanager_native_ui.md` bereits heute aktiv in das iframe
+`int_filemanager` reicht laut `../int_filemanager_native_ui.md` bereits heute aktiv in das iframe
 hinein (der dokumentierte ESC-Tastatur-Fix hängt einen eigenen Listener direkt auf
 `iframe.contentWindow`). Genau dasselbe, bereits etablierte Cross-Frame-Muster ließe sich nutzen,
 um `PDFViewerApplication.save` abzufangen bzw. `pdfDocument.saveDocument()` selbst aufzurufen und

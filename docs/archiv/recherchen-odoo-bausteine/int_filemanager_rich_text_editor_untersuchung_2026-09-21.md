@@ -129,7 +129,7 @@ formatierte Notiz als `.html` ablegen", nicht "beliebige HTML-Dateien editieren"
 ## 4. Vergleich zum Status quo: warum `CodeEditor` für alle fünf heutigen Formate die richtige Wahl bleibt
 
 Der aktuelle Ansatz (`CodeEditor`, Odoos ACE-basierter Editor, derselbe, den Odoo für
-View-XML-Bearbeitung im Entwicklermodus nutzt, siehe `../../int_filemanager_native_ui.md`, Punkt 9) hat
+View-XML-Bearbeitung im Entwicklermodus nutzt, siehe `../int_filemanager_native_ui.md`, Punkt 9) hat
 gegenüber dem Rich-Text-Editor für **genau diese** Formate strukturelle Vorteile, die kein
 Implementierungsdetail sind: kein Konvertierungsschritt (Inhalt = Inhalt, keine
 Formatverlust-Gefahr), Syntax-Highlighting passend zum jeweiligen Format (u.a. für `json`
