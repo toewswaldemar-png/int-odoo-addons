@@ -574,6 +574,53 @@ auf Nutzerwunsch zurückgestellt** („Anschrift erstmal weglassen“), Befund 4
 - **Runde 2 vorbereitet:** Vorschläge der festen Stichprobe neu berechnet (`w6_sample.json`, Stand vor der Änderung als
   `w6_sample_runde1.json` auf Tower), Abhak-Seite Übungsdokumente 11–20.
 
+**Stand W-6 nach Runde 2 (2026-09-29):** Nutzer: „Dokumente sind sehr unterschiedlich.“
+- **Runde 2 (Übungsteil, Dokumente 11–20):** 23 von 39 bewerteten Vorschlägen richtig (**59 %**), 23 von 25 vorhandenen
+  Werten gefunden (92 %). Fehler gehäuft: **Empfänger 8 falsch, 0 richtig** (ohne Anschriftenfeld greift „Herr/Frau“
+  Wörter aus dem Brieftext); **Kundennummer 4 falsch** über die unscharfe Stufe (kurzes Stichwort „Kd.-Nr.“ ≈ nacktes
+  „Nr.“ und „Kunden“); **Dokumentdatum 2× „Geburtsdatum“** (Wortende-Regel ließ kurze allgemeine Stichwörter zu).
+  Eine „falsche“ E-Mail war richtig gelesen, nur mit Leerzeichen gedruckt – die Oberfläche soll den gelesenen Wert
+  deutlich zeigen.
+- **Prüfskript korrigiert:** „✗ falsch“ ohne richtigen Wert zählte nicht mit (erst 23 / 25 = 92 % statt 59 %). Jetzt
+  zählt es als falsch, solange genau dieser Wert vorgeschlagen wird; ein anderer Vorschlag an seiner Stelle ist
+  „unbekannt“.
+- **Nutzerentscheidungen:** Anschriftenfeld **jetzt bauen** (statt Empfänger ausschalten); „Empfänger“ heißt
+  **Adressat des Briefs** (nicht Zahlungsempfänger). Drei Antworten aus Runde 1/2 meinten etwas anderes (Absenderzeile
+  über dem Adressfenster, Kreditvermittler als „Ihr Ansprechpartner“) und sind in `korrekturen.json` (privat, Tower)
+  richtiggestellt; die Originalantworten bleiben unverändert.
+- **Regeln (value_suggest.py, allgemein):**
+  1. **Kurze Stichwörter (< 8 Zeichen) nur als ganzes Wort** in einer längeren Beschriftung, nicht als Ende eines
+     zusammengesetzten Worts: ein „Geburtsdatum“ ist kein Dokumentdatum, ein „Dauerauftrag“ kein Auftrag, eine
+     „Ehefrau“ keine Anrede; lange behalten ihre Bedeutung („Fälligkeitszeitraum“). Solche Stellen gelten auch nicht als
+     „ähnlich“ (Codex: „Eilauftrag“ ≈ „Auftrag“ wäre sonst unscharf durchgerutscht). Eine angeklebte Ziffer ist ein
+     eigenes Wort („1Herrn“).
+  2. **Unscharf nur**, wenn die Beschriftung höchstens einen Buchstaben kürzer ist als das Stichwort.
+  3. **Anschriftenfeld:** neues Feld `page_area` an `extraction_field` („Überall“ / „Adressfenster“), Empfänger im
+     Startkatalog auf Adressfenster. Wert auf Seite 1, beginnt links von 45 % der Breite, endet vor 60 %, zwischen 8 und
+     33 % der Höhe (Seitengröße aus der Wortliste, sonst A4). **Gemessen:** der Name des Adressaten steht in 283 von 374
+     Briefen bei 15–25 % der Höhe und beginnt in 370 von 374 links von 45 % (rechts daneben steht der Infoblock des
+     Absenders, dort lag ein „E-Mail“ neben „Herrn“). Ohne Wortlage (reiner Text) kein Vorschlag für solche Felder.
+  4. **Wort-Werte beginnen mit Großbuchstaben** („und Frau Muster“ ist kein Name), und für Wort-Werte ist die Zeile
+     darüber immer eine Beschriftung („Herrn“ über „Max Muster“; vorher übersprungen, weil jede Zeile ein Wort-Wert ist).
+- **Startkatalog:** Rechnungsnummer + „Rechnung“ (wie „Anfrage“, „Angebot“ … bei ihren Nummern; „Rechnung 2403071700“
+  wurde vorher nur zufällig unscharf gefunden), Dokumentdatum + „Erstellungsdatum“, „Ausstellungsdatum“, Empfänger +
+  „Herrn und Frau“, „Herr und Frau“. Modulversion **19.0.1.18.0**. Der Startkatalog ist `noupdate`: bestehende
+  Test-Datenbanken bekommen Adressfenster und neue Stichwörter beim Update nicht – **bewusst ohne Migrationsskript**
+  (v2 läuft nirgends produktiv, Migrationsskripte ab Inbetriebnahme, Konventionen); die UI-Testinstanz neu aufsetzen oder
+  von Hand nachtragen.
+- **Nachgeprüft (`w6_recheck.py 1 2`, mit Korrekturen):** Runde 1 86 % richtig / 84 % gefunden, Runde 2 **88 % / 92 %**,
+  zusammen **87 % (59 / 68) / 87 %**, **nichts Richtiges falsch geworden**. Neue Vorschläge ohne Bewertung sehen plausibel
+  aus (Adressat „Waldemar und Luriana Töws“, Ansprechpartner „Herr Huy Ngo“, „Paul Heim“ statt „in“).
+- Über die Sammlung: 0 Fehler, Median 0,06 s, höchstens 1,9 s (schneller, weil Wort-Werte in Kleinschrift wegfallen).
+  **Bekannt, nicht behoben:** „als Rechnung i. S. d. § 14 UStG“ liefert jetzt „14“ als Rechnungsnummer (neues Stichwort
+  „Rechnung“, drei Kürzel danach zählen als kurze Fortsetzung); eine falsch gelesene Rechnungsnummer („19G204“) wird
+  jetzt vorgeschlagen statt gar nicht.
+- **Gegengelesen mit Codex, 3 Befunde:** unscharfes Durchrutschen verbotener Wortenden – behoben; `noupdate` – bewusst
+  (siehe oben); Suchmuster dürfen Kleinschrift liefern – bewusst (Verwalter legt das Muster ausdrücklich fest).
+- Tests: +7 (Wortende kurzer Stichwörter, „Nr.“ ≠ „Kd.-Nr.“, Adressfenster, Großschreibung, „Eilauftrag“, „1Herrn“);
+  494 Odoo-Tests grün (vor den letzten zwei Codex-Nachbesserungen, danach die 55 Werterkennungs-Tests), `v2check` ohne
+  neuen Befund.
+
 ## 7. Entscheidungen
 
 **Alle Empfehlungen E1–E9 vom Nutzer übernommen (2026-09-29, „dann leg los“).** Ergänzend aus den Proben (8):

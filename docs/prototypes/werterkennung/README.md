@@ -14,7 +14,7 @@ Wegwerf-Skripte aus der Planung, **kein Modulcode**; Vorlage für W-3/W-4 und W-
 
 Private Daten (Stichprobe mit erkannten Werten, Ergebnisse je Runde) liegen **nur** auf Tower unter
 `/mnt/user/test/werterkennung_w6/` (`chmod 700`): `w6_sample.json` (Aufteilung nach Absendern, 40 Dokumente, Vorschläge),
-`runde<N>.json` (Bewertung des Nutzers). Nie ins Repo, nicht in Berichte mit Werten.
+`runde<N>.json` (Bewertung des Nutzers), `korrekturen.json` (Antworten, die ein anderes Feld meinten, für `w6_recheck.py` richtiggestellt; die Runden-Dateien bleiben unverändert). Nie ins Repo, nicht in Berichte mit Werten.
 
 | Datei | Zweck | Aufruf |
 |---|---|---|

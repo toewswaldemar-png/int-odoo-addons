@@ -5,12 +5,15 @@
 Reads /out/w6_sample.json (suggestions as w6_sample.py last computed them) and
 /out/runde<N>.json (what the user marked). A field counts as right when the new best
 suggestion reads as the value the user confirmed, corrected or added, and when nothing
-is suggested for a value marked "not in the document". Fields the user left open are
-not counted. Prints the numbers and every field whose result changed since the round;
-the values appear only in that list (private: run on Tower, keep the output out of the
-repository).
+is suggested for a value marked "not in the document". A suggestion marked wrong
+without the right value still counts as wrong while it is suggested; another one in
+its place is unknown. Fields the user left open are not counted. Prints the numbers
+and every field whose result changed since the round; the values appear only in that
+list (private: run on Tower, keep the output out of the repository). Answers that meant
+another field are set right in /out/korrekturen.json.
 """
 import json
+import os
 import sys
 import xml.etree.ElementTree as ET
 from datetime import date
@@ -47,6 +50,12 @@ def read(field, text):
     return text.strip()
 
 
+# Answers given for another meaning of a field, set right after the round (private,
+# same folder): {"<round>": {"<n>": {"<field>": value, or null when unknown}}}.
+corrections = {}
+if os.path.exists("/out/korrekturen.json"):
+    corrections = json.load(open("/out/korrekturen.json", encoding="utf-8"))
+
 totals = {"found": 0, "wrong": 0, "absent_suggested": 0, "missing": 0, "present": 0}
 changes = []
 for rnd in sys.argv[1:]:
@@ -55,38 +64,53 @@ for rnd in sys.argv[1:]:
         if doc.get("skip"):
             continue
         new = {f: s[0]["value"] for f, s in by_n[doc["n"]]["suggestions"].items()}
-        truth, was_right = {}, {}
+        # truth: the values the field has (empty: none), None when only known to be
+        # not the one suggested ("wrong" without the right value).
+        truth, wrong_value, was_right = {}, {}, {}
         for field, mark in doc["fields"].items():
             status = mark.get("status")
             if status == "ok":
                 truth[field] = {mark["suggested"]}
                 was_right[field] = True
-            elif status == "wrong" and (mark.get("correct") or "").strip():
-                truth[field] = {read(field, mark["correct"])}
+            elif status == "wrong":
+                correct = (mark.get("correct") or "").strip()
+                truth[field] = {read(field, correct)} if correct else None
+                wrong_value[field] = mark["suggested"]
                 was_right[field] = False
             elif status == "absent":
                 truth[field] = set()
                 was_right[field] = False
         for added in doc["added"]:
             # A second value of a field (another mail address) is no error.
-            truth.setdefault(added["field"], set()).add(read(added["field"], added["value"]))
+            values = truth.get(added["field"]) or set()
+            truth[added["field"]] = values | {read(added["field"], added["value"])}
             was_right.setdefault(added["field"], False)
+        for field, value in corrections.get(rnd, {}).get(str(doc["n"]), {}).items():
+            if value is None:
+                truth.pop(field, None)
+            else:
+                truth[field] = {read(field, value)}
+                was_right[field] = doc["fields"].get(field, {}).get("suggested") == value
         for field, values in truth.items():
             got = new.get(field)
             if values:
                 totals["present"] += 1
             if got is None:
                 result = "missing" if values else "right"
+            elif values is None:
+                result = "wrong" if got == wrong_value[field] else "unknown"
             elif not values:
                 result = "absent_suggested"
             else:
                 result = "right" if got in values else "wrong"
             if result == "right":
                 totals["found"] += bool(values)
-            else:
+            elif result != "unknown":
                 totals[result] += 1
-            if (result == "right") != was_right[field]:
-                changes.append((doc["n"], field, result, got, sorted(values)))
+            if result != "unknown" and (result == "right") != was_right[field]:
+                changes.append((doc["n"], field, result, got, sorted(values or [])))
+            elif result == "unknown":
+                changes.append((doc["n"], field, "anders, unbekannt", got, []))
 
 hits = totals["found"]
 suggested = hits + totals["wrong"] + totals["absent_suggested"]

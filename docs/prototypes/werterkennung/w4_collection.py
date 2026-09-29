@@ -27,13 +27,14 @@ for rec in root.iter("record"):
 specs, names = [], {}
 for i, (fid, f) in enumerate(fields.items(), 1):
     r = rules[fid]
+    area = None if f.get("page_area", "anywhere") == "anywhere" else f["page_area"]
     names[i] = f["name"]
     if r.get("mode") == "regex":
-        specs.append(vs.FieldSpec(i, f["value_type"], unit=f.get("unit"),
+        specs.append(vs.FieldSpec(i, f["value_type"], unit=f.get("unit"), area=area,
                                   patterns=[(i, re.compile(r["pattern"], re.I), 0)]))
     else:
         specs.append(vs.FieldSpec(i, f["value_type"], r["keywords"].splitlines(),
-                                  f.get("unit"), rule_id=i))
+                                  f.get("unit"), rule_id=i, area=area))
 
 per_field = collections.Counter()
 tiers = collections.defaultdict(collections.Counter)
@@ -44,7 +45,7 @@ for path in sorted(glob.glob("/w/[0-9]*.json")):
     docs += 1
     started = time.perf_counter()
     try:
-        page = vs.Page(data["text"], data["words"])
+        page = vs.Page(data["text"], data["words"], data.get("pages"))
         found, free = vs.suggest(page, specs, today=date(2026, 9, 29))
     except Exception:
         errors += 1

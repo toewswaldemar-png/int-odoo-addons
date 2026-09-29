@@ -150,12 +150,20 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
      (Anschriftenfeld) auf Nutzerwunsch zurückgestellt**. Runde 1 automatisch nachgeprüft (`w6_recheck.py 1`):
      84 % → 90 %, nichts Richtiges falsch geworden. Vorschläge neu berechnet, Seite Runde 2 gebaut
      (`%TEMP%\w6r2\werterkennung_runde2.html` auf dem Arbeitsrechner, Übungsdokumente 11–20).
-   - **Einstieg neue Sitzung – Runde 2 auswerten:** sobald der Nutzer gespeichert hat, `werterkennung_runde2.json` aus
-     Downloads als `runde2.json` nach Tower (`/mnt/user/test/werterkennung_w6/`), lokale Kopien (Downloads,
-     `%TEMP%\w6r2`) löschen; Zahlen wie Runde 1, Befunde notieren, als allgemeine Regeln umsetzen, dann
-     `w6_recheck.py 1 2`. Runde 3 = Übungsdokumente 21–24 + ggf. Nachschärfen, **Runde 4 = Prüfteil (16 Dokumente,
-     `check`) erst ganz am Ende, ohne danach etwas einzustellen** – deren Quote ist die ehrliche Erwartung für neue
-     Absender (ohne und mit Lernen messen).
+   - **Runde 2 ausgewertet, Regeln nachgeschärft (2026-09-29, Plan 6 „Stand W-6 nach Runde 2“):** Runde 2 roh 59 %
+     (Empfänger ohne Anschriftenfeld, unscharfe „Nr.“-Treffer, „Geburtsdatum“). Nutzerentscheidungen: Anschriftenfeld
+     jetzt gebaut (`page_area` an `extraction_field`, Version 19.0.1.18.0), „Empfänger“ = Adressat des Briefs; drei
+     Antworten, die etwas anderes meinten, in `korrekturen.json` (Tower) richtiggestellt. Nachgeprüft Runde 1+2 zusammen
+     **87 % richtig / 87 % gefunden**, nichts verschlechtert. `runde2.json` liegt auf Tower, lokale Kopien gelöscht.
+     Startkatalog ist `noupdate`: UI-Testinstanz bekommt Adressfenster/neue Stichwörter nur bei Neuinstallation.
+   - **Einstieg neue Sitzung – Runde 3 auswerten:** Seite `%TEMP%\w6r3\werterkennung_runde3.html` (Übungsdokumente
+     21–24) liegt beim Nutzer. Nach dem Speichern die **neueste** `werterkennung_runde3*.json` aus Downloads (die Seite
+     legt bei jedem Speichern eine neue Kopie an) als `runde3.json` nach Tower, lokale Kopien (Downloads, `%TEMP%\w6r3`)
+     löschen; auswerten wie Runde 2 (`w6_recheck.py 3`, dann `1 2 3`), Befunde als allgemeine Regeln. **Runde 4 =
+     Prüfteil (16 Dokumente, `check`) erst ganz am Ende, ohne danach etwas einzustellen** – deren Quote ist die ehrliche
+     Erwartung für neue Absender (ohne und mit Lernen messen). Vor Runde 4 ggf. noch (Nutzer interessiert, nicht
+     entschieden): E-Rechnung/Überweisungs-QR in der Sammlung zählen, gemerkte Lage je Absender nutzen,
+     Plausibilitätsprüfungen zwischen Werten.
    - Im Downloads-Ordner des Nutzers liegen noch `werterkennung_runde1*.json` (10 Zwischenstände, private Werte) – der
      Nutzer löscht sie selbst; die maßgebliche Fassung liegt auf Tower.
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.

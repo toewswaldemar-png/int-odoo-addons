@@ -33,13 +33,14 @@ for rec in root.iter("record"):
 specs, names, types = [], {}, {}
 for i, (fid, f) in enumerate(fields.items(), 1):
     r = rules[fid]
+    area = None if f.get("page_area", "anywhere") == "anywhere" else f["page_area"]
     names[i], types[i] = f["name"], f["value_type"]
     if r.get("mode") == "regex":
-        specs.append(vs.FieldSpec(i, f["value_type"], unit=f.get("unit"),
+        specs.append(vs.FieldSpec(i, f["value_type"], unit=f.get("unit"), area=area,
                                   patterns=[(i, re.compile(r["pattern"], re.I), 0)]))
     else:
         specs.append(vs.FieldSpec(i, f["value_type"], r["keywords"].splitlines(),
-                                  f.get("unit"), rule_id=i))
+                                  f.get("unit"), rule_id=i, area=area))
 
 index = json.load(open("/w/index.json", encoding="utf-8"))
 
@@ -78,7 +79,7 @@ cut = round(len(groups) * PRACTICE_SHARE)
 part_of = {g: ("practice" if i < cut else "check") for i, g in enumerate(groups)}
 
 for d in docs:
-    page = vs.Page(d["data"]["text"], d["data"]["words"])
+    page = vs.Page(d["data"]["text"], d["data"]["words"], d["data"].get("pages"))
     found, unassigned = vs.suggest(page, specs, today=TODAY)
     d["suggestions"] = {
         names[fid]: [
