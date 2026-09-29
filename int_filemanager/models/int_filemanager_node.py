@@ -8,8 +8,9 @@ import uuid
 from datetime import timedelta
 
 import psycopg2
+from markupsafe import Markup
 
-from odoo import api, fields, models
+from odoo import Command, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import SQL
 from odoo.tools.mimetypes import guess_mimetype
@@ -984,9 +985,10 @@ class IntFilemanagerNode(models.Model):
                 "extraction rule %s took %.1f s on node %s", rule_id, seconds, node.id
             )
 
+        partner = self._suggest_partner(page.text, own, options)
         suggestions, unassigned = value_suggest.suggest(
             page,
-            self._extraction_specs(),
+            self._extraction_specs(self._sender(node, partner)),
             skip=lambda value_type, value: self._is_own_value(own, value_type, value),
             slow=slow,
             **options,
@@ -1017,7 +1019,7 @@ class IntFilemanagerNode(models.Model):
                 )
             ],
             "unassigned": [self._json_value(u, codes) for u in unassigned],
-            "partner": self._suggest_partner(page.text, own, options),
+            "partner": partner,
             "tags": self._suggest_tags(page.text),
         }
 
@@ -1104,9 +1106,38 @@ class IntFilemanagerNode(models.Model):
         ]
         return data
 
-    def _extraction_specs(self):
-        """The active fields and rules as the recognition needs them."""
+    def _sender(self, node, suggested):
+        """The sender whose learned labels apply: the file's contact, else the one
+        suggested; only a contact the user may read."""
+        partner = node.partner_id.commercial_partner_id
+        if not partner and suggested:
+            partner = self.env["res.partner"].browse(suggested["id"])
+        return partner._filtered_access("read")
+
+    def _extraction_specs(self, sender=None):
+        """The active fields and rules as the recognition needs them, with the labels
+        learned for the sender."""
         specs = []
+        # Users have no access to the learned labels themselves: the list would show
+        # which senders there are documents from, also in scopes they cannot read.
+        hints = (
+            self.env["int_filemanager.extraction_hint"]
+            .sudo()
+            .search(
+                [("partner_id", "=", sender.id), ("field_id.active", "=", True)]
+                if sender
+                else [("id", "=", False)]
+            )
+        )
+        for field in hints.field_id:
+            specs.append(
+                value_suggest.FieldSpec(
+                    field.id,
+                    field.value_type,
+                    unit=field.unit or None,
+                    hints={h.label: h.id for h in hints if h.field_id == field},
+                )
+            )
         rules = self.env["int_filemanager.extraction_rule"].search(
             [("field_id.active", "=", True)]
         )
@@ -1276,3 +1307,178 @@ class IntFilemanagerNode(models.Model):
     @api.model
     def _json_suggestion(self, suggestion, codes):
         return {**suggestion, "value": self._json_value(suggestion["value"], codes)}
+
+    @api.model
+    def apply_field_values(
+        self, node_id, revision_id, values, partner_id=False, tag_ids=None
+    ):
+        """Store the confirmed values of the extraction fields on a file.
+
+        :param revision_id: the revision the values were read from; if the file has
+            a newer one by now, nothing is stored
+        :param values: ``[{"field_id", "text", "source", "rule_id", "start"}]`` -
+            ``text`` as printed or typed, an empty one removes the field's value;
+            ``source`` "rule" for an accepted suggestion (``rule_id`` the rule that
+            found it, ``start`` its place in the text), "manual" for a typed value.
+            Every text is read again here with the field's type: nothing parsed by
+            the client is taken over.
+        :param partner_id: the confirmed sender, False to leave it as it is
+        :param tag_ids: tags to add to the file
+        :returns: ``{field_id: value_text}`` of the file's values after the change
+        """
+        node = self.browse(node_id)
+        node.check_access("write")
+        # Under the node's lock, like a new revision: a revision stored meanwhile by
+        # another request makes these values stale.
+        self._lock_and_check_base_revision(node, revision_id)
+        if partner_id:
+            self.env["res.partner"].browse(partner_id).check_access("read")
+        tags = self.env["int_filemanager.tag"].browse(tag_ids or [])
+        tags.check_access("read")
+
+        options = self._recognition_options()
+        _state, page = self._recognition_page(node, node.current_revision_id)
+        Value = self.env["int_filemanager.field_value"].sudo()
+        existing = {v.field_id.id: v for v in node.sudo().field_value_ids}
+        stored, removed, learn = [], [], []
+        for item in values:
+            field = self.env["int_filemanager.extraction_field"].browse(
+                item["field_id"]
+            )
+            if not field.exists():
+                raise UserError(self.env._("This field does not exist any more."))
+            text = (item.get("text") or "").strip()
+            if not text:
+                if field.id in existing:
+                    existing.pop(field.id).unlink()
+                    removed.append(field)
+                continue
+            parsed = self._parse_confirmed(field, text, options)
+            from_rule = item.get("source") == "rule"
+            vals = {
+                "node_id": node.id,
+                "field_id": field.id,
+                "revision_id": revision_id,
+                "source": "rule" if from_rule else "manual",
+                "rule_id": (from_rule and item.get("rule_id")) or False,
+                "source_text": text,
+                "value_text": parsed["value_text"],
+                "value_date": parsed.get("value_date") or False,
+                "value_date_to": parsed.get("value_date_to") or False,
+                "value_number": parsed.get("value_number") or 0.0,
+                "currency_id": self._currency_id(parsed.get("currency_code")),
+                "unit": parsed.get("unit") or False,
+                "page": 0,
+                "x0": 0.0,
+                "top": 0.0,
+                "x1": 0.0,
+                "bottom": 0.0,
+            }
+            label = None
+            if page:
+                label, printed = value_suggest.label_of_value(
+                    page,
+                    field.value_type,
+                    parsed["value_text"],
+                    near=item.get("start"),
+                    unit=field.unit or None,
+                    **options,
+                )
+                box = printed and page.box(printed.start, printed.end)
+                if box:
+                    vals.update(
+                        zip(("page", "x0", "top", "x1", "bottom"), box, strict=False)
+                    )
+            if field.id in existing:
+                existing[field.id].write(vals)
+            else:
+                existing[field.id] = Value.create(vals)
+            stored.append((field, parsed["value_text"]))
+            if label:
+                learn.append((field, label, page.box(label.start, label.end)))
+
+        if partner_id and node.partner_id.id != partner_id:
+            node.partner_id = partner_id
+        if tags:
+            node.tag_ids = [Command.link(tag.id) for tag in tags]
+        self._learn_labels(node.partner_id, learn)
+        if stored or removed:
+            self._post_confirmed_values(node, stored, removed)
+        return {v.field_id.id: v.value_text for v in existing.values()}
+
+    def _parse_confirmed(self, field, text, options):
+        """The value of a confirmed text, read with the field's type; UserError if none.
+
+        A number typed without its unit or currency is read with the field's.
+        """
+        unit = field.unit or None
+        if field.value_type == "amount" and field.currency_id:
+            options = {**options, "default_currency": field.currency_id.name}
+        attempts = [text]
+        if field.value_type == "quantity":
+            attempts.append(f"{text} {field.unit}")
+        elif field.value_type == "amount":
+            code = field.currency_id.name or options["default_currency"]
+            attempts.append(f"{text} {code}")
+        for attempt in attempts:
+            parsed = value_types.parse(field.value_type, attempt, unit=unit, **options)
+            if parsed:
+                return parsed
+        raise UserError(
+            self.env._(
+                "%(field)s: %(text)s cannot be read as a value of this field.",
+                field=field.name,
+                text=text,
+            )
+        )
+
+    def _currency_id(self, code):
+        if not code:
+            return False
+        return (
+            self.env["res.currency"]
+            .sudo()
+            .with_context(active_test=False)
+            .search([("name", "=", code)], limit=1)
+            .id
+        )
+
+    def _learn_labels(self, partner, learned):
+        """Remember for the sender which label named which field; the last one wins."""
+        own = self._own_company_values()["partner_ids"]
+        partner = partner.commercial_partner_id
+        if not partner or partner.id in own:
+            return
+        Hint = self.env["int_filemanager.extraction_hint"].sudo()
+        for field, label, box in learned:
+            norm = value_suggest.normalize(label.text)
+            if not norm:
+                continue
+            vals = {
+                "field_id": field.id,
+                "direction": label.direction,
+                "page": box[0] if box else 0,
+                "x0": box[1] if box else 0.0,
+                "top": box[2] if box else 0.0,
+                "last_date": fields.Datetime.now(),
+            }
+            hint = Hint.search(
+                [("partner_id", "=", partner.id), ("label", "=", norm)], limit=1
+            )
+            if hint:
+                vals["hit_count"] = hint.hit_count + 1 if hint.field_id == field else 1
+                hint.write(vals)
+            else:
+                Hint.create({**vals, "partner_id": partner.id, "label": norm})
+
+    def _post_confirmed_values(self, node, stored, removed):
+        """A note on the file: who confirmed which values, for later questions."""
+        lines = [Markup("<li>%s: %s</li>") % (f.name, text) for f, text in stored]
+        lines += [
+            Markup("<li>%s: %s</li>") % (f.name, self.env._("removed")) for f in removed
+        ]
+        node.message_post(
+            body=Markup("<p>%s</p><ul>%s</ul>")
+            % (self.env._("Values confirmed"), Markup("").join(lines)),
+            subtype_xmlid="mail.mt_note",
+        )

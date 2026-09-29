@@ -26,6 +26,7 @@ V2_MODELS = (
     "int_filemanager_extraction_field",
     "int_filemanager_extraction_rule",
     "int_filemanager_field_value",
+    "int_filemanager_extraction_hint",
 )
 V2_PATH_HINTS = (
     "static/src/int_filemanager/v2/",

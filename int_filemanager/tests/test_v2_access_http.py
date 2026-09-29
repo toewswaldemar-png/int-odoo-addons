@@ -11,8 +11,9 @@ import datetime
 from odoo.tests.common import HttpCase, tagged
 
 
-@tagged("post_install", "-at_install")
-class TestV2AccessHttp(HttpCase):
+class AccessHttpCase(HttpCase):
+    """A file in a scope, a reader and an outsider, and helpers for both RPC routes."""
+
     def setUp(self):
         super().setUp()
         base_group = self.env.ref("int_filemanager.group_filemanager_user")
@@ -125,6 +126,9 @@ class TestV2AccessHttp(HttpCase):
 
     # -- call_kw: every model, as a plain logged-in user, no API key --------
 
+
+@tagged("post_install", "-at_install")
+class TestV2AccessHttp(AccessHttpCase):
     def test_call_kw_search_read_denied_models_return_nothing_for_outsider(self):
         # blob is excluded here: it has no ACL at all (see the dedicated blob test
         # below), so it fails with an "error" payload, not an empty "result" - a

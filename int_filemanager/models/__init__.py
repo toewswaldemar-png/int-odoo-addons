@@ -25,3 +25,4 @@ from . import int_filemanager_share_log
 from . import int_filemanager_extraction_field
 from . import int_filemanager_extraction_rule
 from . import int_filemanager_field_value
+from . import int_filemanager_extraction_hint

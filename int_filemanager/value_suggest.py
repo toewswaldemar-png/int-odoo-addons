@@ -235,9 +235,16 @@ def match_label(label, spec):
 def _match(norm, spec):
     if not norm:
         return None
-    if norm in spec.hints:
-        return TIER_HINT, 0.0
     best = None
+    # A label learned for this sender, as the whole label or a part of it.
+    for hint in spec.hints:
+        if norm == hint:
+            return TIER_HINT, 0.0
+        if hint and hint in norm:
+            found = (TIER_HINT, 1 - len(hint) / len(norm))
+            best = found if best is None or found < best else best
+    if best:
+        return best
     for keyword in spec.keywords:
         kw = normalize(keyword)
         if not kw:
@@ -395,7 +402,9 @@ def _assign(page, pairs):
                 label.direction,
                 key[0],
                 rule_id=rule_id,
-                hint_id=spec.hints.get(normalize(label.text)) if label.text else None,
+                hint_id=_hint_of(normalize(label.text), spec)
+                if key[0] == TIER_HINT
+                else None,
             )
         )
     return {k: v for k, v in result.items() if v}
@@ -412,3 +421,40 @@ def _unassigned(items):
         if len(result) >= MAX_UNASSIGNED:
             break
     return result
+
+
+def _hint_of(norm, spec):
+    """Id of the learned label that the (normalized) label is or contains."""
+    for hint, hint_id in spec.hints.items():
+        if hint and hint in norm:
+            return hint_id
+    return None
+
+
+def label_of_value(page, value_type, value_text, near=None, **options):
+    """The label next to a printed value, to learn from a confirmation; or None.
+
+    The value is looked up in the text by what it reads as (the one closest to
+    ``near`` if it is printed more than once), and labelled like any suggestion.
+    In front of it, only the words after the last one holding a digit count:
+    "Rechnung vom 12.03. Kundennummer" teaches "Kundennummer".
+    """
+    candidates = list(value_types.find(value_type, page.text, **options))
+    matching = [c for c in candidates if c.value["value_text"] == value_text]
+    if not matching:
+        return None, None
+    if near is not None:
+        matching.sort(key=lambda c: abs(c.start - near))
+    value = matching[0]
+    labels = page.labels_of(value.start, value.end, [c.start for c in candidates])
+    if not labels:
+        return None, value
+    label = min(labels, key=lambda lb: _DIRECTION_RANK[lb.direction])
+    if label.direction == "before":
+        words = label.text.split()
+        digits = [i for i, w in enumerate(words) if any(c.isdigit() for c in w)]
+        words = words[digits[-1] + 1 :] if digits else words
+        if not words:
+            return None, value
+        label = Label(" ".join(words), "before", label.start, label.end)
+    return label, value

@@ -26,8 +26,9 @@ def words_of(page):
     }
 
 
-@tagged("post_install", "-at_install")
-class TestV2FieldValueSuggest(DerivativeCase):
+class FieldValueCase(DerivativeCase):
+    """Files with a word list from made-up pages, and fields of the tests only."""
+
     def setUp(self):
         super().setUp()
         # Files are read by internal users; the test users of DerivativeCase are not.
@@ -61,6 +62,9 @@ class TestV2FieldValueSuggest(DerivativeCase):
         entry = next(f for f in result["fields"] if f["field_id"] == field.id)
         return entry["suggestions"][0] if entry["suggestions"] else None
 
+
+@tagged("post_install", "-at_install")
+class TestV2FieldValueSuggest(FieldValueCase):
     def test_suggestions_from_the_word_list(self):
         page = layout(
             (100, [(50, "Rechnungsnummer"), (200, "R-2024-001")]),
