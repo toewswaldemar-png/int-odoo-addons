@@ -165,8 +165,8 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    - **Einstieg neue Sitzung – Oberfläche mit Kasten-Auswahl:** Nutzer-Befund „viele gelesene Werte sind nicht
      relevant, stärker mit selbst auswählen verbinden“, Vorschlag „grob einen Kasten aufziehen, darin wie bisher über
      Stichwörter lesen“. Konzept: `docs/int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`
-     (Entscheidungen K1–K5 und U1–U9 alle getroffen, Vorbilder, geprüfte Odoo-Bausteine, Scheiben U-1…U-9 beginnend mit der Volltextsuche, Nachtrag PaperOffice AI). **Noch nicht freigegeben, nichts
-     umgesetzt** – Vollständigkeitsrunde (Abschnitt 10: Abdeckung, Versuche an allen 513 PDFs, Codex-Gegenlese) ergab neue Fragen N1–N8 (u. a. Formularfeld-Lücke im Umwandler, QR nur 2/513) – nächster Schritt: N1–N8 klären, Freigabe, dann U-1.
+     (Entscheidungen K1–K5 und U1–U9 alle getroffen, Vorbilder, geprüfte Odoo-Bausteine, Scheiben U-1…U-10 beginnend mit der Volltextsuche, Nachtrag PaperOffice AI). **Noch nicht freigegeben, nichts
+     umgesetzt** – Vollständigkeitsrunde (Abschnitt 10: Abdeckung, Versuche an allen 513 PDFs, Codex-Gegenlese) ergab neue Fragen N1–N8 (u. a. Formularfeld-Lücke im Umwandler, QR nur 2/513) – N1–N8 am 2026-09-29 alle entschieden – nächster Schritt: Freigabe, dann U-1.
    - Lokale Kopien der Runden (Downloads, `%TEMP%\w6r*`) sind alle gelöscht (2026-09-29); maßgeblich ist Tower
      `/mnt/user/test/werterkennung_w6/` (`runde1–4.json`, `korrekturen.json`, `w6_sample*.json`).
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.

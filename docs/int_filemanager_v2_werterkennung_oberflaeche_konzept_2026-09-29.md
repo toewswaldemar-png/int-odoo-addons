@@ -1,7 +1,7 @@
 # int_filemanager 2: Werterkennung – Oberfläche mit Kasten-Auswahl (Konzept)
 
 Stand 2026-09-29, **Konzept, nichts umgesetzt.** K1–K5 und U1–U9 entschieden; nach der Vollständigkeitsrunde
-(Abschnitt 10: Abdeckung, Versuche mit echten Dokumenten, kritische Gegenlese) **neue Fragen N1–N8 offen**, danach Freigabe. Baut auf dem
+(Abschnitt 10: Abdeckung, Versuche mit echten Dokumenten, kritische Gegenlese) neue Fragen N1–N8 **entschieden**; es fehlt nur noch die **Freigabe**. Baut auf dem
 Werterkennungs-Plan (`int_filemanager_v2_werterkennung_plan_2026-09-29.md`, W-1…W-6) auf; der Server liefert heute
 schon Vorschläge je Feld mit Fundstelle, bestätigt, lernt je Absender – es fehlt die Oberfläche.
 
@@ -242,12 +242,13 @@ Eingangsordner neu entscheiden. Vorschlag:
 | U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Hervorheben aktive Stelle ↔ Feld (N6) | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
 | U-5 | „daraus nicht lernen“ und Verwalter-Übersicht des Gelernten (N5); Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument; N3: Vorrang nur mit eindeutigem Anker, „gemerkte Kästen verwerfen“), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
 | U-6 | Nachlesen (Umwandler), QR automatisch je Dokument (U5, 5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
-| U-7 | **Kontakt aus Dokument** (vorbelegtes Odoo-Kontaktformular, nur mit Odoos Recht „Kontakte: Anlegen“, U8), Namensvarianten je Kontakt | neuer Absender wird mit zwei Klicks Kontakt, Varianten finden ihn wieder |
-| U-8 | **Werte nutzen**, sobald durch das Prüfen echte Werte entstehen (U9): Suchfilter über erkannte Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, „Zum selben Vorgang“ | „Gesamtbetrag > 500 €“ und „Nebenkosten je Jahr“ funktionieren mit Odoo-Bordmitteln |
-| U-9 | Messung: **Prüfteil** (16 unbekannte Absender, bisher unverbraucht) ohne und mit Lernen, dazu Zeit je Dokument | Zahlen gegen die 86 % des Übungsteils |
+| U-7 | **Neue Feldarten und Feldeigenschaften** (N8, Abgleich 10.6): Verknüpfung zu Odoo-Datensätzen (Zielmodell je Feld, Suche über `name_search`, nur lesbare Datensätze), Ankreuzfeld, Auswahl (Möglichkeiten mit Stichwörtern), Telefon, Prozentsatz, Monat; Eigenschaften Hilfetext, Platzhalter, Standardwert, Sichtbarkeit nur für Gruppen, bei Daten Zukunfts-Warnung und früheste/späteste Grenze | jede neue Art wird an echten Dokumenten erkannt und mit Odoos Eingabefeld angezeigt; ein Fahrzeug-Feld findet das Fahrzeug über das Kennzeichen |
+| U-8 | **Kontakt aus Dokument** (vorbelegtes Odoo-Kontaktformular, nur mit Odoos Recht „Kontakte: Anlegen“, U8), Namensvarianten je Kontakt | neuer Absender wird mit zwei Klicks Kontakt, Varianten finden ihn wieder |
+| U-9 | **Werte nutzen**, sobald durch das Prüfen echte Werte entstehen (U9): Suchfilter über erkannte Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, „Zum selben Vorgang“ | „Gesamtbetrag > 500 €“ und „Nebenkosten je Jahr“ funktionieren mit Odoo-Bordmitteln |
+| U-10 | Messung: **Prüfteil** (16 unbekannte Absender, bisher unverbraucht) ohne und mit Lernen, dazu Zeit je Dokument | Zahlen gegen die 86 % des Übungsteils |
 | (später) | Automatisch übernehmen (6.3, U1) und **Ablageregeln** (N7) mit dem Eingangsordner; Bilder automatisch je Ordner (U6); E-Rechnung; Dokumentarten (U4); Verknüpfung mit Odoo-Bestellungen/-Rechnungen; semantische Suche/Sprachmodell (E12) | eigene Entscheidungen bzw. Schritte |
 
-## 8. Entscheidungen (U1–U9 getroffen; neue Fragen N1–N8 in 10.5)
+## 8. Entscheidungen (U1–U9 getroffen; N1–N8 in 10.5, ebenfalls entschieden)
 
 - ~~**U1**~~ **entschieden:** automatisch übernehmen wie in 6.3 (Schalter je Absender, erst mit Eingangsordner, nur
   eindeutig, Vermerk „automatisch übernommen“ + Filter „automatisch, nie angesehen“ + Notiz).
@@ -286,7 +287,7 @@ abgerechnet **je verarbeiteter Seite** (0,02–0,30 € je Seite, dazu Tarife 39
 | **Human-in-the-loop** – „Jedes Feld trägt Konfidenz und Fundstelle, damit die Kontrolle schnell geht“; unsichere Felder zur Prüfung, „Bild und Text nebeneinander“; Plausibilität (Summen, Steuer, IBAN, Dubletten) | – | Genau unser Prüf-Fenster (Abschnitt 4). Ergänzen: **unsichere Werte zuerst** (Stufe „enthält“, „ähnlich“, „ohne Beschriftung“ farblich markiert, sichere gedämpft); **Plausibilität** als Hinweise: Netto + Steuer = Brutto, Fälligkeit nach Rechnungsdatum, gleiche Rechnungsnummer beim selben Absender schon vorhanden (**Dublette?**), abweichende IBAN | mittel, gehört in U-3 |
 
 **Was daraus für die Scheiben folgt:** eingearbeitet in Abschnitt 7 (U-1 Volltextsuche, U-3 unsichere Werte zuerst,
-Plausibilität, abweichende IBAN, U-7 Kontakt aus Dokument, U-8 Werte nutzen).
+Plausibilität, abweichende IBAN, U-8 Kontakt aus Dokument, U-9 Werte nutzen).
 
 Entscheidungen dazu:
 
@@ -405,9 +406,10 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
   Jahresbescheid Wasser.pdf`), Zielordner (auch Jahr/Monat), Tags; das Prüf-Fenster schlägt „umbenennen in … /
   verschieben nach …“ mit Häkchen vor; die Regel kann aus dem bisherigen Ablageort der Dokumente eines Absenders
   vorgeschlagen werden. Vorher kaum anwendbar, weil vorhandene Dateien schon richtig liegen und heißen.
-- **N8** Feldarten ergänzen – erweitert nach dem Abgleich mit Odoos Feldtypen (10.6): Ankreuzfeld, Auswahl, Verknüpfung
-  zu Odoo-Datensätzen, Telefon, URL, Prozentsatz, Monat, Datum mit Uhrzeit, mehrzeiliger Text; dazu Feldeigenschaften
-  (Hilfe, Platzhalter, Standardwert, Gruppen-Sichtbarkeit, Datumsgrenzen). *Offen.*
+- ~~**N8**~~ **entschieden (Nutzer 2026-09-29), neue Scheibe U-7:** jetzt Verknüpfung zu Odoo-Datensätzen, Ankreuzfeld,
+  Auswahl, Telefon, Prozentsatz, Monat sowie die Feldeigenschaften Hilfetext, Platzhalter, Standardwert,
+  Gruppen-Sichtbarkeit, Datums-Warnung/-Grenzen. **Bei Bedarf:** Datum mit Uhrzeit, mehrzeiliger Text, URL. **Nicht:**
+  Priorität, Datei, Bild, Signatur, formatierter Text, Stichwörter je Feld; Tabellen bleiben außerhalb (E6).
 
 ### 10.6 Abgleich mit Odoos Feldtypen (zu N8)
 
@@ -419,7 +421,7 @@ monetary, many2one, many2many, selection, tags, separator`.
 
 | Odoo-Typ (Studio / Properties) | Unsere Wertart | Befund |
 |---|---|---|
-| Text (`char`), Widgets E-Mail / Telefon / URL | Nummer, Wort, IBAN, USt-IdNr., E-Mail | wir sind feiner (Prüfziffern, Formate); **Telefon und URL fehlen** – Telefonnummern stehen oft unter den nicht zugeordneten Paaren und wären für „Kontakt aus Dokument“ (U-7) nützlich |
+| Text (`char`), Widgets E-Mail / Telefon / URL | Nummer, Wort, IBAN, USt-IdNr., E-Mail | wir sind feiner (Prüfziffern, Formate); **Telefon und URL fehlen** – Telefonnummern stehen oft unter den nicht zugeordneten Paaren und wären für „Kontakt aus Dokument“ (U-8) nützlich |
 | Mehrzeiliger Text (`text`) | – | fehlt (Betreff, Verwendungszweck); „Wort“ fasst höchstens 5 Wörter |
 | Ganzzahl (`integer`) | – (Nummer ist bewusst Text) | nicht nötig |
 | Dezimal (`float`), Widget Prozentsatz | Menge mit Einheit | **Prozentsatz fehlt** (Zinssatz, Umsatzsteuersatz, Anpassung in %) |
