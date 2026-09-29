@@ -245,7 +245,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 | U-7 | **Kontakt aus Dokument** (vorbelegtes Odoo-Kontaktformular, nur mit Odoos Recht „Kontakte: Anlegen“, U8), Namensvarianten je Kontakt | neuer Absender wird mit zwei Klicks Kontakt, Varianten finden ihn wieder |
 | U-8 | **Werte nutzen**, sobald durch das Prüfen echte Werte entstehen (U9): Suchfilter über erkannte Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, „Zum selben Vorgang“ | „Gesamtbetrag > 500 €“ und „Nebenkosten je Jahr“ funktionieren mit Odoo-Bordmitteln |
 | U-9 | Messung: **Prüfteil** (16 unbekannte Absender, bisher unverbraucht) ohne und mit Lernen, dazu Zeit je Dokument | Zahlen gegen die 86 % des Übungsteils |
-| (später) | Automatisch übernehmen (6.3, U1) mit dem Eingangsordner; Bilder automatisch je Ordner (U6); E-Rechnung; Dokumentarten (U4); Verknüpfung mit Odoo-Bestellungen/-Rechnungen; semantische Suche/Sprachmodell (E12) | eigene Entscheidungen bzw. Schritte |
+| (später) | Automatisch übernehmen (6.3, U1) und **Ablageregeln** (N7) mit dem Eingangsordner; Bilder automatisch je Ordner (U6); E-Rechnung; Dokumentarten (U4); Verknüpfung mit Odoo-Bestellungen/-Rechnungen; semantische Suche/Sprachmodell (E12) | eigene Entscheidungen bzw. Schritte |
 
 ## 8. Entscheidungen (U1–U9 getroffen; neue Fragen N1–N8 in 10.5)
 
@@ -400,8 +400,11 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
 - ~~**N6**~~ **entschieden (Nutzer 2026-09-29): nur die aktive Stelle kräftig**, alle übrigen Funde dezent umrandet,
   gegenseitiges Hervorheben Feld ↔ Stelle mit Mitscrollen. Umschalter „alle farbig anzeigen“ nur, falls er beim
   Ausprobieren fehlt.
-- **N7** Neu entdeckt: **Ablageregeln** nach PaperOffice-Vorbild – aus erkannten Werten Dateiname (z. B.
-  „2025-01-23 Jahresbescheid Wasser.pdf“), Zielordner und Tags vorschlagen? *Empfehlung: später, mit dem Eingangsordner.*
+- ~~**N7**~~ **entschieden (Nutzer 2026-09-29): mit dem Eingangsordner (Schritt 7)**, dort fester Baustein.
+  Ablageregel je Absender (Vorbild PaperOffice-Ablagemasken): Dateiname aus Platzhaltern (z. B. `{Dokumentdatum}
+  Jahresbescheid Wasser.pdf`), Zielordner (auch Jahr/Monat), Tags; das Prüf-Fenster schlägt „umbenennen in … /
+  verschieben nach …“ mit Häkchen vor; die Regel kann aus dem bisherigen Ablageort der Dokumente eines Absenders
+  vorgeschlagen werden. Vorher kaum anwendbar, weil vorhandene Dateien schon richtig liegen und heißen.
 - **N8** Feldarten **Auswahlliste** und **Ankreuzfeld** ergänzen? *Empfehlung: bei Bedarf.*
 
 ## Quellen
