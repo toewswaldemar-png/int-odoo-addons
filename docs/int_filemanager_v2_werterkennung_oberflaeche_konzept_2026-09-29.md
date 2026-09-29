@@ -239,7 +239,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 | U-2 | Server: Kästen beim Vorschlagen, Paare je Kasten mit Lage, Wert aus Markierung | Tests je Richtung wie W-4; Jahresbescheid-Beispiel liefert Infoblock-Paare |
 | U-3 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern; **unsichere Werte zuerst**, Plausibilitäts-/Dubletten-Hinweise, **abweichende IBAN** (Abschnitt 9) | eine Datei prüfen und speichern ohne Kasten |
 | U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Farben/Hover | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
-| U-5 | Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
+| U-5 | Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument; N3: Vorrang nur mit eindeutigem Anker, „gemerkte Kästen verwerfen“), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
 | U-6 | Nachlesen (Umwandler), QR automatisch je Dokument (U5, 5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
 | U-7 | **Kontakt aus Dokument** (vorbelegtes Odoo-Kontaktformular, nur mit Odoos Recht „Kontakte: Anlegen“, U8), Namensvarianten je Kontakt | neuer Absender wird mit zwei Klicks Kontakt, Varianten finden ihn wieder |
 | U-8 | **Werte nutzen**, sobald durch das Prüfen echte Werte entstehen (U9): Suchfilter über erkannte Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, „Zum selben Vorgang“ | „Gesamtbetrag > 500 €“ und „Nebenkosten je Jahr“ funktionieren mit Odoo-Bordmitteln |
@@ -386,7 +386,8 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
   ist** – obwohl nur 2 von 513 privaten Dokumenten einen Überweisungs-QR tragen (Geschäftsrechnungen vermutlich öfter,
   nicht gemessen). Mit den Einschränkungen aus 10.4: QR-Werte sind starke Kandidaten, überstimmen Gedrucktes aber nicht –
   bei Abweichung Hinweis im Prüf-Fenster; Seiten-/Zeitgrenzen wie im Umwandler üblich.
-- **N3** Gemerkte Kästen je Absender (U-5) sofort oder erst, wenn die Nutzung zeigt, dass sie gebraucht werden?
+- ~~**N3**~~ **entschieden (Nutzer 2026-09-29): sofort (U-5)**, mit der Anker-Sicherung aus 6.2 und einem Knopf
+  „gemerkte Kästen dieses Absenders verwerfen“ (z. B. bei neuem Briefpapier).
 - **N4** Prüfstatus je Dokument („ungeprüft / geprüft von … am … / automatisch übernommen“) einführen? Pflichtfelder?
   *Empfehlung: Status ja (U1 braucht ihn), Pflichtfelder später.*
 - **N5** Gegensteuer beim Lernen: Häkchen „daraus nicht lernen“ beim Speichern und eine Verwalter-Liste des Gelernten
