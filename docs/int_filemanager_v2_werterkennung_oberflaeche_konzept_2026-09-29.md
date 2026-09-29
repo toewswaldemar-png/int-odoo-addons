@@ -1,7 +1,7 @@
 # int_filemanager 2: Werterkennung – Oberfläche mit Kasten-Auswahl (Konzept)
 
 Stand 2026-09-29, **Konzept, nichts umgesetzt.** K1–K5 und U1–U9 entschieden; nach der Vollständigkeitsrunde
-(Abschnitt 10: Abdeckung, Versuche mit echten Dokumenten, kritische Gegenlese) neue Fragen N1–N9 **entschieden**; es fehlt nur noch die **Freigabe**. Baut auf dem
+(Abschnitt 10: Abdeckung, Versuche mit echten Dokumenten, kritische Gegenlese) neue Fragen N1–N9 **entschieden**. **Keine Freigabe** – weiter durchdenken (Abschnitt 11). Baut auf dem
 Werterkennungs-Plan (`int_filemanager_v2_werterkennung_plan_2026-09-29.md`, W-1…W-6) auf; der Server liefert heute
 schon Vorschläge je Feld mit Fundstelle, bestätigt, lernt je Absender – es fehlt die Oberfläche.
 
@@ -485,6 +485,25 @@ Odoo-Bordmitteln. Mit echten Spalten geht all das über Odoos normale Spalten, �
   Archivieren eines Felds **blendet die Spalte nur aus** (Daten bleiben), Löschen nur als ausdrückliche Verwalter-Aktion
   mit Rückfrage; die Spalte zeigt den Wert der **aktuellen Fassung**. Umsetzung in U-7 (Spaltenarten, Kopplung
   Katalogfeld ↔ Spalte) und U-9 (Spalten einblenden, Filter, Gruppieren, Pivot, Export).
+
+## 11. Noch nicht durchdacht (Stand Sitzungsende 2026-09-29)
+
+Nutzer: **keine Freigabe**, Konzept in der nächsten Sitzung **weiter durchdenken**. Bisher nur grob oder gar nicht behandelt:
+
+1. **Datenmodell im Detail:** neue Herkunftswerte (`source`), Prüfstatus-Felder am Knoten, Modell für gemerkte Kästen
+   (`extraction_area`), Abbildung jeder Wertart auf eine echte Spalte (N9: Namensschema der `x_`-Felder, Betrag +
+   Währung, Zeitraum zwei Spalten, Auswahl-Optionen, Verknüpfungsziel), was beim Umbenennen eines Katalogfelds passiert.
+2. **Rechte je neuem Server-Aufruf** (Kästen vorschlagen, Markierung lesen, Feld anlegen/vorschlagen, Gelerntes ansehen/
+   löschen, Spalten neu aufbauen) – nach dem Muster von W-5 (Leserecht vor `sudo`, N1-Tests über `call_kw` und JSON-2).
+3. **Leistung:** Wortflächen bei langen Dokumenten (100+ Seiten), Vorschläge mit Kästen, Neuaufbau der Spalten über den
+   ganzen Bestand, Nachlesen und QR (Seiten-/Zeitgrenzen konkret).
+4. **Oberfläche im Detail:** leere Zustände (keine Wortliste, Umwandler nicht erreichbar, Bild ohne Text), Fehler,
+   viele Seiten, Tastatur, schmale Bildschirme/Handy, Barrierefreiheit, ungespeicherte Änderungen.
+5. **Abnahme je Scheibe:** Tests und „fertig, wenn“ so genau wie bei W-1…W-6; welche Messungen an der Sammlung.
+6. **Übergang von v1:** vorhandene Werte (`extracted_value`, Muster) bei der Übernahme (Schritt 8) – übernehmen,
+   verwerfen oder neu erkennen?
+7. **Übersetzung** (`de.po`) der neuen Oberflächentexte, Hilfetexte der Feldarten.
+8. **Zusammenspiel mit dem Eingangsordner** (Schritt 7): Automatik, Ablageregeln, Bilder je Ordner, Abarbeitungsliste.
 
 ## Quellen
 
