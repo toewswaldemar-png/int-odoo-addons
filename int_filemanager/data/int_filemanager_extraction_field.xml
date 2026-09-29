@@ -1,0 +1,282 @@
+<odoo noupdate="1">
+  <!-- Starting set from the keyword catalogue tested on real documents. noupdate: the
+         synonyms are meant to grow with every new sender, and an update must not throw
+         that work away. -->
+  <record id="extraction_field_invoice_number" model="int_filemanager.extraction_field">
+    <field name="name">Invoice number</field>
+    <field name="sequence">10</field>
+    <field name="value_type">number</field>
+  </record>
+  <record id="extraction_rule_invoice_number" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_invoice_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Rechnungsnummer
+Rechnungsnr.
+Rechnungs-Nr.
+Belegnummer
+Beleg-Nr.</field>
+  </record>
+  <record
+    id="extraction_field_customer_number"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Customer number</field>
+    <field name="sequence">20</field>
+    <field name="value_type">number</field>
+  </record>
+  <record id="extraction_rule_customer_number" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_customer_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Kundennummer
+Geschäftspartnernummer
+Kunden-Nr.
+Kundennr.
+Kund*innennummer
+Kd.-Nr.</field>
+  </record>
+  <record
+    id="extraction_field_contract_number"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Contract number</field>
+    <field name="sequence">30</field>
+    <field name="value_type">number</field>
+  </record>
+  <record id="extraction_rule_contract_number" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_contract_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Vertragsnummer
+Vertragskonto
+Vertrags-Nr.
+Vertragskontonummer</field>
+  </record>
+  <record id="extraction_field_document_date" model="int_filemanager.extraction_field">
+    <field name="name">Document date</field>
+    <field name="sequence">40</field>
+    <field name="value_type">date</field>
+  </record>
+  <record id="extraction_rule_document_date" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_document_date" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Rechnungsdatum
+Datum
+Bescheiddatum</field>
+  </record>
+  <record id="extraction_field_total_amount" model="int_filemanager.extraction_field">
+    <field name="name">Total amount</field>
+    <field name="sequence">50</field>
+    <field name="value_type">amount</field>
+    <field name="currency_id" ref="base.EUR" />
+  </record>
+  <record id="extraction_rule_total_amount" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_total_amount" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Gesamtbetrag
+Rechnungsbetrag
+Einzugsbetrag
+zu zahlender Betrag
+Endbetrag</field>
+  </record>
+  <record id="extraction_field_due_date" model="int_filemanager.extraction_field">
+    <field name="name">Due date</field>
+    <field name="sequence">60</field>
+    <field name="value_type">date</field>
+  </record>
+  <record id="extraction_rule_due_date" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_due_date" />
+    <field name="mode">keyword</field>
+    <field name="keywords">fällig am
+Fälligkeit
+zahlbar bis
+buchen wir am</field>
+  </record>
+  <record
+    id="extraction_field_mandate_reference"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Mandate reference</field>
+    <field name="sequence">70</field>
+    <field name="value_type">number</field>
+  </record>
+  <record
+    id="extraction_rule_mandate_reference"
+    model="int_filemanager.extraction_rule"
+  >
+    <field name="field_id" ref="extraction_field_mandate_reference" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Mandatsreferenz
+Mandats-ID
+Mandatsnummer</field>
+  </record>
+  <record id="extraction_field_meter_number" model="int_filemanager.extraction_field">
+    <field name="name">Meter number</field>
+    <field name="sequence">80</field>
+    <field name="value_type">number</field>
+  </record>
+  <record id="extraction_rule_meter_number" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_meter_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Zählernummer
+Zähler-Nr.
+Zählernr.</field>
+  </record>
+  <record id="extraction_field_meter_reading" model="int_filemanager.extraction_field">
+    <field name="name">Meter reading</field>
+    <field name="sequence">90</field>
+    <field name="value_type">quantity</field>
+    <field name="unit">kWh</field>
+  </record>
+  <record id="extraction_rule_meter_reading" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_meter_reading" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Zählerstand</field>
+  </record>
+  <record id="extraction_field_instalment" model="int_filemanager.extraction_field">
+    <field name="name">Instalment</field>
+    <field name="sequence">100</field>
+    <field name="value_type">amount</field>
+    <field name="currency_id" ref="base.EUR" />
+  </record>
+  <record id="extraction_rule_instalment" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_instalment" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Abschlagshöhe
+Abschlag
+Abschlagsbetrag</field>
+  </record>
+  <record id="extraction_field_base_price" model="int_filemanager.extraction_field">
+    <field name="name">Base price</field>
+    <field name="sequence">110</field>
+    <field name="value_type">amount</field>
+    <field name="currency_id" ref="base.EUR" />
+  </record>
+  <record id="extraction_rule_base_price" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_base_price" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Grundpreis</field>
+  </record>
+  <record id="extraction_field_energy_price" model="int_filemanager.extraction_field">
+    <field name="name">Energy price</field>
+    <field name="sequence">120</field>
+    <field name="value_type">quantity</field>
+    <field name="unit">ct/kWh</field>
+  </record>
+  <record id="extraction_rule_energy_price" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_energy_price" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Arbeitspreis
+Verbrauchspreis</field>
+  </record>
+  <record
+    id="extraction_field_annual_consumption"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Annual consumption</field>
+    <field name="sequence">130</field>
+    <field name="value_type">quantity</field>
+    <field name="unit">kWh</field>
+  </record>
+  <record
+    id="extraction_rule_annual_consumption"
+    model="int_filemanager.extraction_rule"
+  >
+    <field name="field_id" ref="extraction_field_annual_consumption" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Jahresverbrauch
+Verbrauch</field>
+  </record>
+  <record id="extraction_field_supply_start" model="int_filemanager.extraction_field">
+    <field name="name">Supply start</field>
+    <field name="sequence">140</field>
+    <field name="value_type">date</field>
+  </record>
+  <record id="extraction_rule_supply_start" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_supply_start" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Lieferbeginn
+Belieferungsstart
+Lieferstart
+Vertragsbeginn</field>
+  </record>
+  <record
+    id="extraction_field_price_guarantee"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Price guarantee</field>
+    <field name="sequence">150</field>
+    <field name="value_type">period</field>
+  </record>
+  <record id="extraction_rule_price_guarantee" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_price_guarantee" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Preisgarantie</field>
+  </record>
+  <record id="extraction_field_billing_period" model="int_filemanager.extraction_field">
+    <field name="name">Billing period</field>
+    <field name="sequence">160</field>
+    <field name="value_type">period</field>
+  </record>
+  <record id="extraction_rule_billing_period" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_billing_period" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Abrechnungszeitraum
+Leistungszeitraum
+Zeitraum</field>
+  </record>
+  <record id="extraction_field_minimum_term" model="int_filemanager.extraction_field">
+    <field name="name">Minimum term</field>
+    <field name="sequence">170</field>
+    <field name="value_type">period</field>
+  </record>
+  <record id="extraction_rule_minimum_term" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_minimum_term" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Mindestvertragslaufzeit
+Mindestlaufzeit
+Laufzeit</field>
+  </record>
+  <record id="extraction_field_notice_period" model="int_filemanager.extraction_field">
+    <field name="name">Notice period</field>
+    <field name="sequence">180</field>
+    <field name="value_type">period</field>
+  </record>
+  <record id="extraction_rule_notice_period" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_notice_period" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Kündigungsfrist</field>
+  </record>
+  <record id="extraction_field_iban" model="int_filemanager.extraction_field">
+    <field name="name">IBAN</field>
+    <field name="sequence">190</field>
+    <field name="value_type">iban</field>
+  </record>
+  <record id="extraction_rule_iban" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_iban" />
+    <field name="mode">keyword</field>
+    <field name="keywords">IBAN</field>
+  </record>
+  <record id="extraction_field_vat" model="int_filemanager.extraction_field">
+    <field name="name">VAT number</field>
+    <field name="sequence">200</field>
+    <field name="value_type">vat</field>
+  </record>
+  <record id="extraction_rule_vat" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_vat" />
+    <field name="mode">keyword</field>
+    <field name="keywords">USt-IdNr.
+USt-ID-Nr.
+USt-ID
+Umsatzsteuer-ID
+Umsatzsteuer-Identifikationsnummer</field>
+  </record>
+  <record id="extraction_field_email" model="int_filemanager.extraction_field">
+    <field name="name">Email</field>
+    <field name="sequence">210</field>
+    <field name="value_type">email</field>
+  </record>
+  <record id="extraction_rule_email" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_email" />
+    <field name="mode">regex</field>
+    <field name="pattern">[\w.+-]+@[\w-]+(?:\.[\w-]+)+</field>
+  </record>
+</odoo>

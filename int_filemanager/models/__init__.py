@@ -22,3 +22,6 @@ from . import int_filemanager_upload
 from . import int_filemanager_zip_job
 from . import int_filemanager_share
 from . import int_filemanager_share_log
+from . import int_filemanager_extraction_field
+from . import int_filemanager_extraction_rule
+from . import int_filemanager_field_value

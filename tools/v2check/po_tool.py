@@ -23,6 +23,9 @@ V2_MODELS = (
     "int_filemanager_operation",
     "int_filemanager_zip_job",
     "int_filemanager_share",
+    "int_filemanager_extraction_field",
+    "int_filemanager_extraction_rule",
+    "int_filemanager_field_value",
 )
 V2_PATH_HINTS = (
     "static/src/int_filemanager/v2/",
@@ -35,6 +38,8 @@ V2_PATH_HINTS = (
     "int_filemanager.action_int_filemanager_node",
     "int_filemanager.menu_int_filemanager_v2",
     "int_filemanager.ir_cron_int_filemanager_",
+    # names of the starting set of extraction fields (translated data)
+    "model:int_filemanager.extraction_field,name:",
 )
 # The v1 file model (and its siblings) is not v2 even though some names look alike.
 V1_EXCLUDE = ("model:ir.model,name:int_filemanager.model_int_filemanager_file",)

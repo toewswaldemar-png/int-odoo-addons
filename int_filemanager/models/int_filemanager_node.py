@@ -80,6 +80,8 @@ class IntFilemanagerNode(models.Model):
     status_color = fields.Integer(related="status_id.color")
     partner_id = fields.Many2one("res.partner", ondelete="set null", index=True)
     revision_ids = fields.One2many("int_filemanager.revision", "node_id")
+    # Values read from the document and confirmed by a user, one per field.
+    field_value_ids = fields.One2many("int_filemanager.field_value", "node_id")
     # Portal contacts who may download this file from /my/files, independent of any
     # link. The portal routes check membership explicitly; portal users have no rights
     # on the node model itself.

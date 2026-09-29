@@ -25,3 +25,4 @@ from . import test_v2_derivative
 from . import test_v2_derivative_kinds
 from . import test_v2_mime
 from . import test_v2_preview_http
+from . import test_v2_field_value
