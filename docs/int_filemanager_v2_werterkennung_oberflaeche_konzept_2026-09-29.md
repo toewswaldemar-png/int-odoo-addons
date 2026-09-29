@@ -1,6 +1,6 @@
 # int_filemanager 2: Werterkennung – Oberfläche mit Kasten-Auswahl (Konzept)
 
-Stand 2026-09-29, **Konzept, nichts umgesetzt** (Nutzer: „noch nichts unternehmen“, erst durchdenken). Baut auf dem
+Stand 2026-09-29, **Konzept, nichts umgesetzt; alle Fragen entschieden (K1–K5, U1–U9), wartet auf Freigabe**. Baut auf dem
 Werterkennungs-Plan (`int_filemanager_v2_werterkennung_plan_2026-09-29.md`, W-1…W-6) auf; der Server liefert heute
 schon Vorschläge je Feld mit Fundstelle, bestätigt, lernt je Absender – es fehlt die Oberfläche.
 
@@ -222,19 +222,22 @@ Eingangsordner neu entscheiden. Vorschlag:
   Schalter je Absender, erst mit dem Eingangsordner, nur wenn alles eindeutig ist; Vermerk, Filter, Notiz. E7 gilt
   damit weiter für alles andere.
 
-## 7. Umsetzung in Scheiben (Vorschlag, noch nicht freigegeben)
+## 7. Umsetzung in Scheiben (Reihenfolge nach U9, noch nicht freigegeben)
 
 | Scheibe | Inhalt | Fertig, wenn |
 |---|---|---|
-| U-1 | Server: Kästen beim Vorschlagen, Paare je Kasten mit Lage, Wert aus Markierung | Tests je Richtung wie W-4; Jahresbescheid-Beispiel liefert Infoblock-Paare |
-| U-2 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern | eine Datei prüfen und speichern ohne Kasten |
-| U-3 | Kasten-Werkzeug, weitere Werte, „als neues Feld“, Farben/Hover | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
-| U-4 | Kästen merken je Absender (Modell, Anker, Vorschlag beim nächsten Dokument), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
-| U-5 | Nachlesen (Umwandler), QR automatisch je Dokument (5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
-| U-6 | Messung: **Prüfteil** (16 unbekannte Absender, bisher unverbraucht) ohne und mit Lernen, dazu Zeit je Dokument | Zahlen gegen die 86 % des Übungsteils |
-| (später) | Automatisch übernehmen (6.3) mit dem Eingangsordner; E-Rechnung; Dokumentart | eigene Entscheidungen |
+| U-1 | **Volltextsuche** im gelesenen Text (`derivative.text`) in der Dateisuche wieder anbinden – die v2-Suche findet heute nur Name, Tags, Status, Kontakt (v1 konnte den Inhalt durchsuchen) | ein Wort, das nur im Dokument steht, findet die Datei; Suche bleibt bei großen Ordnern schnell |
+| U-2 | Server: Kästen beim Vorschlagen, Paare je Kasten mit Lage, Wert aus Markierung | Tests je Richtung wie W-4; Jahresbescheid-Beispiel liefert Infoblock-Paare |
+| U-3 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern; **unsichere Werte zuerst**, Plausibilitäts-/Dubletten-Hinweise, **abweichende IBAN** (Abschnitt 9) | eine Datei prüfen und speichern ohne Kasten |
+| U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Farben/Hover | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
+| U-5 | Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
+| U-6 | Nachlesen (Umwandler), QR automatisch je Dokument (U5, 5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
+| U-7 | **Kontakt aus Dokument** (vorbelegtes Odoo-Kontaktformular, nur mit Odoos Recht „Kontakte: Anlegen“, U8), Namensvarianten je Kontakt | neuer Absender wird mit zwei Klicks Kontakt, Varianten finden ihn wieder |
+| U-8 | **Werte nutzen**, sobald durch das Prüfen echte Werte entstehen (U9): Suchfilter über erkannte Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, „Zum selben Vorgang“ | „Gesamtbetrag > 500 €“ und „Nebenkosten je Jahr“ funktionieren mit Odoo-Bordmitteln |
+| U-9 | Messung: **Prüfteil** (16 unbekannte Absender, bisher unverbraucht) ohne und mit Lernen, dazu Zeit je Dokument | Zahlen gegen die 86 % des Übungsteils |
+| (später) | Automatisch übernehmen (6.3, U1) mit dem Eingangsordner; Bilder automatisch je Ordner (U6); E-Rechnung; Dokumentarten (U4); Verknüpfung mit Odoo-Bestellungen/-Rechnungen; semantische Suche/Sprachmodell (E12) | eigene Entscheidungen bzw. Schritte |
 
-## 8. Offene Entscheidungen
+## 8. Entscheidungen (alle getroffen)
 
 - ~~**U1**~~ **entschieden:** automatisch übernehmen wie in 6.3 (Schalter je Absender, erst mit Eingangsordner, nur
   eindeutig, Vermerk „automatisch übernommen“ + Filter „automatisch, nie angesehen“ + Notiz).
@@ -270,26 +273,22 @@ abgerechnet **je verarbeiteter Seite** (0,02–0,30 € je Seite, dazu Tarife 39
 | **Entitäten (NER)** – Personen, Firmen (mit Logo), Beträge, Daten, Orte, Bankdaten, Referenznummern; kanonische Namen mit Aliasen; Fundstelle, Konfidenz und Modellversion je Fund; Korrekturen fließen zurück | Sprachmodell „liest im Kontext“, Vision, Musterprüfung | Haben wir in anderer Form: **Wertarten** (W-3) statt freier Entitäten, **Fundstelle + Stufe** je Wert (Stufe ≈ Konfidenz), Lernen aus Bestätigungen (W-5). Neu übernehmen: (1) **abweichende Bankverbindung** – IBAN im Dokument ≠ bekannte Konten des Kontakts (`res.partner.bank`) → deutlicher Hinweis im Prüf-Fenster (Schutz vor gefälschten Rechnungen); (2) **Aliase** – gedruckter Firmenname, unter dem ein Kontakt bestätigt wurde, als gelernter Name des Absenders merken (wie `extraction_hint`), damit „Nordlicht Energie“ und „NE GmbH“ beim nächsten Mal denselben Kontakt finden | (1) klein, sehr nützlich; (2) klein |
 | **Kontakt-Extraktion** – Firma, Person, Adresse, USt-IdNr., E-Mail, Telefon, Bankdaten, Rollen (Absender, Unterzeichner, Empfänger); Dubletten über Name/E-Mail/USt-IdNr./Logo; Partei-Register mit allen Dokumenten | IDP + Vision, automatisch ohne Bestätigung | Wir finden **vorhandene** Kontakte (W-4: USt-IdNr. → IBAN → Mail → Domain → Name). Neu: **„Kontakt aus Dokument anlegen“** – Odoos Kontaktformular öffnen, vorbelegt über `default_*`-Kontext mit Name, Anschrift (aus Absenderzeile/Briefkopf bzw. einem Kasten), USt-IdNr. (geprüft durch Odoos `base_vat`, auf Wunsch gegen VIES), E-Mail, Telefon, IBAN als Bankkonto. Nutzer bestätigt im gewohnten Formular. Rollen: Absender = Kontakt der Datei, Adressat/Ansprechpartner = unsere Felder. `partner_autocomplete` (Odoo-IAP, Cloud) nicht | mittel, gut abgegrenzt |
 | **Intelligente Suche** – semantisch (Embeddings je Zusammenfassung/Seite/Absatz), hybrid mit Volltext, exakt für Nummern, Filter nach Partei/Typ/Zeitraum/Entitäten, sprachübergreifend, Antwort mit Quellen (Graph-RAG) | Embeddings + Vektorsuche + LLM | **Zuerst die Lücke schließen:** die v2-Suche findet heute **nur Namen, Tags, Status, Kontakt** – der gelesene Text (`derivative.text`) ist nicht durchsuchbar (v1 konnte das). Dann **Suche nach erkannten Werten** mit Odoo-Bordmitteln: Suchfelder/Filter über `field_value_ids` („Gesamtbetrag > 500“, „Absender = …“, „Rechnungsdatum im 3. Quartal“), Gruppieren, gespeicherte Favoriten. **Semantische Suche** braucht Vektoren: Odoo 19 Community hat keinen Vektor-Feldtyp, der Test-Postgres keine `vector`-Erweiterung (nur `pg_trgm`, `unaccent`) → eigener späterer KI-Schritt mit lokalem Modell (E12) | Volltext + Wertefilter: klein, wichtig; semantisch: später |
-| **Human-in-the-loop** – „Jedes Feld trägt Konfidenz und Fundstelle, damit die Kontrolle schnell geht“; unsichere Felder zur Prüfung, „Bild und Text nebeneinander“; Plausibilität (Summen, Steuer, IBAN, Dubletten) | – | Genau unser Prüf-Fenster (Abschnitt 4). Ergänzen: **unsichere Werte zuerst** (Stufe „enthält“, „ähnlich“, „ohne Beschriftung“ farblich markiert, sichere gedämpft); **Plausibilität** als Hinweise: Netto + Steuer = Brutto, Fälligkeit nach Rechnungsdatum, gleiche Rechnungsnummer beim selben Absender schon vorhanden (**Dublette?**), abweichende IBAN | mittel, gehört in U-2/U-3 |
+| **Human-in-the-loop** – „Jedes Feld trägt Konfidenz und Fundstelle, damit die Kontrolle schnell geht“; unsichere Felder zur Prüfung, „Bild und Text nebeneinander“; Plausibilität (Summen, Steuer, IBAN, Dubletten) | – | Genau unser Prüf-Fenster (Abschnitt 4). Ergänzen: **unsichere Werte zuerst** (Stufe „enthält“, „ähnlich“, „ohne Beschriftung“ farblich markiert, sichere gedämpft); **Plausibilität** als Hinweise: Netto + Steuer = Brutto, Fälligkeit nach Rechnungsdatum, gleiche Rechnungsnummer beim selben Absender schon vorhanden (**Dublette?**), abweichende IBAN | mittel, gehört in U-3 |
 
-**Was daraus für die Scheiben folgt** (Ergänzung zu Abschnitt 7, noch nicht freigegeben):
+**Was daraus für die Scheiben folgt:** eingearbeitet in Abschnitt 7 (U-1 Volltextsuche, U-3 unsichere Werte zuerst,
+Plausibilität, abweichende IBAN, U-7 Kontakt aus Dokument, U-8 Werte nutzen).
 
-- **U-2 erweitern:** unsichere Werte zuerst, Plausibilitäts- und Dubletten-Hinweise, abweichende IBAN.
-- **Neue kleine Scheibe U-7 „Werte nutzen“:** Volltextsuche im gelesenen Text wieder anbinden, Suchfilter über erkannte
-  Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, „Zum selben Vorgang“.
-- **Neue Scheibe U-8 „Kontakt aus Dokument“:** vorbelegtes Kontaktformular, Aliase je Kontakt.
-- **Später/eigene Entscheidung:** Verknüpfung mit Odoo-Bestellungen/-Rechnungen (mit Schritt 8), semantische Suche und
-  Sprachmodell (E12).
-
-Weitere offene Entscheidungen dazu:
+Entscheidungen dazu:
 
 - ~~**U7** Fristen als Odoo-Aktivitäten~~ – **entfällt** (Nutzer 2026-09-29: „U7 weglassen“); keine Erinnerungen aus
   erkannten Daten.
 - ~~**U8**~~ **entschieden (Nutzer 2026-09-29): Odoos eigenes Recht gilt** – „Kontakt aus Dokument anlegen“ sieht nur,
   wer in Odoo Kontakte anlegen darf (`base.group_partner_manager`, „Kontakte: Anlegen“; normale interne Benutzer dürfen
   `res.partner` laut `base/security/ir.model.access.csv` nur lesen). Keine eigene Regel, kein Vorschlagsknopf.
-- **U9** Reihenfolge: U-7 (Werte nutzen – Suche, Kalender, Auswertung) **vor** dem Prüf-Fenster, weil es sofort mit den
-  bereits gespeicherten Werten nutzt, oder danach?
+- ~~**U9**~~ **entschieden (Nutzer 2026-09-29): aufgeteilt** – zuerst die **Volltextsuche** (unabhängig, der gelesene
+  Text liegt für jede Datei schon vor), dann das Prüf-Fenster, danach „Werte nutzen“ (Filter, Kalender, Auswertung,
+  Vorgang): diese brauchen gespeicherte Werte, und die entstehen erst durch das Prüfen – heute gibt es außer in
+  Testdatenbanken praktisch keine.
 
 ## Quellen
 
