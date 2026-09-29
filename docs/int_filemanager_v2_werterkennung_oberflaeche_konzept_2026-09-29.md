@@ -405,7 +405,38 @@ offen, was wie gründlich geprüft ist, und korrigiert, was sich dabei als falsc
   Jahresbescheid Wasser.pdf`), Zielordner (auch Jahr/Monat), Tags; das Prüf-Fenster schlägt „umbenennen in … /
   verschieben nach …“ mit Häkchen vor; die Regel kann aus dem bisherigen Ablageort der Dokumente eines Absenders
   vorgeschlagen werden. Vorher kaum anwendbar, weil vorhandene Dateien schon richtig liegen und heißen.
-- **N8** Feldarten **Auswahlliste** und **Ankreuzfeld** ergänzen? *Empfehlung: bei Bedarf.*
+- **N8** Feldarten ergänzen – erweitert nach dem Abgleich mit Odoos Feldtypen (10.6): Ankreuzfeld, Auswahl, Verknüpfung
+  zu Odoo-Datensätzen, Telefon, URL, Prozentsatz, Monat, Datum mit Uhrzeit, mehrzeiliger Text; dazu Feldeigenschaften
+  (Hilfe, Platzhalter, Standardwert, Gruppen-Sichtbarkeit, Datumsgrenzen). *Offen.*
+
+### 10.6 Abgleich mit Odoos Feldtypen (zu N8)
+
+Gelesen: [Studio – Felder und Widgets](https://www.odoo.com/documentation/19.0/de/applications/studio/fields.html)
+vollständig im Originaltext. **Studio ist Enterprise** (`web_studio` nicht im Image); die Feldtypen dahinter sind
+Odoo-Grundgerüst. Die Community-Entsprechung für vom Nutzer definierte Felder sind **Properties**; im Quellcode
+(`odoo/orm/fields_properties.py`, `ALLOWED_TYPES`): `boolean, integer, float, text, char, html, date, datetime,
+monetary, many2one, many2many, selection, tags, separator`.
+
+| Odoo-Typ (Studio / Properties) | Unsere Wertart | Befund |
+|---|---|---|
+| Text (`char`), Widgets E-Mail / Telefon / URL | Nummer, Wort, IBAN, USt-IdNr., E-Mail | wir sind feiner (Prüfziffern, Formate); **Telefon und URL fehlen** – Telefonnummern stehen oft unter den nicht zugeordneten Paaren und wären für „Kontakt aus Dokument“ (U-7) nützlich |
+| Mehrzeiliger Text (`text`) | – | fehlt (Betreff, Verwendungszweck); „Wort“ fasst höchstens 5 Wörter |
+| Ganzzahl (`integer`) | – (Nummer ist bewusst Text) | nicht nötig |
+| Dezimal (`float`), Widget Prozentsatz | Menge mit Einheit | **Prozentsatz fehlt** (Zinssatz, Umsatzsteuersatz, Anpassung in %) |
+| Monetär (`monetary`) | Betrag | vorhanden |
+| Datum (`date`), Eigenschaften „Minimale Genauigkeit Monat/Jahr“, „Warnung für zukünftige Daten“, „frühestes/spätestes Datum“ | Datum | vorhanden; **Monatsangaben fehlen** („Leistungsmonat 03/2025“, „März 2025“ – unser Datum braucht einen Tag); Zukunfts-Warnung und Grenzen wären gute Plausibilitätsprüfungen |
+| Datum/Zeit (`datetime`) | – | fehlt (Termine mit Uhrzeit) |
+| Datumsbereich (Widget) | Zeitraum/Dauer | vorhanden, bei uns zusätzlich Dauer („24 Monate“) |
+| Kontrollkästchen (`boolean`) | – | fehlt (N8 „Ankreuzfeld“) |
+| Auswahl (`selection`) | – | fehlt (N8 „Auswahlliste“) |
+| Many2One (`many2one`) | nur Kontakt (fest eingebaut) | **allgemeine Verknüpfung zu Odoo-Datensätzen fehlt** – z. B. Fahrzeug über Kennzeichen, Mitarbeiter, Projekt, Bestellung; erkannt über die Suche des Zielmodells (`name_search`), wie heute der Absender |
+| Many2Many / Stichwörter (`tags`) | Tags am Dokument | je Feld nicht nötig |
+| Zeilen (`one2many`) | – | Tabellen bewusst außerhalb (E6) |
+| Priorität, Datei, Bild, Signatur, Html, Zugehöriges Feld | – | für Erkennung nicht sinnvoll |
+
+Feldeigenschaften aus Studio, die auch für unsere Felder passen: **Hilfe-Tooltipp**, **Platzhalter**, **Standardwert**,
+**Sichtbarkeit nur für bestimmte Gruppen** (z. B. Gehaltsfelder), **Pflicht** (N4: später), bei Daten **Warnung für
+Zukunft** und **früheste/späteste Grenze**.
 
 ## Quellen
 
