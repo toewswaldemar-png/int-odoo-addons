@@ -57,7 +57,7 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 - **„OCR Templates“** (PR #13043, Juni 2026, nur in den Branch `feature/ocr-templates` gemergt, kein Release,
   Maintainer: „nach v3“): feste Zonen je **Dokumenttyp** auf einem Musterdokument, je Zone Zielfeld, Sprache,
   Umformung (Zahl, Datum, **QR/Barcode lesen** mit zxing-cpp), Prüf-Regex, **„Zone testen“** mit Rohtext und
-  Ergebnis. → Übernehmen: *Testen mit sofortiger Anzeige*, *QR im Kasten*, *Prüfen gegen die Wertart*. Nicht
+  Ergebnis. → Übernehmen: *Testen mit sofortiger Anzeige*, *QR lesen* (bei uns automatisch für jedes Dokument, U5), *Prüfen gegen die Wertart*. Nicht
   übernehmen: starre Zonen je Dokumenttyp (unser verworfener Weg).
 
 ### Odoo selbst
@@ -86,7 +86,7 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 | Odoo-Eingabefelder für unsere frei definierten Felder | `Record` (`web/static/src/model/record.js`) mit `fields`-Definition ohne echtes Modell | vorhanden (genutzt z. B. in `analytic_distribution`, `multi_create_popover`); Datum, Betrag+Währung, Kontakt (many2one), Tags wie überall in Odoo |
 | „Neues Feld anlegen“ direkt im Fenster | Popover-Muster der Properties (`usePopover`, `property_definition`) | vorhanden, als Vorbild |
 | Dokument in zweitem Fenster (zwei Bildschirme) | `mail_popout_service.js` (`documentPictureInPicture` bzw. `window.open`) | vorhanden |
-| QR-Code (Überweisung/GiroCode) im Kasten lesen | `zxing-library` (`web/static/lib/zxing-library`, `HTMLCanvasElementLuminanceSource`) | vorhanden; Odoos eigener Detektor liest nur Video, die Bibliothek kann Canvas → **im Browser machbar**, noch nicht erprobt |
+| QR-Code (Überweisung/GiroCode) im Kasten lesen | `zxing-library` (`web/static/lib/zxing-library`, `HTMLCanvasElementLuminanceSource`) | vorhanden; Odoos eigener Detektor liest nur Video, die Bibliothek kann Canvas → im Browser machbar, noch nicht erprobt. **Nicht gewählt (U5):** gelesen wird auf dem Server im Umwandler |
 | Kasten aufziehen | `CropOverlay` (`web/static/src/core/barcode/crop_overlay.js`) | nur für den Kamera-Scanner (zur Mitte symmetrisch), **nicht wiederverwendbar**; eigener kleiner Zieh-Code (Pointer-Events) wie in v1s Viewer |
 | Ausschnitt gründlich nachlesen | Umwandler `fmconverter`: `pdftoppm`, `tesseract`, OCRmyPDF 17.12, Pillow | vorhanden |
 | E-Rechnung in der PDF | `odoo.tools.pdf.OdooPdfFileReader.getAttachments()`, Modul `account_edi_ubl_cii` | vorhanden (Community) – eigener späterer Schritt, hier nur als Hinweis |
@@ -104,7 +104,7 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 
 ```
 ┌─ Dateien / Rechnungen 2025 / Jahresbescheid Wasser.pdf ─────────── ‹ 3/17 › ─ [Speichern und weiter] ─┐
-│ [Zeiger] [Kasten] [Nachlesen] [QR]  − 100 % +   ⧉ eigenes Fenster  │ Absender  [Verbandsgemeinde…  ▾]  │
+│ [Zeiger] [Kasten] [Nachlesen]  − 100 % +        ⧉ eigenes Fenster  │ Absender  [Verbandsgemeinde…  ▾]  │
 │ ┌───────────────────────────────────────────┐                      │ Tags      [Wasser] [2024] +       │
 │ │  Seite 1                                  │                      │───────────────────────────────────│
 │ │   ┌ ─ Kasten 1 (6 Werte) ─ ─ ─ ─ ┐        │                      │ Rechnungsnummer 300/0154989/5/25 ✓│
@@ -139,8 +139,10 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
    Funden außerhalb, K1); nicht zugeordnete Paare erscheinen rechts unter **„Weitere Werte in Kästen“**. Kästen lassen
    sich verschieben, in der Größe ändern und löschen; beliebig viele, auf jeder Seite (K2).
 3. **Nachlesen** (am Kasten, K4): wurde im Kasten wenig oder Unsinn gelesen (schlechter Scan), liest der Umwandler
-   genau diesen Ausschnitt mit höherer Auflösung neu; Ladeanzeige am Kasten, danach neue Paare. **QR** am Kasten:
-   Überweisungs-QR (GiroCode) lesen → IBAN, Empfänger, Betrag, Verwendungszweck als Vorschläge.
+   genau diesen Ausschnitt mit höherer Auflösung neu; Ladeanzeige am Kasten, danach neue Paare. Den **Überweisungs-QR**
+   (GiroCode) braucht man nicht anzuklicken: er wird für jedes Dokument automatisch gelesen (U5, Abschnitt 5.6); seine
+   Werte (Empfänger, IBAN, Betrag, Verwendungszweck) stehen als sicherste Vorschläge in der Feldliste, im Dokument ist
+   der QR-Code markiert.
 
 ### 4.4 Die Feldliste rechts – „nur was man braucht“
 
@@ -186,6 +188,14 @@ Bestehend bleibt: `suggest_field_values`, `apply_field_values`, `value_suggest.s
    (vorschlagen / automatisch, 6.3). Beim nächsten Dokument desselben Absenders: Anker in der Wortliste suchen und den
    Kasten um die Verschiebung mitnehmen; ohne Anker die gemerkte Lage.
 
+6. **Überweisungs-QR (GiroCode) automatisch** (U5): der Umwandler sucht beim Erzeugen der Wortliste auf jeder Seite
+   nach QR-Codes (Bibliothek `zxing-cpp` im Umwandler-Image nachinstallieren, wie Paperless' OCR-Templates) und
+   liefert gefundene Inhalte mit Lage mit. Ein GiroCode (EPC-Format, beginnt mit „BCD“) ergibt Empfänger, IBAN, BIC,
+   Betrag und Verwendungszweck; diese Werte sind die **höchste Stufe** (maschinenlesbar, nicht aus Text erraten),
+   geprüft wie jeder Wert (IBAN-Prüfziffer, Betrag). Eigene Firmendaten (E10) werden auch hier übersprungen. Neue
+   Spec-Version der Wortliste, damit vorhandene Dokumente beim nächsten Durchlauf nachgelesen werden. Vorher an der
+   Sammlung zählen, wie viele Dokumente einen GiroCode tragen.
+
 ## 6. Lernen je Absender und Automatik
 
 ### 6.1 Was gelernt wird
@@ -220,7 +230,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 | U-2 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern | eine Datei prüfen und speichern ohne Kasten |
 | U-3 | Kasten-Werkzeug, weitere Werte, „als neues Feld“, Farben/Hover | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
 | U-4 | Kästen merken je Absender (Modell, Anker, Vorschlag beim nächsten Dokument), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
-| U-5 | Nachlesen (Umwandler) und QR im Kasten | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird gelesen |
+| U-5 | Nachlesen (Umwandler) und QR automatisch je Dokument (Umwandler, 5.6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
 | U-6 | Messung: **Prüfteil** (16 unbekannte Absender, bisher unverbraucht) ohne und mit Lernen, dazu Zeit je Dokument | Zahlen gegen die 86 % des Übungsteils |
 | (später) | Automatisch übernehmen (6.3) mit dem Eingangsordner; E-Rechnung; Dokumentart | eigene Entscheidungen |
 
@@ -236,8 +246,8 @@ Eingangsordner neu entscheiden. Vorschlag:
 - ~~**U4**~~ **entschieden (Nutzer 2026-09-29): später entscheiden** – zuerst ohne Dokumentarten (Feldliste aus Funden,
   Absender-Gedächtnis und angehefteten Feldern, 4.4); nach einigen Wochen Nutzung prüfen, ob bei neuen Absendern oft
   Felder fehlen. Dokumentarten lassen sich ohne Umbau ergänzen.
-- **U5** QR im Browser (zxing-library, kein Umbau) oder im Umwandler (zxing-cpp nachinstallieren, auch für
-  Stapelverarbeitung)? Vorschlag: im Browser beginnen.
+- ~~**U5**~~ **entschieden (Nutzer 2026-09-29): auf dem Server im Umwandler, automatisch für jedes Dokument** (5.6),
+  ohne Kasten; funktioniert damit auch für den Eingangsordner und die Automatik aus U1.
 - **U6** Nur PDF im Prüf-Fenster, oder auch Bilder (JPG/TIFF-Scans haben heute keine Wortliste, Lücke aus dem
   Werterkennungs-Plan)?
 
