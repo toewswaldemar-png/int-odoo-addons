@@ -621,6 +621,18 @@ auf Nutzerwunsch zurückgestellt** („Anschrift erstmal weglassen“), Befund 4
   494 Odoo-Tests grün (vor den letzten zwei Codex-Nachbesserungen, danach die 55 Werterkennungs-Tests), `v2check` ohne
   neuen Befund.
 
+**Stand W-6 nach Runde 3 (2026-09-29):** Übungsdokumente 21–24 (Rechnung, Bescheid, Kontoauszug, Energie-Rechnung).
+- **Runde 3:** 16 von 20 Vorschlägen richtig (80 %), 16 von 17 vorhandenen Werten gefunden (94 %).
+- **Eine allgemeine Regel:** die Ziffern einer IBAN oder USt-IdNr. sind keine eigene Nummer (die Ziffern von
+  „DE 138188668“ kamen als Rechnungsnummer, Beschriftung darunter). Danach Runde 3 **84 %**, alle drei Runden zusammen
+  **86 % richtig (75 / 87), 88 % gefunden (75 / 85)**, nichts Richtiges falsch geworden; Sammlung 0 Fehler, Median 0,06 s.
+- **Einzelfälle, bewusst nicht eingestellt:** Kontoauszug mit vielen Daten (Datum neben „DATUM“ ist ein Buchungstag, gemeint
+  war das Auszugsdatum), eine „70“ aus einer Tabellenspalte unter „Auftragsnummer“, „0,89 kWh“ aus einem Energieausweis
+  als Jahresverbrauch („Verbrauch“ ist lang genug, um als Wortende zu gelten).
+- Übungsteil damit fertig (24 Dokumente). Als Nächstes Runde 4 (Prüfteil) – vorher ggf. die offenen Ideen (E-Rechnung/
+  Überweisungs-QR zählen, gemerkte Lage je Absender, Plausibilität zwischen Werten), da nach Runde 4 nichts mehr
+  eingestellt wird.
+
 ## 7. Entscheidungen
 
 **Alle Empfehlungen E1–E9 vom Nutzer übernommen (2026-09-29, „dann leg los“).** Ergänzend aus den Proben (8):

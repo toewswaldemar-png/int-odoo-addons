@@ -156,14 +156,15 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
      Antworten, die etwas anderes meinten, in `korrekturen.json` (Tower) richtiggestellt. Nachgeprüft Runde 1+2 zusammen
      **87 % richtig / 87 % gefunden**, nichts verschlechtert. `runde2.json` liegt auf Tower, lokale Kopien gelöscht.
      Startkatalog ist `noupdate`: UI-Testinstanz bekommt Adressfenster/neue Stichwörter nur bei Neuinstallation.
-   - **Einstieg neue Sitzung – Runde 3 auswerten:** Seite `%TEMP%\w6r3\werterkennung_runde3.html` (Übungsdokumente
-     21–24) liegt beim Nutzer. Nach dem Speichern die **neueste** `werterkennung_runde3*.json` aus Downloads (die Seite
-     legt bei jedem Speichern eine neue Kopie an) als `runde3.json` nach Tower, lokale Kopien (Downloads, `%TEMP%\w6r3`)
-     löschen; auswerten wie Runde 2 (`w6_recheck.py 3`, dann `1 2 3`), Befunde als allgemeine Regeln. **Runde 4 =
-     Prüfteil (16 Dokumente, `check`) erst ganz am Ende, ohne danach etwas einzustellen** – deren Quote ist die ehrliche
-     Erwartung für neue Absender (ohne und mit Lernen messen). Vor Runde 4 ggf. noch (Nutzer interessiert, nicht
-     entschieden): E-Rechnung/Überweisungs-QR in der Sammlung zählen, gemerkte Lage je Absender nutzen,
-     Plausibilitätsprüfungen zwischen Werten.
+   - **Runde 3 ausgewertet (2026-09-29, Plan 6 „Stand W-6 nach Runde 3“):** 80 % roh, mit neuer Regel (Ziffern einer
+     IBAN/USt-IdNr. sind keine eigene Nummer) 84 %; alle drei Runden **86 % richtig / 88 % gefunden**. `runde3.json` auf
+     Tower, lokale Kopien gelöscht. Übungsteil fertig.
+   - **Einstieg neue Sitzung – vor Runde 4:** Nutzer fragen, ob vorher noch die offenen Ideen umgesetzt werden
+     (E-Rechnung/Überweisungs-QR in der Sammlung zählen, gemerkte Lage je Absender aus `extraction_hint` nutzen,
+     Plausibilität zwischen Werten) – nach Runde 4 wird nichts mehr eingestellt. Dann Runde 4 = Prüfteil: `w6_review.py
+     <temp>/w6_sample.json 4 0 16 check`, neueste `werterkennung_runde4*.json` als `runde4.json` nach Tower, lokale
+     Kopien löschen, `w6_recheck.py 4` (ohne Lernen); mit Lernen messen (Absender-Hinweise aus den Antworten der
+     Runden 1–3 bzw. je Absender die erste Bestätigung) – Verfahren dafür noch festzulegen.
    - Im Downloads-Ordner des Nutzers liegen noch `werterkennung_runde1*.json` (10 Zwischenstände, private Werte) – der
      Nutzer löscht sie selbst; die maßgebliche Fassung liegt auf Tower.
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
