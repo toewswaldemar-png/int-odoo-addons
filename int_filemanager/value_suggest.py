@@ -36,9 +36,26 @@ MAX_LINE_GAP = 20.0
 MAX_ROWS_ABOVE = 10
 ALIGN_TOLERANCE = 6.0
 
+# A keyword inside a longer label must make up this much of it; below, the label
+# is a sentence that happens to mention the keyword ("Rechnungen werden für einen
+# Zeitraum von 10 Jahren aufbewahrt").
+MIN_CONTAINED_SHARE = 0.3
+# A label may go on a little after the keyword ("Gesamtbetrag in Höhe von", "Ihre
+# Kundennummer bei uns"); more words make it the subject of a sentence
+# ("Auftragsbestätigung gilt gleichzeitig als Rechnung").
+MAX_WORDS_AFTER_KEYWORD = 3
+
+# A number of one digit is a position, a count or a footnote, not a reference.
+MIN_NUMBER_DIGITS = 2
+
+# Check digits prove what these values are, so they are suggested without a label
+# too, after every labelled one. Not an IBAN: printed without a label, it is mostly
+# the reader's own account ("wir buchen von Ihrem Konto ... ab").
+SELF_EVIDENT_TYPES = ("vat",)
+
 # Preference when a value is labelled from several sides, and how well a label
 # names a field: learned for this sender, equal to a keyword, containing one,
-# or close to one.
+# close to one, or no label at all.
 _DIRECTION_RANK = {
     "hint": 0,
     "regex": 0,
@@ -46,8 +63,9 @@ _DIRECTION_RANK = {
     "left": 2,
     "above": 3,
     "below": 4,
+    "unlabelled": 5,
 }
-TIER_HINT, TIER_EXACT, TIER_CONTAINS, TIER_FUZZY = 0, 1, 2, 3
+TIER_HINT, TIER_EXACT, TIER_CONTAINS, TIER_FUZZY, TIER_UNLABELLED = 0, 1, 2, 3, 4
 
 # A rule's pattern running longer than this on one document is reported.
 SLOW_PATTERN_SECONDS = 1.0
@@ -62,6 +80,20 @@ def normalize(label):
     text = unicodedata.normalize("NFKC", label).casefold().replace("ß", "ss")
     text = _NUMBER_WORDS.sub("nummer", text)
     return "".join(c for c in text if c.isalnum())
+
+
+def _is_number(word):
+    digits = sum(c.isdigit() for c in word)
+    return digits > 0 and digits >= sum(c.isalpha() for c in word)
+
+
+def _word_ends(label):
+    """Offsets in normalize(label) at which a word of the label ends."""
+    ends, length = set(), 0
+    for word in re.split(r"[\s/-]+", label):
+        length += len(normalize(word))
+        ends.add(length)
+    return ends
 
 
 @dataclass
@@ -170,9 +202,17 @@ class Page:
         return labels
 
     def _label_before(self, seg, value_start):
-        """The words in front of the value in its own segment: "Rechnungsnr.: 4711"."""
+        """The words in front of the value in its own segment: "Rechnungsnr.: 4711".
+
+        Only the words after the last number count, the rest belongs to another
+        value: "Rechnung vom 12.03. Kundennummer 4711" is labelled "Kundennummer".
+        A word with a stray digit read into it ("1Herrn") is still a word.
+        """
         words = list(re.finditer(r"\S+", self.text[seg.start : value_start]))
         words = words[-LABEL_WORDS_BEFORE:]
+        numbers = [i for i, w in enumerate(words) if _is_number(w.group())]
+        if numbers:
+            words = words[numbers[-1] + 1 :]
         if not words:
             return None
         start = seg.start + words[0].start()
@@ -229,10 +269,33 @@ class Page:
 
 def match_label(label, spec):
     """(tier, score) of how well label names the field, lower is better; or None."""
-    return _match(normalize(label), spec)
+    return _match(normalize(label), spec, _word_ends(label))
 
 
-def _match(norm, spec):
+def _contains(norm, keyword, ends):
+    """How keyword stands in the longer label norm: True as its label, False in
+    prose, None only inside a word.
+
+    It has to end one of the label's words: the last part of a German compound
+    names what it is ("Telekom-Kundennummer" is a customer number, a
+    "Familienkasse" is no family, "angeboten" no offer), and few words may follow.
+    """
+    found = None
+    start = norm.find(keyword)
+    while start >= 0:
+        end = start + len(keyword)
+        if end in ends:
+            if (
+                len(keyword) >= MIN_CONTAINED_SHARE * len(norm)
+                and sum(e > end for e in ends) <= MAX_WORDS_AFTER_KEYWORD
+            ):
+                return True
+            found = False
+        start = norm.find(keyword, start + 1)
+    return found
+
+
+def _match(norm, spec, ends):
     if not norm:
         return None
     best = None
@@ -251,11 +314,15 @@ def _match(norm, spec):
             continue
         if norm == kw:
             return TIER_EXACT, 0.0
-        if kw in norm:
+        contained = _contains(norm, kw, ends) if kw in norm else None
+        if contained is False:
+            continue
+        if contained:
             # The larger the part of the label the keyword covers, the better.
             found = (TIER_CONTAINS, 1 - len(kw) / len(norm))
         else:
-            # The quick upper bounds of difflib rule out most pairs before the
+            # An inflected keyword ("Kundennummern") is still close to it. The
+            # quick upper bounds of difflib rule out most pairs before the
             # exact ratio is worked out. The limit is strict and kept clear of
             # rounding: 1 - 0.8 is 0.19999999999999996 in floating point, which
             # would let "Betrag" (a table column) pass as close to "Endbetrag".
@@ -322,7 +389,11 @@ def suggest(page, specs, skip=None, slow=None, **options):
     """
     skip = skip or (lambda value_type, value: False)
     pairs, unassigned = [], []
-    kinds = {(s.value_type, s.unit) for s in specs if s.keywords or s.hints}
+    kinds = {
+        (s.value_type, s.unit)
+        for s in specs
+        if s.keywords or s.hints or s.value_type in SELF_EVIDENT_TYPES
+    }
     for value_type, unit in sorted(kinds, key=lambda k: (k[0], k[1] or "")):
         fitting = [s for s in specs if (s.value_type, s.unit) == (value_type, unit)]
         cache = {}
@@ -333,12 +404,16 @@ def suggest(page, specs, skip=None, slow=None, **options):
         ]
         starts = [c.start for c in candidates]
         for c in candidates:
+            if value_type == "number" and _digits(c) < MIN_NUMBER_DIGITS:
+                continue
             for label in page.labels_of(c.start, c.end, starts):
                 # The same label stands next to many values: match it once.
-                norm = normalize(label.text)
-                if norm not in cache:
-                    cache[norm] = [(spec, _match(norm, spec)) for spec in fitting]
-                matches = [(spec, m) for spec, m in cache[norm] if m]
+                if label.text not in cache:
+                    norm, ends = normalize(label.text), _word_ends(label.text)
+                    cache[label.text] = [
+                        (spec, _match(norm, spec, ends)) for spec in fitting
+                    ]
+                matches = [(spec, m) for spec, m in cache[label.text] if m]
                 for spec, (tier, score) in matches:
                     key = (
                         tier,
@@ -352,6 +427,13 @@ def suggest(page, specs, skip=None, slow=None, **options):
                     pairs.append((key, spec, c, label, rule_id))
                 if not matches and value_type != "word":
                     unassigned.append((label, value_type, c))
+        # Without a label, the value could belong to any field of its type.
+        if value_type in SELF_EVIDENT_TYPES and len({s.id for s in fitting}) == 1:
+            rank = _DIRECTION_RANK["unlabelled"]
+            for c in candidates:
+                key = (TIER_UNLABELLED, rank, 0, 0.0, 0.0, c.start)
+                label = Label("", "unlabelled", c.start, c.start)
+                pairs.append((key, fitting[0], c, label, None))
     for spec in specs:
         for rule_id, pattern, group in spec.patterns:
             started = time.perf_counter()
@@ -410,6 +492,10 @@ def _assign(page, pairs):
     return {k: v for k, v in result.items() if v}
 
 
+def _digits(candidate):
+    return sum(c.isdigit() for c in candidate.value["value_text"])
+
+
 def _unassigned(items):
     seen, result = set(), []
     for label, value_type, c in items:
@@ -436,8 +522,6 @@ def label_of_value(page, value_type, value_text, near=None, **options):
 
     The value is looked up in the text by what it reads as (the one closest to
     ``near`` if it is printed more than once), and labelled like any suggestion.
-    In front of it, only the words after the last one holding a digit count:
-    "Rechnung vom 12.03. Kundennummer" teaches "Kundennummer".
     """
     candidates = list(value_types.find(value_type, page.text, **options))
     matching = [c for c in candidates if c.value["value_text"] == value_text]
@@ -449,12 +533,4 @@ def label_of_value(page, value_type, value_text, near=None, **options):
     labels = page.labels_of(value.start, value.end, [c.start for c in candidates])
     if not labels:
         return None, value
-    label = min(labels, key=lambda lb: _DIRECTION_RANK[lb.direction])
-    if label.direction == "before":
-        words = label.text.split()
-        digits = [i for i, w in enumerate(words) if any(c.isdigit() for c in w)]
-        words = words[digits[-1] + 1 :] if digits else words
-        if not words:
-            return None, value
-        label = Label(" ".join(words), "before", label.start, label.end)
-    return label, value
+    return min(labels, key=lambda lb: _DIRECTION_RANK[lb.direction]), value

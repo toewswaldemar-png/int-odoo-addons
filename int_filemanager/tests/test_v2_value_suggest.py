@@ -210,6 +210,85 @@ class TestV2ValueSuggest(BaseCase):
         self.assertEqual((found[16][0].tier, found[16][0].hint_id), (vs.TIER_HINT, 7))
         self.assertIsNone(found[16][0].rule_id)
 
+    def test_a_keyword_counts_as_the_last_part_of_a_compound(self):
+        found, _ = run(vs.Page("Telekom-Kundennummer: 4711"), [CUSTOMER])
+        self.assertEqual(found[2][0].tier, vs.TIER_CONTAINS)
+        # At the start of a word, the keyword is part of something else.
+        order = spec(18, "number", "Auftrag")
+        self.assertEqual(run(vs.Page("Auftragsbestandsliste: 4711"), [order])[0], {})
+        family = spec(19, "number", "Familie")
+        self.assertEqual(run(vs.Page("Familienkasse: 4711"), [family])[0], {})
+
+    def test_a_sentence_mentioning_a_keyword_is_no_label(self):
+        # The keyword is too small a part of the line below the value.
+        page = layout(
+            (100, [(50, "12,50 €")]), (112, [(50, "Der offene Betrag wird abgebucht")])
+        )
+        self.assertEqual(run(page, [AMOUNT])[0], {})
+        page = layout((100, [(50, "12,50 €")]), (112, [(50, "Offener Betrag")]))
+        self.assertEqual(texts(run(page, [AMOUNT])[0]), {7: ["12.50 EUR"]})
+        # A few words after the keyword still make a label, a sentence does not.
+        page = vs.Page("Den Betrag in Höhe von 12,50 €")
+        self.assertEqual(texts(run(page, [AMOUNT])[0]), {7: ["12.50 EUR"]})
+        page = layout(
+            (100, [(50, "4711")]),
+            (112, [(50, "Auftragsbestätigung gilt gleichzeitig als Rechnung")]),
+        )
+        order = spec(18, "number", "Auftragsbestätigung")
+        self.assertEqual(run(page, [order])[0], {})
+
+    def test_the_label_in_front_starts_after_the_last_number(self):
+        found, _ = run(vs.Page("Rechnung vom 12.03.2024 Kundennummer 4711"), [CUSTOMER])
+        best = found[2][0]
+        self.assertEqual((best.label, best.tier), ("Kundennummer", vs.TIER_EXACT))
+        page = vs.Page("Zurückzuzahlender Gesamtbetrag: 359. 642,08 €")
+        self.assertEqual(run(page, [spec(17, "amount", "Gesamtbetrag")])[0], {})
+
+    def test_a_number_of_one_digit_is_no_reference(self):
+        order = spec(18, "number", "Auftragsnummer")
+        self.assertEqual(run(vs.Page("Auftragsnummer: 4"), [order])[0], {})
+        self.assertEqual(
+            texts(run(vs.Page("Auftragsnummer: 42"), [order])[0]), {18: ["42"]}
+        )
+
+    def test_a_vat_number_needs_no_label(self):
+        vat = spec(21, "vat", "USt-IdNr.")
+        page = vs.Page("Eingetragen unter DE136695976")
+        found, _ = run(page, [vat])
+        self.assertEqual(texts(found), {21: ["DE136695976"]})
+        best = found[21][0]
+        self.assertEqual(
+            (best.direction, best.tier), ("unlabelled", vs.TIER_UNLABELLED)
+        )
+        self.assertIsNone(best.rule_id)
+        # A labelled one comes first.
+        page = vs.Page("Eingetragen unter DE136695976\nUSt-IdNr.: DE811569869")
+        self.assertEqual(texts(run(page, [vat])[0])[21], ["DE811569869", "DE136695976"])
+        # With two fields of the type, a value without label could be either.
+        other = spec(22, "vat", "USt-IdNr. des Empfängers")
+        self.assertEqual(
+            run(vs.Page("Eingetragen unter DE136695976"), [vat, other])[0], {}
+        )
+
+    def test_prose_is_not_close_to_its_keyword_either(self):
+        term = spec(23, "period", "Mindestvertragslaufzeit")
+        self.assertIsNone(vs.match_label("Mindestvertragslaufzeit s. u. a. O.", term))
+        # An inflected keyword is.
+        self.assertEqual(vs.match_label("Kundennummern", CUSTOMER)[0], vs.TIER_FUZZY)
+
+    def test_a_vat_field_with_a_pattern_only_gets_unlabelled_numbers(self):
+        pattern = vs.FieldSpec(
+            24, "vat", patterns=[(240, re.compile(r"Steuer-ID (\S+)"), 1)]
+        )
+        found, _ = run(vs.Page("Eingetragen unter DE136695976"), [pattern])
+        self.assertEqual(texts(found), {24: ["DE136695976"]})
+
+    def test_an_iban_needs_a_label(self):
+        # Without one it is mostly the reader's own account.
+        iban = spec(13, "iban", "IBAN")
+        page = vs.Page("Wir buchen von Ihrem Konto DE89 3704 0044 0532 0130 00 ab")
+        self.assertEqual(run(page, [iban])[0], {})
+
     def test_a_value_never_crosses_a_column(self):
         page = layout((100, [(50, "Rechnungsnummer"), (200, "4711"), (300, "12")]))
         self.assertEqual(texts(run(page, [INVOICE])[0]), {1: ["4711"]})
