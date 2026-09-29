@@ -317,3 +317,24 @@ Werte im Fließtext. Folgerungen für den Entwurf:
   (ct/kWh, kWh, €/Monat), **Wort** (Tarifname).
 - Die Suche nach Seitenlage braucht die Wortpositionen in Odoo – ein weiterer Grund, die Wortliste v2 (5.4) jetzt zu
   bauen; die Abstände (gleiche Zeile, Spaltenbreite) sind an den Proben einzustellen.
+
+**Vierte Probe: gescannte Vertragsbestätigung eines anderen Stromversorgers**, diesmal mit einem **vorher
+festgelegten** Stichwort-Katalog (18 Felder, Synonyme aus den drei ersten Proben), um die Übertragbarkeit auf einen
+unbekannten Absender zu messen (Kopie danach gelöscht). Wieder eine schlechte Scanner-Textebene („04.05.201 7“,
+IBAN mit falsch gesetzter Lücke); neue Erkennung 7 s für 2 Seiten.
+- **Erster Lauf:** nur 5 der 13 im Dokument vorhandenen Werte richtig, dazu zwei **abgeschnittene** Nummern, die wie
+  echte Werte aussehen („836“ statt „836 585 797 780“). Ursachen, alle allgemein: fehlende Synonyme
+  („Geschäftspartnernummer“ = Kundennummer, „Mandats-ID“ = Mandatsreferenz), **Nummern in Leerzeichen-Gruppen**,
+  **Einheit vor der Zahl** („Grundpreis EUR/Monat 10,90“, „Cent/kWh“ statt „ct/kWh“), Preisgarantie als Dauer
+  („12 Monate ab Lieferbeginn“) statt Zeitraum, und zwei gruppierte Nummern nebeneinander, die zu einer verschmolzen.
+- **Nach allgemeinen Korrekturen** (Synonyme, gruppierte Nummern, Einheit davor oder dahinter, Art „Zeitraum oder
+  Dauer“, großer Wortabstand = Spaltengrenze, die ein Wert nicht überspringt): **13 von 13 richtig** auf dem neu
+  erkannten Text, nur 7 von 13 auf der Scanner-Textebene (E9 erneut bestätigt). Nicht vorhandene Felder
+  (Rechnungsnummer, Gesamtbetrag …) blieben leer, **kein Fehltreffer**. Die Gläubiger-ID ist auf dem Papier von Hand
+  überschrieben; die Prüfziffer schlug fehl, der Wert wurde zu Recht nicht übernommen. Die USt-IdNr. in der kleinen
+  Seitenspalte ging bei der neuen Erkennung verloren (in der Scanner-Ebene vorhanden).
+- **Folgerungen:** (1) Der mitgelieferte Katalog braucht Synonymlisten und wird mit jedem neuen Absender besser – das
+  spricht für „Anklicken und Stichwort lernen“ in der Oberfläche. (2) Die Wortliste v2 (5.4) soll große Abstände
+  innerhalb einer Zeile markieren (z. B. als Tabulator), damit auch die Textsuche Spaltengrenzen kennt. (3) Die
+  Korrekturen entstanden nach Ansicht dieses Dokuments; die ersten drei Proben sind gelöscht und konnten nicht erneut
+  geprüft werden → für W-6 eine **feste Testsammlung auf Tower** anlegen, gegen die jede Regeländerung läuft.
