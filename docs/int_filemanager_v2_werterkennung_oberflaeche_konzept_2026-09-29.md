@@ -1,7 +1,7 @@
 # int_filemanager 2: Werterkennung – Oberfläche mit Kasten-Auswahl (Konzept)
 
 Stand 2026-09-29, **Konzept, nichts umgesetzt.** K1–K5 und U1–U9 entschieden; nach der Vollständigkeitsrunde
-(Abschnitt 10: Abdeckung, Versuche mit echten Dokumenten, kritische Gegenlese) neue Fragen N1–N8 **entschieden**; offen **N9** (Speicherform, 10.7), dann **Freigabe**. Baut auf dem
+(Abschnitt 10: Abdeckung, Versuche mit echten Dokumenten, kritische Gegenlese) neue Fragen N1–N9 **entschieden**; es fehlt nur noch die **Freigabe**. Baut auf dem
 Werterkennungs-Plan (`int_filemanager_v2_werterkennung_plan_2026-09-29.md`, W-1…W-6) auf; der Server liefert heute
 schon Vorschläge je Feld mit Fundstelle, bestätigt, lernt je Absender – es fehlt die Oberfläche.
 
@@ -242,13 +242,13 @@ Eingangsordner neu entscheiden. Vorschlag:
 | U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Hervorheben aktive Stelle ↔ Feld (N6) | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
 | U-5 | „daraus nicht lernen“ und Verwalter-Übersicht des Gelernten (N5); Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument; N3: Vorrang nur mit eindeutigem Anker, „gemerkte Kästen verwerfen“), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
 | U-6 | Nachlesen (Umwandler), QR automatisch je Dokument (U5, 5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
-| U-7 | **Neue Feldarten und Feldeigenschaften** (N8, Abgleich 10.6): Verknüpfung zu Odoo-Datensätzen (Zielmodell je Feld, Suche über `name_search`, nur lesbare Datensätze), Ankreuzfeld, Auswahl (Möglichkeiten mit Stichwörtern), Telefon, Prozentsatz, Monat; Eigenschaften Hilfetext, Platzhalter, Standardwert, Sichtbarkeit nur für Gruppen, bei Daten Zukunfts-Warnung und früheste/späteste Grenze | jede neue Art wird an echten Dokumenten erkannt und mit Odoos Eingabefeld angezeigt; ein Fahrzeug-Feld findet das Fahrzeug über das Kennzeichen |
+| U-7 | **Neue Feldarten und Feldeigenschaften** (N8, Abgleich 10.6) **und echte Spalte je Katalogfeld** (N9: Spaltenart, Kopplung Katalogfeld ↔ Spalte, „neu aufbauen“): Verknüpfung zu Odoo-Datensätzen (Zielmodell je Feld, Suche über `name_search`, nur lesbare Datensätze), Ankreuzfeld, Auswahl (Möglichkeiten mit Stichwörtern), Telefon, Prozentsatz, Monat; Eigenschaften Hilfetext, Platzhalter, Standardwert, Sichtbarkeit nur für Gruppen, bei Daten Zukunfts-Warnung und früheste/späteste Grenze | jede neue Art wird an echten Dokumenten erkannt und mit Odoos Eingabefeld angezeigt; ein Fahrzeug-Feld findet das Fahrzeug über das Kennzeichen |
 | U-8 | **Kontakt aus Dokument** (vorbelegtes Odoo-Kontaktformular, nur mit Odoos Recht „Kontakte: Anlegen“, U8), Namensvarianten je Kontakt | neuer Absender wird mit zwei Klicks Kontakt, Varianten finden ihn wieder |
-| U-9 | **Werte nutzen**, sobald durch das Prüfen echte Werte entstehen (U9): Suchfilter über erkannte Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, „Zum selben Vorgang“ | „Gesamtbetrag > 500 €“ und „Nebenkosten je Jahr“ funktionieren mit Odoo-Bordmitteln |
+| U-9 | **Werte nutzen**, sobald durch das Prüfen echte Werte entstehen (U9): Spalten in der Dateiliste, Filter, Gruppieren, Pivot/Diagramm mit Summen und Export über die echten Spalten (N9), Kalender über Datumswerte, „Zum selben Vorgang“ | „Gesamtbetrag > 500 €“ und „Nebenkosten je Jahr“ funktionieren mit Odoo-Bordmitteln |
 | U-10 | Messung: **Prüfteil** (16 unbekannte Absender, bisher unverbraucht) ohne und mit Lernen, dazu Zeit je Dokument | Zahlen gegen die 86 % des Übungsteils |
 | (später) | Automatisch übernehmen (6.3, U1) und **Ablageregeln** (N7) mit dem Eingangsordner; Bilder automatisch je Ordner (U6); E-Rechnung; Dokumentarten (U4); Verknüpfung mit Odoo-Bestellungen/-Rechnungen; semantische Suche/Sprachmodell (E12) | eigene Entscheidungen bzw. Schritte |
 
-## 8. Entscheidungen (U1–U9 getroffen; N1–N8 in 10.5, ebenfalls entschieden)
+## 8. Entscheidungen (U1–U9 getroffen; N1–N8 in 10.5 und N9 in 10.7, ebenfalls entschieden)
 
 - ~~**U1**~~ **entschieden:** automatisch übernehmen wie in 6.3 (Schalter je Absender, erst mit Eingangsordner, nur
   eindeutig, Vermerk „automatisch übernommen“ + Filter „automatisch, nie angesehen“ + Notiz).
@@ -463,10 +463,28 @@ Anlass: Hinweis des Nutzers auf [Eigenschaftsfelder](https://www.odoo.com/docume
 |---|---|---|---|
 | **A – eigene Modelle** (heute: `extraction_field` + `field_value` mit typisierten Spalten) | volle Kontrolle über Wertarten (IBAN, USt-IdNr., Zeitraum, Menge, neue Arten aus U-7), **Herkunft und Fundstelle je Wert**, Lernen, eigene Rechte (U2), **Summen und Pivot** über typisierte Spalten | Werte erscheinen nicht von selbst als Spalte oder Filter an der Datei; dafür eigene Oberfläche (Prüf-Fenster, U-9 „Werte nutzen“) | **bleibt Grundlage** |
 | **B – globale Eigenschaften** an der Datei (wie `res.partner`) | Odoo-eigene Anzeige im Formular, „In Karten anzeigen“, Filter und Gruppieren je Eigenschaft ohne Eigenbau | **keine Summen**; keine Herkunft/Fundstelle je Wert; Wertarten zu grob (keine Prüfziffern, kein Zeitraum/Menge/Telefon/Prozent/Monat); Erkennungseinstellungen passen nicht in die Definition; Löschen einer Eigenschaft löscht alle Werte; Lernen und Regeln bräuchten trotzdem eigene Modelle → zwei Wahrheiten | als alleinige Speicherform **verworfen** |
-| **C – reguläre `x_`-Felder** je Katalogfeld (wie Studio) | alles nativ: Listenspalten, Filter, Gruppieren, **Summen**, Export, echte Typen | jedes neue Feld ändert zur Laufzeit das Datenbankschema der großen Dateitabelle und lädt die Odoo-Registry in allen Prozessen neu; Typwechsel und Löschen schwierig (Spalte fällt weg); Herkunft/Lernen bräuchten trotzdem eigene Modelle | **verworfen** (Aufwand und Risiko zu hoch) |
+| **C – reguläre `x_`-Felder** je Katalogfeld (wie Studio) | alles nativ: Listenspalten, Filter, Gruppieren, **Summen**, Export, echte Typen | jedes neue Feld ändert zur Laufzeit das Datenbankschema der großen Dateitabelle und lädt die Odoo-Registry in allen Prozessen neu; Typwechsel und Löschen schwierig (Spalte fällt weg); Herkunft/Lernen bräuchten trotzdem eigene Modelle | als **alleinige** Form verworfen (Herkunft/Lernen fehlen); das Risiko ist nach Messung aber klein (siehe unten) → als **Ergänzung zu A gewählt (N9)** |
 | **D – A plus Spiegel in globale Eigenschaften** (bestätigte Werte zusätzlich als Eigenschaft an der Datei) | native Anzeige in Karten und Filter je Feld | doppelte Speicherung, Abgleich in beide Richtungen nötig (Bearbeiten im Formular würde am Prüfweg vorbeischreiben), Löschrisiko | **nicht empfohlen**; die Vorteile holt U-9 mit Odoo-Bordmitteln über `field_value` (Filter, Gruppieren, Pivot mit Summen) |
 
-- **N9** Speicherform: bei **A** bleiben (Empfehlung) – oder eine der Alternativen?
+**Messung zu C** (Tower, Wegwerf-Datenbanken): Spalte an eine Tabelle mit 1,4 Mio. Zeilen anhängen 2–3 ms, entfernen
+~5 ms (PostgreSQL 16, Spalte ohne Standardwert); echtes `x_`-Feld (`ir.model.fields`, `state='manual'`) an
+`int_filemanager.node` anlegen einschließlich Neuaufbau der Registry ≈ 0,1 s je Feld, löschen 0,2 s. Weitere Odoo-Prozesse
+laden beim nächsten Aufruf neu (wie bei Studio). Nebenbefund: zwei Felder des Knotens tragen dieselbe Bezeichnung
+„Created on“ (`create_date`, `mtime`) – kleine Korrektur für später.
+
+**Der eigentliche Unterschied** (praktisches Beispiel mit dem Nutzer durchgespielt: alle Wasserbescheide, Betrag je Jahr,
+Excel für Steuer/Wohngeld): in A steht jeder Wert als eigene Zeile – Filtern geht, aber **Auswertungen über mehrere Felder**
+(Betrag je Jahr des Rechnungsdatums), **Spalten in der Dateiliste** und **Export „eine Zeile je Datei“** gehen nicht mit
+Odoo-Bordmitteln. Mit echten Spalten geht all das über Odoos normale Spalten, „Gruppieren nach“, Summen, Pivot und Export.
+
+- ~~**N9**~~ **entschieden (Nutzer 2026-09-29): A plus echte Spalten.** A (`extraction_field` + `field_value`) bleibt die
+  Grundlage für Herkunft, Fundstelle, Fassung und Lernen. Zusätzlich bekommt jedes aktive Katalogfeld eine echte Spalte
+  (`x_`-Feld) an `int_filemanager.node` mit der passenden Art (Betrag + Währung, Zeitraum als zwei Datumsspalten,
+  Verknüpfung als echtes many2one, Auswahl als selection …). Regeln: Spalten werden **nur vom System** befüllt (Speichern im
+  Prüf-Fenster, Automatik), für Nutzer schreibgeschützt; Verwalter-Knopf **„Spalten aus den Werten neu aufbauen“**;
+  Archivieren eines Felds **blendet die Spalte nur aus** (Daten bleiben), Löschen nur als ausdrückliche Verwalter-Aktion
+  mit Rückfrage; die Spalte zeigt den Wert der **aktuellen Fassung**. Umsetzung in U-7 (Spaltenarten, Kopplung
+  Katalogfeld ↔ Spalte) und U-9 (Spalten einblenden, Filter, Gruppieren, Pivot, Export).
 
 ## Quellen
 
