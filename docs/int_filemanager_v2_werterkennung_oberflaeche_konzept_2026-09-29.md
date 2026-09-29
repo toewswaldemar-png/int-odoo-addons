@@ -233,9 +233,9 @@ Eingangsordner neu entscheiden. Vorschlag:
 - ~~**U3**~~ **entschieden (Nutzer 2026-09-29): für alle Nutzer** (wie die gelernten Beschriftungen seit W-5) – es
   sind nur Vorschläge, eine falsche Vorbelegung korrigiert die nächste Bestätigung. **Ausnahme:** den Schalter
   „automatisch übernehmen“ (U1) setzt nur ein Verwalter.
-- **U4** Feldliste: nur Felder mit Vorschlag + beim Absender benutzte + angeheftete (4.4) – oder zusätzlich
-  **Dokumentarten** mit festen Feldgruppen (Rechnung, Bescheid, Kontoauszug)? Vorschlag: zuerst ohne Dokumentarten,
-  die Feldliste je Absender deckt das meiste ab.
+- ~~**U4**~~ **entschieden (Nutzer 2026-09-29): später entscheiden** – zuerst ohne Dokumentarten (Feldliste aus Funden,
+  Absender-Gedächtnis und angehefteten Feldern, 4.4); nach einigen Wochen Nutzung prüfen, ob bei neuen Absendern oft
+  Felder fehlen. Dokumentarten lassen sich ohne Umbau ergänzen.
 - **U5** QR im Browser (zxing-library, kein Umbau) oder im Umwandler (zxing-cpp nachinstallieren, auch für
   Stapelverarbeitung)? Vorschlag: im Browser beginnen.
 - **U6** Nur PDF im Prüf-Fenster, oder auch Bilder (JPG/TIFF-Scans haben heute keine Wortliste, Lücke aus dem
