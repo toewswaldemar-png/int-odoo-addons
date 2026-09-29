@@ -118,23 +118,24 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    (2026-09-29, „dann leg los“)**; Plan-Abschnitt 4 geändert: **eigene neue v2-Modelle** statt Erweiterung der
    v1-Modelle (Gründe dort).
 
-   **Stand bei Sitzungsende 2026-09-29 – hier weitermachen:**
+   **Stand 2026-09-29 mittags – hier weitermachen:**
    - **W-1 fertig** (Wortliste v2, neue Texterkennung für Scans mit Scanner-Text, Spec-Wechsel-Fehler in
      `_enqueue_missing` behoben, Text in `derivative.text`): 55 Umwandler-Tests, **400 Odoo-Tests** grün, pre-commit
      grün; Einzelheiten Plan Abschnitt 6 „Stand W-1“. Image `fmconverter:dev` auf Tower ist neu gebaut (enthält v2);
      der laufende Container `fmv2_ui_conv` (UI-Testinstanz) nutzt noch das **alte** Image – bei Bedarf neu erstellen.
-   - **Läuft noch auf Tower:** Container `wk_runall` (entfernt sich **nicht** selbst) wendet die neue Wortliste auf
-     alle 513 PDFs der Sammlung an → `/mnt/user/test/werterkennung_words/NNNN.json` (Wortlisten), `index.json`
-     (Datei → Nummer, OCR-Art, Dauer), `run.log` (Fortschritt und am Ende: Modus-Verteilung, Fehler, kaputte
-     Zeichenbereiche – muss 0 sein –, Qualität vorher/nachher, langsamste Dateien). Dauer grob 1–2 h. Danach:
-     `run.log` auswerten, Ergebnis in Plan 6 eintragen, `docker rm wk_runall`. Der Ordner ist `chmod 700` und
-     enthält persönliche Texte – nie ins Repo.
-   - **Nächster Schritt W-2** (Datenmodell nach Plan 4, geänderte Fassung): `extraction_field`, `extraction_rule`
-     (Stichwort- und Regex-Modus), `field_value` mit typisierten Spalten, Rechte, Startbelegung aus dem
-     Stichwort-Katalog der Proben (`docs/prototypes/werterkennung/keyword_search.py`, Liste `FIELDS`).
-     Danach W-3 (Umwandeln/Prüfen je Wertart), W-4 (Vorschlagen: Suche im Text **und** nach Seitenlage, jetzt über
-     `\t`/`\n` und die Wortpositionen der v2-Liste), W-5 (Übernehmen, N1-Test), W-6 (Sollwerte für 30–50 Dokumente
-     der Sammlung mit dem Nutzer abhaken, feste Testsammlung).
+   - **Lauf der Wortliste über die ganze Sammlung ausgewertet** (Plan 6 „Stand W-1“): 513 PDFs, 0 Fehler, 0 kaputte
+     Zeichenbereiche; bei den 73 neu erkannten Scans mit Scanner-Text sauberer Anteil 0,71 → 0,80 (57 besser,
+     8 schlechter – bei W-6 ansehen). Container `wk_runall` entfernt; Wortlisten liegen weiter in
+     `/mnt/user/test/werterkennung_words/` (`chmod 700`, persönliche Texte – nie ins Repo).
+   - **W-2 fertig** (Datenmodell, Plan 6 „Stand W-2“): `int_filemanager.extraction_field`, `.extraction_rule`
+     (Stichwort- und Regex-Modus), `.field_value` mit typisierten Spalten, Rechte (Werte nur lesen entlang des
+     Knoten-Bereichs, niemand schreibt sie über das ORM), Startbelegung (21 Felder, `noupdate`), `de.po`;
+     Modulversion 19.0.1.16.0.
+   - **Nächster Schritt W-3** (Umwandeln/Prüfen je Wertart als reine Funktionen, Plan 5.1 Punkt 4 und die Befunde
+     der Proben in Plan 8: gruppierte Nummern, Einheit vor/nach der Zahl, Zeitraum oder Dauer, Reparatur typischer
+     OCR-Verwechslungen nur bei Prüfziffer-Typen). Danach W-4 (Vorschlagen: Suche im Text **und** nach Seitenlage
+     über `\t`/`\n` und die Wortpositionen der v2-Liste; Rechenzeit je Muster messen), W-5 (Übernehmen, N1-Test),
+     W-6 (Sollwerte für 30–50 Dokumente der Sammlung mit dem Nutzer abhaken, feste Testsammlung).
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
 2. **Testdateien je Format sammeln** (Konzept 18, Schritt 5a) ist durch `/mnt/user/test/formats` auf Tower und
    `tools/fmconverter/run_formats.py` bereits erledigt (95 echte Dateien, `MANIFEST.tsv`). **Für die Werterkennung**

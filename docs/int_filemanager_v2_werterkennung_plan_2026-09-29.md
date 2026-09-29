@@ -257,7 +257,7 @@ Entscheidung E3.
 | # | Inhalt | Abnahme |
 |---|---|---|
 | W-1 | Umwandler: Wortliste v2 (5.4), Text in `derivative.text` | Umwandler-Tests; `run_formats.py` über die 95 Testdateien ohne Unerwartetes; Zeichenbereiche stimmen mit dem Text überein (Test über alle Wörter) |
-| W-2 | Datenmodell 4.1–4.3, Rechte, Startbelegung, `de.po` | Frischinstallation + Update von 19.0.2.x; A1-Test (Nicht-Admin sieht Werte fremder Bereiche nicht) |
+| W-2 | Datenmodell 4 (geänderte Fassung), Rechte, Startbelegung, `de.po` | Frischinstallation + Update von 19.0.1.15.0; A1-Test (Nicht-Admin sieht Werte fremder Bereiche nicht) |
 | W-3 | Umwandeln/Prüfen je Typ als reine Funktionen | Tabellentests mit Grenzfällen (OCR-Fehler, `1.234,56`/`1,234.56`/`1234,5`, Monatsnamen, IBAN mit Leerzeichen, USt-IdNr. ohne Präfix) |
 | W-4 | Vorschlagen (5.1) inkl. Kontakt/Tags | Odoo-Tests; kalter Cache (`invalidate_all`, Lehre aus dem `sudo`-Fehler in Schritt 3) |
 | W-5 | Übernehmen (5.2), N1 | HttpCase: Nicht-Admin per `call_kw` und JSON-2 auf fremden Knoten → Zugriff verweigert; alte `revision_id` → Fehler |
@@ -277,8 +277,56 @@ Entscheidung E3.
   (Wortliste, Kachelgröße) wäre nie nachgeholt worden – zählt jetzt nur Zeilen aus `derivative_plan.CURRENT_JOBS`;
   neu `_drop_outdated_jobs` (löscht Zeilen alter Specs, laufende erst nach Antwort); Text der Wortliste zusätzlich
   in `derivative.text` (`_words_text`, Grenze `MAX_WORDS_BYTES`). Neue Odoo-Tests in `test_v2_derivative_kinds.py`.
-- Tests: 55 Umwandler-Tests, 400 Odoo-Tests grün, pre-commit grün. Offen: Ergebnis des Laufs über die ganze
-  Sammlung (Übergabe 4.0), `race.sh` nach W-1 nicht erneut gelaufen, dann W-2.
+- Tests: 55 Umwandler-Tests, 400 Odoo-Tests grün, pre-commit grün. `race.sh` nach W-1 nicht erneut gelaufen.
+- **Lauf über die ganze Sammlung (2026-09-29, Container `wk_runall`, danach entfernt):** 513 PDFs in 27 min,
+  **0 Fehler, 0 kaputte Zeichenbereiche**. Art: 343 digital (`none`), 97 neu erkannt (`force-ocr`, davon 3 als
+  Rückfall nach gescheitertem `--redo-ocr`), 73 Scans mit Scanner-Text neu erkannt (`redo-ocr`). Anteil sauberer
+  Wörter bei diesen 73: **0,71 → 0,80**, 57 besser, **8 schlechter**; bei den 3 Rückfällen 0,86 → 0,84. Langsamste
+  Datei 43 s (21 Seiten). Die 8 schlechteren sind bei W-6 anzusehen (Maß „sauber“ ist grob: Wörter aus Buchstaben
+  und Ziffern ohne Sonderzeichen; ob der Wert dort trotzdem gefunden wird, zeigt erst die Messung mit Sollwerten).
+
+**Stand W-2 (2026-09-29):** gebaut, Modulversion 19.0.1.16.0.
+- Neue Modelle (Dateien `models/int_filemanager_extraction_field.py`, `…_extraction_rule.py`, `…_field_value.py`):
+  - `int_filemanager.extraction_field`: `name` (übersetzbar, eindeutig ohne Groß-/Kleinschreibung, Prüfung in
+    Python, weil übersetzte Namen als JSON gespeichert sind), `sequence`, `active`, `value_type` (`number`, `word`,
+    `date`, `period` = Zeitraum oder Dauer, `amount`, `quantity`, `iban`, `vat`, `email`), `unit` (Pflicht bei
+    `quantity`), `currency_id` (Währung, falls der Betrag keine trägt). Die Art lässt sich nicht mehr ändern, sobald
+    Werte existieren (sonst passen die gespeicherten Spalten nicht mehr) – dann archivieren und neu anlegen.
+  - `int_filemanager.extraction_rule`: `field_id` (Kaskade), `sequence`, `active`, `mode` (`keyword`/`regex`),
+    `keywords` (eine Zeile je Stichwort, nicht übersetzt – es sind Wörter im Dokument), `pattern`, `group_index`,
+    `ignore_case`; beim Speichern geprüft: mindestens ein Stichwort bzw. gültiger Regex mit vorhandener Gruppe.
+  - `int_filemanager.field_value`: `node_id` (Kaskade), `field_id` (**restrict** – ein Feld mit Werten wird
+    archiviert, nicht gelöscht), `revision_id`, `rule_id`, `source` (`rule`/`manual`), `source_text` (wie gedruckt),
+    `value_text` (normalisiert, immer gesetzt, Trigramm-Index), `value_date`, `value_date_to`, `value_number`,
+    `currency_id`, `unit`, Position `page/x0/top/x1/bottom`; eindeutig `(node_id, field_id)`; Indizes
+    `(field_id, value_date)`, `(field_id, value_number)`; Prüfung, dass **genau** die Spalten der Art gesetzt sind
+    (Datum; Zeitraum = zwei Daten in richtiger Reihenfolge **oder** Zahl mit Einheit; Betrag mit Währung; Menge mit
+    Einheit; Textarten nur `value_text`), und dass `revision_id` zum selben Knoten und `rule_id` zum selben Feld
+    gehören (beides nach Gegenlesen durch Codex verschärft bzw. ergänzt). Ein Betrag von 0 ist nicht von „fehlt“ zu
+    unterscheiden (Odoo speichert eine fehlende Kommazahl als 0) – W-5 setzt Beträge immer aus dem Umwandeln.
+  - Bewusst hingenommen (Codex, niedrig): die Namens-Eindeutigkeit ist eine Python-Prüfung; legen zwei Verwalter
+    im selben Augenblick gleichnamige Felder an, kommen beide durch. Ein Datenbank-Index auf den englischen Namen
+    würde nach einer Umbenennung in der deutschen Oberfläche falsche Konflikte melden.
+  - Knoten: `field_value_ids`.
+- Rechte: Felder und Regeln lesen alle Dateimanager-Nutzer, ändern nur Verwalter; Werte nur lesen, per `ir.rule`
+  entlang des Knoten-Bereichs (`int_filemanager_field_value_security.xml`), **kein Schreibrecht für irgendwen** über
+  das ORM – geschrieben wird in W-5 über die geprüfte Knoten-Methode.
+- Startbelegung `data/int_filemanager_extraction_field.xml` (`noupdate`, damit gelernte Synonyme ein Update
+  überleben): die 18 Felder des Stichwort-Katalogs aus `keyword_search.py` (Zeitraum/Dauer/„Zeitraum oder Dauer“
+  zusammengefasst als `period`, ct/kWh und kWh als `quantity` mit Einheit), dazu IBAN und USt-IdNr. (Stichwörter)
+  und E-Mail (grobes Regex-Muster); Namen englisch, deutsch über `de.po`.
+- `po_tool.py` kennt die neuen Modelle und die Namen der Startbelegung; `de.po` neu erzeugt (dabei auch zwei in
+  W-1 vergessene Begriffe des Umwandlers übersetzt: „Converter Job“, „Text and word positions“).
+- Tests `tests/test_v2_field_value.py` (13): A1 für Werte (fremder Bereich unsichtbar, auch über die Knoten-Suche),
+  niemand schreibt Werte über das ORM (auch Verwalter nicht), Rechte an Feldern/Regeln, Eindeutigkeit je Feld und
+  Knoten, Kaskade beim Löschen des Knotens, Feld mit Werten nur archivierbar, Art-Wechsel gesperrt, Einheit bei
+  Menge, Spalte passt zur Art, Fassung und Regel gehören zum Wert, Regelprüfung, Startbelegung vollständig.
+- Abnahme: Frischinstallation mit allen Tests (413 grün), Update von 19.0.1.15.0 (Stand `HEAD`, mit Deutsch) auf
+  19.0.1.16.0 ohne Fehler – 21 Felder, 21 Regeln, deutsche Namen, alle Indizes da; pre-commit und
+  `v2check.sh` ohne neuen Befund; gegengelesen mit Codex (`-m gpt-5.6-sol`, das in `~/.codex/config.toml`
+  eingestellte `gpt-6-sol` ist für das ChatGPT-Konto nicht freigegeben).
+- Aus 5.5 offen für W-4: Rechenzeit je Muster messen und über 1 s melden (gehört zur Ausführung, nicht zum
+  Speichern).
 
 ## 7. Entscheidungen
 
