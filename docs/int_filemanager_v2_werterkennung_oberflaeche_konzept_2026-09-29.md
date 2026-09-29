@@ -247,7 +247,7 @@ abgerechnet **je verarbeiteter Seite** (0,02–0,30 € je Seite, dazu Tarife 39
 | PaperOffice AI | Wie es dort funktioniert | Übertragung auf int_filemanager 2 (Odoo-nativ) | Einschätzung |
 |---|---|---|---|
 | **Wissensgraph / Vorgänge** – Bestellung → Lieferschein → Rechnung → Vertrag als „ein Vorgang statt vier Dateien“; Ansichten Universum, Partner, Vorgang; jede Verbindung zeigt ihre Quelle | Kanten aus Metafeldern (Referenznummern, Parteien), Embedding-Ähnlichkeit, LLM-Schlüsse (Ultra) | (a) **Gleiche Nummer = gleicher Vorgang:** unsere Felder Bestell-, Auftrags-, Lieferschein-, Rechnungs-, Vertragsnummer liegen typisiert in `field_value` (`value_text` mit Trigram-Index) → im Prüf-Fenster und im Details-Dialog eine Liste **„Zum selben Vorgang“** (andere Dateien mit derselben Nummer), Quelle der Verbindung sichtbar („gleiche Bestellnummer“). (b) **Odoos eigener Vorgang:** `purchase`, `sale`, `stock`, `account` sind installierbar (Community); eine erkannte „Ihre Bestellung P00012“ lässt sich per `name_search` der Bestellung zuordnen – Odoo verknüpft Bestellung, Lieferung und Rechnung dann **selbst**, der Graph kommt aus dem ERP statt aus eigener Technik. (c) Absender: Kontakt-Smartbutton „Dokumente“. Eine Netz-Grafik baut Odoo nicht (`web_hierarchy` zeigt nur Bäume) – Listen reichen | (a) klein, gleich mit dem Prüf-Fenster; (b) sobald Odoo als ERP genutzt wird (Schritt 8 hängt Verknüpfungen um); Grafik nicht |
-| **Zeitleiste** – bis zu 7 Datumsfelder (Rechnung, Fälligkeit, Lieferung, Gültigkeit …) plus alle Ereignisse; **„Attention Queue“** je Partei mit Fristen nach Fälligkeit | Datumsfelder aus der Extraktion, Ereignisse aus dem Protokoll | **Kalender- und Listenansicht über `field_value`** (`value_date`, `value_date_to` sind echte Datumsspalten) – reine Odoo-Ansichten ohne eigenes JS, gruppierbar nach Absender, Feld, Monat. **Fristen:** Knoten um `mail.activity.mixin` erweitern (heute nur `mail.thread`); beim Speichern für Felder wie „Fällig am“, „Kündigungsfrist“, „Ende Mindestlaufzeit“ auf Wunsch eine **Odoo-Aktivität** mit Termin anlegen → erscheint in „Meine Aktivitäten“, mit Erinnerung – das ist Odoos „Attention Queue“ | klein, hoher Alltagsnutzen (Kündigungsfristen!) |
+| **Zeitleiste** – bis zu 7 Datumsfelder (Rechnung, Fälligkeit, Lieferung, Gültigkeit …) plus alle Ereignisse; **„Attention Queue“** je Partei mit Fristen nach Fälligkeit | Datumsfelder aus der Extraktion, Ereignisse aus dem Protokoll | **Kalender- und Listenansicht über `field_value`** (`value_date`, `value_date_to` sind echte Datumsspalten) – reine Odoo-Ansichten ohne eigenes JS, gruppierbar nach Absender, Feld, Monat. ~~Fristen als Odoo-Aktivitäten~~ – **weggelassen (Nutzer 2026-09-29, U7)** | Kalender/Liste: klein |
 | **Auswertung** (Analytics-Dashboard) | Kennzahlen aus extrahierten Werten | **Pivot- und Diagrammansicht über `field_value`** (Beträge je Absender und Monat, z. B. Nebenkosten je Jahr) – Odoo-Bordmittel | klein |
 | **Entitäten (NER)** – Personen, Firmen (mit Logo), Beträge, Daten, Orte, Bankdaten, Referenznummern; kanonische Namen mit Aliasen; Fundstelle, Konfidenz und Modellversion je Fund; Korrekturen fließen zurück | Sprachmodell „liest im Kontext“, Vision, Musterprüfung | Haben wir in anderer Form: **Wertarten** (W-3) statt freier Entitäten, **Fundstelle + Stufe** je Wert (Stufe ≈ Konfidenz), Lernen aus Bestätigungen (W-5). Neu übernehmen: (1) **abweichende Bankverbindung** – IBAN im Dokument ≠ bekannte Konten des Kontakts (`res.partner.bank`) → deutlicher Hinweis im Prüf-Fenster (Schutz vor gefälschten Rechnungen); (2) **Aliase** – gedruckter Firmenname, unter dem ein Kontakt bestätigt wurde, als gelernter Name des Absenders merken (wie `extraction_hint`), damit „Nordlicht Energie“ und „NE GmbH“ beim nächsten Mal denselben Kontakt finden | (1) klein, sehr nützlich; (2) klein |
 | **Kontakt-Extraktion** – Firma, Person, Adresse, USt-IdNr., E-Mail, Telefon, Bankdaten, Rollen (Absender, Unterzeichner, Empfänger); Dubletten über Name/E-Mail/USt-IdNr./Logo; Partei-Register mit allen Dokumenten | IDP + Vision, automatisch ohne Bestätigung | Wir finden **vorhandene** Kontakte (W-4: USt-IdNr. → IBAN → Mail → Domain → Name). Neu: **„Kontakt aus Dokument anlegen“** – Odoos Kontaktformular öffnen, vorbelegt über `default_*`-Kontext mit Name, Anschrift (aus Absenderzeile/Briefkopf bzw. einem Kasten), USt-IdNr. (geprüft durch Odoos `base_vat`, auf Wunsch gegen VIES), E-Mail, Telefon, IBAN als Bankkonto. Nutzer bestätigt im gewohnten Formular. Rollen: Absender = Kontakt der Datei, Adressat/Ansprechpartner = unsere Felder. `partner_autocomplete` (Odoo-IAP, Cloud) nicht | mittel, gut abgegrenzt |
@@ -258,18 +258,17 @@ abgerechnet **je verarbeiteter Seite** (0,02–0,30 € je Seite, dazu Tarife 39
 
 - **U-2 erweitern:** unsichere Werte zuerst, Plausibilitäts- und Dubletten-Hinweise, abweichende IBAN.
 - **Neue kleine Scheibe U-7 „Werte nutzen“:** Volltextsuche im gelesenen Text wieder anbinden, Suchfilter über erkannte
-  Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, Fristen als Odoo-Aktivitäten (`mail.activity.mixin` am
-  Knoten), „Zum selben Vorgang“.
+  Werte, Kalender-/Listen-/Pivot-Ansicht über `field_value`, „Zum selben Vorgang“.
 - **Neue Scheibe U-8 „Kontakt aus Dokument“:** vorbelegtes Kontaktformular, Aliase je Kontakt.
 - **Später/eigene Entscheidung:** Verknüpfung mit Odoo-Bestellungen/-Rechnungen (mit Schritt 8), semantische Suche und
   Sprachmodell (E12).
 
 Weitere offene Entscheidungen dazu:
 
-- **U7** Fristen als Odoo-Aktivitäten: automatisch für bestimmte Felder (Fällig am, Kündigungsfrist) oder nur auf
-  Knopfdruck im Prüf-Fenster? Wer bekommt die Aktivität (der Prüfende, ein fester Verantwortlicher)?
+- ~~**U7** Fristen als Odoo-Aktivitäten~~ – **entfällt** (Nutzer 2026-09-29: „U7 weglassen“); keine Erinnerungen aus
+  erkannten Daten.
 - **U8** Kontakte aus Dokumenten: darf jeder Nutzer neue Kontakte anlegen, oder nur Vorschlag an einen Verwalter?
-- **U9** Reihenfolge: U-7 (Werte nutzen – Suche, Kalender, Fristen) **vor** dem Prüf-Fenster, weil es sofort mit den
+- **U9** Reihenfolge: U-7 (Werte nutzen – Suche, Kalender, Auswertung) **vor** dem Prüf-Fenster, weil es sofort mit den
   bereits gespeicherten Werten nutzt, oder danach?
 
 ## Quellen
