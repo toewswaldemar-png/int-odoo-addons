@@ -300,3 +300,20 @@ die **gekürzt gedruckte Kunden-IBAN** („DE** 5625 ****…“) richtig verworf
 richtig (erstes Datum = Rechnungsdatum, erster Betrag = Gesamtbetrag) – beim Gebührenbescheid nicht. **Grenze des
 Stichwort-Modus:** Werte in Tabellen (Kopfzeile „Netto Steuer Brutto“, Zahlen darunter) findet er nicht; dafür
 bräuchte es eine Option „n-ter Betrag nach dem Stichwort“ oder ein Regex-Muster.
+
+**Dritte Probe: digital erzeugte Vertragsbestätigung Strom, zweispaltig gesetzt** (2 Seiten; Kopie danach gelöscht).
+Im Text stehen Beschriftungen paarweise vor ihren Werten („Grundpreis Geschätzter Jahresverbrauch 13,40 €/Monat
+3000 kWh“), weil die Wortliste Zeile für Zeile über beide Spalten läuft. 15 Probefelder mit zwei Suchweisen:
+**A** Wert innerhalb der nächsten 6 Wörter im Text, **B** Wert rechts daneben oder direkt darunter in derselben
+Spalte (über die Wortpositionen). A fand 13, B fand 10, **beide zusammen (B vor A) 15 von 15 richtig**: Kundennummer,
+Dokumentdatum, Lieferbeginn (im Fließtext), Zählernummer, Tarifname, Abschlag, Fälligkeit erster Abschlag, Grundpreis,
+Arbeitspreis, Jahresverbrauch, Preisgarantie-Zeitraum, Mindestlaufzeit, Kündigungsfrist, USt-IdNr. (Prüfziffer ok),
+Handelsregisternummer. A allein liefert beim Tarifnamen die Nachbarbeschriftung („Fälligkeitstag“), B allein verpasst
+Werte im Fließtext. Folgerungen für den Entwurf:
+- Stichwort-Modus sucht **in beiden Richtungen** (Text dahinter und Seitenlage rechts/darunter); das macht auch die
+  Tabellenwerte der zweiten Probe (Netto/Steuer unter ihrer Kopfzeile) erreichbar.
+- Die **Art** des Werts filtert entscheidend (ohne sie würde „Grundpreis“ den Jahresverbrauch greifen). Zusätzlich zu
+  Nummer/Datum/Betrag nötig: **Zeitraum** (von–bis), **Dauer** (12 Monate, 30 Tage), **Wert mit Einheit**
+  (ct/kWh, kWh, €/Monat), **Wort** (Tarifname).
+- Die Suche nach Seitenlage braucht die Wortpositionen in Odoo – ein weiterer Grund, die Wortliste v2 (5.4) jetzt zu
+  bauen; die Abstände (gleiche Zeile, Spaltenbreite) sind an den Proben einzustellen.
