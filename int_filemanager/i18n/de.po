@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260908\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 08:35+0000\n"
-"PO-Revision-Date: 2026-09-29 08:35+0000\n"
+"POT-Creation-Date: 2026-09-29 09:59+0000\n"
+"PO-Revision-Date: 2026-09-29 09:59+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -338,6 +338,11 @@ msgid "Created on"
 msgstr "Erstellt am"
 
 #. module: int_filemanager
+#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_credit_note_number
+msgid "Credit note number"
+msgstr "Gutschriftnummer"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__currency_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__currency_id
 msgid "Currency"
@@ -372,6 +377,11 @@ msgstr "Endgültig löschen"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_trash_list
 msgid "Deleted on"
 msgstr "Gelöscht am"
+
+#. module: int_filemanager
+#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_delivery_note_number
+msgid "Delivery note number"
+msgstr "Lieferscheinnummer"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__depends_on_id
@@ -816,6 +826,11 @@ msgid "Include subfolders"
 msgstr "Unterordner einbeziehen"
 
 #. module: int_filemanager
+#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_inquiry_number
+msgid "Inquiry number"
+msgstr "Anfragenummer"
+
+#. module: int_filemanager
 #: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_instalment
 msgid "Instalment"
 msgstr "Abschlag"
@@ -1242,6 +1257,11 @@ msgid "Operation"
 msgstr "Vorgang"
 
 #. module: int_filemanager
+#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_sale_order_number
+msgid "Order number"
+msgstr "Auftragsnummer"
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__origin
@@ -1344,6 +1364,11 @@ msgid "Processing"
 msgstr "In Bearbeitung"
 
 #. module: int_filemanager
+#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_purchase_order_number
+msgid "Purchase order number"
+msgstr "Bestellnummer"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__purge_group_ids
 msgid "Purge groups"
 msgstr "Endgültig löschen erlaubt für"
@@ -1357,6 +1382,11 @@ msgstr "An den ursprünglichen Ort zurücklegen"
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__quantity
 msgid "Quantity with unit"
 msgstr "Menge mit Einheit"
+
+#. module: int_filemanager
+#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_quotation_number
+msgid "Quotation number"
+msgstr "Angebotsnummer"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__read_group_ids

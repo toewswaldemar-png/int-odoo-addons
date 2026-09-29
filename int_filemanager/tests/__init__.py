@@ -27,3 +27,5 @@ from . import test_v2_mime
 from . import test_v2_preview_http
 from . import test_v2_field_value
 from . import test_v2_value_types
+from . import test_v2_value_suggest
+from . import test_v2_field_value_suggest

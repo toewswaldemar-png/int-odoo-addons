@@ -1,4 +1,5 @@
 import io
+import json
 import logging
 import os
 import re
@@ -13,7 +14,7 @@ from odoo.exceptions import UserError
 from odoo.tools import SQL
 from odoo.tools.mimetypes import guess_mimetype
 
-from .. import blobstore, fault
+from .. import blobstore, fault, value_suggest, value_types
 from .. import derivative_plan as plan
 from . import int_filemanager_derivative as derivative
 
@@ -28,6 +29,17 @@ TRASH_RETENTION_PARAM = "int_filemanager.trash_retention_days"
 # refuses, so that an export or a network drive works for every name in the tree.
 _INVALID_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
 _WINDOWS_RESERVED_NAME = re.compile(r"(con|prn|aux|nul|(com|lpt)[0-9¹²³])(\..*)?", re.I)
+
+# Company names are looked for in the letterhead, the start of the first page.
+NAME_SEARCH_CHARS = 20000
+MAX_SUGGESTED_TAGS = 10
+
+
+def _website_host(website):
+    """ "https://www.example.com/x" -> "example.com"."""
+    host = re.sub(r"^[a-z]+://", "", (website or "").strip().lower())
+    return host.split("/")[0].removeprefix("www.")
+
 
 PREVIEW_STATES = [
     ("ready", "Ready"),
@@ -942,3 +954,325 @@ class IntFilemanagerNode(models.Model):
     @api.model
     def _cron_purge_trash(self):
         self._purge_expired_trash()
+
+    # ------------------------------------------------------------------
+    # value recognition
+    # ------------------------------------------------------------------
+
+    @api.model
+    def suggest_field_values(self, node_id):
+        """Suggest values for the extraction fields from the file's current text.
+
+        Nothing is stored: rules change at any time, and stored suggestions would go
+        stale. ``state`` is "ready", "pending" (the text is still being read) or
+        "none" (no text to read, e.g. a picture); ``revision_id`` is the revision the
+        suggestions come from, to be sent back when they are confirmed.
+        """
+        node = self.browse(node_id)
+        node.check_access("read")
+        revision = node.current_revision_id
+        if node.is_dir or not revision:
+            return {"state": "none", "revision_id": False}
+        state, page = self._recognition_page(node, revision)
+        if state != "ready":
+            return {"state": state, "revision_id": revision.id}
+        own = self._own_company_values()
+        options = self._recognition_options()
+
+        def slow(rule_id, seconds):
+            _logger.warning(
+                "extraction rule %s took %.1f s on node %s", rule_id, seconds, node.id
+            )
+
+        suggestions, unassigned = value_suggest.suggest(
+            page,
+            self._extraction_specs(),
+            skip=lambda value_type, value: self._is_own_value(own, value_type, value),
+            slow=slow,
+            **options,
+        )
+        codes = {
+            c.name: c.id
+            for c in self.env["res.currency"].sudo().search([("active", "=", True)])
+        }
+        confirmed = {v.field_id.id: v for v in node.field_value_ids}
+        return {
+            "state": "ready",
+            "revision_id": revision.id,
+            "fields": [
+                {
+                    "field_id": f.id,
+                    "name": f.name,
+                    "value_type": f.value_type,
+                    "suggestions": [
+                        self._json_suggestion(s.as_dict(), codes)
+                        for s in suggestions.get(f.id, [])
+                    ],
+                    "confirmed": confirmed[f.id].value_text
+                    if f.id in confirmed
+                    else False,
+                }
+                for f in self.env["int_filemanager.extraction_field"].search(
+                    [("active", "=", True)]
+                )
+            ],
+            "unassigned": [self._json_value(u, codes) for u in unassigned],
+            "partner": self._suggest_partner(page.text, own, options),
+            "tags": self._suggest_tags(page.text),
+        }
+
+    def _recognition_options(self):
+        """Currencies as printed (symbol or code) and the defaults of the company."""
+        # Settings, not data of the user: read whatever the user's own rights are.
+        company = self.env.company.sudo()
+        currencies = {}
+        for currency in (
+            self.env["res.currency"].sudo().search([("active", "=", True)])
+            + company.currency_id
+        ):
+            currencies[currency.symbol] = currency.name
+            currencies[currency.name] = currency.name
+        if "EUR" in currencies:
+            currencies["Euro"] = "EUR"
+        return {
+            "currencies": currencies,
+            "default_currency": company.currency_id.name,
+            "default_country": (company.country_id.code or "DE").upper(),
+        }
+
+    def _recognition_page(self, node, revision):
+        """("ready", Page) of the revision's text and words, or (state, None)."""
+        jobs = (
+            self.env["int_filemanager.derivative"]
+            .sudo()
+            .search(
+                [
+                    ("source_blob_id", "=", revision.blob_id.id),
+                    "|",
+                    "&",
+                    ("kind", "=", "words"),
+                    ("spec", "=", plan.WORDS_SPEC),
+                    "&",
+                    ("kind", "=", "text"),
+                    ("spec", "=", plan.TEXT_SPEC),
+                ]
+            )
+        )
+        done = jobs.filtered(lambda j: j.state == "done")
+        words_job = done.filtered(lambda j: j.kind == "words" and j.derived_blob_id)[:1]
+        if words_job:
+            words = self._read_word_list(words_job.derived_blob_id)
+            if words is not None:
+                return "ready", value_suggest.Page(words["text"], words["words"])
+        text_job = done.filtered(lambda j: j.kind == "text" and j.text)[:1]
+        if text_job:
+            return "ready", value_suggest.Page(text_job.text)
+        if jobs.filtered(lambda j: j.state in ("pending", "running")):
+            return "pending", None
+        # Not queued yet (the queue runs by cron), but planned for this kind of file.
+        planned = {item.kind for item in plan.job_plan(node.name)}
+        if not jobs and planned & {"words", "text"}:
+            return "pending", None
+        return "none", None
+
+    def _read_word_list(self, blob):
+        path = blobstore.blob_path(self.env, blob.sha256)
+        try:
+            if os.path.getsize(path) > derivative.MAX_WORDS_BYTES:
+                return None
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            _logger.warning(
+                "word list %s could not be read", blob.sha256, exc_info=True
+            )
+            return None
+        if not isinstance(data, dict) or data.get("version") != 2:
+            return None
+        text, words = data.get("text"), data.get("words")
+        if not isinstance(text, str) or not isinstance(words, list):
+            return None
+        # Only well-formed words that point into the text; a broken entry is left
+        # out rather than breaking the whole suggestion.
+        data["words"] = [
+            w
+            for w in words
+            if isinstance(w, list)
+            and len(w) == 7
+            and all(isinstance(x, int | float) for x in w)
+            and 0 <= w[5] <= w[6] <= len(text)
+        ]
+        return data
+
+    def _extraction_specs(self):
+        """The active fields and rules as the recognition needs them."""
+        specs = []
+        rules = self.env["int_filemanager.extraction_rule"].search(
+            [("field_id.active", "=", True)]
+        )
+        for rule in rules:
+            f = rule.field_id
+            spec = value_suggest.FieldSpec(
+                f.id, f.value_type, unit=f.unit or None, rule_id=rule.id
+            )
+            if rule.mode == "keyword":
+                spec.keywords = rule._keyword_list()
+            else:
+                flags = re.IGNORECASE if rule.ignore_case else 0
+                pattern = re.compile(rule.pattern, flags)
+                spec.patterns = [(rule.id, pattern, rule.group_index)]
+            specs.append(spec)
+        return specs
+
+    def _own_company_values(self):
+        """VAT numbers, bank accounts and mail domains of the own companies."""
+        partners = (
+            self.env["res.company"]
+            .sudo()
+            .search([("partner_id", "!=", False)])
+            .partner_id
+        )
+        accounts = (
+            self.env["res.partner.bank"]
+            .sudo()
+            .search([("partner_id", "in", partners.ids)])
+        )
+        domains = set()
+        for partner in partners:
+            if partner.email and "@" in partner.email:
+                domains.add(partner.email.rsplit("@", 1)[1].strip().lower())
+            if partner.website:
+                domains.add(_website_host(partner.website))
+        return {
+            "partner_ids": set(partners.commercial_partner_id.ids),
+            "vat": {re.sub(r"[^A-Z0-9]", "", p.vat.upper()) for p in partners if p.vat},
+            "iban": {
+                a.sanitized_acc_number for a in accounts if a.sanitized_acc_number
+            },
+            "domains": domains - {""},
+        }
+
+    @api.model
+    def _is_own_value(self, own, value_type, value):
+        text = value.get("value_text") or ""
+        if value_type in ("iban", "vat"):
+            return text in own[value_type]
+        if value_type == "email":
+            return text.rsplit("@", 1)[-1] in own["domains"]
+        return False
+
+    def _suggest_partner(self, text, own, options):
+        """The sender, found like account's _import_retrieve_customer does: VAT
+        number, bank account, mail address or its domain, then the name; never an
+        own company, and only a contact the user may read."""
+        partners = self.env["res.partner"].sudo()
+
+        def found(records, via):
+            # Access is checked on the company that is returned, not on the contact
+            # that led to it.
+            commercial = records.commercial_partner_id.filtered(
+                lambda p: p.id not in own["partner_ids"]
+            )
+            readable = commercial.with_env(self.env)._filtered_access("read")
+            if not readable:
+                return None
+            partner = readable[0]
+            return {"id": partner.id, "name": partner.display_name, "via": via}
+
+        def values(value_type):
+            return sorted(
+                {
+                    c.value["value_text"]
+                    for c in value_types.find(value_type, text, **options)
+                    if not self._is_own_value(own, value_type, c.value)
+                }
+            )
+
+        for vat in values("vat"):
+            # Stored with or without the country prefix.
+            domain = ["|", ("vat", "=ilike", vat), ("vat", "=ilike", vat[2:])]
+            if hit := found(partners.search(domain, limit=5), "vat"):
+                return hit
+        if ibans := values("iban"):
+            accounts = (
+                self.env["res.partner.bank"]
+                .sudo()
+                .search([("sanitized_acc_number", "in", ibans)], limit=5)
+            )
+            if hit := found(accounts.partner_id, "iban"):
+                return hit
+        addresses = values("email")
+        for address in addresses:
+            records = partners.search([("email", "=ilike", address)], limit=5)
+            if hit := found(records, "email"):
+                return hit
+        # Another address of the same company: its domain is the company's website.
+        # A mail provider's domain is nobody's website, so it never matches.
+        for domain in sorted({a.rsplit("@", 1)[1] for a in addresses}):
+            records = partners.search([("website", "ilike", domain)], limit=20)
+            records = records.filtered(
+                lambda p, d=domain: _website_host(p.website) == d
+            )
+            if hit := found(records, "email"):
+                return hit
+        # Names last: companies whose whole name stands in the letterhead (the
+        # first page), compared in the database rather than name by name.
+        first_page = text.split("\f", 1)[0][:NAME_SEARCH_CHARS]
+        tokens = [t.strip(",;:()").lower() for t in first_page.split()]
+        phrases = {
+            " ".join(tokens[i : i + n])
+            for n in range(1, 7)
+            for i in range(len(tokens) - n + 1)
+        }
+        phrases = [p for p in phrases if len(p) >= 5]
+        if phrases:
+            self.env.cr.execute(
+                """
+                SELECT id FROM res_partner
+                WHERE active AND is_company AND length(name) >= 5
+                  AND lower(regexp_replace(name, '[[:space:]]+', ' ', 'g')) = ANY(%s)
+                ORDER BY length(name) DESC
+                LIMIT 20
+                """,
+                [phrases],
+            )
+            ids = [row[0] for row in self.env.cr.fetchall()]
+            if hit := found(partners.browse(ids), "name"):
+                return hit
+        return False
+
+    def _suggest_tags(self, text):
+        """Tags whose name stands in the text as a whole word or phrase."""
+        words = re.findall(r"\w+", text.lower())
+        single, joined = set(words), f" {' '.join(words)} "
+        result = []
+        for tag in self.env["int_filemanager.tag"].search([("name", "!=", False)]):
+            parts = re.findall(r"\w+", tag.name.lower())
+            if not parts:
+                continue
+            if (
+                parts[0] in single
+                if len(parts) == 1
+                else f" {' '.join(parts)} " in joined
+            ):
+                result.append({"id": tag.id, "name": tag.name})
+                if len(result) == MAX_SUGGESTED_TAGS:
+                    break
+        return result
+
+    @api.model
+    def _json_value(self, value, codes):
+        """A value of value_types as JSON, with the currency as a record id."""
+        result = {}
+        for key, item in value.items():
+            if key == "currency_code":
+                result["currency_id"] = codes.get(item, False)
+            elif hasattr(item, "isoformat"):
+                result[key] = item.isoformat()
+            else:
+                result[key] = item
+        return result
+
+    @api.model
+    def _json_suggestion(self, suggestion, codes):
+        return {**suggestion, "value": self._json_value(suggestion["value"], codes)}

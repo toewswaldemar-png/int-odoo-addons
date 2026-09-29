@@ -60,7 +60,14 @@ Vertragskontonummer</field>
     <field name="mode">keyword</field>
     <field name="keywords">Rechnungsdatum
 Datum
-Bescheiddatum</field>
+Bescheiddatum
+Belegdatum
+Anfrage
+Angebot
+Bestellung
+Auftragsbestätigung
+Lieferschein
+Gutschrift</field>
   </record>
   <record id="extraction_field_total_amount" model="int_filemanager.extraction_field">
     <field name="name">Total amount</field>
@@ -278,5 +285,112 @@ Umsatzsteuer-Identifikationsnummer</field>
     <field name="field_id" ref="extraction_field_email" />
     <field name="mode">regex</field>
     <field name="pattern">[\w.+-]+@[\w-]+(?:\.[\w-]+)+</field>
+  </record>
+  <record id="extraction_field_inquiry_number" model="int_filemanager.extraction_field">
+    <field name="name">Inquiry number</field>
+    <field name="sequence">220</field>
+    <field name="value_type">number</field>
+  </record>
+  <record id="extraction_rule_inquiry_number" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_inquiry_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Anfragenummer
+Anfrage-Nr.
+Anfragenr.
+Anfrage</field>
+  </record>
+  <record
+    id="extraction_field_quotation_number"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Quotation number</field>
+    <field name="sequence">230</field>
+    <field name="value_type">number</field>
+  </record>
+  <record id="extraction_rule_quotation_number" model="int_filemanager.extraction_rule">
+    <field name="field_id" ref="extraction_field_quotation_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Angebotsnummer
+Angebots-Nr.
+Angebotsnr.
+Angebot</field>
+  </record>
+  <record
+    id="extraction_field_purchase_order_number"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Purchase order number</field>
+    <field name="sequence">240</field>
+    <field name="value_type">number</field>
+  </record>
+  <record
+    id="extraction_rule_purchase_order_number"
+    model="int_filemanager.extraction_rule"
+  >
+    <field name="field_id" ref="extraction_field_purchase_order_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Bestellnummer
+Bestell-Nr.
+Bestellnr.
+Ihre Bestellung
+Bestellung</field>
+  </record>
+  <record
+    id="extraction_field_sale_order_number"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Order number</field>
+    <field name="sequence">250</field>
+    <field name="value_type">number</field>
+  </record>
+  <record
+    id="extraction_rule_sale_order_number"
+    model="int_filemanager.extraction_rule"
+  >
+    <field name="field_id" ref="extraction_field_sale_order_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Auftragsnummer
+Auftrags-Nr.
+Auftragsnr.
+Auftragsbestätigung
+Auftrag</field>
+  </record>
+  <record
+    id="extraction_field_delivery_note_number"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Delivery note number</field>
+    <field name="sequence">260</field>
+    <field name="value_type">number</field>
+  </record>
+  <record
+    id="extraction_rule_delivery_note_number"
+    model="int_filemanager.extraction_rule"
+  >
+    <field name="field_id" ref="extraction_field_delivery_note_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Lieferscheinnummer
+Lieferschein-Nr.
+Lieferscheinnr.
+Lieferschein</field>
+  </record>
+  <record
+    id="extraction_field_credit_note_number"
+    model="int_filemanager.extraction_field"
+  >
+    <field name="name">Credit note number</field>
+    <field name="sequence">270</field>
+    <field name="value_type">number</field>
+  </record>
+  <record
+    id="extraction_rule_credit_note_number"
+    model="int_filemanager.extraction_rule"
+  >
+    <field name="field_id" ref="extraction_field_credit_note_number" />
+    <field name="mode">keyword</field>
+    <field name="keywords">Gutschriftnummer
+Gutschriftsnummer
+Gutschrift-Nr.
+Gutschrift</field>
   </record>
 </odoo>

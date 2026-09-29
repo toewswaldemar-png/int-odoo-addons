@@ -66,6 +66,8 @@ class TestV2ValueTypes(BaseCase):
                 ("44 450 7-5 148 621", {"value_text": "444507-5148621"}),
                 # A label's next word is no number without a digit.
                 ("an.", None),
+                ("29.01.2019", None),
+                ("2019-01-29", None),
                 ("Kunde", None),
                 # A value never crosses a column or line break.
                 ("4711\t12", {"value_text": "4711"}),
@@ -228,6 +230,8 @@ class TestV2ValueTypes(BaseCase):
             [
                 ("DE89 3704 0044 0532 0130 00", {"value_text": iban}),
                 (iban, {"value_text": iban}),
+                # Some letterheads put a space after the country code.
+                ("DE 89 3704 0044 0532 0130 00", {"value_text": iban}),
                 # OCR read a letter where the format demands a digit.
                 ("DE89 37O4 0044 0532 0130 00", {"value_text": iban}),
                 ("DE89 3704 0044 O532 Ol30 00", {"value_text": iban}),

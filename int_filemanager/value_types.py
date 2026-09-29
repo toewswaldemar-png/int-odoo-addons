@@ -317,7 +317,13 @@ def _find_number(text, pos, endpos, ctx):
         + r"|(?=[\w\-/.]*\d)[A-Za-z0-9](?:[A-Za-z0-9\-/.]*[A-Za-z0-9])?(?![\w\-/]))"
     )
     for m in pattern.finditer(text, pos, endpos):
+        # A date is not a number, though it looks like one ("29.01.2019").
+        if _DATE_TOKEN.fullmatch(m.group()):
+            continue
         yield m.start(), m.end(), {"value_text": m.group().replace(" ", "")}
+
+
+_DATE_TOKEN = re.compile(_date_re(1))
 
 
 def _find_word(text, pos, endpos, ctx):
@@ -449,7 +455,7 @@ def _find_iban(text, pos, endpos, ctx):
     # decide which reading is an IBAN. One character per repetition, so that a
     # long run of letters cannot be split in many ways.
     pattern = re.compile(
-        r"(?<![A-Za-z0-9])[A-Z]{2}[0-9OoIlSB]{2}(?:[ ]?[0-9A-Za-z]){11,30}"
+        r"(?<![A-Za-z0-9])[A-Z]{2}[ ]?[0-9OoIlSB]{2}(?:[ ]?[0-9A-Za-z]){11,30}"
         r"(?![A-Za-z0-9])"
     )
     for m in pattern.finditer(text, pos, endpos):
