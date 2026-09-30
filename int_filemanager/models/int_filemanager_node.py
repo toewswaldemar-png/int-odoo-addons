@@ -38,6 +38,9 @@ MAX_SUGGESTED_TAGS = 10
 # Boxes one request may carry, and the longest text a marking may cover.
 MAX_AREAS = 50
 MAX_SELECTION_CHARS = 200
+# Words of a content search, and their length.
+MAX_SEARCH_TERMS = 10
+MAX_SEARCH_TERM_CHARS = 100
 
 
 def _website_host(website):
@@ -48,6 +51,21 @@ def _website_host(website):
 
 def _area(field):
     return None if field.page_area == "anywhere" else field.page_area
+
+
+def _whole_words(text, start, end):
+    """Widen ``[start:end]`` where it cuts a word, up to a blank, tab or line break.
+
+    Looks no further than a marking may be long, so a text without blanks costs no more.
+    """
+    if 0 < start < len(text) and not text[start - 1].isspace():
+        if not text[start].isspace():
+            head = text[max(0, start - MAX_SELECTION_CHARS) : start]
+            start -= len(re.search(r"\S*$", head)[0])
+    if 0 < end < len(text) and not text[end - 1].isspace():
+        if not text[end].isspace():
+            end += len(re.match(r"\S*", text[end : end + MAX_SELECTION_CHARS])[0])
+    return start, end
 
 
 PREVIEW_STATES = [
@@ -259,6 +277,12 @@ class IntFilemanagerNode(models.Model):
         if operator not in ("ilike", "not ilike"):
             raise UserError(self.env._("The content can only be searched for words."))
         terms = str(value or "").split()
+        if len(terms) > MAX_SEARCH_TERMS or any(
+            len(term) > MAX_SEARCH_TERM_CHARS for term in terms
+        ):
+            raise UserError(
+                self.env._("The content search has too many or too long words.")
+            )
         if not terms:
             return Domain.TRUE if operator == "ilike" else Domain.FALSE
         texts = (
@@ -1018,9 +1042,9 @@ class IntFilemanagerNode(models.Model):
             found. ``areas`` in the answer has one entry per box: how many values
             lie in it and the label-value pairs no field took.
         """
-        boxes = self._parse_areas(areas)
         node = self.browse(node_id)
         node.check_access("read")
+        boxes = self._parse_areas(areas)
         revision = node.current_revision_id
         if node.is_dir or not revision:
             return {"state": "none", "revision_id": False}
@@ -1095,8 +1119,11 @@ class IntFilemanagerNode(models.Model):
 
     def _parse_areas(self, areas):
         """The boxes of a request as tuples ``(page, x0, top, x1, bottom)``."""
+        areas = areas or []
+        if len(areas) > MAX_AREAS:
+            raise UserError(self.env._("There are too many boxes."))
         boxes = []
-        for area in areas or []:
+        for area in areas:
             try:
                 page = area["page"]
                 x0, top, x1, bottom = (
@@ -1114,8 +1141,6 @@ class IntFilemanagerNode(models.Model):
             if not valid:
                 raise UserError(self.env._("A box is not valid."))
             boxes.append((page, x0, top, x1, bottom))
-        if len(boxes) > MAX_AREAS:
-            raise UserError(self.env._("There are too many boxes."))
         return boxes
 
     def _recognition_options(self):
@@ -1438,13 +1463,15 @@ class IntFilemanagerNode(models.Model):
             isinstance(start, int)
             and isinstance(end, int)
             and 0 <= start < end <= len(page.text)
+            # Blanks are squeezed below, so the range may be longer than the text.
+            and end - start <= 4 * MAX_SELECTION_CHARS
         ):
             raise UserError(self.env._("The marking is not valid."))
-        touched = page.words_between(start, end)
-        if touched:
-            start, end = min(start, touched[0][5]), max(end, touched[-1][6])
-        text = " ".join(page.text[start:end].split())
-        if not text or len(text) > MAX_SELECTION_CHARS:
+        start, end = _whole_words(page.text, start, end)
+        marked = page.text[start:end]
+        text = " ".join(marked.split())
+        # Not over a page break: the place of the value would belong to no page.
+        if not text or len(text) > MAX_SELECTION_CHARS or "\f" in marked:
             raise UserError(self.env._("The marking is not valid."))
         result = {"state": "ready", "revision_id": revision.id}
         try:

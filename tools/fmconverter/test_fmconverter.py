@@ -551,6 +551,18 @@ class ConverterTest(unittest.TestCase):
             "Antrag auf Leistung 2026\nM\u00fcller \u20ac\nGr\u00fc\u00dfe",
         )
 
+    def test_form_values_without_a_byte_order_mark_are_read_as_pdfdocencoding(self):
+        # 0xa0 is the euro sign in PDFDocEncoding (Latin-1: a no-break space);
+        # 0xe4 is the same in both.
+        value = b"5 " + bytes([0xA0, 0x20, 0x46, 0xE4]) + b"l"
+        pdf = self.make_form_pdf([("a", "Tx", value, (200, 690, 400, 710))])
+        expected = "Antrag auf Leistung 2026" + chr(10) + "5 " + chr(0x20AC) + " F" + chr(0xE4) + "l"
+        self.assertEqual(self.words(pdf)["text"], expected)
+
+    def test_a_word_list_format_it_does_not_make_is_refused(self):
+        status, _headers, _data = self.tile(store(b"%PDF-1.4"), "v5", "words", "pdf")
+        self.assertEqual(status, 400)
+
     def test_a_value_with_several_lines_and_words_is_split_within_its_box(self):
         pdf = self.make_form_pdf(
             [("address", "Tx", "Musterweg 1\r12345 Stadt", (200, 600, 400, 640))]

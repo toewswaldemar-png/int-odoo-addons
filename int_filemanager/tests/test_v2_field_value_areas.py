@@ -7,7 +7,9 @@ from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import tagged
 
 from ..models import int_filemanager_node
-from ..models.int_filemanager_node import MAX_AREAS
+from ..models.int_filemanager_node import MAX_AREAS, MAX_SELECTION_CHARS
+from .test_v2_derivative import FakeConverter
+from .test_v2_derivative_kinds import text_result
 from .test_v2_field_value_suggest import FieldValueCase
 from .test_v2_value_suggest import layout
 
@@ -171,3 +173,50 @@ class TestV2FieldValueAreas(FieldValueCase):
         start, end = self._offsets("29.01.2019")
         with self.assertRaises(AccessError):
             self._read(self.date, start, end, user=self.outsider)
+
+    def _text_file(self, content):
+        node = self._file("notiz.txt", content.encode())
+        self._run(
+            FakeConverter(
+                by_kind={"text": lambda sha256: text_result(content.encode())}
+            )
+        )
+        return node
+
+    def _read_in(self, node, field, start, end):
+        return self.Node.with_user(self.writer).read_selection(
+            node.id, node.current_revision_id.id, field.id, start, end
+        )
+
+    def test_a_marking_that_cuts_a_word_of_a_plain_text_takes_the_whole_word(self):
+        text = "Rechnungsnummer: 4711 vom 29.01.2019"
+        node = self._text_file(text)
+        start = text.index("4711")
+        result = self._read_in(node, self.invoice, start + 1, start + 3)
+        self.assertEqual(result["suggestion"]["source_text"], "4711")
+        self.assertEqual(
+            (result["suggestion"]["start"], result["suggestion"]["end"]),
+            (start, start + 4),
+        )
+
+    def test_a_marking_over_a_page_break_is_refused(self):
+        node = self._text_file("Alice\fSmith")
+        word = (
+            self.env["int_filemanager.extraction_field"]
+            .sudo()
+            .create({"name": "T Word", "value_type": "word"})
+        )
+        with self.assertRaises(UserError):
+            self._read_in(node, word, 0, 11)
+
+    def test_a_long_range_of_blanks_is_refused_before_it_is_worked_on(self):
+        node = self._text_file("4711" + " " * (5 * MAX_SELECTION_CHARS))
+        with self.assertRaises(UserError):
+            self._read_in(node, self.invoice, 0, 5 * MAX_SELECTION_CHARS)
+
+    def test_too_many_boxes_are_refused_only_after_the_right_to_read(self):
+        many = [BOTTOM] * (MAX_AREAS + 1)
+        with self.assertRaises(AccessError):
+            self._suggest_in(many, self.outsider)
+        with self.assertRaises(UserError):
+            self._suggest_in(many)

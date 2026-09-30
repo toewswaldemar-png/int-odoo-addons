@@ -12,6 +12,7 @@ from odoo.tests.common import TransactionCase, tagged
 from odoo.tools import SQL
 
 from .. import derivative_plan as plan
+from ..models.int_filemanager_node import MAX_SEARCH_TERM_CHARS, MAX_SEARCH_TERMS
 from .test_v2_access_http import AccessHttpCase
 
 INVOICE = "Rechnungsnummer 300/0154989/5/25 vom 3. Maerz, Wasserverbrauch 42 m3"
@@ -131,6 +132,13 @@ class TestV2ContentSearch(TransactionCase):
         self.assertEqual(self._found("a_b"), self.other)
         self.assertFalse(self._found("a_c"))
         self.assertEqual(self._found("_"), self.other)
+
+    def test_a_search_with_too_many_or_too_long_words_is_refused(self):
+        with self.assertRaises(UserError):
+            self._found(" ".join(["wort"] * (MAX_SEARCH_TERMS + 1)))
+        with self.assertRaises(UserError):
+            self._found("x" * (MAX_SEARCH_TERM_CHARS + 1))
+        self.assertFalse(self._found(" ".join(["wort"] * MAX_SEARCH_TERMS)))
 
     def test_only_the_current_revision_counts(self):
         node = self._file("versions.pdf", "alteswort zwischenwort")

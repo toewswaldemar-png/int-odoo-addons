@@ -608,7 +608,7 @@ def _inherited(data, key):
 
 
 def _pdf_text(value):
-    """Text of a PDF string: UTF-16 or UTF-8 with a byte order mark, else Latin-1."""
+    """Text of a PDF string: UTF-16 or UTF-8 with a byte order mark, else PDFDocEncoding."""
     if isinstance(value, str):
         return value
     if not isinstance(value, bytes):
@@ -622,7 +622,10 @@ def _pdf_text(value):
     try:
         return value.decode("utf-8")
     except UnicodeDecodeError:
-        return value.decode("latin-1")
+        # Not Latin-1: PDFDocEncoding differs above 0x7f (0xa0 is the euro sign).
+        from pdfminer.utils import decode_text
+
+        return decode_text(value)
 
 
 def _form_value(data):

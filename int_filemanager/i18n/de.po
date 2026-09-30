@@ -47,6 +47,12 @@ msgid "There are too many boxes."
 msgstr "Es sind zu viele Kästen."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "The content search has too many or too long words."
+msgstr "Die Inhaltssuche hat zu viele oder zu lange Wörter."
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 msgid "%s could not be prepared."

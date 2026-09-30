@@ -71,6 +71,9 @@ SHA256_RE = re.compile(r"[0-9a-f]{64}")
 SPEC_RE = re.compile(r"([0-9]{2,4})x([0-9]{2,4})")
 EXT_RE = re.compile(r"[a-z0-9]{0,8}")
 LABEL_RE = re.compile(r"[a-z0-9_]{1,16}")
+# The word list formats this converter makes; a newer one is not made silently in an
+# older format, so an Odoo that asks for it gets an error and not a wrong result.
+WORDS_SPECS = ("v2", "v3", "v4")
 JOB_ID_RE = re.compile(r"[0-9a-f]{32}")
 WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "worker.py")
 EXIT_STATES = {0: "done", 10: "not_applicable", 11: "failed"}
@@ -366,7 +369,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 match = SPEC_RE.fullmatch(spec)
                 if not match or max(int(match[1]), int(match[2])) > MAX_EDGE:
                     raise ValueError("bad size")
-            elif not LABEL_RE.fullmatch(spec):
+            elif not LABEL_RE.fullmatch(spec) or (
+                kind == "words" and spec not in WORDS_SPECS
+            ):
                 raise ValueError("bad spec")
         except (ValueError, KeyError, TypeError):
             return self._json(400, {"error": "bad request"})
