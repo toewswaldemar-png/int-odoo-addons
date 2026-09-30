@@ -6,7 +6,9 @@ import {
   chooseSuggestion,
   initialRows,
   isDirty,
+  pickSelection,
   removeRow,
+  rowMarkers,
   typeText,
   valuesToSave,
 } from "../../src/int_filemanager/v2/value_review/value_review_edits.js";
@@ -90,4 +92,46 @@ test("nothing is dirty until the user touched something", () => {
   assert.equal(isDirty(rows, {changedTags: true}), true);
   typeText(rows[0], "1");
   assert.equal(isDirty(rows), true);
+});
+
+test("the uncertain rows come first, in their order", () => {
+  const fields = [
+    {field_id: 1, name: "A", suggestions: [{...suggestion("1", 1), tier: 1}]},
+    {field_id: 2, name: "B", suggestions: [{...suggestion("2", 2), tier: 3}]},
+    {field_id: 3, name: "C", suggestions: [{...suggestion("3", 3), tier: 0}]},
+    {field_id: 4, name: "D", suggestions: [{...suggestion("4", 4), tier: 4}]},
+    {field_id: 5, name: "E", confirmed: "5", suggestions: []},
+  ];
+  const rows = initialRows(fields);
+  assert.deepEqual(
+    rows.map((r) => r.fieldId),
+    [2, 4, 1, 3, 5]
+  );
+  assert.deepEqual(
+    rows.map((r) => r.uncertain),
+    [true, true, false, false, false]
+  );
+});
+
+test("a click on words takes the place of the read text and keeps it for learning", () => {
+  const rows = initialRows(FIELDS);
+  const picked = {...suggestion("99", 77), x0: 1, top: 1, x1: 9, bottom: 5, page: 1};
+  pickSelection(rows[0], picked);
+  assert.deepEqual(valuesToSave(rows)[0], {
+    field_id: 1,
+    text: "99",
+    source: "manual",
+    rule_id: false,
+    start: 77,
+  });
+  const boxes = rowMarkers(rows, {1: [100, 100]});
+  assert.equal(boxes.length, 1);
+  assert.equal(boxes[0].box.left, 0.01);
+});
+
+test("typing over a clicked value takes its outline away", () => {
+  const rows = initialRows(FIELDS);
+  pickSelection(rows[0], {...suggestion("99", 77), page: 1, x0: 1, top: 1, x1: 9, bottom: 5});
+  typeText(rows[0], "100");
+  assert.deepEqual(rowMarkers(rows, {}), []);
 });

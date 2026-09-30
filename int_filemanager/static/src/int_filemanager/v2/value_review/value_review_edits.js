@@ -6,13 +6,16 @@
 
 import {relativeBox, shownFields} from "./value_review_geometry.js";
 
+// Tiers of value_suggest: 0 learned, 1 exact keyword, 2 contains, 3 close, 4 no label.
+const UNCERTAIN_TIER = 2;
+
 /**
  * One row per field worth showing, filled with its best suggestion or its stored value.
  * @param {Object[]} fields the ``fields`` of suggest_field_values
  * @returns {Object[]}
  */
 export function initialRows(fields) {
-  return shownFields(fields).map((field) => {
+  const rows = shownFields(fields).map((field) => {
     const best = (field.suggestions || [])[0];
     return {
       fieldId: field.field_id,
@@ -25,10 +28,16 @@ export function initialRows(fields) {
       source: field.confirmed || !best ? "manual" : "rule",
       ruleId: field.confirmed || !best ? false : best.rule_id || false,
       start: field.confirmed || !best ? false : best.start,
+      // The suggestion a click on a word made, kept for its place in the document.
+      picked: null,
+      // A label that only contains or resembles the keyword, or none: look at it first.
+      uncertain: !field.confirmed && Boolean(best) && best.tier >= UNCERTAIN_TIER,
       touched: false,
       removed: false,
     };
   });
+  // Sorted stably: the uncertain ones first, the rest in the order of the catalogue.
+  return [...rows.filter((r) => r.uncertain), ...rows.filter((r) => !r.uncertain)];
 }
 
 /** The user typed into the row. */
@@ -38,6 +47,22 @@ export function typeText(row, text) {
     source: "manual",
     ruleId: false,
     start: false,
+    picked: null,
+    uncertain: false,
+    touched: true,
+    removed: false,
+  });
+}
+
+/** The user clicked words in the document; ``suggestion`` is what read_selection returned. */
+export function pickSelection(row, suggestion) {
+  Object.assign(row, {
+    text: suggestion.source_text,
+    source: "manual",
+    ruleId: false,
+    start: suggestion.start,
+    picked: suggestion,
+    uncertain: false,
     touched: true,
     removed: false,
   });
@@ -50,6 +75,8 @@ export function chooseSuggestion(row, suggestion) {
     source: "rule",
     ruleId: suggestion.rule_id || false,
     start: suggestion.start,
+    picked: null,
+    uncertain: false,
     touched: true,
     removed: false,
   });
@@ -80,10 +107,13 @@ export function isDirty(rows, {changedSender = false, changedTags = false} = {})
 export function rowMarkers(rows, pageSizes) {
   const result = [];
   for (const row of rows) {
-    if (row.removed || row.source !== "rule") {
+    if (row.removed || (row.source !== "rule" && !row.picked)) {
       continue;
     }
-    const chosen = row.suggestions.find((s) => s.start === row.start);
+    const chosen =
+      row.picked && row.picked.start === row.start
+        ? row.picked
+        : row.suggestions.find((s) => s.start === row.start);
     const box = relativeBox(chosen, pageSizes);
     if (box) {
       result.push({fieldId: row.fieldId, name: row.name, box});

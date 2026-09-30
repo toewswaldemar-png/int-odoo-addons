@@ -8,6 +8,7 @@ import {
   pageSize,
   relativeBox,
   shownFields,
+  wordBox,
   wrapIndex,
 } from "../../src/int_filemanager/v2/value_review/value_review_geometry.js";
 
@@ -72,4 +73,13 @@ test("the pager wraps around", () => {
   assert.equal(wrapIndex(-1, 3), 2);
   assert.equal(wrapIndex(1, 3), 1);
   assert.equal(wrapIndex(5, 0), 0);
+});
+
+test("a word is placed in shares of its page", () => {
+  assert.deepEqual(wordBox([20, 40, 100, 80, 0, 5], [200, 400]), {
+    left: 0.1,
+    top: 0.1,
+    width: 0.4,
+    height: 0.1,
+  });
 });

@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260908\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 12:26+0000\n"
-"PO-Revision-Date: 2026-09-30 12:26+0000\n"
+"POT-Creation-Date: 2026-09-30 12:57+0000\n"
+"PO-Revision-Date: 2026-09-30 12:57+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -21,6 +21,12 @@ msgstr ""
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "%(field)s: %(text)s cannot be read as a value of this field."
 msgstr "%(field)s: %(text)s lässt sich nicht als Wert dieses Felds lesen."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "%(field)s: this IBAN is not one of the bank accounts of %(partner)s."
+msgstr "%(field)s: Diese IBAN gehört zu keinem der Bankkonten von %(partner)s."
 
 #. module: int_filemanager
 #. odoo-python
@@ -264,6 +270,12 @@ msgstr "Werte prüfen"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
 msgid "Clear"
 msgstr "Leeren"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Click words in the document to take a value from there."
+msgstr "Klicken Sie Wörter im Dokument an, um von dort einen Wert zu übernehmen."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -1512,6 +1524,12 @@ msgid "Period or duration"
 msgstr "Zeitraum oder Dauer"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Please check this value"
+msgstr "Bitte diesen Wert prüfen"
+
+#. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_blob__state__present
 msgid "Present"
 msgstr "Vorhanden"
@@ -1965,6 +1983,12 @@ msgstr "Die Markierung ist ungültig."
 
 #. module: int_filemanager
 #. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "The page is not valid."
+msgstr "Die Seite ist ungültig."
+
+#. module: int_filemanager
+#. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_extraction_rule.py:0
 msgid ""
 "The regular expression has %(count)s group(s); group %(index)s does not "
@@ -2073,6 +2097,12 @@ msgstr "Dieses Feld gibt es nicht mehr."
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "This file changed since you loaded it; reload and try again."
 msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneut versuchen."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "This file changed; reload it."
+msgstr "Diese Datei hat sich geändert; laden Sie sie neu."
 
 #. module: int_filemanager
 #. odoo-python

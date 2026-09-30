@@ -20,18 +20,21 @@ import {
   chooseSuggestion,
   initialRows,
   isDirty,
+  pickSelection,
   removeRow,
   rowMarkers,
   typeText,
   valuesToSave,
 } from "./value_review_edits.js";
-import {wrapIndex} from "./value_review_geometry.js";
+import {pageSize, wrapIndex} from "./value_review_geometry.js";
 
 const NODE_MODEL = "int_filemanager.node";
 const VIEWER_URL = "/web/static/lib/pdfjs/web/viewer.html";
 const POLL_PENDING_MS = 3000;
 const MAX_POLLS = 40;
 const DOCUMENT_WIDTH = 640;
+const WORDS_WAIT_MS = 200;
+const WORDS_WAIT_LIMIT_MS = 10000;
 
 function isPdf(name) {
   return /\.pdf$/i.test(name || "");
@@ -121,6 +124,7 @@ export class IntFilemanagerV2ValueReview extends Component {
       () => {
         if (this.overlay) {
           this.overlay.setActive(this.state.activeFieldId);
+          this.overlay.setWordMode(this.state.activeFieldId !== null);
         }
       },
       () => [this.state.activeFieldId]
@@ -277,12 +281,58 @@ export class IntFilemanagerV2ValueReview extends Component {
     }
     const overlay = new ViewerOverlay(iframe, {
       onSelect: (fieldId) => this.onSelectField(fieldId, {scroll: false}),
+      loadWords: (page) => this.loadWords(page),
+      pageSize: (page) => pageSize(this.state.data && this.state.data.page_sizes, page),
+      onPick: ({start, end}) => this.onPickWords(start, end),
     });
     this.overlay = overlay;
     // The frame loads the new file after the src changed; attach() waits for its pages.
     if (await overlay.attach()) {
       overlay.setMarkers(this.markers);
       overlay.setActive(this.state.activeFieldId);
+      overlay.setWordMode(this.state.activeFieldId !== null);
+    }
+  }
+
+  /** The words of a page, once the suggestions (and so the revision) are known. */
+  async loadWords(page) {
+    for (let waited = 0; !this.state.data; waited += WORDS_WAIT_MS) {
+      if (waited > WORDS_WAIT_LIMIT_MS) {
+        return [];
+      }
+      await new Promise((resolve) => setTimeout(resolve, WORDS_WAIT_MS));
+    }
+    const result = await this.orm.call(NODE_MODEL, "page_words", [
+      this.nodeId,
+      this.state.data.revision_id,
+      page,
+    ]);
+    return result.words;
+  }
+
+  /** Words were clicked while a field is chosen: the server reads the text as its value. */
+  async onPickWords(start, end) {
+    const row = this.state.rows.find((r) => r.fieldId === this.state.activeFieldId);
+    if (!row || !this.state.data) {
+      return;
+    }
+    try {
+      const result = await this.orm.call(NODE_MODEL, "read_selection", [
+        this.nodeId,
+        this.state.data.revision_id,
+        row.fieldId,
+        start,
+        end,
+      ]);
+      if (result.suggestion) {
+        pickSelection(row, result.suggestion);
+      } else {
+        this.notification.add(result.message || _t("This file changed; reload it."), {
+          type: "warning",
+        });
+      }
+    } catch (error) {
+      this.notification.add(errorMessage(error), {type: "danger"});
     }
   }
 

@@ -136,6 +136,20 @@
                     >Not reviewed</span>
                   </div>
                   <div
+                    t-foreach="state.data.warnings"
+                    t-as="warning"
+                    t-key="warning_index"
+                    class="alert alert-warning"
+                    role="alert"
+                    t-esc="warning.message"
+                  />
+                  <div
+                    t-if="state.activeFieldId !== null"
+                    class="small text-muted pb-2"
+                  >
+                    Click words in the document to take a value from there.
+                  </div>
+                  <div
                     t-if="state.sender"
                     class="o_int_filemanager_review_row d-flex gap-3 py-2 border-bottom"
                   >
@@ -196,10 +210,16 @@
                     t-att-class="{o_active: state.activeFieldId === row.fieldId}"
                     t-on-click="() => this.onSelectField(row.fieldId)"
                   >
-                    <label
-                      class="o_form_label o_int_filemanager_review_label"
-                      t-esc="row.name"
-                    />
+                    <label class="o_form_label o_int_filemanager_review_label">
+                      <t t-esc="row.name" />
+                      <i
+                        t-if="row.uncertain"
+                        class="fa fa-exclamation-triangle text-warning ms-1"
+                        role="img"
+                        aria-label="Please check this value"
+                        data-tooltip="Please check this value"
+                      />
+                    </label>
                     <div class="flex-grow-1 min-w-0">
                       <input
                         type="text"

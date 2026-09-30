@@ -175,6 +175,54 @@ class TestV2FieldValueAreas(FieldValueCase):
         with self.assertRaises(AccessError):
             self._read(self.date, start, end, user=self.outsider)
 
+    def _words(self, page_number, user=None, revision_id=None, node=None):
+        node = node or self.node
+        return self.Node.with_user(user or self.writer).page_words(
+            node.id, revision_id or node.current_revision_id.id, page_number
+        )
+
+    def test_the_words_of_a_page_come_with_their_places(self):
+        result = self._words(1)
+        self.assertEqual(result["state"], "ready")
+        words = {self.page.text[w[4] : w[5]]: w for w in result["words"]}
+        self.assertEqual(words["Objektnummer"][:2], [50, 510])
+        self.assertEqual(len(result["words"]), len(self.page.words))
+        self.assertEqual(self._words(2)["words"], [])
+
+    def test_the_words_of_a_page_are_limited_and_checked(self):
+        with patch.object(int_filemanager_node, "MAX_PAGE_WORDS", 3):
+            self.assertEqual(len(self._words(1)["words"]), 3)
+        for page_number in ("1", 1.5, True, None):
+            with self.subTest(page=page_number), self.assertRaises(UserError):
+                self._words(page_number)
+        self.assertEqual(self._words(1, revision_id=-1)["state"], "changed")
+        with self.assertRaises(AccessError):
+            self._words(1, user=self.outsider)
+
+    def test_an_iban_none_of_the_accounts_of_the_sender_has_is_warned_about(self):
+        self.env["int_filemanager.extraction_rule"].sudo().create(
+            {"field_id": self.iban.id, "keywords": "IBAN"}
+        )
+        sender = (
+            self.env["res.partner"]
+            .sudo()
+            .create({"name": "Vendor T", "is_company": True, "vat": "DE136695976"})
+        )
+        page = layout(
+            (100, [(50, "USt-IdNr.: DE136695976")]),
+            (112, [(50, "IBAN: GB82 WEST 1234 5698 7654 32")]),
+        )
+        node = self._pdf("iban.pdf", page)
+        self.assertEqual(self._suggest(node)["warnings"], [])  # no known account
+        bank = self.env["res.partner.bank"].sudo()
+        bank.create({"acc_number": "DE89370400440532013000", "partner_id": sender.id})
+        warnings = self._suggest(node)["warnings"]
+        self.assertEqual([w["type"] for w in warnings], ["iban_differs"])
+        self.assertEqual(warnings[0]["field_id"], self.iban.id)
+        self.assertIn("Vendor T", warnings[0]["message"])
+        bank.create({"acc_number": "GB82WEST12345698765432", "partner_id": sender.id})
+        self.assertEqual(self._suggest(node)["warnings"], [])
+
     def _text_file(self, content):
         node = self._file("notiz.txt", content.encode())
         self._run(

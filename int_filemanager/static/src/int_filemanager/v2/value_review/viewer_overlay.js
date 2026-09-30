@@ -6,9 +6,15 @@
 // puts the layer back at once. The boxes are placed in percent of the page, which follows
 // every zoom without a repaint.
 //
+// Words to click on lie in a second layer, loaded per page when the page gets its layer
+// and only reacting while a field is chosen (word mode); then a click or a drag over
+// several words says which text of the file was meant.
+//
 // The viewer's document has none of Odoo's stylesheets, and Odoo's page defines no color
 // variables at run time: the two colors are read from Odoo's own classes (the action color
 // and the muted text color) on a hidden element and copied into the frame.
+
+import {wordBox} from "./value_review_geometry.js";
 
 const POLL_MS = 100;
 const READY_TIMEOUT_MS = 20000;
@@ -19,6 +25,13 @@ const STYLE = `
 .o_int_fm_review_box {
   position: absolute; box-sizing: border-box; pointer-events: auto; cursor: pointer;
   border: 1px solid var(--o-int-border); border-radius: 2px;
+}
+.o_int_fm_review_words { position: absolute; inset: 0; }
+.o_int_fm_review_word { position: absolute; pointer-events: none; }
+.o_word_mode .o_int_fm_review_word { pointer-events: auto; cursor: crosshair; }
+.o_word_mode .o_int_fm_review_box { pointer-events: none; }
+.o_int_fm_review_word:hover, .o_int_fm_review_word.o_picking {
+  background: color-mix(in srgb, var(--o-int-accent) 20%, transparent);
 }
 .o_int_fm_review_box:hover { border-color: var(--o-int-accent); }
 .o_int_fm_review_box.o_active {
@@ -44,11 +57,22 @@ function themeColors() {
 export class ViewerOverlay {
   /**
    * @param {HTMLIFrameElement} iframe the pdf.js viewer
-   * @param {{onSelect?: Function}} [options] ``onSelect(fieldId)`` when a box is clicked
+   * @param {Object} [options]
+   * @param {Function} [options.onSelect] ``onSelect(fieldId)`` when a box is clicked
+   * @param {Function} [options.loadWords] ``loadWords(page)`` resolves to the words of a
+   *   page: ``[x0, top, x1, bottom, start, end]`` each
+   * @param {Function} [options.pageSize] ``pageSize(page)``: width and height of a page
+   * @param {Function} [options.onPick] ``onPick({start, end})`` when words were clicked
    */
-  constructor(iframe, {onSelect} = {}) {
+  constructor(iframe, {onSelect, loadWords, pageSize, onPick} = {}) {
     this.iframe = iframe;
     this.onSelect = onSelect;
+    this.loadWords = loadWords;
+    this.pageSize = pageSize;
+    this.onPick = onPick;
+    this.wordMode = false;
+    this.words = new Map();
+    this.anchor = null;
     this.markers = [];
     this.activeFieldId = null;
     this.observers = [];
@@ -89,6 +113,15 @@ export class ViewerOverlay {
   setActive(fieldId) {
     this.activeFieldId = fieldId;
     this._paintAll();
+  }
+
+  /** Words react to the mouse only while a field waits for a value. */
+  setWordMode(enabled) {
+    this.wordMode = enabled;
+    const doc = this.iframe.contentDocument;
+    for (const layer of doc ? doc.querySelectorAll(".o_int_fm_review_layer") : []) {
+      layer.classList.toggle("o_word_mode", enabled);
+    }
   }
 
   /** Scrolls the box of a field to the middle of the viewer, also on a page not drawn yet. */
@@ -170,10 +203,91 @@ export class ViewerOverlay {
     if (this.destroyed || pageDiv.querySelector(":scope > .o_int_fm_review_layer")) {
       return;
     }
-    const layer = this.iframe.contentDocument.createElement("div");
+    const doc = this.iframe.contentDocument;
+    const layer = doc.createElement("div");
     layer.className = "o_int_fm_review_layer";
+    layer.classList.toggle("o_word_mode", this.wordMode);
+    const words = doc.createElement("div");
+    words.className = "o_int_fm_review_words";
+    const boxes = doc.createElement("div");
+    boxes.className = "o_int_fm_review_boxes";
+    layer.append(words, boxes);
     pageDiv.appendChild(layer);
-    this._paint(layer, Number(pageDiv.dataset.pageNumber));
+    const pageNumber = Number(pageDiv.dataset.pageNumber);
+    this._paint(layer, pageNumber);
+    this._paintWords(words, pageNumber);
+  }
+
+  async _paintWords(container, pageNumber) {
+    if (!this.loadWords) {
+      return;
+    }
+    if (!this.words.has(pageNumber)) {
+      this.words.set(pageNumber, this.loadWords(pageNumber));
+    }
+    const words = await this.words.get(pageNumber).catch(() => null);
+    if (!words) {
+      this.words.delete(pageNumber);
+      return;
+    }
+    if (this.destroyed || !container.isConnected) {
+      return;
+    }
+    const doc = this.iframe.contentDocument;
+    const size = this.pageSize ? this.pageSize(pageNumber) : [595, 842];
+    const elements = words.map((word) => {
+      const element = doc.createElement("div");
+      element.className = "o_int_fm_review_word";
+      element.dataset.start = String(word[4]);
+      element.dataset.end = String(word[5]);
+      const {left, top, width, height} = wordBox(word, size);
+      Object.assign(element.style, {
+        left: `${left * 100}%`,
+        top: `${top * 100}%`,
+        width: `${width * 100}%`,
+        height: `${height * 100}%`,
+      });
+      return element;
+    });
+    container.replaceChildren(...elements);
+    this._listenToWords(container);
+  }
+
+  // A click is a drag from one word to the same one.
+  _listenToWords(container) {
+    const range = (from, to) => {
+      const all = [...container.children];
+      const [a, b] = [all.indexOf(from), all.indexOf(to)].sort((x, y) => x - y);
+      return all.slice(a, b + 1);
+    };
+    const mark = (elements) =>
+      [...container.children].forEach((el) =>
+        el.classList.toggle("o_picking", elements.includes(el))
+      );
+    container.addEventListener("pointerdown", (event) => {
+      if (event.target.classList.contains("o_int_fm_review_word")) {
+        this.anchor = event.target;
+        mark([event.target]);
+        event.preventDefault();
+      }
+    });
+    container.addEventListener("pointerover", (event) => {
+      if (this.anchor && event.target.classList.contains("o_int_fm_review_word")) {
+        mark(range(this.anchor, event.target));
+      }
+    });
+    container.addEventListener("pointerup", (event) => {
+      const anchor = this.anchor;
+      this.anchor = null;
+      mark([]);
+      if (anchor && event.target.classList.contains("o_int_fm_review_word")) {
+        const picked = range(anchor, event.target);
+        this.onPick?.({
+          start: Math.min(...picked.map((el) => Number(el.dataset.start))),
+          end: Math.max(...picked.map((el) => Number(el.dataset.end))),
+        });
+      }
+    });
   }
 
   _paintAll() {
@@ -208,6 +322,6 @@ export class ViewerOverlay {
         element.addEventListener("click", () => this.onSelect?.(marker.fieldId));
         return element;
       });
-    layer.replaceChildren(...boxes);
+    layer.querySelector(".o_int_fm_review_boxes").replaceChildren(...boxes);
   }
 }

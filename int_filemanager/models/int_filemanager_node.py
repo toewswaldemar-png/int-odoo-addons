@@ -38,6 +38,8 @@ MAX_SUGGESTED_TAGS = 10
 # Boxes one request may carry, and the longest text a marking may cover.
 MAX_AREAS = 50
 MAX_SELECTION_CHARS = 200
+# Words of one page sent to the review window to click on.
+MAX_PAGE_WORDS = 5000
 # Words of a content search, and their length.
 MAX_SEARCH_TERMS = 10
 MAX_SEARCH_TERM_CHARS = 100
@@ -1130,6 +1132,76 @@ class IntFilemanagerNode(models.Model):
             ],
             "partner": partner,
             "tags": self._suggest_tags(page.text),
+            "warnings": self._suggest_warnings(partner, suggestions),
+        }
+
+    def _suggest_warnings(self, partner, suggestions):
+        """Hints for the reviewer about values that look wrong; nothing is stored.
+
+        An IBAN that none of the bank accounts of the sender has: the protection
+        against a forged invoice with a new account. Without a known sender or
+        accounts there is nothing to compare with.
+        """
+        if not partner:
+            return []
+        accounts = (
+            self.env["res.partner.bank"]
+            .sudo()
+            .search([("partner_id", "child_of", partner["id"])])
+        )
+        known = {a.sanitized_acc_number for a in accounts if a.sanitized_acc_number}
+        if not known:
+            return []
+        warnings = []
+        for field in self.env["int_filemanager.extraction_field"].search(
+            [("active", "=", True), ("value_type", "=", "iban")]
+        ):
+            best = (suggestions.get(field.id) or [None])[0]
+            if best and best.value["value_text"] not in known:
+                warnings.append(
+                    {
+                        "type": "iban_differs",
+                        "field_id": field.id,
+                        "message": self.env._(
+                            "%(field)s: this IBAN is not one of the bank accounts "
+                            "of %(partner)s.",
+                            field=field.name,
+                            partner=partner["name"],
+                        ),
+                    }
+                )
+        return warnings
+
+    @api.model
+    def page_words(self, node_id, revision_id, page_number):
+        """The words of one page of a file with their places, to click on.
+
+        :returns: ``{"state", "revision_id", "words"}``; each word is ``[x0, top,
+            x1, bottom, start, end]`` in the unit of the value boxes, ``start`` and
+            ``end`` the offsets in the text of the file. "changed" when the file has a
+            newer revision than ``revision_id``.
+        """
+        node = self.browse(node_id)
+        node.check_access("read")
+        if not isinstance(page_number, int) or isinstance(page_number, bool):
+            raise UserError(self.env._("The page is not valid."))
+        revision = node.current_revision_id
+        if node.is_dir or not revision:
+            return {"state": "none", "revision_id": False, "words": []}
+        if revision.id != revision_id:
+            return {"state": "changed", "revision_id": revision.id, "words": []}
+        state, page = self._recognition_page(node, revision)
+        if state != "ready":
+            return {"state": state, "revision_id": revision.id, "words": []}
+        words = [
+            [w[1], w[2], w[3], w[4], w[5], w[6]]
+            for w in page.words
+            if w[0] == page_number
+        ]
+        return {
+            "state": "ready",
+            "revision_id": revision.id,
+            "words": words[:MAX_PAGE_WORDS],
         }
 
     def _parse_areas(self, areas):

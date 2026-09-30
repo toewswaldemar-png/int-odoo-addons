@@ -48,6 +48,22 @@ export function relativeBox(suggestion, pageSizes) {
 }
 
 /**
+ * The box of a word of ``page_words`` as shares of its page.
+ * @param {Number[]} word [x0, top, x1, bottom, start, end]
+ * @param {Number[]} size width and height of the page
+ * @returns {{left: Number, top: Number, width: Number, height: Number}}
+ */
+export function wordBox(word, size) {
+  const [x0, top, x1, bottom] = word;
+  return {
+    left: x0 / size[0],
+    top: top / size[1],
+    width: (x1 - x0) / size[0],
+    height: (bottom - top) / size[1],
+  };
+}
+
+/**
  * The outlines to draw: the best suggestion of every field that has a place.
  * @param {Object[]} fields the ``fields`` of suggest_field_values
  * @param {Object} pageSizes
