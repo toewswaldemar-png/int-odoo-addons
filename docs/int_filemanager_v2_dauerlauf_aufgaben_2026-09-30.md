@@ -50,10 +50,11 @@ Reihenfolge = Priorität. Kästchen `[ ]` offen, `[x]` fertig (mit Commit-Hash u
   auf; das Szenario war vor dem Fix rot (echter Fehler), jetzt grün. (3) Aufräumjob (Konzept-Prüfpunkt A4, `blob_gc_against_reuse`): läuft als zweiter
   `odoo shell`-Prozess mit `hold` am Schreiber, grün. Beleg: `int_filemanager/tests/tower/README.md` und der Lauf von A1 (alle 17 Szenarien grün).
   Nichts zu entscheiden, nichts geändert außer diesem Eintrag.
-- [ ] **A3 Konzept Abschnitt 11, Punkte 1–3 als Entwurf** (Datenmodell im Detail, Rechte je neuem Aufruf, Leistung): am Odoo-Code
+- [x] **A3 Konzept Abschnitt 11, Punkte 1–3 als Entwurf** (Datenmodell im Detail, Rechte je neuem Aufruf, Leistung): am Odoo-Code
   und mit Messungen auf Tower an Wegwerf-Daten belegen; Alternativen zeigen; Abdeckung angeben. Ergebnis:
   `docs/int_filemanager_v2_werterkennung_denkpunkte_entwurf_2026-09-30.md`. Fertig, wenn: jeder Unterpunkt Vorschlag, Beleg
   und Restrisiko hat.
+  **Ergebnis (Dauerlauf 2026-09-30, Commit siehe Log):** Entwurf liegt, Abschnitt 4 dort fasst je Unterpunkt Vorschlag/Beleg/Restrisiko zusammen. Gemessen (Tower, Wegwerf-Container `dl_bench`/`dl_pg`, entfernt): Vorschlagen linear, 100 Seiten ≈ 0,8 s, 1.000 Seiten ≈ 9 s; Neuaufbau echter Spalten für 300.000 Dokumente in SQL ≈ 1,5 min (ORM-Weg ungemessen). Befund: Nutzer haben Schreibrecht auf den ganzen Knoten, die „nur vom System befüllt“-Spalten (N9) brauchen eine Sperre in `write`. Drei Fragen unten eingetragen.
 - [ ] **A4 Konzept Abschnitt 11, Punkte 4, 5, 7** (Oberflächen-Zustände, Abnahmekriterien je Scheibe U-1…U-10 nach dem Muster
   „fertig, wenn“ von W-1…W-6, Übersetzung): gleicher Entwurfsordner, gleiche Regeln.
 - [ ] **A5 Übergang von v1 (Punkt 6).** v1-Modelle (`extracted_value`, Muster) gegen das v2-Schema legen: Mengen und Beispiele
@@ -86,4 +87,4 @@ Reihenfolge = Priorität. Kästchen `[ ]` offen, `[x]` fertig (mit Commit-Hash u
 
 ## Fragen an den Nutzer (Claude trägt hier ein, statt zu raten)
 
-(leer)
+- **A3 (Denkpunkte 1–3), Entwurf Abschnitt 5:** (1) Was zählt als „ungeprüft“ – alle Dateien mit Text oder nur, was ausdrücklich in die Prüfung kommt (Empfehlung: Letzteres)? (2) Dauern in Wochen und Mengen mit abweichender Einheit nicht in die Spalten spiegeln (Empfehlung: ja)? (3) Einheit eines Mengenfelds sperren, sobald Werte da sind (Empfehlung: ja)?

@@ -13,6 +13,7 @@ Stand 2026-09-30. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde g
 | [`int_filemanager_v2_schritt4_plan_2026-09-28.md`](int_filemanager_v2_schritt4_plan_2026-09-28.md) | Plan der Oberfläche (Schritt 4) |
 | [`int_filemanager_v2_werterkennung_plan_2026-09-29.md`](int_filemanager_v2_werterkennung_plan_2026-09-29.md) | Plan der Werterkennung (Schritt 5, Punkt 1) mit Befund Odoo 19 und Paperless-ngx |
 | [`int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`](int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md) | Konzept Prüf-Fenster mit Kasten-Auswahl (U1–U9 und N1–N9 entschieden, Freigabe offen): Vorbilder PaperOffice/Paperless-ngx/Odoo, geprüfte Odoo-Bausteine, Nachtrag PaperOffice AI, Scheiben U-1…U-10 |
+| [`int_filemanager_v2_werterkennung_denkpunkte_entwurf_2026-09-30.md`](int_filemanager_v2_werterkennung_denkpunkte_entwurf_2026-09-30.md) | Entwurf (Dauerlauf A3): Datenmodell, Rechte je Aufruf und Leistung der Werterkennung, mit Messungen; ohne Freigabe |
 | [`int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md`](int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md) | Aufgabenliste für den unbeaufsichtigten Dauerlauf (Regeln, Grenzen, Fortschritt je Aufgabe) |
 | [`review/konzept_codepruefung_2026-09-26.md`](review/konzept_codepruefung_2026-09-26.md) | Code-Prüfung des Konzepts (194 Behauptungen) |
 | [`odoo_konventionen_2026-09-26.md`](odoo_konventionen_2026-09-26.md) | Code-Konventionen für neuen Code |
