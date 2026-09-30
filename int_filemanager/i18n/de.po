@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260908\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 12:11+0000\n"
-"PO-Revision-Date: 2026-09-30 12:11+0000\n"
+"POT-Creation-Date: 2026-09-30 12:26+0000\n"
+"PO-Revision-Date: 2026-09-30 12:26+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -173,6 +173,12 @@ msgstr "Jahresverbrauch"
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__page_area__anywhere
 msgid "Anywhere"
 msgstr "Überall"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__review_state__automatic
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
+msgid "Applied automatically"
+msgstr "Automatisch übernommen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_attachment_count
@@ -481,8 +487,15 @@ msgstr "Richtung"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 msgid "Discard"
 msgstr "Verwerfen"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "Discard changes"
+msgstr "Änderungen verwerfen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__display_name
@@ -1309,6 +1322,13 @@ msgstr "Nicht anwendbar"
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__review_state__unreviewed
+msgid "Not reviewed"
+msgstr "Nicht geprüft"
+
+#. module: int_filemanager
+#. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_navigation.js:0
 msgid "Notes / activities"
 msgstr "Notizen / Aktivitäten"
@@ -1586,6 +1606,12 @@ msgstr "Löschgrund"
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Remove"
+msgstr "Entfernen"
+
+#. module: int_filemanager
+#. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_uploads.js:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
@@ -1630,6 +1656,18 @@ msgstr "Das Wiederherstellen würde mit einer vorhandenen Datei oder einem Ordne
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__result
 msgid "Result"
 msgstr "Ergebnis"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__review_state
+msgid "Review State"
+msgstr "Prüfstatus"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__review_state__reviewed
+msgid "Reviewed"
+msgstr "Geprüft"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__revision_ids
@@ -1680,6 +1718,7 @@ msgstr "SMS-Zustellfehler"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/text_editor_dialog.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
 msgid "Save"
@@ -1707,6 +1746,12 @@ msgstr "Wählen Sie eine Datei oder einen Ordner aus, um Notizen und Aktivitäte
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 msgid "Select files in the file manager and choose \"Check values\"."
 msgstr "Wählen Sie Dateien in der Dateiverwaltung aus und wählen Sie „Werte prüfen“."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Sender"
+msgstr "Absender"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__sequence
@@ -1824,6 +1869,12 @@ msgid "Status"
 msgstr "Status"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "Stay here"
+msgstr "Hier bleiben"
+
+#. module: int_filemanager
 #: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_supply_start
 msgid "Supply start"
 msgstr "Lieferbeginn"
@@ -1831,6 +1882,7 @@ msgstr "Lieferbeginn"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/native_ui/document_review_dialog.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__tag_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__tag_ids
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_file_search
@@ -1968,6 +2020,12 @@ msgstr "Der Wert von %(field)s passt nicht zu seiner Art."
 msgid ""
 "The value of %(field)s names a revision or rule that belongs elsewhere."
 msgstr "Der Wert von %(field)s nennt eine Fassung oder Regel, die woanders hingehört."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "The values you changed are not saved. Leave and discard them?"
+msgstr "Die geänderten Werte sind nicht gespeichert. Verlassen und verwerfen?"
 
 #. module: int_filemanager
 #. odoo-python
@@ -2155,6 +2213,13 @@ msgid "Unit a quantity is given in, for example kWh or ct/kWh."
 msgstr "Einheit einer Menge, zum Beispiel kWh oder ct/kWh."
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Unsaved changes"
+msgstr "Nicht gespeicherte Änderungen"
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "Unsupported search on the top of the tree."
@@ -2255,6 +2320,17 @@ msgid "Values confirmed"
 msgstr "Werte bestätigt"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
+msgid "Values not reviewed"
+msgstr "Werte nicht geprüft"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "Values saved."
+msgstr "Werte gespeichert."
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 msgid "Versions"
@@ -2342,6 +2418,12 @@ msgstr "aktuell"
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "found by"
+msgstr "gefunden über"
+
+#. module: int_filemanager
+#. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
 msgid "label above"
 msgstr "Beschriftung darüber"
@@ -2393,3 +2475,9 @@ msgstr "entfernt"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
 msgid "rule"
 msgstr "Regel"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "typed"
+msgstr "eingegeben"

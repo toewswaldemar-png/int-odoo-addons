@@ -1,7 +1,7 @@
 {
     "name": "Filemanager",
     "summary": "File manager with versions, trash, rights and ONLYOFFICE editing.",
-    "version": "19.0.1.21.0",
+    "version": "19.0.1.22.0",
     "category": "Productivity",
     "author": "Waldemar Toews",
     "license": "LGPL-3",

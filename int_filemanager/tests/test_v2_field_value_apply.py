@@ -64,6 +64,17 @@ class TestV2FieldValueApply(FieldValueCase):
         self.assertEqual(value.revision_id, self.revision)
         self.assertEqual((value.page, value.x0, value.top), (1, 200, 112))
 
+    def test_storing_marks_the_file_as_reviewed(self):
+        self.assertEqual(self.node.review_state, "unreviewed")
+        self.assertEqual(self._suggest(self.node)["review_state"], "unreviewed")
+        self._apply([{"field_id": self.customer.id, "text": "4711"}])
+        self.assertEqual(self.node.review_state, "reviewed")
+        self.assertEqual(self._suggest(self.node)["review_state"], "reviewed")
+        found = self.Node.with_user(self.writer).search(
+            [("id", "=", self.node.id), ("review_state", "=", "unreviewed")]
+        )
+        self.assertFalse(found)
+
     def test_a_text_that_is_no_value_of_the_type_is_refused(self):
         with self.assertRaises(UserError):
             self._apply([{"field_id": self.due.id, "text": "31.02.2024"}])

@@ -40,6 +40,17 @@
         />
         <separator />
         <filter
+          name="filter_unreviewed"
+          string="Values not reviewed"
+          domain="[('is_dir', '=', False), ('review_state', '=', 'unreviewed')]"
+        />
+        <filter
+          name="filter_automatic"
+          string="Applied automatically"
+          domain="[('review_state', '=', 'automatic')]"
+        />
+        <separator />
+        <filter
           name="groupby_status_id"
           string="Status"
           context="{'group_by': 'status_id'}"

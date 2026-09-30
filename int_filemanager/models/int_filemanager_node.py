@@ -133,6 +133,17 @@ class IntFilemanagerNode(models.Model):
     )
     # Set by trash() for the whole subtree; the trash purge counts from it.
     trashed_at = fields.Datetime(index=True)
+    # Whether someone looked at the values found in the file; set by apply_field_values.
+    review_state = fields.Selection(
+        [
+            ("unreviewed", "Not reviewed"),
+            ("reviewed", "Reviewed"),
+            ("automatic", "Applied automatically"),
+        ],
+        default="unreviewed",
+        copy=False,
+        index=True,
+    )
     # Only the states: the explorer builds the picture URLs from the revision itself.
     # Thumbnail and large preview image.
     preview_state = fields.Selection(PREVIEW_STATES, compute="_compute_preview_states")
@@ -1076,6 +1087,7 @@ class IntFilemanagerNode(models.Model):
         return {
             "state": "ready",
             "revision_id": revision.id,
+            "review_state": node.review_state,
             # Width and height of the pages in the unit of the value boxes; a page
             # not listed is taken as A4.
             "page_sizes": {str(n): list(size) for n, size in page.sizes.items()},
@@ -1607,6 +1619,7 @@ class IntFilemanagerNode(models.Model):
         if tags:
             node.tag_ids = [Command.link(tag.id) for tag in tags]
         self._learn_labels(node.partner_id, learn)
+        node.review_state = "reviewed"
         if stored or removed:
             self._post_confirmed_values(node, stored, removed)
         return {v.field_id.id: v.value_text for v in existing.values()}

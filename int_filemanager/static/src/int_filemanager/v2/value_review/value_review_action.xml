@@ -9,6 +9,30 @@
       display="display"
       className="'o_int_filemanager_review h-100 d-flex flex-column'"
     >
+      <t t-set-slot="control-panel-create-button">
+        <t t-if="!isEmpty">
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-hotkey="s"
+            t-att-disabled="state.saving or !state.data"
+            t-on-click="onSave"
+          >Save</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-hotkey="j"
+            t-att-disabled="state.saving or !isChanged"
+            t-on-click="onDiscard"
+          >Discard</button>
+        </t>
+      </t>
+      <t t-set-slot="control-panel-status-indicator">
+        <span
+          t-if="isChanged"
+          class="text-warning small o_int_filemanager_review_dirty"
+        >Unsaved changes</span>
+      </t>
       <t t-if="isEmpty">
         <div class="o_view_nocontent">
           <div class="o_nocontent_help">
@@ -101,32 +125,116 @@
                   <div class="alert alert-danger" role="alert" t-esc="state.message" />
                 </t>
                 <t t-else="">
-                  <div t-if="!fields.length" class="o_view_nocontent">
+                  <div class="d-flex align-items-center gap-2 pb-2">
+                    <span
+                      t-if="isReviewed"
+                      class="badge rounded-pill text-bg-success"
+                    >Reviewed</span>
+                    <span
+                      t-else=""
+                      class="badge rounded-pill text-bg-secondary"
+                    >Not reviewed</span>
+                  </div>
+                  <div
+                    t-if="state.sender"
+                    class="o_int_filemanager_review_row d-flex gap-3 py-2 border-bottom"
+                  >
+                    <label
+                      class="o_form_label o_int_filemanager_review_label"
+                    >Sender</label>
+                    <div class="flex-grow-1">
+                      <div class="fw-bold" t-esc="state.sender.name" />
+                      <div class="small text-muted">found by <t
+                        t-esc="state.sender.via"
+                      /></div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-light border-0 px-1 py-0 align-self-start"
+                      aria-label="Remove"
+                      data-tooltip="Remove"
+                      t-on-click="onRemoveSender"
+                    >
+                      <i class="fa fa-times" />
+                    </button>
+                  </div>
+                  <div
+                    t-if="state.tags.length"
+                    class="d-flex flex-wrap align-items-center gap-1 py-2 border-bottom"
+                  >
+                    <label
+                      class="o_form_label o_int_filemanager_review_label"
+                    >Tags</label>
+                    <span
+                      t-foreach="state.tags"
+                      t-as="tag"
+                      t-key="tag.id"
+                      class="o_tag badge rounded-pill o_tag_color_0"
+                    >
+                      <t t-esc="tag.name" />
+                      <a
+                        role="button"
+                        class="ms-1 text-reset"
+                        aria-label="Remove"
+                        t-on-click="() => this.onRemoveTag(tag)"
+                      >
+                        <i class="fa fa-times" />
+                      </a>
+                    </span>
+                  </div>
+                  <div t-if="!visibleRows.length" class="o_view_nocontent">
                     <div class="o_nocontent_help">
                       <p class="o_view_nocontent_neutral_face">No values found</p>
                       <p>Nothing in this document matches a field.</p>
                     </div>
                   </div>
                   <div
-                    t-foreach="fields"
-                    t-as="field"
-                    t-key="field.field_id"
+                    t-foreach="visibleRows"
+                    t-as="row"
+                    t-key="row.fieldId"
                     class="o_int_filemanager_review_row d-flex gap-3 py-2 border-bottom"
-                    t-att-class="{o_active: state.activeFieldId === field.field_id}"
-                    role="button"
-                    t-on-click="() => this.onSelectField(field.field_id)"
+                    t-att-class="{o_active: state.activeFieldId === row.fieldId}"
+                    t-on-click="() => this.onSelectField(row.fieldId)"
                   >
                     <label
                       class="o_form_label o_int_filemanager_review_label"
-                      t-esc="field.name"
+                      t-esc="row.name"
                     />
-                    <div class="flex-grow-1">
-                      <div class="fw-bold" t-esc="valueText(field)" />
-                      <div class="small text-muted" t-esc="originText(field)" />
-                      <div t-if="otherCount(field)" class="small text-muted">
-                        <t t-esc="otherCount(field)" /> more found
-                      </div>
+                    <div class="flex-grow-1 min-w-0">
+                      <input
+                        type="text"
+                        class="form-control form-control-sm fw-bold"
+                        t-att-value="row.text"
+                        t-att-aria-label="row.name"
+                        t-on-input="(ev) => this.onType(row, ev.target.value)"
+                        t-on-focus="() => this.onSelectField(row.fieldId)"
+                      />
+                      <div class="small text-muted" t-esc="originText(row)" />
+                      <Dropdown t-if="row.suggestions.length > 1">
+                        <button type="button" class="btn btn-link btn-sm p-0"><t
+                          t-esc="row.suggestions.length - 1"
+                        /> more found</button>
+                        <t t-set-slot="content">
+                          <DropdownItem
+                            t-foreach="row.suggestions"
+                            t-as="other"
+                            t-key="other_index"
+                            onSelected="() => this.onChoose(row, other)"
+                          >
+                            <t t-esc="other.source_text" />
+                          </DropdownItem>
+                        </t>
+                      </Dropdown>
                     </div>
+                    <button
+                      type="button"
+                      class="btn btn-light border-0 px-1 py-0 align-self-start"
+                      aria-label="Remove"
+                      data-tooltip="Remove"
+                      t-on-click.stop="() => this.onRemove(row)"
+                    >
+                      <i class="fa fa-times" />
+                    </button>
                   </div>
                 </t>
               </div>

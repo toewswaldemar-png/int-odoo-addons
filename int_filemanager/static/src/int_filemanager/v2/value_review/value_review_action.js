@@ -4,15 +4,28 @@
 // and the values found in it on the right, in the header the pager of the chosen files.
 // A client action, not a dialog: the document needs the room.
 import {Component, onWillUnmount, useEffect, useRef, useState} from "@odoo/owl";
+import {ConfirmationDialog} from "@web/core/confirmation_dialog/confirmation_dialog";
+import {Dropdown} from "@web/core/dropdown/dropdown";
+import {DropdownItem} from "@web/core/dropdown/dropdown_item";
 import {_t} from "@web/core/l10n/translation";
 import {registry} from "@web/core/registry";
 import {ResizablePanel} from "@web/core/resizable_panel/resizable_panel";
 import {useService} from "@web/core/utils/hooks";
+import {useSetupAction} from "@web/search/action_hook";
 import {Layout} from "@web/search/layout";
 import {usePager} from "@web/search/pager_hook";
 import {downloadUrl, errorMessage} from "../utils.js";
 import {ViewerOverlay} from "./viewer_overlay.js";
-import {markers, shownFields, wrapIndex} from "./value_review_geometry.js";
+import {
+  chooseSuggestion,
+  initialRows,
+  isDirty,
+  removeRow,
+  rowMarkers,
+  typeText,
+  valuesToSave,
+} from "./value_review_edits.js";
+import {wrapIndex} from "./value_review_geometry.js";
 
 const NODE_MODEL = "int_filemanager.node";
 const VIEWER_URL = "/web/static/lib/pdfjs/web/viewer.html";
@@ -24,24 +37,37 @@ function isPdf(name) {
   return /\.pdf$/i.test(name || "");
 }
 
+// The ids come as a list from the menu and as "3,4,5" from the address after a reload.
+function parseIds(raw) {
+  const list = Array.isArray(raw) ? raw : String(raw || "").split(",");
+  return list.map(Number).filter((id) => id > 0);
+}
+
 export class IntFilemanagerV2ValueReview extends Component {
   static template = "int_filemanager.v2.ValueReview";
-  static components = {Layout, ResizablePanel};
+  static components = {Dropdown, DropdownItem, Layout, ResizablePanel};
   static props = ["*"];
 
   setup() {
     this.orm = useService("orm");
     this.notification = useService("notification");
+    this.dialog = useService("dialog");
     const params = (this.props.action && this.props.action.params) || {};
-    this.nodeIds = params.node_ids || [];
+    this.nodeIds = parseIds(params.node_ids);
     this.display = {controlPanel: {}};
     this.viewerRef = useRef("viewer");
     this.state = useState({
-      index: wrapIndex(params.index || 0, this.nodeIds.length),
+      index: wrapIndex(Number(params.index) || 0, this.nodeIds.length),
       status: "loading", // Loading | ready | pending | none | error
       name: "",
       message: "",
       data: null,
+      rows: [],
+      sender: null,
+      changedSender: false,
+      tags: [],
+      changedTags: false,
+      saving: false,
       activeFieldId: null,
       tab: "document",
     });
@@ -53,13 +79,27 @@ export class IntFilemanagerV2ValueReview extends Component {
       offset: this.state.index,
       limit: 1,
       total: this.nodeIds.length,
-      onUpdate: ({offset}) => {
-        this.state.index = wrapIndex(offset, this.nodeIds.length);
+      // Going on saves what was changed first, like the form view of Odoo.
+      onUpdate: async ({offset}) => {
+        if (await this.saveIfChanged()) {
+          this.state.index = wrapIndex(offset, this.nodeIds.length);
+        }
       },
     }));
+    useSetupAction({beforeLeave: (options) => this.confirmLeave(options)});
     useEffect(
       () => {
         this.load();
+      },
+      () => [this.state.index]
+    );
+    useEffect(
+      () => {
+        // A reload of the page comes back to the same files.
+        this.props.updateActionState?.({
+          node_ids: this.nodeIds.join(","),
+          index: String(this.state.index),
+        });
       },
       () => [this.state.index]
     );
@@ -75,7 +115,7 @@ export class IntFilemanagerV2ValueReview extends Component {
           this.overlay.setMarkers(this.markers);
         }
       },
-      () => [this.state.data]
+      () => [this.markerKey]
     );
     useEffect(
       () => {
@@ -114,13 +154,29 @@ export class IntFilemanagerV2ValueReview extends Component {
     return `${VIEWER_URL}?file=${file}#pagemode=none`;
   }
 
-  get fields() {
-    return this.state.data ? shownFields(this.state.data.fields) : [];
-  }
-
   get markers() {
     const data = this.state.data;
-    return data ? markers(data.fields, data.page_sizes) : [];
+    return data ? rowMarkers(this.state.rows, data.page_sizes) : [];
+  }
+
+  // Changes when a box has to move, appear or go: what the overlay effect watches.
+  get markerKey() {
+    return this.markers.map((m) => `${m.fieldId}:${m.box.left}:${m.box.top}`).join("|");
+  }
+
+  get isChanged() {
+    return isDirty(this.state.rows, {
+      changedSender: this.state.changedSender,
+      changedTags: this.state.changedTags,
+    });
+  }
+
+  get visibleRows() {
+    return this.state.rows.filter((row) => !row.removed);
+  }
+
+  get isReviewed() {
+    return this.state.data && this.state.data.review_state !== "unreviewed";
   }
 
   get panelWidth() {
@@ -132,20 +188,15 @@ export class IntFilemanagerV2ValueReview extends Component {
     return `o_int_filemanager_review_document${hidden ? " d-none" : ""}`;
   }
 
-  valueText(field) {
-    if (field.confirmed) {
-      return field.confirmed;
+  originText(row) {
+    if (row.touched && row.source === "manual") {
+      return _t("typed");
     }
-    const best = field.suggestions[0];
-    return best ? best.value.value_text : "";
-  }
-
-  originText(field) {
-    if (field.confirmed) {
+    if (row.confirmed && !row.touched) {
       return _t("Confirmed value");
     }
-    const best = field.suggestions[0];
-    if (!best) {
+    const chosen = row.suggestions.find((s) => s.start === row.start);
+    if (!chosen) {
       return "";
     }
     const how = {
@@ -156,12 +207,8 @@ export class IntFilemanagerV2ValueReview extends Component {
       above: _t("label above"),
       below: _t("label below"),
       unlabelled: _t("no label"),
-    }[best.direction];
-    return best.label ? `${best.label} (${how})` : how || "";
-  }
-
-  otherCount(field) {
-    return Math.max(field.suggestions.length - 1, 0);
+    }[chosen.direction];
+    return chosen.label ? `${chosen.label} (${how})` : how || "";
   }
 
   // ---------------------------------------------------------------- loading
@@ -176,6 +223,11 @@ export class IntFilemanagerV2ValueReview extends Component {
       Object.assign(this.state, {
         status: "loading",
         data: null,
+        rows: [],
+        sender: null,
+        changedSender: false,
+        tags: [],
+        changedTags: false,
         activeFieldId: null,
         message: "",
       });
@@ -192,6 +244,11 @@ export class IntFilemanagerV2ValueReview extends Component {
       this.env.config.setDisplayName?.(this.state.name);
       this.state.status = data.state;
       this.state.data = data.state === "ready" ? data : null;
+      if (data.state === "ready") {
+        this.state.rows = initialRows(data.fields);
+        this.state.sender = data.partner || null;
+        this.state.tags = data.tags || [];
+      }
       if (data.state === "pending" && polls < MAX_POLLS) {
         this.pollTimer = setTimeout(() => this.load(polls + 1), POLL_PENDING_MS);
       }
@@ -241,6 +298,98 @@ export class IntFilemanagerV2ValueReview extends Component {
 
   onSelectTab(tab) {
     this.state.tab = tab;
+  }
+
+  onType(row, text) {
+    typeText(row, text);
+  }
+
+  onChoose(row, suggestion) {
+    chooseSuggestion(row, suggestion);
+    this.onSelectField(row.fieldId);
+  }
+
+  onRemove(row) {
+    removeRow(row);
+  }
+
+  onRemoveSender() {
+    this.state.sender = null;
+    this.state.changedSender = true;
+  }
+
+  onRemoveTag(tag) {
+    this.state.tags = this.state.tags.filter((t) => t.id !== tag.id);
+    this.state.changedTags = true;
+  }
+
+  onDiscard() {
+    this.load();
+  }
+
+  async onSave() {
+    if (await this.save()) {
+      await this.load();
+    }
+  }
+
+  // ---------------------------------------------------------------- saving
+
+  /** Stores the rows; the server reads every text again with the type of its field. */
+  async save() {
+    const data = this.state.data;
+    if (!data || this.state.saving) {
+      return false;
+    }
+    this.state.saving = true;
+    try {
+      await this.orm.call(
+        NODE_MODEL,
+        "apply_field_values",
+        [this.nodeId, data.revision_id, valuesToSave(this.state.rows)],
+        {
+          partner_id: this.state.sender ? this.state.sender.id : false,
+          tag_ids: this.state.tags.map((tag) => tag.id),
+        }
+      );
+    } catch (error) {
+      this.notification.add(errorMessage(error), {type: "danger"});
+      return false;
+    } finally {
+      this.state.saving = false;
+    }
+    this.notification.add(_t("Values saved."), {type: "success"});
+    return true;
+  }
+
+  async saveIfChanged() {
+    return this.isChanged ? this.save() : true;
+  }
+
+  /** Asks before leaving with changes that were not saved: "Stay here" or "Discard". */
+  confirmLeave({forceLeave} = {}) {
+    if (forceLeave || !this.isChanged) {
+      return true;
+    }
+    return new Promise((resolve) => {
+      let leave = false;
+      this.dialog.add(
+        ConfirmationDialog,
+        {
+          title: _t("Unsaved changes"),
+          body: _t("The values you changed are not saved. Leave and discard them?"),
+          confirmLabel: _t("Discard changes"),
+          confirm: () => {
+            leave = true;
+          },
+          cancelLabel: _t("Stay here"),
+          cancel: () => {
+            leave = false;
+          },
+        },
+        {onClose: () => resolve(leave)}
+      );
+    });
   }
 }
 
