@@ -115,7 +115,7 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 - **Bewusster Eigenbau ohne Odoo-Gegenstück:** Wortflächen über der PDF-Seite, Kasten aufziehen/verschieben/skalieren, Hover
   Dokument ↔ Feldzeile. Alles andere folgt einem Odoo-Vorbild (Tabelle oben und Abschnitt 4).
 
-### 3.2 Bewusst offene Alternativen (Entscheidung vor U-3)
+### 3.2 Alternativen (entschieden 2026-09-30)
 
 **Kurzprobe im Browser 2026-09-30 (Test-Instanz `fmv2_ui`, nur zur Laufzeit, nichts geändert):**
 
@@ -131,7 +131,7 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
   Wortflächen auf echten Wortlisten, Handy.
 - *Formular am Knoten:* nicht erprobt.
 
-Empfehlung nach der Probe: Client-Aktion **und** Odoos Viewer mit Überlagerung.
+**Entschieden (Nutzer 2026-09-30, „so übernehmen“): eigene Client-Aktion (nicht Formular am Knoten) und Odoos pdf.js-Viewer mit Überlagerung (nicht eigene Leinwand).** Die Überlagerung wird per `MutationObserver` je Seite wieder eingehängt; Mehrseitigkeit, zweites Fenster und Handy werden in U-3/U-4 als Erstes im Browser bestätigt.
 
 - **Eigene Client-Aktion (gewählt, 4.1) oder echtes Odoo-Formular an `int_filemanager.node`** (mit eigenem Vorschau-Baustein):
   das Formular brächte Pager, Alt+N/P/S/J, Chatter und Handy-Anpassung geschenkt; nachteilig, weil unser Speichern über
