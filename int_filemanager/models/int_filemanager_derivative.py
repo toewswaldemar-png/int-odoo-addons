@@ -115,7 +115,7 @@ class IntFilemanagerDerivative(models.Model):
     error = fields.Char()
     # The text of a document (kinds "text" and "words"; for "words" the same text the
     # word positions in the result blob point into). Empty text means "none found".
-    text = fields.Text()
+    text = fields.Text(index="trigram")
     # The facts of a file (kind "meta"): everything the converter found, and the
     # ones worth filtering and sorting by as columns.
     meta = fields.Json()

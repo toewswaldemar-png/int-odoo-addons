@@ -12,6 +12,7 @@
         <field name="tag_ids" string="Tags" />
         <field name="status_id" />
         <field name="partner_id" />
+        <field name="content" string="Content" />
         <filter
           name="filter_folders"
           string="Folders only"

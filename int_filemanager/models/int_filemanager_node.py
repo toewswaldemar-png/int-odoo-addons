@@ -12,7 +12,8 @@ from markupsafe import Markup
 
 from odoo import Command, api, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import SQL
+from odoo.fields import Domain
+from odoo.tools import SQL, escape_psql
 from odoo.tools.mimetypes import guess_mimetype
 
 from .. import blobstore, fault, value_suggest, value_types
@@ -145,6 +146,9 @@ class IntFilemanagerNode(models.Model):
     is_visible_top = fields.Boolean(
         compute="_compute_is_visible_top", search="_search_is_visible_top"
     )
+    # Searchable only: the text read from the document (see the derivative's ``text``).
+    # It is never handed out, not even to someone who found the file by it.
+    content = fields.Char(compute="_compute_content", search="_search_content")
 
     @api.depends("parent_id", "scope_id", "parent_id.scope_id")
     def _compute_is_scope_root(self):
@@ -237,6 +241,38 @@ class IntFilemanagerNode(models.Model):
         top_ids = [row[0] for row in cr.fetchall()]
         # search() applies the caller's rights on top of this list of candidates.
         return [("id", "in" if (operator == "=") == value else "not in", top_ids)]
+
+    def _compute_content(self):
+        self.content = False
+
+    def _search_content(self, operator, value):
+        """Files whose read text contains every word of ``value``, in any order.
+
+        Only the current revision counts. The text is read as the superuser, but the
+        answer is a list of hits, which the caller's rights on the node then narrow
+        down like for any other field: nothing is revealed about files the caller
+        cannot see.
+        """
+        if operator not in ("ilike", "not ilike"):
+            raise UserError(self.env._("The content can only be searched for words."))
+        terms = str(value or "").split()
+        if not terms:
+            return Domain.TRUE if operator == "ilike" else Domain.FALSE
+        texts = (
+            self.env["int_filemanager.derivative"]
+            .sudo()
+            ._search(
+                [
+                    ("kind", "in", ("text", "words")),
+                    ("state", "=", "done"),
+                    *(("text", "ilike", escape_psql(term)) for term in terms),
+                ]
+            )
+        )
+        found = Domain(
+            "current_revision_id.blob_id", "in", texts.subselect("source_blob_id")
+        )
+        return found if operator == "ilike" else ~found
 
     @api.model
     def tree_children(self, parent_id):
