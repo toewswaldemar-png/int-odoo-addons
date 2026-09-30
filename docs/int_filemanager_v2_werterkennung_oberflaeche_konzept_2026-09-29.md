@@ -115,7 +115,23 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 - **Bewusster Eigenbau ohne Odoo-Gegenstück:** Wortflächen über der PDF-Seite, Kasten aufziehen/verschieben/skalieren, Hover
   Dokument ↔ Feldzeile. Alles andere folgt einem Odoo-Vorbild (Tabelle oben und Abschnitt 4).
 
-### 3.2 Bewusst offene Alternativen (Entscheidung vor U-3, nicht jetzt)
+### 3.2 Bewusst offene Alternativen (Entscheidung vor U-3)
+
+**Kurzprobe im Browser 2026-09-30 (Test-Instanz `fmv2_ui`, nur zur Laufzeit, nichts geändert):**
+
+- *Client-Aktion mit `Layout` und `usePager`:* funktioniert. Kopfzeile links „Speichern“/„Verwerfen“, daneben „Dateien › Jahresbescheid
+  Wasser.pdf“ (Ordner-Krumen des Explorers erscheinen nicht, wie vorhergesagt), rechts „1 / 17“ mit Pfeilen; Klick auf Weiter und Alt+N
+  blättern; `data-hotkey` s, j, b, n, p sind registriert. Reiter mit `d-none` umgeschaltet: das Element bleibt dasselbe (kein Neuaufbau).
+  Nicht geprüft: Handy-Breite, Speichern-Hinweis „Ungespeicherte Änderungen“.
+- *Odoos pdf.js-Viewer mit Überlagerung:* funktioniert. `PDFViewerApplication` ist aus der Odoo-Seite erreichbar (gleicher Ursprung);
+  ein Kasten in Prozent der Seite sitzt auf 1 px genau über dem Text (Textebene als Maßstab) und bleibt beim Zoomen richtig, **aber
+  pdf.js entfernt beim Neuzeichnen fremde Kinder aus der Seite** – die Überlagerung muss per `MutationObserver` wieder eingehängt
+  werden (das genügt; das Ereignis `pagerendered` kam in der Probe nicht an, `pagerender` schon). Ein mit der Maus aufgezogener Kasten
+  liefert direkt die relativen Werte für `suggest_field_values`. Nicht geprüft: mehrere Seiten mit Blättern/Entladen der Seiten, zweites Fenster,
+  Wortflächen auf echten Wortlisten, Handy.
+- *Formular am Knoten:* nicht erprobt.
+
+Empfehlung nach der Probe: Client-Aktion **und** Odoos Viewer mit Überlagerung.
 
 - **Eigene Client-Aktion (gewählt, 4.1) oder echtes Odoo-Formular an `int_filemanager.node`** (mit eigenem Vorschau-Baustein):
   das Formular brächte Pager, Alt+N/P/S/J, Chatter und Handy-Anpassung geschenkt; nachteilig, weil unser Speichern über
