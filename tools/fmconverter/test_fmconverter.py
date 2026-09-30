@@ -623,6 +623,31 @@ class ConverterTest(unittest.TestCase):
         )
         self.assertEqual(self.words(pdf)["text"], "Antrag auf Leistung 2026\nErika")
 
+    def test_a_field_and_a_word_at_the_same_place_share_one_frame(self):
+        import pikepdf
+
+        # The page box does not start at the origin; whatever the frame of the words is
+        # for such a page, the field must be in the same one.
+        pdf = pikepdf.open(io.BytesIO(self.make_pdf("Kundennummer und Datum")))
+        pdf.pages[0].MediaBox = [50, 50, 645, 892]
+        widget = pdf.make_indirect(
+            pikepdf.Dictionary(
+                Type=pikepdf.Name.Annot, Subtype=pikepdf.Name.Widget, FT=pikepdf.Name.Tx,
+                T=pikepdf.String("f"), V=pikepdf.String("Wert"),
+                # starts where the text does (x 72), a little above its line (y 700)
+                Rect=[72, 730, 172, 750], F=4,
+            )
+        )  # fmt: skip
+        pdf.pages[0].Annots = pikepdf.Array([widget])
+        pdf.Root.AcroForm = pdf.make_indirect(pikepdf.Dictionary(Fields=[widget]))
+        buf = io.BytesIO()
+        pdf.save(buf)
+        result = self.words(buf.getvalue())
+        label = self.word(result, "Kundennummer")
+        value = self.word(result, "Wert")
+        self.assertEqual(value[1], label[1])
+        self.assertLess(value[2], label[2])
+
     def test_a_broken_form_does_not_stop_the_text(self):
         pdf = self.make_form_pdf(
             [
