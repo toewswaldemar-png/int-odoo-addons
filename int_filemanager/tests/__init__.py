@@ -32,3 +32,4 @@ from . import test_v2_field_value_suggest
 from . import test_v2_field_value_apply
 from . import test_v2_field_value_http
 from . import test_v2_content_search
+from . import test_v2_pg_extensions

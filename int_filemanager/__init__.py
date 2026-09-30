@@ -1,6 +1,7 @@
 from . import controllers
 from . import models
 from . import watcher
+from .pg_extensions import pre_init_hook  # noqa: F401
 
 
 def post_load():

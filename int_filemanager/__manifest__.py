@@ -1,11 +1,12 @@
 {
     "name": "Filemanager",
     "summary": "File manager with versions, trash, rights and ONLYOFFICE editing.",
-    "version": "19.0.1.18.0",
+    "version": "19.0.1.19.0",
     "category": "Productivity",
     "author": "Waldemar Toews",
     "license": "LGPL-3",
     "depends": ["base", "bus", "mail", "portal", "onlyoffice_odoo"],
+    "pre_init_hook": "pre_init_hook",
     "post_load": "post_load",
     "post_init_hook": "post_init_hook",
     "data": [
