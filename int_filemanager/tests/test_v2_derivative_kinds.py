@@ -251,32 +251,41 @@ class TestKindsQueue(DerivativeCase):
 
     def test_rows_of_an_older_spec_are_replaced(self):
         """A new word list format (or thumbnail size) must reach files that already
-        have the old one: the old row is dropped and the current one made."""
+        have the old one: the current row is made, then the old row goes."""
         paper = self._file("paper.pdf", b"pdf bytes")
         self._run()
         current = self._rows(paper)["words"]
         old_result = current.derived_blob_id
         current.spec = "v0-older"
         self.env.flush_all()
+        blob = paper.current_revision_id.blob_id.id
+        words = [("source_blob_id", "=", blob), ("kind", "=", "words")]
         with self.subTest("the old row does not count as the planned one"):
             self.Derivative._enqueue_missing()
-            specs = self.Derivative.search(
-                [
-                    ("source_blob_id", "=", paper.current_revision_id.blob_id.id),
-                    ("kind", "=", "words"),
-                ]
-            ).mapped("spec")
+            specs = self.Derivative.search(words).mapped("spec")
             self.assertEqual(sorted(specs), sorted([plan.WORDS_SPEC, "v0-older"]))
+        with self.subTest("the old row stays while the current one is not finished"):
+            self.Derivative._drop_outdated_jobs()
+            self.assertEqual(
+                sorted(self.Derivative.search(words).mapped("spec")),
+                sorted([plan.WORDS_SPEC, "v0-older"]),
+            )
         self._run()
-        rows = self.Derivative.search(
-            [
-                ("source_blob_id", "=", paper.current_revision_id.blob_id.id),
-                ("kind", "=", "words"),
-            ]
-        )
-        self.assertEqual(rows.mapped("spec"), [plan.WORDS_SPEC])
-        self.assertEqual(rows.state, "done")
+        with self.subTest("the old row goes once the current one is finished"):
+            self.Derivative._drop_outdated_jobs()
+            rows = self.Derivative.search(words)
+            self.assertEqual(rows.mapped("spec"), [plan.WORDS_SPEC])
+            self.assertEqual(rows.state, "done")
         self.assertTrue(old_result.exists())  # only the blob cleanup removes blobs
+
+    def test_an_unfinished_row_of_an_older_spec_goes_at_once(self):
+        paper = self._file("paper.pdf", b"pdf bytes")
+        self.Derivative._enqueue_missing()
+        job = self._rows(paper)["words"]
+        job.spec = "v0-older"
+        self.assertEqual(job.state, "pending")
+        self.Derivative._drop_outdated_jobs()
+        self.assertFalse(job.exists())
 
     def test_a_running_row_of_an_older_spec_is_left_until_it_answered(self):
         paper = self._file("paper.pdf", b"pdf bytes")
@@ -285,7 +294,7 @@ class TestKindsQueue(DerivativeCase):
         job.write({"spec": "v0-older", "state": "running"})
         self.Derivative._drop_outdated_jobs()
         self.assertTrue(job.exists())
-        job.state = "done"
+        job.state = "failed"
         self.Derivative._drop_outdated_jobs()
         self.assertFalse(job.exists())
 

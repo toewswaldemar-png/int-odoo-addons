@@ -279,7 +279,9 @@ class IntFilemanagerDerivative(models.Model):
 
         Their replacement is queued by ``_enqueue_missing``; a result blob that was only
         theirs is left without a reference and goes with the blob cleanup. Rows still
-        running are left until the converter answered.
+        running are left until the converter answered. A finished row stays until the
+        current row of its kind is finished too, so the text search keeps finding the
+        file while it is read again.
         """
         self.env.flush_all()
         kinds, specs = zip(*derivative_plan.CURRENT_JOBS, strict=True)
@@ -287,13 +289,20 @@ class IntFilemanagerDerivative(models.Model):
             """
             DELETE FROM int_filemanager_derivative
             WHERE id IN (
-                SELECT id FROM int_filemanager_derivative
-                WHERE state != 'running'
-                  AND (kind, spec) NOT IN (
+                SELECT old.id FROM int_filemanager_derivative old
+                WHERE old.state != 'running'
+                  AND (old.kind, old.spec) NOT IN (
                       SELECT * FROM unnest(%s::text[], %s::text[]))
+                  AND (old.state != 'done' OR EXISTS (
+                      SELECT 1 FROM int_filemanager_derivative new
+                      WHERE new.source_blob_id = old.source_blob_id
+                        AND new.kind = old.kind
+                        AND (new.kind, new.spec) IN (
+                            SELECT * FROM unnest(%s::text[], %s::text[]))
+                        AND new.state IN ('done', 'not_applicable')))
                 LIMIT %s)
             """,
-            [list(kinds), list(specs), ENQUEUE_BATCH],
+            [list(kinds), list(specs), list(kinds), list(specs), ENQUEUE_BATCH],
         )
         self.env.invalidate_all()
 
