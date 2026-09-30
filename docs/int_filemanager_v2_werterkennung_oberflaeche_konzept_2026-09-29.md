@@ -128,6 +128,11 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 - **Markierung (N6):** alle gefundenen Werte im Dokument dezent umrandet; das gerade gezeigte oder gewählte Feld wird
   kräftig hervorgehoben, das Dokument scrollt dorthin (auch auf eine andere Seite); Hover im Dokument hebt umgekehrt
   die Zeile rechts hervor. Keine feste Farbe je Feld.
+- **Feldnamen im Dokument (N10, Nutzer 2026-09-30):** In der Werkzeugleiste ein Schalter **„Feldnamen einblenden“**. Voreinstellung: kleine
+  Namensmarke über der Umrandung **nur bei bereits einem Feld zugeordneten Werten**; nicht zugeordnete Umrandungen bleiben ohne
+  Namen; der aktive Wert zeigt seinen Namen immer gut lesbar. Schalter aus: Namen nur bei Hover und beim aktiven Feld (wie oben).
+  Marken überdecken sich bei dichten Dokumenten – deshalb an einem Muster mit vielen Werten (Rechnung, Bescheid) auf
+  Lesbarkeit prüfen, bevor die Voreinstellung feststeht; Umsetzung in Scheibe U-4.
 
 ### 4.3 Die drei Werkzeuge im Dokument
 
@@ -250,6 +255,8 @@ Eingangsordner neu entscheiden. Vorschlag:
 
 ## 8. Entscheidungen (U1–U9 getroffen; N1–N8 in 10.5 und N9 in 10.7, ebenfalls entschieden)
 
+- ~~**N10**~~ **entschieden (Nutzer 2026-09-30): Feldnamen über den Umrandungen einblenden, per Schalter** (Voreinstellung: nur bei
+  zugeordneten Werten und beim aktiven Feld) – Einzelheiten und Vorbehalt in 4.2 („Feldnamen im Dokument“).
 - ~~**U1**~~ **entschieden:** automatisch übernehmen wie in 6.3 (Schalter je Absender, erst mit Eingangsordner, nur
   eindeutig, Vermerk „automatisch übernommen“ + Filter „automatisch, nie angesehen“ + Notiz).
 - ~~**U2**~~ **entschieden (Nutzer 2026-09-29): nur Verwalter** legen Felder direkt an; normale Nutzer „Feld
