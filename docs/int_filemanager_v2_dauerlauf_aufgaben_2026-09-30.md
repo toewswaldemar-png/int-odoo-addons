@@ -40,10 +40,16 @@ Reihenfolge = Priorität. Kästchen `[ ]` offen, `[x]` fertig (mit Commit-Hash u
   auf Tower aufsetzen (Präfix `dl_`), Szenarien laufen lassen, Ergebnis in Übergabe 4.0 eintragen, aufräumen.
   Fertig, wenn: alle Szenarien grün oder jede rote Stelle mit Ursache dokumentiert.
   **Ergebnis (Commit siehe Log, Basis 1eec795):** Alle 17 Szenarien grün (Kopie von `race.sh` mit `dl_`-Namen, ca. 3 min 45 s), aufgeräumt, in Übergabe eingetragen.
-- [ ] **A2 Testlücken Schritt 3 klären.** `lock_timeout_triggers_retry` (fehlende „Sperre halten“-Stufe in `tests/tower/fault.py`)
+- [x] **A2 Testlücken Schritt 3 klären.** `lock_timeout_triggers_retry` (fehlende „Sperre halten“-Stufe in `tests/tower/fault.py`)
   und `move_against_delete` (`trash()` ohne `fault_point`) sowie A4 (Aufräumjob ohne Auslöser): je Lücke Lösung mit
   Alternativen und Aufwand als Entwurf beschreiben. Nur reinen Testcode (`fault.py`, Treiber) darf Claude ändern; alles, was
   Produktivcode berührt, wird nur vorgeschlagen. Fertig, wenn: Entwurf mit Empfehlung je Lücke liegt.
+  **Ergebnis (Dauerlauf 2026-09-30, kein Entwurf nötig):** Alle drei Lücken sind schon geschlossen, die Aufgabenbeschreibung war veraltet.
+  (1) `lock_timeout_triggers_retry`: `fault.py` (liegt im Modul, nicht unter `tests/tower/`) hat die Stufe `hold:<Sekunden>`; das Szenario ist grün und
+  prüft, dass der Verlierer mindestens die Sperr-Wartezeit gewartet hat. (2) `move_against_delete`: `trash()` ruft `fault_point("node_tree_before_write")`
+  auf; das Szenario war vor dem Fix rot (echter Fehler), jetzt grün. (3) Aufräumjob (Konzept-Prüfpunkt A4, `blob_gc_against_reuse`): läuft als zweiter
+  `odoo shell`-Prozess mit `hold` am Schreiber, grün. Beleg: `int_filemanager/tests/tower/README.md` und der Lauf von A1 (alle 17 Szenarien grün).
+  Nichts zu entscheiden, nichts geändert außer diesem Eintrag.
 - [ ] **A3 Konzept Abschnitt 11, Punkte 1–3 als Entwurf** (Datenmodell im Detail, Rechte je neuem Aufruf, Leistung): am Odoo-Code
   und mit Messungen auf Tower an Wegwerf-Daten belegen; Alternativen zeigen; Abdeckung angeben. Ergebnis:
   `docs/int_filemanager_v2_werterkennung_denkpunkte_entwurf_2026-09-30.md`. Fertig, wenn: jeder Unterpunkt Vorschlag, Beleg
