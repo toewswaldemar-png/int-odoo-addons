@@ -10,6 +10,29 @@ schon Vorschläge je Feld mit Fundstelle, bestätigt, lernt je Absender – es f
 11 eingearbeitet, gekennzeichnet mit „(Odoo-Abgleich)“. Nutzer 2026-09-30: **Brotkrumen und Tastaturkürzel nach Odoo-Art**
 (N11, N12 in Abschnitt 10.8). U-1 (Volltextsuche, Formularfelder) ist fertig.
 
+## 0. Änderungswünsche nach dem ersten Blick auf die Oberfläche (2026-09-30, gilt vor allem anderen)
+
+Der Nutzer hat U-3 (Prüf-Fenster) im Browser gesehen und ein Kontaktformular von Odoo als Gegenbeispiel gezeigt: **die Oberfläche
+sieht nicht nach Odoo aus, es wird viele Änderungen geben.** Bis zur Bestätigung gilt nichts hiervon als umgesetzt.
+
+**Abweichungen zum Kontaktformular (Befund):** (1) Eingabefelder sind eckige Kästen (`form-control`), Odoo hat flache Felder mit
+Linie darunter (`o_input`) und echte Feld-Bausteine (Datum, Betrag, Kontakt); (2) Beschriftungsspalte hat keine feste Breite, die Felder
+beginnen an verschiedenen Stellen (Odoo: `o_group`/`o_inner_group`/`o_wrap_label`); (3) Abstände zu eng, Trennlinien zwischen Zeilen,
+Schrift zu klein; (4) Kopfzeile: Odoo zeigt den Namen groß, Speichern/Verwerfen als Symbole (Wolke, Kreuz) und keinen Text
+„Nicht gespeicherte Änderungen“; (5) Status als Pille statt Statusleiste/Ribbon; (6) Chatter fehlt. Ursache: U-3b nahm bewusst die
+Abkürzung mit einfachen Textfeldern statt der `Record`-Felder, die Abschnitt 4.4 verlangt.
+
+**Grober Rahmen (Vorschlag, Nutzer wollte zuerst den Rahmen, „Kleinigkeiten“ danach – Bestätigung steht aus):**
+- Odoo-Muster `COMBO` (aus `mail/.../chatter/web/form_renderer.js`, ab 1400 px): **Formular links, Dokument-Vorschau rechts an der
+  Seite, Chatter unten unter dem Formular.** (Korrektur: Abschnitt 3 und 4.2 sowie der Abgleich sprachen von „Vorschau links“ – Odoo setzt
+  sie an die Seite, in der Regel rechts; beim Bauen gegen eine echte Odoo-Rechnung prüfen.)
+- **Links Formular** im Kontaktformular-Aufbau, **rechts Odoos pdf.js-Viewer** (Trennlinie ziehbar, anfangs etwa halbe/halbe),
+  **Chatter optional**: standardmäßig aus, Knopf (Sprechblase) in der Kopfzeile blendet ihn unter dem Formular ein, Einstellung im Browser
+  merken. Er zeigt das Protokoll der Datei (bestätigte Werte, Notizen). Schmal/Handy: Reiter Werte | Dokument, Chatter darunter.
+- Anders als Odoo: Vorschau immer sichtbar (nicht erst ab 1400 px).
+- **Danach (Kleinigkeiten):** Feldstil über echte Odoo-Felder (`Record`, Weg B), Kopfzeile mit Symbolen und großem Namen (explizites Speichern
+  bleibt, Alt+S/Alt+J), Statusleiste statt Pille, Herkunft/Alternativen/Entfernen als kleine Zeile und Symbole.
+
 ## 1. Anlass und Nutzerentscheidungen
 
 Nach drei Übungsrunden (86 % richtige Vorschläge, 88 % gefunden) der Befund des Nutzers: *„Mir scheint es effektiver,

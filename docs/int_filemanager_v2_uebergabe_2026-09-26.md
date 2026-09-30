@@ -167,6 +167,21 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
      Stichwörter lesen“. Konzept: `docs/int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`
      (Entscheidungen K1–K5 und U1–U9 alle getroffen, Vorbilder, geprüfte Odoo-Bausteine, Scheiben U-1…U-10 beginnend mit der Volltextsuche, Nachtrag PaperOffice AI). **Noch nicht freigegeben, nichts
      umgesetzt** – Vollständigkeitsrunde (Abschnitt 10: Abdeckung, Versuche an allen 513 PDFs, Codex-Gegenlese) ergab neue Fragen N1–N8 (u. a. Formularfeld-Lücke im Umwandler, QR nur 2/513) – N1–N9 am 2026-09-29 alle entschieden (N9: eigene Modelle plus echte Spalte je Katalogfeld) – **Sitzungsende 2026-09-29: keine Freigabe**, Nutzer will das Konzept weiter durchdenken. **Einstieg neue Sitzung:** Konzept lesen (Abschnitte 1, 4, 7, 8, 10, 11), mit den offenen Punkten aus **Abschnitt 11** weitermachen (Datenmodell im Detail, Rechte, Leistung, Oberflächen-Zustände, Abnahme je Scheibe, v1-Übergang, Übersetzung, Eingangsordner); **nichts umsetzen** vor der Freigabe. Arbeitsweise laut Nutzer: Abdeckung offenlegen (vollständig vs. Stichprobe), Alternativen zeigen, Fragen einzeln durchgehen. Kleinigkeit: zwei Knotenfelder mit Bezeichnung „Created on“ (`create_date`, `mtime`).
+   - **EINSTIEG neue Sitzung (Stand 2026-09-30 abends, alles gepusht bis 98b69ff, Branch `feature/int-filemanager-v2`):**
+     U-1, U-2, U-3a/b/c gebaut (Volltextsuche, Kästen/Markierung im Server, Prüf-Fenster lesen/bearbeiten/speichern/anklicken);
+     Codex-Gegenlese von U-1+U-2 erledigt und eingearbeitet (f9f6c97). **Der Nutzer hat die Oberfläche gesehen: sie sieht nicht nach
+     Odoo aus, viel wird sich ändern.** Erst das lesen: Konzept-Abschnitt „0. Änderungswünsche nach dem ersten Blick“
+     (`docs/int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`). Nächster Schritt: Nutzer bestätigt den groben
+     Rahmen (Formular links, Vorschau rechts, Chatter optional), dann Rahmen umbauen, dann Feldstil (Odoo-Felder über `Record`),
+     Kopfzeile, Statusleiste. **U-4 (Kasten-Werkzeug) noch nicht anfangen**, erst der Rahmen. Arbeitsweise: nur kurze Tests
+     (gezielte Klassen, Node-JS-Tests, jscheck), Oberfläche im Browser auf der Test-Instanz ansehen; volle Suite/v2check nur bei
+     Server-Änderungen oder am Ende. Test-Instanz: `http://192.168.188.67:8085` (`tools/v2check/ui_instance.sh` aktualisiert sie mit dem
+     Arbeitsstand; Login `cat /mnt/user/appdata/fmtest/v2ui/LOGIN.txt` auf Tower – der Nutzer tippt das Passwort selbst), Ordner „Test“ mit
+     „Bescheid A/B/C.pdf“ (selbst erzeugt, ungefährlich). Offene Entscheidungen: Mindestlänge Suchwörter der Inhaltssuche
+     (Wörter < 3 Zeichen nutzen den Trigram-Index nicht), Dublette-/Plausibilitätshinweise (Katalogfelder brauchen feste Bedeutung).
+     Stolpersteine: Odoo 19 Community hat keine `--bs-*`-Farbvariablen zur Laufzeit (Farben über Klassen `text-action`/`text-muted`
+     lesen); pdf.js entfernt fremde Kinder einer Seite beim Neuzeichnen (MutationObserver in `viewer_overlay.js`); die Bash-Werkzeug-
+     Heredocs mit `'''` brechen – Dateien mit dem Schreibwerkzeug ändern.
    - **Stand 2026-09-30:** U-1 fertig (Volltextsuche, Formularfelder); Entscheidungen dazu: kein zweiter Index für häufige Wörter,
      alte Wortlisten bleiben bis zum Ersatz (umgesetzt), Codex-Gegenlesen von U-1 steht noch aus (Codex-Limit bis 12:30). Der
      Odoo-Abgleich der Oberfläche ist im Konzept eingearbeitet (Abschnitte 3.1, 3.2, 4, 10.8): Brotkrumen „Dateien › Name“ und
