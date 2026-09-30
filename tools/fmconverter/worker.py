@@ -23,6 +23,7 @@ its own, generous timeout) - everything else is expected to finish in a few seco
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -79,6 +80,14 @@ SCANNED_DOCUMENT_PAGE_SHARE = 0.5
 # columns; it becomes a tab in the text so that a value is never read across it.
 COLUMN_GAP_HEIGHTS = 1.5
 WORDS_FORMAT_VERSION = 2
+# Form fields whose value is text: "Tx" (a text box) and "Ch" (a list or combo box).
+# "Btn" (check box, radio button) holds a name, not text; "Sig" is a signature.
+FORM_TEXT_FIELD_TYPES = {"Tx", "Ch"}
+# Annotation flags that keep a field off the page (hidden, not shown) and the field
+# flag of a password box: their values are not part of what the page says.
+ANNOTATION_HIDDEN_FLAGS = 0b100010
+FIELD_PASSWORD_FLAG = 1 << 13
+MAX_FORM_FIELDS_PER_PAGE = 5000
 # A document longer than this is refused rather than OCR'd for hours.
 MAX_OCR_PAGES = int(os.environ.get("CONVERTER_MAX_OCR_PAGES", "2000"))
 MAX_WORDS = 500_000
@@ -529,7 +538,8 @@ def _read_pdf(pdf_path):
     of each page, ``words`` one ``[page, x0, top, x1, bottom, start, end]`` per word,
     where ``text[start:end]`` is the word - so positions never have to be worked out
     again from how the text was put together. Lines are separated by a line break,
-    columns by a tab, pages by a form feed.
+    columns by a tab, pages by a form feed. The values of filled-in form fields
+    follow the text of their page, each on lines of its own.
     """
     import pdfplumber
 
@@ -551,10 +561,11 @@ def _read_pdf(pdf_path):
                 chunks.append("\f")
                 offset += 1
             previous = None
+            form_words = _form_field_words(page)
             page = _dedupe_chars(page)
-            for w in page.extract_words(use_text_flow=False):
+            for w in page.extract_words(use_text_flow=False) + form_words:
                 if previous is not None:
-                    separator = _separator(previous, w)
+                    separator = "\n" if w.get("line_start") else _separator(previous, w)
                     chunks.append(separator)
                     offset += len(separator)
                 # A NUL would be dropped on the way into the database and shift every
@@ -578,6 +589,105 @@ def _read_pdf(pdf_path):
                 if offset >= MAX_TEXT_CHARS:
                     break
     return pages, "".join(chunks)[:MAX_TEXT_CHARS], words, scanned
+
+
+def _inherited(data, key):
+    """A form field's entry: its own, else the one of the nearest parent that has it."""
+    from pdfminer.pdftypes import resolve1
+
+    for _level in range(32):
+        if not isinstance(data, dict):
+            return None
+        if key in data:
+            return resolve1(data[key])
+        data = resolve1(data.get("Parent"))
+    return None
+
+
+def _pdf_text(value):
+    """Text of a PDF string: UTF-16 or UTF-8 with a byte order mark, else Latin-1."""
+    if isinstance(value, str):
+        return value
+    if not isinstance(value, bytes):
+        return ""
+    if value.startswith(b"\xfe\xff"):
+        return value[2:].decode("utf-16-be", errors="replace")
+    if value.startswith(b"\xff\xfe"):
+        return value[2:].decode("utf-16-le", errors="replace")
+    if value.startswith(b"\xef\xbb\xbf"):
+        return value[3:].decode("utf-8", errors="replace")
+    try:
+        return value.decode("utf-8")
+    except UnicodeDecodeError:
+        return value.decode("latin-1")
+
+
+def _form_value(data):
+    """What a text or choice field shows, or "" (empty, hidden, a password, not text)."""
+    from pdfminer.pdftypes import resolve1
+
+    field_type = getattr(_inherited(data, "FT"), "name", None)
+    if field_type not in FORM_TEXT_FIELD_TYPES:
+        return ""
+    if (resolve1(data.get("F")) or 0) & ANNOTATION_HIDDEN_FLAGS:
+        return ""
+    if (_inherited(data, "Ff") or 0) & FIELD_PASSWORD_FLAG:
+        return ""
+    value = _inherited(data, "V")
+    values = value if isinstance(value, list) else [value]
+    # A list box or combo box stores the value a program reads, and shows the text
+    # next to it in the options.
+    shown = {}
+    for option in _inherited(data, "Opt") or []:
+        option = resolve1(option)
+        if isinstance(option, list) and len(option) == 2:
+            shown[_pdf_text(resolve1(option[0]))] = _pdf_text(resolve1(option[1]))
+    texts = [_pdf_text(resolve1(v)) for v in values]
+    return "\n".join(shown.get(text, text) for text in texts)
+
+
+def _form_field_words(page):
+    """The typed-in values of the page's form fields as words, each in its field's box.
+
+    A filled-in form keeps its values apart from the page's text, so reading the
+    text alone misses them. The box is the field's own, in the same picture of the
+    page as the words (turned pages included), so a value can be located like any
+    word. A value of several words or lines is split up within its box in proportion
+    to the characters, as no program knows where it really ends up. Fields come in
+    reading order, each value on lines of its own.
+    """
+    try:
+        annotations = page.annots
+    except Exception:  # noqa: BLE001 - a damaged annotation table must not lose the text
+        return []
+    fields = []
+    for annotation in annotations[:MAX_FORM_FIELDS_PER_PAGE]:
+        try:
+            data = annotation["data"]
+            left, right = annotation["x0"], annotation["x1"]
+            top, bottom = annotation["top"], annotation["bottom"]
+            value = _form_value(data)
+        except Exception:  # noqa: BLE001 - one odd field must not lose the others
+            continue
+        lines = [line.strip() for line in value.splitlines() if line.strip()]
+        if lines and right > left and bottom > top:
+            fields.append((round(top), left, right, top, bottom, lines))
+    words = []
+    for _row, left, right, top, bottom, lines in sorted(fields, key=lambda f: f[:2]):
+        line_height = (bottom - top) / len(lines)
+        for number, line in enumerate(lines):
+            for match in re.finditer(r"\S+", line):
+                words.append(
+                    {
+                        "text": match.group(),
+                        "x0": left + (right - left) * match.start() / len(line),
+                        "x1": left + (right - left) * match.end() / len(line),
+                        "top": top + number * line_height,
+                        "bottom": top + (number + 1) * line_height,
+                        "line_start": match.start() == 0,
+                    }
+                )
+    return words
 
 
 def _pdf_page_count(source):

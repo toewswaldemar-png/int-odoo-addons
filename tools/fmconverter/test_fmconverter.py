@@ -179,6 +179,47 @@ class ConverterTest(unittest.TestCase):
         image.save(buf, "PDF", resolution=150.0)
         return buf.getvalue()
 
+    def make_form_pdf(self, fields, rotate=0, text="Antrag auf Leistung 2026"):
+        """A PDF with form fields drawn as PDF viewers store them.
+
+        Each field is ``(name, type, value, rect)`` (``type`` "Tx", "Ch" or "Btn"; ``rect``
+        in PDF points from the lower left), or a dict with more entries of the field.
+        """
+        import pikepdf
+
+        pdf = pikepdf.open(io.BytesIO(self.make_pdf(text)))
+        if rotate:
+            pdf.pages[0].Rotate = rotate
+        widgets = []
+        for field in fields:
+            if isinstance(field, tuple):
+                name, kind, value, rect = field
+                field = {"T": name, "FT": kind, "V": value, "Rect": rect}
+            widget = pikepdf.Dictionary(
+                Type=pikepdf.Name.Annot, Subtype=pikepdf.Name.Widget, F=4
+            )
+            for key, value in field.items():
+                if key == "FT":
+                    widget.FT = pikepdf.Name("/" + value)
+                elif key == "V" and isinstance(value, str) and value.startswith("/"):
+                    widget.V = pikepdf.Name(value)
+                elif key in ("V", "T") and isinstance(value, bytes | str):
+                    widget[pikepdf.Name("/" + key)] = pikepdf.String(value)
+                elif key == "Opt":
+                    widget.Opt = pikepdf.Array(
+                        [pikepdf.Array([pikepdf.String(x) for x in o]) for o in value]
+                    )
+                else:
+                    widget[pikepdf.Name("/" + key)] = value
+            widgets.append(pdf.make_indirect(widget))
+        pdf.pages[0].Annots = pdf.make_indirect(pikepdf.Array(widgets))
+        pdf.Root.AcroForm = pdf.make_indirect(
+            pikepdf.Dictionary(Fields=pikepdf.Array(widgets))
+        )
+        buf = io.BytesIO()
+        pdf.save(buf)
+        return buf.getvalue()
+
     def make_scan_with_scanner_text(self, picture_text, hidden_text):
         """A scan whose scanner already added (wrong) invisible text, like many do."""
         import pikepdf
@@ -408,6 +449,181 @@ class ConverterTest(unittest.TestCase):
         self.assertEqual(result["ocr"], "none")
         self.assertIn("Zaehlernummer 44 450 7-5 148 621", result["text"])
         self.assert_ranges_match_the_text(result)
+
+    def test_filled_form_fields_are_part_of_the_text_and_words(self):
+        pdf = self.make_form_pdf(
+            [
+                ("name", "Tx", "Erika Mustermann", (200, 690, 400, 710)),
+                ("id", "Tx", "300/0154989/5/25", (200, 640, 400, 660)),
+            ]
+        )
+        result = self.words(pdf)
+        self.assert_ranges_match_the_text(result)
+        self.assertEqual(
+            result["text"], "Antrag auf Leistung 2026\nErika Mustermann\n300/0154989/5/25"
+        )
+        page, x0, top, x1, bottom, _start, _end = self.word(result, "Erika")
+        self.assertEqual(page, 1)
+        # The field's box in the picture of the page: from the top, not the bottom.
+        self.assertEqual((x0, top, bottom), (200.0, 842 - 710.0, 842 - 690.0))
+        _page, x0, top, x1, bottom, _start, _end = self.word(result, "Mustermann")
+        self.assertGreater(x0, 200.0)
+        self.assertEqual(x1, 400.0)
+        # A value that is one word keeps the whole width of its field.
+        _page, x0, top, x1, bottom, _start, _end = self.word(result, "300/0154989/5/25")
+        self.assertEqual((x0, x1, top, bottom), (200.0, 400.0, 182.0, 202.0))
+
+    def test_a_pdf_without_a_form_is_read_as_before(self):
+        pdf = self.make_pdf("Hello converter, digital page")
+        with_empty_form = self.make_form_pdf(
+            [("name", "Tx", "", (200, 690, 400, 710))], text="Hello converter, digital page"
+        )
+        self.assertEqual(self.words(pdf)["text"], "Hello converter, digital page")
+        self.assertEqual(self.words(with_empty_form)["text"], "Hello converter, digital page")
+
+    def test_a_choice_field_gives_the_shown_text_not_the_stored_value(self):
+        pdf = self.make_form_pdf(
+            [
+                {
+                    "T": "country",
+                    "FT": "Ch",
+                    "V": "de",
+                    "Opt": [("de", "Deutschland"), ("fr", "Frankreich")],
+                    "Rect": [200, 690, 400, 710],
+                }
+            ]
+        )
+        self.assertEqual(self.words(pdf)["text"], "Antrag auf Leistung 2026\nDeutschland")
+
+    def test_check_boxes_and_radio_buttons_are_ignored(self):
+        pdf = self.make_form_pdf(
+            [
+                ("agree", "Btn", "/Yes", (200, 690, 220, 710)),
+                ("kind", "Btn", "/Option2", (200, 640, 220, 660)),
+                ("name", "Tx", "Erika", (200, 590, 400, 610)),
+            ]
+        )
+        result = self.words(pdf)
+        self.assertEqual(result["text"], "Antrag auf Leistung 2026\nErika")
+
+    def test_hidden_and_password_fields_are_ignored(self):
+        pdf = self.make_form_pdf(
+            [
+                {"T": "hidden", "FT": "Tx", "V": "Versteckt", "Rect": [1, 1, 99, 20], "F": 2},
+                {"T": "secret", "FT": "Tx", "V": "Passwort", "Rect": [1, 30, 99, 50], "Ff": 1 << 13},
+                ("shown", "Tx", "Sichtbar", (200, 690, 400, 710)),
+            ]
+        )
+        self.assertEqual(self.words(pdf)["text"], "Antrag auf Leistung 2026\nSichtbar")
+
+    def test_a_value_kept_in_the_parent_field_is_found(self):
+        import pikepdf
+
+        pdf = pikepdf.open(io.BytesIO(self.make_pdf("Antrag auf Leistung 2026")))
+        parent = pdf.make_indirect(
+            pikepdf.Dictionary(
+                FT=pikepdf.Name.Tx, T=pikepdf.String("parent"), V=pikepdf.String("Geerbt")
+            )
+        )
+        kid = pdf.make_indirect(
+            pikepdf.Dictionary(
+                Type=pikepdf.Name.Annot, Subtype=pikepdf.Name.Widget, Parent=parent,
+                Rect=[200, 690, 400, 710], F=4,
+            )
+        )  # fmt: skip
+        parent.Kids = pikepdf.Array([kid])
+        pdf.pages[0].Annots = pikepdf.Array([kid])
+        pdf.Root.AcroForm = pdf.make_indirect(pikepdf.Dictionary(Fields=[parent]))
+        buf = io.BytesIO()
+        pdf.save(buf)
+        self.assertEqual(self.words(buf.getvalue())["text"], "Antrag auf Leistung 2026\nGeerbt")
+
+    def test_form_values_in_utf16_and_latin1_are_decoded(self):
+        utf16 = b"\xfe\xff" + "M\u00fcller \u20ac".encode("utf-16-be")
+        pdf = self.make_form_pdf(
+            [
+                ("a", "Tx", utf16, (200, 690, 400, 710)),
+                ("b", "Tx", "Gr\u00fc\u00dfe".encode("latin-1"), (200, 640, 400, 660)),
+            ]
+        )
+        self.assertEqual(
+            self.words(pdf)["text"],
+            "Antrag auf Leistung 2026\nM\u00fcller \u20ac\nGr\u00fc\u00dfe",
+        )
+
+    def test_a_value_with_several_lines_and_words_is_split_within_its_box(self):
+        pdf = self.make_form_pdf(
+            [("address", "Tx", "Musterweg 1\r12345 Stadt", (200, 600, 400, 640))]
+        )
+        result = self.words(pdf)
+        self.assert_ranges_match_the_text(result)
+        self.assertEqual(result["text"], "Antrag auf Leistung 2026\nMusterweg 1\n12345 Stadt")
+        first = self.word(result, "Musterweg")
+        last = self.word(result, "Stadt")
+        # Two lines share the height of the box (from the top: 202 to 242).
+        self.assertEqual((first[2], first[4]), (202.0, 222.0))
+        self.assertEqual((last[2], last[4]), (222.0, 242.0))
+        self.assertLess(first[1], self.word(result, "1")[1])
+        for entry in result["words"][4:]:
+            self.assertTrue(200.0 <= entry[1] < entry[3] <= 400.0, entry)
+
+    def test_form_values_of_a_rotated_page_lie_where_the_page_shows_them(self):
+        field = ("name", "Tx", "Erika", (200, 690, 400, 710))
+        # The box of the field (x0, y0, x1, y1 from the lower left of the unturned page)
+        # as the turned page shows it, from its top left.
+        expected = {
+            90: (690.0, 200.0, 710.0, 400.0),
+            180: (195.0, 690.0, 395.0, 710.0),
+            270: (132.0, 195.0, 152.0, 395.0),
+        }
+        for rotation, box in expected.items():
+            with self.subTest(rotation=rotation):
+                result = self.words(self.make_form_pdf([field], rotate=rotation))
+                self.assertEqual(result["pages"][0]["rotation"], rotation)
+                _page, x0, top, x1, bottom, _start, _end = self.word(result, "Erika")
+                self.assertEqual((x0, top, x1, bottom), box)
+
+    def test_form_values_stay_on_their_own_page(self):
+        import pikepdf
+
+        source = os.path.join(BLOB_ROOT, "form_two_pages.ps")
+        with open(source, "w") as f:
+            f.write(
+                "/Helvetica findfont 24 scalefont setfont "
+                "72 700 moveto (First page of the letter) show showpage "
+                "72 700 moveto (Second page of the letter) show showpage\n"
+            )
+        path = os.path.join(BLOB_ROOT, "form_two_pages.pdf")
+        subprocess.run(
+            ["gs", "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=pdfwrite",
+             f"-sOutputFile={path}", source],
+            check=True,
+        )  # fmt: skip
+        pdf = pikepdf.open(path)
+        widget = pdf.make_indirect(
+            pikepdf.Dictionary(
+                Type=pikepdf.Name.Annot, Subtype=pikepdf.Name.Widget, FT=pikepdf.Name.Tx,
+                T=pikepdf.String("late"), V=pikepdf.String("Spaet"), Rect=[200, 690, 400, 710], F=4,
+            )
+        )  # fmt: skip
+        pdf.pages[1].Annots = pikepdf.Array([widget])
+        pdf.Root.AcroForm = pdf.make_indirect(pikepdf.Dictionary(Fields=[widget]))
+        buf = io.BytesIO()
+        pdf.save(buf)
+        result = self.words(buf.getvalue())
+        self.assertEqual(
+            result["text"], "First page of the letter\fSecond page of the letter\nSpaet"
+        )
+        self.assertEqual(self.word(result, "Spaet")[0], 2)
+
+    def test_a_broken_form_does_not_stop_the_text(self):
+        pdf = self.make_form_pdf(
+            [
+                {"T": "odd", "FT": "Tx", "V": "Kaputt", "Rect": [1, 2]},
+                ("name", "Tx", "Erika", (200, 690, 400, 710)),
+            ]
+        )
+        self.assertIn("Antrag auf Leistung 2026", self.words(pdf)["text"])
 
     def test_pages_are_separated_by_a_form_feed(self):
         source = os.path.join(BLOB_ROOT, "two_pages.ps")
