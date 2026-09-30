@@ -86,6 +86,11 @@ SLOW_PATTERN_SECONDS = 1.0
 
 MAX_ALTERNATIVES = 4
 MAX_UNASSIGNED = 30
+# The pairs of a box are what the user asked for, so many more are kept than outside.
+MAX_UNASSIGNED_IN_AREA = 100
+# A value belongs to a box when this share of its own area lies inside; a box drawn
+# by hand does not have to sit exactly.
+AREA_MIN_SHARE = 0.5
 
 
 @lru_cache(maxsize=4096)
@@ -223,6 +228,41 @@ class Page:
             and box[2] >= top * height
             and box[4] <= bottom * height
         )
+
+    def in_box(self, start, end, area):
+        """Whether text[start:end] is printed in a box drawn by the user.
+
+        The box is ``(page, x0, top, x1, bottom)`` in shares of the page's width
+        and height, so it does not depend on the size of the page or the
+        resolution of a scan. Without positions a value is in no box.
+        """
+        box = self.box(start, end)
+        if not box or box[0] != area[0]:
+            return False
+        width, height = self.sizes.get(box[0], _A4)
+        left, top, right, bottom = (
+            area[1] * width,
+            area[2] * height,
+            area[3] * width,
+            area[4] * height,
+        )
+        own = (box[3] - box[1]) * (box[4] - box[2])
+        wide, high = (
+            min(box[3], right) - max(box[1], left),
+            min(box[4], bottom) - max(box[2], top),
+        )
+        if own <= 0:
+            return left <= (box[1] + box[3]) / 2 <= right and (
+                top <= (box[2] + box[4]) / 2 <= bottom
+            )
+        return wide > 0 and high > 0 and wide * high >= AREA_MIN_SHARE * own
+
+    def area_of(self, start, end, areas):
+        """Index of the first of the boxes that holds text[start:end], or None."""
+        for index, area in enumerate(areas or []):
+            if self.in_box(start, end, area):
+                return index
+        return None
 
     def segment_at(self, pos):
         i = bisect.bisect_right(self._seg_starts, pos) - 1
@@ -405,6 +445,8 @@ class Suggestion:
     tier: int
     rule_id: int = None
     hint_id: int = None
+    # Printed in one of the boxes the user drew; such a value goes before the others.
+    in_area: bool = False
 
     def as_dict(self):
         page, x0, top, x1, bottom = self.box or (0, 0.0, 0.0, 0.0, 0.0)
@@ -423,19 +465,25 @@ class Suggestion:
             "tier": self.tier,
             "rule_id": self.rule_id,
             "hint_id": self.hint_id,
+            "in_area": self.in_area,
         }
 
 
-def suggest(page, specs, skip=None, slow=None, **options):
+def suggest(page, specs, skip=None, slow=None, areas=None, **options):
     """Return the suggestions per field and the label-value pairs no field took.
 
     :param page: the document as a :class:`Page`
     :param specs: the active fields as :class:`FieldSpec`
+    :param areas: boxes ``(page, x0, top, x1, bottom)`` in shares of the page, drawn
+        by the user: a value printed in one goes before those outside, after
+        the ones learned for the sender. The others are kept as they were.
     :param skip: callable(value_type, value) -> True for a value never to suggest
         (the own company's IBAN, VAT number and mail addresses)
     :param slow: callable(rule_id, seconds) for a pattern that ran too long
     :param options: passed on to value_types (currencies, default_currency, today ...)
-    :returns: ``({field_id: [best, alternative, ...]}, [unassigned pair, ...])``
+    :returns: ``({field_id: [best, alternative, ...]}, [unassigned pair, ...])``;
+        an unassigned pair carries the place of its value and, when it lies in a box,
+        the ``area`` index of the box
     """
     skip = skip or (lambda value_type, value: False)
     pairs, unassigned = [], []
@@ -478,7 +526,9 @@ def suggest(page, specs, skip=None, slow=None, **options):
             seconds = time.perf_counter() - started
             if slow and seconds > SLOW_PATTERN_SECONDS:
                 slow(rule_id, seconds)
-    return _assign(page, pairs), _unassigned(unassigned)
+    result = _assign(page, pairs, areas)
+    taken = {(chosen[0].start, chosen[0].end) for chosen in result.values()}
+    return result, _unassigned(page, unassigned, taken, areas)
 
 
 def _labelled_pairs(page, value_type, fitting, candidates, pairs, unassigned):
@@ -541,10 +591,26 @@ def _pattern_pairs(page, spec, rule_id, pattern, group, skip, options):
     return pairs
 
 
-def _assign(page, pairs):
+def _assign(page, pairs, areas=None):
     """Best pairs first. A value is the best suggestion of at most one field; it may
     still be an alternative of others. A field keeps up to MAX_ALTERNATIVES more."""
-    pairs.sort(key=lambda p: p[0])
+    inside = {}
+
+    def in_area(c):
+        span = (c.start, c.end)
+        if span not in inside:
+            inside[span] = page.area_of(c.start, c.end, areas) is not None
+        return inside[span]
+
+    def order(pair):
+        key, c = pair[0], pair[2]
+        here = bool(areas) and in_area(c)
+        # Learned for the sender, then in a box, then the rest; among the learned
+        # ones too a value in a box goes first.
+        stage = 0 if key[0] == TIER_HINT else (1 if here else 2)
+        return (stage, not here, key)
+
+    pairs.sort(key=order)
     taken = set()
     result = {}
     for key, spec, c, label, rule_id in pairs:
@@ -573,6 +639,7 @@ def _assign(page, pairs):
                 hint_id=_hint_of(normalize(label.text), spec)
                 if key[0] == TIER_HINT
                 else None,
+                in_area=bool(areas) and in_area(c),
             )
         )
     return {k: v for k, v in result.items() if v}
@@ -582,16 +649,35 @@ def _digits(candidate):
     return sum(c.isdigit() for c in candidate.value["value_text"])
 
 
-def _unassigned(items):
-    seen, result = set(), []
+def _unassigned(page, items, taken, areas):
+    """The label-value pairs no field took, once per value.
+
+    :param taken: the places of the values that are a field's best suggestion; a
+        pair of one of them is no news
+    """
+    seen, result, counts = set(), [], {}
     for label, value_type, c in items:
         span = (c.start, c.end)
-        if span in seen or len(label.text.split()) > 4:
+        if span in seen or span in taken or len(label.text.split()) > 4:
             continue
         seen.add(span)
-        result.append({"label": label.text, "value_type": value_type, **c.value})
-        if len(result) >= MAX_UNASSIGNED:
-            break
+        index = page.area_of(c.start, c.end, areas)
+        limit = MAX_UNASSIGNED if index is None else MAX_UNASSIGNED_IN_AREA
+        if counts.get(index, 0) >= limit:
+            continue
+        counts[index] = counts.get(index, 0) + 1
+        box = page.box(c.start, c.end) or (0, 0.0, 0.0, 0.0, 0.0)
+        result.append(
+            {
+                "label": label.text,
+                "value_type": value_type,
+                **c.value,
+                "start": c.start,
+                "end": c.end,
+                **dict(zip(("page", "x0", "top", "x1", "bottom"), box, strict=True)),
+                "area": index,
+            }
+        )
     return result
 
 

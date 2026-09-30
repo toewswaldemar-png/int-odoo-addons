@@ -35,6 +35,9 @@ _WINDOWS_RESERVED_NAME = re.compile(r"(con|prn|aux|nul|(com|lpt)[0-9¹²³])(\..
 # Company names are looked for in the letterhead, the start of the first page.
 NAME_SEARCH_CHARS = 20000
 MAX_SUGGESTED_TAGS = 10
+# Boxes one request may carry, and the longest text a marking may cover.
+MAX_AREAS = 50
+MAX_SELECTION_CHARS = 200
 
 
 def _website_host(website):
@@ -1001,14 +1004,21 @@ class IntFilemanagerNode(models.Model):
     # ------------------------------------------------------------------
 
     @api.model
-    def suggest_field_values(self, node_id):
+    def suggest_field_values(self, node_id, areas=None):
         """Suggest values for the extraction fields from the file's current text.
 
         Nothing is stored: rules change at any time, and stored suggestions would go
         stale. ``state`` is "ready", "pending" (the text is still being read) or
         "none" (no text to read, e.g. a picture); ``revision_id`` is the revision the
         suggestions come from, to be sent back when they are confirmed.
+
+        :param areas: boxes the user drew, ``[{"page", "x0", "top", "x1", "bottom"}]``
+            with the place as shares (0 to 1) of the page. A value printed in a box
+            goes before the same kind of value outside; everything outside is still
+            found. ``areas`` in the answer has one entry per box: how many values
+            lie in it and the label-value pairs no field took.
         """
+        boxes = self._parse_areas(areas)
         node = self.browse(node_id)
         node.check_access("read")
         revision = node.current_revision_id
@@ -1031,6 +1041,7 @@ class IntFilemanagerNode(models.Model):
             self._extraction_specs(self._sender(node, partner)),
             skip=lambda value_type, value: self._is_own_value(own, value_type, value),
             slow=slow,
+            areas=boxes,
             **options,
         )
         codes = {
@@ -1058,10 +1069,54 @@ class IntFilemanagerNode(models.Model):
                     [("active", "=", True)]
                 )
             ],
-            "unassigned": [self._json_value(u, codes) for u in unassigned],
+            "unassigned": [
+                self._json_value(u, codes) for u in unassigned if u["area"] is None
+            ],
+            "areas": [
+                {
+                    "index": index,
+                    "values": sum(
+                        1
+                        for found in suggestions.values()
+                        if page.in_box(found[0].start, found[0].end, box)
+                    )
+                    + sum(1 for u in unassigned if u["area"] == index),
+                    "unassigned": [
+                        self._json_value(u, codes)
+                        for u in unassigned
+                        if u["area"] == index
+                    ],
+                }
+                for index, box in enumerate(boxes)
+            ],
             "partner": partner,
             "tags": self._suggest_tags(page.text),
         }
+
+    def _parse_areas(self, areas):
+        """The boxes of a request as tuples ``(page, x0, top, x1, bottom)``."""
+        boxes = []
+        for area in areas or []:
+            try:
+                page = area["page"]
+                x0, top, x1, bottom = (
+                    float(area[k]) for k in ("x0", "top", "x1", "bottom")
+                )
+                valid = (
+                    isinstance(page, int)
+                    and not isinstance(page, bool)
+                    and page >= 1
+                    and 0.0 <= x0 < x1 <= 1.0
+                    and 0.0 <= top < bottom <= 1.0
+                )
+            except (KeyError, TypeError, ValueError):
+                valid = False
+            if not valid:
+                raise UserError(self.env._("A box is not valid."))
+            boxes.append((page, x0, top, x1, bottom))
+        if len(boxes) > MAX_AREAS:
+            raise UserError(self.env._("There are too many boxes."))
+        return boxes
 
     def _recognition_options(self):
         """Currencies as printed (symbol or code) and the defaults of the company."""
@@ -1350,6 +1405,83 @@ class IntFilemanagerNode(models.Model):
     @api.model
     def _json_suggestion(self, suggestion, codes):
         return {**suggestion, "value": self._json_value(suggestion["value"], codes)}
+
+    @api.model
+    def read_selection(self, node_id, revision_id, field_id, start, end):
+        """Read the marked text of a file as a value of a field.
+
+        :param revision_id: the revision the marking was made on; if the file has
+            a newer one by now, ``state`` is "changed" and nothing is read
+        :param start: offset in the text of the file where the marking begins
+        :param end: offset where it ends; a marking that cuts a word takes the
+            whole word
+        :returns: ``{"state", "revision_id", "suggestion", "message"}``. ``suggestion``
+            is the value in the form of :meth:`suggest_field_values` (direction
+            "selection"), or False when the text is no value of the field; then
+            ``message`` says so. Nothing is stored: confirming goes through
+            :meth:`apply_field_values`, which reads the text again.
+        """
+        node = self.browse(node_id)
+        node.check_access("read")
+        field = self.env["int_filemanager.extraction_field"].browse(field_id)
+        if not field.exists():
+            raise UserError(self.env._("This field does not exist any more."))
+        revision = node.current_revision_id
+        if node.is_dir or not revision:
+            return {"state": "none", "revision_id": False}
+        if revision.id != revision_id:
+            return {"state": "changed", "revision_id": revision.id}
+        state, page = self._recognition_page(node, revision)
+        if state != "ready":
+            return {"state": state, "revision_id": revision.id}
+        if not (
+            isinstance(start, int)
+            and isinstance(end, int)
+            and 0 <= start < end <= len(page.text)
+        ):
+            raise UserError(self.env._("The marking is not valid."))
+        touched = page.words_between(start, end)
+        if touched:
+            start, end = min(start, touched[0][5]), max(end, touched[-1][6])
+        text = " ".join(page.text[start:end].split())
+        if not text or len(text) > MAX_SELECTION_CHARS:
+            raise UserError(self.env._("The marking is not valid."))
+        result = {"state": "ready", "revision_id": revision.id}
+        try:
+            parsed = self._parse_confirmed(field, text, self._recognition_options())
+        except UserError:
+            labels = dict(field._fields["value_type"]._description_selection(self.env))
+            message = self.env._(
+                "%(text)s cannot be read as: %(type)s.",
+                text=text,
+                type=labels[field.value_type],
+            )
+            return {**result, "suggestion": False, "message": message}
+        codes = {
+            c.name: c.id
+            for c in self.env["res.currency"].sudo().search([("active", "=", True)])
+        }
+        box = dict(
+            zip(
+                ("page", "x0", "top", "x1", "bottom"),
+                page.box(start, end) or (0, 0.0, 0.0, 0.0, 0.0),
+                strict=True,
+            )
+        )
+        suggestion = {
+            "value": parsed,
+            "source_text": text,
+            "start": start,
+            "end": end,
+            **box,
+            "label": "",
+            "direction": "selection",
+            "tier": None,
+            "rule_id": None,
+            "hint_id": None,
+            "in_area": False,
+        }
+        return {**result, "suggestion": self._json_suggestion(suggestion, codes)}
 
     @api.model
     def apply_field_values(

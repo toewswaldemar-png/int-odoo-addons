@@ -6,6 +6,8 @@ from odoo.tests.common import tagged
 
 from .test_v2_access_http import AccessHttpCase
 
+BOX = {"page": 1, "x0": 0.0, "top": 0.0, "x1": 1.0, "bottom": 1.0}
+
 
 @tagged("post_install", "-at_install")
 class TestV2FieldValueHttp(AccessHttpCase):
@@ -31,6 +33,8 @@ class TestV2FieldValueHttp(AccessHttpCase):
         for method, args in (
             ("apply_field_values", [self.node.id, self.revision.id, self.values]),
             ("suggest_field_values", [self.node.id]),
+            ("suggest_field_values", [self.node.id, [BOX]]),
+            ("read_selection", [self.node.id, self.revision.id, self.field.id, 0, 3]),
         ):
             with self.subTest(method=method):
                 payload = self._call_kw("int_filemanager.node", method, args).json()
@@ -68,6 +72,22 @@ class TestV2FieldValueHttp(AccessHttpCase):
             key,
         )
         self.assertEqual(resp.status_code, 403)
+        for method, arguments in (
+            ("suggest_field_values", {"node_id": self.node.id, "areas": [BOX]}),
+            (
+                "read_selection",
+                {
+                    "node_id": self.node.id,
+                    "revision_id": self.revision.id,
+                    "field_id": self.field.id,
+                    "start": 0,
+                    "end": 3,
+                },
+            ),
+        ):
+            with self.subTest(method=method):
+                resp = self._json2("int_filemanager.node", method, arguments, key)
+                self.assertEqual(resp.status_code, 403)
         self.assertEqual(self._stored(), 0)
 
     def test_json2_values_cannot_be_written_directly(self):

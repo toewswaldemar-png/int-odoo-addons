@@ -23,6 +23,30 @@ msgid "%(field)s: %(text)s cannot be read as a value of this field."
 msgstr "%(field)s: %(text)s lässt sich nicht als Wert dieses Felds lesen."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "%(text)s cannot be read as: %(type)s."
+msgstr "%(text)s lässt sich nicht lesen als: %(type)s."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "A box is not valid."
+msgstr "Ein Kasten ist ungültig."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "The marking is not valid."
+msgstr "Die Markierung ist ungültig."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "There are too many boxes."
+msgstr "Es sind zu viele Kästen."
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 msgid "%s could not be prepared."

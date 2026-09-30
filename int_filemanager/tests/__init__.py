@@ -28,7 +28,9 @@ from . import test_v2_preview_http
 from . import test_v2_field_value
 from . import test_v2_value_types
 from . import test_v2_value_suggest
+from . import test_v2_value_suggest_areas
 from . import test_v2_field_value_suggest
+from . import test_v2_field_value_areas
 from . import test_v2_field_value_apply
 from . import test_v2_field_value_http
 from . import test_v2_content_search
