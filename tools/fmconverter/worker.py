@@ -27,6 +27,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import warnings
 
 from PIL import Image, ImageOps
 
@@ -545,7 +546,9 @@ def _read_pdf(pdf_path):
 
     pages, chunks, words = [], [], []
     offset = scanned = 0
-    with pdfplumber.open(pdf_path) as pdf:
+    # Not raising on undecodable strings: a field name or comment in an odd encoding
+    # would otherwise take all annotations of the page - the form values - with it.
+    with pdfplumber.open(pdf_path, raise_unicode_errors=False) as pdf:
         for page_no, page in enumerate(pdf.pages, start=1):
             pages.append(
                 {
@@ -657,7 +660,10 @@ def _form_field_words(page):
     reading order, each value on lines of its own.
     """
     try:
-        annotations = page.annots
+        with warnings.catch_warnings():
+            # "Could not decode ... of annotation": the title or comment is not needed.
+            warnings.simplefilter("ignore")
+            annotations = page.annots
     except Exception:  # noqa: BLE001 - a damaged annotation table must not lose the text
         return []
     fields = []

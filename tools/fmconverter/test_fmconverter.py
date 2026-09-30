@@ -616,6 +616,13 @@ class ConverterTest(unittest.TestCase):
         )
         self.assertEqual(self.word(result, "Spaet")[0], 2)
 
+    def test_a_field_name_that_is_no_valid_text_does_not_hide_the_values(self):
+        # pdfplumber refuses the whole page's annotations over such a name.
+        pdf = self.make_form_pdf(
+            [{"T": b"F\xe4l", "FT": "Tx", "V": "Erika", "Rect": [200, 690, 400, 710]}]
+        )
+        self.assertEqual(self.words(pdf)["text"], "Antrag auf Leistung 2026\nErika")
+
     def test_a_broken_form_does_not_stop_the_text(self):
         pdf = self.make_form_pdf(
             [
