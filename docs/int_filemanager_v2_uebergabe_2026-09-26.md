@@ -170,7 +170,7 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
    - **Stand 2026-09-30:** U-1 fertig (Volltextsuche, Formularfelder); Entscheidungen dazu: kein zweiter Index für häufige Wörter,
      alte Wortlisten bleiben bis zum Ersatz (umgesetzt), Codex-Gegenlesen von U-1 steht noch aus (Codex-Limit bis 12:30). Der
      Odoo-Abgleich der Oberfläche ist im Konzept eingearbeitet (Abschnitte 3.1, 3.2, 4, 10.8): Brotkrumen „Dateien › Name“ und
-     Alt-Kürzel entschieden. **U-2 (Server für Kästen und Markierung) freigegeben und fertig** (Version 19.0.1.20.0, Konzept
+     Alt-Kürzel entschieden. **U-3a (Prüf-Fenster, nur lesend) fertig** (Version 19.0.1.21.0, `static/src/int_filemanager/v2/value_review/`, im Browser auf der Test-Instanz geprüft: Aktionsmenü „Werte prüfen“, Pager/Alt+N, Odoos Viewer mit Umrandungen, Feldliste, Handy-Reiter; noch offen: Bearbeiten/Speichern = U-3b, Wortflächen/Hinweise = U-3c, Wiederherstellen nach F5 fehlt). **U-2 (Server für Kästen und Markierung) freigegeben und fertig** (Version 19.0.1.20.0, Konzept
      Abschnitt 7): `suggest_field_values(node_id, areas)` und neuer Aufruf `read_selection`, Tests in
      `test_v2_value_suggest_areas.py`, `test_v2_field_value_areas.py`, N1-Fälle in `test_v2_field_value_http.py`. **Für U-3 ff.
      keine Freigabe.**

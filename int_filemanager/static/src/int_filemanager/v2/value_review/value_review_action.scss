@@ -1,0 +1,33 @@
+.o_int_filemanager_review {
+  .o_int_filemanager_review_viewer {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .o_int_filemanager_review_document {
+    flex: 0 0 auto;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .o_int_filemanager_review_row {
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--table-hover-bg, rgba(var(--bs-primary-rgb), 0.05));
+    }
+
+    &.o_active {
+      background-color: tint-color($o-action, 90%);
+    }
+  }
+
+  // A small screen shows one pane at a time; the width the panel got by dragging on a
+  // large one does not apply there.
+  @include media-breakpoint-down(md) {
+    .o_int_filemanager_review_document {
+      width: 100% !important;
+    }
+  }
+}

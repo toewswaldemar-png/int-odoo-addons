@@ -1076,6 +1076,9 @@ class IntFilemanagerNode(models.Model):
         return {
             "state": "ready",
             "revision_id": revision.id,
+            # Width and height of the pages in the unit of the value boxes; a page
+            # not listed is taken as A4.
+            "page_sizes": {str(n): list(size) for n, size in page.sizes.items()},
             "fields": [
                 {
                     "field_id": f.id,

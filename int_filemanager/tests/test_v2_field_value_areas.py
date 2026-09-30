@@ -55,6 +55,7 @@ class TestV2FieldValueAreas(FieldValueCase):
     def test_without_boxes_the_answer_has_none(self):
         result = self._suggest(self.node)
         self.assertEqual(result["areas"], [])
+        self.assertEqual(result["page_sizes"], {"1": [595.0, 842.0]})
         best = self._best(result, self.invoice)
         self.assertEqual(
             (best["value"]["value_text"], best["in_area"]), ("1111", False)

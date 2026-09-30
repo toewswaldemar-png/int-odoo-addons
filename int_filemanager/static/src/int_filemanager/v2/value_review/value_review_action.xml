@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+  <!-- The value review (client action). Both panes stay mounted on a small screen and are
+       switched with d-none: Odoo's Notebook draws only the active tab, which would load
+       the document again at every change. -->
+  <t t-name="int_filemanager.v2.ValueReview">
+    <Layout
+      display="display"
+      className="'o_int_filemanager_review h-100 d-flex flex-column'"
+    >
+      <t t-if="isEmpty">
+        <div class="o_view_nocontent">
+          <div class="o_nocontent_help">
+            <p class="o_view_nocontent_neutral_face">No files to check</p>
+            <p>Select files in the file manager and choose "Check values".</p>
+          </div>
+        </div>
+      </t>
+      <t t-else="">
+        <ul t-if="env.isSmall" class="nav nav-tabs o_int_filemanager_review_tabs">
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              t-att-class="{active: state.tab === 'document'}"
+              role="button"
+              t-on-click="() => this.onSelectTab('document')"
+            >Document</a>
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              t-att-class="{active: state.tab === 'values'}"
+              role="button"
+              t-on-click="() => this.onSelectTab('values')"
+            >Values</a>
+          </li>
+        </ul>
+        <div class="o_int_filemanager_review_body d-flex flex-grow-1 overflow-hidden">
+          <ResizablePanel
+            class="documentClass"
+            handleSide="'end'"
+            initialWidth="panelWidth"
+            minWidth="320"
+          >
+            <iframe
+              t-if="hasViewer"
+              t-ref="viewer"
+              t-key="nodeId"
+              class="o_int_filemanager_review_viewer"
+              t-att-src="viewerSrc"
+              title="Document"
+            />
+            <div t-elif="state.status === 'loading'" class="text-center p-5">
+              <i
+                class="fa fa-circle-o-notch fa-spin fa-2x"
+                role="img"
+                aria-label="Loading"
+              />
+            </div>
+            <div t-else="" class="o_view_nocontent">
+              <div class="o_nocontent_help">
+                <p class="o_view_nocontent_neutral_face">No preview here</p>
+                <p>Only PDF files are shown next to their values for now.</p>
+              </div>
+            </div>
+          </ResizablePanel>
+          <div
+            class="o_int_filemanager_review_values o_form_view flex-grow-1 overflow-auto"
+            t-att-class="{'d-none': env.isSmall and state.tab !== 'values'}"
+          >
+            <div class="o_form_sheet_bg">
+              <div class="o_form_sheet p-3">
+                <t t-if="state.status === 'loading'">
+                  <div class="text-center p-5">
+                    <i
+                      class="fa fa-circle-o-notch fa-spin fa-2x"
+                      role="img"
+                      aria-label="Loading"
+                    />
+                  </div>
+                </t>
+                <t t-elif="state.status === 'pending'">
+                  <div class="alert alert-info" role="alert">
+                    <i
+                    class="fa fa-circle-o-notch fa-spin me-2"
+                    role="img"
+                    aria-label="Loading"
+                  />The text of this file is still being read.
+                  </div>
+                </t>
+                <t t-elif="state.status === 'none'">
+                  <div class="o_view_nocontent">
+                    <div class="o_nocontent_help">
+                      <p class="o_view_nocontent_neutral_face">Nothing to read here</p>
+                      <p>This file has no text to look for values in.</p>
+                    </div>
+                  </div>
+                </t>
+                <t t-elif="state.status === 'error'">
+                  <div class="alert alert-danger" role="alert" t-esc="state.message" />
+                </t>
+                <t t-else="">
+                  <div t-if="!fields.length" class="o_view_nocontent">
+                    <div class="o_nocontent_help">
+                      <p class="o_view_nocontent_neutral_face">No values found</p>
+                      <p>Nothing in this document matches a field.</p>
+                    </div>
+                  </div>
+                  <div
+                    t-foreach="fields"
+                    t-as="field"
+                    t-key="field.field_id"
+                    class="o_int_filemanager_review_row d-flex gap-3 py-2 border-bottom"
+                    t-att-class="{o_active: state.activeFieldId === field.field_id}"
+                    role="button"
+                    t-on-click="() => this.onSelectField(field.field_id)"
+                  >
+                    <label
+                      class="o_form_label o_int_filemanager_review_label"
+                      t-esc="field.name"
+                    />
+                    <div class="flex-grow-1">
+                      <div class="fw-bold" t-esc="valueText(field)" />
+                      <div class="small text-muted" t-esc="originText(field)" />
+                      <div t-if="otherCount(field)" class="small text-muted">
+                        <t t-esc="otherCount(field)" /> more found
+                      </div>
+                    </div>
+                  </div>
+                </t>
+              </div>
+            </div>
+          </div>
+        </div>
+      </t>
+    </Layout>
+  </t>
+
+</templates>

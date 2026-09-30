@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260908\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 06:24+0000\n"
-"PO-Revision-Date: 2026-09-30 06:24+0000\n"
+"POT-Creation-Date: 2026-09-30 12:11+0000\n"
+"PO-Revision-Date: 2026-09-30 12:11+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -27,30 +27,6 @@ msgstr "%(field)s: %(text)s lässt sich nicht als Wert dieses Felds lesen."
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "%(text)s cannot be read as: %(type)s."
 msgstr "%(text)s lässt sich nicht lesen als: %(type)s."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "A box is not valid."
-msgstr "Ein Kasten ist ungültig."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "The marking is not valid."
-msgstr "Die Markierung ist ungültig."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "There are too many boxes."
-msgstr "Es sind zu viele Kästen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "The content search has too many or too long words."
-msgstr "Die Inhaltssuche hat zu viele oder zu lange Wörter."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -76,6 +52,12 @@ msgstr "%s ist bereit."
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_blob_sha256_uniq
 msgid "A blob with this hash already exists."
 msgstr "Ein Blob mit diesem Hash existiert bereits."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "A box is not valid."
+msgstr "Ein Kasten ist ungültig."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_field_value_node_field_uniq
@@ -267,6 +249,12 @@ msgstr "Upload abbrechen"
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
+msgid "Check values"
+msgstr "Werte prüfen"
+
+#. module: int_filemanager
+#. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
 msgid "Clear"
 msgstr "Leeren"
@@ -297,6 +285,12 @@ msgstr "Ordner einklappen"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__color
 msgid "Color"
 msgstr "Farbe"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "Confirmed value"
+msgstr "Bestätigter Wert"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -520,6 +514,12 @@ msgstr "Verwerfen"
 #: model:ir.model.fields,field_description:int_filemanager.field_res_partner__display_name
 msgid "Display Name"
 msgstr "Anzeigename"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Document"
+msgstr "Dokument"
 
 #. module: int_filemanager
 #: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_document_date
@@ -1080,6 +1080,12 @@ msgstr "Links ohne Anmeldung"
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Loading"
+msgstr "Wird geladen"
+
+#. module: int_filemanager
+#. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
 msgid "Loading…"
 msgstr "Wird geladen …"
@@ -1260,6 +1266,24 @@ msgid "Next Try At"
 msgstr "Nächster Versuch am"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "No files to check"
+msgstr "Keine Dateien zu prüfen"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "No preview here"
+msgstr "Hier keine Vorschau"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "No values found"
+msgstr "Keine Werte gefunden"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__node_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__node_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__node_id
@@ -1290,10 +1314,22 @@ msgid "Notes / activities"
 msgstr "Notizen / Aktivitäten"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Nothing in this document matches a field."
+msgstr "Nichts in diesem Dokument passt zu einem Feld."
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/zip_stream.py:0
 msgid "Nothing to download."
 msgstr "Nichts zum Herunterladen."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Nothing to read here"
+msgstr "Hier gibt es nichts zu lesen"
 
 #. module: int_filemanager
 #: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_notice_period
@@ -1340,6 +1376,12 @@ msgstr "Office"
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_extraction_rule__keywords
 msgid "One label per line, as printed before, beside or above the value."
 msgstr "Eine Beschriftung je Zeile, so wie sie vor, neben oder über dem Wert gedruckt ist."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Only PDF files are shown next to their values for now."
+msgstr "Vorerst werden nur PDF-Dateien neben ihren Werten angezeigt."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1661,6 +1703,12 @@ msgid "Select a file or folder to see its notes and activities."
 msgstr "Wählen Sie eine Datei oder einen Ordner aus, um Notizen und Aktivitäten zu sehen."
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Select files in the file manager and choose \"Check values\"."
+msgstr "Wählen Sie Dateien in der Dateiverwaltung aus und wählen Sie „Werte prüfen“."
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__sequence
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__sequence
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__sequence
@@ -1840,6 +1888,12 @@ msgid "The content can only be searched for words."
 msgstr "Der Inhalt lässt sich nur nach Wörtern durchsuchen."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "The content search has too many or too long words."
+msgstr "Die Inhaltssuche hat zu viele oder zu lange Wörter."
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 msgid "The download is big and is being prepared. You will be notified."
@@ -1850,6 +1904,12 @@ msgstr "Der Download ist groß und wird vorbereitet. Sie werden benachrichtigt."
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 msgid "The file could not be loaded."
 msgstr "Die Datei konnte nicht geladen werden."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "The marking is not valid."
+msgstr "Die Markierung ist ungültig."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1883,6 +1943,12 @@ msgid "The text as printed in the document."
 msgstr "Der Text, wie er im Dokument gedruckt ist."
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "The text of this file is still being read."
+msgstr "Der Text dieser Datei wird noch gelesen."
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_extraction_field.py:0
 msgid ""
@@ -1902,6 +1968,12 @@ msgstr "Der Wert von %(field)s passt nicht zu seiner Art."
 msgid ""
 "The value of %(field)s names a revision or rule that belongs elsewhere."
 msgstr "Der Wert von %(field)s nennt eine Fassung oder Regel, die woanders hingehört."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_node.py:0
+msgid "There are too many boxes."
+msgstr "Es sind zu viele Kästen."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -1949,6 +2021,12 @@ msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneu
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "This file has no content yet; nothing to copy."
 msgstr "Diese Datei hat noch keinen Inhalt; nichts zu kopieren."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "This file has no text to look for values in."
+msgstr "Diese Datei hat keinen Text, in dem nach Werten gesucht werden könnte."
 
 #. module: int_filemanager
 #. odoo-python
@@ -2165,6 +2243,12 @@ msgid "Value Type"
 msgstr "Art des Werts"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "Values"
+msgstr "Werte"
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "Values confirmed"
@@ -2257,7 +2341,55 @@ msgid "current"
 msgstr "aktuell"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "label above"
+msgstr "Beschriftung darüber"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "label before"
+msgstr "Beschriftung davor"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "label below"
+msgstr "Beschriftung darunter"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "label to the left"
+msgstr "Beschriftung links"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "learned for this sender"
+msgstr "für diesen Absender gelernt"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+msgid "more found"
+msgstr "weitere gefunden"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "no label"
+msgstr "ohne Beschriftung"
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "removed"
 msgstr "entfernt"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
+msgid "rule"
+msgstr "Regel"

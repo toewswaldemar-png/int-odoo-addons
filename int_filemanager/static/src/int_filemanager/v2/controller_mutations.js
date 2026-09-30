@@ -443,6 +443,15 @@ export const mutationsMixin = (Base) =>
       );
     }
 
+    onCheckValues(records) {
+      this.actionService.doAction({
+        type: "ir.actions.client",
+        tag: "int_filemanager.value_review",
+        name: records[0].data.name,
+        params: {node_ids: records.map((record) => record.resId)},
+      });
+    }
+
     // ---------------------------------------------------------------- opening
 
     async openRecord(record) {
@@ -570,6 +579,14 @@ export const mutationsMixin = (Base) =>
           icon: "fa fa-upload",
           description: _t("Upload new version"),
           callback: () => this.triggerNewVersionUpload(selection[0]),
+        },
+        int_check_values: {
+          isAvailable: () =>
+            selection.length > 0 && selection.every((r) => !r.data.is_dir),
+          sequence: 12,
+          icon: "fa fa-check-square-o",
+          description: _t("Check values"),
+          callback: () => this.onCheckValues(selection.slice()),
         },
         int_details: {
           isAvailable: single,
