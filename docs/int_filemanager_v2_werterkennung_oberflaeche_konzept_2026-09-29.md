@@ -5,6 +5,11 @@ Stand 2026-09-29, **Konzept, nichts umgesetzt.** K1–K5 und U1–U9 entschieden
 Werterkennungs-Plan (`int_filemanager_v2_werterkennung_plan_2026-09-29.md`, W-1…W-6) auf; der Server liefert heute
 schon Vorschläge je Feld mit Fundstelle, bestätigt, lernt je Absender – es fehlt die Oberfläche.
 
+**Nachtrag 2026-09-30:** Optik und Bedienung sind gegen den Odoo-19-Quellcode geprüft
+(`docs/review/werterkennung_oberflaeche_odoo_optik_abgleich_2026-09-30.md`); die Empfehlungen sind in die Abschnitte 3, 4 und
+11 eingearbeitet, gekennzeichnet mit „(Odoo-Abgleich)“. Nutzer 2026-09-30: **Brotkrumen und Tastaturkürzel nach Odoo-Art**
+(N11, N12 in Abschnitt 10.8). U-1 (Volltextsuche, Formularfelder) ist fertig.
+
 ## 1. Anlass und Nutzerentscheidungen
 
 Nach drei Übungsrunden (86 % richtige Vorschläge, 88 % gefunden) der Befund des Nutzers: *„Mir scheint es effektiver,
@@ -80,17 +85,45 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 
 | Bedarf | Odoo-Baustein | Befund |
 |---|---|---|
-| Ganzseitiges Prüf-Fenster mit Brotkrumen, Knöpfen, Blättern | `ir.actions.client` + `Layout`/ControlPanel, `usePager` (`web/static/src/search/pager_hook.js`) | vorhanden; Blättern durch die Auswahl wie Datensatz-Pager (Alt+N/P) |
-| Dokument neben den Feldern, Breite ziehbar | `ResizablePanel` (`web/static/src/core/resizable_panel/`) | vorhanden, u. a. in Discuss und Website-Builder genutzt |
-| Vorbild Layout „Vorschau neben Formular“ | `mail` `AttachmentView` + `o_attachment_preview` (Eingangsrechnungen) | nur für `ir.attachment` des Datensatzes und als fertiger iframe-Viewer ohne eigene Überlagerung → **nur Vorbild**, nicht nutzbar (unsere Dateien liegen im eigenen Blob-Speicher) |
-| PDF zeichnen, Kästen darüber | pdf.js **4.8.69** (`web/static/lib/pdfjs/build/pdf.js`, inkl. `TextLayer`) | vorhanden; v1-Baustein `IntPdfHighlightViewer` (Canvas + Kästen, Zoom mit Mausrad) ist die Grundlage |
-| Odoo-Eingabefelder für unsere frei definierten Felder | `Record` (`web/static/src/model/record.js`) mit `fields`-Definition ohne echtes Modell | vorhanden (genutzt z. B. in `analytic_distribution`, `multi_create_popover`); Datum, Betrag+Währung, Kontakt (many2one), Tags wie überall in Odoo |
-| „Neues Feld anlegen“ direkt im Fenster | Popover-Muster der Properties (`usePopover`, `property_definition`) | vorhanden, als Vorbild |
-| Dokument in zweitem Fenster (zwei Bildschirme) | `mail_popout_service.js` (`documentPictureInPicture` bzw. `window.open`) | vorhanden |
+| Ganzseitiges Prüf-Fenster mit Brotkrumen, Knöpfen, Blättern | `ir.actions.client` + `Layout`/ControlPanel, `usePager` (`web/static/src/search/pager_hook.js`) | vorhanden; Vorbilder für eine Client-Aktion mit Knöpfen im Kopf und Seitenleiste im Kern: Import-Assistent (`base_import/.../import_action.xml`) und Berichtsansicht. Blättern durch die Auswahl wie Datensatz-Pager (Alt+N/P). **(Odoo-Abgleich)** Im Kern nutzen `usePager` nur Formular, Liste, Kanban und Aktivität; die Nutzung in einer Client-Aktion ist neu und wird in U-3 **zuerst im Browser bestätigt** (ControlPanel liest nur `env.config.pagerProps`, technisch plausibel) |
+| Dokument neben den Feldern, Breite ziehbar | `ResizablePanel` (`web/static/src/core/resizable_panel/`) | vorhanden, u. a. in Discuss und Website-Builder und schon im v2-Explorer genutzt. **(Odoo-Abgleich)** Der Griff reagiert nur auf Maus (nicht auf Finger und Tastatur), Mindestbreite 400 px je Seite; für Tablets ungelöst |
+| Vorbild Layout „Vorschau neben Formular“ | `mail` `AttachmentView` + `o_attachment_preview` (Eingangsrechnungen) | nur für `ir.attachment` des Datensatzes und als fertiger iframe-Viewer ohne eigene Überlagerung → **nur Vorbild**, nicht nutzbar (unsere Dateien liegen im eigenen Blob-Speicher). **(Odoo-Abgleich)** Odoo zeigt die Vorschau **nur ab 1400 px** Breite (darunter Chatter unten); bei uns immer sichtbar, weil das Dokument die Hauptsache ist. Optik übernehmen: Rundknopf am Dokumentrand mit Symbol `fa-window-restore` und Sprechblase „Open preview in a separate window.“ (`o_attachment_control`), rechte Spalte als Formularblatt (`o_form_sheet_bg` > `o_form_sheet`) |
+| PDF zeichnen, Kästen darüber | pdf.js **4.8.69** (`web/static/lib/pdfjs/build/pdf.js`, inkl. `TextLayer`) | vorhanden; v1-Baustein `IntPdfHighlightViewer` (Canvas + Kästen) ist die Grundlage, **aber nicht seine festen Farben und nicht das Mausrad-Zoomen** (siehe 3.1). Kein Kern-Modul benutzt `TextLayer`; die Wortflächen sind begründeter Eigenbau |
+| Odoo-Eingabefelder für unsere frei definierten Felder | `Record` (`web/static/src/model/record.js`) mit `fields`-Definition ohne echtes Modell | vorhanden (`analytic_distribution` baut die Felder von Hand, `multi_create_popover` lädt sie aus einer echten Formularansicht); Datum, Betrag+Währung, Kontakt (many2one, dort `relation` angeben), Tags wie überall in Odoo |
+| „Neues Feld anlegen“ direkt im Fenster | Popover-Muster der Properties (`usePopover`, `property_definition`) | vorhanden, als Vorbild. **(Odoo-Abgleich)** Odoos Knopf „Add Property“ legt zuerst einen Platzhalter an und öffnet dann das Definitions-Popover (Beschriftung, Feldtyp mit Bildchen); unser Popover übernimmt Zeilenanordnung und die Knöpfe **Add / Discard** aus `multi_create_popover.xml`. Ohne Verwalterrecht kommt eine Warnmeldung statt eines unsichtbaren Knopfs (wie `checkDefinitionWriteAccess`) |
+| Dokument in zweitem Fenster (zwei Bildschirme) | `mail_popout_service.js` (`popout()` = `window.open`-Popup, `pip()` = `documentPictureInPicture` mit `window.open` als Ersatz) | vorhanden. **(Odoo-Abgleich)** `pip()` beginnt mit kleiner Höhe (240 px) – Größe angeben; Beobachter im zweiten Fenster hängen am Hauptfenster, deshalb Zieh-Code mit `setPointerCapture` am Element bauen |
 | QR-Code (Überweisung/GiroCode) im Kasten lesen | `zxing-library` (`web/static/lib/zxing-library`, `HTMLCanvasElementLuminanceSource`) | vorhanden; Odoos eigener Detektor liest nur Video, die Bibliothek kann Canvas → im Browser machbar, noch nicht erprobt. **Nicht gewählt (U5):** gelesen wird auf dem Server im Umwandler |
-| Kasten aufziehen | `CropOverlay` (`web/static/src/core/barcode/crop_overlay.js`) | nur für den Kamera-Scanner (zur Mitte symmetrisch), **nicht wiederverwendbar**; eigener kleiner Zieh-Code (Pointer-Events) wie in v1s Viewer |
+| Kasten aufziehen | `CropOverlay` (`web/static/src/core/barcode/crop_overlay.js`) | nur für den Kamera-Scanner (zur Mitte symmetrisch), **nicht wiederverwendbar**; eigener kleiner Zieh-Code (Pointer-Events) wie in v1s Viewer. **(Odoo-Abgleich)** Aussehen der Griffe nach `html_builder/.../builder_overlay.scss` (`o_handle`: 8 runde Griffe, Cursor je Griff, Umkehr bei `o_rtl`); `image_crop.js` (cropperjs) ist Vorbild fürs Aussehen, nicht nutzbar. Verschieben eventuell mit `useDraggable`, Größe ändern nicht |
 | Ausschnitt gründlich nachlesen | Umwandler `fmconverter`: `pdftoppm`, `tesseract`, OCRmyPDF 17.12, Pillow | vorhanden |
 | E-Rechnung in der PDF | `odoo.tools.pdf.OdooPdfFileReader.getAttachments()`, Modul `account_edi_ubl_cii` | vorhanden (Community) – eigener späterer Schritt, hier nur als Hinweis |
+
+### 3.1 Optik-Regeln (Odoo-Abgleich, verbindlich für alle Scheiben)
+
+- **Keine eigenen Farbwerte, keine eigenen Schriftgrößen.** Nur Odoo-/Bootstrap-Variablen (`$o-action`,
+  `tint-color($o-action, 90%)`, `$o-gray-*`, `--bs-*`), Odoo-Klassen (`btn`, `btn-group`, `badge`, `alert`, `form-switch`,
+  `o_tag`) und FontAwesome-/`oi`-Symbole. Ruhige Umrandung 1 px in gedämpfter Bootstrap-Farbe, aktive Stelle Fläche
+  `tint-color($o-action, 90%)` plus Rand `$o-action`.
+- **Nicht übernehmen:** die festen Farben des v1-Viewers (`pdf_highlight_viewer.scss`: Gelb, Rot, `#525659`) und die im
+  Community-Code nicht definierten Variablen (`--o-view-background-color`, `--body-bg-secondary`, `--o-webclient-hover-bg`);
+  sie fallen immer auf ihren festen Ersatzwert zurück. Für neue Dateien SCSS-Variablen oder `--bs-*`.
+- **Mausrad scrollt, Strg+Mausrad zoomt** (wie pdf.js und Browser; der v1-Viewer sperrt das Scrollen).
+- **Symbolknöpfe** immer mit `aria-label` und `data-tooltip`.
+- **Dunkelmodus:** in Odoo 19 Community nicht vorhanden und nicht prüfbar; wer nur Odoos Variablen benutzt, ist für Enterprise
+  vorbereitet. PDF-Seiten bleiben weiß (wie überall in Odoo).
+- **Rechts-nach-Links:** die Bedienleisten spiegeln, die Kästen im Dokument nicht (Inline-Positionen, Regeln mit
+  `/*rtl:ignore*/`, Seitenbereich `direction: ltr`).
+- **Bewusster Eigenbau ohne Odoo-Gegenstück:** Wortflächen über der PDF-Seite, Kasten aufziehen/verschieben/skalieren, Hover
+  Dokument ↔ Feldzeile. Alles andere folgt einem Odoo-Vorbild (Tabelle oben und Abschnitt 4).
+
+### 3.2 Bewusst offene Alternativen (Entscheidung vor U-3, nicht jetzt)
+
+- **Eigene Client-Aktion (gewählt, 4.1) oder echtes Odoo-Formular an `int_filemanager.node`** (mit eigenem Vorschau-Baustein):
+  das Formular brächte Pager, Alt+N/P/S/J, Chatter und Handy-Anpassung geschenkt; nachteilig, weil unser Speichern über
+  `apply_field_values` läuft (Lernen, Fassungsprüfung) und an `onWillSaveRecord`/`onRecordSaved` gehängt werden müsste. Nicht erprobt.
+- **Eigene Leinwand (pdf.js selbst) oder Odoos fertiger pdf.js-Viewer mit Überlagerung:** der v2-Explorer nutzt den Viewer schon
+  für seine Vorschau (`toViewerFile`); ein Prüf-Fenster mit eigener Leinwand sähe daneben anders aus (Leiste, Zoom, Seitenleiste).
+  Vorteil des Viewers: Zoom, Suche, Farben wie überall in Odoo; Nachteil: Kästen und Wortflächen müssen in den Rahmen
+  gezeichnet werden (`window.PDFViewerApplication` mit `pagerendered`/`textlayerrendered` ist erreichbar). Nicht erprobt.
 
 ## 4. Bedienkonzept
 
@@ -98,13 +131,21 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 
 - Kontextmenü, Listen-Aktion und Vorschau: **„Werte prüfen“** (eine oder mehrere Dateien). Später Eingangsordner:
   Filter „ungeprüft“ → dasselbe Fenster.
-- Öffnet ein **ganzseitiges Prüf-Fenster** (Client-Aktion, kein Dialog – Platz für das Dokument), Brotkrumen zurück
-  zum Ordner, Blättern durch die Auswahl („3 / 17“), Knöpfe **Speichern**, **Speichern und weiter**, **Verwerfen**.
+- Öffnet ein **ganzseitiges Prüf-Fenster** (Client-Aktion, kein Dialog – Platz für das Dokument). **Kopfzeile wie Odoo
+  (Odoo-Abgleich, N11):** links die Text-Knöpfe **Speichern** (Alt+S) und **Verwerfen** (Alt+J), daneben die Brotkrumen
+  „Dateien › Name der Datei“ (zurück zur Liste mit Alt+B), rechts der Pager „3 / 17“. Der Ordnerpfad ist **keine**
+  Brotkrume (Odoo bildet dort nur geöffnete Seiten ab), sondern eine kleine Zeile unter dem Dateinamen.
+- **Speichern und weiter:** der „Weiter“-Knopf des Pagers (Alt+N) speichert bei Änderungen zuerst, wie beim Odoo-Formular;
+  am letzten Dokument geht es wie in Odoo zyklisch zum ersten. Ungespeicherte Änderungen zeigt der Hinweis
+  „Ungespeicherte Änderungen“ im Statusplatz der Kopfzeile, beim Verlassen fragt Odoos Dialog „Hier bleiben / Verwerfen“
+  (Vorbild ist die Einstellungsseite mit ihrem expliziten Speichern, nicht das selbstspeichernde Formular).
+- Auf dem Handy schiebt das ControlPanel die Knöpfe von selbst in das „⋮“-Menü, die Brotkrumen werden zum Zurückpfeil.
 
 ### 4.2 Aufbau
 
 ```
-┌─ Dateien / Rechnungen 2025 / Jahresbescheid Wasser.pdf ─────────── ‹ 3/17 › ─ [Speichern und weiter] ─┐
+┌─ [Speichern] [Verwerfen]  Dateien › Jahresbescheid Wasser.pdf ──────────────── ‹ 3 / 17 › ──────────┐
+│  (kleine Zeile unter dem Namen: Rechnungen 2025)                                                     │
 │ [Zeiger] [Kasten] [Nachlesen]  − 100 % +        ⧉ eigenes Fenster  │ Absender  [Verbandsgemeinde…  ▾]  │
 │ ┌───────────────────────────────────────────┐                      │ Tags      [Wasser] [2024] +       │
 │ │  Seite 1                                  │                      │───────────────────────────────────│
@@ -123,8 +164,14 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 ```
 
 - **Links das Dokument** (alle Seiten untereinander, Zoom, Seitenleiste), **rechts die Felder**; Trennlinie ziehbar
-  (`ResizablePanel`); auf schmalen Bildschirmen Reiter „Dokument / Werte“; Knopf „eigenes Fenster“ legt das
-  Dokument auf einen zweiten Bildschirm.
+  (`ResizablePanel`); Knopf „eigenes Fenster“ legt das Dokument auf einen zweiten Bildschirm (Symbol `fa-window-restore`,
+  Sprechblase, Lage am Dokumentrand wie `o_attachment_control`). Rechts ein Formularblatt (`o_form_sheet_bg`).
+- **Schmale Bildschirme (Odoo-Abgleich):** Reiter „Dokument / Werte“ im Aussehen des Odoo-Notebooks (`nav nav-tabs`), aber
+  **beide Bereiche bleiben geladen** und werden mit `d-none` umgeschaltet – Odoos `Notebook` rendert nur den aktiven Reiter,
+  das Dokument würde bei jedem Wechsel neu aufgebaut, Zoom und Kästen gingen verloren. Schwelle Handy = `env.isSmall`
+  (≤ 767 px); für Tablets (768–1399 px, Teilung mit 400 px Mindestbreite knapp) die Umschaltgrenze am echten Gerät
+  festlegen, Vorschlag 992 px. Der Trenngriff braucht für Finger und Tastatur eigene Bedienung.
+- **Prüfstatus** als Badge (`widget="badge"`), nicht als `statusbar`.
 - **Markierung (N6):** alle gefundenen Werte im Dokument dezent umrandet; das gerade gezeigte oder gewählte Feld wird
   kräftig hervorgehoben, das Dokument scrollt dorthin (auch auf eine andere Seite); Hover im Dokument hebt umgekehrt
   die Zeile rechts hervor. Keine feste Farbe je Feld.
@@ -132,16 +179,23 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
   Namensmarke über der Umrandung **nur bei bereits einem Feld zugeordneten Werten**; nicht zugeordnete Umrandungen bleiben ohne
   Namen; der aktive Wert zeigt seinen Namen immer gut lesbar. Schalter aus: Namen nur bei Hover und beim aktiven Feld (wie oben).
   Marken überdecken sich bei dichten Dokumenten – deshalb an einem Muster mit vielen Werten (Rechnung, Bescheid) auf
-  Lesbarkeit prüfen, bevor die Voreinstellung feststeht; Umsetzung in Scheibe U-4.
+  Lesbarkeit prüfen, bevor die Voreinstellung feststeht; Umsetzung in Scheibe U-4. Der Schalter ist Odoos `CheckBox` mit
+  `form-switch`, die Namensmarke der Pillenform von `TagsList` (`o_tag`, kleine Schrift, neutrale Farbklasse).
 
 ### 4.3 Die drei Werkzeuge im Dokument
+
+*Werkzeugleiste (Odoo-Abgleich):* Zeiger / Kasten / Nachlesen als `btn-group` mit reinen Symbolknöpfen und Sprechblase wie
+Odoos Ansichtsumschalter (`o_cp_switch_buttons`, aktiver Knopf `active`; Symbole `fa-mouse-pointer`, `fa-crop`,
+`fa-refresh` o. ä.), Zoom mit `fa-plus`/`fa-minus` und Sprechblasen wie im `FileViewer` (Tastenkürzel + / − / 0).
 
 1. **Zeiger (Standard): anklicken und markieren.** Jedes gelesene Wort ist eine unsichtbare Fläche (aus der
    Wortliste, gilt für digitale PDFs und Scans gleich). Feld rechts anklicken, dann im Dokument ein Wort anklicken
    oder über mehrere Wörter ziehen → der Text wird nach der Wertart des Felds gelesen und eingetragen (9 von 10
    fehlenden Werten aus Runde 1 wären so erreichbar gewesen). Ohne gewähltes Feld: Klick auf einen Wert öffnet
    „Zu Feld …“.
-2. **Kasten: grob aufziehen** (Werkzeug oder Umschalt+Ziehen). Sofort danach liest der Server alle
+2. **Kasten: grob aufziehen** (Werkzeug Alt+K oder Umschalt+Ziehen; Griffe wie `builder_overlay`, per Tastatur Pfeile
+   verschieben und Entf löschen – über Odoos Niveau hinaus; auf dem Handy konkurriert Ziehen mit Scrollen, deshalb nur im
+   Kasten-Werkzeug, `touch-action: none` auf der Überlagerung). Sofort danach liest der Server alle
    Beschriftung–Wert-Paare darin; die Kastenecke zeigt „6 Werte“. Zugeordnete Werte füllen ihre Felder (Vorrang vor
    Funden außerhalb, K1); nicht zugeordnete Paare erscheinen rechts unter **„Weitere Werte in Kästen“**. Kästen lassen
    sich verschieben, in der Größe ändern und löschen; beliebig viele, auf jeder Seite (K2).
@@ -156,6 +210,13 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 - Angezeigt werden: Felder **mit Vorschlag**, Felder, die **bei diesem Absender schon einmal bestätigt** wurden, und
   **angeheftete** Felder. Alle übrigen Felder des Katalogs erscheinen nicht – erreichbar über **„+ Feld“** (Suche im
   Katalog wie Paperless' „Custom Fields“-Menü).
+- Zeilen im Formularaufbau (`o_group`/`o_inner_group`, Beschriftung links, Feld rechts; auf dem Handy Beschriftung darüber),
+  der „Hilfetext“ (10.6) ist Odoos Feldhilfe (`help`, Fragezeichen an der Beschriftung), ungültige Werte mit `o_field_invalid`,
+  Hinweisbänder (abweichende IBAN, Dublette?) als `alert alert-warning` mit Textknopf wie an Odoo-Rechnungen, Symbolknöpfe
+  bestätigen `fa-check` / entfernen `fa-times`. „Herkunft“ und gedruckter Wert als `small text-muted` unter dem Feld.
+- **„+ Feld“** ist Odoos `SelectMenu` mit Suche (auf dem Handy als Bottom-Sheet), **„→ Feld …“** bei den weiteren Werten
+  folgt der Spaltenzuordnung des Import-Assistenten (Tabelle „Wert → Feld“, je Zeile ein `SelectMenu` mit Typ-Symbol),
+  die Alternativen „▾ (2)“ sind ein `Dropdown` mit `DropdownItem`s.
 - Jede Zeile nutzt das **Odoo-Eingabefeld der Wertart** (über `Record`): Datumswähler, Betrag mit Währung, Text.
   Daneben: Herkunft (aus Kasten / gelernt / Stichwort / von Hand), Alternativen (Aufklappliste, „▾ (2)“), bestätigen,
   entfernen. Der **gelesene Wert** steht im Feld, der **gedruckte** darunter klein (Runde 2: eine E-Mail war richtig
@@ -166,8 +227,14 @@ dem Eingangsordner neu entscheiden), E10 (eigene Firmendaten nie), E12 (Lernen j
 
 ### 4.5 Tastatur
 
-Tab/Umschalt+Tab durch die Felder, Enter bestätigt den Vorschlag, Alt+N / Alt+P nächstes / voriges Dokument
-(Odoo-Pager), K = Kasten-Werkzeug, Esc = Zeiger. Speichern und weiter = Strg+Enter.
+**Nach Odoo-Art (N12, Odoo-Abgleich):** Kürzel als `data-hotkey` an den Knöpfen, damit die Alt-Taste die Buchstaben
+einblendet. Tab/Umschalt+Tab durch die Felder; **Alt+N / Alt+P** nächstes / voriges Dokument (Pager, speichert bei Änderung
+zuerst); **Alt+S** Speichern, **Alt+J** Verwerfen, **Alt+B** zurück zur Liste (alle von Odoo belegt, nicht neu definieren);
+**Alt+K** Kasten-Werkzeug, **Alt+Z** Zeiger (Esc = Zeiger nur, wenn nichts offen ist – ein offenes Popover oder Dropdown
+gehört zuerst Esc). Kein Strg+Enter (in Odoo nur in Dialogen belegt, dort bleibt es beim Dialog, z. B. im Kontakt-Formular);
+Strg+K (Befehlspalette) nie überschreiben. „Enter bestätigt den Vorschlag“ ist in Odoo-Feldern nicht belegt und bleibt
+bewusste Ausnahme. Belegte Alt-Buchstaben im Kern: s, j, c, n, p, b, u, x, q, z, v, h – vor jedem neuen Knopf gegenprüfen (Alt+Z
+kollidiert mit „Schließen“ nur in anderen Masken; beim Bau im Browser prüfen).
 
 ## 5. Server: was dazukommt
 
@@ -226,7 +293,8 @@ Eingangsordner neu entscheiden. Vorschlag:
 
 - **Standard je Absender: vorschlagen.** Gemerkte Kästen erscheinen gestrichelt, Werte vorbelegt, Speichern bestätigt.
 - **„Künftig automatisch übernehmen“** als Schalter je Absender (setzt nur ein Verwalter, U3), erst mit dem Eingangsordner (Schritt 7) wirksam,
-  nur wenn *alle* Werte aus gemerkten Kästen eindeutig gelesen wurden und die Anker gefunden wurden; sonst fällt die
+  nur wenn *alle* Werte aus gemerkten Kästen eindeutig gelesen wurden und die Anker gefunden wurden (jeder gemerkte Kasten
+  wiedergefunden, jeder Wert darin sauber gelesen); sonst fällt die
   Datei in „ungeprüft“. Übernommene Werte tragen die Herkunft „automatisch“ und bleiben filterbar („automatisch
   übernommen, nie angesehen“); Notiz im Verlauf wie heute.
 - **Ergänzt nach Gegenlese (10.4):** „eindeutig“ wird messbar – ein Absender kommt für die Automatik erst in Frage, wenn
@@ -243,7 +311,7 @@ Eingangsordner neu entscheiden. Vorschlag:
 |---|---|---|
 | U-1 | **Volltextsuche** im gelesenen Text (`derivative.text`) in der Dateisuche wieder anbinden, dazu **Formularfeld-Werte** in Wortliste und Text (N1) – die v2-Suche findet heute nur Name, Tags, Status, Kontakt (v1 konnte den Inhalt durchsuchen) | ein Wort, das nur im Dokument steht, findet die Datei; Suche bleibt bei großen Ordnern schnell |
 | U-2 | Server: Kästen beim Vorschlagen, Paare je Kasten mit Lage, Wert aus Markierung | Tests je Richtung wie W-4; Jahresbescheid-Beispiel liefert Infoblock-Paare |
-| U-3 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern, **Prüfstatus** je Dokument (N4); **unsichere Werte zuerst**, Plausibilitäts-/Dubletten-Hinweise, **abweichende IBAN** (Abschnitt 9) | eine Datei prüfen und speichern ohne Kasten |
+| U-3 | Prüf-Fenster Grundgerüst: Client-Aktion, Pager, geteilte Ansicht, Viewer mit Wortflächen, Feldliste mit `Record`, Speichern, **Prüfstatus** je Dokument (N4); **unsichere Werte zuerst**, Plausibilitäts-/Dubletten-Hinweise, **abweichende IBAN** (Abschnitt 9) | eine Datei prüfen und speichern ohne Kasten; zuerst im Browser bestätigt: `usePager` in der Client-Aktion, Brotkrumen „Dateien › Name“, Reiter-Umschaltung ohne Neuladen des Dokuments (Odoo-Abgleich) |
 | U-4 | Kasten-Werkzeug, weitere Werte, „als neues Feld“ (Verwalter) / „Feld vorschlagen“ (Nutzer, U2), Hervorheben aktive Stelle ↔ Feld (N6) | Kästen auf mehreren Seiten, Katalog wächst aus dem Fenster |
 | U-5 | „daraus nicht lernen“ und Verwalter-Übersicht des Gelernten (N5); Kästen merken je Absender für alle (U3: Modell, Anker, Vorschlag beim nächsten Dokument; N3: Vorrang nur mit eindeutigem Anker, „gemerkte Kästen verwerfen“), Feldliste je Absender | zweites Dokument desselben Absenders kommt vorbelegt |
 | U-6 | Nachlesen (Umwandler), QR automatisch je Dokument (U5, 5.6), „Text erkennen“ für Bilder auf Wunsch (U6) | schlechter Scan liefert nach Nachlesen Werte; GiroCode wird ohne Zutun gelesen und vorgeschlagen |
@@ -493,6 +561,22 @@ Odoo-Bordmitteln. Mit echten Spalten geht all das über Odoos normale Spalten, �
   mit Rückfrage; die Spalte zeigt den Wert der **aktuellen Fassung**. Umsetzung in U-7 (Spaltenarten, Kopplung
   Katalogfeld ↔ Spalte) und U-9 (Spalten einblenden, Filter, Gruppieren, Pivot, Export).
 
+### 10.8 Abgleich mit Odoos Optik und Bedienung (2026-09-30)
+
+Ergebnis in `docs/review/werterkennung_oberflaeche_odoo_optik_abgleich_2026-09-30.md` (lesend gegen den lokalen
+Odoo-19-Quellcode, Stand 2026-09-24; **nicht geprüft:** Enterprise und jedes Verhalten im Browser). Alle 15 Empfehlungen sind
+eingearbeitet (3, 3.1, 3.2, 4.1–4.5, 11.4). Zwei Punkte entschied der Nutzer:
+
+- ~~**N11** Brotkrumen~~ **entschieden (Nutzer 2026-09-30, „wie deine Empfehlung“): Odoo-Art** – „Dateien › Dateiname“, der Ordner
+  als kleine Zeile darunter (4.1). Der Ordnerpfad als Brotkrume wäre Eigenbau gewesen.
+- ~~**N12** Tastaturkürzel~~ **entschieden (Nutzer 2026-09-30, „wie deine Empfehlung“): Alt-Kürzel** (4.5): Alt+N/P/S/J, Alt+K
+  Kasten, Alt+Z Zeiger; „Speichern und weiter“ = Weiter-Knopf des Pagers; Strg+Enter entfällt.
+
+Die in U1 (6.3) festgelegte Automatik deckt sich mit den vom Nutzer am 2026-09-30 wiederholten Regeln (Standard Vorschlag;
+Schalter je Absender, erst mit Eingangsordner; nur bei eindeutigem Ergebnis, sonst „ungeprüft“; Vermerk „automatisch
+übernommen“, Filter „automatisch, nie angesehen“, Notiz im Verlauf) – keine Änderung nötig. Präzisierung: „eindeutig“ heißt
+jeder gemerkte Kasten wiedergefunden **und** jeder Wert darin sauber gelesen.
+
 ## 11. Noch nicht durchdacht (Stand Sitzungsende 2026-09-29)
 
 Nutzer: **keine Freigabe**, Konzept in der nächsten Sitzung **weiter durchdenken**. Bisher nur grob oder gar nicht behandelt:
@@ -504,8 +588,11 @@ Nutzer: **keine Freigabe**, Konzept in der nächsten Sitzung **weiter durchdenke
    löschen, Spalten neu aufbauen) – nach dem Muster von W-5 (Leserecht vor `sudo`, N1-Tests über `call_kw` und JSON-2).
 3. **Leistung:** Wortflächen bei langen Dokumenten (100+ Seiten), Vorschläge mit Kästen, Neuaufbau der Spalten über den
    ganzen Bestand, Nachlesen und QR (Seiten-/Zeitgrenzen konkret).
-4. **Oberfläche im Detail:** leere Zustände (keine Wortliste, Umwandler nicht erreichbar, Bild ohne Text), Fehler,
-   viele Seiten, Tastatur, schmale Bildschirme/Handy, Barrierefreiheit, ungespeicherte Änderungen.
+4. **Oberfläche im Detail:** Zustände nach Odoo-Vorbild (Odoo-Abgleich, Rest offen): leer (keine Wortliste, Bild ohne Text) =
+   `NoContentHelper` (`o_view_nocontent`, Titel plus eine Zeile); Laden = `fa-circle-o-notch fa-spin` am Kasten; Umwandler nicht
+   erreichbar und Fehler = Odoo-Meldung `warning`/`danger` mit optionalem Textknopf (`role="alert"`); Rückfrage („Gemerkte
+   Kästen verwerfen“) = `ConfirmationDialog`. Barrierefreiheit: Odoo-Niveau (`aria-label`, `data-tooltip`, `role="alert"`)
+   plus Tastaturbedienung der Kästen. Noch offen: viele Seiten, Tablet-Umschaltgrenze, ungespeicherte Änderungen im Detail.
 5. **Abnahme je Scheibe:** Tests und „fertig, wenn“ so genau wie bei W-1…W-6; welche Messungen an der Sammlung.
 6. **Übergang von v1:** vorhandene Werte (`extracted_value`, Muster) bei der Übernahme (Schritt 8) – übernehmen,
    verwerfen oder neu erkennen?

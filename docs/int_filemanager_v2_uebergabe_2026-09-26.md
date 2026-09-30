@@ -167,6 +167,10 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
      Stichwörter lesen“. Konzept: `docs/int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`
      (Entscheidungen K1–K5 und U1–U9 alle getroffen, Vorbilder, geprüfte Odoo-Bausteine, Scheiben U-1…U-10 beginnend mit der Volltextsuche, Nachtrag PaperOffice AI). **Noch nicht freigegeben, nichts
      umgesetzt** – Vollständigkeitsrunde (Abschnitt 10: Abdeckung, Versuche an allen 513 PDFs, Codex-Gegenlese) ergab neue Fragen N1–N8 (u. a. Formularfeld-Lücke im Umwandler, QR nur 2/513) – N1–N9 am 2026-09-29 alle entschieden (N9: eigene Modelle plus echte Spalte je Katalogfeld) – **Sitzungsende 2026-09-29: keine Freigabe**, Nutzer will das Konzept weiter durchdenken. **Einstieg neue Sitzung:** Konzept lesen (Abschnitte 1, 4, 7, 8, 10, 11), mit den offenen Punkten aus **Abschnitt 11** weitermachen (Datenmodell im Detail, Rechte, Leistung, Oberflächen-Zustände, Abnahme je Scheibe, v1-Übergang, Übersetzung, Eingangsordner); **nichts umsetzen** vor der Freigabe. Arbeitsweise laut Nutzer: Abdeckung offenlegen (vollständig vs. Stichprobe), Alternativen zeigen, Fragen einzeln durchgehen. Kleinigkeit: zwei Knotenfelder mit Bezeichnung „Created on“ (`create_date`, `mtime`).
+   - **Stand 2026-09-30:** U-1 fertig (Volltextsuche, Formularfelder); Entscheidungen dazu: kein zweiter Index für häufige Wörter,
+     alte Wortlisten bleiben bis zum Ersatz (umgesetzt), Codex-Gegenlesen von U-1 steht noch aus (Codex-Limit bis 12:30). Der
+     Odoo-Abgleich der Oberfläche ist im Konzept eingearbeitet (Abschnitte 3.1, 3.2, 4, 10.8): Brotkrumen „Dateien › Name“ und
+     Alt-Kürzel entschieden. **Weiterhin keine Freigabe** für U-2 ff.
    - Lokale Kopien der Runden (Downloads, `%TEMP%\w6r*`) sind alle gelöscht (2026-09-29); maßgeblich ist Tower
      `/mnt/user/test/werterkennung_w6/` (`runde1–4.json`, `korrekturen.json`, `w6_sample*.json`).
    - Prototyp-Skripte (ohne persönliche Daten): `docs/prototypes/werterkennung/` mit README.
