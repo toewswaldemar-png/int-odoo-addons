@@ -167,7 +167,52 @@ Nichts davon ist an eine Explorer-Ansicht angebunden außer den fertigen Kacheln
      Stichwörter lesen“. Konzept: `docs/int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`
      (Entscheidungen K1–K5 und U1–U9 alle getroffen, Vorbilder, geprüfte Odoo-Bausteine, Scheiben U-1…U-10 beginnend mit der Volltextsuche, Nachtrag PaperOffice AI). **Noch nicht freigegeben, nichts
      umgesetzt** – Vollständigkeitsrunde (Abschnitt 10: Abdeckung, Versuche an allen 513 PDFs, Codex-Gegenlese) ergab neue Fragen N1–N8 (u. a. Formularfeld-Lücke im Umwandler, QR nur 2/513) – N1–N9 am 2026-09-29 alle entschieden (N9: eigene Modelle plus echte Spalte je Katalogfeld) – **Sitzungsende 2026-09-29: keine Freigabe**, Nutzer will das Konzept weiter durchdenken. **Einstieg neue Sitzung:** Konzept lesen (Abschnitte 1, 4, 7, 8, 10, 11), mit den offenen Punkten aus **Abschnitt 11** weitermachen (Datenmodell im Detail, Rechte, Leistung, Oberflächen-Zustände, Abnahme je Scheibe, v1-Übergang, Übersetzung, Eingangsordner); **nichts umsetzen** vor der Freigabe. Arbeitsweise laut Nutzer: Abdeckung offenlegen (vollständig vs. Stichprobe), Alternativen zeigen, Fragen einzeln durchgehen. Kleinigkeit: zwei Knotenfelder mit Bezeichnung „Created on“ (`create_date`, `mtime`).
-   - **EINSTIEG neue Sitzung (Stand 2026-09-30 abends, alles gepusht bis 98b69ff, Branch `feature/int-filemanager-v2`):**
+   - **EINSTIEG neue Sitzung (Stand 2026-10-01, Branch `feature/int-filemanager-v2`, Commits `3d33f8c` [ADD] Eigenschaften-Formular, `4a7441e` [FIX] Erkennung/Umwandler, danach `[DOC]`):**
+     **Entscheidung des Nutzers:** Das Prüf-Fenster fällt weg. Rechtsklick → **Eigenschaften** öffnet ein natives Odoo-Formular am Knoten
+     (Dialog extra-large; Aktion `action_int_filemanager_node_details`, Ansicht `int_filemanager_node_details_form`): links Name, Größe, Status,
+     Tags, Kontakt und darunter die erkannten Werte, rechts die Vorschau.
+     **Gebaut:** (1) Server: Feld `values_json` am Knoten (Compute = `suggest_field_values`, Inverse = `apply_field_values`), so speichert
+     der normale Speichern-Knopf; `suggest_field_values` liefert zusätzlich `confirmed_place` (Ort gespeicherter Werte, mit `Page.refit` auf die
+     aktuellen Wortkästen angepasst). (2) Client `static/src/int_filemanager/v2/properties/`: `values_field.js/.xml` (Widget
+     `int_filemanager_v2_values`: Zeilen zur Laufzeit als Odoo-Felder über `Record` + `FormRenderer`; Eingabe = Odoos `AutoComplete` mit den
+     Fundstellen und losen Werten, letzter Eintrag „Im Dokument wählen …“; letzte Zeile „Feld hinzufügen“ ebenfalls `AutoComplete`; Knöpfe „Gefundene
+     Werte übernehmen“ und „Kontakt: …“), `preview_field.js/.xml/.scss` (Widget `int_filemanager_v2_preview` auf `current_revision_id`: pdf.js-Rahmen mit
+     `hidePDFJSButtons`, Bilder/Video, Symbol „eigenes Fenster“ = `FileViewer`, Wortmodus mit Hinweisband und Esc, Umrandung der Werte mit 2/1 pt Rand,
+     Zoom auf den Wert beim Fokus per pdf.js-Ziel `FitR`), `events.js` (die sechs Ereignisse auf `record.model.bus`). `viewer_overlay.js` bekam `onCancel`
+     (Esc im Rahmen) und `scrollTo` per `FitR`. (3) Erkennung: Spalten-Label mit „:“ dazwischen (`value_suggest.py`), Kundennummer „6098455/ 1“
+     (`value_types.py`), Katalogstichwort „RE“ bei Rechnungsnummer (nur Seed, `noupdate`: bestehende DB von Hand). (4) Umwandler `tools/fmconverter/worker.py`:
+     weißer Text auf weißem Papier wird nicht gelesen (Maschinen-Marken wie `#x#MAIL#x#`), Schriften ohne Ascent/Descent nehmen die FontBBox
+     (`_repaired_font_manager`), Wörter-Format **v6** (`derivative_plan.py` `WORDS_SPEC`, `server.py` `WORDS_SPECS`); 76 Umwandler-Tests. (5) Derivate-Aufholfunktion
+     zählt nur für die Dateiart geplante Jobs (`_enqueue_missing`). (6) `ui_instance.sh` upgradet mit `--i18n-overwrite`.
+     **Geprüft:** pre-commit grün; volle Odoo-Suite 555 Tests ohne Fehler; Umwandler 76 Tests; 72 Node-Tests der Logik; `jscheck` sauber; v2check und
+     v2check „OK (140 Dateien als neu geprüft)“; Codex-Gegenlese unten bewertet. Im Browser hat der Nutzer das Formular auf der Test-Instanz gesehen und nachgebessert.
+     **Nächste Schritte (in dieser Reihenfolge):** (a) Rückmeldung des Nutzers zum Formular abwarten (Zoom auf den Wert, Rahmenrand, Layout).
+     (b) **Prüf-Fenster entfernen** (Schritt 3 der Absprache): `static/src/int_filemanager/v2/value_review/` (Client-Aktion, XML, SCSS, Tests),
+     Menüpunkt `int_check_values` und `onCheckValues` in `controller_mutations.js`, Übersetzungen; vorher `viewer_overlay.js`,
+     `value_review_geometry.js`, `value_review_edits.js` (+ Node-Tests) nach `properties/` verschieben und die Importe nachziehen.
+     (c) Wortklick fertig machen: Bilder (Wortschicht über `<img>`), Handy (zum Dokument scrollen und zurück). (d) **A7 Wörterbuch** (Planung im Ideenkatalog
+     und im Chat: Modell `int_filemanager.ocr_correction`, bearbeitbare Liste, `apply_corrections` in `_recognition_page`, nur bei `ocr != "none"`);
+     offene Entscheidungen: sofort wirken, keine Sprache, nur Einzelwörter. (e) Ideenkatalog `docs/int_filemanager_paperoffice_ideenkatalog_2026-10-01.md`
+     (A1–H6) mit dem Nutzer durchgehen; Entscheidungen: Was ist der „Dokumenttyp“ (Tag/Status/Feld)? Virtuelle Ordner? Notizen auf Bereichen und Stempel?
+     Papier-Workflows (Trennseite, QR, Originalablageort)? (f) Konzept-Doku nachziehen (Konzept Abschnitte 0/4 beschreiben noch das Prüf-Fenster).
+     **Offen/Unfertig:** Gesamtbetrag der Henrich-Rechnung hat keinen gespeicherten Ort (springt nicht); gedrehte PDF-Seiten bekommen keinen Zoom auf den Wert;
+     weitere unsichtbare Textarten (Schrift < 1 pt, außerhalb der Seite) werden nicht gefiltert; Modulversion nicht erhöht (19.0.1.23.0).
+     **Codex-Gegenlese 2026-10-01 (5 Befunde, bewertet):** (1) *offen, echt:* `ViewerOverlay.attach()` lädt die Wörter **aller** Seiten sofort
+     (`page_words` je Seite) – bei sehr langen PDFs viele Aufrufe; Fix: Wörter erst im Wortmodus laden (`setWordMode(true)` malt die Wortflächen) oder nur sichtbare Seiten.
+     (2) *offen, plausibel:* Ein getippter Wert geht verloren, wenn man direkt mit dem Speichern-Kürzel speichert, ohne das Feld zu verlassen (`useInputField`
+     hängt am Bus des inneren `Record`, das Formular ruft nur seinen eigenen `NEED_LOCAL_CHANGES`); Fix: im Werte-Widget `hooks.onRootLoaded` das innere Record merken und
+     das Ereignis des Formulars dorthin weiterreichen (`proms` mitgeben). Im Browser prüfen. (3) *offen, selten:* Kontakt wechseln lässt die Vorschläge beim alten Absender
+     (Hinweise je Absender); Fix: nach Kontaktwechsel `values_json` neu lesen. (4) *bekannte Grenze:* weiß gefüllter Text mit schwarzer Kontur wird vom Weiß-Filter
+     entfernt (pdfplumber liefert keinen Textwiedergabemodus; die Strichfarbe ist meist Standard-Schwarz und taugt nicht zur Unterscheidung). (5) *behoben:* die Kundennummer-
+     Erweiterung „Zahl/ Ziffer“ schneidet keine Dezimalzahl mehr ab (`value_types.py`, Test).
+     **Arbeitsweise des Nutzers (neu):** Odoo-Code gründlich auf native Bausteine prüfen; Ursachen im Code mit Test beheben, keine Handeingriffe in DB/Container;
+     **Commit erst auf Ansage**; Test-Instanz ohne Rückfrage aktualisieren (`bash tools/v2check/ui_instance.sh`, `http://192.168.188.67:8085`, Login-Datei
+     `/mnt/user/appdata/fmtest/v2ui/LOGIN.txt` auf Tower, Nutzer tippt das Passwort selbst); Test-Datei: Henrich-Rechnung (Knoten 2) und „Bescheid A/B/C“.
+     **Stolpersteine:** neue Wörter-Spec nur mit Eintrag in `server.py` `WORDS_SPECS`, sonst 400 vom Umwandler; gs-Test-PDFs brauchen ≥ 20 sichtbare Zeichen, sonst
+     liest der Umwandler per OCR; pdfminer nimmt für Standardschriften (Helvetica …) die Maße aus seinen Tabellen, nicht aus dem Beschreiber; Bash-Heredocs mit `
+`
+     in Python-Strings werden zu echten Zeilenumbrüchen; `pre-commit` prüft nur gestagte Dateien; der Hook formatiert JS/XML/Python um (danach neu stagen).
+   - *(Überholt, Stand 2026-09-30 abends – nur noch als Verlauf)* **EINSTIEG neue Sitzung (alles gepusht bis 98b69ff):**
      U-1, U-2, U-3a/b/c gebaut (Volltextsuche, Kästen/Markierung im Server, Prüf-Fenster lesen/bearbeiten/speichern/anklicken);
      Codex-Gegenlese von U-1+U-2 erledigt und eingearbeitet (f9f6c97). **Der Nutzer hat die Oberfläche gesehen: sie sieht nicht nach
      Odoo aus, viel wird sich ändern.** Erst das lesen: Konzept-Abschnitt „0. Änderungswünsche nach dem ersten Blick“

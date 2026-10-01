@@ -1,6 +1,6 @@
 # docs/ – Wegweiser
 
-Stand 2026-09-30. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde gelöscht; was überholt ist, liegt in
+Stand 2026-10-01. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde gelöscht; was überholt ist, liegt in
 [`archiv/`](archiv/) und in der Git-Historie.
 
 ## int_filemanager 2 (lebend)
@@ -15,6 +15,7 @@ Stand 2026-09-30. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde g
 | [`int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`](int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md) | Konzept Prüf-Fenster mit Kasten-Auswahl (U1–U9 und N1–N9 entschieden, Freigabe offen): Vorbilder PaperOffice/Paperless-ngx/Odoo, geprüfte Odoo-Bausteine, Nachtrag PaperOffice AI, Scheiben U-1…U-10 |
 | [`int_filemanager_v2_werterkennung_denkpunkte_entwurf_2026-09-30.md`](int_filemanager_v2_werterkennung_denkpunkte_entwurf_2026-09-30.md) | Entwurf (Dauerlauf A3): Datenmodell, Rechte je Aufruf und Leistung der Werterkennung, mit Messungen; ohne Freigabe |
 | [`int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md`](int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md) | Aufgabenliste für den unbeaufsichtigten Dauerlauf (Regeln, Grenzen, Fortschritt je Aufgabe) |
+| [`int_filemanager_paperoffice_ideenkatalog_2026-10-01.md`](int_filemanager_paperoffice_ideenkatalog_2026-10-01.md) | Ideenkatalog A1–H6 aus PaperOffice Classic mit Odoo-Weg, Aufwand, Einordnung, offenen Entscheidungen und Umsetzungsstand |
 | [`review/konzept_codepruefung_2026-09-26.md`](review/konzept_codepruefung_2026-09-26.md) | Code-Prüfung des Konzepts (194 Behauptungen) |
 | [`odoo_konventionen_2026-09-26.md`](odoo_konventionen_2026-09-26.md) | Code-Konventionen für neuen Code |
 | [`int_filemanager_konzept_db_vorrang_2026-09-24.md`](int_filemanager_konzept_db_vorrang_2026-09-24.md) | Hintergrund: Abschnitte 19 und 20 (Live-Prüfungen auf Tower) |
