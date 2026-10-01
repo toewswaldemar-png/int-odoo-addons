@@ -15,7 +15,10 @@ TEXT_SPEC = "embedded"
 # v2: lines, column gaps, each word's place in the text, page sizes; scans OCR'd anew.
 # v3: text drawn twice for bold is read once.
 # v4: the values of filled-in PDF form fields are part of the text and the words.
-WORDS_SPEC = "v4"
+# v5: text printed in white on white (machine tags) is not part of the text.
+# v6: the box of a word follows the glyph box of its font when the font declares no
+# ascent and no descent (it stood on the baseline and stuck out above the text).
+WORDS_SPEC = "v6"
 META_SPEC = "v1"
 
 # Order in the queue: what is seen first, then what is only looked up. "words" can mean

@@ -338,3 +338,35 @@ class TestV2ValueSuggest(BaseCase):
     def test_a_value_never_crosses_a_column(self):
         page = layout((100, [(50, "Rechnungsnummer"), (200, "4711"), (300, "12")]))
         self.assertEqual(texts(run(page, [INVOICE])[0]), {1: ["4711"]})
+
+
+@tagged("post_install", "-at_install")
+class TestV2PlaceRefit(BaseCase):
+    def test_a_stored_place_takes_the_box_of_the_word_now_in_it(self):
+        page = layout((100, [(50, "Kundennummer"), (200, "4711")]))
+        # Stored when the word boxes stood a few points higher.
+        old = {
+            "page": 1,
+            "x0": 200,
+            "top": 96,
+            "x1": 200 + 4 * CHAR_WIDTH,
+            "bottom": 105,
+        }
+        place = page.refit(old)
+        self.assertEqual(
+            place,
+            {
+                "page": 1,
+                "x0": 200,
+                "top": 100,
+                "x1": 200 + 4 * CHAR_WIDTH,
+                "bottom": 100 + LINE_HEIGHT,
+            },
+        )
+
+    def test_a_place_without_a_word_in_it_stays(self):
+        page = layout((100, [(50, "Kundennummer")]))
+        empty = {"page": 1, "x0": 400, "top": 500, "x1": 450, "bottom": 510}
+        self.assertEqual(page.refit(empty), empty)
+        other_page = {"page": 2, "x0": 50, "top": 100, "x1": 100, "bottom": 110}
+        self.assertEqual(page.refit(other_page), other_page)

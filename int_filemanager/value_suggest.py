@@ -213,6 +213,34 @@ class Page:
             max(w[4] for w in words),
         )
 
+    def refit(self, place):
+        """The box of the words that stand in a place stored earlier, as they are now.
+
+        A place is stored with a confirmed value. The boxes of the words change when the
+        word list is made in another way (a font's box, a new reading of the file), and
+        a stored place then still outlines the old one. Every word whose centre lies in
+        the stored box is taken; without such a word the place stays as it was.
+
+        :param place: ``{"page", "x0", "top", "x1", "bottom"}``
+        :returns: the same shape
+        """
+        words = [
+            w
+            for w in self.words
+            if w[0] == place["page"]
+            and place["x0"] <= (w[1] + w[3]) / 2 <= place["x1"]
+            and place["top"] <= (w[2] + w[4]) / 2 <= place["bottom"]
+        ]
+        if not words:
+            return place
+        return {
+            "page": place["page"],
+            "x0": min(w[1] for w in words),
+            "top": min(w[2] for w in words),
+            "x1": max(w[3] for w in words),
+            "bottom": max(w[4] for w in words),
+        }
+
     def in_area(self, start, end, area):
         """Whether text[start:end] is printed in area; without positions it is not."""
         if not area:
@@ -316,6 +344,9 @@ class Page:
         segments = self._on_page.get(page, [])
         labels = []
         left = [s for s in segments if s.line == seg.line and s.x1 <= seg.x0 + 1]
+        # A cell of only a colon or dash between label and value ("Datum : 18.08.2026")
+        # is no label: the label is the one before it.
+        left = [s for s in left if any(c.isalnum() for c in self.text[s.start : s.end])]
         if left:
             s = max(left, key=lambda s: s.x1)
             labels.append(self._label(s, "left", 0, seg.x0 - s.x1))

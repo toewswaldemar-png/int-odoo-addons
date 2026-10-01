@@ -80,6 +80,8 @@ SCANNED_DOCUMENT_PAGE_SHARE = 0.5
 # Within a line, a gap wider than this many times the text height separates two
 # columns; it becomes a tab in the text so that a value is never read across it.
 COLUMN_GAP_HEIGHTS = 1.5
+# How far from pure white a fill colour may be and still count as white.
+WHITE_TOLERANCE = 0.02
 WORDS_FORMAT_VERSION = 2
 # Form fields whose value is text: "Tx" (a text box) and "Ch" (a list or combo box).
 # "Btn" (check box, radio button) holds a name, not text; "Sig" is a signature.
@@ -509,6 +511,76 @@ def _separator(previous, word):
     return " "
 
 
+def _repaired_font_manager():
+    """pdfminer's font manager, but a font that gives no ascent and no descent gets them
+    from its own FontBBox.
+
+    pdfminer puts a character one font size high on its baseline, lowered by the descent
+    the font declares. Some programs declare 0 for both although the same descriptor holds
+    the box of all glyphs (FontBBox, in thousandths of the font size); the character box
+    then stands on the baseline and sticks out above the text, with no room for descenders.
+    The box of the glyphs is the font's own statement of its extent, so it replaces the
+    missing values - and only those: a font with an ascent or a descent, or a box that does
+    not enclose the baseline (the invisible font of an OCR text layer), stays as it is.
+    """
+    from pdfminer.pdfinterp import PDFResourceManager
+
+    class RepairedFonts(PDFResourceManager):
+        def get_font(self, objid, spec):
+            font = super().get_font(objid, spec)
+            if not font.ascent and not font.descent:
+                try:
+                    _x0, y0, _x1, y1 = (float(v) for v in font.bbox)
+                except (TypeError, ValueError):
+                    return font
+                if y0 < 0 < y1:
+                    font.descent, font.ascent = y0, y1
+            return font
+
+    return RepairedFonts()
+
+
+def _is_white(color):
+    """Whether a fill colour is white: gray or RGB at full, CMYK without any ink."""
+    if not isinstance(color, (tuple, list)) or not color:
+        return False
+    if len(color) == 4:
+        return all(c <= WHITE_TOLERANCE for c in color)
+    return all(c >= 1 - WHITE_TOLERANCE for c in color)
+
+
+def _without_invisible_text(page):
+    """The page without the text nobody can see: white letters on the white paper.
+
+    Programs that print invoices put machine tags there ("#x#MAIL#x#:name@example.org")
+    that the person reading the page never sees, and a value found in it would be outlined
+    in an empty place. White text over a coloured area or a picture is a heading on a bar
+    and stays; so does the invisible text layer of a scan (no fill colour at all).
+    """
+    white = [c for c in page.chars if _is_white(c.get("non_stroking_color"))]
+    if not white:
+        return page
+    grounds = [
+        o
+        for o in page.rects + page.curves
+        if o.get("fill") and not _is_white(o.get("non_stroking_color"))
+    ] + list(page.images)
+
+    def on_ground(char):
+        x = (char["x0"] + char["x1"]) / 2
+        y = (char["top"] + char["bottom"]) / 2
+        return any(
+            g["x0"] <= x <= g["x1"] and g["top"] <= y <= g["bottom"] for g in grounds
+        )
+
+    hidden = {id(c) for c in white if not on_ground(c)}
+    if not hidden:
+        return page
+    return page.filter(
+        lambda obj: obj.get("object_type") != "char" or id(obj) not in hidden
+    )
+
+
 def _dedupe_chars(page):
     """``page.dedupe_chars()`` with the same rules, in n log n.
 
@@ -549,6 +621,7 @@ def _read_pdf(pdf_path):
     # Not raising on undecodable strings: a field name or comment in an odd encoding
     # would otherwise take all annotations of the page - the form values - with it.
     with pdfplumber.open(pdf_path, raise_unicode_errors=False) as pdf:
+        pdf.rsrcmgr = _repaired_font_manager()
         for page_no, page in enumerate(pdf.pages, start=1):
             pages.append(
                 {
@@ -565,7 +638,7 @@ def _read_pdf(pdf_path):
                 offset += 1
             previous = None
             form_words = _form_field_words(page)
-            page = _dedupe_chars(page)
+            page = _dedupe_chars(_without_invisible_text(page))
             for w in page.extract_words(use_text_flow=False) + form_words:
                 if previous is not None:
                     separator = "\n" if w.get("line_start") else _separator(previous, w)

@@ -73,7 +73,7 @@ EXT_RE = re.compile(r"[a-z0-9]{0,8}")
 LABEL_RE = re.compile(r"[a-z0-9_]{1,16}")
 # The word list formats this converter makes; a newer one is not made silently in an
 # older format, so an Odoo that asks for it gets an error and not a wrong result.
-WORDS_SPECS = ("v2", "v3", "v4")
+WORDS_SPECS = ("v2", "v3", "v4", "v5", "v6")
 JOB_ID_RE = re.compile(r"[0-9a-f]{32}")
 WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "worker.py")
 EXIT_STATES = {0: "done", 10: "not_applicable", 11: "failed"}

@@ -314,7 +314,10 @@ def _find_number(text, pos, endpos, ctx):
     pattern = re.compile(
         _LEFT
         + r"(?:\d{1,4}(?:-\d{1,4})?(?:[ ]\d{1,4}(?:-\d{1,4})?){1,6}(?![\w,]|[.,]\d)"
-        + r"|(?=[\w\-/.]*\d)[A-Za-z0-9](?:[A-Za-z0-9\-/.]*[A-Za-z0-9])?(?![\w\-/]))"
+        + r"|(?=[\w\-/.]*\d)[A-Za-z0-9](?:[A-Za-z0-9\-/.]*[A-Za-z0-9])?"
+        # A sub-account after a slash and a blank: "6098455/ 1", but not the start of a
+        # decimal number ("123/ 45,67").
+        + r"(?:/[ ]\d{1,3}(?![,.]\d))?(?![\w\-/]))"
     )
     for m in pattern.finditer(text, pos, endpos):
         # A date is not a number, though it looks like one ("29.01.2019").

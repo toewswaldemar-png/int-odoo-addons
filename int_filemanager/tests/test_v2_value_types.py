@@ -71,8 +71,16 @@ class TestV2ValueTypes(BaseCase):
                 ("Kunde", None),
                 # A value never crosses a column or line break.
                 ("4711\t12", {"value_text": "4711"}),
+                # A sub-account behind a slash and a blank belongs to the number.
+                ("6098455/ 1", {"value_text": "6098455/1"}),
             ],
         )
+
+    def test_the_start_of_a_decimal_number_is_no_sub_account(self):
+        found = [
+            c.value["value_text"] for c in value_types.find("number", "123/ 45,67", 0)
+        ]
+        self.assertNotIn("123/45", found)
 
     def test_number_right_after_a_label(self):
         # "Nr.4711" is one token; searched from the end of the label it is the number.

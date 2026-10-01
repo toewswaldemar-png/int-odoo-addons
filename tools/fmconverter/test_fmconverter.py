@@ -444,6 +444,88 @@ class ConverterTest(unittest.TestCase):
                 [(c["text"], c["x0"], c["top"]) for c in theirs.chars],
             )
 
+    def pdf_with_font_metrics(self, ascent, descent, bbox):
+        """A PDF of one line of text whose font descriptor says what is given.
+
+        The font gets a name of its own and widths, or pdfminer would take the metrics of a
+        standard font from its tables and never read the descriptor.
+        """
+        import pikepdf
+
+        pdf = pikepdf.open(io.BytesIO(self.make_pdf("Metrics of this font are set")))
+        for font in pdf.pages[0].Resources.Font.values():
+            font.BaseFont = pikepdf.Name.AllAndNone
+            font.FirstChar = 32
+            font.LastChar = 126
+            font.Widths = pikepdf.Array([556] * 95)
+            font.FontDescriptor = pdf.make_indirect(
+                pikepdf.Dictionary(
+                    Type=pikepdf.Name.FontDescriptor,
+                    FontName=pikepdf.Name.AllAndNone,
+                    Flags=32,
+                    ItalicAngle=0,
+                    StemV=80,
+                    Ascent=ascent,
+                    Descent=descent,
+                    FontBBox=pikepdf.Array(bbox),
+                )
+            )
+        buf = io.BytesIO()
+        pdf.save(buf)
+        return buf.getvalue()
+
+    def first_word_box(self, content):
+        result = self.words(content)
+        height = result["pages"][0]["height"]
+        _page, _x0, top, _x1, bottom, _start, _end = result["words"][0]
+        # make_pdf puts the text on a baseline 700 points above the lower edge, size 24.
+        baseline = height - 700
+        return top - baseline, bottom - baseline
+
+    def test_a_font_without_ascent_and_descent_takes_its_box_from_the_font_bbox(self):
+        top, bottom = self.first_word_box(
+            self.pdf_with_font_metrics(0, 0, [-200, -250, 1000, 800])
+        )
+        # One font size high, lowered by the 0.25 of the glyph box that lies below the baseline.
+        self.assertAlmostEqual(bottom, 0.25 * 24, delta=0.1)
+        self.assertAlmostEqual(top, -0.75 * 24, delta=0.1)
+
+    def test_a_font_with_a_descent_keeps_it(self):
+        top, bottom = self.first_word_box(
+            self.pdf_with_font_metrics(718, -207, [-200, -250, 1000, 800])
+        )
+        self.assertAlmostEqual(bottom, 0.207 * 24, delta=0.1)
+
+    def test_a_font_box_that_does_not_enclose_the_baseline_is_not_used(self):
+        top, bottom = self.first_word_box(
+            self.pdf_with_font_metrics(0, 0, [0, 0, 500, 1000])
+        )
+        # The invisible font of an OCR text layer: the word stays on its baseline.
+        self.assertAlmostEqual(bottom, 0, delta=0.1)
+
+    def test_text_in_white_on_white_is_not_read_but_white_on_a_bar_is(self):
+        source = os.path.join(BLOB_ROOT, "white.ps")
+        with open(source, "w") as f:
+            f.write(
+                "/Helvetica findfont 24 scalefont setfont "
+                "0 setgray 72 700 moveto (Visible text of this page) show "
+                "1 setgray 72 650 moveto (HiddenTag) show "
+                "0.2 setgray 60 585 300 40 rectfill "
+                "1 setgray 72 595 moveto (OnBar) show showpage\n"
+            )
+        path = os.path.join(BLOB_ROOT, "white.pdf")
+        subprocess.run(
+            ["gs", "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=pdfwrite",
+             f"-sOutputFile={path}", source],
+            check=True,
+        )  # fmt: skip
+        with open(path, "rb") as f:
+            result = self.words(f.read())
+        # Enough visible text, or the page would count as a scan and be read by OCR.
+        self.assertIn("Visible text", result["text"])
+        self.assertIn("OnBar", result["text"])
+        self.assertNotIn("HiddenTag", result["text"])
+
     def test_close_words_stay_on_one_line_with_a_space(self):
         result = self.words(self.make_pdf("Zaehlernummer 44 450 7-5 148 621"))
         self.assertEqual(result["ocr"], "none")
@@ -560,7 +642,7 @@ class ConverterTest(unittest.TestCase):
         self.assertEqual(self.words(pdf)["text"], expected)
 
     def test_a_word_list_format_it_does_not_make_is_refused(self):
-        status, _headers, _data = self.tile(store(b"%PDF-1.4"), "v5", "words", "pdf")
+        status, _headers, _data = self.tile(store(b"%PDF-1.4"), "v7", "words", "pdf")
         self.assertEqual(status, 400)
 
     def test_a_value_with_several_lines_and_words_is_split_within_its_box(self):

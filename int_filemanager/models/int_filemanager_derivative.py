@@ -206,7 +206,15 @@ class IntFilemanagerDerivative(models.Model):
         cr = self.env.cr
         extensions = derivative_plan.ALL_EXTENSIONS
         planned = [len(derivative_plan.job_plan(f"x.{ext}")) for ext in extensions]
-        kinds, specs = zip(*derivative_plan.CURRENT_JOBS, strict=True)
+        # What is planned per extension, not for all kinds of file together: a row of a
+        # kind that another kind of file plans (the text of a PDF read the old way) must
+        # not count as a planned job of this one.
+        plan_ext, plan_kind, plan_spec = [], [], []
+        for ext in extensions:
+            for item in derivative_plan.job_plan(f"x.{ext}"):
+                plan_ext.append(ext)
+                plan_kind.append(item.kind)
+                plan_spec.append(item.spec)
         cr.execute(
             f"""
             SELECT DISTINCT ON (b.id) b.id, n.name
@@ -217,13 +225,15 @@ class IntFilemanagerDerivative(models.Model):
                  ON want.ext = {EXTENSION_SQL}
             WHERE n.active AND b.size > 0
               AND (SELECT count(*) FROM int_filemanager_derivative d
-                   WHERE d.source_blob_id = b.id
-                     AND (d.kind, d.spec) IN (
-                         SELECT * FROM unnest(%s::text[], %s::text[]))) < want.n
+                   JOIN unnest(%s::text[], %s::text[], %s::text[])
+                        AS plan(ext, kind, spec)
+                        ON plan.ext = want.ext
+                           AND plan.kind = d.kind AND plan.spec = d.spec
+                   WHERE d.source_blob_id = b.id) < want.n
             ORDER BY b.id, n.id
             LIMIT %s
             """,  # noqa: S608 - EXTENSION_SQL is a constant
-            [extensions, planned, list(kinds), list(specs), ENQUEUE_BATCH],
+            [extensions, planned, plan_ext, plan_kind, plan_spec, ENQUEUE_BATCH],
         )
         for blob_id, name in cr.fetchall():
             self._queue_jobs(blob_id, name)

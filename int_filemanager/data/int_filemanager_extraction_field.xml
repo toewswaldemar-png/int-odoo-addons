@@ -15,7 +15,8 @@ Rechnungsnr.
 Rechnungs-Nr.
 Belegnummer
 Beleg-Nr.
-Rechnung</field>
+Rechnung
+RE</field>
   </record>
   <record
     id="extraction_field_customer_number"
