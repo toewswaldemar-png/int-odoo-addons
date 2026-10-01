@@ -63,7 +63,7 @@ PY
 fi
 
 echo "== upgrade + start"
-ssh "$HOST" "docker run --rm --network fmtest-net $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB -u int_filemanager \
+ssh "$HOST" "docker run --rm --network fmtest-net $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB -u int_filemanager --i18n-overwrite \
   --stop-after-init --workers=0 --no-http --log-level=warn >$R/upgrade.log 2>&1"
 ssh "$HOST" "docker run -d --name $NAME --network fmtest-net -p $PORT:8069 $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB --log-level=info >/dev/null"
 

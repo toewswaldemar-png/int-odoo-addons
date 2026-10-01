@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260908\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 12:57+0000\n"
-"PO-Revision-Date: 2026-09-30 12:57+0000\n"
+"POT-Creation-Date: 2026-10-01 09:01+0000\n"
+"PO-Revision-Date: 2026-10-01 09:01+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -140,6 +140,18 @@ msgid "Above"
 msgstr "Darüber"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
+msgid "Accept"
+msgstr "Übernehmen"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
+msgid "Accept found values"
+msgstr "Gefundene Werte übernehmen"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_needaction
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_needaction
 msgid "Action Needed"
@@ -152,6 +164,12 @@ msgstr "Aktion erforderlich"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__active
 msgid "Active"
 msgstr "Aktiv"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.js:0
+msgid "Add field"
+msgstr "Feld hinzufügen"
 
 #. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__page_area__address
@@ -246,6 +264,7 @@ msgstr "Kamera"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/move_dialog.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/text_editor_dialog.xml:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/text_input_dialog.xml:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
@@ -264,6 +283,12 @@ msgstr "Upload abbrechen"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 msgid "Check values"
 msgstr "Werte prüfen"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
+msgid "Choose the value of"
+msgstr "Wählen Sie den Wert von"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -317,9 +342,22 @@ msgid "Connection lost - continue to resume"
 msgstr "Verbindung verloren - fortsetzen, um weiterzumachen"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
+#: model:ir.model,name:int_filemanager.model_res_partner
+msgid "Contact"
+msgstr "Kontakt"
+
+#. module: int_filemanager
 #: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_contact_person
 msgid "Contact person"
 msgstr "Ansprechpartner"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
+msgid "Contact:"
+msgstr "Kontakt:"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__content
@@ -484,12 +522,6 @@ msgstr "Abhängig von"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__derived_blob_id
 msgid "Derived Blob"
 msgstr "Abgeleiteter Blob"
-
-#. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node_details
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
-msgid "Details"
-msgstr "Details"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__direction
@@ -1105,6 +1137,7 @@ msgstr "Links ohne Anmeldung"
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 msgid "Loading"
 msgstr "Wird geladen"
@@ -1352,6 +1385,12 @@ msgid "Nothing in this document matches a field."
 msgstr "Nichts in diesem Dokument passt zu einem Feld."
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
+msgid "Nothing in this file matches a field."
+msgstr "In dieser Datei passt nichts zu einem Feld."
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/zip_stream.py:0
 msgid "Nothing to download."
@@ -1437,6 +1476,12 @@ msgstr "Zuerst einen Ordner öffnen"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_uploads.js:0
 msgid "Open a folder first, then upload into it."
 msgstr "Öffnen Sie zuerst einen Ordner und laden Sie dann dorthin hoch."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
+msgid "Open preview in a separate window."
+msgstr "Vorschau in einem separaten Fenster öffnen."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__operation_id
@@ -1525,6 +1570,7 @@ msgstr "Zeitraum oder Dauer"
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 msgid "Please check this value"
 msgstr "Bitte diesen Wert prüfen"
@@ -1533,6 +1579,13 @@ msgstr "Bitte diesen Wert prüfen"
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_blob__state__present
 msgid "Present"
 msgstr "Vorhanden"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__preview
+msgid "Preview"
+msgstr "Vorschau"
 
 #. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__preview_pdf
@@ -1564,6 +1617,14 @@ msgstr "Priorität"
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__processing
 msgid "Processing"
 msgstr "In Bearbeitung"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
+#: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node_details
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
+msgid "Properties"
+msgstr "Eigenschaften"
 
 #. module: int_filemanager
 #: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_purchase_order_number
@@ -1755,6 +1816,18 @@ msgstr "Bereich"
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.js:0
+msgid "Search a field..."
+msgstr "Feld suchen…"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
+msgid "Select"
+msgstr "Auswählen"
+
+#. module: int_filemanager
+#. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/shared.xml:0
 msgid "Select a file or folder to see its notes and activities."
 msgstr "Wählen Sie eine Datei oder einen Ordner aus, um Notizen und Aktivitäten zu sehen."
@@ -1764,6 +1837,12 @@ msgstr "Wählen Sie eine Datei oder einen Ordner aus, um Notizen und Aktivitäte
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 msgid "Select files in the file manager and choose \"Check values\"."
 msgstr "Wählen Sie Dateien in der Dateiverwaltung aus und wählen Sie „Werte prüfen“."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.js:0
+msgid "Select in the document..."
+msgstr "Im Dokument wählen …"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -1909,12 +1988,6 @@ msgid "Tags"
 msgstr "Tags"
 
 #. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Tags, status, contact"
-msgstr "Tags, Status, Kontakt"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__taken_at
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__taken_at
 msgid "Taken At"
@@ -1962,6 +2035,12 @@ msgstr "Der Inhalt lässt sich nur nach Wörtern durchsuchen."
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "The content search has too many or too long words."
 msgstr "Die Inhaltssuche hat zu viele oder zu lange Wörter."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.js:0
+msgid "The document is not ready yet."
+msgstr "Das Dokument ist noch nicht bereit."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -2023,6 +2102,14 @@ msgstr "Der Text, wie er im Dokument gedruckt ist."
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 msgid "The text of this file is still being read."
 msgstr "Der Text dieser Datei wird noch gelesen."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
+msgid ""
+"The text of this file is still being read. Open the properties again in a "
+"moment."
+msgstr "Der Text dieser Datei wird noch gelesen. Öffnen Sie die Eigenschaften gleich noch einmal."
 
 #. module: int_filemanager
 #. odoo-python
@@ -2100,6 +2187,12 @@ msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneu
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.js:0
+msgid "This file changed. Open the properties again."
+msgstr "Die Datei hat sich geändert. Öffnen Sie die Eigenschaften neu."
+
+#. module: int_filemanager
+#. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.js:0
 msgid "This file changed; reload it."
 msgstr "Diese Datei hat sich geändert; laden Sie sie neu."
@@ -2112,6 +2205,7 @@ msgstr "Diese Datei hat noch keinen Inhalt; nichts zu kopieren."
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 msgid "This file has no text to look for values in."
 msgstr "Diese Datei hat keinen Text, in dem nach Werten gesucht werden könnte."
@@ -2340,6 +2434,8 @@ msgstr "Art des Werts"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__values_json
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
 msgid "Values"
 msgstr "Werte"
 
@@ -2348,6 +2444,12 @@ msgstr "Werte"
 #: code:addons/int_filemanager/models/int_filemanager_node.py:0
 msgid "Values confirmed"
 msgstr "Werte bestätigt"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.js:0
+msgid "Values found in the file"
+msgstr "In der Datei gefundene Werte"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
@@ -2451,6 +2553,12 @@ msgstr "aktuell"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/value_review/value_review_action.xml:0
 msgid "found by"
 msgstr "gefunden über"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
+msgid "in the document (click a word or drag over several). Esc cancels."
+msgstr "im Dokument (Wort anklicken oder über mehrere Wörter ziehen). Esc bricht ab."
 
 #. module: int_filemanager
 #. odoo-javascript

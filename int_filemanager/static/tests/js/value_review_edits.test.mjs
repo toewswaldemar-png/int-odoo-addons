@@ -135,3 +135,33 @@ test("typing over a clicked value takes its outline away", () => {
   typeText(rows[0], "100");
   assert.deepEqual(rowMarkers(rows, {}), []);
 });
+
+test("a stored value nobody changed stands where it was read from", () => {
+  const rows = initialRows([
+    {
+      field_id: 2,
+      name: "Date",
+      value_type: "date",
+      confirmed: "2024-01-01",
+      confirmed_place: {page: 1, x0: 10, top: 20, x1: 60, bottom: 30},
+      suggestions: [],
+    },
+  ]);
+  const boxes = rowMarkers(rows, {1: [100, 200]});
+  assert.equal(boxes.length, 1);
+  const {page, left, top, width, height} = boxes[0].box;
+  assert.equal(page, 1);
+  for (const [actual, expected] of [[left, 0.1], [top, 0.1], [width, 0.5], [height, 0.05]]) {
+    assert.ok(Math.abs(actual - expected) < 1e-9);
+  }
+  // Typed over, the old place is no longer the place of the value.
+  typeText(rows[0], "2024-02-02");
+  assert.deepEqual(rowMarkers(rows, {1: [100, 200]}), []);
+});
+
+test("a stored value without a known place has no outline", () => {
+  const rows = initialRows([
+    {field_id: 2, name: "Date", value_type: "date", confirmed: "2024-01-01", suggestions: []},
+  ]);
+  assert.deepEqual(rowMarkers(rows, {}), []);
+});

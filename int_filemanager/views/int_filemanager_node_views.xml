@@ -247,31 +247,54 @@
     <field name="target">new</field>
   </record>
 
-  <!-- Tags, status and contact of one file or folder, edited in a dialog. -->
+  <!-- Properties of one file or folder, edited in a dialog: an ordinary Odoo form. The values
+       found in a file are rows of the values widget, stored by the form's own Save. -->
   <record id="int_filemanager_node_details_form" model="ir.ui.view">
     <field name="name">int_filemanager.node.details.form</field>
     <field name="model">int_filemanager.node</field>
     <field name="arch" type="xml">
-      <form string="Details">
+      <form string="Properties">
+        <field name="is_dir" invisible="1" />
+        <field name="current_revision_id" invisible="1" />
+        <field name="full_preview_state" invisible="1" />
         <sheet>
-          <group>
-            <field name="name" readonly="1" />
-            <field
-              name="size"
-              readonly="1"
-              invisible="is_dir"
-              widget="int_filemanager_v2_size"
-            />
-            <field name="mtime" readonly="1" invisible="is_dir" string="Modified" />
-            <field name="is_dir" invisible="1" />
-            <field name="status_id" options="{'no_create': True}" />
-            <field
-              name="tag_ids"
-              widget="many2many_tags"
-              options="{'color_field': 'color'}"
-            />
-            <field name="partner_id" />
-          </group>
+          <div class="row">
+            <div class="col-lg-6">
+              <group>
+                <field name="name" readonly="1" />
+                <field
+                  name="size"
+                  readonly="1"
+                  invisible="is_dir"
+                  widget="int_filemanager_v2_size"
+                />
+                <field name="mtime" readonly="1" invisible="is_dir" string="Modified" />
+                <field name="status_id" options="{'no_create': True}" />
+                <field
+                  name="tag_ids"
+                  widget="many2many_tags"
+                  options="{'color_field': 'color'}"
+                />
+                <field name="partner_id" />
+              </group>
+              <separator string="Values" invisible="is_dir" />
+              <field
+                name="values_json"
+                widget="int_filemanager_v2_values"
+                nolabel="1"
+                invisible="is_dir"
+              />
+            </div>
+            <div class="col-lg-6">
+              <field
+                name="current_revision_id"
+                widget="int_filemanager_v2_preview"
+                readonly="1"
+                nolabel="1"
+                invisible="is_dir"
+              />
+            </div>
+          </div>
         </sheet>
         <footer>
           <button string="Save" special="save" class="btn-primary" />
@@ -282,11 +305,12 @@
   </record>
 
   <record id="action_int_filemanager_node_details" model="ir.actions.act_window">
-    <field name="name">Details</field>
+    <field name="name">Properties</field>
     <field name="res_model">int_filemanager.node</field>
     <field name="view_mode">form</field>
     <field name="view_id" ref="int_filemanager_node_details_form" />
     <field name="target">new</field>
+    <field name="context">{'dialog_size': 'extra-large'}</field>
   </record>
 
   <menuitem

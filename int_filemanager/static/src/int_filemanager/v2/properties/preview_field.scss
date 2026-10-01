@@ -1,0 +1,28 @@
+// Fills the dialog from top to bottom: its height is the screen less what is around the
+// body of the dialog (margins, header, footer, the padding of the sheet), so the dialog
+// needs no scrollbar of its own. The hint above the document takes room from it.
+.o_int_filemanager_preview {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 15rem);
+  min-height: 20rem;
+
+  iframe,
+  img,
+  video {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    border: 0;
+  }
+
+  img,
+  video {
+    object-fit: contain;
+  }
+
+  // The button of the separate window sits in the corner.
+  .o_int_filemanager_preview_hint {
+    padding-right: 3rem;
+  }
+}

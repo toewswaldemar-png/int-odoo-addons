@@ -78,7 +78,45 @@ export const largePreviewUrl = (record) => {
   return `/int_filemanager/v2/preview/${revision.id}/${kind}`;
 };
 
-const canPreview = (record) =>
+/** The file in the shape Odoo's FileViewer expects. */
+export function viewerFileOf(record) {
+  const converted = !isPreviewable(record.data.name) && largePreviewUrl(record);
+  if (converted) {
+    const isPdf = isOffice(record.data.name);
+    return {
+      resId: record.resId,
+      name: record.data.name,
+      downloadUrl: downloadUrl(record.resId),
+      isImage: !isPdf,
+      isPdf,
+      isVideo: false,
+      isViewable: true,
+      defaultSource: isPdf
+        ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(converted)}#pagemode=none`
+        : converted,
+    };
+  }
+  const url = downloadUrl(record.resId, {inline: true});
+  const ext = extOf(record.data.name);
+  const isPdf = ext === "pdf";
+  const isVideo = VIDEO_EXTENSIONS.has(ext);
+  const isImage = PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && !isVideo;
+  return {
+    resId: record.resId,
+    name: record.data.name,
+    downloadUrl: downloadUrl(record.resId),
+    isImage,
+    isPdf,
+    isVideo,
+    mimetype: isVideo ? VIDEO_MIME_TYPES[ext] : undefined,
+    isViewable: isPreviewable(record.data.name),
+    defaultSource: isPdf
+      ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(url)}#pagemode=none`
+      : url,
+  };
+}
+
+export const canPreview = (record) =>
   isPreviewable(record.data.name) || Boolean(largePreviewUrl(record));
 
 export const mutationsMixin = (Base) =>
@@ -431,8 +469,9 @@ export const mutationsMixin = (Base) =>
       });
     }
 
-    // Tags, status and contact: a plain Odoo form in a dialog, saved through the ORM (these
-    // fields carry no naming or rights rules of their own beyond the record rules).
+    // Properties: a plain Odoo form in a dialog, saved through the ORM (these fields carry
+    // no naming or rights rules of their own beyond the record rules); the values found in
+    // the file are confirmed through the same Save.
     onEditDetails(record) {
       this.actionService.doAction(
         "int_filemanager.action_int_filemanager_node_details",
@@ -491,40 +530,7 @@ export const mutationsMixin = (Base) =>
     }
 
     toViewerFile(record) {
-      const converted = !isPreviewable(record.data.name) && largePreviewUrl(record);
-      if (converted) {
-        const isPdf = isOffice(record.data.name);
-        return {
-          resId: record.resId,
-          name: record.data.name,
-          downloadUrl: downloadUrl(record.resId),
-          isImage: !isPdf,
-          isPdf,
-          isVideo: false,
-          isViewable: true,
-          defaultSource: isPdf
-            ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(converted)}#pagemode=none`
-            : converted,
-        };
-      }
-      const url = downloadUrl(record.resId, {inline: true});
-      const ext = extOf(record.data.name);
-      const isPdf = ext === "pdf";
-      const isVideo = VIDEO_EXTENSIONS.has(ext);
-      const isImage = PREVIEWABLE_EXTENSIONS.has(ext) && !isPdf && !isVideo;
-      return {
-        resId: record.resId,
-        name: record.data.name,
-        downloadUrl: downloadUrl(record.resId),
-        isImage,
-        isPdf,
-        isVideo,
-        mimetype: isVideo ? VIDEO_MIME_TYPES[ext] : undefined,
-        isViewable: isPreviewable(record.data.name),
-        defaultSource: isPdf
-          ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(url)}#pagemode=none`
-          : url,
-      };
+      return viewerFileOf(record);
     }
 
     onPreview(record) {
@@ -591,8 +597,8 @@ export const mutationsMixin = (Base) =>
         int_details: {
           isAvailable: single,
           sequence: 10,
-          icon: "fa fa-tags",
-          description: _t("Tags, status, contact"),
+          icon: "fa fa-info-circle",
+          description: _t("Properties"),
           callback: () => this.onEditDetails(selection[0]),
         },
         int_share: {

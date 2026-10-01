@@ -12,16 +12,20 @@ const UNCERTAIN_TIER = 2;
 /**
  * One row per field worth showing, filled with its best suggestion or its stored value.
  * @param {Object[]} fields the ``fields`` of suggest_field_values
+ * @param {{all?: boolean}} [options] ``all``: a row for every field, an empty one for a
+ *     field without a value
  * @returns {Object[]}
  */
-export function initialRows(fields) {
-  const rows = shownFields(fields).map((field) => {
+export function initialRows(fields, {all = false} = {}) {
+  const rows = (all ? fields || [] : shownFields(fields)).map((field) => {
     const best = (field.suggestions || [])[0];
     return {
       fieldId: field.field_id,
       name: field.name,
       valueType: field.value_type,
       confirmed: field.confirmed || false,
+      // Where the stored value was read from, if it is known.
+      place: field.confirmed_place || null,
       suggestions: field.suggestions || [],
       text: field.confirmed || (best ? best.source_text : ""),
       // "rule" = a suggestion accepted as printed, "manual" = typed.
@@ -99,7 +103,8 @@ export function isDirty(rows, {changedSender = false, changedTags = false} = {})
 
 /**
  * The outlines to draw: the chosen suggestion of every row that still stands on a place
- * of the document. A typed or removed row has none.
+ * of the document, and the place of a stored value nobody changed. A typed or removed row
+ * has none.
  * @param {Object[]} rows
  * @param {Object} pageSizes
  * @returns {{fieldId: Number, name: String, box: Object}[]}
@@ -107,13 +112,19 @@ export function isDirty(rows, {changedSender = false, changedTags = false} = {})
 export function rowMarkers(rows, pageSizes) {
   const result = [];
   for (const row of rows) {
-    if (row.removed || (row.source !== "rule" && !row.picked)) {
+    if (row.removed) {
       continue;
     }
-    const chosen =
-      row.picked && row.picked.start === row.start
-        ? row.picked
-        : row.suggestions.find((s) => s.start === row.start);
+    let chosen = null;
+    if (row.source === "rule" || row.picked) {
+      chosen =
+        row.picked && row.picked.start === row.start
+          ? row.picked
+          : row.suggestions.find((s) => s.start === row.start);
+    } else if (row.confirmed && !row.touched) {
+      // A stored value nobody changed stands where it was read from.
+      chosen = row.place;
+    }
     const box = relativeBox(chosen, pageSizes);
     if (box) {
       result.push({fieldId: row.fieldId, name: row.name, box});

@@ -152,6 +152,14 @@ class IntFilemanagerNode(models.Model):
     full_preview_state = fields.Selection(
         PREVIEW_STATES, compute="_compute_preview_states"
     )
+    # The values found in the file, for the properties form: reading gives the answer of
+    # suggest_field_values, writing {"revision_id", "edits"} confirms values through
+    # apply_field_values. Never stored, so the form saves it like any other field.
+    values_json = fields.Json(
+        string="Values",
+        compute="_compute_values_json",
+        inverse="_inverse_values_json",
+    )
 
     # Names are unique per folder regardless of case, like on Windows. NULLS NOT
     # DISTINCT: otherwise two roots (parent_id IS NULL) would never collide.
@@ -1105,6 +1113,11 @@ class IntFilemanagerNode(models.Model):
                     "confirmed": confirmed[f.id].value_text
                     if f.id in confirmed
                     else False,
+                    # Where the stored value was read from, shaped like a suggestion,
+                    # with the boxes of the words as they are now.
+                    "confirmed_place": self._place_of(confirmed[f.id], page)
+                    if f.id in confirmed
+                    else False,
                 }
                 for f in self.env["int_filemanager.extraction_field"].search(
                     [("active", "=", True)]
@@ -1134,6 +1147,39 @@ class IntFilemanagerNode(models.Model):
             "tags": self._suggest_tags(page.text),
             "warnings": self._suggest_warnings(partner, suggestions),
         }
+
+    @staticmethod
+    def _place_of(value, page):
+        """Where a stored value is printed, shaped like a suggestion, or False."""
+        if not value.page:
+            return False
+        place = {
+            "page": value.page,
+            "x0": value.x0,
+            "top": value.top,
+            "x1": value.x1,
+            "bottom": value.bottom,
+        }
+        return page.refit(place)
+
+    def _compute_values_json(self):
+        for node in self:
+            answer = False
+            if node.id and not node.is_dir:
+                try:
+                    answer = self.suggest_field_values(node.id)
+                except Exception:
+                    # The form is still worth opening without the values.
+                    _logger.exception("could not read the values of node %s", node.id)
+            node.values_json = answer
+
+    def _inverse_values_json(self):
+        for node in self:
+            payload = node.values_json or {}
+            if payload.get("edits"):
+                self.apply_field_values(
+                    node.id, payload.get("revision_id"), payload["edits"]
+                )
 
     def _suggest_warnings(self, partner, suggestions):
         """Hints for the reviewer about values that look wrong; nothing is stored.

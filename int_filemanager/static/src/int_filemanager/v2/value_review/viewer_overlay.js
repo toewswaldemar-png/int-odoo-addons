@@ -18,7 +18,16 @@ import {wordBox} from "./value_review_geometry.js";
 
 const POLL_MS = 100;
 const READY_TIMEOUT_MS = 20000;
-const SCROLL_RETRY_MS = 300;
+// The outline stands this far (PDF points) outside the box of the text, so that it does not
+// touch the letters; in points, not pixels, so it grows and shrinks with the zoom.
+const OUTLINE_PADDING_X = 2;
+const OUTLINE_PADDING_Y = 1;
+// The viewer shows this much of the page width around a box: a few times the width of the
+// box, but neither less than a third of the page (a short number would fill the screen) nor
+// more than four fifths of it.
+const REGION_PER_BOX_WIDTH = 4;
+const REGION_MIN_SHARE = 0.3;
+const REGION_MAX_SHARE = 0.8;
 
 const STYLE = `
 .o_int_fm_review_layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
@@ -63,13 +72,22 @@ export class ViewerOverlay {
    *   page: ``[x0, top, x1, bottom, start, end]`` each
    * @param {Function} [options.pageSize] ``pageSize(page)``: width and height of a page
    * @param {Function} [options.onPick] ``onPick({start, end})`` when words were clicked
+   * @param {Function} [options.onCancel] ``onCancel()`` when Esc is pressed in word mode;
+   *   the key goes to the frame, not to the page around it
    */
-  constructor(iframe, {onSelect, loadWords, pageSize, onPick} = {}) {
+  constructor(iframe, {onSelect, loadWords, pageSize, onPick, onCancel} = {}) {
     this.iframe = iframe;
     this.onSelect = onSelect;
     this.loadWords = loadWords;
     this.pageSize = pageSize;
     this.onPick = onPick;
+    this.onCancel = onCancel;
+    this._onKeydown = (event) => {
+      if (event.key === "Escape" && this.wordMode) {
+        event.preventDefault();
+        this.onCancel?.();
+      }
+    };
     this.wordMode = false;
     this.words = new Map();
     this.anchor = null;
@@ -122,26 +140,59 @@ export class ViewerOverlay {
     for (const layer of doc ? doc.querySelectorAll(".o_int_fm_review_layer") : []) {
       layer.classList.toggle("o_word_mode", enabled);
     }
+    if (doc) {
+      doc.removeEventListener("keydown", this._onKeydown);
+      if (enabled) {
+        doc.addEventListener("keydown", this._onKeydown);
+      }
+    }
   }
 
-  /** Scrolls the box of a field to the middle of the viewer, also on a page not drawn yet. */
-  scrollTo(fieldId, retry = true) {
+  /**
+   * Brings the box of a field to the middle of the viewer and zooms to it, with pdf.js's own
+   * destination "FitR" (the way a link inside a PDF goes to a place). The region has the
+   * shape of the viewer and is centred on the box, so the value stands in the middle with
+   * its surroundings, also on a page that is not drawn yet.
+   */
+  scrollTo(fieldId) {
     const marker = this.markers.find((m) => m.fieldId === fieldId);
-    const doc = this.iframe.contentDocument;
-    if (!marker || !doc) {
+    const viewer = this.app && this.app.pdfViewer;
+    const pageView = marker && viewer && viewer.getPageView(marker.box.page - 1);
+    if (!pageView || pageView.rotation % 360 !== 0) {
       return;
     }
-    const box = doc.querySelector(`.o_int_fm_review_box[data-field-id="${fieldId}"]`);
-    if (box) {
-      box.scrollIntoView({block: "center", behavior: "smooth"});
-    } else if (retry && this.app) {
-      this.app.pdfViewer.scrollPageIntoView({pageNumber: marker.box.page});
-      this._later(() => this.scrollTo(fieldId, false), SCROLL_RETRY_MS);
-    }
+    // The page in PDF units, origin at the lower left; the box was given from the top left.
+    const [x0, y0, x1, y1] = pageView.viewport.viewBox;
+    const pageWidth = x1 - x0;
+    const pageHeight = y1 - y0;
+    const {left, top, width, height} = marker.box;
+    const centerX = x0 + (left + width / 2) * pageWidth;
+    const centerY = y1 - (top + height / 2) * pageHeight;
+    const regionWidth = Math.min(
+      Math.max(width * pageWidth * REGION_PER_BOX_WIDTH, pageWidth * REGION_MIN_SHARE),
+      pageWidth * REGION_MAX_SHARE
+    );
+    const regionHeight =
+      (regionWidth * viewer.container.clientHeight) / viewer.container.clientWidth;
+    viewer.scrollPageIntoView({
+      pageNumber: marker.box.page,
+      destArray: [
+        null,
+        {name: "FitR"},
+        centerX - regionWidth / 2,
+        centerY - regionHeight / 2,
+        centerX + regionWidth / 2,
+        centerY + regionHeight / 2,
+      ],
+    });
   }
 
   destroy() {
     this.destroyed = true;
+    const doc = this.iframe && this.iframe.contentDocument;
+    if (doc) {
+      doc.removeEventListener("keydown", this._onKeydown);
+    }
     this.observers.forEach((observer) => observer.disconnect());
     this.observers = [];
     this.timers.forEach((timer) => clearTimeout(timer));
@@ -313,11 +364,16 @@ export class ViewerOverlay {
         element.dataset.fieldId = String(marker.fieldId);
         element.title = marker.name;
         const {left, top, width, height} = marker.box;
+        const [pageWidth, pageHeight] = this.pageSize
+          ? this.pageSize(pageNumber)
+          : [595, 842];
+        const padX = OUTLINE_PADDING_X / pageWidth;
+        const padY = OUTLINE_PADDING_Y / pageHeight;
         Object.assign(element.style, {
-          left: `${left * 100}%`,
-          top: `${top * 100}%`,
-          width: `${width * 100}%`,
-          height: `${height * 100}%`,
+          left: `${(left - padX) * 100}%`,
+          top: `${(top - padY) * 100}%`,
+          width: `${(width + 2 * padX) * 100}%`,
+          height: `${(height + 2 * padY) * 100}%`,
         });
         element.addEventListener("click", () => this.onSelect?.(marker.fieldId));
         return element;

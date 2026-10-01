@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+  <t t-name="int_filemanager.v2.PreviewField">
+    <div
+      t-if="file"
+      class="o_int_filemanager_preview border rounded position-relative overflow-hidden"
+    >
+      <button
+        type="button"
+        class="btn btn-light border-0 position-absolute top-0 end-0 m-1"
+        aria-label="Open preview in a separate window."
+        data-tooltip="Open preview in a separate window."
+        t-on-click="onOpenWindow"
+      >
+        <i class="fa fa-window-restore" role="img" />
+      </button>
+      <div
+        t-if="state.picking"
+        class="o_int_filemanager_preview_hint alert alert-info d-flex align-items-center gap-2 m-2 mb-0 py-1"
+        role="status"
+      >
+        <i class="fa fa-crosshairs" role="img" aria-label="Select" />
+        <span>Choose the value of <b
+          t-esc="state.picking.name"
+        /> in the document (click a word or drag over several). Esc cancels.</span>
+        <button
+          type="button"
+          class="btn btn-link btn-sm ms-auto py-0"
+          t-on-click="onCancelPick"
+        >Cancel</button>
+      </div>
+      <img t-if="file.isImage" t-att-src="file.defaultSource" alt="Preview" />
+      <video t-elif="file.isVideo" controls="controls">
+        <source t-att-data-type="file.mimetype" t-att-src="file.defaultSource" />
+      </video>
+      <iframe t-else="" t-ref="iframe" t-att-src="file.defaultSource" title="Preview" />
+    </div>
+  </t>
+
+</templates>
