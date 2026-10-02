@@ -29,8 +29,8 @@ Zuletzt geprüft (2026-10-01): pre-commit grün, 555 Odoo-Tests, 76 Umwandler-Te
 
 ## 2. Nächste Schritte (in dieser Reihenfolge)
 
-**Vorrang vor allem anderen:** die Sicherheitsbefunde aus 3.1 (Altcode live auf HM-SRV) und 3.2 (Rechtemodell des Branches). Erst Regressionstests, die
-ein Nicht-Admin per ORM auslöst und die jetzt rot sind, dann die Korrekturen; die Regelabweichungen aus 3.3 bis 3.5 folgen getrennt davon.
+**Vorrang vor allem anderen:** die Sicherheitsbefunde aus 3.1 (Altcode live auf HM-SRV); 3.2 (Rechtemodell des Branches) ist behoben. Die
+Regelabweichungen aus 3.3 bis 3.5 folgen getrennt davon.
 
 1. **Rückmeldung des Nutzers zum Eigenschaften-Formular** abwarten (Zoom auf den Wert, Rahmenrand, Layout).
 2. **Prüf-Fenster entfernen:** `static/src/int_filemanager/v2/value_review/` (Client-Aktion, XML, SCSS, Tests), Menüpunkt `int_check_values`,
@@ -95,34 +95,22 @@ Durch Lesen belegt, nicht ausgeführt.
   im Prozessspeicher und bricht bei Prefork-Betrieb.
 - `share_download` und `zip_extract_entry` lesen ganze Dateien in den Speicher (Grundregel I12).
 
-### 3.2 Sicherheit im Rechtemodell des Branches (vor Schritt 8 beheben)
+### 3.2 Rechtemodell des Branches: direkte ORM-Zugriffe (behoben 2026-10-02, noch nicht committet)
 
-Durch Lesen belegt, nicht ausgeführt. Betrifft nur den Branch und die Testinstanz, nicht `master`. Verletzt die Grundregel I7 ("Rechte prüft nur Odoo, für
-jede Tabelle und jeden Zugriffsweg"). Ursache: die Modelle sind über die ORM-Schnittstelle (`/json/2`, `call_kw`) mit allen Feldern schreibbar, die
-Prüfungen stehen nur in den Hilfsmethoden. Es gibt kein `groups=`, kein `readonly` und keine Prüfung in `write`/`create`; Odoo prüft Rules bei `write` nur
-vorher, Ziele eines Many2one werden nicht auf Leserecht geprüft.
+Verletzte die Grundregel I7: über `/json/2` und `call_kw` waren die Modelle mit allen Feldern schreibbar, die Prüfungen standen nur in den
+Hilfsmethoden. Behoben und mit `tests/test_v2_orm_rights.py` abgesichert (14 Tests, vorher 11 rot; ganze Modul-Suite 570 Tests grün auf HM-SRV):
 
-1. **Beliebige Dateien auf dem Server anhängen, anlegen und löschen:** `int_filemanager.upload.temp_file` ist frei beschreibbar
-   (`models/int_filemanager_upload.py`), die ACL erlaubt Nutzern Anlegen, Schreiben und Löschen der eigenen Zeilen. `upload_chunk` hängt per
-   `open(..., "ab")` an diesen Pfad an; `cancel_upload`, der Ablauf-Cron und `finish_upload` löschen ihn danach. Eine Gruppenmitgliedschaft reicht.
-   Lesen über den Hardlink in `blobstore.adopt_hashed` geht nur auf demselben Dateisystem wie der Blob-Speicher (andere Filestores, Sessions).
-   Korrektur: Nutzer-ACL auf `upload` nur lesend, Schreiben per `sudo()` nach der Rechteprüfung; den Pfad aus der Operationsnummer ableiten und mit
-   `realpath` unter `tmp_dir` prüfen.
-2. **Knoten- und Revisionsfelder frei schreibbar:**
-   - Fremde Inhalte lesen: `node.current_revision_id` auf eine fremde Revision setzen oder eine Revision mit fremdem `blob_id` anlegen; der Download
-     liefert den Blob ohne Prüfung (`controllers/int_filemanager_v2.py`, `download` und `_blob_stream`).
-   - Ohne Löschrecht endgültig löschen: `active`, `removal_reason` und `trashed_at` setzen, der Cron `_purge_expired_trash` löscht als Superuser.
-   - Zielprüfung umgehen: `scope_id` und `parent_id` ändern, `rename_or_move` und `create_file` prüfen das Ziel nur in der Methode.
-   - Außerdem `review_state`, `size`, `mime`.
-   Korrektur: diese Felder nur mit `env.su` änderbar machen und die internen Wege nach der Prüfung mit `sudo()` schreiben lassen (kein Context-Flag,
-   RPC-Clients setzen den Context frei).
-3. **Jeder Nutzer kann Scopes anlegen:** ACL `scope` hat `create=1`, die Rule prüft beim Anlegen nur, ob die eigene Gruppe in `manage_group_ids` steht,
-   und die setzt der Anleger selbst.
-4. **Verschieben in einen anderen Scope** (`models/int_filemanager_node.py`, `rename_or_move`): ein Roh-`UPDATE ... LIKE` setzt den Scope aller Nachfahren,
-   auch von Unterordnern mit fremdem Scope, die der Nutzer nicht sehen darf; er bekommt sie dann mit dem Ziel-Scope. `is_scope_root` wird dabei nicht neu
-   berechnet. Der Test `test_move_to_different_scope_updates_whole_subtree` prüft nur ohne so einen Unterordner.
-5. **Testlücke:** keiner der Rechte-Tests lässt einen Nutzer mit Schreibrecht die Felder aus 1 bis 3 direkt per ORM schreiben; die Rennszenarien
-   (`tests/tower`) gehen nur über die Hilfsmethoden. Vor der Korrektur je einen roten Test schreiben (Nicht-Admin, `call_kw` und `/json/2`).
+- **Knoten:** `scope_id`, `parent_id`, `current_revision_id`, `size`, `mime`, `review_state`, `active`, `removal_reason` und `trashed_at` sind nur noch mit
+  `env.su` schreibbar (`_has_field_access` am Modell, `SERVER_ONLY_FIELDS`; `fields_get` meldet sie als `readonly`). Nutzer legen Knoten, Revisionen und
+  Uploads nicht mehr selbst an (ACL ohne `create` bzw. `write`); die Methoden prüfen das Recht und schreiben dann per `sudo()`. `trash`, `restore` und
+  `delete_permanently` prüfen den ganzen Teilbaum, bevor sie per `sudo()` schreiben.
+- **Upload:** Nutzer haben nur Leserecht auf ihre eigenen Uploads; `temp_file` setzt allein der Server. Beim Abschluss eines Uploads für eine neue Datei wird
+  das Schreibrecht auf den Zielordner erneut geprüft.
+- **Scope:** Anlegen nur noch für `group_filemanager_admin`; die Nutzer-ACL hat kein `create` und kein `unlink` mehr.
+- **Verschieben:** nur Nachfahren mit dem Scope des Knotens wechseln mit; ein Unterordner mit eigenem Scope behält ihn (der Nutzer sieht ihn eventuell
+  nicht). Die abhängigen gespeicherten Felder (`is_scope_root`) werden über `modified()` neu berechnet.
+- **Offen:** die Rennszenarien (`tests/tower/race.sh`) und der Lauf auf Tower sind nach dieser Änderung nicht gelaufen; `test_lint`, odoo-ls und
+  pre-commit ebenfalls nicht.
 
 ### 3.3 Fehler und Leistung im neuen Code
 
@@ -130,7 +118,6 @@ vorher, Ziele eines Many2one werden nicht auf Leserecht geprüft.
   Übersetzung ("existiert hier bereits") passt nicht. Der Knopf erscheint für deutsche Nutzer nie. Korrektur: am Fehlertyp erkennen, nicht am Text.
 - **Follower-Zeile je Knoten:** beim Anlegen ist nur `mail_create_nolog` gesetzt, nicht `mail_create_nosubscribe` (`create_file`, `create_folder`,
   `copy_node`, `_copy_children`, `_finish_now`); Odoo legt dadurch je Knoten eine Zeile in `mail_followers` an (bei der Übernahme von 1,8 TB Hunderttausende).
-- **Roh-SQL in Folge von `rename_or_move`:** siehe 3.2 Nr. 4 (Rechte) und fehlendes `modified()` für `is_scope_root` (ORM-Regel "Flush, SQL, Invalidate, modified").
 - **Textdatei-Editor ohne Größenlimit:** `controller_mutations.js` (`onEditText`) lädt jede `.txt`/`.log`/`.csv`/`.json`/`.md` vollständig in den Browser.
 - **Eingabeprüfung der öffentlichen Methoden:** `apply_field_values` greift ungeprüft auf `item["field_id"]` zu, `existing_names`, `upload_chunk` und
   `create_link` nehmen beliebige Typen; schlechte Eingabe endet als 500 statt als `UserError`. Nicht ausnutzbar, aber unsauber.
