@@ -19,6 +19,8 @@ odoo-ls ohne Befund im eigenen Code, `i18n/de.po` vollständig, Gegenlese durch 
 | 8 Übernahme des Bestands | Probelauf auf der Testinstanz vollständig; Zählung und Prüfsummen stimmen; Rückweg geprobt | offen |
 | 9 Netzlaufwerk | nach Erfahrungen aus 4–8 entscheiden | später |
 
+**Ideenkatalog** (`int_filemanager_paperoffice_ideenkatalog_2026-10-01.md`): A1 (Wortklick) nur für PDF umgesetzt, A2 teilweise (Umrandung im Dokument, Warnsymbol bei unsicheren Werten, aber keine Markierung "automatisch gelesen" am Feld), A7 nur geplant; C10, B5, E4, F1, F3, F5 und H6 sind schon vorhanden oder im Neubau vorgesehen; alle anderen nicht begonnen.
+
 Zuletzt geprüft (2026-10-01): pre-commit grün, 555 Odoo-Tests, 76 Umwandler-Tests, 72 Node-Tests, `v2check` ohne neue Befunde
 (12 alte Befunde im bestehenden Code unverändert). **Neu 2026-10-02:** Prüfautomatik und Odoo-19-Regeln aus `master` übernommen
 (`pruefautomatik_2026-10-02.md`, `odoo_regeln/`); Docker-Läufe auf Tower und pre-commit auf Windows noch nicht verifiziert.

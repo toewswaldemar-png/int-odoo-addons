@@ -3,7 +3,7 @@
 Stand 2026-10-01. Ergebnis der Recherche in der PaperOffice-Classic-Hilfe (öffentliches Portal) und
 des Abgleichs mit dem Odoo-19-Quellcode (`C:\Users\Admin\Documents\GitHub\odoo`, Community).
 Der Katalog ist **unabhängig vom Ist-Stand des Moduls** aufgestellt; was schon gebaut ist, steht
-am Ende unter „Umsetzungsstand“.
+in `int_filemanager_stand.md`.
 
 Zeichen: **✔** = Odoo-Baustein im Quellcode gefunden. **–** = in Odoo Community nichts Passendes,
 wäre Eigenbau. Nichts davon ist im Browser erprobt, wo nicht ausdrücklich vermerkt.
@@ -136,38 +136,3 @@ Es zieht nie einen Kasten für Werte auf. Werte werden aus einer Textschicht per
 oder durch Regeln (Position, zwischen zwei Begriffen, irgendwo, Regex) gefunden. Nur Notizen
 werden mit einem aufgezogenen Bereich gesetzt. Das stützt die Linie: Wortklick vom Feld aus
 (A1) zuerst, Kasten später.
-
-## Umsetzungsstand (Stand 2026-10-01)
-
-| # | Stand |
-|---|---|
-| A1 | **Umgesetzt** (nur PDF): Eintrag „Im Dokument wählen …“ in der Feldliste, Wortmodus mit Hinweisband, Esc, Übernahme über `read_selection`; Umrandung der erkannten Werte, Zoom auf den Wert beim Fokus (pdf.js `FitR`). Offen: Bilder, Handy-Scrollen. |
-| A2 | Teilweise: Umrandung im Dokument und Warnsymbol bei unsicheren Werten; keine eigene Markierung „automatisch gelesen“ am Feld. |
-| A7 | Nur geplant (Planung im Chat vom 2026-10-01: Modell `int_filemanager.ocr_correction`, bearbeitbare Liste, reine Funktion `apply_corrections` in `_recognition_page`, nur bei `ocr != "none"`). Nicht gebaut, Entscheidungen offen (sofort wirken lassen, Sprache weglassen, nur Einzelwörter). |
-| C10, B5, E4, F1, F3, F5, H6 | Schon vorhanden bzw. im Konzept vorgesehen. |
-| alle anderen | Nicht begonnen. |
-
-## Quellen (PaperOffice-Hilfe, Stand Oktober 2026)
-
-Portal `https://portal.paperoffice.ai/paperoffice/de/kb/paperoffice-classic-dms/<Artikel>`:
-`wie_ist_die_paperoffice_oberflaeche_aufgebaut`, `was_bedeuten_die_symbole_und_farben_in_der_dokumentliste`,
-`welche_symbole_werden_neben_der_dokumentvorschau_dargestellt_und_welche_weiterfuehrenden_optionen_kann_ich_ausfuehren`,
-`was_bedeutet_die_untere_leiste_in_der_dokumentliste`, `einstellungen_unter_dokumenteigenschaften`,
-`pia_ablagedialog_detailliert_erklaert`, `wie_lerne_ich_die_dokumentvorlagen_in_paperoffice_ein`,
-`wie_werden_ablagemasken_erstellt_und_wann_werden_sie_ausgefuehrt`,
-`welche_werte_koennen_als_benutzerdefinierte_felder_angelegt_werden`,
-`wie_erstelle_ich_notizen_oder_aufgaben_auf_einem_dokument`, `notiz_informationen_hinterlegen_und_aufgaben_zuweisen`,
-`notizverwaltung`, `was_bedeutet_die_texterkennung_fuer_die_dokumentseite`,
-`was_ist_ein_smartspell_woerterbuch_und_wie_kann_ich_es_verwalten`,
-`wie_funktioniert_die_texterkennung_fuer_hinzugefuegte_dokumente`,
-`welche_erweiterten_einstellungen_gibt_es_fuer_die_texterkennung_ocr`, `versionierung_und_versionskontrolle`,
-`taegliches_briefing_und_uebersicht`, `kalenderansicht`, `stempel_dokument`, `stempel_hinzufuegen`,
-`wie_arbeite_ich_mit_qr-codes`, `wie_fuehre_ich_ein_stapelscan_mit_paperoffice_trennseiten_durch`,
-`hilfe_zu_explorerconnect_verzeichnisueberwachung`, `askpia_ablagemodi_erklaert`, `workflow_und_arbeitszuweisung`,
-`welche_anzeigetypen_gibt_es_und_wie_kann_ich_diese_aendern`,
-`wie_ist_die_leiste_der_schnellsuche_in_paperoffice_aufgebaut_und_was_bedeuten_die_knoepfe`,
-`wie_kann_ich_mein_dokument_bearbeiten_weiterleiten_oder_oeffnen_was_bedeutet_das_kontext_menu_der_dokumentliste`,
-`kontaktverwaltung`, `kann_ich_dokumente_mit_kontakten_und_adressen_verbinden`,
-`wie_funktioniert_die_erweiterte_suche`,
-`wie_administriere_ich_verschiedene_verwaltungsmasken_in_paperoffice_schluesselwoerter_statuseintraege_workflows_usw`.
-Video: <https://www.youtube.com/watch?v=y3eohX0qOSM> (Schnelleinführung Oberfläche PaperOffice Classic).

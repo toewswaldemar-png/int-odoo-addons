@@ -37,26 +37,9 @@ Rückgabe: Exit-Code ≠ 0 bei Befunden. odoo-ls: Fehler und Warnungen (Stufe 1�
 
 ## 3. Was verifiziert ist – und was nicht
 
-Verifiziert in einer **Cloud-Sitzung** (Odoo 19.0 Git-Stand 2026-10-02, Python 3.11, pylint 4.1.1, PostgreSQL 16, Node 22,
-odoo-ls 1.6.0 aus dem Quellcode gebaut):
+**Verifiziert** in einer Cloud-Sitzung (Odoo 19.0 Git-Stand 2026-10-02, ohne Docker): alle pre-commit-Hooks (ein Probemodul mit absichtlich eingebauten Fehlern wurde erkannt), `test_lint` über Odoo-Kern und unsere Module (Befunde Abschnitt 4), odoo-ls im Parse-Lauf.
 
-- **pre-commit:** alle Hooks laufen; ein Probemodul mit Absicht eingebauten Fehlern wurde erkannt (SQL-Injection,
-  `cr.commit()`, `print`, `eval`, `except: pass`, übersetzte Zeichenkette mit `%`, `debugger`, bare `except`). ESLint verarbeitet native ES-Module (`import`, `static`), Prettier formatiert XML. Auf Altdateien und
-  `docs/` laufen keine Hooks.
-- **`test_lint`:** voller Lauf über Odoo-Kern + unsere Module (Befunde Abschnitt 4).
-- **odoo-ls:** Parse-Lauf, JSON-Format bestätigt, Auswertung läuft.
-
-**Nicht verifiziert:**
-- Die Docker-Läufe auf **Tower** (`run_test_lint.sh`, `MODE=docker`): in der Cloud gibt es keinen Docker-Daemon. Dieselben
-  Odoo-/odoo-ls-Aufrufe wurden aber ohne Docker ausgeführt.
-- pre-commit auf dem **Windows-Arbeitsrechner** (Node-Pin `22.9.0` wird dort von pre-commit selbst geladen; in der Cloud
-  wurde das System-Node benutzt).
-- Abweichungen durch den Unterschied Image `odoo:19.0-hm-test` (19.0-20260908) ↔ Git-Stand und pylint-Version.
-
-Umgebungsartefakte der Cloud-Sitzung, die **keine** Befunde sind: 9 Docstring-Fehler (Pygments fehlte; nach Installation
-grün), `test_eslint` mit ESLint 9 (`--eslintrc` entfernt; mit ESLint 8.57.1 läuft er), odoo-ls-Fehlalarme `OLS02001`
-für Bibliotheken außerhalb des Pfads (mit `PYTHONPATH` weg), Modell `documents.document` (Enterprise) in `onlyoffice_odoo`.
-Auf Tower ist ESLint im Image nicht vorhanden → `test_eslint` wird dort **übersprungen**, nicht bestanden.
+**Nicht verifiziert:** die Docker-Läufe auf Tower (`run_test_lint.sh`, `MODE=docker`), pre-commit auf dem Windows-Arbeitsrechner, Abweichungen durch den Unterschied zwischen Image `odoo:19.0-hm-test` und dem Git-Stand. Auf Tower fehlt ESLint im Image, `test_eslint` wird dort **übersprungen**, nicht bestanden.
 
 ## 4. Befunde im Altbestand (Stand der Prüfung)
 
