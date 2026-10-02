@@ -4,7 +4,7 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/user_interface/icons.rst` und `scss_inheritance.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/user_interface/icons.html>,
 `…/scss_inheritance.html`). Geprüft: 2026-10-02. SCSS-Format/Namensregeln (Coding Guidelines):
-`docs/odoo_konventionen_2026-09-26.md` Abschnitt 6. Index: `docs/odoo_regeln_index_2026-10-02.md`.
+`docs/odoo_konventionen_2026-09-26.md` Abschnitt 6. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Icons
 

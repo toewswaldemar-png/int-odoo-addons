@@ -3,7 +3,7 @@
 Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/backend/actions.rst`, `backend/http.rst`, `backend/reports.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/actions.html>, `…/http.html`,
-`…/reports.html`). Geprüft: 2026-10-02. Index: `docs/odoo_regeln_index_2026-10-02.md`.
+`…/reports.html`). Geprüft: 2026-10-02. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 **Grenze der Quelle:** `odoo.http.route`, `Request`, `Response`, `IrCron._commit_progress`/`method_direct_trigger`/
 `_trigger` sind *autodoc* – Parameter (`auth`, `type`, `csrf`, `methods`, `cors`, `website` …) stehen nur im

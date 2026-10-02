@@ -3,12 +3,12 @@
 Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/frontend/qweb.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/frontend/qweb.html>).
-Geprüft: 2026-10-02. QWeb-Berichte: `docs/odoo_regeln_actions_cron_http_reports_2026-10-02.md` Abschnitt 4.
-Index: `docs/odoo_regeln_index_2026-10-02.md`.
+Geprüft: 2026-10-02. QWeb-Berichte: `docs/odoo_regeln/odoo_regeln_actions_cron_http_reports_2026-10-02.md` Abschnitt 4.
+Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 **Vorsicht, Quelle teils veraltet:** der Abschnitt "Javascript" (`QWeb2.Engine`, `core.qweb`, `t-extend`/`t-jquery`,
 `t-js`) beschreibt das alte System; die Quelle selbst markiert ihn mit "no longer relevant, section to rewrite".
-Für neue Owl-Templates gilt Owl-Syntax (siehe `docs/odoo_regeln_js_framework_2026-10-02.md` Abschnitt 7).
+Für neue Owl-Templates gilt Owl-Syntax (siehe `docs/odoo_regeln/odoo_regeln_js_framework_2026-10-02.md` Abschnitt 7).
 
 ## 1. Direktiven (Python- und JS-QWeb)
 
@@ -36,7 +36,7 @@ Für neue Owl-Templates gilt Owl-Syntax (siehe `docs/odoo_regeln_js_framework_20
 - **Doppeltes Escapen erzwingen:** zurück in `str` wandeln (`str(inhalt)` in Python, `String(inhalt)` in JS).
 - Unterschied: Python-`Markup` escaped den anderen Operanden bei Verkettung, JS-`Markup` **nicht** (Verkettung
   liefert `String`, der andere Operand bleibt unescaped).
-- Ausführlich: `docs/odoo_regeln_security_2026-10-02.md` (Escaping vs. Sanitizing, `Markup`-Muster).
+- Ausführlich: `docs/odoo_regeln/odoo_regeln_security_2026-10-02.md` (Escaping vs. Sanitizing, `Markup`-Muster).
 
 ## 3. Nur Python-QWeb
 

@@ -4,8 +4,8 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/frontend/unit_testing.rst`, `unit_testing/hoot.rst`, `unit_testing/web_helpers.rst`,
 `unit_testing/mock_server.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/frontend/unit_testing.html> und Unterseiten).
-Geprüft: 2026-10-02. Python-Tests und Tours: `docs/odoo_regeln_testing_2026-10-02.md`.
-Index: `docs/odoo_regeln_index_2026-10-02.md`.
+Geprüft: 2026-10-02. Python-Tests und Tours: `docs/odoo_regeln/odoo_regeln_testing_2026-10-02.md`.
+Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 Die Quelle ist ein API-Katalog; hier stehen die **Regeln und Fallstricke**. Matcher-/Helfer-Listen nur als
 Namensübersicht, Details in der Quelle bzw. `@odoo/hoot` im Core.

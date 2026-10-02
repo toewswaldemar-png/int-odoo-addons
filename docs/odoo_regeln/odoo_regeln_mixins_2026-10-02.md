@@ -3,7 +3,7 @@
 Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/backend/mixins.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/mixins.html>).
-Geprüft: 2026-10-02. Index: `docs/odoo_regeln_index_2026-10-02.md`.
+Geprüft: 2026-10-02. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 **Vorsicht, Quelle teilweise veraltet:** Die Codebeispiele enthalten Fehler und Altlasten (u. a.
 `message_new` mit falschen Variablennamen, `${object…}`-Syntax im Rating-Mailtemplate statt QWeb/Inline-Syntax,

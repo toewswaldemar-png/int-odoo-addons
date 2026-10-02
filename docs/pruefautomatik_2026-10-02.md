@@ -2,7 +2,7 @@
 
 Umsetzung des Beschlusses vom 2026-09-26 (`docs/odoo_konventionen_2026-09-26.md`, Abschnitte 9 und 10):
 **pre-commit nach OCA-Vorlage (nur neuer Code), Odoos `test_lint`, odoo-ls im Parse-Modus; keine GitHub Action.**
-Regeln selbst: `docs/odoo_regeln_index_2026-10-02.md`.
+Regeln selbst: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Bestandteile
 

@@ -53,7 +53,7 @@ eine belastbare Aussage.
 ## Verbindlich: Odoo-19-Regeln (Coding Guidelines + Developer Reference)
 
 Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentation` Branch 19.0) sind in
-`docs/odoo_regeln_index_2026-10-02.md` und den dort verlinkten Destillaten `docs/odoo_regeln_*` festgehalten
+`docs/odoo_regeln/odoo_regeln_index_2026-10-02.md` und den dort verlinkten Destillaten `docs/odoo_regeln/odoo_regeln_*` festgehalten
 (Coding/Git: `docs/odoo_konventionen_2026-09-26.md`).
 
 - **Vor Code in einem Bereich** (ORM, Views/XML, Sicherheit, Daten/Manifest, Aktionen/Cron/Controller/Berichte,

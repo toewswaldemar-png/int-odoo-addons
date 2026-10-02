@@ -4,7 +4,7 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/backend/data.rst` und `backend/module.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/data.html>,
 <…/backend/module.html>). Geprüft: 2026-10-02. Ergänzt `docs/odoo_konventionen_2026-09-26.md` Abschnitte 1, 2 und 5.
-Index: `docs/odoo_regeln_index_2026-10-02.md`.
+Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Manifest (`__manifest__.py`)
 

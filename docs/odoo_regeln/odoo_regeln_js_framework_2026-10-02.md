@@ -3,10 +3,10 @@
 Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02), Verzeichnis
 `content/developer/reference/frontend/`: `framework_overview.rst`, `javascript_modules.rst`, `assets.rst`,
 `registries.rst`, `services.rst`, `hooks.rst`, `patching_code.rst`, `javascript_reference.rst` (ohne Feld-Widgets,
-siehe `docs/odoo_regeln_js_fields_2026-10-02.md`), `owl_components.rst`, `error_handling.rst`, `odoo_editor.rst`,
+siehe `docs/odoo_regeln/odoo_regeln_js_fields_2026-10-02.md`), `owl_components.rst`, `error_handling.rst`, `odoo_editor.rst`,
 `mobile.rst`. Web-Wurzel: <https://www.odoo.com/documentation/19.0/developer/reference/frontend/>.
-Geprüft: 2026-10-02. QWeb: `docs/odoo_regeln_qweb_2026-10-02.md`. JS-Tests: `docs/odoo_regeln_js_tests_2026-10-02.md`.
-Index: `docs/odoo_regeln_index_2026-10-02.md`.
+Geprüft: 2026-10-02. QWeb: `docs/odoo_regeln/odoo_regeln_qweb_2026-10-02.md`. JS-Tests: `docs/odoo_regeln/odoo_regeln_js_tests_2026-10-02.md`.
+Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 **Vorsicht, Quelle teils inkonsistent/veraltet:** `framework_overview.rst` zeigt `this.env._t(...)` und
 `env.services.action_manager`, `javascript_reference.rst` zeigt dagegen `import { _t } from

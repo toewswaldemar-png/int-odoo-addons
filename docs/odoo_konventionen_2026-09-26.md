@@ -297,7 +297,7 @@ inhaltlich gültig; **Ergänzungen**, die dort fehlten:
 
 - **Cron-Fehlerbehandlung (Python):** Fängt eine geplante Aktion Fehler und soll weiterlaufen, **rollback** machen;
   Crons laufen in eigener Transaktion, Fortschritt wird über `IrCron._commit_progress` gemeldet
-  (`docs/odoo_regeln_actions_cron_http_reports_2026-10-02.md` Abschnitt 2). Das ersetzt `cr.commit()` im Cron-Code.
+  (`docs/odoo_regeln/odoo_regeln_actions_cron_http_reports_2026-10-02.md` Abschnitt 2). Das ersetzt `cr.commit()` im Cron-Code.
 - **Commit mit `cr.commit()`:** Ausnahmen laut Guidelines nur im **selbst geöffneten** Cursor; **kein** `commit()` nötig in
   `_auto_init`, Reports und `TransientModel`-Methoden (laufen im Framework-Transaktionskontext).
 - **Frontend-Ordner:** zusätzlich `static/src/js/tours/` (Onboarding-Tours für Endnutzer) neben
@@ -306,7 +306,7 @@ inhaltlich gültig; **Ergänzungen**, die dort fehlten:
 - **SCSS/CSS-Variablen:** CSS-Variablen sind **ausschließlich DOM-bezogen** (kontextuelle Anpassung, Standardwert
   im Komponentenblock); das Design-System steckt in SCSS-Variablen, kombiniert über
   `color: var(--MyComponent-color, #{$o-component-color})`. **Keine CSS-Variablen auf `:root`** (Ausnahme: Templates,
-  die über Bundles geteilt werden). Details: `docs/odoo_regeln_ui_icons_scss_2026-10-02.md`.
+  die über Bundles geteilt werden). Details: `docs/odoo_regeln/odoo_regeln_ui_icons_scss_2026-10-02.md`.
 - **Übersetzung:** `_('…') % wert` (Formatierung außerhalb) ist ebenfalls falsch, nicht nur `_('…' % wert)`; bei einer
   Variablen `%`, bei mehreren `%(name)s`.
 - **Git:** `[MOV]` nur mit `git mv` und **ohne Inhaltsänderung** (sonst geht die Historie verloren; gilt auch beim
@@ -317,4 +317,4 @@ inhaltlich gültig; **Ergänzungen**, die dort fehlten:
   reinen Verschiebe-Commit, dann die Änderung (bereits in "Quellen und Rangfolge" festgehalten).
 
 Alle Regeln der **Developer Reference** (ORM, Views, JS, Tests …) stehen in den Destillaten
-`docs/odoo_regeln_*_2026-10-02.md`, Einstieg über `docs/odoo_regeln_index_2026-10-02.md`.
+`docs/odoo_regeln/odoo_regeln_*_2026-10-02.md`, Einstieg über `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.

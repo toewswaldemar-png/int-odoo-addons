@@ -195,7 +195,7 @@ const config = [{
 
 }, {
     // Odoo 19 native JS modules (import/export): static/src and static/tests are transpiled
-    // by the server (docs/odoo_regeln_js_framework_2026-10-02.md, section 2). Deviation from
+    // by the server (docs/odoo_regeln/odoo_regeln_js_framework_2026-10-02.md, section 2). Deviation from
     // the OCA template, which only treats *.esm.js and *test.js as modules.
     files: ["**/static/src/**/*.js", "**/static/tests/**/*.js", "**/*.esm.js", "**/*test.js"],
 

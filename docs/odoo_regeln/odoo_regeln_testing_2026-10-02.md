@@ -4,7 +4,7 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/backend/testing.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/testing.html>).
 Geprüft: 2026-10-02. Ergänzt `docs/odoo_konventionen_2026-09-26.md` Abschnitt 7. JS-Tests (Hoot, Mock-Server,
-Web-Helfer): `docs/odoo_regeln_js_tests_2026-10-02.md`. Index: `docs/odoo_regeln_index_2026-10-02.md`.
+Web-Helfer): `docs/odoo_regeln/odoo_regeln_js_tests_2026-10-02.md`. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 **Grenze der Quelle:** Klassen und Methoden (`TransactionCase`, `HttpCase`, `Form`, `assertQueryCount`, `tagged` …)
 sind *autodoc* – Details im Core-Quellcode.

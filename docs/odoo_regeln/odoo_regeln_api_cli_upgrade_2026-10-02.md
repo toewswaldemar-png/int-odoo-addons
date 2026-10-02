@@ -5,7 +5,7 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02), `conte
 `upgrades/upgrade_scripts.rst`, `upgrades/upgrade_utils.rst`, `standard_modules*`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/external_api.html> usw.).
 Geprüft: 2026-10-02. Migrationsregel des Repos: `docs/odoo_konventionen_2026-09-26.md` Abschnitt 2 + 10.
-Index: `docs/odoo_regeln_index_2026-10-02.md`.
+Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Externe JSON-2-API (neu in 19.0 – gewünschter Weg für Integrationen)
 

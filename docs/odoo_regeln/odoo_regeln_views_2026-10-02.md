@@ -5,7 +5,7 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 Bausteine `view_architectures/*.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/user_interface/view_records.html>,
 `…/view_architectures.html`). Geprüft: 2026-10-02. Ergänzt `docs/odoo_konventionen_2026-09-26.md` Abschnitt 5 (XML).
-Icons und SCSS: `docs/odoo_regeln_ui_icons_scss_2026-10-02.md`. Index: `docs/odoo_regeln_index_2026-10-02.md`.
+Icons und SCSS: `docs/odoo_regeln/odoo_regeln_ui_icons_scss_2026-10-02.md`. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 Legende: **Pflicht** = laut Quelle "Mandatory"; sonst optional. Standardwerte in Klammern. `Enterprise` = nicht in
 Community (HM-SRV/Tower betreiben Community → **nicht verfügbar**).

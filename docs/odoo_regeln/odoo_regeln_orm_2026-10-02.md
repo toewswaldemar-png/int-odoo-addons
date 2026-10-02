@@ -3,7 +3,7 @@
 Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/backend/orm.rst` und `backend/orm/changelog.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/orm.html>).
-Geprüft: 2026-10-02. Index und Einordnung: `docs/odoo_regeln_index_2026-10-02.md`.
+Geprüft: 2026-10-02. Index und Einordnung: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 **Grenze der Quelle:** `orm.rst` ist größtenteils *autodoc* – Feldparameter, Signaturen und Details von
 `create`/`write`/`search`/`_read_group`/`unlink`/`copy`/`with_context` usw. stehen **nur im Docstring des

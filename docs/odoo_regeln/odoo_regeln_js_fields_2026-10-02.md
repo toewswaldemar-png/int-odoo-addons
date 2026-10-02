@@ -2,8 +2,8 @@
 
 Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/frontend/javascript_reference.rst` (Abschnitte Fields, Widgets, Client actions).
-Geprüft: 2026-10-02. Framework-Teil derselben Datei: `docs/odoo_regeln_js_framework_2026-10-02.md`.
-Index: `docs/odoo_regeln_index_2026-10-02.md`.
+Geprüft: 2026-10-02. Framework-Teil derselben Datei: `docs/odoo_regeln/odoo_regeln_js_framework_2026-10-02.md`.
+Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 Dies ist ein **Nachschlage-Katalog** (kein Regelwerk). Verbindlich ist nur, **für welchen Feldtyp ein Widget
 gilt**, und dass Optionen in `options="{…}"` bzw. als Attribut am `<field>` stehen. Vor Verwendung im Core des
