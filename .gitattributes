@@ -4,3 +4,15 @@ int_filemanager/** text=auto eol=lf
 
 # Converter service runs in a Linux container: LF only (a CR breaks Dockerfile line continuations).
 tools/fmconverter/** text eol=lf
+
+# Lint/hook configuration: LF in the working tree, as enforced by pre-commit (mixed-line-ending --fix=lf).
+# Without this, a fresh clone on Windows (core.autocrlf=true) gets CRLF and the first commit of such a file fails.
+/.editorconfig text eol=lf
+/.gitattributes text eol=lf
+/.gitignore text eol=lf
+/.pre-commit-config.yaml text eol=lf
+/.pylintrc text eol=lf
+/.pylintrc-mandatory text eol=lf
+/.ruff.toml text eol=lf
+/eslint.config.cjs text eol=lf
+/prettier.config.cjs text eol=lf
