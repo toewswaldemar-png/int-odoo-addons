@@ -117,18 +117,13 @@ größere Umstellungen erst als reiner Verschiebe-Commit (`[MOV]`), dann die Än
 - **Reihenfolge im Modell:** private Attribute (`_name`, `_description`, `_inherit`, …) → Default-Methoden → Felder → SQL-Constraints/Indizes →
   Compute/Inverse/Search (in Feldreihenfolge) → Selection-Methoden → `@api.constrains`/`@api.onchange` → CRUD-Überschreibungen → Aktionen → übrige Geschäftsmethoden.
 
-## 4. Sicherheit (Kurzfassung der Security Pitfalls, verbindlich)
+## 4. Sicherheit
 
-Ausführlich: `odoo_regeln_security_2026-10-02.md`.
+Verbindlich und ausführlich: `odoo_regeln_security_2026-10-02.md` (Security Pitfalls, Rechte, `Markup`, `Domain`, `eval`). Kernsätze:
 
-- **Öffentliche Methoden sind per RPC mit beliebigen Argumenten aufrufbar.** Datensatz und Parameter nicht vertrauen; Zugriffsrechte greifen nur bei CRUD.
-  Heikles in private Methoden (`_…`) auslagern; privat allein reicht nicht, Rechte bewusst prüfen. `sudo()` nie auf nutzergesteuerte Eingaben.
-- **ORM nicht umgehen:** kein direktes SQL, wenn das ORM es kann (sonst fehlen Übersetzung, Cache-Invalidierung, `active`, Rechte). Wo SQL nötig ist:
-  **`odoo.tools.SQL`** mit Parametern, nie `+`/`%` in den SQL-Text (`sql-injection`).
-- **Domains** nicht als Listen zusammenkleben; `odoo.fields.Domain` benutzen (`domain &= Domain(...)`), sonst können Nutzer Bedingungen einschleusen.
-- **Kein `t-raw`**/ungeprüftes HTML; `t-esc`/`t-out`; HTML in Python nur mit `markupsafe.Markup` und Formatierung **nach** dem Literal
-  (`Markup('<p>%s</p>') % wert`), keine f-Strings in `Markup`. Escapen statt Säubern, wo möglich.
-- **Kein `eval`**; `safe_eval` nur für vertrauenswürdige, privilegierte Eingaben; zum Einlesen `ast.literal_eval`, `json.loads`, `int()` usw.
+- Öffentliche Methoden sind per RPC mit beliebigen Argumenten aufrufbar; `sudo()` nie auf nutzergesteuerte Eingaben.
+- ORM nicht umgehen; wo SQL nötig ist, `odoo.tools.SQL` mit Parametern.
+- Kein `t-raw`, kein `eval`; HTML in Python nur mit `Markup`.
 
 ## 5. XML
 
@@ -163,13 +158,9 @@ Ausführlich: `odoo_regeln_js_framework_2026-10-02.md`, `odoo_regeln_ui_icons_sc
 
 ## 7. Tests
 
-Ausführlich: `odoo_regeln_testing_2026-10-02.md`, `odoo_regeln_js_tests_2026-10-02.md`.
-
-- Jede Fehlerbehebung mit einem Test, der ohne die Behebung fehlschlägt; neue Funktionen möglichst vollständig testen (OCA).
-- **Mit möglichst geringen Rechten testen** (`new_test_user`, `@users`, `uid`/`env` in `setUpClass`), sonst falsch-positive Tests.
-- Flaky Tests vermeiden: `subTest` setzt DB und Cache **nicht** zurück; in Klassenvariablen gespeicherte Datensätze tragen altes `env` (Nutzer, sudo,
-  Kontext) mit; feste Daten statt `now()` (`freezegun`); externe Dienste mocken (`unittest.mock`, `classPatch`).
-- Testdateien müssen in `tests/__init__.py` importiert sein (`test_test_holes`).
+Regeln und Hausregeln: `odoo_regeln_testing_2026-10-02.md` und `odoo_regeln_js_tests_2026-10-02.md`. Ergänzend gegen flaky Tests: in
+Klassenvariablen gespeicherte Datensätze tragen ihr altes `env` (Nutzer, sudo, Kontext) mit; feste Daten statt `now()` (`freezegun`); externe Dienste
+mocken (`unittest.mock`, `classPatch`).
 
 ## 8. Hausregeln dieses Repos
 
