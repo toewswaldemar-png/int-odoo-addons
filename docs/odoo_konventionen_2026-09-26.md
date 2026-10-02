@@ -265,7 +265,7 @@ scheitert bei Fehlern/Warnungen in eigenen Pfaden.
 | `sudo()` | heutiges Modul: 59 Stellen (N1-Lücke) | v2: I7 – nie auf Nutzereingaben; jede Stelle begründet |
 | Rohes SQL | heutiges Modul: 13 × `cr.execute`; Prototyp: Pfadauflösung per rekursiver CTE | v2: nur wo das ORM nicht reicht, mit `odoo.tools.SQL`, Rechteprüfung über das ORM danach |
 | Hooks | Prototyp `post_load` in `__init__.py` | in `hooks.py` (OCA) |
-| Lint/pre-commit | im Repo **keine** Konfiguration | **entschieden 2026-09-26:** pre-commit nach OCA-Vorlage (nur neuer Code) + Odoos `test_lint` + **odoo-ls Parse-Modus** (nur eigene Pfade) auf der Testinstanz; keine GitHub Action |
+| Lint/pre-commit | **eingerichtet 2026-10-02** (`.pre-commit-config.yaml`, `scripts/lint/`; Stand und Befunde: `docs/pruefautomatik_2026-10-02.md`) | **entschieden 2026-09-26:** pre-commit nach OCA-Vorlage (nur neuer Code) + Odoos `test_lint` + **odoo-ls Parse-Modus** (nur eigene Pfade) auf der Testinstanz; keine GitHub Action. Abweichungen von der OCA-Vorlage: keine OCA-Packaging-/README-Hooks, pylint-odoo erzwingt Autor/README nicht, ESLint kennt ES-Module, Ruff ignoriert UP031 |
 | Migrationsskripte | im heutigen Modul keine `migrations/` | **entschieden 2026-09-26:** ab dem ersten Datenmodell-Wechsel nach Inbetriebnahme mit `odoo/upgrade-util` |
 | Commit-Nachrichten | bisher `docs: …`, `CLAUDE.md: …` | für Modul-Code `[TAG] modul: …` (Odoo 2) |
 | Manifest | `19.0.1.15.0`, `LGPL-3` – Format passt | keine Schlüssel mit Standardwert; `hooks`/`external_dependencies` (z. B. `wsgidav`) angeben, kein `except ImportError`-Ersatz |

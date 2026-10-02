@@ -13,9 +13,9 @@ dann Prüfautomatik).
 1. **`CLAUDE.md`** – kurze Pflichtregel mit Verweis hierher (immer geladen).
 2. **Diese Destillate** – pro Themenbereich eine Datei: Regeln der Quelle, Fallstricke, Quellverweis, Prüfdatum.
    Sie sind **keine Kopie** der Dokumentation (zu groß, veraltet schnell), sondern ihre Regeln und Entscheidungspunkte.
-3. **Maschinelle Prüfung** (pre-commit nach OCA-Vorlage, Odoos `test_lint`, odoo-ls) – **noch nicht eingerichtet**
-   (nächster Schritt; Beschluss vom 2026-09-26). Erst sie macht Regeln erzwingbar; bis dahin sind die Destillate
-   Review-Checkliste.
+3. **Maschinelle Prüfung** (pre-commit nach OCA-Vorlage, Odoos `test_lint`, odoo-ls) – **eingerichtet 2026-10-02**,
+   Stand, Aufruf und Befunde im Altbestand: `docs/pruefautomatik_2026-10-02.md`. Erst sie macht Regeln erzwingbar;
+   Regeln ohne Werkzeug bleiben Review-Checkliste in den Destillaten.
 
 ## Dateien
 
@@ -62,7 +62,8 @@ dann Prüfautomatik).
 
 ## Offene Folgepunkte
 
-1. Prüfautomatik einrichten (`.pre-commit-config.yaml` nach OCA-Vorlage, `test_lint`, odoo-ls) – Schicht 3.
+1. Prüfautomatik: Läufe auf Tower und Arbeitsrechner, Altbefunde und offene Entscheidungen siehe
+   `docs/pruefautomatik_2026-10-02.md` (Abschnitte 3–5).
 2. Stichprobe, ob bestehende Module gegen die Destillate verstoßen (z. B. rohes SQL ohne `SQL`, `_cr`/`_context`,
    Listen-Domains, fehlendes `flush_model`/`invalidate_*`); Ergebnis in die Übergabe-Dokumente von `int_filemanager`.
 3. Destillate durch Review gegen die Quelle prüfen lassen, bevor sie als abgenommen gelten (sie wurden in einem

@@ -10,7 +10,7 @@ Output format (odoo-ls 1.6.0, ``server/src/cli_backend.rs``): ``{"events": [{"ty
 severities 1 = error, 2 = warning, 3 = information, 4 = hint.
 
 Rules:
-- only files inside this repository count (``--root``);
+- only files inside Odoo modules of this repository count (``--root``; not docs/, scripts/);
 - legacy files (see sync_legacy_excludes.py) are skipped unless ``--include-legacy``;
 - severities up to ``--fail-level`` (default 2: errors and warnings) fail the run; level 3
   (e.g. OLS03024) is information, not an error.
@@ -34,6 +34,11 @@ SEVERITY = {1: "error", 2: "warning", 3: "info", 4: "hint"}
 
 def uri_to_path(uri):
     return pathlib.Path(unquote(urlparse(uri).path))
+
+
+def is_module_file(rel, root):
+    """Only files inside an Odoo module count (docs/prototypes, scripts etc. are not module code)."""
+    return len(rel.parts) > 1 and (root / rel.parts[0] / "__manifest__.py").is_file()
 
 
 def is_legacy(rel, legacy_files):
@@ -71,6 +76,8 @@ def main():
         try:
             rel = path.resolve().relative_to(root)
         except ValueError:
+            continue
+        if not is_module_file(rel, root):
             continue
         if not args.include_legacy and is_legacy(rel, legacy_files):
             skipped_legacy += len(event.get("diagnostics", []))

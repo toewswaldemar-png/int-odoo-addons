@@ -61,8 +61,9 @@ Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentati
 - Neuer Code verletzt sie nicht; bei bestehendem Code Stil nicht umformatieren (Konventionen, "Quellen und Rangfolge").
 - Die Destillate sind **kein Ersatz** für den Core-Grep oben: wo die Quelle autodoc ist (Signaturen, Feldparameter),
   gilt der Core im Container. Bei Widerspruch gilt die Odoo-Quelle, nicht das Destillat – Destillat dann korrigieren.
-- Prüfautomatik (pre-commit, `test_lint`, odoo-ls) ist beschlossen, aber noch **nicht eingerichtet**; bis dahin sind
-  die Destillate die Review-Checkliste.
+- Prüfautomatik (pre-commit, `test_lint`, odoo-ls) ist eingerichtet (`docs/pruefautomatik_2026-10-02.md`: Aufruf,
+  Verifikationsstand, Altbefunde); Regeln ohne Werkzeug bleiben Review-Checkliste in den Destillaten. Neuer Code muss
+  `pre-commit run` bestehen; Altdateien stehen im LEGACY-Block (`scripts/lint/sync_legacy_excludes.py`).
 
 ## Weitere Grundsätze
 

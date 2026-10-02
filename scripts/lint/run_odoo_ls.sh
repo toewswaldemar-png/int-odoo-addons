@@ -14,8 +14,11 @@
 #   OLS_DIR      directory with odoo_ls_server and typeshed/   (local: required; docker: /tmp/odoo-ls)
 #   ODOO_PATH    Odoo community path (the directory that contains odoo/ and addons/)  (local: required)
 #   PYTHON       python of the Odoo environment                (local: python3)
+#   PYTHONPATH   site-packages of that environment, otherwise third-party imports (PIL, mutagen, ...)
+#                are reported as OLS02001 (false positives); docker mode: set PYLIB_ENV
 #   IMAGE        odoo image                                    (docker: odoo:19.0-hm-test)
 #   OLS_OUT      JSON output                                   (/tmp/odoo_ls_out.json)
+# odoo-ls writes progress noise to stdout/stderr; it goes to $OLS_OUT.log.
 # Extra arguments are passed to odoo_ls_check.py (e.g. --include-legacy --show-info).
 set -euo pipefail
 
@@ -28,10 +31,10 @@ local)
     : "${OLS_DIR:?set OLS_DIR to the directory with odoo_ls_server and typeshed/}"
     : "${ODOO_PATH:?set ODOO_PATH to the Odoo community checkout}"
     "$OLS_DIR/odoo_ls_server" --parse \
-        -c "$ODOO_PATH" -a "$REPO" -t "$REPO" \
+        -c "$ODOO_PATH" -a "$ODOO_PATH/addons" -a "$REPO" -t "$REPO" \
         --python "${PYTHON:-python3}" \
         --stdlib "$OLS_DIR/typeshed/stdlib" -s "$OLS_DIR/typeshed/stubs" \
-        -o "$OLS_OUT" --log-level error
+        -o "$OLS_OUT" --log-level error >"$OLS_OUT.log" 2>&1
     ;;
 docker)
     OLS_DIR=${OLS_DIR:-/tmp/odoo-ls}
@@ -45,7 +48,7 @@ docker)
         --entrypoint /ols/odoo_ls_server "$IMAGE" --parse \
         -c /usr/lib/python3/dist-packages/odoo -a /mnt/lint-addons -t /mnt/lint-addons \
         --python python3 --stdlib /ols/typeshed/stdlib -s /ols/typeshed/stubs \
-        -o "/out/$(basename "$OLS_OUT")" --log-level error
+        -o "/out/$(basename "$OLS_OUT")" --log-level error >"$OLS_OUT.log" 2>&1
     # the tracked folder inside the container is /mnt/lint-addons: map it back for the evaluator
     sed -i "s#file:///mnt/lint-addons#file://$REPO#g" "$OLS_OUT"
     ;;
