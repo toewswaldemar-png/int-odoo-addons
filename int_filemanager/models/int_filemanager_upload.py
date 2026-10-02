@@ -139,7 +139,9 @@ class IntFilemanagerUpload(models.Model):
             vals["target_parent_id"] = target_parent_id
             vals["target_name"] = target_name
 
-        upload = self.create(vals)
+        # Users cannot write uploads themselves (temp_file is a server path); the
+        # target rights were checked above.
+        upload = self.sudo().create(vals)
         result = {"upload_id": upload.id}
         operation.write({"result": result})
         return result
@@ -163,7 +165,8 @@ class IntFilemanagerUpload(models.Model):
             )
         )
         upload.invalidate_recordset(["received_size", "temp_file", "state"])
-        upload.check_access("write")
+        # The rule limits uploads to their owner, so reading one proves ownership.
+        upload.check_access("read")
 
         if upload.state != "open":
             raise UserError(self.env._("This upload is not open for more chunks."))
@@ -179,14 +182,14 @@ class IntFilemanagerUpload(models.Model):
             temp_path = os.path.join(
                 blobstore.tmp_dir(self.env), f"upload_{upload.operation_id.id}"
             )
-            upload.write({"temp_file": temp_path})
+            upload.sudo().write({"temp_file": temp_path})
 
         with open(temp_path, "ab") as f:
             f.write(data)
             f.flush()
             os.fsync(f.fileno())
 
-        upload.write({"received_size": offset + len(data)})
+        upload.sudo().write({"received_size": offset + len(data)})
         return {"received_size": upload.received_size}
 
     @api.model
@@ -211,7 +214,7 @@ class IntFilemanagerUpload(models.Model):
         upload = self.browse(upload_id).exists()
         if not upload:
             return True
-        upload.check_access("unlink")
+        upload.check_access("read")
         if upload.state == "processing":
             raise UserError(
                 self.env._(
@@ -219,7 +222,7 @@ class IntFilemanagerUpload(models.Model):
                 )
             )
         temp_file = upload.temp_file
-        upload.unlink()
+        upload.sudo().unlink()
         if temp_file:
             self.env.cr.postcommit.add(lambda: _remove_if_exists(temp_file))
         return True
@@ -239,16 +242,16 @@ class IntFilemanagerUpload(models.Model):
             return operation.result
 
         upload = self.browse(upload_id)
-        upload.check_access("write")
+        upload.check_access("read")
         if upload.state != "open":
             raise UserError(self.env._("This upload is not open."))
         if not upload.temp_file:
             raise UserError(self.env._("This upload has not received any data yet."))
         if target_name and upload.target_parent_id:
-            upload.write({"target_name": target_name})
+            upload.sudo().write({"target_name": target_name})
 
         if upload.received_size > self._large_file_threshold_bytes():
-            upload.write({"state": "processing"})
+            upload.sudo().write({"state": "processing"})
             result = {"upload_id": upload.id, "state": "processing"}
             operation.write({"result": result})
             return result
@@ -278,13 +281,9 @@ class IntFilemanagerUpload(models.Model):
         else:
             try:
                 with self.env.cr.savepoint():
-                    new_node = Node.with_context(mail_create_nolog=True).create(
-                        {
-                            "name": upload.target_name,
-                            "parent_id": upload.target_parent_id.id,
-                            "scope_id": upload.target_parent_id.scope_id.id,
-                            "is_dir": False,
-                        }
+                    new_node = Node._create_below(
+                        upload.target_parent_id,
+                        {"name": upload.target_name, "is_dir": False},
                     )
             except psycopg2.errors.UniqueViolation:
                 # No state change: the request is rolled back anyway. The upload
@@ -301,7 +300,7 @@ class IntFilemanagerUpload(models.Model):
             )
 
         attach_result["sha256"] = sha256
-        upload.write({"state": "done", "result": attach_result, "error": False})
+        upload.sudo().write({"state": "done", "result": attach_result, "error": False})
         self.env.cr.postcommit.add(lambda: _remove_if_exists(upload.temp_file))
         return attach_result
 

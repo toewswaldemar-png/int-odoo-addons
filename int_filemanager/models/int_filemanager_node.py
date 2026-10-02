@@ -27,6 +27,23 @@ _logger = logging.getLogger(__name__)
 DEFAULT_TRASH_RETENTION_DAYS = 30
 TRASH_RETENTION_PARAM = "int_filemanager.trash_retention_days"
 
+# Fields that carry rights, position, content or the trash purge time. The record
+# rules only look at where a node is now, so these change through the model methods,
+# which check the rights on both ends, never through a plain write().
+SERVER_ONLY_FIELDS = frozenset(
+    {
+        "scope_id",
+        "parent_id",
+        "current_revision_id",
+        "size",
+        "mime",
+        "review_state",
+        "active",
+        "removal_reason",
+        "trashed_at",
+    }
+)
+
 # A name never carries a path: "/" and "\\" would make it one. The rest is what Windows
 # refuses, so that an export or a network drive works for every name in the tree.
 _INVALID_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
@@ -452,6 +469,15 @@ class IntFilemanagerNode(models.Model):
             )
         return name
 
+    def _has_field_access(self, field, operation):
+        if (
+            operation == "write"
+            and field.name in SERVER_ONLY_FIELDS
+            and not self.env.su
+        ):
+            return False
+        return super()._has_field_access(field, operation)
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -465,12 +491,32 @@ class IntFilemanagerNode(models.Model):
         return super().write(vals)
 
     @api.model
+    def _create_below(self, parent, vals):
+        """Create a node below ``parent`` in its scope, once the caller may write there.
+
+        Users have no create right on nodes: the position and the scope are not
+        theirs to choose, they follow from the parent.
+        """
+        parent.check_access("write")
+        return self._create_node(parent, vals)
+
+    @api.model
+    def _create_node(self, parent, vals):
+        """Create a node below ``parent`` without checking rights; the caller did."""
+        # No "created" chatter message per node: there are too many of them.
+        return (
+            self.sudo()
+            .with_context(mail_create_nolog=True)
+            .create(dict(vals, parent_id=parent.id, scope_id=parent.scope_id.id))
+        )
+
+    @api.model
     def create_file(self, parent_id, name, content, operation_key):
         """Create a file from content small enough for one request.
 
-        The node is created first, as the calling user, so the record rules
-        reject a denied request before anything reaches the blob store. A name
-        collision raises instead of replacing the existing file.
+        The caller's rights on the folder are checked first, so a denied request
+        stops before anything reaches the blob store. A name collision raises
+        instead of replacing the existing file.
         """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
@@ -480,21 +526,17 @@ class IntFilemanagerNode(models.Model):
 
         content = blobstore.decode_content(content)
         parent = self.browse(parent_id)
-        scope_id = parent.scope_id.id
 
         fault.fault_point("node_create_before_check")
         try:
             with self.env.cr.savepoint():
-                # No "created" chatter message per file: too many of them, and it
-                # can fail on a reply-to lookup the user has no rights for.
-                node = self.with_context(mail_create_nolog=True).create(
+                node = self._create_below(
+                    parent,
                     {
                         "name": name,
-                        "parent_id": parent_id,
-                        "scope_id": scope_id,
                         "is_dir": False,
                         "mime": guess_mimetype(content) if content else False,
-                    }
+                    },
                 )
         except psycopg2.errors.UniqueViolation:
             raise UserError(
@@ -510,24 +552,28 @@ class IntFilemanagerNode(models.Model):
         sha256, size = blobstore.hash_file(tmp_path)
         blobstore.adopt_hashed(self.env, tmp_path, sha256, keep_tmp=True)
 
-        # Blobs have no user rights at all; sudo() is safe here because the node
-        # create() above already checked the caller against the scope.
+        # Blobs and revisions have no user rights at all; sudo() is safe here because
+        # _create_below() above already checked the caller against the scope.
         blob = self.env["int_filemanager.blob"].sudo()._get_or_create(sha256, size)
         blobstore.ensure_on_disk(self.env, sha256, tmp_path)
         if content and not blob.mime:
             # The bytes are in hand: no need to read the file again.
             blob.mime = guess_mimetype(content) or False
-        revision = self.env["int_filemanager.revision"].create(
-            {
-                "node_id": node.id,
-                "blob_id": blob.id,
-                "revision_no": 1,
-                "origin": "upload",
-                "operation_id": operation.id,
-                "size": size,
-            }
+        revision = (
+            self.env["int_filemanager.revision"]
+            .sudo()
+            .create(
+                {
+                    "node_id": node.id,
+                    "blob_id": blob.id,
+                    "revision_no": 1,
+                    "origin": "upload",
+                    "operation_id": operation.id,
+                    "size": size,
+                }
+            )
         )
-        node.write({"current_revision_id": revision.id, "size": size})
+        node.sudo().write({"current_revision_id": revision.id, "size": size})
         fault.fault_point("node_create_after_insert")
 
         result = {"node_id": node.id, "revision_id": revision.id, "sha256": sha256}
@@ -576,14 +622,7 @@ class IntFilemanagerNode(models.Model):
         parent = self.browse(parent_id)
         try:
             with self.env.cr.savepoint():
-                node = self.with_context(mail_create_nolog=True).create(
-                    {
-                        "name": name,
-                        "parent_id": parent_id,
-                        "scope_id": parent.scope_id.id,
-                        "is_dir": True,
-                    }
-                )
+                node = self._create_below(parent, {"name": name, "is_dir": True})
         except psycopg2.errors.UniqueViolation:
             raise UserError(
                 self.env._(
@@ -630,22 +669,28 @@ class IntFilemanagerNode(models.Model):
         if current and current.blob_id.id == blob_id:
             return {"node_id": node.id, "revision_id": current.id, "unchanged": True}
 
+        # sudo(): users cannot create revisions or point a node at one; every caller
+        # checked the rights on the node and took the blob from content it may use.
         next_no = (current.revision_no if current else 0) + 1
-        revision = self.env["int_filemanager.revision"].create(
-            {
-                "node_id": node.id,
-                "blob_id": blob_id,
-                "revision_no": next_no,
-                "origin": origin,
-                "operation_id": operation.id,
-                "size": size,
-            }
+        revision = (
+            self.env["int_filemanager.revision"]
+            .sudo()
+            .create(
+                {
+                    "node_id": node.id,
+                    "blob_id": blob_id,
+                    "revision_no": next_no,
+                    "origin": origin,
+                    "operation_id": operation.id,
+                    "size": size,
+                }
+            )
         )
         # What the content is decides the node's type, not its name; a new revision
         # can be another kind of file than the one before.
         blob = self.env["int_filemanager.blob"].sudo().browse(blob_id)
         blob._ensure_mime()
-        node.write(
+        node.sudo().write(
             {
                 "current_revision_id": revision.id,
                 "size": size,
@@ -762,12 +807,11 @@ class IntFilemanagerNode(models.Model):
         target_parent = self.browse(target_parent_id)
         if source.is_dir and target_parent.parent_path.startswith(source.parent_path):
             raise UserError(self.env._("A folder cannot be copied into itself."))
-        scope_id = target_parent.scope_id.id
 
         try:
             with self.env.cr.savepoint():
-                new_node = self.with_context(mail_create_nolog=True).create(
-                    self._copy_vals(source, new_name, target_parent_id, scope_id)
+                new_node = self._create_below(
+                    target_parent, self._copy_vals(source, new_name)
                 )
         except psycopg2.errors.UniqueViolation:
             raise UserError(
@@ -780,17 +824,15 @@ class IntFilemanagerNode(models.Model):
 
         result = self._attach_copy_content(source, new_node, operation)
         if source.is_dir:
-            copied = self._copy_children(source, new_node, scope_id, operation)
+            copied = self._copy_children(source, new_node, operation)
             result = {"node_id": new_node.id, "copied": copied + 1}
         operation.write({"result": result})
         return result
 
     @api.model
-    def _copy_vals(self, source, name, parent_id, scope_id):
+    def _copy_vals(self, source, name):
         return {
             "name": name,
-            "parent_id": parent_id,
-            "scope_id": scope_id,
             "is_dir": source.is_dir,
             "mime": source.mime,
             "tag_ids": [(6, 0, source.tag_ids.ids)],
@@ -810,25 +852,25 @@ class IntFilemanagerNode(models.Model):
             operation,
         )
 
-    def _copy_children(self, source, new_top, scope_id, operation):
+    def _copy_children(self, source, new_top, operation):
         """Copy what the caller can see below ``source`` into ``new_top``.
 
         Parents come before their children, so every new parent exists in time.
+        The caller checked the write right on the folder ``new_top`` lies in, and
+        every copy takes its scope.
         """
-        mapping = {source.id: new_top.id}
+        mapping = {source.id: new_top}
         copied = 0
         descendants = self.search(
             [("id", "child_of", source.id), ("id", "!=", source.id)],
             order="parent_path",
         )
         for old in descendants:
-            new_parent_id = mapping.get(old.parent_id.id)
-            if not new_parent_id:
+            new_parent = mapping.get(old.parent_id.id)
+            if not new_parent:
                 continue  # parent was not visible to the caller, so neither is this
-            new = self.with_context(mail_create_nolog=True).create(
-                self._copy_vals(old, old.name, new_parent_id, scope_id)
-            )
-            mapping[old.id] = new.id
+            new = self._create_node(new_parent, self._copy_vals(old, old.name))
+            mapping[old.id] = new
             self._attach_copy_content(old, new, operation)
             copied += 1
         return copied
@@ -838,7 +880,8 @@ class IntFilemanagerNode(models.Model):
         """Rename a node and/or move it below ``new_parent_id``.
 
         Only rows change, no file is touched. Moving into another scope moves
-        the whole subtree along. The write right on the destination is checked
+        what shares the node's scope along; a folder below it with a scope of
+        its own keeps it. The write right on the destination is checked
         explicitly: record rules only check the node's current scope.
         """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
@@ -879,9 +922,15 @@ class IntFilemanagerNode(models.Model):
         fault.fault_point("node_rename_before_check")
         fault.fault_point("node_tree_before_write")
         self._touch_active_parent(new_parent)
+        # What shares the old scope is read before the node changes it.
+        inheriting = (
+            self._inheriting_descendants(node) if new_scope_id is not None else None
+        )
         try:
             with self.env.cr.savepoint():
-                node.write(vals)
+                # sudo(): the position and scope fields are not writable by users;
+                # the rights on the node and on the destination were checked above.
+                node.sudo().write(vals)
         except psycopg2.errors.UniqueViolation:
             raise UserError(
                 self.env._(
@@ -890,24 +939,54 @@ class IntFilemanagerNode(models.Model):
                 )
             ) from None
 
-        if new_scope_id is not None:
-            # write() above recomputed parent_path (its own _parent_store logic)
-            # but this recordset's cached value predates that - refetch it.
-            node.invalidate_recordset(["parent_path"])
-            # The whole subtree, the node included, changes scope in this transaction.
-            cr.execute(
-                SQL(
-                    "UPDATE int_filemanager_node SET scope_id = %s"
-                    " WHERE parent_path LIKE %s",
-                    new_scope_id,
-                    f"{node.parent_path}%",
-                )
-            )
-            self.invalidate_model(["scope_id"])
+        if inheriting:
+            self._set_scope(inheriting, new_scope_id)
 
         result = {"node_id": node.id}
         operation.write({"result": result})
         return result
+
+    def _inheriting_descendants(self, node):
+        """Return the descendants of ``node`` that take their scope from it.
+
+        A folder with a scope of its own is left out, with everything below it:
+        the caller may not even see it, and its rights are not the node's to give.
+        """
+        scope_id = node.sudo().scope_id.id
+        descendants = (
+            self.sudo()
+            .with_context(active_test=False)
+            .search_fetch(
+                [("id", "child_of", node.id), ("id", "!=", node.id)],
+                ["parent_id", "scope_id"],
+                order="parent_path",
+            )
+        )
+        # Parents come before their children, so one pass is enough.
+        inheriting_ids = {node.id}
+        for child in descendants:
+            if child.parent_id.id in inheriting_ids and child.scope_id.id == scope_id:
+                inheriting_ids.add(child.id)
+        inheriting_ids.discard(node.id)
+        return descendants.browse(inheriting_ids)
+
+    def _set_scope(self, nodes, scope_id):
+        """Set the scope of ``nodes`` in one statement.
+
+        A subtree can have hundreds of thousands of rows, too many to write
+        through the ORM; the stored fields that depend on the scope are
+        recomputed from ``modified()``.
+        """
+        self.flush_model(["scope_id"])
+        self.env.execute_query(
+            SQL(
+                "UPDATE int_filemanager_node SET scope_id = %s WHERE id = ANY(%s)",
+                scope_id,
+                nodes.ids,
+            )
+        )
+        nodes.invalidate_recordset(["scope_id"])
+        nodes.modified(["scope_id"])
 
     @api.model
     def trash(self, node_id, operation_key):
@@ -922,8 +1001,10 @@ class IntFilemanagerNode(models.Model):
         node.check_access("write")
 
         subtree = self.search([("id", "child_of", node_id)])
+        # The write below is sudo(), which skips the record rules of every row.
+        subtree.check_access("write")
         fault.fault_point("node_tree_before_write")
-        subtree.write(
+        subtree.sudo().write(
             {
                 "active": False,
                 "removal_reason": "trash",
@@ -953,6 +1034,8 @@ class IntFilemanagerNode(models.Model):
         subtree = self.with_context(active_test=False).search(
             [("id", "child_of", node_id)]
         )
+        # The write below is sudo(), which skips the record rules of every row.
+        subtree.check_access("write")
         fault.fault_point("node_tree_before_write")
         # Restoring under a folder that is still in the trash would leave an active
         # node below an inactive one - same rule (and same row conflict) as moving
@@ -960,7 +1043,7 @@ class IntFilemanagerNode(models.Model):
         self._touch_active_parent(node.parent_id)
         try:
             with self.env.cr.savepoint():
-                subtree.write(
+                subtree.sudo().write(
                     {"active": True, "removal_reason": False, "trashed_at": False}
                 )
         except psycopg2.errors.UniqueViolation:
@@ -1002,8 +1085,11 @@ class IntFilemanagerNode(models.Model):
         subtree = self.with_context(active_test=False).search(
             [("id", "child_of", root.id)]
         )
+        # The write below is sudo(); unlink() checks the purge right per row, the
+        # write right is what clearing the revision used to need.
+        subtree.check_access("write")
         # current_revision_id is ondelete=restrict: clear it before the delete.
-        subtree.write({"current_revision_id": False})
+        subtree.sudo().write({"current_revision_id": False})
         subtree.unlink()
         return len(subtree)
 
@@ -1737,7 +1823,7 @@ class IntFilemanagerNode(models.Model):
         if tags:
             node.tag_ids = [Command.link(tag.id) for tag in tags]
         self._learn_labels(node.partner_id, learn)
-        node.review_state = "reviewed"
+        node.sudo().review_state = "reviewed"
         if stored or removed:
             self._post_confirmed_values(node, stored, removed)
         return {v.field_id.id: v.value_text for v in existing.values()}

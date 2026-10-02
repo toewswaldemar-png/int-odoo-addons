@@ -12,6 +12,7 @@ from . import test_publish_overwrite
 from . import test_v2_fault
 from . import test_v2_access
 from . import test_v2_access_http
+from . import test_v2_orm_rights
 from . import test_v2_blobstore
 from . import test_v2_write_paths
 from . import test_v2_upload

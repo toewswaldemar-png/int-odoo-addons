@@ -180,9 +180,12 @@ class TestV2SideModelAccess(TransactionCase):
             .with_user(owner)
             .create({"key": "op-upload-1"})
         )
+        # Users cannot create uploads; the model methods do, as sudo() under the
+        # user's uid, which keeps create_uid.
         upload = (
             self.env["int_filemanager.upload"]
             .with_user(owner)
+            .sudo()
             .create({"operation_id": operation.id})
         )
 

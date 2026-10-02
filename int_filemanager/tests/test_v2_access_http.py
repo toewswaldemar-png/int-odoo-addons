@@ -79,9 +79,12 @@ class AccessHttpCase(HttpCase):
             .with_user(self.reader)
             .create({"key": "http-op-1"})
         )
+        # Users cannot create uploads; the model methods do, as sudo() under the
+        # user's uid, which keeps create_uid.
         self.upload = (
             self.env["int_filemanager.upload"]
             .with_user(self.reader)
+            .sudo()
             .create({"operation_id": upload_operation.id})
         )
         self.operation = (
