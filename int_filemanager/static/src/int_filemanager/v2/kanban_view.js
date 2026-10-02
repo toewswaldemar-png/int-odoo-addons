@@ -17,30 +17,30 @@ import {IntFilemanagerV2SearchModel} from "./search_model.js";
 import {IntFilemanagerV2UploadPanel} from "./upload_panel.js";
 
 export class IntFilemanagerV2KanbanController extends filemanagerV2Mixin(
-  KanbanController
+    KanbanController
 ) {
-  static template = "int_filemanager.v2.KanbanView";
-  static components = {
-    ...KanbanController.components,
-    Chatter,
-    Dropdown,
-    DropdownItem,
-    ResizablePanel,
-    FolderTree: IntFilemanagerV2FolderTree,
-    UploadPanel: IntFilemanagerV2UploadPanel,
-  };
+    static template = "int_filemanager.v2.KanbanView";
+    static components = {
+        ...KanbanController.components,
+        Chatter,
+        Dropdown,
+        DropdownItem,
+        ResizablePanel,
+        FolderTree: IntFilemanagerV2FolderTree,
+        UploadPanel: IntFilemanagerV2UploadPanel,
+    };
 
-  get className() {
-    const classes = [super.className, "o_int_filemanager_kanban"];
-    if (this.chatterState.open) {
-      classes.push("o_int_filemanager_chatter_open");
+    get className() {
+        const classes = [super.className, "o_int_filemanager_kanban"];
+        if (this.chatterState.open) {
+            classes.push("o_int_filemanager_chatter_open");
+        }
+        return classes.filter(Boolean).join(" ");
     }
-    return classes.filter(Boolean).join(" ");
-  }
 }
 
 registry.category("views").add("int_filemanager_v2_kanban", {
-  ...kanbanView,
-  Controller: IntFilemanagerV2KanbanController,
-  SearchModel: IntFilemanagerV2SearchModel,
+    ...kanbanView,
+    Controller: IntFilemanagerV2KanbanController,
+    SearchModel: IntFilemanagerV2SearchModel,
 });

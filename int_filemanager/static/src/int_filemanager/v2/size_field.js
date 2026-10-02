@@ -16,27 +16,27 @@ import {_t} from "@web/core/l10n/translation";
  * @returns {String}
  */
 export function humanFileSize(value) {
-  if (!value) {
-    return "";
-  }
-  if (value < 1024) {
-    return `${humanNumber(value, {decimals: 0})} ${_t("Bytes")}`;
-  }
-  return `${humanNumber(value, {decimals: 0}).replace(/([kMGTPE])$/, " $1")}B`;
+    if (!value) {
+        return "";
+    }
+    if (value < 1024) {
+        return `${humanNumber(value, {decimals: 0})} ${_t("Bytes")}`;
+    }
+    return `${humanNumber(value, {decimals: 0}).replace(/([kMGTPE])$/, " $1")}B`;
 }
 
 export class IntFilemanagerV2SizeField extends Component {
-  static template = "int_filemanager.v2.SizeField";
-  static props = {...standardFieldProps};
+    static template = "int_filemanager.v2.SizeField";
+    static props = {...standardFieldProps};
 
-  get formattedValue() {
-    return humanFileSize(this.props.record.data[this.props.name]);
-  }
+    get formattedValue() {
+        return humanFileSize(this.props.record.data[this.props.name]);
+    }
 }
 
 export const intFilemanagerV2SizeField = {
-  component: IntFilemanagerV2SizeField,
-  supportedTypes: ["float", "integer"],
+    component: IntFilemanagerV2SizeField,
+    supportedTypes: ["float", "integer"],
 };
 
 registry.category("fields").add("int_filemanager_v2_size", intFilemanagerV2SizeField);

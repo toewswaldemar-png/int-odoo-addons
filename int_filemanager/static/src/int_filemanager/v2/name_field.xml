@@ -1,57 +1,57 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
   <t t-name="int_filemanager.v2.NameField">
-    <div class="d-flex align-items-center gap-1 o_int_filemanager_name_cell">
-      <!-- A div, not a span: Odoo's ".o_list_char .o_field_widget span:not(.o_m2o_avatar)"
+        <div class="d-flex align-items-center gap-1 o_int_filemanager_name_cell">
+            <!-- A div, not a span: Odoo's ".o_list_char .o_field_widget span:not(.o_m2o_avatar)"
            rule would take the wrapper out of its flex layout and hide the icon. -->
-      <div class="o_int_filemanager_name_icon">
-        <i
-          t-if="isDir"
-          class="fa fa-folder fa-fw text-primary"
-          role="img"
-          aria-label="Folder"
-        />
-        <img
-          t-elif="previewUrl"
-          class="o_int_filemanager_thumb"
-          t-att-src="previewUrl"
-          loading="lazy"
-          alt=""
-        />
-        <span
-          t-else=""
-          class="o_image"
-          role="img"
-          t-att-data-mimetype="pseudoMimetype"
-        />
-      </div>
-      <input
-        t-if="isRenaming"
-        t-ref="renameInput"
-        class="o_int_filemanager_rename_input"
-        t-model="env.filemanagerRename.state.value"
-        t-on-keydown="onRenameKeydown"
-        t-on-blur="onRenameBlur"
-        t-on-click.stop="() => {}"
-      />
-      <div t-else="" class="d-flex flex-column o_int_filemanager_name_text">
-        <!-- Own class: the drag and rubber band code aims at the visible name, not the cell.
+            <div class="o_int_filemanager_name_icon">
+                <i
+                    t-if="isDir"
+                    class="fa fa-folder fa-fw text-primary"
+                    role="img"
+                    aria-label="Folder"
+                />
+                <img
+                    t-elif="previewUrl"
+                    class="o_int_filemanager_thumb"
+                    t-att-src="previewUrl"
+                    loading="lazy"
+                    alt=""
+                />
+                <span
+                    t-else=""
+                    class="o_image"
+                    role="img"
+                    t-att-data-mimetype="pseudoMimetype"
+                />
+            </div>
+            <input
+                t-if="isRenaming"
+                t-ref="renameInput"
+                class="o_int_filemanager_rename_input"
+                t-model="env.filemanagerRename.state.value"
+                t-on-keydown="onRenameKeydown"
+                t-on-blur="onRenameBlur"
+                t-on-click.stop="() => {}"
+            />
+            <div t-else="" class="d-flex flex-column o_int_filemanager_name_text">
+                <!-- Own class: the drag and rubber band code aims at the visible name, not the cell.
              data-tooltip (not title): Odoo's list already sets one on the cell, a second
              native title would show two boxes. -->
-        <span
-          class="text-truncate o_int_filemanager_name_label"
-          t-att-data-tooltip="value"
-          data-tooltip-delay="1000"
-          t-esc="value"
-        />
-        <span
-          t-if="showParent and parentName"
-          class="text-truncate text-muted small"
-          t-att-data-tooltip="parentName"
-          data-tooltip-delay="1000"
-          t-esc="parentName"
-        />
-      </div>
-    </div>
-  </t>
+                <span
+                    class="text-truncate o_int_filemanager_name_label"
+                    t-att-data-tooltip="value"
+                    data-tooltip-delay="1000"
+                    t-esc="value"
+                />
+                <span
+                    t-if="showParent and parentName"
+                    class="text-truncate text-muted small"
+                    t-att-data-tooltip="parentName"
+                    data-tooltip-delay="1000"
+                    t-esc="parentName"
+                />
+            </div>
+        </div>
+    </t>
 </templates>

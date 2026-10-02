@@ -4,25 +4,25 @@
        between two unrelated base templates, so the two files repeat the small wiring and share
        the pieces through t-call (shared.xml). -->
   <t
-    t-name="int_filemanager.v2.KanbanView"
-    t-inherit="web.KanbanView"
-    t-inherit-mode="primary"
-  >
-    <xpath expr="//t[@t-set-slot='control-panel-create-button']" position="replace">
-      <t t-set-slot="control-panel-create-button">
-        <t t-call="int_filemanager.v2.CreateButton" />
-        <t t-call="int_filemanager.v2.HiddenInputs" />
-      </t>
-    </xpath>
-    <xpath
-      expr="//t[@t-set-slot='control-panel-navigation-additional']"
-      position="inside"
+        t-name="int_filemanager.v2.KanbanView"
+        t-inherit="web.KanbanView"
+        t-inherit-mode="primary"
     >
-      <t t-call="int_filemanager.v2.ChatterToggle" />
-    </xpath>
-    <xpath expr="//div[@t-ref='root']" position="inside">
-      <t t-call="int_filemanager.v2.TreeSidebar" />
-      <t t-call="int_filemanager.v2.Overlays" />
-    </xpath>
-  </t>
+        <xpath expr="//t[@t-set-slot='control-panel-create-button']" position="replace">
+            <t t-set-slot="control-panel-create-button">
+                <t t-call="int_filemanager.v2.CreateButton" />
+                <t t-call="int_filemanager.v2.HiddenInputs" />
+            </t>
+        </xpath>
+        <xpath
+            expr="//t[@t-set-slot='control-panel-navigation-additional']"
+            position="inside"
+        >
+            <t t-call="int_filemanager.v2.ChatterToggle" />
+        </xpath>
+        <xpath expr="//div[@t-ref='root']" position="inside">
+            <t t-call="int_filemanager.v2.TreeSidebar" />
+            <t t-call="int_filemanager.v2.Overlays" />
+        </xpath>
+    </t>
 </templates>

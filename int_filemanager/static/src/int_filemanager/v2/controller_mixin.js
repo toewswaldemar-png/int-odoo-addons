@@ -11,4 +11,6 @@ import {previewsMixin} from "./controller_previews.js";
 import {uploadsMixin} from "./controller_uploads.js";
 
 export const filemanagerV2Mixin = (Base) =>
-  interactionMixin(previewsMixin(uploadsMixin(mutationsMixin(navigationMixin(Base)))));
+    interactionMixin(
+        previewsMixin(uploadsMixin(mutationsMixin(navigationMixin(Base))))
+    );

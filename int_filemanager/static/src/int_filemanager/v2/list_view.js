@@ -20,41 +20,41 @@ import {IntFilemanagerV2SearchModel} from "./search_model.js";
 import {IntFilemanagerV2UploadPanel} from "./upload_panel.js";
 
 export class IntFilemanagerV2ListController extends filemanagerV2Mixin(ListController) {
-  static template = "int_filemanager.v2.ListView";
-  // The inherited components must be carried along: a re-assignment without the spread
-  // would hide them and every tag of the inherited template would break.
-  static components = {
-    ...ListController.components,
-    Chatter,
-    Dropdown,
-    DropdownItem,
-    ResizablePanel,
-    SearchBar,
-    FolderTree: IntFilemanagerV2FolderTree,
-    UploadPanel: IntFilemanagerV2UploadPanel,
-  };
+    static template = "int_filemanager.v2.ListView";
+    // The inherited components must be carried along: a re-assignment without the spread
+    // would hide them and every tag of the inherited template would break.
+    static components = {
+        ...ListController.components,
+        Chatter,
+        Dropdown,
+        DropdownItem,
+        ResizablePanel,
+        SearchBar,
+        FolderTree: IntFilemanagerV2FolderTree,
+        UploadPanel: IntFilemanagerV2UploadPanel,
+    };
 
-  get className() {
-    const classes = [super.className, "o_int_filemanager_list"];
-    // Odoo's own small-screen threshold (768px, ui service): the mobile layout switches
-    // on by itself in the desktop action, no separate menu entry.
-    if (this.env.isSmall) {
-      classes.push("o_int_filemanager_mobile");
-      if (this.mobileTreeState.open) {
-        classes.push("o_int_filemanager_mobile_tree_open");
-      }
+    get className() {
+        const classes = [super.className, "o_int_filemanager_list"];
+        // Odoo's own small-screen threshold (768px, ui service): the mobile layout switches
+        // on by itself in the desktop action, no separate menu entry.
+        if (this.env.isSmall) {
+            classes.push("o_int_filemanager_mobile");
+            if (this.mobileTreeState.open) {
+                classes.push("o_int_filemanager_mobile_tree_open");
+            }
+        }
+        // Pushes the list aside for the chatter panel instead of lying under it.
+        if (this.chatterState.open) {
+            classes.push("o_int_filemanager_chatter_open");
+        }
+        return classes.filter(Boolean).join(" ");
     }
-    // Pushes the list aside for the chatter panel instead of lying under it.
-    if (this.chatterState.open) {
-      classes.push("o_int_filemanager_chatter_open");
-    }
-    return classes.filter(Boolean).join(" ");
-  }
 }
 
 registry.category("views").add("int_filemanager_v2_list", {
-  ...listView,
-  Controller: IntFilemanagerV2ListController,
-  Renderer: IntFilemanagerV2ListRenderer,
-  SearchModel: IntFilemanagerV2SearchModel,
+    ...listView,
+    Controller: IntFilemanagerV2ListController,
+    Renderer: IntFilemanagerV2ListRenderer,
+    SearchModel: IntFilemanagerV2SearchModel,
 });

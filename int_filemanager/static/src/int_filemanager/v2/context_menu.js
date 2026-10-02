@@ -14,20 +14,20 @@ import {DropdownItem} from "@web/core/dropdown/dropdown_item";
 // dependable moment to ask the navigator for a new item list (without it the hover
 // highlight stays missing).
 export class IntFilemanagerV2ContextMenu extends Component {
-  static template = "int_filemanager.v2.ContextMenu";
-  static components = {DropdownItem};
-  static props = {
-    items: Array,
-    close: Function,
-    navigator: Object,
-  };
+    static template = "int_filemanager.v2.ContextMenu";
+    static components = {DropdownItem};
+    static props = {
+        items: Array,
+        close: Function,
+        navigator: Object,
+    };
 
-  setup() {
-    onMounted(() => this.props.navigator.update());
-  }
+    setup() {
+        onMounted(() => this.props.navigator.update());
+    }
 
-  onItemSelected(item) {
-    this.props.close();
-    item.callback();
-  }
+    onItemSelected(item) {
+        this.props.close();
+        item.callback();
+    }
 }

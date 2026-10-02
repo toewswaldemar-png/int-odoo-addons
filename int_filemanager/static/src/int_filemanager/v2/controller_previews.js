@@ -13,50 +13,52 @@ const POLL_MS = 30000;
 const RELOAD_DELAY_MS = 1000;
 
 export const previewsMixin = (Base) =>
-  class extends Base {
-    setup() {
-      super.setup();
-      const busService = useService("bus_service");
-      this._previewTimers = new Set();
-      this._onPreviewReady = () => this._scheduleRefresh(RELOAD_DELAY_MS);
-      busService.subscribe(PREVIEW_READY_EVENT, this._onPreviewReady);
-      onWillUnmount(() => {
-        busService.unsubscribe(PREVIEW_READY_EVENT, this._onPreviewReady);
-        this._previewTimers.forEach((timer) => clearTimeout(timer));
-      });
-      // Runs after every render, but only asks when the set of waiting files changed.
-      useEffect(
-        (key) => {
-          if (key) {
-            this.orm.call(NODE_MODEL, "request_previews", [this._pendingPreviewIds()]);
-            this._scheduleRefresh(POLL_MS);
-          }
-        },
-        () => [this._pendingPreviewIds().join(",")]
-      );
-    }
-
-    _pendingPreviewIds() {
-      return (this.model.root?.records || [])
-        .filter(
-          (record) =>
-            record.data.preview_state === "pending" ||
-            record.data.full_preview_state === "pending"
-        )
-        .map((record) => record.resId);
-    }
-
-    _scheduleRefresh(delay) {
-      const timer = setTimeout(async () => {
-        this._previewTimers.delete(timer);
-        if (this._pendingPreviewIds().length) {
-          await this.reload();
-          // Still waiting for some: look again later.
-          if (this._pendingPreviewIds().length) {
-            this._scheduleRefresh(POLL_MS);
-          }
+    class extends Base {
+        setup() {
+            super.setup();
+            const busService = useService("bus_service");
+            this._previewTimers = new Set();
+            this._onPreviewReady = () => this._scheduleRefresh(RELOAD_DELAY_MS);
+            busService.subscribe(PREVIEW_READY_EVENT, this._onPreviewReady);
+            onWillUnmount(() => {
+                busService.unsubscribe(PREVIEW_READY_EVENT, this._onPreviewReady);
+                this._previewTimers.forEach((timer) => clearTimeout(timer));
+            });
+            // Runs after every render, but only asks when the set of waiting files changed.
+            useEffect(
+                (key) => {
+                    if (key) {
+                        this.orm.call(NODE_MODEL, "request_previews", [
+                            this._pendingPreviewIds(),
+                        ]);
+                        this._scheduleRefresh(POLL_MS);
+                    }
+                },
+                () => [this._pendingPreviewIds().join(",")]
+            );
         }
-      }, delay);
-      this._previewTimers.add(timer);
-    }
-  };
+
+        _pendingPreviewIds() {
+            return (this.model.root?.records || [])
+                .filter(
+                    (record) =>
+                        record.data.preview_state === "pending" ||
+                        record.data.full_preview_state === "pending"
+                )
+                .map((record) => record.resId);
+        }
+
+        _scheduleRefresh(delay) {
+            const timer = setTimeout(async () => {
+                this._previewTimers.delete(timer);
+                if (this._pendingPreviewIds().length) {
+                    await this.reload();
+                    // Still waiting for some: look again later.
+                    if (this._pendingPreviewIds().length) {
+                        this._scheduleRefresh(POLL_MS);
+                    }
+                }
+            }, delay);
+            this._previewTimers.add(timer);
+        }
+    };

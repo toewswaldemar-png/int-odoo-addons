@@ -22,117 +22,118 @@ const RETRYABLE_HTTP_STATUS = new Set([0, 408, 425, 429, 500, 502, 503, 504]);
 export const UPLOADS_IDLE_EVENT = "INT_FILEMANAGER:UPLOADS_IDLE";
 
 function readJson(key) {
-  try {
-    return JSON.parse(browser.localStorage.getItem(key) || "{}");
-  } catch {
-    return {};
-  }
+    try {
+        return JSON.parse(browser.localStorage.getItem(key) || "{}");
+    } catch {
+        return {};
+    }
 }
 
 function writeJson(key, value) {
-  try {
-    browser.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage full or blocked (private window): uploads still work, just not resumable
-    // after a reload.
-  }
+    try {
+        browser.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+        // Storage full or blocked (private window): uploads still work, just not resumable
+        // after a reload.
+    }
 }
 
 function toBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(",", 2)[1] || "");
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(",", 2)[1] || "");
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
 }
 
 export const uploadsService = {
-  dependencies: ["orm"],
-  start(env, {orm}) {
-    const state = reactive({items: [], unfinished: 0});
+    dependencies: ["orm"],
+    start(env, {orm}) {
+        const state = reactive({items: [], unfinished: 0});
 
-    // Odoo's own errors (rights, a name in use) are final; a lost connection is retried.
-    const call = async (model, method, kwargs) => {
-      try {
-        return await orm.silent.call(model, method, [], kwargs);
-      } catch (error) {
-        error.retryable = error instanceof ConnectionLostError;
-        throw error;
-      }
-    };
+        // Odoo's own errors (rights, a name in use) are final; a lost connection is retried.
+        const call = async (model, method, kwargs) => {
+            try {
+                return await orm.silent.call(model, method, [], kwargs);
+            } catch (error) {
+                error.retryable = error instanceof ConnectionLostError;
+                throw error;
+            }
+        };
 
-    const postChunk = async (uploadId, offset, blob) => {
-      const query = new URLSearchParams({
-        offset: String(offset),
-        csrf_token: odoo.csrf_token,
-      });
-      let response = null;
-      try {
-        response = await fetch(
-          `/int_filemanager/v2/upload/${uploadId}/chunk?${query}`,
-          {
-            method: "POST",
-            headers: {"Content-Type": "application/octet-stream"},
-            body: blob,
-            credentials: "same-origin",
-          }
-        );
-      } catch (error) {
-        error.retryable = true; // The request never got an answer
-        throw error;
-      }
-      if (!response.ok) {
-        const error = new Error(`${response.status} ${response.statusText}`);
-        error.retryable = RETRYABLE_HTTP_STATUS.has(response.status);
-        throw error;
-      }
-      return response.json();
-    };
+        const postChunk = async (uploadId, offset, blob) => {
+            const query = new URLSearchParams({
+                offset: String(offset),
+                csrf_token: odoo.csrf_token,
+            });
+            let response = null;
+            try {
+                response = await fetch(
+                    `/int_filemanager/v2/upload/${uploadId}/chunk?${query}`,
+                    {
+                        method: "POST",
+                        headers: {"Content-Type": "application/octet-stream"},
+                        body: blob,
+                        credentials: "same-origin",
+                    }
+                );
+            } catch (error) {
+                error.retryable = true; // The request never got an answer
+                throw error;
+            }
+            if (!response.ok) {
+                const error = new Error(`${response.status} ${response.statusText}`);
+                error.retryable = RETRYABLE_HTTP_STATUS.has(response.status);
+                throw error;
+            }
+            return response.json();
+        };
 
-    const deps = {
-      call,
-      postChunk,
-      readBase64: toBase64,
-      sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-      newKey: newOperationKey,
-    };
+        const deps = {
+            call,
+            postChunk,
+            readBase64: toBase64,
+            sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+            newKey: newOperationKey,
+        };
 
-    const manager = new UploadManager({
-      deps,
-      storage: {
-        load: () => readJson(STORAGE_KEY),
-        save: (value) => writeJson(STORAGE_KEY, value),
-      },
-      onChange: (items) => {
-        state.items = items;
+        const manager = new UploadManager({
+            deps,
+            storage: {
+                load: () => readJson(STORAGE_KEY),
+                save: (value) => writeJson(STORAGE_KEY, value),
+            },
+            onChange: (items) => {
+                state.items = items;
+                state.unfinished = manager.unfinished().length;
+            },
+            onIdle: () => env.bus.trigger(UPLOADS_IDLE_EVENT),
+        });
         state.unfinished = manager.unfinished().length;
-      },
-      onIdle: () => env.bus.trigger(UPLOADS_IDLE_EVENT),
-    });
-    state.unfinished = manager.unfinished().length;
 
-    const downloadBases = new DownloadBases({
-      load: () => readJson(BASES_KEY),
-      save: (value) => writeJson(BASES_KEY, value),
-    });
+        const downloadBases = new DownloadBases({
+            load: () => readJson(BASES_KEY),
+            save: (value) => writeJson(BASES_KEY, value),
+        });
 
-    return {
-      state,
-      /** From dropped or chosen files to a plan: folders, name conflicts, decisions. */
-      plan: (entries, parentId, resolveConflicts) =>
-        planUpload(entries, parentId, deps, resolveConflicts),
-      enqueue: (plan) => manager.add(plan),
-      pause: (id) => manager.pause(id),
-      retry: (id) => manager.retry(id),
-      cancel: (id) => manager.cancel(id),
-      renameAndRetry: (id, name) => manager.renameAndRetry(id, name),
-      clearFinished: () => manager.clearFinished(),
-      discardUnfinished: () => manager.discardUnfinished(),
-      rememberBase: (nodeId, revisionId) => downloadBases.remember(nodeId, revisionId),
-      takeBase: (nodeId) => downloadBases.take(nodeId),
-    };
-  },
+        return {
+            state,
+            /** From dropped or chosen files to a plan: folders, name conflicts, decisions. */
+            plan: (entries, parentId, resolveConflicts) =>
+                planUpload(entries, parentId, deps, resolveConflicts),
+            enqueue: (plan) => manager.add(plan),
+            pause: (id) => manager.pause(id),
+            retry: (id) => manager.retry(id),
+            cancel: (id) => manager.cancel(id),
+            renameAndRetry: (id, name) => manager.renameAndRetry(id, name),
+            clearFinished: () => manager.clearFinished(),
+            discardUnfinished: () => manager.discardUnfinished(),
+            rememberBase: (nodeId, revisionId) =>
+                downloadBases.remember(nodeId, revisionId),
+            takeBase: (nodeId) => downloadBases.take(nodeId),
+        };
+    },
 };
 
 registry.category("services").add("int_filemanager.uploads", uploadsService);

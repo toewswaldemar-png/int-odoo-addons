@@ -166,9 +166,7 @@ class TestV2OrmRights(TransactionCase):
     def test_node_cannot_change_parent_directly(self):
         """Moving checks the target in rename_or_move only; write() must not skip it."""
         with self.assertRaises(AccessError):
-            self._as_writer(self.own_file).write(
-                {"parent_id": self.foreign_folder.id}
-            )
+            self._as_writer(self.own_file).write({"parent_id": self.foreign_folder.id})
 
     def test_node_cannot_be_created_below_a_folder_the_user_cannot_write(self):
         with self.assertRaises(AccessError):

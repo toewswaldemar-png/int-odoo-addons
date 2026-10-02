@@ -8,7 +8,7 @@
 const IGNORED_NAMES = new Set([".DS_Store", "Thumbs.db", "desktop.ini"]);
 
 function keep(name) {
-  return !IGNORED_NAMES.has(name);
+    return !IGNORED_NAMES.has(name);
 }
 
 /**
@@ -17,53 +17,53 @@ function keep(name) {
  * @returns {Array<{file: File, path: string[]}>}
  */
 export function entriesFromFiles(files) {
-  const entries = [];
-  for (const file of files) {
-    if (!keep(file.name)) {
-      continue;
+    const entries = [];
+    for (const file of files) {
+        if (!keep(file.name)) {
+            continue;
+        }
+        const relative = file.webkitRelativePath || "";
+        const parts = relative ? relative.split("/") : [];
+        entries.push({file, path: parts.slice(0, -1)});
     }
-    const relative = file.webkitRelativePath || "";
-    const parts = relative ? relative.split("/") : [];
-    entries.push({file, path: parts.slice(0, -1)});
-  }
-  return entries;
+    return entries;
 }
 
 function readEntries(reader) {
-  return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+    return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
 }
 
 function fileOf(entry) {
-  return new Promise((resolve, reject) => entry.file(resolve, reject));
+    return new Promise((resolve, reject) => entry.file(resolve, reject));
 }
 
 async function walk(entry, path, out) {
-  if (entry.isFile) {
-    if (keep(entry.name)) {
-      out.push({file: await fileOf(entry), path});
+    if (entry.isFile) {
+        if (keep(entry.name)) {
+            out.push({file: await fileOf(entry), path});
+        }
+        return;
     }
-    return;
-  }
-  if (!entry.isDirectory || !keep(entry.name)) {
-    return;
-  }
-  const reader = entry.createReader();
-  const inside = [...path, entry.name];
-  let hasContent = false;
-  // A reader hands out at most ~100 entries per call: ask until it answers empty.
-  for (;;) {
-    const batch = await readEntries(reader);
-    if (!batch.length) {
-      break;
+    if (!entry.isDirectory || !keep(entry.name)) {
+        return;
     }
-    hasContent = true;
-    for (const child of batch) {
-      await walk(child, inside, out);
+    const reader = entry.createReader();
+    const inside = [...path, entry.name];
+    let hasContent = false;
+    // A reader hands out at most ~100 entries per call: ask until it answers empty.
+    for (;;) {
+        const batch = await readEntries(reader);
+        if (!batch.length) {
+            break;
+        }
+        hasContent = true;
+        for (const child of batch) {
+            await walk(child, inside, out);
+        }
     }
-  }
-  if (!hasContent) {
-    out.push({folderOnly: true, path: inside});
-  }
+    if (!hasContent) {
+        out.push({folderOnly: true, path: inside});
+    }
 }
 
 /**
@@ -74,32 +74,34 @@ async function walk(entry, path, out) {
  * @returns {() => Promise<Array<{file?: File, path: string[], folderOnly?: boolean}>>}
  */
 export function startDropWalk(dataTransfer) {
-  const roots = [];
-  for (const item of dataTransfer.items || []) {
-    if (item.kind !== "file") {
-      continue;
-    }
-    const entry =
-      typeof item.webkitGetAsEntry === "function" ? item.webkitGetAsEntry() : null;
-    roots.push(entry || {plainFile: item.getAsFile()});
-  }
-  const plain = roots.length ? [] : [...(dataTransfer.files || [])];
-  return async () => {
-    const out = [];
-    for (const root of roots) {
-      if (root.plainFile) {
-        if (keep(root.plainFile.name)) {
-          out.push({file: root.plainFile, path: []});
+    const roots = [];
+    for (const item of dataTransfer.items || []) {
+        if (item.kind !== "file") {
+            continue;
         }
-      } else {
-        await walk(root, [], out);
-      }
+        const entry =
+            typeof item.webkitGetAsEntry === "function"
+                ? item.webkitGetAsEntry()
+                : null;
+        roots.push(entry || {plainFile: item.getAsFile()});
     }
-    for (const file of plain) {
-      if (keep(file.name)) {
-        out.push({file, path: []});
-      }
-    }
-    return out;
-  };
+    const plain = roots.length ? [] : [...(dataTransfer.files || [])];
+    return async () => {
+        const out = [];
+        for (const root of roots) {
+            if (root.plainFile) {
+                if (keep(root.plainFile.name)) {
+                    out.push({file: root.plainFile, path: []});
+                }
+            } else {
+                await walk(root, [], out);
+            }
+        }
+        for (const file of plain) {
+            if (keep(file.name)) {
+                out.push({file, path: []});
+            }
+        }
+        return out;
+    };
 }

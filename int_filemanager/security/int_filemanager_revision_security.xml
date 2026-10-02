@@ -1,15 +1,15 @@
 <odoo>
-  <!-- Users can neither change nor create revisions: the model methods create them
+    <!-- Users can neither change nor create revisions: the model methods create them
          after checking the write right on the node, so only reading needs a rule. -->
-  <record id="rule_revision_scope_read" model="ir.rule">
-    <field name="name">Filemanager v2: revision visible in its node's scope</field>
-    <field name="model_id" ref="model_int_filemanager_revision" />
-    <field
-      name="domain_force"
-    >[('node_id.scope_id.read_group_ids', 'in', user.all_group_ids.ids)]</field>
-    <field name="perm_read">True</field>
-    <field name="perm_write">False</field>
-    <field name="perm_create">False</field>
-    <field name="perm_unlink">False</field>
-  </record>
+    <record id="rule_revision_scope_read" model="ir.rule">
+        <field name="name">Filemanager v2: revision visible in its node's scope</field>
+        <field name="model_id" ref="model_int_filemanager_revision" />
+        <field
+            name="domain_force"
+        >[('node_id.scope_id.read_group_ids', 'in', user.all_group_ids.ids)]</field>
+        <field name="perm_read">True</field>
+        <field name="perm_write">False</field>
+        <field name="perm_create">False</field>
+        <field name="perm_unlink">False</field>
+    </record>
 </odoo>

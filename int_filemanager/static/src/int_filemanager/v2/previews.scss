@@ -1,17 +1,17 @@
 // Thumbnail in place of the file type icon (name_field.xml): a small square in the list,
 // a larger picture on the cards.
 .o_int_filemanager_name_icon .o_int_filemanager_thumb {
-  width: 24px;
-  height: 24px;
-  object-fit: cover;
-  border-radius: 2px;
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 2px;
 }
 
 .o_int_filemanager_kanban
-  .o_int_filemanager_kanban_cover_fallback
-  .o_int_filemanager_name_cell
-  .o_int_filemanager_thumb {
-  width: 100%;
-  height: 96px;
-  object-fit: contain;
+    .o_int_filemanager_kanban_cover_fallback
+    .o_int_filemanager_name_cell
+    .o_int_filemanager_thumb {
+    width: 100%;
+    height: 96px;
+    object-fit: contain;
 }

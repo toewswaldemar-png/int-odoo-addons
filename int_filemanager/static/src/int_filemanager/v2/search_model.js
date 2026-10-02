@@ -20,51 +20,55 @@ router.addLockedKey(FOLDER_URL_KEY);
 const RECURSIVE_FILTER_NAME = "filter_search_recursive";
 
 export class IntFilemanagerV2SearchModel extends SearchModel {
-  setup(services) {
-    super.setup(services);
-    const fromUrl = Number(router.current[FOLDER_URL_KEY]);
-    this.folderId = Number.isInteger(fromUrl) && fromUrl > 0 ? fromUrl : false;
-  }
-
-  /**
-   * Opens a folder (false = the top). replaceState, not pushState: every folder click
-   * updates the URL without adding a browser history entry.
-   * @param {number|false} folderId
-   */
-  setFolder(folderId) {
-    this.folderId = folderId || false;
-    router.replaceState({[FOLDER_URL_KEY]: this.folderId || undefined});
-    this._notify();
-  }
-
-  _isRecursive() {
-    const filterActive = this.query.some(
-      (element) =>
-        this.searchItems[element.searchItemId]?.name === RECURSIVE_FILTER_NAME
-    );
-    return filterActive || Boolean(this.globalContext.int_filemanager_recursive);
-  }
-
-  _getFolderDomain() {
-    const folderId = this.folderId;
-    if (this._isRecursive()) {
-      // Everything below the folder, not the folder itself.
-      return folderId
-        ? new Domain(["&", ["id", "child_of", folderId], ["id", "!=", folderId]])
-        : new Domain([]);
+    setup(services) {
+        super.setup(services);
+        const fromUrl = Number(router.current[FOLDER_URL_KEY]);
+        this.folderId = Number.isInteger(fromUrl) && fromUrl > 0 ? fromUrl : false;
     }
-    return folderId
-      ? new Domain([["parent_id", "=", folderId]])
-      : new Domain([["is_visible_top", "=", true]]);
-  }
 
-  _getDomain(params = {}) {
-    const folderDomain = this._getFolderDomain();
-    if (params.raw) {
-      return Domain.and([super._getDomain(params), folderDomain]);
+    /**
+     * Opens a folder (false = the top). replaceState, not pushState: every folder click
+     * updates the URL without adding a browser history entry.
+     * @param {number|false} folderId
+     */
+    setFolder(folderId) {
+        this.folderId = folderId || false;
+        router.replaceState({[FOLDER_URL_KEY]: this.folderId || undefined});
+        this._notify();
     }
-    return Domain.and([new Domain(super._getDomain(params)), folderDomain]).toList(
-      this.domainEvalContext
-    );
-  }
+
+    _isRecursive() {
+        const filterActive = this.query.some(
+            (element) =>
+                this.searchItems[element.searchItemId]?.name === RECURSIVE_FILTER_NAME
+        );
+        return filterActive || Boolean(this.globalContext.int_filemanager_recursive);
+    }
+
+    _getFolderDomain() {
+        const folderId = this.folderId;
+        if (this._isRecursive()) {
+            // Everything below the folder, not the folder itself.
+            return folderId
+                ? new Domain([
+                      "&",
+                      ["id", "child_of", folderId],
+                      ["id", "!=", folderId],
+                  ])
+                : new Domain([]);
+        }
+        return folderId
+            ? new Domain([["parent_id", "=", folderId]])
+            : new Domain([["is_visible_top", "=", true]]);
+    }
+
+    _getDomain(params = {}) {
+        const folderDomain = this._getFolderDomain();
+        if (params.raw) {
+            return Domain.and([super._getDomain(params), folderDomain]);
+        }
+        return Domain.and([new Domain(super._getDomain(params)), folderDomain]).toList(
+            this.domainEvalContext
+        );
+    }
 }

@@ -1,13 +1,13 @@
 # A3/A4 real-process tests
 
 Not Odoo tests. `TransactionCase` never commits and runs no post-commit hooks (see the
-write-path tests), so it cannot see a real name/lock race or a real cleanup cron running against a
-committed row. These scripts drive a REAL, running Odoo instance on the Tower test
-environment instead - same idea as the 1.15.0 durchstich tests
-and the earlier `fm_proto` prototype tests. Deliberately outside
-`int_filemanager/tests/__init__.py`: `pre-commit` and `tools/v2check/v2check.sh` still
-lint this code, but `odoo-bin --test-tags` never collects it, and it is only ever run by
-hand against `fmtest_pg`.
+write-path tests), so it cannot see a real name/lock race or a real cleanup cron running
+against a committed row. These scripts drive a REAL, running Odoo instance on the Tower
+test environment instead - same idea as the 1.15.0 durchstich tests and the earlier
+`fm_proto` prototype tests. Deliberately outside `int_filemanager/tests/__init__.py`:
+`pre-commit` and `tools/v2check/v2check.sh` still lint this code, but
+`odoo-bin --test-tags` never collects it, and it is only ever run by hand against
+`fmtest_pg`.
 
 ## Status: all scenarios verified for real on Tower (2026-09-28)
 
@@ -82,7 +82,7 @@ this is the single source of truth `race_scenarios.py` assumes:
 
 | Stage                                | Where                                                                                                                  |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `node_create_before_check`           | after the uniqueness/lock check, before `create` (write path, "create")                                     |
+| `node_create_before_check`           | after the uniqueness/lock check, before `create` (write path, "create")                                                |
 | `node_create_after_insert`           | after `create`, before commit                                                                                          |
 | `revision_write_before_check`        | after the base-revision check, before writing a new revision                                                           |
 | `revision_write_after_insert`        | after the new revision row exists, before commit                                                                       |
@@ -104,8 +104,8 @@ this is the single source of truth `race_scenarios.py` assumes:
   (bind mount), so the barrier directory (`<fault file>.barrier.<stage>`) is visible to
   both.
 - `int_filemanager.watcher_enabled` set to `false` before running `odoo shell` against
-  this database (a shell session against the watcher DB starts a
-  second watcher otherwise), matching the existing `fmshell.sh` Tower helper.
+  this database (a shell session against the watcher DB starts a second watcher
+  otherwise), matching the existing `fmshell.sh` Tower helper.
 - Network access to the instance from wherever this script runs (matches the existing
   Tower helper-container setup used for 20.2 and `runv2.sh`).
 

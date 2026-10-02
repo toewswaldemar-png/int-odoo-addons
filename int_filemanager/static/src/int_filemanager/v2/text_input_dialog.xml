@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
   <t t-name="int_filemanager.v2.TextInputDialog">
-    <Dialog title="props.title" size="'sm'">
-      <div class="p-2">
-        <label t-if="props.label" class="form-label" t-esc="props.label" />
-        <input
-          type="text"
-          class="form-control"
-          t-model="state.value"
-          t-on-keydown="onKeydown"
-          t-ref="autofocus"
-        />
-      </div>
-      <t t-set-slot="footer">
-        <button
-          class="btn btn-primary"
-          t-on-click="onConfirm"
-          t-esc="props.confirmLabel"
-        />
-        <button
-          class="btn btn-secondary"
-          t-on-click="() => this.props.close()"
-        >Cancel</button>
-      </t>
-    </Dialog>
-  </t>
+        <Dialog title="props.title" size="'sm'">
+            <div class="p-2">
+                <label t-if="props.label" class="form-label" t-esc="props.label" />
+                <input
+                    type="text"
+                    class="form-control"
+                    t-model="state.value"
+                    t-on-keydown="onKeydown"
+                    t-ref="autofocus"
+                />
+            </div>
+            <t t-set-slot="footer">
+                <button
+                    class="btn btn-primary"
+                    t-on-click="onConfirm"
+                    t-esc="props.confirmLabel"
+                />
+                <button
+                    class="btn btn-secondary"
+                    t-on-click="() => this.props.close()"
+                >Cancel</button>
+            </t>
+        </Dialog>
+    </t>
 </templates>

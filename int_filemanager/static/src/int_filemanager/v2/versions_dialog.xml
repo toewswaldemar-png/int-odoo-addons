@@ -1,56 +1,60 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
   <t t-name="int_filemanager.v2.VersionsDialog">
-    <Dialog title="title" size="'lg'">
-      <div class="p-2">
-        <div t-if="state.loading" class="text-muted">Loading…</div>
-        <table t-else="" class="table table-sm align-middle">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Saved</th>
-              <th>By</th>
-              <th>Size</th>
-              <th>Origin</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            <tr t-foreach="state.revisions" t-as="revision" t-key="revision.id">
-              <td>
-                <t t-esc="revision.revision_no" />
-                <span
-                  t-if="revision.id === state.currentId"
-                  class="badge text-bg-primary ms-1"
-                >current</span>
-              </td>
-              <td t-esc="formatDate(revision.create_date)" />
-              <td t-esc="revision.create_uid[1]" />
-              <td t-esc="formatSize(revision.size)" />
-              <td t-esc="originLabel(revision.origin)" />
-              <td class="text-end text-nowrap">
-                <a
-                  class="btn btn-sm btn-link"
-                  t-att-href="downloadHref(revision)"
-                  download=""
-                >Download</a>
+        <Dialog title="title" size="'lg'">
+            <div class="p-2">
+                <div t-if="state.loading" class="text-muted">Loading…</div>
+                <table t-else="" class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Saved</th>
+                            <th>By</th>
+                            <th>Size</th>
+                            <th>Origin</th>
+                            <th />
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            t-foreach="state.revisions"
+                            t-as="revision"
+                            t-key="revision.id"
+                        >
+                            <td>
+                                <t t-esc="revision.revision_no" />
+                                <span
+                                    t-if="revision.id === state.currentId"
+                                    class="badge text-bg-primary ms-1"
+                                >current</span>
+                            </td>
+                            <td t-esc="formatDate(revision.create_date)" />
+                            <td t-esc="revision.create_uid[1]" />
+                            <td t-esc="formatSize(revision.size)" />
+                            <td t-esc="originLabel(revision.origin)" />
+                            <td class="text-end text-nowrap">
+                                <a
+                                    class="btn btn-sm btn-link"
+                                    t-att-href="downloadHref(revision)"
+                                    download=""
+                                >Download</a>
+                                <button
+                                    t-if="revision.id !== state.currentId"
+                                    type="button"
+                                    class="btn btn-sm btn-secondary"
+                                    t-on-click="() => this.onRestore(revision)"
+                                >Restore</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <t t-set-slot="footer">
                 <button
-                  t-if="revision.id !== state.currentId"
-                  type="button"
-                  class="btn btn-sm btn-secondary"
-                  t-on-click="() => this.onRestore(revision)"
-                >Restore</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <t t-set-slot="footer">
-        <button
-          class="btn btn-secondary"
-          t-on-click="() => this.props.close()"
-        >Close</button>
-      </t>
-    </Dialog>
-  </t>
+                    class="btn btn-secondary"
+                    t-on-click="() => this.props.close()"
+                >Close</button>
+            </t>
+        </Dialog>
+    </t>
 </templates>
