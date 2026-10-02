@@ -1,0 +1,30 @@
+# Rendered from OCA/oca-addons-repo-template (odoo_version 19.0, use_ruff) at 0c2edf1.
+target-version = "py310"
+fix = true
+
+[lint]
+extend-select = [
+    "B",
+    "C90",
+    "E501",  # line too long (default 88)
+    "I",  # isort
+    "UP",  # pyupgrade
+]
+extend-safe-fixes = ["UP008"]
+# Odoo guideline prefers % over .format() (docs/odoo_konventionen_2026-09-26.md, section 3); the OCA
+# template used pyupgrade --keep-percent-format before ruff, so UP031 is not wanted.
+ignore = ["UP031"]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401", "I001"]  # ignore unused and unsorted imports in __init__.py
+"__manifest__.py" = ["B018"]  # useless expression
+
+[lint.isort]
+section-order = ["future", "standard-library", "third-party", "odoo", "odoo-addons", "first-party", "local-folder"]
+
+[lint.isort.sections]
+"odoo" = ["odoo"]
+"odoo-addons" = ["odoo.addons"]
+
+[lint.mccabe]
+max-complexity = 16
