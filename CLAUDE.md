@@ -1,5 +1,7 @@
 # int-odoo-addons
 
+Projektbeschreibung, Modulübersicht, Umgebung und Deploy: `README.md`. Hier stehen nur die verbindlichen Arbeitsregeln.
+
 Custom-Odoo-19-Addons. Module: `int_filemanager` (Dateiverwaltung/DMS), `int_repair_workshop`
 (Reparatur-Werkstatt), `int_fleet_kanban_width`, `int_generic`, `int_legacy_erp_import`,
 `onlyoffice_odoo`.
@@ -86,9 +88,8 @@ Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentati
   Seite (Ziel, offene Fragen), danach das Ergebnis in die Entscheidungen und die Notiz löschen.
   v2-Code nur auf Branch `feature/int-filemanager-v2` (Tag `int_filemanager-v1` = heutiges Modul). Prüfungen:
   pre-commit (`py -3.13 -m pre_commit`, Hook installiert) und `tools/v2check/v2check.sh [--quick]` (odoo-ls +
-  `test_lint` auf Tower, `docs/pruefautomatik_2026-10-02.md`). Hintergrund zum heutigen Modul:
-  `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitte 19/20).
-  Übersicht aller Dokumente: `docs/README.md` (lebende Dokumente vs. `docs/archiv/`).
+  `test_lint` auf Tower, `docs/pruefautomatik_2026-10-02.md`).
+  Übersicht aller Dokumente: `docs/README.md`; Projektbeschreibung: `README.md` (Repo-Wurzel).
 - `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher. Workaround:
   vorher `int_filemanager.watcher_enabled` auf `false`, danach zurück auf `true` (der laufende Server prüft den
   Schalter nur beim Start, sein Watcher läuft weiter).

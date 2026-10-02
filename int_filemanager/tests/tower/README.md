@@ -1,11 +1,10 @@
 # A3/A4 real-process tests
 
-Not Odoo tests. `TransactionCase` never commits and runs no post-commit hooks (Konzept
-16), so it cannot see a real name/lock race or a real cleanup cron running against a
+Not Odoo tests. `TransactionCase` never commits and runs no post-commit hooks (see the
+write-path tests), so it cannot see a real name/lock race or a real cleanup cron running against a
 committed row. These scripts drive a REAL, running Odoo instance on the Tower test
 environment instead - same idea as the 1.15.0 durchstich tests
-(`docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`, 20.2) and the `fm_proto`
-prototype tests (`docs/prototypes/fm2/tests/t_exit.py`). Deliberately outside
+and the earlier `fm_proto` prototype tests. Deliberately outside
 `int_filemanager/tests/__init__.py`: `pre-commit` and `tools/v2check/v2check.sh` still
 lint this code, but `odoo-bin --test-tags` never collects it, and it is only ever run by
 hand against `fmtest_pg`.

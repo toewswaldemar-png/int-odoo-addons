@@ -53,7 +53,7 @@ Netzlaufwerk kommt, wird nach der Nutzung entschieden. **Test mit echtem Word/Ex
 | SFTP, FTP, S3, NFS, Python-SMB (`impacket`), schreibgeschützter Spiegel, eigener Sync-Client | Verworfen (Windows kann SFTP nicht einbinden, FTP unverschlüsselt, S3 ohne Umbenennen, NFS nur Pro, `impacket` nicht gehärtet, Sync-Client zu groß). rclone + WinFsp bleibt als Notlösung am Client. |
 | ONLYOFFICE im Browser statt Desktop-Office vom Server | "Lokal öffnen" (Word/Excel) braucht WebDAV. **ONLYOFFICE-Zertifikat** ist heute nur auf einem Rechner vertraut; ohne Lösung ist v2 für Word/Excel ein Rückschritt gegenüber v1. JWT im Callback ist Pflicht, Rechteprüfung mit `check_access` (das heutige `onlyoffice_odoo` verwirft das Ergebnis von `has_access`). |
 
-Prototyp-Code liegt unter `docs/prototypes/fm2/`.
+Prototyp-Code (`fm_proto`, `fmdav`, Testskripte) nur noch im Git-Tag `docs-vor-aufraeumen-2026-10-02`, Pfad `docs/prototypes/fm2/`.
 
 ## 4. Umwandler, Vorschau, OCR
 

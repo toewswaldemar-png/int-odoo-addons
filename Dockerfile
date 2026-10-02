@@ -1,10 +1,8 @@
-# Spiegelt das auf HM-SRV (Unraid) tatsächlich deployte Image
-# (/mnt/user/appdata/odoo/Dockerfile), ergänzt um mutagen für Phase 4
-# (Audio-Metadaten) sowie tesseract/OCRmyPDF für Baustein 1 (Volltextsuche/OCR, siehe
-# docs/int_filemanager_paperoffice_recherche.md, docs/int_filemanager_ocr_selbstdefinierte_felder.md
-# Phase B). Das offizielle odoo:19.0-Image läuft als USER odoo - ein pip install direkt nach FROM
-# ohne USER-root-Wechsel scheitert mangels Schreibrechten auf die System-Packages (empirisch
-# bestätigt, siehe docs/int_filemanager_ausbau.md).
+# Odoo-19-Image mit den Bibliotheken für int_filemanager: mutagen (Audio-Metadaten), tesseract/OCRmyPDF
+# (Volltextsuche/OCR), pdfplumber, pyjwt (ONLYOFFICE). Basis war das auf HM-SRV (Unraid) deployte Image
+# (/mnt/user/appdata/odoo/Dockerfile); der Start-Wrapper für die SMB-Freigaben ist entfernt. Das offizielle
+# odoo:19.0-Image läuft als USER odoo - ein pip install direkt nach FROM ohne USER-root-Wechsel
+# scheitert mangels Schreibrechten auf die System-Packages (empirisch bestätigt).
 FROM odoo:19.0
 USER root
 # tesseract-ocr (+ deutsches Sprachpaket) bleibt bestehen, laeuft aber seit Phase B nicht mehr
@@ -28,15 +26,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # mit "AttributeError: module 'lib' has no attribute 'GEN_EMAIL'", die komplette Oberflaeche war
 # nicht mehr erreichbar. pyopenssl>=24 ist mit cryptography 50.x kompatibel.
 RUN pip3 install --break-system-packages --ignore-installed --no-cache-dir pyjwt mutagen==1.47.0 "pyopenssl>=24" pdfplumber ocrmypdf
-# Wartet beim Start, bis die drei SMB-Freigaben unter /mnt/hm-daten wirklich als CIFS
-# gemountet sind (nicht Unraids leerer tmpfs-Platzhalter) - siehe Kommentar im Skript.
-# Muss noch als root kopiert/ausfuehrbar gemacht werden, laeuft danach aber als USER odoo.
-COPY scripts/wait_for_smb_mounts.sh /usr/local/bin/wait_for_smb_mounts.sh
-RUN chmod +x /usr/local/bin/wait_for_smb_mounts.sh
 USER odoo
-ENTRYPOINT ["/usr/local/bin/wait_for_smb_mounts.sh"]
-# Docker setzt ein von der Basis geerbtes CMD zurueck, sobald ein Dockerfile einen eigenen
-# ENTRYPOINT definiert (dokumentiertes Verhalten, hier live bestaetigt: ohne diese Zeile war
-# Cmd=[] statt dem geerbten ["odoo"]) - explizit wiederherstellen, da Unraids Docker-Template
-# fuer diesen Container kein eigenes PostArgs setzt und sich auf das Image-CMD verlaesst.
-CMD ["odoo"]

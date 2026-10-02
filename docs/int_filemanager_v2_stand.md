@@ -65,6 +65,7 @@ Modell gegenlesen und Befundliste ablegen; (A7) fehlt dem Image `odoo:19.0-hm-te
   Seitenladen aktuelle Fassung als Basis; Meldung "frühere Uploads wurden unterbrochen" kann veraltet sein (`upload_manager.js`).
 - Nach neuer Wörter-Spec werden vorhandene `words`-Ergebnisse gelöscht und im Hintergrund neu gelesen; bis dahin findet die Volltextsuche diese PDFs nicht.
 - Live-Datenbanken auf `pg_trgm` nicht geprüft; die Migration legt die Erweiterung an, wenn der DB-Benutzer darf, sonst Warnung.
+- Der v1-Code (u. a. `native_ui/`, `models/filemanager_file.py`, `publish_service.py`) verweist in Kommentaren noch auf gelöschte v1-Dokumente (Papierkorb, Ausbau, native UI, DB-Vorrang-Konzept); die Verweise verschwinden mit dem Löschen des v1-Codes in Schritt 8, die Dokumente stehen im Git-Tag.
 - Sicherheitslücke **N1** im heutigen Modul (HM-SRV) ist **nicht** gefixt. In `web-filemanager` liegen nicht committete Änderungen des Nutzers (unberührt lassen).
 
 ## 4. Arbeitsweise des Nutzers
@@ -86,8 +87,8 @@ Modell gegenlesen und Befundliste ablegen; (A7) fehlt dem Image `odoo:19.0-hm-te
   Wegwerf-Umgebung), `tests.sh`, `jscheck.sh`, `owlcheck.sh`, `i18n_export.sh`. pre-commit: `py -3.13 -m pre_commit` (Programme unter `%APPDATA%\Python\Python313\Scripts`).
 - Blob-Speicher der Tests: Share `fmv2blobs` (nur disk3, kein Cache, keine SMB-Freigabe, ca. 53 GB).
 - **Private Testsammlung** (nie ins Repo, nie in Berichte mit Werten): `/mnt/user/test/werterkennung/` (528 Dateien, 513 PDFs), abgeleitete Wortlisten
-  `/mnt/user/test/werterkennung_words_v3/`, Messdaten und Bewertungen `/mnt/user/test/werterkennung_w6/` (`chmod 700`). Werkzeuge:
-  `docs/prototypes/werterkennung/` (README). Formate-Testsammlung: `/mnt/user/test/formats` (95 Dateien, `tools/fmconverter/run_formats.py`).
+  `/mnt/user/test/werterkennung_words_v3/`, Messdaten und Bewertungen `/mnt/user/test/werterkennung_w6/` (`chmod 700`). Messwerkzeuge
+  (`w6_sample.py`, `w6_recheck.py` für den Regressionstest nach jeder Regeländerung, `keyword_search.py` u. a.) nur noch im Git-Tag `docs-vor-aufraeumen-2026-10-02`, Pfad `docs/prototypes/werterkennung/` (mit README). Formate-Testsammlung: `/mnt/user/test/formats` (95 Dateien, `tools/fmconverter/run_formats.py`).
 - Prototyp-Container `fmv2_*`, `fmtest_*`, `fmreal_odoo` auf Tower sind WebDAV-/Prototyp-Reste: **vor dem Löschen den Nutzer fragen**.
 - **HM-SRV** ist von hier nicht erreichbar; vor jedem Odoo-Image-Update DB-Kollation prüfen (siehe Entscheidungen 2).
 
@@ -110,5 +111,5 @@ Modell gegenlesen und Befundliste ablegen; (A7) fehlt dem Image `odoo:19.0-hm-te
 | Warum so, was verworfen | `int_filemanager_v2_entscheidungen.md` |
 | Backlog PaperOffice-Ideen | `int_filemanager_paperoffice_ideenkatalog_2026-10-01.md` |
 | Code-Regeln | `odoo_regeln/` (Coding und Git Guidelines, Hausregeln, Developer Reference), `pruefautomatik_2026-10-02.md` |
-| Messdaten und Prototypen | `prototypes/` (`fm2/` WebDAV/Blob, `werterkennung/`) |
+| Prototypen (WebDAV/Blob `fm2/`, Werterkennung) und Messdaten | nur im Git-Tag `docs-vor-aufraeumen-2026-10-02`, Pfad `docs/prototypes/` |
 | Alles Frühere (Konzept, Pläne, Übergabe-Verlauf, Messungen 19.x) | Git-Tag `docs-vor-aufraeumen-2026-10-02` |
