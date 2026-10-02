@@ -184,7 +184,6 @@ Nach den Regeldateien in `docs/odoo_regeln/` geordnet; Stand der Prüfung per Le
 - **Manifest und Daten:**
   - `installable: True` ist der Standardwert.
   - `external_dependencies` fehlt für `pdfplumber`, `ocrmypdf` und `mutagen` (Altcode, aber das Manifest ist umgeschrieben).
-  - Die Hooks (`pre_init_hook`, `post_init_hook`, `post_load`) stehen in `__init__.py` und `pg_extensions.py` statt in `hooks.py`.
   - `<field name="active">True</field>` in den Cron-Records und `<field name="context">{}</field>` in `action_int_filemanager_node` sind Standardwerte.
 - **Views/XML:**
   - IDs: `action_int_filemanager_node` statt `int_filemanager_node_action`; Views ohne `_view_` im Namen; Menü `menu_int_filemanager_v2_root`.

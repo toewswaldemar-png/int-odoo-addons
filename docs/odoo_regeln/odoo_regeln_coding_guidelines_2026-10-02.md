@@ -37,7 +37,6 @@ größere Umstellungen erst als reiner Verschiebe-Commit (`[MOV]`), dann die Än
   - Statisches: `static/src/js|scss|xml|img|css`, Onboarding-Tours für Endnutzer `static/src/js/tours/`, Test-Tours `static/tests/tours/`,
     Bibliotheken `static/lib/<name>/`, Schriften `static/fonts`, Tests `static/tests/`; eine Komponente je Datei. Keine externen URLs auf
     Bilder/Bibliotheken, ins Modul kopieren.
-- **Hooks** (`pre_init_hook`, `post_init_hook`, `uninstall_hook`, `post_load`) in `hooks.py`, im `__init__.py` importiert (OCA).
 - `__init__.py` in jedem Modul (Odoo `test_dunderinit`).
 
 ## 2. Manifest (`__manifest__.py`)
@@ -171,8 +170,8 @@ mocken (`unittest.mock`, `classPatch`).
    Fundgeschichte ("found on Tower …"). Der Kommentar muss ohne Dokument verständlich sein; wo Code eine Grundregel absichert, steht der Grund im
    Klartext. Verweise auf Dateien im selben Repo-Ordner (z. B. eine README daneben) sind erlaubt.
 3. **Docstrings wie im Odoo-Kern:** eine Zeile, was die Funktion tut (Imperativ: "Return …", "Create …"); nur wenn nötig danach wenige Zeilen zu
-   Randbedingungen. Kein Ablaufprotokoll, keine Aufzählung der Aufrufer, kein Docstring bei selbsterklärenden Methoden (im Odoo-Kern hat gut ein Drittel
-   der Methoden einen, Median 3 Zeilen).
+   Randbedingungen. Kein Ablaufprotokoll, keine Aufzählung der Aufrufer. Docstring an jeder Methode, deren Zweck nicht aus dem Namen folgt (Odoo Guidelines: "docstring on methods"); bei selbsterklärenden
+   Methoden entfällt er (im Odoo-Kern hat ein Viertel der Methoden in `models/` einen, Median 3 Zeilen; gemessen 2026-10-02).
 4. **Odoo-Stellen per Funktionsname, nicht per Zeilennummer** (`# odoo.http.Stream.get_response only uses X-Accel below data_dir/filestore`, nicht
    `# see http.py:665`); Zeilennummern verschieben sich mit jedem Update.
 5. **Kein auskommentierter Code, keine Autor-/Datumszeilen** (steht in Git); `TODO` nur mit Begründung.
@@ -182,11 +181,14 @@ mocken (`unittest.mock`, `classPatch`).
 Beispiel:
 
 ```python
-def begin_write(self, *, content_type=None):
-    """Start receiving the request body into a temporary blob file."""
-    # Commit on our own cursor before streaming so no transaction stays open for the whole
-    # upload (would hold the snapshot and block VACUUM); nothing has been written yet.
-    self.env.cr.commit()
+def reserve_blob(self):
+    """Create the blob row and commit it before the upload starts."""
+    # Own cursor, so the request transaction stays untouched: committing before streaming
+    # keeps no transaction open for the whole upload (would hold the snapshot, block VACUUM).
+    with self.pool.cursor() as cr:
+        blob = self.env(cr=cr)["int_filemanager.blob"].create({})
+        cr.commit()
+    return blob.id
 ```
 
 **Sprache und Namen** (Entscheidung 2026-09-26):
@@ -197,7 +199,6 @@ def begin_write(self, *, content_type=None):
 - `cr.commit()` nur im selbst geöffneten Cursor (Crons mit eigenem Cursor, eigene Server-Prozesse) und mit Kommentar.
 - `sudo()` nie auf Nutzereingaben; jede Stelle begründet.
 - Rohes SQL nur, wo das ORM nicht reicht, mit `odoo.tools.SQL` und Rechteprüfung über das ORM danach.
-- Hooks in `hooks.py`.
 - Migrationsskripte mit `odoo/upgrade-util` (ab dem ersten Datenmodell-Wechsel nach Inbetriebnahme).
 - Manifest: keine Schlüssel mit Standardwert; `external_dependencies` angeben (z. B. `wsgidav`) statt `except ImportError`-Ersatz.
 - Öffentlich ist nur, was mit beliebigen Argumenten sicher ist (JSON-2 macht jede öffentliche Modellmethode für jeden angemeldeten Nutzer aufrufbar).
