@@ -37,11 +37,11 @@ from datetime import datetime, timedelta
 
 from odoo import _
 from odoo.api import SUPERUSER_ID, Environment
-from odoo.exceptions import LockError, UserError
+from odoo.exceptions import LockError, UserError, ValidationError
 from odoo.modules.registry import Registry
 
 from .index_utils import index_upsert
-from .path_utils import get_root, make_shareable, suppress_watcher
+from .path_utils import make_shareable, suppress_watcher
 from .write_service import DEFAULT_VERSION_MAX_SIZE_MB
 
 _logger = logging.getLogger(__name__)
@@ -180,8 +180,7 @@ def stage_overwrite(env, file_record, new_content):
     fasst den Share nicht an. Rueckgabe: {"skipped": True} bei unveraendertem Inhalt, sonst
     {"state": "pending", "revision": n, "sha256": ...}."""
     rec = file_record.sudo()
-    root = get_root(env)
-    abs_path = os.path.join(root, rec.path)
+    abs_path = rec._absolute_path()
     max_mb, max_bytes = _max_bytes(env)
     if len(new_content) > max_bytes:
         raise UserError(_("Datei zu groß für automatische Versionierung (Grenze liegt bei %d MB).") % max_mb)
@@ -256,7 +255,13 @@ def _phase_a(dbname, file_id, expected_revision, is_retry=False):
             return "skip", "noop"
         fault_point("hook_before_snapshot")
 
-        abs_path = os.path.join(get_root(env), rec.path)
+        try:
+            abs_path = rec._absolute_path()
+        except ValidationError:
+            # Whatever wrote the row, a path that leaves the root is never published to.
+            rec.share_state = "conflict"
+            _logger.error("int_filemanager.file %s: path %r leaves the root", rec.id, rec.path)
+            return "skip", "conflict"
         pending_sha = rec.pending_sha256
         new_bytes = base64.b64decode(rec.pending_content or b"")
         if hashlib.sha256(new_bytes).hexdigest() != pending_sha:
@@ -386,7 +391,7 @@ def publish_pending(dbname, file_id, expected_revision=None, is_retry=False):
 def _abs_path_of(dbname, file_id):
     with Registry(dbname).cursor() as cr:
         env = Environment(cr, SUPERUSER_ID, {})
-        return os.path.join(get_root(env), env["int_filemanager.file"].browse(file_id).path)
+        return env["int_filemanager.file"].browse(file_id)._absolute_path()
 
 
 def publish_all_pending(env, min_age_seconds=30, limit=50):

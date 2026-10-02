@@ -17,7 +17,7 @@ class IntFilemanagerExtractionPattern(models.Model):
     # int_filemanager.file - seit der Vereinheitlichung am selben Tag ist target_field nur noch
     # ein frei waehlbares Label ohne Sonderbedeutung im Code: JEDES Muster (auch die drei
     # mitgelieferten) erzeugt gleichermassen einen int_filemanager.extracted_value-Datensatz
-    # (siehe filemanager_file.py::action_apply_extracted_values).
+    # (siehe filemanager_file.py::_apply_extracted_values).
     target_field = fields.Char(
         required=True,
         help="Freier Anzeigename/technischer Name des Feldes, das dieses Muster befüllt (z.B. "

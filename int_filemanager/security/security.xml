@@ -149,7 +149,7 @@
          (statt eines reinen Felds auf int_filemanager.file) einen neuen Angriffspunkt eroeffnet.
          write/unlink hier trotz perm_write=0/perm_unlink=0 in ir.model.access.csv (dort bewusst
          nur lesend fuer Nutzer, echte Schreib-/Loeschvorgaenge laufen ausschliesslich sudo() ueber
-         filemanager_file.py::action_apply_extracted_values) - dieselbe scheinbare Redundanz
+         filemanager_file.py::_apply_extracted_values) - dieselbe scheinbare Redundanz
          besteht bereits bei int_filemanager.version oben, als Verteidigung in der Tiefe falls die
          Basis-ACL je gelockert wird. -->
     <record id="rule_extracted_value_protected_read" model="ir.rule">

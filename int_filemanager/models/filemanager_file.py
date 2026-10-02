@@ -1,5 +1,6 @@
 import fnmatch
 import logging
+import math
 import os
 import secrets
 import shutil
@@ -8,13 +9,14 @@ import uuid
 from datetime import datetime, timedelta
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
+from .. import authz
 from ..fulltext import FulltextTooLarge, extract_fulltext, fulltext_type_of, pdf_word_index, suggest_from_text
 from ..hash_utils import compute_stable_hash
-from ..index_utils import rename_entry
+from ..index_utils import TRASH_DIRNAME, rename_entry, trash_disk_path
 from ..mediameta import MetaTooLarge, extract_metadata, media_type_of
-from ..path_utils import get_root, to_relative
+from ..path_utils import get_root, resolve_path, to_relative
 
 _logger = logging.getLogger(__name__)
 
@@ -71,6 +73,16 @@ DEFAULT_FULLTEXT_MAX_BYTES = {
 # bekommen stattdessen den gerenderten Highlight-Viewer) - reine UI-Bequemlichkeit, kein
 # Sicherheitslimit wie DEFAULT_FULLTEXT_MAX_BYTES, daher grosszuegig bemessen statt konfigurierbar.
 CONTENT_TEXT_PREVIEW_CHARS = 20000
+
+# The only fields of this model a user may write through the ORM (``call_kw``, ``/json/2``).
+# Every other field is index, state or content the server derives from the disk and acts
+# on: a row pointed at any path would be deleted, published or read by the server. Users
+# reach those through the routes and actions, which check the rights on the real path.
+USER_WRITABLE_FIELDS = frozenset({"name", "tag_ids", "status_id", "partner_id", "shared_partner_ids"})
+
+# What the review dialog may send as confirmed values.
+MAX_EXTRACTED_VALUES = 200
+MAX_EXTRACTED_VALUE_CHARS = 1000
 
 
 class IntFilemanagerFile(models.Model):
@@ -210,15 +222,26 @@ class IntFilemanagerFile(models.Model):
         Scan-Reconciliation weiter unten (Vollscan-Refresh sowie Identitaetserkennung nach
         Umbenennen/Verschieben ausserhalb Odoos) - alle bereits entsprechend markiert.
         """
-        if (
-            "name" in vals
-            and len(self) == 1
-            and not self.env.context.get("int_filemanager_syncing_index")
-        ):
-            rename_entry(self.env, self.path, vals.pop("name"))
-            if not vals:
-                return True
+        if "name" in vals and not self.env.context.get("int_filemanager_syncing_index"):
+            # A plain write would only change the label and leave the disk entry under its
+            # old name, skipping the rights checks of the rename.
+            if len(self) > 1:
+                raise UserError(self.env._("Rename one entry at a time."))
+            if self:
+                rename_entry(self.env, self.path, vals.pop("name"))
+                if not vals:
+                    return True
         return super().write(vals)
+
+    def _has_field_access(self, field, operation):
+        if (
+            operation == "write"
+            and field._module == "int_filemanager"
+            and field.name not in USER_WRITABLE_FIELDS
+            and not self.env.su
+        ):
+            return False
+        return super()._has_field_access(field, operation)
 
     content_sha256 = fields.Char(
         index=True,
@@ -404,17 +427,18 @@ class IntFilemanagerFile(models.Model):
     original_path = fields.Char(copy=False, help="Pfad vor dem Löschen, für Anzeige und Wiederherstellen.")
 
     def action_restore(self):
-        """Verschiebt diesen Papierkorb-Eintrag zurueck an original_path - siehe
-        index_restore_tree() fuer Kollisions-/Lock-Verhalten. Keine eigene Berechtigungspruefung
-        noetig: rule_file_trash_visibility (security.xml) erlaubt Schreiben auf trashed=True nur,
-        wenn trashed_by der aktuelle Nutzer ist oder er Admin ist - dieselbe Regel, die den
-        Datensatz ueberhaupt erst in der Papierkorb-Liste sichtbar macht, deckt auch das
-        Wiederherstellen ab. self (nicht sudo) fuer den Aufruf, damit dieser Check tatsaechlich
-        greift, nicht per Zufall umgangen wird."""
+        """Move this trash entry back to the place it was deleted from."""
         self.ensure_one()
+        # rule_file_trash_visibility lets a user write only to the own trash entries.
+        self.check_access("write")
+        if not self.trashed or self.folder_path != TRASH_DIRNAME:
+            raise UserError(self.env._("Only entries in the trash can be restored."))
+        # The original place may be protected differently now than when it was deleted.
+        authz.require(self.env, os.path.dirname(self.original_path or ""), "write")
         from ..index_utils import index_restore_tree
 
-        index_restore_tree(self.env, self)
+        # sudo: the index fields are server-only, the rights are checked above.
+        index_restore_tree(self.env, self.sudo())
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -425,20 +449,38 @@ class IntFilemanagerFile(models.Model):
             },
         }
 
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_live_entries(self):
+        """Let users delete only entries of the trash; the live tree changes via the routes."""
+        if self.env.su:
+            return
+        for rec in self:
+            if not rec.trashed or trash_disk_path(self.env, rec.path) is None:
+                raise AccessError(self.env._("Only entries in the trash can be deleted permanently."))
+
     def unlink(self):
-        """Endgültiges Löschen aus dem Papierkorb (Odoos eigener nativer Lösch-Button der
-        Papierkorb-Liste, kein neuer Mechanismus) entfernt zusätzlich die Bytes aus .trash/ -
-        analog zum bestehenden write()-Override oben fürs Umbenennen. Nicht-trashed-Datensätze
-        (der reguläre Löschweg läuft über index_remove_tree(), nicht hierüber) bleiben
-        unverändert reines DB-unlink()."""
-        root = get_root(self.env)
+        """Delete the rows and, for trashed entries, their bytes below .trash/."""
+        # Resolved before the rows go; the bytes follow the rows so that a refused delete
+        # leaves them alone.
+        doomed = []
         for rec in self.filtered("trashed"):
-            abs_path = os.path.join(root, rec.path)
+            abs_path = trash_disk_path(self.env, rec.path)
+            if abs_path is None:
+                _logger.error(
+                    "int_filemanager: trashed entry %s (%r) is not below %s, its bytes are left alone",
+                    rec.id,
+                    rec.path,
+                    TRASH_DIRNAME,
+                )
+                continue
+            doomed.append(abs_path)
+        result = super().unlink()
+        for abs_path in doomed:
             if os.path.isdir(abs_path):
                 shutil.rmtree(abs_path)
             elif os.path.exists(abs_path):
                 os.remove(abs_path)
-        return super().unlink()
+        return result
 
     _path_uniq = models.Constraint("UNIQUE(path)", "Für diesen Pfad existiert bereits ein Metadaten-Eintrag.")
     _share_token_uniq = models.Constraint(
@@ -449,15 +491,16 @@ class IntFilemanagerFile(models.Model):
         """Erzeugt (oder rotiert) den anonymen Freigabe-Link - Token und
         Ablauf werden immer gemeinsam neu gesetzt, nie das eine ohne das
         andere veraendert (siehe share_expires_at-Feldkommentar). Die
-        eigentliche Berechtigungspruefung uebernimmt der normale write()-Weg
-        (ORM -> ir.rule-Schreibregel), kein zusaetzlicher Check hier noetig -
-        wer diese Methode ueber die Formularansicht erreichen kann, hat
-        bereits Schreibrecht auf den Datensatz."""
+        Berechtigungspruefung (Schreibrecht samt Schutzordner-Regeln) steht
+        ausdruecklich am Anfang: Token und Ablauf sind nur dem Server
+        beschreibbar, geschrieben wird danach per sudo()."""
         self.ensure_one()
+        self.check_access("write")
         if self.is_dir:
             raise UserError(_("Nur einzelne Dateien können freigegeben werden, keine Ordner."))
         days = int(self.env["ir.config_parameter"].sudo().get_param("int_filemanager.share_default_days", "30"))
-        self.write(
+        # sudo: the token fields are server-only; the write right is checked above.
+        self.sudo().write(
             {
                 "share_token": secrets.token_urlsafe(32),
                 "share_expires_at": fields.Datetime.now() + timedelta(days=days),
@@ -469,12 +512,22 @@ class IntFilemanagerFile(models.Model):
 
     def action_revoke_share_token(self):
         self.ensure_one()
+        self.check_access("write")
         had_token = bool(self.share_token)
-        self.write({"share_token": False, "share_expires_at": False})
+        # sudo: the token fields are server-only; the write right is checked above.
+        self.sudo().write({"share_token": False, "share_expires_at": False})
         if had_token:
             self.env["int_filemanager.share_log"].sudo().create(
                 {"file_id": self.id, "path": self.path, "filename": self.name, "event_type": "revoked"}
             )
+
+    def _absolute_path(self):
+        """Return the disk path of this entry; refuse one that leaves the root.
+
+        ``path`` is index data, so every use of it on the disk goes through here.
+        """
+        self.ensure_one()
+        return resolve_path(self.env, self.path)
 
     def _cron_scan_filemanager(self):
         self._scan_and_reconcile()
@@ -519,14 +572,19 @@ class IntFilemanagerFile(models.Model):
         Bestandsdaten laufen ueber dieselbe Queue). Bewusst NICHT synchron im
         Watcher-Thread, damit eine grosse/kaputte Datei nicht die gesamte
         Inotify-Verarbeitung blockiert."""
-        root = get_root(self.env)
         Model = self.env["int_filemanager.file"].sudo()
         records = Model.search(
             [("hash_state", "=", "pending"), ("is_dir", "=", False)],
             limit=HASH_CRON_BATCH_SIZE,
         )
         for rec in records:
-            abs_path = os.path.join(root, rec.path)
+            try:
+                abs_path = rec._absolute_path()
+            except ValidationError:
+                _logger.error("int_filemanager: entry %s (%r) leaves the root, not hashed", rec.id, rec.path)
+                rec.write({"hash_state": "error"})
+                self.env["ir.cron"]._commit_progress(processed=1)
+                continue
             result = compute_stable_hash(abs_path)
             if result is None:
                 # Datei aendert sich gerade, ist unlesbar oder verschwunden -
@@ -560,7 +618,6 @@ class IntFilemanagerFile(models.Model):
         fuer alle Dateien mit meta_state='pending'. Bewusst NICHT synchron im
         Watcher-Thread - eine grosse/kaputte Mediendatei soll die inotify-
         Verarbeitung nicht blockieren."""
-        root = get_root(self.env)
         Model = self.env["int_filemanager.file"].sudo()
         records = Model.search(
             [("meta_state", "=", "pending"), ("is_dir", "=", False)],
@@ -576,7 +633,19 @@ class IntFilemanagerFile(models.Model):
                 self.env["ir.cron"]._commit_progress(processed=1)
                 continue
 
-            abs_path = os.path.join(root, rec.path)
+            try:
+                abs_path = rec._absolute_path()
+            except ValidationError:
+                _logger.error("int_filemanager: entry %s (%r) leaves the root, no metadata read", rec.id, rec.path)
+                rec.write(
+                    {
+                        "meta_state": "error",
+                        "meta_error": "path outside the root",
+                        "meta_attempts": rec.meta_attempts + 1,
+                    }
+                )
+                self.env["ir.cron"]._commit_progress(processed=1)
+                continue
             max_bytes = self._meta_max_bytes(media_type)
             try:
                 result = extract_metadata(abs_path, media_type, max_bytes)
@@ -614,7 +683,7 @@ class IntFilemanagerFile(models.Model):
                 pass
         return DEFAULT_FULLTEXT_MAX_BYTES[fulltext_type]
 
-    def _extract_fulltext_for_record(self, root=None):
+    def _extract_fulltext_for_record(self):
         """Fuehrt die Volltextextraktion fuer genau einen Datensatz aus und schreibt das Ergebnis
         - gemeinsamer Kern fuer den Hintergrund-Cron (_cron_extract_fulltext, Pfad B: Scan-
         Eingangsordner, niemand da zum Bestaetigen) UND den interaktiven Analyse-Endpunkt
@@ -627,18 +696,28 @@ class IntFilemanagerFile(models.Model):
         None bei Klartextdateien oder wenn keine Positionen ermittelt werden konnten. Der
         Hintergrund-Cron unten ignoriert das zweite Element einfach."""
         self.ensure_one()
-        root = root or get_root(self.env)
         fulltext_type = fulltext_type_of(self.name)
         if fulltext_type is None:
             self.write({"ocr_state": False})
             return "", None
 
-        abs_path = os.path.join(root, self.path)
+        try:
+            abs_path = self._absolute_path()
+        except ValidationError:
+            _logger.error("int_filemanager: entry %s (%r) leaves the root, no text read", self.id, self.path)
+            self.write(
+                {
+                    "ocr_state": "error",
+                    "ocr_error": "path outside the root",
+                    "ocr_attempts": self.ocr_attempts + 1,
+                }
+            )
+            return "", None
 
         # Schon fertig extrahiert und die Datei seitdem unveraendert (gleiche Groesse/mtime wie
         # beim letzten Lauf)? Dann reicht der gespeicherte content_text - keine erneute, bei
         # Scan-PDFs teure OCR-Extraktion. Nutzerfeedback 2026-09-07: der interaktive Analyse-
-        # Endpunkt (Pfad A, via action_analyze_document) rief bisher bei JEDEM "Werte
+        # Endpunkt (Pfad A, via _analyze_document) rief bisher bei JEDEM "Werte
         # erkennen"-Klick unbedingt neu auf, auch wenn sich an der Datei seit der letzten (ggf.
         # vom Cron laengst erledigten) Extraktion nichts geaendert hatte - z.B. beim erneuten
         # Pruefen nach dem Anlegen eines neuen Erkennungsmusters, wo nur die bereits vorhandenen
@@ -694,31 +773,22 @@ class IntFilemanagerFile(models.Model):
         bestaetigen kann. Dient gleichzeitig als Sicherheitsnetz fuer Pfad A (Drag&Drop in die
         App), falls der dortige interaktive Analyse-Aufruf uebersprungen oder abgebrochen wurde -
         ocr_state bleibt in dem Fall pending und wird hier nachgeholt."""
-        root = get_root(self.env)
         Model = self.env["int_filemanager.file"].sudo()
         records = Model.search(
             [("ocr_state", "=", "pending"), ("is_dir", "=", False)],
             limit=FULLTEXT_CRON_BATCH_SIZE,
         )
         for rec in records:
-            rec._extract_fulltext_for_record(root=root)
+            rec._extract_fulltext_for_record()
             self.env["ir.cron"]._commit_progress(processed=1)
 
     @api.model
-    def action_analyze_document(self, path):
-        """Interaktiver Pfad A: fuehrt die Volltextextraktion synchron fuer eine einzelne, gerade
-        hochgeladene (oder manuell ausgewaehlte) Datei aus und leitet daraus Vorschlaege ab -
-        blockierend ist hier in Ordnung, es geht um genau eine Datei in einer Nutzerinteraktion,
-        nicht um einen Massenlauf wie beim Cron oben. res_id im Ergebnis, damit der Aufrufer (der
-        Kontroll-Dialog) bei Bestaetigung gezielt genau diesen Datensatz per normalem ORM-write()
-        aktualisieren kann - kein sudo() dafuer noetig/gewuenscht, das laeuft dann als der
-        eingeloggte Nutzer ueber dieselben generierten ir.rule-Regeln wie jede andere
-        Feldbearbeitung am Datensatz (siehe acl_rules.py) - anders als hier oben, wo sudo() den
-        bereits durch authz.require() im Controller abgedeckten Schreibzugriff nur fuer die
-        Extraktion selbst nutzt (gleiches Muster wie die Cron-Jobs weiter oben). Seit Phase B/C
-        (siehe docs/int_filemanager_ocr_selbstdefinierte_felder.md) zusaetzlich matches (Liste der
-        erkannten Feld-Treffer inkl. PDF-Position) und content_text_preview (gekuerzter Volltext,
-        fuer die Klartext-Vorschau im Dialog bei Nicht-PDF-Dateien)."""
+    def _analyze_document(self, path):
+        """Extract the text of one file and derive suggestions from it.
+
+        Private: it works as superuser, so the caller has to check the write right on
+        ``path`` first. ``res_id`` tells the dialog which record to write the tags to.
+        """
         empty = {"res_id": False, "suggested_tags": [], "suggested_partner": False,
                  "matches": [], "content_text_preview": ""}
         rec = self.env["int_filemanager.file"].sudo().search([("path", "=", path)], limit=1)
@@ -732,34 +802,69 @@ class IntFilemanagerFile(models.Model):
         return {**result, "res_id": rec.id}
 
     @api.model
-    def action_apply_extracted_values(self, path, values):
-        """Ersetzt die komplette extracted_value_ids-Liste der per path referenzierten Datei durch
-        die vom Kontroll-Dialog bestaetigten Werte (siehe document_review_dialog.js onConfirm) -
-        kein Merge/Diff, einfache Rundumersetz-Semantik. sudo() innen: int_filemanager.extracted_value
-        hat bewusst keine eigene Schreib-ACL fuer Nutzer (siehe ir.model.access.csv) - derselbe
-        Aufbau wie int_filemanager.version, nur ueber diese Methode statt einen
-        Dateisystem-Vorgang erreichbar. Der Controller (/int_filemanager/apply_extracted_values)
-        prueft VOR diesem Aufruf bereits authz.require(..., "write") auf denselben Pfad - exakt
-        dasselbe Muster wie action_analyze_document oben."""
+    def _clean_extracted_values(self, values):
+        """Return the confirmed values as rows to create; raise UserError on bad input.
+
+        The values come from the request body, so a wrong type must end as a message.
+        """
+        invalid = UserError(self.env._("The recognised values are not valid."))
+        if not isinstance(values, list) or len(values) > MAX_EXTRACTED_VALUES:
+            raise invalid
+
+        def is_number(number):
+            if isinstance(number, bool) or not isinstance(number, (int, float)):
+                return False
+            return math.isfinite(number)
+
+        rows = []
+        for item in values:
+            if not isinstance(item, dict):
+                raise invalid
+            pattern_id = item.get("pattern_id")
+            value = item.get("value")
+            if not pattern_id or not value:
+                continue
+            if not is_number(pattern_id) or int(pattern_id) != pattern_id:
+                raise invalid
+            if not isinstance(value, str) or len(value) > MAX_EXTRACTED_VALUE_CHARS:
+                raise invalid
+            page = item.get("page") or 0
+            if not is_number(page) or page < 0 or int(page) != page:
+                raise invalid
+            box = [item.get(key) or 0.0 for key in ("x0", "y0", "x1", "y1")]
+            if not all(is_number(coordinate) for coordinate in box):
+                raise invalid
+            coordinates = [coordinate or False for coordinate in box]
+            rows.append((int(pattern_id), value, int(page) or False, *coordinates))
+        pattern_ids = {row[0] for row in rows}
+        known = self.env["int_filemanager.extraction_pattern"].browse(pattern_ids).exists()
+        if pattern_ids - set(known.ids):
+            raise invalid
+        return rows
+
+    @api.model
+    def _apply_extracted_values(self, path, values):
+        """Replace the recognised values of the file at ``path`` by the confirmed ones.
+
+        Private for the same reason as ``_analyze_document``. The old list is replaced
+        as a whole, not merged; users have no write ACL on the values, hence ``sudo``.
+        """
         rec = self.env["int_filemanager.file"].sudo().search([("path", "=", path)], limit=1)
         if not rec or rec.is_dir:
             return False
+        rows = self._clean_extracted_values(values)
         rec.extracted_value_ids.unlink()
         Value = self.env["int_filemanager.extracted_value"].sudo()
-        for vals in values:
-            pattern_id = vals.get("pattern_id")
-            value = vals.get("value")
-            if not pattern_id or not value:
-                continue
+        for pattern_id, value, page, x0, y0, x1, y1 in rows:
             Value.create({
                 "file_id": rec.id,
                 "pattern_id": pattern_id,
                 "value": value,
-                "page": vals.get("page") or False,
-                "x0": vals.get("x0") or False,
-                "y0": vals.get("y0") or False,
-                "x1": vals.get("x1") or False,
-                "y1": vals.get("y1") or False,
+                "page": page,
+                "x0": x0,
+                "y0": y0,
+                "x1": x1,
+                "y1": y1,
             })
         return True
 

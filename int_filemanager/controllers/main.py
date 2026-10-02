@@ -7,7 +7,7 @@ import shutil
 import zipfile
 
 from odoo import _, fields, http
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.http import request
 
 from .. import authz, publish_service, write_service, zip_utils
@@ -370,7 +370,8 @@ class IntFilemanagerController(http.Controller):
         abs_path = resolve_path(request.env, path)
         rel = to_relative(request.env, abs_path)
         authz.require(request.env, rel, "write")
-        return request.env["int_filemanager.file"].action_analyze_document(rel)
+        # The write right is checked above; the private method then works as superuser.
+        return request.env["int_filemanager.file"]._analyze_document(rel)
 
     @http.route("/int_filemanager/apply_extracted_values", type="jsonrpc", auth="user", methods=["POST"])
     def apply_extracted_values(self, path="", values=None):
@@ -380,12 +381,13 @@ class IntFilemanagerController(http.Controller):
         Dieselbe "write"-Pruefung wie oben - int_filemanager.extracted_value hat bewusst keine
         eigene Nutzer-ACL (siehe ir.model.access.csv), die Berechtigung wird hier am zugehoerigen
         Dateipfad geprueft, die eigentliche Schreibarbeit laeuft sudo() in
-        action_apply_extracted_values."""
+        _apply_extracted_values."""
         self._check_access()
         abs_path = resolve_path(request.env, path)
         rel = to_relative(request.env, abs_path)
         authz.require(request.env, rel, "write")
-        return request.env["int_filemanager.file"].action_apply_extracted_values(rel, values or [])
+        File = request.env["int_filemanager.file"]
+        return File._apply_extracted_values(rel, values if values is not None else [])
 
     # ---------------------------------------------------------------------
     # versioning
@@ -459,8 +461,11 @@ class IntFilemanagerController(http.Controller):
         ):
             return request.not_found()
 
-        root = get_root(request.env)
-        abs_path = os.path.join(root, record.path)
+        try:
+            abs_path = record._absolute_path()
+        except ValidationError:
+            # The link is anonymous, so a path that leaves the root is never served.
+            return request.not_found()
         if not os.path.isfile(abs_path):
             return request.not_found()
 

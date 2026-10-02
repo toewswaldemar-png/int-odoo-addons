@@ -2,9 +2,8 @@ import mimetypes
 import os
 
 from odoo import http
+from odoo.exceptions import ValidationError
 from odoo.http import request
-
-from ..path_utils import get_root
 
 
 class IntFilemanagerPortal(http.Controller):
@@ -43,7 +42,10 @@ class IntFilemanagerPortal(http.Controller):
         if record.is_dir:
             return request.not_found()
 
-        abs_path = os.path.join(get_root(request.env), record.path)
+        try:
+            abs_path = record.sudo()._absolute_path()
+        except ValidationError:
+            return request.not_found()
         if not os.path.isfile(abs_path):
             return request.not_found()
 

@@ -28,7 +28,7 @@
                     </group>
                     <!-- Nur lesend (kein editable="bottom"/create/delete-Button) - entstehen
                          ausschliesslich ueber den "Werte erkennen"-Dialog, nicht per Hand hier
-                         (siehe filemanager_file.py::action_apply_extracted_values). -->
+                         (siehe filemanager_file.py::_apply_extracted_values). -->
                     <notebook invisible="not extracted_value_ids">
                         <page string="Erkannte Werte" name="extracted_values">
                             <field name="extracted_value_ids" readonly="1">

@@ -54,7 +54,7 @@
                     </div>
                     <!-- Eine Zeile pro aktivem Erkennungsmuster - keine feste Liste im
                          Dialog-Code, neue Admin-Muster tauchen automatisch ab dem naechsten
-                         Analyse-Lauf hier auf (siehe filemanager_file.py::action_analyze_document).
+                         Analyse-Lauf hier auf (siehe filemanager_file.py::_analyze_document).
                          Seit der Vereinheitlichung (2026-09-19) gibt es keine fest verdrahteten
                          Datum/Rechnungsnr./Betrag-Felder mehr - auch die drei mitgelieferten
                          Muster landen hier wie jedes andere. -->

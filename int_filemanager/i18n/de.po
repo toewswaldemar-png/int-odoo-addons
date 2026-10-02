@@ -1456,6 +1456,18 @@ msgstr "Vorerst werden nur PDF-Dateien neben ihren Werten angezeigt."
 
 #. module: int_filemanager
 #. odoo-python
+#: code:addons/int_filemanager/models/filemanager_file.py:0
+msgid "Only entries in the trash can be deleted permanently."
+msgstr "Nur Einträge im Papierkorb können endgültig gelöscht werden."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/filemanager_file.py:0
+msgid "Only entries in the trash can be restored."
+msgstr "Nur Einträge im Papierkorb können wiederhergestellt werden."
+
+#. module: int_filemanager
+#. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_share.py:0
 msgid "Only single files with content can be shared by link."
 msgstr "Nur einzelne Dateien mit Inhalt können per Link freigegeben werden."
@@ -1696,6 +1708,12 @@ msgstr "Entfernen"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
 msgid "Rename"
 msgstr "Umbenennen"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/filemanager_file.py:0
+msgid "Rename one entry at a time."
+msgstr "Benennen Sie jeweils nur einen Eintrag um."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -2068,6 +2086,12 @@ msgstr "Die Seite ist ungültig."
 
 #. module: int_filemanager
 #. odoo-python
+#: code:addons/int_filemanager/models/filemanager_file.py:0
+msgid "The recognised values are not valid."
+msgstr "Die erkannten Werte sind ungültig."
+
+#. module: int_filemanager
+#. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_extraction_rule.py:0
 msgid ""
 "The regular expression has %(count)s group(s); group %(index)s does not "
@@ -2172,6 +2196,12 @@ msgstr "Dieses Stück setzt den Upload nicht dort fort, wo er aufgehört hat."
 #: code:addons/int_filemanager/models/int_filemanager_zip_job.py:0
 msgid "This download does not exist any more."
 msgstr "Dieser Download existiert nicht mehr."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/index_utils.py:0
+msgid "This entry is not in the trash."
+msgstr "Dieser Eintrag liegt nicht im Papierkorb."
 
 #. module: int_filemanager
 #. odoo-python

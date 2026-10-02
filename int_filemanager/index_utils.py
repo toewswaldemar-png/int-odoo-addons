@@ -5,7 +5,7 @@ import unicodedata
 from datetime import datetime
 
 from odoo import _, fields
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools.sql import escape_psql
 
 from . import authz
@@ -224,6 +224,22 @@ def trash_destination(env, rel):
     return "%s/%s" % (TRASH_DIRNAME, _trash_name(name))
 
 
+def trash_disk_path(env, rel_path):
+    """Return the absolute path of an entry below the trash folder, else None.
+
+    The index is only a mirror of the disk, so an entry whose path does not resolve to a
+    place below ``<root>/.trash`` must never make the trash code delete or move anything.
+    """
+    try:
+        abs_path = resolve_path(env, rel_path)
+    except ValidationError:
+        return None
+    trash_root = os.path.join(get_root(env), TRASH_DIRNAME)
+    if not abs_path.startswith(trash_root + os.sep):
+        return None
+    return abs_path
+
+
 def _ensure_trash_folder(env):
     """Stellt sicher, dass .trash als eigener, aber unsichtbarer (trashed=True) Ordner-Datensatz
     existiert. Scan/Watcher legen ihn NIE an (dot-Praefix-Ausschluss, siehe TRASH_DIRNAME oben) -
@@ -336,6 +352,9 @@ def index_restore_tree(env, rec):
     new_rel = rec.original_path
     if not new_rel:
         raise UserError(_("Kein ursprünglicher Pfad bekannt."))
+    abs_old = trash_disk_path(env, old_rel)
+    if abs_old is None:
+        raise UserError(env._("This entry is not in the trash."))
     new_parent = os.path.dirname(new_rel) if new_rel else ""
 
     abs_new = resolve_path(env, new_rel)
@@ -345,7 +364,6 @@ def index_restore_tree(env, rec):
     if not os.path.isdir(abs_new_parent):
         raise UserError(_("Der ursprüngliche Ordner existiert nicht mehr."))
 
-    abs_old = resolve_path(env, old_rel)
     with suppress_watcher(abs_new):
         shutil.move(abs_old, abs_new)
 

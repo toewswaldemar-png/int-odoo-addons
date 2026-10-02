@@ -2,7 +2,7 @@
     <!-- Reine Auswertungsansicht - kein Formular, kein Anlegen/Bearbeiten ueber die UI (die ACL
          erlaubt Nutzern ohnehin nur Lesen, siehe ir.model.access.csv; Werte entstehen
          ausschliesslich ueber den "Werte erkennen"-Dialog, siehe filemanager_file.py::
-         action_apply_extracted_values). Genau der in
+         _apply_extracted_values). Genau der in
          docs/int_filemanager_ocr_selbstdefinierte_felder.md als Vorteil eines echten
          Datensatz-Modells (statt fields.Properties) genannte Fall: Suchen/Filtern/Pivot direkt
          auf den erkannten Werten, ohne JSON-Parsing. -->

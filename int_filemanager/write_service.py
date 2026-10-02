@@ -34,7 +34,7 @@ from odoo.fields import Datetime
 from odoo.modules.registry import Registry
 from odoo.tools import config
 
-from .path_utils import get_root, make_shareable
+from .path_utils import make_shareable
 
 _logger = logging.getLogger(__name__)
 
@@ -102,8 +102,7 @@ def snapshot_and_write(env, file_record, new_content, *, operation):
     neuer Inhalt die konfigurierte Versionierungs-Größengrenze überschreitet
     - kein stilles Überschreiben ohne Sicherung, insbesondere für den
     ONLYOFFICE-Pfad, wo es keinen sinnvollen Bestätigungsdialog dafür gibt."""
-    root = get_root(env)
-    abs_path = os.path.join(root, file_record.path)
+    abs_path = file_record.sudo()._absolute_path()
     dbname = env.cr.dbname
 
     max_mb = int(

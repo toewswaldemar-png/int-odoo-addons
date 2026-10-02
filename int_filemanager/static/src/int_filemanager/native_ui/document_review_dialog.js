@@ -134,7 +134,7 @@ export class IntDocumentReviewDialog extends Component {
 
     onSkip() {
         // content_text/ocr_state wurden bereits beim Analyse-Aufruf gespeichert (siehe
-        // action_analyze_document) - "Verwerfen" laesst nur die Tag-/Wert-Vorschlaege ungenutzt,
+        // _analyze_document) - "Verwerfen" laesst nur die Tag-/Wert-Vorschlaege ungenutzt,
         // der Volltext bleibt durchsuchbar.
         this.props.close();
     }
