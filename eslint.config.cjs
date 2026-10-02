@@ -194,28 +194,26 @@ const config = [{
     },
 
 }, {
-    // int_filemanager's JS is written as native ES modules (Odoo 19 transpiles them).
-    files: ["int_filemanager/static/**/*.js", "int_filemanager/static/**/*.mjs"],
+    // Odoo 19 native JS modules (import/export): static/src and static/tests are transpiled
+    // by the server (docs/odoo_regeln_js_framework_2026-10-02.md, section 2). Deviation from
+    // the OCA template, which only treats *.esm.js and *test.js as modules.
+    files: ["**/static/src/**/*.js", "**/static/tests/**/*.js", "**/*.esm.js", "**/*test.js"],
 
     languageOptions: {
         ecmaVersion: 2024,
         sourceType: "module",
     },
 }, {
-    // Node runs these tests (node --test), so Node's globals exist.
-    files: ["int_filemanager/static/tests/**/*.mjs"],
+    // int_filemanager's own tests are .mjs modules that Node runs (node --test), so Node's
+    // globals exist and the files are modules.
+    files: ["int_filemanager/static/**/*.mjs"],
 
     languageOptions: {
+        ecmaVersion: 2024,
+        sourceType: "module",
         globals: {
             Buffer: "readonly",
         },
-    },
-}, {
-    files: ["**/*.esm.js", "**/*test.js"],
-
-    languageOptions: {
-        ecmaVersion: 2024,
-        sourceType: "module",
     },
 }];
 

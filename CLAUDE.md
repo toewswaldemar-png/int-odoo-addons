@@ -50,6 +50,21 @@ genaueren Suchen doch eine native Entsprechung:
 Erst wenn alle fünf Punkte durchlaufen sind und nichts Passendes auftaucht, ist "Eigenbau nötig"
 eine belastbare Aussage.
 
+## Verbindlich: Odoo-19-Regeln (Coding Guidelines + Developer Reference)
+
+Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentation` Branch 19.0) sind in
+`docs/odoo_regeln_index_2026-10-02.md` und den dort verlinkten Destillaten `docs/odoo_regeln_*` festgehalten
+(Coding/Git: `docs/odoo_konventionen_2026-09-26.md`).
+
+- **Vor Code in einem Bereich** (ORM, Views/XML, Sicherheit, Daten/Manifest, Aktionen/Cron/Controller/Berichte,
+  JS/Owl/QWeb/Assets, Tests, CLI/Upgrade) **die zugehörige Datei lesen** (Zuordnung im Index) und die Regeln einhalten.
+- Neuer Code verletzt sie nicht; bei bestehendem Code Stil nicht umformatieren (Konventionen, "Quellen und Rangfolge").
+- Die Destillate sind **kein Ersatz** für den Core-Grep oben: wo die Quelle autodoc ist (Signaturen, Feldparameter),
+  gilt der Core im Container. Bei Widerspruch gilt die Odoo-Quelle, nicht das Destillat – Destillat dann korrigieren.
+- Prüfautomatik (pre-commit, `test_lint`, odoo-ls) ist eingerichtet (`docs/pruefautomatik_2026-10-02.md`: Aufruf,
+  Verifikationsstand, Altbefunde); Regeln ohne Werkzeug bleiben Review-Checkliste in den Destillaten. Neuer Code muss
+  `pre-commit run` bestehen; Altdateien stehen im LEGACY-Block (`scripts/lint/sync_legacy_excludes.py`).
+
 ## Weitere Grundsätze
 
 - **Code-Konventionen:** `docs/odoo_konventionen_2026-09-26.md` (Odoo Coding/Git Guidelines 19.0, Security Pitfalls,

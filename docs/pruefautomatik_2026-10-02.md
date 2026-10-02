@@ -88,3 +88,13 @@ Benutzertexte (`_()`/Übersetzung) bzw. Manifeste und sollten bewusst entschiede
 4. **`test_eslint` auf Tower:** läuft nur mit installiertem ESLint 8 (nicht im Image), sonst wird er übersprungen.
 5. Auf welchem Branch gelten die Dateien: sie liegen auf `claude/festive-goldberg-f6on8h`; die Entwicklung läuft laut
    Konzept auf `feature/int-filemanager-v2` → dorthin übernehmen (Merge/Cherry-pick).
+
+## 6. Stand auf `feature/int-filemanager-v2`
+
+Die Prüfautomatik ist am 2026-10-02 von `master` auf diesen Branch übernommen worden und ersetzt die frühere, rohe OCA-Fassung der Konfigurationsdateien. Anpassungen für v2:
+
+- **LEGACY-Block:** Referenz bleibt das Tag `int_filemanager-v1`. 102 der 109 Dateien von `int_filemanager` sind hier unverändert und damit Altbestand. Die 7 seit dem Tag geänderten Dateien stehen in `REWRITTEN_FILES` (`scripts/lint/sync_legacy_excludes.py`) und werden geprüft. Wird eine weitere Altdatei umgeschrieben, trägt man sie dort ein und startet das Skript.
+- **ESLint:** zusätzlicher Block für `int_filemanager/static/**/*.mjs` (ES-Module, Node-Global `Buffer`), weil die Tests als `.mjs` mit `node --test` laufen. Auf `master` gibt es diese Dateien nicht.
+- **Autor im Manifest:** Die frühere v2-Fassung erzwang `manifest-required-authors=Waldemar Toews`. Das entfällt, `.pylintrc` und `.pylintrc-mandatory` entsprechen wieder `master` (Autor nur als nicht blockierende Prüfung).
+- **Neben `tools/v2check/`:** `tools/v2check/v2check.sh` bleibt der Aufruf für `int_filemanager` 2 auf Tower; `scripts/lint/run_test_lint.sh` und `run_odoo_ls.sh` sind die allgemeine Fassung aus `master`. Beide laufen unabhängig voneinander; ob eine wegfällt, ist offen.
+- **Nicht erneut verifiziert:** Die Läufe in Abschnitt 3 und die Befunde in Abschnitt 4 stammen vom Stand `master`. Auf diesem Branch wurden `pre-commit`, `test_lint` und odoo-ls nach der Übernahme **nicht** ausgeführt, nur die Syntax der Dateien geprüft.

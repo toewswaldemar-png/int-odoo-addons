@@ -1,12 +1,15 @@
-
-
+# Optional AND mandatory pylint-odoo checks for IDEs and the non-blocking pre-commit run.
+# .pylintrc-mandatory is the blocking one. Rendered from OCA/oca-addons-repo-template
+# (odoo_version 19.0) at 0c2edf1; same deviations as .pylintrc-mandatory.
 [MASTER]
 load-plugins=pylint_odoo
 score=n
 
+[IMPORTS]
+deprecated-modules=pdb,pudb,ipdb,bs4
+
 [ODOOLINT]
-manifest-required-authors=Waldemar Toews
-manifest-required-keys=license
+readme-template-url="https://github.com/OCA/maintainer-tools/blob/master/template/module/README.rst"
 manifest-deprecated-keys=description,active
 license-allowed=AGPL-3,GPL-2,GPL-2 or any later version,GPL-3,GPL-3 or any later version,LGPL-3
 valid-odoo-versions=19.0
@@ -14,25 +17,17 @@ valid-odoo-versions=19.0
 [MESSAGES CONTROL]
 disable=all
 
-# This .pylintrc contains optional AND mandatory checks and is meant to be
-# loaded in an IDE to have it check everything, in the hope this will make
-# optional checks more visible to contributors who otherwise never look at a
-# green travis to see optional checks that failed.
-# .pylintrc-mandatory containing only mandatory checks is used the pre-commit
-# config as a blocking check.
-
 enable=anomalous-backslash-in-string,
     assignment-from-none,
     attribute-deprecated,
     dangerous-default-value,
+    deprecated-module,
     development-status-allowed,
     duplicate-key,
     eval-used,
     license-allowed,
     manifest-author-string,
     manifest-deprecated-key,
-    manifest-required-author,
-    manifest-required-key,
     manifest-version-format,
     method-compute,
     method-inverse,
@@ -56,7 +51,6 @@ enable=anomalous-backslash-in-string,
     except-pass,
     invalid-commit,
     manifest-maintainers-list,
-    missing-readme,
     missing-return,
     odoo-addons-relative-import,
     renamed-field-parameter,
@@ -67,9 +61,9 @@ enable=anomalous-backslash-in-string,
     website-manifest-key-not-valid-uri,
     external-request-timeout,
     bad-builtin-groupby,
-    category-allowed,
     deprecated-name-get,
     deprecated-odoo-model-method,
+    deprecated-self-cr,
     inheritable-method-lambda,
     inheritable-method-string,
     invalid-email,
@@ -84,29 +78,18 @@ enable=anomalous-backslash-in-string,
     translation-format-interpolation,
     translation-format-truncated,
     translation-fstring-interpolation,
+    translation-injection,
     translation-not-lazy,
     translation-too-few-args,
     translation-too-many-args,
     translation-unsupported-format,
     no-write-in-compute,
-    # messages that do not cause the lint step to fail
-    consider-merging-classes-inherited,
-    create-user-wo-reset-password,
-    dangerous-filter-wo-user,
-    deprecated-module,
-    file-not-used,
-    invalid-commit,
-    missing-manifest-dependency,
-    missing-newline-extrafiles,
+    # optional messages that do not cause the lint step to fail
     missing-readme,
-    no-utf8-coding-comment,
-    odoo-addons-relative-import,
-    old-api7-method-defined,
+    manifest-required-author,
+    manifest-required-key,
     redefined-builtin,
-    too-complex,
-    unnecessary-utf8-coding-comment,
     manifest-external-assets
-
 
 [REPORTS]
 msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
