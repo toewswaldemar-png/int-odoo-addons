@@ -81,12 +81,11 @@ Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentati
 - **Claims immer verifizieren**, nie "sollte sicher funktionieren" — im Code/Container nachsehen,
   live testen, nicht raten.
 - **Produktentscheidungen vorab mit dem Nutzer klären**, nicht impliziten Annahmen folgen.
-- **Einstieg int_filemanager: `docs/int_filemanager_v2_stand.md`** (Stand, nächste Schritte, Arbeitsweise, Testumgebung auf
-  Tower). Begründungen und verworfene Wege: `docs/int_filemanager_v2_entscheidungen.md`; Grundregeln und Aufbau:
-  `docs/int_filemanager_v2_kern_2026-09-26.md`. Der Code ist maßgeblich; Konzept und Pläne der Zeit bis 2026-10-02 stehen
+- **Einstieg int_filemanager: `docs/int_filemanager_stand.md`** (Stand, Aufbau, nächste Schritte, Arbeitsweise, Testumgebung auf
+  Tower). Grundregeln I1–I13, Begründungen und verworfene Wege: `docs/int_filemanager_entscheidungen.md`. Der Code ist maßgeblich; Konzept und Pläne der Zeit bis 2026-10-02 stehen
   nur noch im Git-Tag `docs-vor-aufraeumen-2026-10-02`. Neue Features ohne Konzeptdokument: vor einem größeren Feature eine halbe
   Seite (Ziel, offene Fragen), danach das Ergebnis in die Entscheidungen und die Notiz löschen.
-  v2-Code nur auf Branch `feature/int-filemanager-v2` (Tag `int_filemanager-v1` = heutiges Modul). Prüfungen:
+  Der Neubau entsteht nur auf dem Branch `feature/int-filemanager-v2`; `master` hat den bisherigen Stand (Tag `int_filemanager-v1`). Prüfungen:
   pre-commit (`py -3.13 -m pre_commit`, Hook installiert) und `tools/v2check/v2check.sh [--quick]` (odoo-ls +
   `test_lint` auf Tower, `docs/pruefautomatik_2026-10-02.md`).
   Übersicht aller Dokumente: `docs/README.md`; Projektbeschreibung: `README.md` (Repo-Wurzel).

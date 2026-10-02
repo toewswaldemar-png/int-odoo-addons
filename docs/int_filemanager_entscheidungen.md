@@ -1,23 +1,43 @@
-# int_filemanager 2 – Entscheidungen und Befunde
+# int_filemanager – Entscheidungen und Befunde
 
 Stand 2026-10-02. Hier steht, **warum** etwas so gebaut ist und was bewusst **nicht** gebaut wird. Was der Code tut, steht im
 Code und in den Tests; diese Datei wird nur ergänzt, wenn eine Entscheidung fällt, und nicht nachgeführt, wenn sich Code ändert.
 Die ausführlichen Vorgänger (Konzept, Werterkennungs-Plan, Oberflächen-Konzept, Übergabe) stehen im Git-Tag
-`docs-vor-aufraeumen-2026-10-02` (`git show docs-vor-aufraeumen-2026-10-02:docs/<Datei>`). Die Grundregeln I1–I13 stehen in
-`int_filemanager_v2_kern_2026-09-26.md`.
+`docs-vor-aufraeumen-2026-10-02` (`git show docs-vor-aufraeumen-2026-10-02:docs/<Datei>`).
+
+## Grundregeln I1–I13
+
+Gelten immer, auch bei Absturz und Last; jede hat Tests. Die Kürzel stehen in den Tests und Entscheidungen, nicht in Code-Kommentaren.
+
+| # | Regel | in einfachen Worten |
+|---|---|---|
+| I1 | Nur Odoo schreibt in den Dateispeicher. | Keine Hintertür auf die Dateien. |
+| I2 | Ein gespeicherter Inhalt wird nie verändert. | Neue Fassung = neue Datei im Speicher, benannt nach ihrer Prüfsumme. |
+| I3 | Erst die Datenbank, dann die Wirkung nach außen. | Mails, Umwandlungen usw. erst, wenn der Vorgang sicher gespeichert ist. |
+| I4 | Inhalte werden erst gelöscht, wenn nichts mehr auf sie verweist **und** eine Schonfrist abgelaufen ist; im Zweifel bleiben sie. | Kein Datenverlust durch Aufräumen, auch nicht bei gleichzeitigem Upload desselben Inhalts. |
+| I5 | Nichts wird gelöscht, nur weil es nicht gesehen wurde. | Kein Watcher, kein Scan, der Dateien entfernt. |
+| I6 | Jede gespeicherte Fassung ist wiederherstellbar. | Versionen und Papierkorb. |
+| I7 | Rechte prüft nur Odoo, für jede Tabelle und jeden Zugriffsweg. | Auch Versionen und Inhalte sind geschützt; Admin-Rechte im Code erst nach der Prüfung. |
+| I8 | Verweise über Nummern (IDs), nie über Pfade. | Umbenennen und Verschieben brechen nichts. |
+| I9 | Was Nutzer sehen, ändert sich ganz oder gar nicht; Wiederholungen und gleichzeitige Zugriffe erzeugen keine Doppelungen. | Doppelklick, Abbruch, erneutes Senden, zwei gleichzeitige Uploads sind harmlos. |
+| I10 | Odoo selbst wird nicht verändert. | Updates bleiben möglich. |
+| I11 | Fremde Dateiformate werden außerhalb von Odoo verarbeitet. | Vorschaubilder und OCR in einem eigenen Container. |
+| I12 | Keine ganzen großen Dateien im Arbeitsspeicher. | Hoch- und Herunterladen als Datenstrom. |
+| I13 | Odoo öffnet keine fremden Dateibytes, auch nicht die Ergebnisse des Umwandlers. | Vorschaubilder und Text liegen im Dateispeicher und werden nur ausgeliefert. |
 
 ## 1. Grundsatz
 
 | Entscheidung | Grund |
 |---|---|
-| **Dateimanager vollständig als Odoo-Addon, Odoo ist alleiniger Schreiber** (2026-09-26) | Fast alle Fehler des heutigen Moduls kamen vom direkten Schreiben anderer (SMB, Explorer) auf dieselben Dateien: Watcher verliert Ereignisse (17 % bei 20.000 Dateien per robocopy), zwei Schreiber überschreiben sich still, Rechte laufen an Odoo vorbei, überschriebene Fassungen sind weg. Ein Schreibweg macht die Invarianten I1–I13 überhaupt erst haltbar. |
+| **Dateimanager vollständig als Odoo-Addon, Odoo ist alleiniger Schreiber** (2026-09-26) | Fast alle Fehler des Stands auf `master` kamen vom direkten Schreiben anderer (SMB, Explorer) auf dieselben Dateien: Watcher verliert Ereignisse (17 % bei 20.000 Dateien per robocopy), zwei Schreiber überschreiben sich still, Rechte laufen an Odoo vorbei, überschriebene Fassungen sind weg. Ein Schreibweg macht die Invarianten I1–I13 überhaupt erst haltbar. |
 | Eigenbau nur, wo Odoo nachweislich nicht reicht | Wiederholt war "gibt es nicht in Odoo" falsch (siehe CLAUDE.md). Vor jeder Eigenbau-Aussage Core-Grep. |
 | **Bestand kopieren, kein Hardlink** | Ein später bearbeiteter Hardlink würde den Blob verändern (I2). Rückweg bleibt möglich: alter Share bleibt schreibgeschützt bis zur Abnahme. |
 | Ganzer Share, Versionen unbegrenzt, Papierkorb 30 Tage, Rechte minimal ("Alle" + heutiger Schutzordner) (2026-09-26) | Heute 1 interner Nutzer außer Admin, keine Portal-Nutzer; engere Bereiche erst bei Bedarf. |
-| **HM-SRV behält vorerst das heutige Modul** | Die Sicherheitslücke N1 (öffentliche Methoden `action_analyze_document`/`action_apply_extracted_values` mit `sudo`) ist dort noch nicht behoben. |
+| **HM-SRV bleibt vorerst auf `master`** | Die Sicherheitslücke N1 (öffentliche Methoden `action_analyze_document`/`action_apply_extracted_values` mit `sudo`) ist dort noch nicht behoben. |
 | Modellnamen mit Präfix `int_filemanager.*`; Code englisch, Oberflächentexte englisch + `i18n/de.po` | Odoo-/OCA-Konvention (`odoo_regeln/odoo_regeln_coding_guidelines_2026-10-02.md`). |
 | Keine Verweise auf Dokumente in Kommentaren/Docstrings (2026-09-28) | Dokumente veralten, der Code bleibt. |
 | Odoo wird nicht verändert (I10), Änderungen am Datenmodell über Migrationsskripte mit `odoo/upgrade-util` | Updates müssen möglich bleiben. |
+| **Bewusst viel Eigenbau, aber klein gehalten**: Blob-Speicher, Upload in Stücken, Umwandler; keine Erweiterungen, bevor das Fundament im Alltag trägt | Für einen Server mit heute einem Nutzer ist das ein Risiko, das bewusst eingegangen wurde. Kein Netzlaufwerk zum Start, kein Samba + Watcher, keine Änderung am Odoo-Kern. |
 
 ## 2. Speicher und Schreiben
 
@@ -34,6 +54,7 @@ Die ausführlichen Vorgänger (Konzept, Werterkennungs-Plan, Oberflächen-Konzep
 | Dateityp aus den ersten Bytes (libmagic), nicht aus der Endung (2026-09-28) | Schließt eine Lücke bei Dateien mit falscher Endung; HTML wird beim Download immer als Text ausgeliefert. |
 | Aufräumjob löscht nur ohne Verweis **und** nach Schonfrist, im Zweifel bleibt der Inhalt (I4) | Ein gleichzeitiger Upload desselben Inhalts darf nicht verlieren. |
 | Backup: Datenbank und Blob-Speicher zusammen, erst DB, dann Speicher | Inhalte ändern sich nie, inkrementell reicht. |
+| ZIP-Download bis ca. 500 MB direkt als Strom, darüber Hintergrundjob mit Benachrichtigung (2026-09-27) | Ein langer Download belegt sonst einen Odoo-Prozess bis zum Zeitlimit. |
 | `fsync` je Datei bleibt | ~28–33 ms auf dem Array, Ausreißer bis 7 s nach Spindown; Absturzsicherheit wiegt mehr. |
 | Kopierrate bei der Übernahme 27,5 MB/s | Hochrechnung ca. 18 h für 1,8 TB, ca. 7 % Dubletten. |
 
@@ -48,10 +69,10 @@ Netzlaufwerk kommt, wird nach der Nutzung entschieden. **Test mit echtem Word/Ex
 | **WebDAV als eigener Odoo-Befehl `odoo fmdav`** (Protokoll WsgiDAV, Basic mit API-Schlüssel mit eigenem Bereich `int_filemanager.dav`, `GET` per `X-Accel-Redirect`) | **Bevorzugte Bauform, falls WebDAV.** litmus 100 %, Windows-WebClient, LibreOffice. Identitätsregel für das Word/Excel-Speichermuster (Temp schreiben, Original wegbenennen, Temp umbenennen) hält Knoten und Versionen. Grenzen: HTTPS mit vertrautem Zertifikat und angehobene Download-Grenze (50 MB) je Windows-Client, viele kleine Dateien langsam (8 Requests je Datei, 0,28 s). |
 | WebDAV in einer Odoo-Route (`dav_inproc`) | **Verworfen:** offene Transaktion, Zeitlimits, belegte Worker, nur mit Kniffen beherrschbar; `PUT` großer Dateien liegt im RAM. |
 | Separater WebDAV-Dienst mit JSON-RPC | **Verworfen:** langsamer, Hash doppelt, zwei Code-Stände. JSON-2 nimmt nur JSON, Binärdaten nur base64 (I12). |
-| **Samba + inotify** (Prinzip des heutigen Moduls) | **Verworfen:** zweiter Schreiber; unlösbar bleiben gleichzeitiges Schreiben (Odoo ersetzt die Datei, der offene SMB-Client schreibt ins Leere), Rechte an Odoo vorbei, Versionen externer Änderungen. |
+| **Samba + inotify** (Prinzip von `master`) | **Verworfen:** zweiter Schreiber; unlösbar bleiben gleichzeitiges Schreiben (Odoo ersetzt die Datei, der offene SMB-Client schreibt ins Leere), Rechte an Odoo vorbei, Versionen externer Änderungen. |
 | **SMB über Samba + Odoo-FUSE-Dateisystem** | **Eleganteste Alternative für die Clients** (normales Netzlaufwerk, nichts einzurichten), aber ohne Prototyp: UID-Zuordnung, Schreibpuffer bis Schließen (große `.pst`/`.accdb` werden bei jedem Schließen komplett neu gespeichert), Metadaten-Tempo, FUSE im Container. |
 | SFTP, FTP, S3, NFS, Python-SMB (`impacket`), schreibgeschützter Spiegel, eigener Sync-Client | Verworfen (Windows kann SFTP nicht einbinden, FTP unverschlüsselt, S3 ohne Umbenennen, NFS nur Pro, `impacket` nicht gehärtet, Sync-Client zu groß). rclone + WinFsp bleibt als Notlösung am Client. |
-| ONLYOFFICE im Browser statt Desktop-Office vom Server | "Lokal öffnen" (Word/Excel) braucht WebDAV. **ONLYOFFICE-Zertifikat** ist heute nur auf einem Rechner vertraut; ohne Lösung ist v2 für Word/Excel ein Rückschritt gegenüber v1. JWT im Callback ist Pflicht, Rechteprüfung mit `check_access` (das heutige `onlyoffice_odoo` verwirft das Ergebnis von `has_access`). |
+| ONLYOFFICE im Browser statt Desktop-Office vom Server | "Lokal öffnen" (Word/Excel) braucht WebDAV. **ONLYOFFICE-Zertifikat** ist heute nur auf einem Rechner vertraut; ohne Lösung ist der Branch für Word/Excel ein Rückschritt gegenüber `master`. JWT im Callback ist Pflicht, Rechteprüfung mit `check_access` (das heutige `onlyoffice_odoo` verwirft das Ergebnis von `has_access`). |
 
 Prototyp-Code (`fm_proto`, `fmdav`, Testskripte) nur noch im Git-Tag `docs-vor-aufraeumen-2026-10-02`, Pfad `docs/prototypes/fm2/`.
 
@@ -71,7 +92,7 @@ Prototyp-Code (`fm_proto`, `fmdav`, Testskripte) nur noch im Git-Tag `docs-vor-a
 
 | Entscheidung | Grund |
 |---|---|
-| **Werterkennung bleibt in Odoo** (Muster arbeiten nur auf dem fertigen Text), eigene v2-Modelle (`extraction_field`, `extraction_rule`, `field_value`, `extraction_hint`) statt Erweiterung der v1-Modelle | Rechte, Herkunft, Fundstelle, Fassung und Lernen brauchen eigene Zeilen. |
+| **Werterkennung bleibt in Odoo** (Muster arbeiten nur auf dem fertigen Text), eigene Modelle (`extraction_field`, `extraction_rule`, `field_value`, `extraction_hint`) statt Erweiterung der bisherigen Modelle von `master` | Rechte, Herkunft, Fundstelle, Fassung und Lernen brauchen eigene Zeilen. |
 | **Eigene Modelle als Grundlage plus echte Spalte je Katalogfeld** (N9) | Eigenschaftsfelder verworfen: keine Summen, keine Herkunft, Wertarten zu grob, Löschen einer Eigenschaft löscht alle Werte. Reine `x_`-Felder verworfen: ohne Herkunft/Lernen. Spiegel in Eigenschaften verworfen: doppelte Speicherung. Spalten nur vom System befüllt (Sperre in `write`/`create`), Archivieren blendet nur aus; die Spalte zeigt den Wert der aktuellen Fassung. Messung: Spalte an 1,4 Mio. Zeilen 2–3 ms. |
 | **Vorschläge nur bei Bedarf berechnen**, nichts gespeichert (E2); ein Wert je Feld (E6) | Speichern erst, wenn eine Liste "ungeprüfte Eingänge" gebraucht wird (Eingangsordner). Linear: 100 Seiten ≈ 0,8 s, 1.000 ≈ 9 s. |
 | **Erkennung allgemein** (E12): Beschriftung-Wert-Paare nach Layout aus allen Richtungen, unscharfe Zuordnung wie `base_import`, **Lernen pro Absender**; lokales KI-Modell erst, wenn die Quote nicht reicht | Stichwort für Stichwort skaliert nicht. Tower: i7-4770K, 16 GB, keine GPU, ein kleines Modell bräuchte 0,5–3 min je Dokument. Einstellungen **nur als allgemeine Regeln**, nie für ein einzelnes Dokument. |
@@ -97,7 +118,7 @@ Befund: Nutzer haben Schreibrecht auf den ganzen Knoten, deshalb brauchen die "n
 
 | Entscheidung | Grund |
 |---|---|
-| **Neue v2-Oberfläche parallel** (`static/src/int_filemanager/v2/`) auf `int_filemanager.node`; die v1-Oberfläche bleibt bis zur Übernahme und wird dann **gelöscht** | Modul bleibt nach jedem Schritt installierbar. |
+| **Neue Oberfläche parallel** (`static/src/int_filemanager/v2/`) auf `int_filemanager.node`; die bisherige Oberfläche (`native_ui/`) bleibt bis zur Übernahme und wird dann **gelöscht** | Modul bleibt nach jedem Schritt installierbar. |
 | **Nichts Neues im Frontend, was Odoo kann**: native list/kanban/form/search; Eigenbau nur für Ordnerbaum (Odoo hat keine Baum-Seitenleiste), Chunk-Upload, Kontextmenü | – |
 | Alles Schreibende über Modellmethoden (`create_file`, `rename_or_move` …) mit Vorgangsnummer, nie `write()` aus dem Browser | I9. |
 | Frontend **nicht per Browser-Automatik testen** (Nutzerregel); Server mit Odoo-Tests und Echtprozess-Skripten, Frontend per eslint/prettier und **freiem Nutzertest** | – |
@@ -127,5 +148,6 @@ Befund: Nutzer haben Schreibrecht auf den ganzen Knoten, deshalb brauchen die "n
 - **`retrying()`** wiederholt keine Namenskonflikte und keine belegten Sperren (siehe 2).
 - **Datenbank:** `pg_trgm` nur in selbst erzeugten DBs; C-Kollation (siehe 2).
 - **Odoo-Image:** Das Test-Image `odoo:19.0-hm-test` (19.0-20260908) enthält den Sicherheits-Fix `97e3d6152d`; das Live-Tag `odoo:19.0-hm` (20260817) nicht.
+- **Verknüpfung mit Geschäftsobjekten** überschreibt `_check_access` und `_search` (wie Odoos `mail.activity`); die Ordnerrechte selbst laufen über normale Regeln. Odoo-Updates nur nach grünem Testlauf auf der Testinstanz.
 - **Zwei Knotenfelder** tragen dieselbe Bezeichnung "Created on" (`create_date`, `mtime`).
 - `odoo shell`/`odoo -u` gegen die Watcher-DB startet einen zweiten Watcher; Workaround: `int_filemanager.watcher_enabled` vorher auf `false`.

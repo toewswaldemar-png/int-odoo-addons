@@ -6,12 +6,12 @@ File manager inside Odoo: folders and files with versions, trash, rights, previe
 search, OCR and links to business records. Office documents are edited in the
 browser through ONLYOFFICE.
 
-Version 2 (in progress on branch ``feature/int-filemanager-v2``) makes Odoo the
-only writer of file contents: files live in a content-addressed blob store, every
-change creates a new revision, and access is checked by Odoo's rights system only.
+Odoo is the only writer of file contents: files live in a content-addressed blob
+store, every change creates a new revision, and access is checked by Odoo's rights
+system only. This is the design on branch ``feature/int-filemanager-v2``; ``master``
+still holds the earlier state, which the branch is meant to replace.
 
 Design documents (German):
 
-* ``docs/int_filemanager_v2_kern_2026-09-26.md`` - rules and architecture
-* ``docs/int_filemanager_v2_entscheidungen.md`` - decisions and rejected alternatives
-* ``docs/int_filemanager_v2_stand.md`` - status and next steps
+* ``docs/int_filemanager_entscheidungen.md`` - rules, decisions and rejected alternatives
+* ``docs/int_filemanager_stand.md`` - status, architecture and next steps

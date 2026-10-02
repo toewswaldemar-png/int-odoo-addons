@@ -30,8 +30,8 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
   authentifizieren); je Dienst ein eigener Schlüssel; Schlüssel nie im Quelltext.
 - Dynamische Doku: `/doc` der Instanz (laut Quelle "Under construction").
 - Hinweis der Quelle: Zugriff auf externe API ist bei Odoo **Online** nur im Tarif *Custom*; für selbst betriebenes
-  Community (HM-SRV/Tower) nicht relevant. Passt zur Entscheidung "JSON-2 und API-Key-Scope" im Konzept
-  int_filemanager 2.
+  Community (HM-SRV/Tower) nicht relevant. Passt zur Entscheidung "JSON-2 und API-Key-Scope" für `int_filemanager`
+  (siehe `docs/int_filemanager_entscheidungen.md`).
 - **Ablösung:** `/xmlrpc`, `/xmlrpc/2`, `/jsonrpc` (Dienste `common`, `db`, `object`) sind **veraltet und werden in
   Odoo 22 (Herbst 2028) entfernt** → für neue Integrationen nur JSON-2. Ersatz: `common.version` → `GET
   /web/version`; `authenticate` entfällt (API-Key; eigene ID über `res.users/context_get`); `object.execute(_kw)` →

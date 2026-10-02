@@ -10,7 +10,7 @@ Live-Systeme geprüft.
 
 | Modul | Version | Wofür | Stand |
 |---|---|---|---|
-| [`int_filemanager`](int_filemanager/) | 19.0.1.23.0 | Dateiverwaltung (DMS) in Odoo: Ordner und Dateien mit Versionen, Papierkorb, Rechten, Vorschau, Suche, Texterkennung, Verknüpfung mit Datensätzen; Office im Browser über ONLYOFFICE | Version 1 läuft auf HM-SRV und Tower. **Version 2** (Odoo als alleiniger Schreiber, eigener Blob-Speicher) ist im Bau auf dem Branch `feature/int-filemanager-v2` |
+| [`int_filemanager`](int_filemanager/) | 19.0.1.23.0 | Dateiverwaltung (DMS) in Odoo: Ordner und Dateien mit Versionen, Papierkorb, Rechten, Vorschau, Suche, Texterkennung, Verknüpfung mit Datensätzen; Office im Browser über ONLYOFFICE | `master` läuft auf HM-SRV und Tower. Der Neubau (Odoo als alleiniger Schreiber, eigener Blob-Speicher) entsteht auf dem Branch `feature/int-filemanager-v2` und soll `master` ablösen |
 | [`int_repair_workshop`](int_repair_workshop/) | 19.0.1.0.0 | Werkstattfelder am Reparaturauftrag (Auftragsart, Eingangsdatum, Resttage, sieben Werkstattstufen mit Mitarbeiter) und eine Listenansicht; löst die manuelle Excel-Reparaturübersicht ab | Liste ist als Übersicht für die Produktion gedacht, **keine** Belegmaske für Kunde, Kostenvoranschlag oder Versand |
 | [`int_generic`](int_generic/) | 19.0.1.0.1 | Sammelmodul für kleine Anpassungen ohne Bindung an eine Business-App; bisher: Spaltenreihenfolge in Listenansichten per Drag & Drop | wächst nur um Anpassungen, die nicht mehr als `base` und `web` brauchen |
 | [`int_fleet_kanban_width`](int_fleet_kanban_width/) | 19.0.1.0.0 | Die Spalten des Fahrzeug-Kanban teilen sich die verfügbare Breite, statt zu scrollen | bewusst eigenes Modul, weil es an `fleet` hängt |
@@ -26,8 +26,8 @@ Zwei Unraid-Server mit je einer Odoo-19-Instanz in Docker:
 
 | Standort | Container | Zugang | Hinweis |
 |---|---|---|---|
-| **HM-SRV** | `Odoo19` (Datenbank getrennt) | SSH-Alias `unraid-odoo` | Addons unter `/mnt/user/appdata/odoo18/extra-addons`. Der Ordnername ist irreführend: es ist Odoo 19. Hier läuft vorerst Version 1 von `int_filemanager` |
-| **Tower** (lokal) | `odoo`, `odoo_db`, `OnlyOfficeDocumentServer` | SSH-Alias `unraid` | Addons unter `/mnt/user/appdata/odoo/extra-addons` (einfache Kopie, nur `int_filemanager` und `onlyoffice_odoo`); Test-Umgebung und Test-Instanz für `int_filemanager` 2 |
+| **HM-SRV** | `Odoo19` (Datenbank getrennt) | SSH-Alias `unraid-odoo` | Addons unter `/mnt/user/appdata/odoo18/extra-addons`. Der Ordnername ist irreführend: es ist Odoo 19. Hier läuft vorerst der Stand von `master` |
+| **Tower** (lokal) | `odoo`, `odoo_db`, `OnlyOfficeDocumentServer` | SSH-Alias `unraid` | Addons unter `/mnt/user/appdata/odoo/extra-addons` (einfache Kopie, nur `int_filemanager` und `onlyoffice_odoo`); Test-Umgebung und Test-Instanz für den Branch |
 
 Einordnung (Stand 2026-09-18): Odoo ist noch **kein** produktives ERP. Das Alt-ERP läuft weiter, ein Umstieg ist nicht entschieden;
 Grundlage dafür sind die Analysen in [`docs/erp/`](docs/erp/).
@@ -41,26 +41,26 @@ Das [`Dockerfile`](Dockerfile) baut ein Odoo-19-Image mit den Bibliotheken für 
 | `int_*/`, `onlyoffice_odoo/` | die Module (jedes mit eigenem `__manifest__.py`) |
 | [`docs/`](docs/) | Dokumentation, Einstieg [`docs/README.md`](docs/README.md) |
 | `docs/odoo_regeln/` | Odoo-19-Regeln: Coding und Git Guidelines mit Hausregeln, Developer Reference |
-| `tools/fmconverter/` | Umwandler-Container für `int_filemanager` 2 (Vorschauen, OCR, Metadaten) |
-| `tools/v2check/` | Prüf- und Testskripte für `int_filemanager` 2 auf dem Tower |
+| `tools/fmconverter/` | Umwandler-Container für `int_filemanager` (Vorschauen, OCR, Metadaten) |
+| `tools/v2check/` | Prüf- und Testskripte für `int_filemanager` auf dem Tower |
 | `scripts/lint/` | Läufe für `test_lint` und odoo-ls, Verwaltung der Altbestand-Ausnahmen |
 | `.pre-commit-config.yaml`, `.pylintrc*`, `.ruff.toml`, `eslint.config.cjs`, `prettier.config.cjs` | Prüfautomatik für neuen Code |
 | [`CLAUDE.md`](CLAUDE.md) | verbindliche Arbeitsregeln für die Arbeit mit Claude Code |
 
 ## Branches und Tags
 
-- `master`: Stand von `int_filemanager` Version 1 plus Dokumentation und Prüfautomatik.
-- `feature/int-filemanager-v2`: aktuelle Entwicklung von Version 2. Ein Zeitpunkt für den Merge nach `master` ist nicht dokumentiert.
-- Tag `int_filemanager-v1`: das heutige, laufende Modul. Tag `docs-vor-aufraeumen-2026-10-02`: alle Dokumente vor der Aufräumaktion.
+- `master`: der bisherige Stand von `int_filemanager` (laufend auf HM-SRV und Tower) plus Dokumentation und Prüfautomatik.
+- `feature/int-filemanager-v2`: der Neubau von `int_filemanager`, aktuelle Entwicklung. Ein Zeitpunkt für den Merge nach `master` ist nicht dokumentiert.
+- Tag `int_filemanager-v1`: der Stand von `master` vor dem Neubau. Tag `docs-vor-aufraeumen-2026-10-02`: alle Dokumente vor der Aufräumaktion.
 
 ## Entwickeln
 
 - **Regeln:** vor Code in einem Bereich die zugehörige Datei in [`docs/odoo_regeln/`](docs/odoo_regeln/) lesen; vor jeder Aussage "das gibt es in Odoo nicht"
   den Odoo-19-Core durchsuchen (Regeln in `CLAUDE.md`). Neuer Code englisch, Oberflächentexte englisch mit deutscher Übersetzung in `i18n/de.po`.
 - **Prüfen:** `pre-commit run` für neuen Code (Altdateien stehen im LEGACY-Block); `test_lint` und odoo-ls auf dem Tower. Aufruf und Verifikationsstand:
-  [`docs/pruefautomatik_2026-10-02.md`](docs/pruefautomatik_2026-10-02.md). Für `int_filemanager` 2: `tools/v2check/v2check.sh`.
+  [`docs/pruefautomatik_2026-10-02.md`](docs/pruefautomatik_2026-10-02.md). Für `int_filemanager`: `tools/v2check/v2check.sh`.
 - **Commits:** `[TAG] modul: kurzer Satz` (Odoo-Git-Guidelines), Commit nur auf Ansage.
-- **Testinstanz** von `int_filemanager` 2: siehe [`docs/int_filemanager_v2_stand.md`](docs/int_filemanager_v2_stand.md), Abschnitt Testumgebung.
+- **Testinstanz** von `int_filemanager`: siehe [`docs/int_filemanager_stand.md`](docs/int_filemanager_stand.md), Abschnitt Testumgebung.
 
 ## Deploy auf HM-SRV (bisheriges Vorgehen, Stand 2026-09)
 
@@ -75,4 +75,4 @@ laufenden Odoo nichts. Der Windows-Mount `X:\odoo18\extra-addons` lässt sich f�
 4. Prüfen, was wirklich geladen ist (z. B. `ir_ui_view.arch_db` per `psql`), bevor man dem Browser glaubt.
 
 Vor einem Odoo-Image-Update auf HM-SRV die Datenbank-Kollation prüfen (muss `C` sein, sonst können Teilbäume beim Verschieben beschädigt werden).
-Einzelheiten: [`docs/int_filemanager_v2_entscheidungen.md`](docs/int_filemanager_v2_entscheidungen.md), Abschnitt 2.
+Einzelheiten: [`docs/int_filemanager_entscheidungen.md`](docs/int_filemanager_entscheidungen.md), Abschnitt 2.

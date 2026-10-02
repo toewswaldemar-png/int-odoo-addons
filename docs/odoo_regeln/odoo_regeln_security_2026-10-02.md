@@ -53,7 +53,7 @@ Gruppen. Dazu Feldzugriff (`groups=` am Feld) und eigener Code.
 - **Privat allein reicht nicht** – die private Methode muss richtig benutzt werden (Beispiel der Quelle:
   `_set_state` ruft `sudo().write`, wird nur nach Rechteprüfung aufgerufen).
 - Folgerung für dieses Repo: jede `action_*`/öffentliche Methode mit `sudo()` oder Rechtewechsel braucht eine
-  eigene Rechteprüfung am Anfang (Hausregel I7, siehe Konzept int_filemanager 2).
+  eigene Rechteprüfung am Anfang (Hausregel I7, siehe `docs/int_filemanager_entscheidungen.md`).
 
 ### ORM nicht umgehen
 - **Nie** `cr` direkt benutzen, wenn das ORM dasselbe kann (verloren gehen Übersetzung, Cache-Invalidierung,

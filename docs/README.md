@@ -2,16 +2,15 @@
 
 Stand 2026-10-02. Projektbeschreibung: [`../README.md`](../README.md). Arbeitsregeln für Claude Code: [`../CLAUDE.md`](../CLAUDE.md).
 
-Frühere Dokumente (Konzepte, Pläne, Übergabe-Verlauf, Messungen, Recherchen, Prototypen, v1-Doku) stehen im Git-Tag
+Frühere Dokumente (Konzepte, Pläne, Übergabe-Verlauf, Messungen, Recherchen, Prototypen, Doku des bisherigen Stands) stehen im Git-Tag
 `docs-vor-aufraeumen-2026-10-02`: `git show docs-vor-aufraeumen-2026-10-02:docs/<Pfad>`.
 
-## int_filemanager 2
+## int_filemanager
 
 | Dokument | Wofür |
 |---|---|
-| [`int_filemanager_v2_stand.md`](int_filemanager_v2_stand.md) | **Einstieg:** Stand, nächste Schritte, bekannte Mängel, Arbeitsweise, Testumgebung |
-| [`int_filemanager_v2_entscheidungen.md`](int_filemanager_v2_entscheidungen.md) | Warum so, was verworfen wurde, Odoo-19-Fallen |
-| [`int_filemanager_v2_kern_2026-09-26.md`](int_filemanager_v2_kern_2026-09-26.md) | Grundregeln, Aufbau, Reihenfolge mit Abnahmekriterien |
+| [`int_filemanager_stand.md`](int_filemanager_stand.md) | **Einstieg:** Stand und Abnahme je Schritt, nächste Schritte, bekannte Mängel, Arbeitsweise, Testumgebung, Aufbau, Plan der Übernahme |
+| [`int_filemanager_entscheidungen.md`](int_filemanager_entscheidungen.md) | Grundregeln I1–I13, warum so, was verworfen wurde, Odoo-19-Fallen |
 | [`int_filemanager_paperoffice_ideenkatalog_2026-10-01.md`](int_filemanager_paperoffice_ideenkatalog_2026-10-01.md) | Backlog: Ideen A1–H6 aus PaperOffice Classic mit Odoo-Weg, Aufwand, Einordnung, offenen Entscheidungen |
 
 ## Code-Regeln
