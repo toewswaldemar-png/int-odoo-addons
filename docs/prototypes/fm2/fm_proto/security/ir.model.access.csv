@@ -1,7 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_fm_node,fm.node,model_fm_node,base.group_user,1,1,1,1
-access_fm_revision,fm.revision,model_fm_revision,base.group_user,1,0,1,0
-access_fm_blob,fm.blob,model_fm_blob,base.group_user,1,0,1,0
-access_fm_upload,fm.upload,model_fm_upload,base.group_user,1,1,1,0
-access_fm_dav_lock,fm.dav.lock,model_fm_dav_lock,base.group_system,1,1,1,1
-access_fm_dav_prop,fm.dav.prop,model_fm_dav_prop,base.group_system,1,1,1,1
