@@ -29,8 +29,9 @@ Zuletzt geprüft (2026-10-01): pre-commit grün, 555 Odoo-Tests, 76 Umwandler-Te
 
 ## 2. Nächste Schritte (in dieser Reihenfolge)
 
-**Vorrang vor allem anderen:** die Sicherheitsbefunde aus 3.1 (Altcode live auf HM-SRV); 3.2 (Rechtemodell des Branches) ist behoben. Die
-Regelabweichungen aus 3.3 bis 3.5 folgen getrennt davon.
+**Vorrang vor allem anderen:** die offenen Sicherheitsbefunde aus 3.1 (Altcode live auf HM-SRV); N1 und das Löschen beliebiger Pfade sind auf dem
+Branch behoben (noch nicht committet, noch nicht auf HM-SRV), ebenso 3.2 (Rechtemodell des Branches). Die Regelabweichungen aus 3.3 bis 3.5 folgen
+getrennt davon.
 
 1. **Rückmeldung des Nutzers zum Eigenschaften-Formular** abwarten (Zoom auf den Wert, Rahmenrand, Layout).
 2. **Prüf-Fenster entfernen:** `static/src/int_filemanager/v2/value_review/` (Client-Aktion, XML, SCSS, Tests), Menüpunkt `int_check_values`,
@@ -75,20 +76,50 @@ Modell gegenlesen und Befundliste ablegen; (A7) fehlt dem Image `odoo:19.0-hm-te
 - Nach neuer Wörter-Spec werden vorhandene `words`-Ergebnisse gelöscht und im Hintergrund neu gelesen; bis dahin findet die Volltextsuche diese PDFs nicht.
 - Live-Datenbanken auf `pg_trgm` nicht geprüft; die Migration legt die Erweiterung an, wenn der DB-Benutzer darf, sonst Warnung.
 - Der Code von `master` (u. a. `native_ui/`, `models/filemanager_file.py`, `publish_service.py`) verweist in Kommentaren noch auf gelöschte Dokumente (Papierkorb, Ausbau, native UI, DB-Vorrang-Konzept); die Verweise verschwinden mit dem Entfernen des alten Codes in Schritt 8, die Dokumente stehen im Git-Tag.
-- Sicherheitslücke **N1** auf `master` (HM-SRV) ist **nicht** gefixt, Einzelheiten und weitere Altcode-Lücken in 3.1. In `web-filemanager` liegen nicht committete Änderungen des Nutzers (unberührt lassen).
+- Sicherheitslücke **N1** und das Löschen beliebiger Pfade sind auf dem Branch behoben (3.1), `master` und damit HM-SRV haben den Fix **noch nicht**;
+  weitere Altcode-Lücken stehen in 3.1. In `web-filemanager` liegen nicht committete Änderungen des Nutzers (unberührt lassen).
 
 ### 3.1 Sicherheit im Altcode (`master`, läuft live auf HM-SRV)
 
-Durch Lesen belegt, nicht ausgeführt.
+**Behoben auf dem Branch am 2026-10-02, noch nicht committet, nicht auf `master`/HM-SRV.** Gemeinsame Ursache von N1 und dem Löschen beliebiger
+Pfade: `int_filemanager.file` ist nur der Index der Platte, aber jeder Dateimanager-Nutzer durfte die Zeilen per ORM (`call_kw`, `/json/2`) anlegen
+und in allen Feldern beschreiben, und mehrere Stellen setzten `rec.path` ungeprüft auf die Platte um. Ein gefälschter Eintrag
+(`path="x/../Buchhaltung"` oder ein absoluter Pfad) konnte deshalb den Ordner löschen (`unlink`), per anonymem Freigabe-Link jede lesbare Datei des
+Servers ausliefern (`share_token` ist ebenfalls frei beschreibbar), über `ocr_state=pending` Text beliebiger Dateien in `content_text` ablegen,
+über `pending_content` jede Datei überschreiben oder per `action_restore` verschieben. Behoben an der Wurzel und zusätzlich an jeder Senke:
 
-- **N1:** `action_analyze_document` und `action_apply_extracted_values` (`models/filemanager_file.py`) sind öffentlich und arbeiten mit `sudo()`; die
-  Rechteprüfung steht nur im Controller und fehlt beim RPC-Aufruf. Jeder Dateimanager-Nutzer kann so den Text und Kontaktnamen zu jedem Pfad auslesen
-  (auch in Schutzordnern) und erkannte Werte ersetzen.
-- **Beliebige Ordner löschen:** `unlink` (`models/filemanager_file.py`) löscht bei Papierkorb-Einträgen per `shutil.rmtree` den Pfad aus dem frei
-  beschreibbaren Feld `path`, ohne `resolve_path`. Ein Nutzer legt einen Eintrag mit `trashed=True`, `trashed_by=ich` und `path="x/../Buchhaltung"` an
-  und löscht ihn; der echte Ordner ist weg. Die ACL erlaubt Nutzern Anlegen und Löschen auf `int_filemanager.file`.
+- **Feldrechte (Erlaubnisliste):** schreibbar durch Nutzer sind nur `name` (über den Umbenennen-Weg), `tag_ids`, `status_id`, `partner_id` und
+  `shared_partner_ids` (`USER_WRITABLE_FIELDS`). Jedes andere Feld des Moduls ist nur mit `env.su` schreibbar (`_has_field_access`; ein neues Feld
+  ist damit von Anfang an gesperrt; `fields_get` meldet sie `readonly`). Die Nutzer-ACL hat kein `create` mehr; Index-Zeilen legt nur der Server an.
+  Mehrere Zeilen mit `name` auf einmal zu schreiben ist abgelehnt (es würde nur das Etikett ändern und die Rechteprüfung des Umbenennens überspringen).
+- **Löschen:** Nutzer dürfen per ORM nur Papierkorb-Einträge löschen, deren Pfad wirklich unterhalb von `.trash/` liegt (`@api.ondelete`,
+  `index_utils.trash_disk_path`: `resolve_path`, kein `..`, kein Link nach draußen). Die Bytes werden erst nach dem Löschen der Zeilen entfernt (vorher
+  geschah das vor der Rechteprüfung) und nur, wenn der Pfad unter `.trash/` liegt; sonst bleiben sie stehen und der Fehler wird geloggt.
+- **Wiederherstellen:** `action_restore` prüft das Schreibrecht, dass der Eintrag eine Papierkorb-Wurzel ist und das Schreibrecht auf den
+  ursprünglichen Ordner (der Schutz kann sich seit dem Löschen geändert haben); `index_restore_tree` verschiebt nur noch aus `.trash/`. Dann erst
+  `sudo()`.
+- **Freigabe-Link:** `action_generate_share_token`/`action_revoke_share_token` prüfen das Schreibrecht, schreiben danach per `sudo()`.
+- **N1:** `action_analyze_document` und `action_apply_extracted_values` heißen jetzt `_analyze_document` und `_apply_extracted_values` (per RPC nicht
+  mehr erreichbar); die Routen prüfen wie bisher `authz.require(…, "write")`. Die Eingabe des Prüf-Dialogs wird geprüft (Typen, Länge, Zahl,
+  vorhandenes Muster) und endet bei Fehlern als `UserError` statt als 500; ungültige Eingabe lässt die vorhandenen Werte unberührt.
+- **Senken:** jede Stelle, die einen Index-Pfad auf die Platte abbildet, geht über `_absolute_path()` (`resolve_path`): anonymer Freigabe-Download,
+  Portal-Download, Veröffentlichen (`stage_overwrite`, Phase A: `share_state='conflict'`), Schreibdienst (`snapshot_and_write`, also auch ONLYOFFICE-Sync
+  und Versions-Wiederherstellung) und die drei Crons für Hash, Metadaten und Text (Zeile geht auf `error`, der Lauf geht weiter).
+- **Tests:** `tests/test_index_rights.py` (39 Tests): jeder Angriff oben je Senke, Schreibversuch auf jedes Serverfeld einzeln, Prüfung, dass `fields_get`
+  alle als `readonly` meldet, die Liste der öffentlichen Methoden des Modells (eine neue öffentliche Methode fällt dort auf), HTTP-Tests für Freigabe-Link,
+  Portal und beide Routen. Gegen den Stand vor dem Fix sind 17 der 39 Tests rot (mit 117 fehlgeschlagenen Teilfällen), der Rest sind Gegenproben, dass
+  der erlaubte Weg weiter funktioniert. Lauf auf HM-SRV in Wegwerf-DB (`fmtest_pg`, Image `int-filemanager-odoo:19.0-ocr`): 609 Tests, 0 Fehler.
+- **Offen dazu:** `race.sh`, Tower, `test_lint`, odoo-ls und pre-commit sind nach dieser Änderung nicht gelaufen. Die geänderten Altdateien bleiben im
+  LEGACY-Block (nur die geänderten Zeilen folgen den Regeln, nichts umformatiert). Nach dem Einspielen auf HM-SRV: `-u int_filemanager` (die ACL
+  ändert sich).
+
+**Noch offen (Altcode, durch Lesen belegt, nicht ausgeführt):**
+
 - **Nicht indexierte Pfade sind ungeschützt:** `authz.require` lässt einen Pfad ohne Index-Eintrag durch. Auf CIFS-Freigaben ohne Watcher-Ereignis wird
   eine Datei bis zum nächsten Vollscan nicht indexiert und ist in einem Schutzordner für jeden Nutzer erreichbar.
+- **Vollscan löscht den Papierkorb:** `_scan_and_reconcile` sucht die verwaisten Zeilen ohne `trashed`-Filter (`scan_run_id != Lauf`), `.trash/` wird
+  beim Gehen übersprungen; alle Papierkorb-Einträge gelten als verwaist und werden samt Bytes entfernt. Per Testlauf bestätigt (Datei in den Papierkorb,
+  dann `_scan_and_reconcile`: Zeile und Bytes weg), vor wie nach dem Fix oben; nur die Zeile `.trash` selbst bleibt samt Ordner stehen.
 - `int_filemanager.share_log` ist für alle Nutzer lesbar, ohne Rule; Pfade und Namen von Dateien, die der Nutzer nicht sehen darf, werden sichtbar
   (das Modell nutzt auch der Branch).
 - Die Route `/int_filemanager/upload` hat `csrf=False`; der WebDAV-Weg (`_put`) schreibt ohne Größengrenze; der Token-Speicher in `webdav_tokens.py` liegt

@@ -33,7 +33,7 @@ Gelten immer, auch bei Absturz und Last; jede hat Tests. Die Kürzel stehen in d
 | Eigenbau nur, wo Odoo nachweislich nicht reicht | Wiederholt war "gibt es nicht in Odoo" falsch (siehe CLAUDE.md). Vor jeder Eigenbau-Aussage Core-Grep. |
 | **Bestand kopieren, kein Hardlink** | Ein später bearbeiteter Hardlink würde den Blob verändern (I2). Rückweg bleibt möglich: alter Share bleibt schreibgeschützt bis zur Abnahme. |
 | Ganzer Share, Versionen unbegrenzt, Papierkorb 30 Tage, Rechte minimal ("Alle" + heutiger Schutzordner) (2026-09-26) | Heute 1 interner Nutzer außer Admin, keine Portal-Nutzer; engere Bereiche erst bei Bedarf. |
-| **HM-SRV bleibt vorerst auf `master`** | Die Sicherheitslücke N1 (öffentliche Methoden `action_analyze_document`/`action_apply_extracted_values` mit `sudo`) ist dort noch nicht behoben. |
+| **HM-SRV bleibt vorerst auf `master`** | Die Sicherheitslücken N1 (öffentliche Methoden mit `sudo`) und das Löschen beliebiger Pfade über gefälschte Index-Zeilen sind auf dem Branch behoben (`docs/int_filemanager_stand.md`, 3.1), auf `master` noch nicht; bis der Fix dort eingespielt ist, bleibt der Altcode angreifbar. |
 | Modellnamen mit Präfix `int_filemanager.*`; Code englisch, Oberflächentexte englisch + `i18n/de.po` | Odoo-/OCA-Konvention (`odoo_regeln/odoo_regeln_coding_guidelines_2026-10-02.md`). |
 | Keine Verweise auf Dokumente in Kommentaren/Docstrings (2026-09-28) | Dokumente veralten, der Code bleibt. |
 | Odoo wird nicht verändert (I10), Änderungen am Datenmodell über Migrationsskripte mit `odoo/upgrade-util` | Updates müssen möglich bleiben. |
@@ -144,6 +144,7 @@ Befund: Nutzer haben Schreibrecht auf den ganzen Knoten, deshalb brauchen die "n
 
 - **JSON-2:** Jede öffentliche Methode (kein `_`, nicht `@api.private`) ist für jeden angemeldeten Nutzer per API-Schlüssel aufrufbar. Öffentlich ist nur, was mit beliebigen Argumenten sicher ist; lesende Methoden mit `@api.readonly`. `/xmlrpc` und `/jsonrpc` sind veraltet (Entfernung Odoo 22).
 - **Rechte:** Jede Tabelle braucht eigene Regeln; Odoo überträgt Ordnerrechte nicht auf Versionen und Inhalte. `call_kw` erreicht jede öffentliche Methode.
+- **Index-Zeilen sind nur dem Server beschreibbar:** Ein Modell, dessen Zeilen der Server auf die Platte abbildet (`int_filemanager.file`), darf Nutzern per ORM nur wenige, ausdrücklich erlaubte Felder (`USER_WRITABLE_FIELDS`) zum Schreiben geben und kein `create`; alle anderen Felder sperrt `_has_field_access` ohne `env.su`, damit ein neues Feld von Anfang an gesperrt ist. Zusätzlich löst jede Stelle, die einen Index-Pfad auf die Platte abbildet, ihn über `resolve_path` auf, statt `root + path` zu verketten.
 - **API-Schlüssel:** Prüfung `scope IS NULL OR scope = angefragt`; Nicht-Admins brauchen ein Ablaufdatum bis `api_key_duration` ihrer Gruppe (Standard 1 Tag).
 - **`retrying()`** wiederholt keine Namenskonflikte und keine belegten Sperren (siehe 2).
 - **Datenbank:** `pg_trgm` nur in selbst erzeugten DBs; C-Kollation (siehe 2).
