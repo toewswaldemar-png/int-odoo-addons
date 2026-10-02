@@ -3,7 +3,7 @@
 #
 # odoo-ls (https://github.com/odoo/odoo-ls) knows the Odoo registry and finds unknown models/fields,
 # models missing from `depends`, invalid domain fields, wrong call arguments ... (see
-# docs/odoo_konventionen_2026-09-26.md section 9). Diagnostics are only raised in the tracked folder
+# docs/pruefautomatik_2026-10-02.md section 7). Diagnostics are only raised in the tracked folder
 # (= this repository), so the Odoo core does not drown the result.
 #
 # Two modes (MODE):

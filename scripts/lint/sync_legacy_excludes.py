@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Keep the LEGACY exclude block of .pre-commit-config.yaml in sync.
 
-Odoo rule (docs/odoo_konventionen_2026-09-26.md): existing code is not reformatted. pre-commit
+Odoo rule (docs/odoo_regeln/odoo_regeln_coding_guidelines_2026-10-02.md): existing code is not reformatted. pre-commit
 therefore only checks files that did not exist at the baseline tag. Whole legacy modules are
 excluded by directory, the baseline files of modules that are being rewritten
 (``int_filemanager``) one by one. Rewritten files are removed from the list by hand-editing

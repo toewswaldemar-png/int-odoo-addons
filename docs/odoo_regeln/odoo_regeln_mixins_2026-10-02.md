@@ -41,7 +41,7 @@ Website-Mixins (`utm`, `website.published`, `website.seo.metadata`) und Rating n
 - **Defaults beeinflussen:** Attribut `_mail_post_access` (Recht zum Posten; Standard `write`, auch `read`); Kontext
   `mail_create_nosubscribe`, `mail_create_nolog`, `mail_notrack`, `tracking_disable` (kein MailThread-Feature),
   `mail_auto_delete` (Standard True), `mail_notify_force_send` (Standard True, < 50 Mails direkt), 
-  `mail_notify_user_signature` (Standard True). Vorbild für **eigene Kontextschlüssel** mit Modulpräfix (Konventionen 3).
+  `mail_notify_user_signature` (Standard True). Vorbild für **eigene Kontextschlüssel** mit Modulpräfix (Coding Guidelines 3).
 
 ## 2. Mail-Alias (`mail.alias.mixin`)
 

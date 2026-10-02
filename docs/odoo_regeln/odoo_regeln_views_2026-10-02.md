@@ -4,7 +4,7 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/user_interface/view_records.rst`, `view_architectures.rst` und die eingebundenen
 Bausteine `view_architectures/*.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/user_interface/view_records.html>,
-`…/view_architectures.html`). Geprüft: 2026-10-02. Ergänzt `docs/odoo_konventionen_2026-09-26.md` Abschnitt 5 (XML).
+`…/view_architectures.html`). Geprüft: 2026-10-02. Ergänzt `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitt 5 (XML).
 Icons und SCSS: `docs/odoo_regeln/odoo_regeln_ui_icons_scss_2026-10-02.md`. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 Legende: **Pflicht** = laut Quelle "Mandatory"; sonst optional. Standardwerte in Klammern. `Enterprise` = nicht in
@@ -36,7 +36,7 @@ Community (HM-SRV/Tower betreiben Community → **nicht verfügbar**).
   = Kopie des gefundenen Knotens, zum Umhüllen), `attributes` (`<attribute name="x">Wert</attribute>`; ohne Körper =
   Attribut entfernen; `add`/`remove`/`separator` für Teilwerte, Standardtrenner `,`), `move`
   (`position="move"` auf dem Inhalt; der Locator braucht dann `inside|replace|after|before`).
-- Hausregeln aus den Konventionen: `position="replace"` **vermeiden** (Kommentar + hohe `priority`), ein Modul erweitert
+- Hausregeln aus den Coding Guidelines: `position="replace"` **vermeiden** (Kommentar + hohe `priority`), ein Modul erweitert
   eine View nur einmal; geerbte View-ID = Original-ID, `name` mit `.inherit.<modul>`.
 
 ## 2. Python-Ausdrücke in Views

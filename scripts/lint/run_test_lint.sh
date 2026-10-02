@@ -2,8 +2,8 @@
 # Run Odoo's own lint tests (odoo/addons/test_lint) over all addon paths, including our modules.
 #
 # Why: test_lint is what Odoo's CI checks mechanically (pylint with custom checkers, manifest,
-# __init__, docstring, ESLint, JS translations, ...); see docs/odoo_konventionen_2026-09-26.md
-# section 9. pylint is not part of the odoo image, so it is mounted via PYTHONPATH.
+# __init__, docstring, ESLint, JS translations, ...); see docs/pruefautomatik_2026-10-02.md
+# section 7. pylint is not part of the odoo image, so it is mounted via PYTHONPATH.
 #
 # Runs on the Tower host (needs docker, the PostgreSQL test container and a pylint directory).
 # NOT yet run on Tower; the same Odoo command was verified in a cloud session with a venv

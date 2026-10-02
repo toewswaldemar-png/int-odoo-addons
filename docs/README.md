@@ -11,8 +11,7 @@ Stand 2026-10-02. Lebende Dokumente oben, alles Übrige darunter. Was überholt 
 | [`int_filemanager_v2_entscheidungen.md`](int_filemanager_v2_entscheidungen.md) | Warum so, was verworfen wurde, Odoo-19-Fallen |
 | [`int_filemanager_v2_kern_2026-09-26.md`](int_filemanager_v2_kern_2026-09-26.md) | Grundregeln, Aufbau, Reihenfolge mit Abnahmekriterien |
 | [`int_filemanager_paperoffice_ideenkatalog_2026-10-01.md`](int_filemanager_paperoffice_ideenkatalog_2026-10-01.md) | Backlog: Ideen A1–H6 aus PaperOffice Classic mit Odoo-Weg, Aufwand, Einordnung, offenen Entscheidungen |
-| [`odoo_konventionen_2026-09-26.md`](odoo_konventionen_2026-09-26.md) | Code-Konventionen für neuen Code |
-| [`odoo_regeln/`](odoo_regeln/) | Odoo-19-Regeln (Einstieg: `odoo_regeln/odoo_regeln_index_2026-10-02.md`) |
+| [`odoo_regeln/`](odoo_regeln/) | Odoo-19-Regeln: Coding und Git Guidelines mit Hausregeln, Developer Reference (Einstieg: `odoo_regeln/odoo_regeln_index_2026-10-02.md`) |
 | [`pruefautomatik_2026-10-02.md`](pruefautomatik_2026-10-02.md) | pre-commit, `test_lint`, odoo-ls: Aufruf und Verifikationsstand |
 | [`int_filemanager_konzept_db_vorrang_2026-09-24.md`](int_filemanager_konzept_db_vorrang_2026-09-24.md) | Hintergrund: Abschnitte 19 und 20 (Live-Prüfungen auf Tower) |
 

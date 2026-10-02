@@ -3,7 +3,7 @@
 Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/backend/security.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/security.html>).
-Geprüft: 2026-10-02. Ergänzt `docs/odoo_konventionen_2026-09-26.md` Abschnitt 4 (dort die Kurzfassung der
+Geprüft: 2026-10-02. Ergänzt `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitt 4 (dort die Kurzfassung der
 Pitfalls). Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Zugriffsmodell

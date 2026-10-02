@@ -15,7 +15,7 @@ Die ausführlichen Vorgänger (Konzept, Werterkennungs-Plan, Oberflächen-Konzep
 | **Bestand kopieren, kein Hardlink** | Ein später bearbeiteter Hardlink würde den Blob verändern (I2). Rückweg bleibt möglich: alter Share bleibt schreibgeschützt bis zur Abnahme. |
 | Ganzer Share, Versionen unbegrenzt, Papierkorb 30 Tage, Rechte minimal ("Alle" + heutiger Schutzordner) (2026-09-26) | Heute 1 interner Nutzer außer Admin, keine Portal-Nutzer; engere Bereiche erst bei Bedarf. |
 | **HM-SRV behält vorerst das heutige Modul** | Die Sicherheitslücke N1 (öffentliche Methoden `action_analyze_document`/`action_apply_extracted_values` mit `sudo`) ist dort noch nicht behoben. |
-| Modellnamen mit Präfix `int_filemanager.*`; Code englisch, Oberflächentexte englisch + `i18n/de.po` | Odoo-/OCA-Konvention (`odoo_konventionen_2026-09-26.md`). |
+| Modellnamen mit Präfix `int_filemanager.*`; Code englisch, Oberflächentexte englisch + `i18n/de.po` | Odoo-/OCA-Konvention (`odoo_regeln/odoo_regeln_coding_guidelines_2026-10-02.md`). |
 | Keine Verweise auf Dokumente in Kommentaren/Docstrings (2026-09-28) | Dokumente veralten, der Code bleibt. |
 | Odoo wird nicht verändert (I10), Änderungen am Datenmodell über Migrationsskripte mit `odoo/upgrade-util` | Updates müssen möglich bleiben. |
 

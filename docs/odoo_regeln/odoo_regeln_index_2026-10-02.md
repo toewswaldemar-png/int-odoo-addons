@@ -21,7 +21,8 @@ dann Prüfautomatik).
 
 | Datei | Quelle (`content/…`) | Inhalt |
 |---|---|---|
-| `odoo_konventionen_2026-09-26.md` (+ Abschnitt 11) | `contributing/development/coding_guidelines.rst`, `git_guidelines.rst` | Coding-/Git-Guidelines, OCA, `test_lint`; Abgleich 2026-10-02 in Abschnitt 11 |
+| `odoo_regeln_coding_guidelines_2026-10-02.md` | `contributing/development/coding_guidelines.rst` | Modul, Manifest, Python, Sicherheit (Kurzfassung), XML, JS/SCSS, Tests, Hausregeln dieses Repos |
+| `odoo_regeln_git_guidelines_2026-10-02.md` | `contributing/development/git_guidelines.rst` | Commit-Nachrichten |
 | `odoo_regeln_orm_2026-10-02.md` | `developer/reference/backend/orm.rst`, `orm/changelog.rst` | Modelle, Felder, Recordsets, Domains, Environment, SQL, Vererbung, Changelog 15.2 → 19.0 |
 | `odoo_regeln_security_2026-10-02.md` | `backend/security.rst` | ACL, Record Rules, Feldzugriff, Security Pitfalls |
 | `odoo_regeln_performance_2026-10-02.md` | `backend/performance.rst` | Batching, Komplexität, Indizes, Profiler |

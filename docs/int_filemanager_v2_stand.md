@@ -109,6 +109,6 @@ Modell gegenlesen und Befundliste ablegen; (A7) fehlt dem Image `odoo:19.0-hm-te
 | Regeln und Aufbau | `int_filemanager_v2_kern_2026-09-26.md` |
 | Warum so, was verworfen | `int_filemanager_v2_entscheidungen.md` |
 | Backlog PaperOffice-Ideen | `int_filemanager_paperoffice_ideenkatalog_2026-10-01.md` |
-| Code-Regeln | `odoo_konventionen_2026-09-26.md`, `odoo_regeln/`, `pruefautomatik_2026-10-02.md` |
+| Code-Regeln | `odoo_regeln/` (Coding und Git Guidelines, Hausregeln, Developer Reference), `pruefautomatik_2026-10-02.md` |
 | Messdaten und Prototypen | `prototypes/` (`fm2/` WebDAV/Blob, `werterkennung/`) |
 | Alles Frühere (Konzept, Pläne, Übergabe-Verlauf, Messungen 19.x) | Git-Tag `docs-vor-aufraeumen-2026-10-02` |

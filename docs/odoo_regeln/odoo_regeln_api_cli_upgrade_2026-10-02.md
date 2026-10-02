@@ -4,7 +4,7 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02), `conte
 `external_api.rst` (JSON-2), `external_rpc_api.rst` (XML-/JSON-RPC, veraltet), `extract_api.rst`, `cli.rst`,
 `upgrades/upgrade_scripts.rst`, `upgrades/upgrade_utils.rst`, `standard_modules*`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/external_api.html> usw.).
-Geprüft: 2026-10-02. Migrationsregel des Repos: `docs/odoo_konventionen_2026-09-26.md` Abschnitt 2 + 10.
+Geprüft: 2026-10-02. Migrationsregel des Repos: `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitte 2 und 8.
 Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Externe JSON-2-API (neu in 19.0 – gewünschter Weg für Integrationen)
@@ -99,7 +99,7 @@ JSON-RPC2 auf `https://extract.api.odoo.com`; Dokumenttypen Rechnung, Kontoauszu
   Datensätze, ORM, Domains, SQL (`pg`), Misc, Report; Tests über `odoo.upgrade.testing`. Installation: `--upgrade-path=
   <upgrade-util>/src` oder `pip install git+https://github.com/odoo/upgrade-util@master` (nicht im Image; Odoo.sh:
   `requirements.txt`). Vorteile: konsistente Daten, indirekte Referenzen, weniger eigener Code.
-  **Hausregel: Helfer statt eigenem SQL** (Konventionen 2).
+  **Hausregel: Helfer statt eigenem SQL** (Coding Guidelines 2).
 
 ## 6. Standardmodule
 

@@ -4,7 +4,7 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/user_interface/icons.rst` und `scss_inheritance.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/user_interface/icons.html>,
 `…/scss_inheritance.html`). Geprüft: 2026-10-02. SCSS-Format/Namensregeln (Coding Guidelines):
-`docs/odoo_konventionen_2026-09-26.md` Abschnitt 6. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
+`odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitt 6. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Icons
 
@@ -37,5 +37,5 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
   `web._assets_primary_variables` (Enterprise vor Community; Primär- vor Komponenten-Variablen) →
   `web._assets_bootstrap` → `web.assets_backend` (CSS-Variablen-Definition und kontextuelle Anpassungen).
 - **Folgerung für eigene Module:** Variablen mit `!default` definieren und im richtigen Bundle laden (siehe
-  Assets-Operationen `prepend`/`before`/`after` im JS-Framework-Destillat); Stilnamen und Format nach Konventionen
+  Assets-Operationen `prepend`/`before`/`after` im JS-Framework-Destillat); Stilnamen und Format nach den Coding Guidelines
   Abschnitt 6 (`$o-<modul>-…`, lokale `$-name`, CSS-Variablen BEM).

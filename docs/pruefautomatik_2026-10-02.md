@@ -1,6 +1,6 @@
 # Prüfautomatik (pre-commit, test_lint, odoo-ls) – Stand 2026-10-02
 
-Umsetzung des Beschlusses vom 2026-09-26 (`docs/odoo_konventionen_2026-09-26.md`, Abschnitte 9 und 10):
+Umsetzung des Beschlusses vom 2026-09-26 (`docs/odoo_regeln/odoo_regeln_coding_guidelines_2026-10-02.md`, Abschnitt 8):
 **pre-commit nach OCA-Vorlage (nur neuer Code), Odoos `test_lint`, odoo-ls im Parse-Modus; keine GitHub Action.**
 Regeln selbst: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
@@ -72,7 +72,7 @@ Auf Tower ist ESLint im Image nicht vorhanden → `test_eslint` wird dort **übe
 
 odoo-ls (mit Bibliotheken im Pfad, alle Dateien): `int_filemanager` ohne Befund; offen bleiben `int_generic`
 (doppelte Template-ID `list_column_reorder.xml`) und `onlyoffice_odoo` (`documents.document` = Enterprise-Modell).
-Das deckt sich mit dem Probelauf vom 2026-09-26 in Konventionen Abschnitt 9.
+Das deckt sich mit dem Probelauf vom 2026-09-26 (Abschnitt 7).
 
 Diese Befunde sind **nicht behoben**: Altcode wird nach der Odoo-Regel nicht angefasst, und die Änderungen betreffen
 Benutzertexte (`_()`/Übersetzung) bzw. Manifeste und sollten bewusst entschieden werden.
@@ -98,3 +98,31 @@ Die Prüfautomatik ist am 2026-10-02 von `master` auf diesen Branch übernommen 
 - **Autor im Manifest:** Die frühere v2-Fassung erzwang `manifest-required-authors=Waldemar Toews`. Das entfällt, `.pylintrc` und `.pylintrc-mandatory` entsprechen wieder `master` (Autor nur als nicht blockierende Prüfung).
 - **Neben `tools/v2check/`:** `tools/v2check/v2check.sh` bleibt der Aufruf für `int_filemanager` 2 auf Tower; `scripts/lint/run_test_lint.sh` und `run_odoo_ls.sh` sind die allgemeine Fassung aus `master`. Beide laufen unabhängig voneinander; ob eine wegfällt, ist offen.
 - **Nicht erneut verifiziert:** Die Läufe in Abschnitt 3 und die Befunde in Abschnitt 4 stammen vom Stand `master`. Auf diesem Branch wurden `pre-commit`, `test_lint` und odoo-ls nach der Übernahme **nicht** ausgeführt, nur die Syntax der Dateien geprüft.
+
+
+## 7. Was die Werkzeuge prüfen (Nachschlagewerk)
+
+**Odoo `test_lint`** (läuft mit `--test-tags /test_lint` über alle Addon-Pfade): Pylint mit `used-before-assignment`, `undefined-variable`, `eval-used`,
+`unreachable`, `function-redefined`, `sql-injection`, `missing-gettext`, `gettext-variable`, `gettext-placeholders`, `gettext-repr`,
+`raise-unlink-override`, verbotene Funktion `input`, veraltete Module `csv`/`urllib`/`cgi`; dazu Tests für Manifest, `__init__.py`, Docstring ↔ Signatur,
+ESLint, JS-Übersetzungen, Index auf One2many-Gegenstücken, Merge-Konfliktmarker, Parameternamen `ids`/`context`, keine Onchange-Domains, kein Import aus
+`odoo.orm`, Überschreibungs-Signaturen, doppelte `.pot`-Einträge, Routen-Vererbung, nicht importierte Testdateien. `test_pylint` prüft den ganzen Odoo-Core,
+der mit pylint 3.3 selbst Befunde hat (`l10n_tr_nilvera`, `point_of_sale`, `purchase`); der Test schlägt deshalb allein nichts über unseren Code aus,
+`tools/v2check/v2check_filter.py` filtert auf `int_filemanager`.
+
+**odoo-ls, Parse-Modus:** `odoo_ls_server --parse -c <Odoo-Pfad> -a <Addon-Pfad> -t <Addon-Pfad> --python <python> --stdlib <typeshed>/stdlib
+-s <typeshed>/stubs -o out.json` schreibt alle Befunde als JSON. Es findet, was pylint nicht sehen kann, weil es die Odoo-Registry kennt: unbekanntes Modell,
+Modell nicht in `depends`, Feld existiert nicht, ungültiges Domain-Feld, Methode existiert nicht, Compute-Methode setzt das Feld nicht, Related-Feld mit
+falschem Typ, falsche Aufrufargumente; dazu ESLint (oxc) für JS. Fallstricke: (1) `typeshed.zip` aus dem Release gehört dazu, sonst bricht der Lauf ab;
+(2) Bibliotheken außerhalb des Images (z. B. `wsgidav` in `/mnt/pylib`) per `PYTHONPATH` sichtbar machen, sonst Fehlalarme; (3) die Ausgabe enthält auch
+~1.800 Befunde aus dem Odoo-Core, nach eigenen Pfaden filtern; (4) Hinweise mit Stufe 3 (z. B. `OLS03024`) sind Information, kein Fehler. Das Programm beendet
+sich unabhängig von den Befunden normal, deshalb wertet `scripts/lint/odoo_ls_check.py` das JSON aus.
+
+**OCA pre-commit** (Vorlage, Odoo ≥ 18): `whool`, `oca-gen-addon-readme`, `oca-fix-manifest-website`, `oca-gen-external-dependencies`,
+`oca-checks-odoo-module` (mit `--fix`), `oca-checks-po`, `autoflake`, `black` (bzw. ruff), `prettier`, `eslint`, `trailing-whitespace`, `end-of-file-fixer`,
+`debug-statements`; pylint-odoo-Pflichtprüfungen u. a. `invalid-commit`, `except-pass`, `print-used`, `sql-injection`, `eval-used`, `method-required-super`,
+`method-compute/inverse/search` (Namensmuster), `manifest-required-author/-key`, `manifest-version-format`, `license-allowed`, `missing-readme`,
+`no-write-in-compute`, `no-search-all`, `no-raise-unlink`, `prohibited-method-override`, `translation-*`, `external-request-timeout`, `context-overridden`,
+`dangerous-view-replace-wo-priority`, `duplicate-xml-record-id`, `xml-deprecated-*`, `attribute-string-redundant`, `no-wizard-in-models`,
+`deprecated-name-get`, `deprecated-self-cr`, `prefer-env-translation`. In diesem Repo sind die OCA-Packaging-Hooks (README-Erzeugung, Website) und
+`manifest-required-author`/`-key` bewusst ausgeschaltet (`.pre-commit-config.yaml`, `.pylintrc-mandatory`).

@@ -54,11 +54,11 @@ eine belastbare Aussage.
 
 Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentation` Branch 19.0) sind in
 `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md` und den dort verlinkten Destillaten im selben Ordner `docs/odoo_regeln/` festgehalten
-(Coding/Git: `docs/odoo_konventionen_2026-09-26.md`).
+(Coding Guidelines und Hausregeln: `docs/odoo_regeln/odoo_regeln_coding_guidelines_2026-10-02.md`, Git: `…/odoo_regeln_git_guidelines_2026-10-02.md`).
 
 - **Vor Code in einem Bereich** (ORM, Views/XML, Sicherheit, Daten/Manifest, Aktionen/Cron/Controller/Berichte,
   JS/Owl/QWeb/Assets, Tests, CLI/Upgrade) **die zugehörige Datei lesen** (Zuordnung im Index) und die Regeln einhalten.
-- Neuer Code verletzt sie nicht; bei bestehendem Code Stil nicht umformatieren (Konventionen, "Quellen und Rangfolge").
+- Neuer Code verletzt sie nicht; bei bestehendem Code Stil nicht umformatieren (Coding Guidelines, "Quellen und Rangfolge").
 - Die Destillate sind **kein Ersatz** für den Core-Grep oben: wo die Quelle autodoc ist (Signaturen, Feldparameter),
   gilt der Core im Container. Bei Widerspruch gilt die Odoo-Quelle, nicht das Destillat – Destillat dann korrigieren.
 - Prüfautomatik (pre-commit, `test_lint`, odoo-ls) ist eingerichtet (`docs/pruefautomatik_2026-10-02.md`: Aufruf,
@@ -67,13 +67,13 @@ Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentati
 
 ## Weitere Grundsätze
 
-- **Code-Konventionen:** `docs/odoo_konventionen_2026-09-26.md` (Odoo Coding/Git Guidelines 19.0, Security Pitfalls,
-  Odoos `test_lint`, OCA-Richtlinien und -pre-commit) gelten für neuen Code; Abschnitt 10 dort listet die
-  Abweichungen dieses Repos. Entschieden 2026-09-26: neuer Code **englisch** (Namen, Kommentare, Docstrings, Logs,
+- **Code-Konventionen:** `docs/odoo_regeln/odoo_regeln_coding_guidelines_2026-10-02.md` und
+  `…_git_guidelines_2026-10-02.md` (Odoo Coding/Git Guidelines 19.0, Security Pitfalls, OCA-Richtlinien) gelten für neuen
+  Code; Abschnitt 8 der Coding Guidelines enthält die Hausregeln dieses Repos. Entschieden 2026-09-26: neuer Code **englisch** (Namen, Kommentare, Docstrings, Logs,
   Commits `[TAG] modul: …`), Oberflächentexte englisch + `i18n/de.po`; **pre-commit** (OCA-Vorlage, nur neuer
-  Code), Odoos **`test_lint`** und **odoo-ls** (Parse-Modus, Konventionen Abschnitt 9) müssen grün sein; keine GitHub Action;
+  Code), Odoos **`test_lint`** und **odoo-ls** (Parse-Modus, `docs/pruefautomatik_2026-10-02.md`) müssen grün sein; keine GitHub Action;
   Migrationsskripte mit `odoo/upgrade-util`. Bestehende Module nicht umformatieren.
-  Kommentare: Hausregeln in Abschnitt 3 "Kommentare und Docstrings" (Warum statt Was, keine Kürzel/Verweise auf Dokumente, kurze Docstrings wie im Odoo-Kern, Odoo-Stellen
+  Kommentare: Hausregeln in Abschnitt 8 der Coding Guidelines (Warum statt Was, keine Kürzel/Verweise auf Dokumente, kurze Docstrings wie im Odoo-Kern, Odoo-Stellen
   per Funktionsname statt Zeilennummer).
 
 - **Claims immer verifizieren**, nie "sollte sicher funktionieren" — im Code/Container nachsehen,
@@ -86,7 +86,7 @@ Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentati
   Seite (Ziel, offene Fragen), danach das Ergebnis in die Entscheidungen und die Notiz löschen.
   v2-Code nur auf Branch `feature/int-filemanager-v2` (Tag `int_filemanager-v1` = heutiges Modul). Prüfungen:
   pre-commit (`py -3.13 -m pre_commit`, Hook installiert) und `tools/v2check/v2check.sh [--quick]` (odoo-ls +
-  `test_lint` auf Tower, Konventionen Abschnitt 9). Hintergrund zum heutigen Modul:
+  `test_lint` auf Tower, `docs/pruefautomatik_2026-10-02.md`). Hintergrund zum heutigen Modul:
   `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitte 19/20).
   Übersicht aller Dokumente: `docs/README.md` (lebende Dokumente vs. `docs/archiv/`).
 - `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher. Workaround:

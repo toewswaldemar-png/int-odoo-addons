@@ -3,7 +3,7 @@
 Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/backend/data.rst` und `backend/module.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/data.html>,
-<…/backend/module.html>). Geprüft: 2026-10-02. Ergänzt `docs/odoo_konventionen_2026-09-26.md` Abschnitte 1, 2 und 5.
+<…/backend/module.html>). Geprüft: 2026-10-02. Ergänzt `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitte 1, 2 und 5.
 Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Manifest (`__manifest__.py`)
@@ -30,7 +30,7 @@ Ein einziges Python-Dict. Schlüssel laut Referenz:
 | `sequence` | int, Standard 100 | Reihenfolge in der Apps-Liste |
 | `active` | — | **veraltet** → `auto_install` |
 
-Folgen für dieses Repo: Schlüssel mit Standardwert weglassen (Odoo `test_manifests`, siehe Konventionen 2);
+Folgen für dieses Repo: Schlüssel mit Standardwert weglassen (Odoo `test_manifests`, siehe Coding Guidelines 2);
 `external_dependencies` statt `try/except ImportError`-Ersatzklassen; Hooks nur mit Begründung.
 
 ## 2. XML-Datendateien

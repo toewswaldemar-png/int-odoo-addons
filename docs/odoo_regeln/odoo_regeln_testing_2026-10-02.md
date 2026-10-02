@@ -3,7 +3,7 @@
 Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 `content/developer/reference/backend/testing.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/testing.html>).
-Geprüft: 2026-10-02. Ergänzt `docs/odoo_konventionen_2026-09-26.md` Abschnitt 7. JS-Tests (Hoot, Mock-Server,
+Geprüft: 2026-10-02. Ergänzt `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitt 7. JS-Tests (Hoot, Mock-Server,
 Web-Helfer): `docs/odoo_regeln/odoo_regeln_js_tests_2026-10-02.md`. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 **Grenze der Quelle:** Klassen und Methoden (`TransactionCase`, `HttpCase`, `Form`, `assertQueryCount`, `tagged` …)
@@ -60,7 +60,7 @@ sind *autodoc* – Details im Core-Quellcode.
 - **Onboarding-Tours** (Benutzerführung): `static/src/js/tours/*.js` in `web.assets_backend` plus
   `web_tour.tour`-Datensatz (`name` = JS-Registrierung, `sequence`, `url`, `rainbow_man_message`).
 
-## 4. Hausregeln (ergänzend aus `docs/odoo_konventionen_2026-09-26.md` Abschnitt 7, bleiben gültig)
+## 4. Hausregeln (ergänzend aus den Coding Guidelines, Abschnitt 7, bleiben gültig)
 
 - Jede Fehlerbehebung mit einem Test, der ohne die Behebung fehlschlägt.
 - Mit möglichst geringen Rechten testen (`new_test_user`, `@users`); Flaky-Test-Fallen vermeiden
