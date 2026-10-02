@@ -82,7 +82,9 @@ Modell gegenlesen und Befundliste ablegen; (A7) fehlt dem Image `odoo:19.0-hm-te
 - Dokumentation: kein Konzeptdokument je Feature. Vor einem größeren Feature eine halbe Seite (Ziel, offene Fragen), nach der Umsetzung das Ergebnis in
   die Entscheidungen und die Notiz löschen.
 
-## 5. Testumgebung (Tower, `ssh unraid`)
+## 5. Testumgebung (Tower 192.168.188.67, `ssh unraid`)
+
+- Es gibt drei getrennte Unraid-Server (HM-SRV, Tower, Tower 192.168.178.73, siehe `README.md`). "Tower" ohne Zusatz ist 192.168.188.67; die hier beschriebene Testumgebung liegt dort.
 
 - Test-Instanz der Oberfläche: `http://192.168.188.67:8085`, Login-Datei `/mnt/user/appdata/fmtest/v2ui/LOGIN.txt` auf Tower (der Nutzer tippt das
   Passwort selbst). Testdateien: Henrich-Rechnung (Knoten 2) und "Bescheid A/B/C" (selbst erzeugt, ungefährlich).

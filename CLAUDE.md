@@ -1,8 +1,9 @@
 # int-odoo-addons
 
-Projektbeschreibung, Modulübersicht, Umgebung (HM-SRV, Tower) und Deploy: `README.md`. Hier stehen nur die verbindlichen Arbeitsregeln.
+Projektbeschreibung, Modulübersicht, Umgebung (drei getrennte Unraid-Server: HM-SRV, Tower, Tower 192.168.178.73) und Deploy: `README.md`. Hier stehen nur die verbindlichen Arbeitsregeln.
 
-Die `docker exec Odoo19 …`-Beispiele unten gelten für HM-SRV (Host-Alias `unraid-odoo`); auf Tower (Alias `unraid`) heißt der Container `odoo`.
+Die `docker exec Odoo19 …`-Beispiele unten gelten für HM-SRV (192.100.0.119, Host-Alias `unraid-odoo`); auf Tower (192.168.188.67, Alias `unraid`) heißt der
+Container `odoo`. Der dritte Server, Tower 192.168.178.73, ist eine eigene Instanz: nie annehmen, dass ein Stand von einem Server auf einem anderen liegt.
 
 ## Verbindlich: vor jeder "kein Bordmittel"/Eigenbau-Aussage Odoo-Core prüfen
 

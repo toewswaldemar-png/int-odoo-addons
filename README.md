@@ -22,12 +22,19 @@ Grundsatz zum Zuschnitt: ein Modul je fachlicher Abhängigkeit (auch bei winzige
 
 ## Umgebung
 
-Zwei Unraid-Server mit je einer Odoo-19-Instanz in Docker:
+Drei **voneinander getrennte** Unraid-Server, jeder mit eigener Odoo-19-Instanz in Docker, an verschiedenen Standorten und in verschiedenen Netzen.
+Sie teilen weder Datenbank noch Addons-Ordner; jede Änderung muss je Instanz eingespielt werden.
 
-| Standort | Container | Zugang | Hinweis |
-|---|---|---|---|
-| **HM-SRV** | `Odoo19` (Datenbank getrennt) | SSH-Alias `unraid-odoo` | Addons unter `/mnt/user/appdata/odoo18/extra-addons`. Der Ordnername ist irreführend: es ist Odoo 19. Hier läuft vorerst der Stand von `master` |
-| **Tower** (lokal) | `odoo`, `odoo_db`, `OnlyOfficeDocumentServer` | SSH-Alias `unraid` | Addons unter `/mnt/user/appdata/odoo/extra-addons` (einfache Kopie, nur `int_filemanager` und `onlyoffice_odoo`); Test-Umgebung und Test-Instanz für den Branch |
+| Name in den Docs | IP | Odoo / Container | Zugang | Hinweis |
+|---|---|---|---|---|
+| **HM-SRV** | 192.100.0.119 | `Odoo19` (Datenbank getrennt) | SSH-Alias `unraid-odoo` | Addons unter `/mnt/user/appdata/odoo18/extra-addons`. Der Ordnername ist irreführend: es ist Odoo 19. Hier läuft vorerst der Stand von `master` |
+| **Tower** | 192.168.188.67 | `odoo`, `odoo_db`, `OnlyOfficeDocumentServer`; Testumgebung `fmtest_*`, `fmv2_*` | SSH-Alias `unraid` | Addons unter `/mnt/user/appdata/odoo/extra-addons` (einfache Kopie, nur `int_filemanager` und `onlyoffice_odoo`); Test-Instanz für den Branch (Port 8085) |
+| **Tower (192.168.178.73)** | 192.168.178.73 | eigene Odoo-Instanz | in diesen Docs kein Alias | Container, Addons-Ordner, Datenbank und deployter Stand sind hier nicht dokumentiert (noch zu ergänzen) |
+
+**Namensregel:** "Tower" ohne Zusatz bedeutet in allen Docs, Skripten und Kommentaren **192.168.188.67** (SSH-Alias `unraid`). Der andere Tower wird immer mit
+seiner IP genannt.
+
+**Erreichbarkeit** (geprüft 2026-10-02 vom Arbeitsrechner mit 192.100.0.182): im Firmennetz 192.100.0.x ist nur HM-SRV per SSH erreichbar. Beide Tower liegen in anderen Netzen (192.168.188.x und 192.168.178.x) und laufen von dort in den Timeout; der Alias `unraid` ist auf diesem Rechner nicht eingerichtet. Angaben zu den Towern in diesen Docs stammen aus Sitzungen auf einem Rechner mit Zugang und sind von hier nicht nachprüfbar.
 
 Einordnung (Stand 2026-09-18): Odoo ist noch **kein** produktives ERP. Das Alt-ERP läuft weiter, ein Umstieg ist nicht entschieden;
 Grundlage dafür sind die Analysen in [`docs/erp/`](docs/erp/).
