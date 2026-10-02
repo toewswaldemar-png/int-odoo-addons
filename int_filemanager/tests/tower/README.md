@@ -1,4 +1,4 @@
-# A3/A4 real-process tests (Konzept 16, Pruefbericht A3/A4)
+# A3/A4 real-process tests
 
 Not Odoo tests. `TransactionCase` never commits and runs no post-commit hooks (Konzept
 16), so it cannot see a real name/lock race or a real cleanup cron running against a
@@ -12,7 +12,7 @@ hand against `fmtest_pg`.
 
 ## Status: all scenarios verified for real on Tower (2026-09-28)
 
-`race_scenarios.py` drives Konzept 16's scenarios over real
+`race_scenarios.py` drives the race and crash scenarios over real
 `/json/2/int_filemanager.node/<method>` calls against a live `workers=2` instance.
 `tools/v2check/race.sh` builds that instance from scratch, runs everything and tears it
 down again (about 1.5 minutes). Result:
@@ -83,7 +83,7 @@ this is the single source of truth `race_scenarios.py` assumes:
 
 | Stage                                | Where                                                                                                                  |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `node_create_before_check`           | after the uniqueness/lock check, before `create` (write path, Konzept 6 "Anlegen")                                     |
+| `node_create_before_check`           | after the uniqueness/lock check, before `create` (write path, "create")                                     |
 | `node_create_after_insert`           | after `create`, before commit                                                                                          |
 | `revision_write_before_check`        | after the base-revision check, before writing a new revision                                                           |
 | `revision_write_after_insert`        | after the new revision row exists, before commit                                                                       |
@@ -105,7 +105,7 @@ this is the single source of truth `race_scenarios.py` assumes:
   (bind mount), so the barrier directory (`<fault file>.barrier.<stage>`) is visible to
   both.
 - `int_filemanager.watcher_enabled` set to `false` before running `odoo shell` against
-  this database (Konzept 19.5, N5 - a shell session against the watcher DB starts a
+  this database (a shell session against the watcher DB starts a
   second watcher otherwise), matching the existing `fmshell.sh` Tower helper.
 - Network access to the instance from wherever this script runs (matches the existing
   Tower helper-container setup used for 20.2 and `runv2.sh`).

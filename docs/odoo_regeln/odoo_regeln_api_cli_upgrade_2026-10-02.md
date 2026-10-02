@@ -83,7 +83,7 @@ JSON-RPC2 auf `https://extract.api.odoo.com`; Dokumenttypen Rechnung, Kontoauszu
   `cloc` (`cloc_exclude` im Manifest), `obfuscate` (**kein sicheres Anonymisieren**), `deploy` (braucht
   `base_import_module`), `upgrade_code --from 18.0 --to 19.0 [--dry-run]`.
 - **Folgen für dieses Repo:** `odoo shell`/`odoo -u` gegen die Watcher-DB startet einen zweiten Watcher
-  (`CLAUDE.md`, Konzept 19.5/N5) – das ist unabhängig von der Referenz, aber der Shell-Rollback gilt weiter.
+  (`CLAUDE.md`) – das ist unabhängig von der Referenz, aber der Shell-Rollback gilt weiter.
   Tests über `--test-tags /int_filemanager` (und `/test_lint`) auf der Testinstanz.
 
 ## 5. Upgrade-Skripte

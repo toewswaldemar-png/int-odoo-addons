@@ -45,7 +45,7 @@ echo "== install"
 ssh "$HOST" "docker exec fmtest_pg dropdb -U odoo --if-exists $DB && docker run --rm --network $NET $MOUNTS $IMAGE \
   odoo -c /etc/odoo/odoo.conf -d $DB -i int_filemanager --stop-after-init --workers=0 --no-http --log-level=warn >$R/install.log 2>&1" \
   || { ssh "$HOST" "tail -30 $R/install.log"; exit 1; }
-# A shell/server session against a DB with the watcher on would start a second watcher (Konzept 19.5, N5).
+# A shell/server session against a DB with the watcher on would start a second watcher.
 ssh "$HOST" "docker exec fmtest_pg psql -U odoo -d $DB -qAtc \"insert into ir_config_parameter(key,value,create_date,write_date) values('int_filemanager.watcher_enabled','false',now(),now()) on conflict (key) do update set value='false'\""
 
 echo "== bootstrap"

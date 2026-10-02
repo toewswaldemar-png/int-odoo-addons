@@ -53,7 +53,7 @@ eine belastbare Aussage.
 ## Verbindlich: Odoo-19-Regeln (Coding Guidelines + Developer Reference)
 
 Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentation` Branch 19.0) sind in
-`docs/odoo_regeln/odoo_regeln_index_2026-10-02.md` und den dort verlinkten Destillaten `docs/odoo_regeln/odoo_regeln_*` festgehalten
+`docs/odoo_regeln/odoo_regeln_index_2026-10-02.md` und den dort verlinkten Destillaten im selben Ordner `docs/odoo_regeln/` festgehalten
 (Coding/Git: `docs/odoo_konventionen_2026-09-26.md`).
 
 - **Vor Code in einem Bereich** (ORM, Views/XML, Sicherheit, Daten/Manifest, Aktionen/Cron/Controller/Berichte,
@@ -79,16 +79,16 @@ Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentati
 - **Claims immer verifizieren**, nie "sollte sicher funktionieren" — im Code/Container nachsehen,
   live testen, nicht raten.
 - **Produktentscheidungen vorab mit dem Nutzer klären**, nicht impliziten Annahmen folgen.
-- **Einstieg int_filemanager: `docs/int_filemanager_v2_uebergabe_2026-09-26.md`** (Stand, Entscheidungen, nächste
-  Schritte, Testumgebung auf Tower). Kurzfassung: `docs/int_filemanager_v2_kern_2026-09-26.md`.
-  Leitfaden ist das Konzept `docs/int_filemanager_v2_konzept_2026-09-26.md`
-  (Nutzerentscheidung 2026-09-26: vollständig Odoo-Addon, Odoo alleiniger Schreiber, eigener Blob-Speicher).
-  Hintergrund und Befunde zum heutigen Modul: `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md`
-  (Abschnitte 19/20). Konzept und Kern am 2026-09-27 freigegeben; Umsetzung nach Konzept 18 / Kern 11 mit Abnahme je Schritt.
+- **Einstieg int_filemanager: `docs/int_filemanager_v2_stand.md`** (Stand, nächste Schritte, Arbeitsweise, Testumgebung auf
+  Tower). Begründungen und verworfene Wege: `docs/int_filemanager_v2_entscheidungen.md`; Grundregeln und Aufbau:
+  `docs/int_filemanager_v2_kern_2026-09-26.md`. Der Code ist maßgeblich; Konzept und Pläne der Zeit bis 2026-10-02 stehen
+  nur noch im Git-Tag `docs-vor-aufraeumen-2026-10-02`. Neue Features ohne Konzeptdokument: vor einem größeren Feature eine halbe
+  Seite (Ziel, offene Fragen), danach das Ergebnis in die Entscheidungen und die Notiz löschen.
   v2-Code nur auf Branch `feature/int-filemanager-v2` (Tag `int_filemanager-v1` = heutiges Modul). Prüfungen:
   pre-commit (`py -3.13 -m pre_commit`, Hook installiert) und `tools/v2check/v2check.sh [--quick]` (odoo-ls +
-  `test_lint` auf Tower, Konventionen Abschnitt 9).
+  `test_lint` auf Tower, Konventionen Abschnitt 9). Hintergrund zum heutigen Modul:
+  `docs/int_filemanager_konzept_db_vorrang_2026-09-24.md` (Abschnitte 19/20).
   Übersicht aller Dokumente: `docs/README.md` (lebende Dokumente vs. `docs/archiv/`).
-- `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher (Konzept 19.5, N5). Workaround:
+- `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher. Workaround:
   vorher `int_filemanager.watcher_enabled` auf `false`, danach zurück auf `true` (der laufende Server prüft den
   Schalter nur beim Start, sein Watcher läuft weiter).

@@ -12,6 +12,6 @@ change creates a new revision, and access is checked by Odoo's rights system onl
 
 Design documents (German):
 
-* ``docs/int_filemanager_v2_kern_2026-09-26.md`` - short version
-* ``docs/int_filemanager_v2_konzept_2026-09-26.md`` - full concept
-* ``docs/int_filemanager_v2_uebergabe_2026-09-26.md`` - status and next steps
+* ``docs/int_filemanager_v2_kern_2026-09-26.md`` - rules and architecture
+* ``docs/int_filemanager_v2_entscheidungen.md`` - decisions and rejected alternatives
+* ``docs/int_filemanager_v2_stand.md`` - status and next steps

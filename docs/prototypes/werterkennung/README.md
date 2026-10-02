@@ -1,7 +1,7 @@
 # Prototypen Werterkennung (2026-09-29)
 
 Wegwerf-Skripte aus der Planung, **kein Modulcode**; Vorlage für W-3/W-4 und W-6
-(`docs/int_filemanager_v2_werterkennung_plan_2026-09-29.md`). Enthalten keine Dokumente oder persönlichen Daten.
+(Plan im Git-Tag `docs-vor-aufraeumen-2026-10-02`, Entscheidungen in `docs/int_filemanager_v2_entscheidungen.md`). Enthalten keine Dokumente oder persönlichen Daten.
 
 | Datei | Zweck | Aufruf (Tower, Wegwerf-Container ohne Netz) |
 |---|---|---|

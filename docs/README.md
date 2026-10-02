@@ -1,24 +1,23 @@
 # docs/ – Wegweiser
 
-Stand 2026-10-01. Lebende Dokumente oben, alles Übrige darunter. Nichts wurde gelöscht; was überholt ist, liegt in
-[`archiv/`](archiv/) und in der Git-Historie.
+Stand 2026-10-02. Lebende Dokumente oben, alles Übrige darunter. Was überholt ist, liegt in
+[`archiv/`](archiv/) und in der Git-Historie (Tag `docs-vor-aufraeumen-2026-10-02`).
 
 ## int_filemanager 2 (lebend)
 
 | Dokument | Wofür |
 |---|---|
-| [`int_filemanager_v2_uebergabe_2026-09-26.md`](int_filemanager_v2_uebergabe_2026-09-26.md) | **Einstieg:** Stand, Entscheidungen, nächste Schritte, Testumgebung |
-| [`int_filemanager_v2_kern_2026-09-26.md`](int_filemanager_v2_kern_2026-09-26.md) | Kurzfassung des Konzepts |
-| [`int_filemanager_v2_konzept_2026-09-26.md`](int_filemanager_v2_konzept_2026-09-26.md) | Leitfaden mit allen Einzelheiten (gilt bei Widerspruch) |
-| [`int_filemanager_v2_schritt4_plan_2026-09-28.md`](int_filemanager_v2_schritt4_plan_2026-09-28.md) | Plan der Oberfläche (Schritt 4) |
-| [`int_filemanager_v2_werterkennung_plan_2026-09-29.md`](int_filemanager_v2_werterkennung_plan_2026-09-29.md) | Plan der Werterkennung (Schritt 5, Punkt 1) mit Befund Odoo 19 und Paperless-ngx |
-| [`int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md`](int_filemanager_v2_werterkennung_oberflaeche_konzept_2026-09-29.md) | Konzept Prüf-Fenster mit Kasten-Auswahl (U1–U9 und N1–N9 entschieden, Freigabe offen): Vorbilder PaperOffice/Paperless-ngx/Odoo, geprüfte Odoo-Bausteine, Nachtrag PaperOffice AI, Scheiben U-1…U-10 |
-| [`int_filemanager_v2_werterkennung_denkpunkte_entwurf_2026-09-30.md`](int_filemanager_v2_werterkennung_denkpunkte_entwurf_2026-09-30.md) | Entwurf (Dauerlauf A3): Datenmodell, Rechte je Aufruf und Leistung der Werterkennung, mit Messungen; ohne Freigabe |
-| [`int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md`](int_filemanager_v2_dauerlauf_aufgaben_2026-09-30.md) | Aufgabenliste für den unbeaufsichtigten Dauerlauf (Regeln, Grenzen, Fortschritt je Aufgabe) |
-| [`int_filemanager_paperoffice_ideenkatalog_2026-10-01.md`](int_filemanager_paperoffice_ideenkatalog_2026-10-01.md) | Ideenkatalog A1–H6 aus PaperOffice Classic mit Odoo-Weg, Aufwand, Einordnung, offenen Entscheidungen und Umsetzungsstand |
-| [`review/konzept_codepruefung_2026-09-26.md`](review/konzept_codepruefung_2026-09-26.md) | Code-Prüfung des Konzepts (194 Behauptungen) |
+| [`int_filemanager_v2_stand.md`](int_filemanager_v2_stand.md) | **Einstieg:** Stand, nächste Schritte, bekannte Mängel, Arbeitsweise, Testumgebung |
+| [`int_filemanager_v2_entscheidungen.md`](int_filemanager_v2_entscheidungen.md) | Warum so, was verworfen wurde, Odoo-19-Fallen |
+| [`int_filemanager_v2_kern_2026-09-26.md`](int_filemanager_v2_kern_2026-09-26.md) | Grundregeln, Aufbau, Reihenfolge mit Abnahmekriterien |
+| [`int_filemanager_paperoffice_ideenkatalog_2026-10-01.md`](int_filemanager_paperoffice_ideenkatalog_2026-10-01.md) | Backlog: Ideen A1–H6 aus PaperOffice Classic mit Odoo-Weg, Aufwand, Einordnung, offenen Entscheidungen |
 | [`odoo_konventionen_2026-09-26.md`](odoo_konventionen_2026-09-26.md) | Code-Konventionen für neuen Code |
+| [`odoo_regeln/`](odoo_regeln/) | Odoo-19-Regeln (Einstieg: `odoo_regeln/odoo_regeln_index_2026-10-02.md`) |
+| [`pruefautomatik_2026-10-02.md`](pruefautomatik_2026-10-02.md) | pre-commit, `test_lint`, odoo-ls: Aufruf und Verifikationsstand |
 | [`int_filemanager_konzept_db_vorrang_2026-09-24.md`](int_filemanager_konzept_db_vorrang_2026-09-24.md) | Hintergrund: Abschnitte 19 und 20 (Live-Prüfungen auf Tower) |
+
+Konzept, Pläne, Übergabe-Verlauf, Messungen und Prüfberichte der Zeit bis 2026-10-02 stehen im Git-Tag
+`docs-vor-aufraeumen-2026-10-02` (`git show docs-vor-aufraeumen-2026-10-02:docs/<Datei>`).
 
 ## Betrieb und Themen, die in v2 noch kommen
 

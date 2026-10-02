@@ -10,7 +10,7 @@
 # (docs/odoo_regeln/odoo_regeln_index_2026-10-02.md, "Prüfautomatik").
 #
 # Usage (from the repo root):  scripts/lint/run_test_lint.sh
-# Environment (defaults for the fmtest setup, see docs/int_filemanager_v2_uebergabe_2026-09-26.md):
+# Environment (defaults for the fmtest setup, see docs/int_filemanager_v2_stand.md):
 #   IMAGE      odoo image                       (odoo:19.0-hm-test)
 #   PG_HOST    PostgreSQL container name        (fmtest_pg)
 #   PG_NET     docker network of PG_HOST        (fmtest-net)

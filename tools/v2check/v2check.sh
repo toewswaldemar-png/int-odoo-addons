@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Odoo test_lint and odoo-ls for int_filemanager on the Tower test instance
-# (Konzept 16, Kern 11: both must report nothing in new code).
+# (both must report nothing in new code).
 #
 # Usage (from the repo, Git Bash):  tools/v2check/v2check.sh [--quick]
 #   --quick  odoo-ls only (~30 s); without it test_lint also runs (~8 min, pylint over the core)

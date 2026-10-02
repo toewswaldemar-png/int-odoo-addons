@@ -1,6 +1,6 @@
 # fmdav – Prototyp WebDAV-Dienst neben Odoo (int_filemanager 2, Konzept 11 A)
 
-Ergebnisse: `docs/int_filemanager_v2_konzept_2026-09-26.md`, Abschnitt 19.4. Odoo-Seite: `../fm_proto/dav.py`.
+Ergebnisse und Begründung: `docs/int_filemanager_v2_entscheidungen.md`, Abschnitt 3 (Messungen im Git-Tag `docs-vor-aufraeumen-2026-10-02`, Konzept 19.4). Odoo-Seite: `../fm_proto/dav.py`.
 
 - `dav_service.py` – WsgiDAV-Provider; reicht jede Operation mit dem API-Schlüssel des Nutzers (`auth='bearer'`) an
   Odoo weiter, schreibt selbst nichts auf die Platte.

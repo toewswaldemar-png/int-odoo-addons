@@ -1,8 +1,7 @@
 # int_filemanager 2 – Kern
 
-Stand 2026-09-26, überarbeitet 2026-09-27 nach der Code-Prüfung, **freigegeben am 2026-09-27.** Kurzfassung des Konzepts. Die Einzelheiten, Messungen und Belege stehen im
-ausführlichen Konzept `int_filemanager_v2_konzept_2026-09-26.md` (Verweise wie "→ K 5" = Konzept Abschnitt 5).
-Bei einem Widerspruch zwischen beiden gilt das Konzept; ein Widerspruch ist ein Fehler und wird in beiden behoben.
+Stand 2026-09-26, überarbeitet 2026-09-27 nach der Code-Prüfung, **freigegeben am 2026-09-27.** Architekturüberblick: Regeln, Aufbau, Reihenfolge mit Abnahmekriterien. Begründungen und verworfene Wege:
+`int_filemanager_v2_entscheidungen.md`; aktueller Stand: `int_filemanager_v2_stand.md`. Gilt bei Widerspruch der Code.
 
 ---
 
@@ -10,12 +9,11 @@ Bei einem Widerspruch zwischen beiden gilt das Konzept; ein Widerspruch ist ein 
 
 Die Dateien vom Share `Daten` (Tower, ca. 1,8 TB) werden in einen neuen Dateimanager **in Odoo** übernommen. Danach
 **schreibt nur noch Odoo** die Dateien. Niemand sonst ändert sie direkt auf der Platte – kein Explorer über SMB, kein
-anderes Programm. Genau das direkte Schreiben von außen war die Ursache fast aller Fehler des heutigen Moduls
-(→ K 1, DB-Vorrang-Konzept 19/20).
+anderes Programm. Genau das direkte Schreiben von außen war die Ursache fast aller Fehler des heutigen Moduls.
 
 ## 2. Die Grundregeln
 
-Diese Regeln gelten immer, auch bei Absturz und Last. Jede hat Tests (→ K 2).
+Diese Regeln gelten immer, auch bei Absturz und Last. Jede hat Tests.
 
 | # | Regel | in einfachen Worten |
 |---|---|---|
@@ -47,30 +45,30 @@ Diese Regeln gelten immer, auch bei Absturz und Last. Jede hat Tests (→ K 2).
         └── Umwandler-Container (Vorschaubilder, Texterkennung, Metadaten)
 ```
 
-- **Datenbank:** Ordner, Dateien, Versionen, Rechte, Tags, Status, Texterkennung (→ K 4).
+- **Datenbank:** Ordner, Dateien, Versionen, Rechte, Tags, Status, Texterkennung.
 - **Dateispeicher:** eigener Ordner auf dem Array; jede Fassung einmal, benannt nach ihrer SHA-256-Prüfsumme; gleiche
-  Inhalte werden nur einmal gespeichert (→ K 5). `ir.attachment` reicht dafür nicht (kein Datenstrom, → K 5). Auch Vorschaubilder und Text liegen im
-  Dateispeicher (→ K 8.1).
-- **nginx** liefert Downloads direkt von der Platte, Odoo prüft nur die Rechte (→ K 8).
+  Inhalte werden nur einmal gespeichert. `ir.attachment` reicht dafür nicht (kein Datenstrom). Auch Vorschaubilder und Text liegen im
+  Dateispeicher.
+- **nginx** liefert Downloads direkt von der Platte, Odoo prüft nur die Rechte.
 
 ## 4. Was man damit tun kann – zum Start
 
 | Kann | Wie |
 |---|---|
 | Ordner und Dateien verwalten | Odoo-Oberfläche: anlegen, umbenennen, verschieben, kopieren, löschen (Papierkorb 30 Tage) |
-| Hochladen | im Browser, auch ganze Ordner und große Dateien (in Stücken, abgebrochene Uploads werden fortgesetzt, → K 7) |
-| Herunterladen | einzeln oder als ZIP; große ZIPs (über ca. 500 MB) werden im Hintergrund gepackt, dann kommt eine Nachricht (→ K 8) |
-| Office-Dateien bearbeiten | im Browser mit ONLYOFFICE (→ K 10) |
+| Hochladen | im Browser, auch ganze Ordner und große Dateien (in Stücken, abgebrochene Uploads werden fortgesetzt) |
+| Herunterladen | einzeln oder als ZIP; große ZIPs (über ca. 500 MB) werden im Hintergrund gepackt, dann kommt eine Nachricht |
+| Office-Dateien bearbeiten | im Browser mit ONLYOFFICE |
 | Andere Dateien bearbeiten | herunterladen, lokal bearbeiten, hochladen – wird eine neue Version; wer inzwischen geändert hat, bekommt einen Hinweis statt stillem Überschreiben |
 | Versionen | jede Fassung bleibt, wiederherstellbar (unbegrenzt) |
-| Ansehen | Vorschaubilder für Fotos (auch HEIC, RAW), Video, Office und PDF; Scans werden per Texterkennung durchsuchbar. Erzeugt im Hintergrund, was auf dem Bildschirm steht, kommt zuerst (→ K 8.1–8.4) |
+| Ansehen | Vorschaubilder für Fotos (auch HEIC, RAW), Video, Office und PDF; Scans werden per Texterkennung durchsuchbar. Erzeugt im Hintergrund, was auf dem Bildschirm steht, kommt zuerst |
 | Suchen | nach Namen, nach Inhalt (Texterkennung), nach Tags/Status/Kontakt |
-| Einliefern | Scanner, Handy, Kopien in den Eingangsordner legen; Odoo übernimmt eine Datei, wenn sie sich 2 Minuten nicht mehr ändert (→ K 11.1) |
+| Einliefern | Scanner, Handy, Kopien in den Eingangsordner legen; Odoo übernimmt eine Datei, wenn sie sich 2 Minuten nicht mehr ändert |
 | Teilen | Freigabe-Links mit Ablauf, Kundenportal |
 
 **Zum Start nicht:** Netzlaufwerk im Explorer, Word/Excel am Desktop direkt vom Server öffnen, Programme, die mit
 Ordnern und Pfaden arbeiten (z. B. Audio-Projekte). Ob und wie ein Netzlaufwerk dazukommt, wird nach der Nutzung
-entschieden; zwei Wege sind vorbereitet (→ K 11, K 19.10, K 19.14).
+entschieden; zwei Wege sind vorbereitet.
 
 ## 5. Die wichtigsten Bausteine im Datenmodell
 
@@ -79,14 +77,12 @@ entschieden; zwei Wege sind vorbereitet (→ K 11, K 19.10, K 19.14).
 | **Knoten** (`int_filemanager.node`) | ein Ordner oder eine Datei: Name, übergeordneter Ordner, Rechte-Bereich, aktuelle Fassung, Tags, Status. Namen je Ordner eindeutig, **ohne Rücksicht auf Groß/Klein** (wie Windows). Auch eine leere Datei hat eine Fassung. |
 | **Fassung** (`int_filemanager.revision`) | eine Version einer Datei; wird nie verändert |
 | **Inhalt** (`int_filemanager.blob`) | eine Datei im Dateispeicher (Prüfsumme, Größe) |
-| **Abgeleitete Daten** (`int_filemanager.derivative`) | Vorschaubild, Vorschau-PDF, Text oder Metadaten zu einem Inhalt; erzeugt vom Umwandler, für Nutzer nicht direkt lesbar, ausgeliefert über eine eigene Route mit den Rechten der Fassung (→ K 8.3, 8.5) |
+| **Abgeleitete Daten** (`int_filemanager.derivative`) | Vorschaubild, Vorschau-PDF, Text oder Metadaten zu einem Inhalt; erzeugt vom Umwandler, für Nutzer nicht direkt lesbar, ausgeliefert über eine eigene Route mit den Rechten der Fassung |
 | **Rechte-Bereich** (`int_filemanager.scope`) | wer lesen, schreiben, verwalten, endgültig löschen darf; gilt für einen Ordner samt Inhalt |
-
-→ Einzelheiten K 4.
 
 ## 6. Wie Schreiben funktioniert
 
-Jeder Schreibvorgang läuft gleich ab (→ K 6):
+Jeder Schreibvorgang läuft gleich ab:
 1. Rechte prüfen, Vorgangsnummer prüfen (gegen Doppelungen).
 2. Falls neuer Inhalt: als Datenstrom in den Dateispeicher, Prüfsumme dabei berechnen; die Zwischendatei bleibt bis
    zum Abschluss liegen. Das ist harmlos, falls danach etwas schiefgeht – der Aufräumjob entfernt unbenutzte Inhalte.
@@ -95,7 +91,7 @@ Jeder Schreibvorgang läuft gleich ab (→ K 6):
 4. Erst danach Wirkungen nach außen.
 
 Treffen zwei Vorgänge aufeinander (gleicher Name, gleiche Datei), wartet der zweite kurz oder wird wiederholt. Odoo
-erledigt das nicht von selbst, der Code regelt es ausdrücklich (→ K 6).
+erledigt das nicht von selbst, der Code regelt es ausdrücklich.
 
 Umbenennen, Verschieben und Kopieren ändern nur die Datenbank – keine Datei wird bewegt oder kopiert.
 
@@ -103,15 +99,15 @@ Umbenennen, Verschieben und Kopieren ändern nur die Datenbank – keine Datei w
 
 Zum Start **minimal**: ein Bereich "Alle" und der heutige Schutzordner als eigener Bereich. Unterordner mit engeren
 Rechten bekommen bei Bedarf einen eigenen Bereich. Rechte gelten für alle Wege gleich (Liste, Suche, Vorschau,
-Download, Freigabe-Links); öffentliche Methoden arbeiten nie mit Admin-Rechten auf Nutzereingaben (→ K 12).
+Download, Freigabe-Links); öffentliche Methoden arbeiten nie mit Admin-Rechten auf Nutzereingaben.
 **Wichtig:** Odoo 19 macht jede öffentliche Modellmethode für **jeden angemeldeten Nutzer** aufrufbar – über die
 Schnittstelle der Oberfläche und über **JSON-2** (mit API-Schlüssel). Öffentlich ist deshalb nur, was mit beliebigen
 Argumenten sicher ist; alles andere bleibt intern. Außerdem braucht **jede** Tabelle eigene Regeln: Odoo überträgt
-die Rechte eines Ordners nicht von selbst auf Versionen und Inhalte (→ K 12, K 19.16).
+die Rechte eines Ordners nicht von selbst auf Versionen und Inhalte.
 
 ## 8. Übernahme des Bestands
 
-Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
+Der Bestand wird **kopiert**, nicht verschoben:
 1. Erstkopie im laufenden Betrieb (wiederholbar, fortsetzbar): ca. 18 Stunden für 1,8 TB (gemessen 27,5 MB/s).
    Etwa 7 % sind doppelte Inhalte und werden nur einmal gespeichert; Platzbedarf ca. 1,7 TB, frei sind ca. 3,7 TB.
 2. Tags, Status, Kontakte, Texterkennung, Freigaben und alte Versionen aus dem heutigen Modul übernehmen.
@@ -122,7 +118,7 @@ Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
 
 ## 9. Betrieb
 
-- Odoo im Prefork-Modus (mehrere Prozesse), nginx davor, Umwandler-Container (→ K 13).
+- Odoo im Prefork-Modus (mehrere Prozesse), nginx davor, Umwandler-Container.
 - Aufräumjobs: unbenutzte Inhalte, abgebrochene Uploads, Temp-Dateien.
 - Dateispeicher: Unraid-Share unter `/mnt/user/<name>`, abgelegt nur auf disk2 + disk3 (3,2 TB frei), ohne
   Cache-SSD; Odoo greift nur über `/mnt/user` zu. Schlafende Platten brauchen beim ersten Zugriff einige Sekunden.
@@ -150,9 +146,9 @@ Der Bestand wird **kopiert**, nicht verschoben (→ K 14):
 | 2026-09-27 | Eingangsordner: Datei gilt nach 2 Minuten ohne Änderung als fertig |
 | 2026-09-27 | ZIP-Download bis ca. 500 MB direkt, darüber im Hintergrund |
 | 2026-09-27 | Dateispeicher als Share unter `/mnt/user`, Plattenauswahl disk2 + disk3, ohne Cache (Tower) |
-| 2026-09-28 | Abgeleitete Dateien (Vorschau, Text, Metadaten) im eigenen Dateispeicher statt in `ir.attachment`; Odoo dekodiert sie nie (K 8.9) |
-| 2026-09-28 | Erzeugung als Mischform: dauerhafte Warteschlange, gedrosselt im Hintergrund, Sichtbares zuerst (K 8.4) |
-| 2026-09-28 | Zwei Bildgrößen (Kachel, Vorschau); Werterkennung bleibt in Odoo; Umfang von Schritt 5 = Kern, Erweiterungen später (K 8.1, 8.8) |
+| 2026-09-28 | Abgeleitete Dateien (Vorschau, Text, Metadaten) im eigenen Dateispeicher statt in `ir.attachment`; Odoo dekodiert sie nie |
+| 2026-09-28 | Erzeugung als Mischform: dauerhafte Warteschlange, gedrosselt im Hintergrund, Sichtbares zuerst |
+| 2026-09-28 | Zwei Bildgrößen (Kachel, Vorschau); Werterkennung bleibt in Odoo; Umfang von Schritt 5 = Kern, Erweiterungen später |
 | 2026-09-29 | OCR/Werterkennung mit Wortpositionen (Hervorhebung, wie v1s Phase A–C) für die volle Ausbaustufe, auch für Vorschau-PDFs aus Office; erst Server/Datenmodell, Oberfläche folgt als eigener Schritt. Kein Zerstückeln langer Dokumente: der Umwandler antwortet bei einer Umwandlung über 15 s mit einer Auftragsnummer statt zu blockieren, Odoo fragt später nach (Vorbild: FileRun, Nextcloud, Amazon/Google Document-Umwandlung, alle geprüft) |
 
 ## 11. Reihenfolge mit Abnahme
@@ -175,7 +171,7 @@ am 2026-09-27 verbindlich.)*
 
 ## 12. Bewusst nicht (vorerst)
 
-- Kein Netzlaufwerk zum Start; kein Samba + Watcher (zweiter Schreiber, → K 19.15).
+- Kein Netzlaufwerk zum Start; kein Samba + Watcher (zweiter Schreiber).
 - Keine Änderung am Odoo-Kern.
 - Keine Erweiterungen, bevor das Fundament im Alltag trägt.
 
@@ -195,17 +191,12 @@ am 2026-09-27 verbindlich.)*
   Entscheidung beim Betrieb.
 - **Nicht mit echtem Word/Excel getestet** (nur nachgespielt), betrifft erst ein späteres Netzlaufwerk.
 - **Gleichzeitige Zugriffe:** Odoos automatische Wiederholung greift nicht bei Namenskonflikten und belegten Sperren;
-  der eigene Code muss das regeln – deshalb in Schritt 3 die Tests zuerst (→ K 6, Prüfbericht A3).
+  der eigene Code muss das regeln – deshalb in Schritt 3 die Tests zuerst.
 
 ## 14. Wo was steht
 
-| Thema | Konzept |
+| Thema | Datei |
 |---|---|
-| Grundregeln, Aufbau, Datenmodell | K 2–4 |
-| Dateispeicher, Schreibwege, Upload | K 5–7 |
-| Vorschau, Suche, Office | K 8–10 |
-| Netzlaufwerk-Vorarbeit, Eingangsordner | K 11, 19.4–19.15 |
-| Rechte, Betrieb, Übernahme | K 12–14 |
-| Tests | K 16 |
-| Messungen und Prototypen | K 19 |
-| Code-Prüfung (Beleg je Aussage) | `docs/review/konzept_codepruefung_2026-09-26.md` |
+| Stand, nächste Schritte, Testumgebung | `int_filemanager_v2_stand.md` |
+| Begründungen, verworfene Wege, Odoo-19-Fallen | `int_filemanager_v2_entscheidungen.md` |
+| Frühere Konzepte, Messungen, Prüfberichte | Git-Tag `docs-vor-aufraeumen-2026-10-02` |

@@ -1,4 +1,4 @@
-"""Filter odoo-ls and test_lint output down to int_filemanager (Konzept 16, Kern 11).
+"""Filter odoo-ls and test_lint output down to int_filemanager.
 
 Runs inside the Odoo test image on Tower. Both tools check far more than our module:
 odoo-ls reports ~1,800 diagnostics in the Odoo core, and test_lint runs pylint over the
