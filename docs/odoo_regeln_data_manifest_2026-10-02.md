@@ -1,0 +1,76 @@
+# Odoo 19 Regeln: Datendateien und Manifest (Destillat)
+
+Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
+`content/developer/reference/backend/data.rst` und `backend/module.rst`
+(Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/data.html>,
+<…/backend/module.html>). Geprüft: 2026-10-02. Ergänzt `docs/odoo_konventionen_2026-09-26.md` Abschnitte 1, 2 und 5.
+Index: `docs/odoo_regeln_index_2026-10-02.md`.
+
+## 1. Manifest (`__manifest__.py`)
+
+Ein einziges Python-Dict. Schlüssel laut Referenz:
+
+| Schlüssel | Typ / Standard | Regel |
+|---|---|---|
+| `name` | str, **Pflicht** | Anzeigename |
+| `version` | str | folgt Semantic Versioning (Hausregel: `19.0.x.y.z`) |
+| `description` | str | reStructuredText |
+| `author`, `website`, `maintainer` | str | Maintainer ist standardmäßig der Autor |
+| `license` | str, Standard `LGPL-3` | `GPL-2`, `GPL-2 or any later version`, `GPL-3`, `GPL-3 or any later version`, `AGPL-3`, `LGPL-3`, `Other OSI approved licence`, `OEEL-1`, `OPL-1`, `Other proprietary` |
+| `category` | str, Standard `Uncategorized` | bestehende Kategorien bevorzugen; unbekannte werden angelegt; Hierarchie mit `/` (`Foo / Bar`) |
+| `depends` | list | Module, die zuerst geladen sein müssen (Funktionen nutzen **oder** Ressourcen ändern). **`base` immer angeben**, auch wenn immer installiert – sonst wird das Modul bei `base`-Updates nicht mit aktualisiert |
+| `data` | list | immer geladene Dateien, Pfade ab Modulwurzel |
+| `demo` | list | nur im Demo-Modus |
+| `auto_install` | bool oder list, Standard `False` | für "Verbindungsmodule" (`sale_crm`); Liste = Teilmenge der `depends`, leere Liste = immer installieren |
+| `external_dependencies` | dict | `{'python': [...], 'bin': [...]}`; Modul installiert nicht, wenn etwas fehlt |
+| `application` | bool, Standard `False` | vollwertige App vs. technisches Modul |
+| `assets` | dict | Bundles (siehe Frontend-Assets-Destillat) |
+| `installable` | bool, Standard `True` | |
+| `{pre_init, post_init, uninstall}_hook` | str | Funktionsname in `__init__.py`, Argument ist `env`; **nur nutzen, wenn Setup/Aufräumen über die API extrem schwierig oder unmöglich ist** |
+| `sequence` | int, Standard 100 | Reihenfolge in der Apps-Liste |
+| `active` | — | **veraltet** → `auto_install` |
+
+Folgen für dieses Repo: Schlüssel mit Standardwert weglassen (Odoo `test_manifests`, siehe Konventionen 2);
+`external_dependencies` statt `try/except ImportError`-Ersatzklassen; Hooks nur mit Begründung.
+
+## 2. XML-Datendateien
+
+- Wurzel `<odoo>`, darin beliebig viele Operationen. **Dateien laufen sequentiell**; eine Operation kann nur auf
+  Ergebnisse **vorheriger** Operationen verweisen (Reihenfolge in `data` beachten).
+- **`noupdate`:** `<odoo noupdate="1">` oder Block `<data noupdate="1">` = nur bei Installation (`-i`) geladen;
+  ohne = bei Installation und Update (`-i`/`-u`) neu geladen.
+
+### `<record>`
+- `model` (Pflicht), `id` (externe ID, **dringend empfohlen**: bei Erstellung für spätere Bezüge, bei
+  Änderung der Zieldatensatz), `context`, `forcecreate` (Update-Modus: anlegen, wenn nicht vorhanden; braucht
+  externe ID; Standard `True`).
+- Ein `<record>` ohne `<field>` nimmt alle Defaults (Neuanlage) oder tut nichts (Update).
+
+### `<field>` (Wertangabe)
+- Ohne Wert → implizit `False` (leeren oder Default vermeiden).
+- `search` (Domain; nimmt bei Many2one nur den ersten Treffer), `ref` (externe ID; Many2one/Reference),
+  `type` (`xml`/`html` mit `%(external_id)s` und `%%`, `file`, `char`, `base64` mit `file`-Attribut, `int`, `float`,
+  `list`/`tuple` mit `<value>`), `eval` (beliebiger Python-Ausdruck; Kontext `time`, `datetime`, `timedelta`,
+  `relativedelta`, `ref`, `obj`).
+- `eval` nur, wenn die anderen Formen nicht passen.
+
+### `<delete>`, `<function>`
+- `<delete model= id=|search=>` (`id` und `search` schließen sich aus).
+- `<function model= name=>` ruft eine Methode auf (Parameter per `eval` oder `<value>`). Methoden, die so aus
+  Daten aufgerufen werden, sind öffentlich → Sicherheits-Destillat beachten.
+
+### Kurzformen
+- **`<menuitem>`:** `parent` (externe ID; ohne: `name` als `/`-getrennter Pfad, Zwischenmenüs werden angelegt;
+  sonst Top-Level), `name` (ohne: Name der verknüpften Aktion, sonst `id`), `groups` (kommagetrennte externe IDs;
+  `-` davor entfernt die Gruppe), `action`, `id`. Für Menüs `<menuitem>` statt `<record>`.
+- **`<template>`:** QWeb-View, nur `arch` nötig; optional `id`, `name`, `inherit_id` (externe ID), `priority`,
+  `primary`, `groups`, `active`. **`active` am Knoten wirkt nur bei der Erstellung**, nicht bei späteren Updates.
+- **`<asset>`:** `id`, `name`, `active` (gleiche Einschränkung wie bei `<template>`), Kinder `<bundle>`
+  (Attribut `directive`) und `<path>`, optional `<field>`.
+
+## 3. CSV-Datendateien
+
+- Für viele einfache Datensätze eines Modells (typisch: Zugriffsrechte).
+- Dateiname **`<modellname>.csv`**; erste Zeile = Felder, Sonderfeld `id` = externe ID; jede weitere Zeile ein
+  Datensatz. Beispiel: `security/ir.model.access.csv`. Referenzierte Datensätze (z. B. Land) müssen vorher
+  definiert sein.
