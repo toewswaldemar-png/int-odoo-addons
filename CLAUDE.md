@@ -53,9 +53,19 @@ Die Regeln der Odoo-19-Dokumentation (Stand 2026-10-02, Quelle `odoo/documentati
 - Neuer Code verletzt sie nicht; bei bestehendem Code Stil nicht umformatieren (Coding Guidelines, "Quellen und Rangfolge").
 - Die Destillate sind **kein Ersatz** für den Core-Grep oben: wo die Quelle autodoc ist (Signaturen, Feldparameter),
   gilt der Core im Container. Bei Widerspruch gilt die Odoo-Quelle, nicht das Destillat – Destillat dann korrigieren.
+- **Volltext-Referenzen zum Nachschlagen** (nicht pauschal laden): `docs/odoo19_reference/` (Odoo-19-Developer-Reference
+  plus Coding Guidelines) und `docs/owl2_reference/` (Owl 2.8.4); Einstieg jeweils `INDEX.md`, dann nur die passende Datei lesen.
+  Bei Unsicherheit über API-Details (Signaturen, Feldparameter, View-Attribute) hier nachschlagen statt aus dem Gedächtnis
+  zu schreiben. **Owl:** Odoo 19 nutzt Owl 2.8.4 – für Owl-Code gilt nur `owl2_reference/`; die Online-Doku `…/owl/documentation/v3/`
+  (Owl 3: Signals, Plugins, Effects) gilt für Odoo 19 nicht. Verbindliche Regeln bleiben die Destillate in `docs/odoo_regeln/`.
 - Prüfautomatik (pre-commit, `test_lint`, odoo-ls) ist eingerichtet (`docs/pruefautomatik_2026-10-02.md`: Aufruf,
   Verifikationsstand, Altbefunde); Regeln ohne Werkzeug bleiben Review-Checkliste in den Destillaten. Neuer Code muss
   `pre-commit run` bestehen; Altdateien stehen im LEGACY-Block (`scripts/lint/sync_legacy_excludes.py`).
+  **Wann:** nicht bei jeder Bearbeitung. pre-commit läuft bei jedem Commit automatisch (nur geänderte Dateien);
+  `tools/v2check/v2check.sh` (`test_lint` + odoo-ls auf Tower, langsam) einmal vor dem Commit, wenn Python/XML/Manifest/i18n berührt
+  wurden; zwischendurch nur gezielte schnelle Tests. Neue Befunde gegen die Altbefunde (`docs/pruefautomatik_2026-10-02.md`, Abschnitt 4)
+  abgleichen. **Nie `pre-commit run --all-files` im Arbeitsbaum** (Windows, `autocrlf`): die Hooks schreiben Dateien um
+  (Zeilenenden, ruff format) – 2026-10-02 betraf das 58 Dateien; nur `pre-commit run` (staged) bzw. `--files <Datei>`.
 
 ## Weitere Grundsätze
 
