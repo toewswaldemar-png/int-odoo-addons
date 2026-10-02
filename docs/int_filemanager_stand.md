@@ -24,8 +24,13 @@ odoo-ls ohne Befund im eigenen Code, `i18n/de.po` vollständig, Gegenlese durch 
 Zuletzt geprüft (2026-10-01): pre-commit grün, 555 Odoo-Tests, 76 Umwandler-Tests, 72 Node-Tests, `v2check` ohne neue Befunde
 (12 alte Befunde im bestehenden Code unverändert). **Neu 2026-10-02:** Prüfautomatik und Odoo-19-Regeln aus `master` übernommen
 (`pruefautomatik_2026-10-02.md`, `odoo_regeln/`); Docker-Läufe auf Tower und pre-commit auf Windows noch nicht verifiziert.
+**Review 2026-10-02:** gesamtes Modul gegen alle Regeldateien gelesen (Ergebnis in 3.1 bis 3.5); dabei wurde nichts ausgeführt, auch nicht pre-commit,
+`test_lint`, odoo-ls oder die Tests. Ein pre-commit-Hook ist auf dem Arbeitsrechner nicht installiert (`.git/hooks` leer, `pre_commit` fehlt).
 
 ## 2. Nächste Schritte (in dieser Reihenfolge)
+
+**Vorrang vor allem anderen:** die Sicherheitsbefunde aus 3.1 (Altcode live auf HM-SRV) und 3.2 (Rechtemodell des Branches). Erst Regressionstests, die
+ein Nicht-Admin per ORM auslöst und die jetzt rot sind, dann die Korrekturen; die Regelabweichungen aus 3.3 bis 3.5 folgen getrennt davon.
 
 1. **Rückmeldung des Nutzers zum Eigenschaften-Formular** abwarten (Zoom auf den Wert, Rahmenrand, Layout).
 2. **Prüf-Fenster entfernen:** `static/src/int_filemanager/v2/value_review/` (Client-Aktion, XML, SCSS, Tests), Menüpunkt `int_check_values`,
@@ -70,7 +75,141 @@ Modell gegenlesen und Befundliste ablegen; (A7) fehlt dem Image `odoo:19.0-hm-te
 - Nach neuer Wörter-Spec werden vorhandene `words`-Ergebnisse gelöscht und im Hintergrund neu gelesen; bis dahin findet die Volltextsuche diese PDFs nicht.
 - Live-Datenbanken auf `pg_trgm` nicht geprüft; die Migration legt die Erweiterung an, wenn der DB-Benutzer darf, sonst Warnung.
 - Der Code von `master` (u. a. `native_ui/`, `models/filemanager_file.py`, `publish_service.py`) verweist in Kommentaren noch auf gelöschte Dokumente (Papierkorb, Ausbau, native UI, DB-Vorrang-Konzept); die Verweise verschwinden mit dem Entfernen des alten Codes in Schritt 8, die Dokumente stehen im Git-Tag.
-- Sicherheitslücke **N1** auf `master` (HM-SRV) ist **nicht** gefixt. In `web-filemanager` liegen nicht committete Änderungen des Nutzers (unberührt lassen).
+- Sicherheitslücke **N1** auf `master` (HM-SRV) ist **nicht** gefixt, Einzelheiten und weitere Altcode-Lücken in 3.1. In `web-filemanager` liegen nicht committete Änderungen des Nutzers (unberührt lassen).
+
+### 3.1 Sicherheit im Altcode (`master`, läuft live auf HM-SRV)
+
+Durch Lesen belegt, nicht ausgeführt.
+
+- **N1:** `action_analyze_document` und `action_apply_extracted_values` (`models/filemanager_file.py`) sind öffentlich und arbeiten mit `sudo()`; die
+  Rechteprüfung steht nur im Controller und fehlt beim RPC-Aufruf. Jeder Dateimanager-Nutzer kann so den Text und Kontaktnamen zu jedem Pfad auslesen
+  (auch in Schutzordnern) und erkannte Werte ersetzen.
+- **Beliebige Ordner löschen:** `unlink` (`models/filemanager_file.py`) löscht bei Papierkorb-Einträgen per `shutil.rmtree` den Pfad aus dem frei
+  beschreibbaren Feld `path`, ohne `resolve_path`. Ein Nutzer legt einen Eintrag mit `trashed=True`, `trashed_by=ich` und `path="x/../Buchhaltung"` an
+  und löscht ihn; der echte Ordner ist weg. Die ACL erlaubt Nutzern Anlegen und Löschen auf `int_filemanager.file`.
+- **Nicht indexierte Pfade sind ungeschützt:** `authz.require` lässt einen Pfad ohne Index-Eintrag durch. Auf CIFS-Freigaben ohne Watcher-Ereignis wird
+  eine Datei bis zum nächsten Vollscan nicht indexiert und ist in einem Schutzordner für jeden Nutzer erreichbar.
+- `int_filemanager.share_log` ist für alle Nutzer lesbar, ohne Rule; Pfade und Namen von Dateien, die der Nutzer nicht sehen darf, werden sichtbar
+  (das Modell nutzt auch der Branch).
+- Die Route `/int_filemanager/upload` hat `csrf=False`; der WebDAV-Weg (`_put`) schreibt ohne Größengrenze; der Token-Speicher in `webdav_tokens.py` liegt
+  im Prozessspeicher und bricht bei Prefork-Betrieb.
+- `share_download` und `zip_extract_entry` lesen ganze Dateien in den Speicher (Grundregel I12).
+
+### 3.2 Sicherheit im Rechtemodell des Branches (vor Schritt 8 beheben)
+
+Durch Lesen belegt, nicht ausgeführt. Betrifft nur den Branch und die Testinstanz, nicht `master`. Verletzt die Grundregel I7 ("Rechte prüft nur Odoo, für
+jede Tabelle und jeden Zugriffsweg"). Ursache: die Modelle sind über die ORM-Schnittstelle (`/json/2`, `call_kw`) mit allen Feldern schreibbar, die
+Prüfungen stehen nur in den Hilfsmethoden. Es gibt kein `groups=`, kein `readonly` und keine Prüfung in `write`/`create`; Odoo prüft Rules bei `write` nur
+vorher, Ziele eines Many2one werden nicht auf Leserecht geprüft.
+
+1. **Beliebige Dateien auf dem Server anhängen, anlegen und löschen:** `int_filemanager.upload.temp_file` ist frei beschreibbar
+   (`models/int_filemanager_upload.py`), die ACL erlaubt Nutzern Anlegen, Schreiben und Löschen der eigenen Zeilen. `upload_chunk` hängt per
+   `open(..., "ab")` an diesen Pfad an; `cancel_upload`, der Ablauf-Cron und `finish_upload` löschen ihn danach. Eine Gruppenmitgliedschaft reicht.
+   Lesen über den Hardlink in `blobstore.adopt_hashed` geht nur auf demselben Dateisystem wie der Blob-Speicher (andere Filestores, Sessions).
+   Korrektur: Nutzer-ACL auf `upload` nur lesend, Schreiben per `sudo()` nach der Rechteprüfung; den Pfad aus der Operationsnummer ableiten und mit
+   `realpath` unter `tmp_dir` prüfen.
+2. **Knoten- und Revisionsfelder frei schreibbar:**
+   - Fremde Inhalte lesen: `node.current_revision_id` auf eine fremde Revision setzen oder eine Revision mit fremdem `blob_id` anlegen; der Download
+     liefert den Blob ohne Prüfung (`controllers/int_filemanager_v2.py`, `download` und `_blob_stream`).
+   - Ohne Löschrecht endgültig löschen: `active`, `removal_reason` und `trashed_at` setzen, der Cron `_purge_expired_trash` löscht als Superuser.
+   - Zielprüfung umgehen: `scope_id` und `parent_id` ändern, `rename_or_move` und `create_file` prüfen das Ziel nur in der Methode.
+   - Außerdem `review_state`, `size`, `mime`.
+   Korrektur: diese Felder nur mit `env.su` änderbar machen und die internen Wege nach der Prüfung mit `sudo()` schreiben lassen (kein Context-Flag,
+   RPC-Clients setzen den Context frei).
+3. **Jeder Nutzer kann Scopes anlegen:** ACL `scope` hat `create=1`, die Rule prüft beim Anlegen nur, ob die eigene Gruppe in `manage_group_ids` steht,
+   und die setzt der Anleger selbst.
+4. **Verschieben in einen anderen Scope** (`models/int_filemanager_node.py`, `rename_or_move`): ein Roh-`UPDATE ... LIKE` setzt den Scope aller Nachfahren,
+   auch von Unterordnern mit fremdem Scope, die der Nutzer nicht sehen darf; er bekommt sie dann mit dem Ziel-Scope. `is_scope_root` wird dabei nicht neu
+   berechnet. Der Test `test_move_to_different_scope_updates_whole_subtree` prüft nur ohne so einen Unterordner.
+5. **Testlücke:** keiner der Rechte-Tests lässt einen Nutzer mit Schreibrecht die Felder aus 1 bis 3 direkt per ORM schreiben; die Rennszenarien
+   (`tests/tower`) gehen nur über die Hilfsmethoden. Vor der Korrektur je einen roten Test schreiben (Nicht-Admin, `call_kw` und `/json/2`).
+
+### 3.3 Fehler und Leistung im neuen Code
+
+- **Umbenennen-Knopf fehlt auf Deutsch:** `static/src/int_filemanager/v2/upload_panel.js` (`canRename`) prüft den Fehlertext mit `/exists/`; die deutsche
+  Übersetzung ("existiert hier bereits") passt nicht. Der Knopf erscheint für deutsche Nutzer nie. Korrektur: am Fehlertyp erkennen, nicht am Text.
+- **Follower-Zeile je Knoten:** beim Anlegen ist nur `mail_create_nolog` gesetzt, nicht `mail_create_nosubscribe` (`create_file`, `create_folder`,
+  `copy_node`, `_copy_children`, `_finish_now`); Odoo legt dadurch je Knoten eine Zeile in `mail_followers` an (bei der Übernahme von 1,8 TB Hunderttausende).
+- **Roh-SQL in Folge von `rename_or_move`:** siehe 3.2 Nr. 4 (Rechte) und fehlendes `modified()` für `is_scope_root` (ORM-Regel "Flush, SQL, Invalidate, modified").
+- **Textdatei-Editor ohne Größenlimit:** `controller_mutations.js` (`onEditText`) lädt jede `.txt`/`.log`/`.csv`/`.json`/`.md` vollständig in den Browser.
+- **Eingabeprüfung der öffentlichen Methoden:** `apply_field_values` greift ungeprüft auf `item["field_id"]` zu, `existing_names`, `upload_chunk` und
+  `create_link` nehmen beliebige Typen; schlechte Eingabe endet als 500 statt als `UserError`. Nicht ausnutzbar, aber unsauber.
+- **Rechenaufwand beim Öffnen des Formulars:** `_compute_values_json` liest je Knoten den ganzen Text und fängt jeden Fehler mit `except Exception`;
+  `_suggest_tags` lädt alle Tags; `_learn_labels` sucht je Feld. Für einzelne Dokumente unkritisch.
+- **Crons:** der Rückgabewert von `_commit_progress` (Restzeit) wird in `_cron_finish_pending`, `_cron_build_zips` und `_cron_run` ignoriert; die Regel
+  verlangt, bei 0 sofort zurückzukehren.
+- Die Prüf-Client-Aktion `value_review` ist noch geladen und im Menü, obwohl entschieden war, sie zu entfernen (Schritt 2 oben); das Modul hat zwei
+  Wurzelmenüs ("Dateimanager" und "Files").
+- `tests/tower/bootstrap_fixtures.py` enthält ein festes Testpasswort (`race_driver_pw_1`) und liegt im Modulordner; beides nur für die Testinstanz gedacht.
+
+### 3.4 Abweichungen von den Odoo-19-Regeln und Hausregeln (neuer Code)
+
+Nach den Regeldateien in `docs/odoo_regeln/` geordnet; Stand der Prüfung per Lesen, kein Werkzeuglauf.
+
+- **Python/ORM:**
+  - Roh-SQL ohne `odoo.tools.SQL`: f-String in `models/int_filemanager_derivative.py` (`_enqueue_missing`, mit `# noqa: S608`) und gut 15 weitere
+    `cr.execute("...", [...])` in `int_filemanager_blob.py`, `_derivative.py`, `_node.py` und `_upload.py` (Hausregel: `SQL()`).
+  - `except Exception` ohne konkreten Typ an vier Stellen: `int_filemanager_node.py` (`_purge_expired_trash`, `_compute_values_json`),
+    `int_filemanager_upload.py` (`_finish_pending_one`), `int_filemanager_zip_job.py` (`_build_one`).
+  - `_remove_if_exists` steht dreimal (`_node`, `_upload`, `_zip_job`), obwohl `blobstore.remove_if_exists` existiert.
+  - Reihenfolge im Modell `int_filemanager.node`: Felder (`mtime`, `share_ids`, `is_scope_root`, `is_visible_top`, `content`) stehen nach `_unique_name_per_parent`;
+    `tag_ids` hat ein überflüssiges `string="Tags"`; `is_dir` hat den Standardwert `default=False`.
+  - Acht lesende öffentliche Methoden ohne `@api.readonly` (`request_previews` schreibt und ist ausgenommen): `tree_children`, `breadcrumb`, `existing_names`,
+    `suggest_field_values`, `page_words`, `read_selection`, `upload_status`, `zip_job_status` (Entscheidungen, Abschnitt 8).
+  - Docstrings: 16 von 147 haben mehr als fünf Zeilen (Hausregel: wenige Zeilen), 30 öffentliche Funktionen haben keinen.
+  - In `value_suggest.py` überschreibt `Page.in_area` die Parameter `start` und `end`; Kommentare mit Fundgeschichte ("test collection").
+- **Sprache und Verweise (Hausregel 8):**
+  - `__init__.py`: deutscher Docstring, "Phase 5", Verweis auf das gelöschte `docs/int_filemanager_ausbau.md`.
+  - `views/int_filemanager_node_views.xml`: Kommentar mit "Schritt 4b" und veraltetem Dateinamen (`int_filemanager_v2_search_model.js`, richtig `v2/search_model.js`).
+  - `data/int_filemanager_upload_cron.xml`: Verweis "N6".
+  - `views/portal_templates.xml`: hartcodierte deutsche Texte, `t-esc` statt `t-out`, deutsche Kommentare.
+  - `systray/` (Audio-Player, wird von v2 genutzt) und `shared/` haben deutsche Quelltexte in Templates und `_t`; sie fehlen in `i18n/de.po`.
+  - `README.rst` verweist auf Dokumente (erlaubt, aber nach Schritt 8 prüfen).
+- **Manifest und Daten:**
+  - `installable: True` ist der Standardwert.
+  - `external_dependencies` fehlt für `pdfplumber`, `ocrmypdf` und `mutagen` (Altcode, aber das Manifest ist umgeschrieben).
+  - Die Hooks (`pre_init_hook`, `post_init_hook`, `post_load`) stehen in `__init__.py` und `pg_extensions.py` statt in `hooks.py`.
+  - `<field name="active">True</field>` in den Cron-Records und `<field name="context">{}</field>` in `action_int_filemanager_node` sind Standardwerte.
+- **Views/XML:**
+  - IDs: `action_int_filemanager_node` statt `int_filemanager_node_action`; Views ohne `_view_` im Namen; Menü `menu_int_filemanager_v2_root`.
+  - Redundantes `string=` an `name` und `size` in `int_filemanager_node_views.xml`.
+  - `position="replace"` in `v2/list_view.xml` und `v2/kanban_view.xml` ohne Begründungskommentar an der Stelle.
+- **Benennung "v2":** Beschreibungen der Modelle ("Filemanager v2 ..."), Routen `/int_filemanager/v2/...`, Registry-Schlüssel `int_filemanager_v2_*`,
+  Dateiname `controllers/int_filemanager_v2.py` (Regel: `controllers/<modul>.py`). Der Freigabe-Link `/int_filemanager/v2/share/<token>` geht an Kunden;
+  eine spätere Umbenennung bricht diese Links, deshalb **vor Schritt 8 entscheiden**.
+- **JavaScript/Owl:**
+  - `fetch` (`controller_mutations.js`, `uploads_service.js`), `window.open` (`controller_mutations.js`), `setTimeout` und `document.addEventListener`
+    (`list_renderer.js`, `controller_previews.js`, `viewer_overlay.js`, `uploads_service.js`) statt `browser.*` / `useExternalListener`.
+  - `/** @odoo-module **/` ist unter `static/src` überflüssig.
+  - `window`-weiter `dragover`-Listener mit `preventDefault()` auch für fremde Drags (`controller_uploads.js`).
+  - `viewer_overlay.js` hängt an Interna von pdf.js (`PDFViewerApplication`), bei einem Odoo-Update zu prüfen.
+- **Tests:**
+  - Keine Hoot-Tests und keine Tours; die `.mjs`-Tests laufen nur mit `node --test`, nicht in Odoos Testlauf.
+  - `test_fulltext_word_index.py` hat kein `@tagged`.
+  - Skripte für Tower liegen im Modulordner (`tests/tower`), werden mit dem Modul ausgeliefert.
+- **i18n:** `i18n/de.po` Eintrag "A name must not contain / \ : ...": im `msgstr` steht ein einzelner Backslash statt `\\`. In den v2-JS-Dateien fehlen
+  "Delete" (kommt aus dem Odoo-Kern) und "Bytes" in `de.po`.
+- **SCSS:** neun Zeilen über 80 Zeichen in `v2/previews.scss`, `v2/upload_panel.scss`, `v2/properties/preview_field.scss` und
+  `v2/value_review/value_review_action.scss`; letztere nutzt `var(--bs-primary-rgb)`, obwohl die Entscheidungen festhalten, dass Odoo 19 Community keine
+  `--bs-*`-Farbvariablen zur Laufzeit hat; `.o_int_filemanager_move_tree` steht in `upload_panel.scss`.
+- **Prüfautomatik:** `pre_commit`, pylint-odoo, `test_lint` und odoo-ls sind für den Stand dieser Review nicht gelaufen.
+
+### 3.5 Altcode: Abweichungen, die bis Schritt 8 stehen bleiben
+
+Nach der Regel "bestehenden Code nicht umformatieren" nicht angefasst; bekannt aus `pruefautomatik_2026-10-02.md` und ergänzt.
+
+- Fehlertexte ohne `_()`, `odoo.orm`-Import in `acl_rules.py`, Prop in `link_record_dialog.xml` nicht übersetzbar, `application: False` in den
+  Manifesten der anderen Module (`test_lint`).
+- Deutsche Namen, Docstrings, Kommentare und Oberflächentexte im ganzen Altcode; Kommentare mit Verweisen auf gelöschte Dokumente und auf Memory-Notizen
+  (`views/filemanager_file_search.xml`).
+- `cr.commit()` mitten im Scan (`_scan_and_reconcile`) und im Watcher statt `_commit_progress`; `search_count([])`.
+- Alt-Crons in `data/ir_cron.xml`, Status und Erkennungsmuster ohne `noupdate`: ein Modul-Update aktiviert abgeschaltete Crons wieder und überschreibt
+  geänderte Status-Namen und Muster.
+- `index_utils._upsert_by_path` baut das SQL mit `.format`; `fulltext.py`, `mediameta.py` und `watcher.py` verarbeiten fremde Dateien im Odoo-Prozess
+  (Grundregeln I11 und I13) und starten in `post_load` einen Watcher, der der Grundregel "nur Odoo schreibt" (I1/I5) widerspricht.
+- Doppelte Fehlerinjektion (`publish_service.fault_point` und `fault.py`), doppelte Dialoge und Größenformatierung (`shared/`, `native_ui/` und `v2/`).
+- `native_ui/native_search_model.js`: rekursive Suche mit `=like` ohne Maskierung von `_` und `%` im Ordnernamen (findet Dateien von Nachbarordnern).
+- `int_filemanager.linkable.mixin`: `search_count` je Datensatz in der Liste (N+1).
 
 ## 4. Arbeitsweise des Nutzers
 
