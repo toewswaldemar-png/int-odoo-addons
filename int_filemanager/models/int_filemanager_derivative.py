@@ -284,6 +284,48 @@ class IntFilemanagerDerivative(models.Model):
             by_kind[item.kind] = job
 
     @api.model
+    def _request_words(self, blob_id, name):
+        """Queue the reading of a picture's text, in front of the rest; return the job.
+
+        A picture is never read without being asked, so this is not part of the plan of
+        its file name. A job that gave up is started again.
+        """
+        domain = [
+            ("source_blob_id", "=", blob_id),
+            ("kind", "=", "words"),
+            ("spec", "=", derivative_plan.WORDS_SPEC),
+        ]
+        job = self.search(domain)
+        if not job:
+            try:
+                with self.env.cr.savepoint():
+                    return self.create(
+                        {
+                            "source_blob_id": blob_id,
+                            "kind": "words",
+                            "spec": derivative_plan.WORDS_SPEC,
+                            "hint_ext": derivative_plan.file_extension(name),
+                            "priority": VISIBLE_PRIORITY,
+                        }
+                    )
+            except psycopg2.errors.UniqueViolation:
+                # Another request asked at the same time: use its row.
+                job = self.search(domain)
+        if job.state in ("failed", "not_applicable"):
+            job.write(
+                {
+                    "state": "pending",
+                    "attempts": 0,
+                    "next_try_at": False,
+                    "lease_until": False,
+                    "finished_at": False,
+                    "error": False,
+                    "priority": VISIBLE_PRIORITY,
+                }
+            )
+        return job
+
+    @api.model
     def _drop_outdated_jobs(self):
         """Delete rows of a (kind, spec) the plan no longer makes.
 

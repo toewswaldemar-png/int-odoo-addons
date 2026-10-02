@@ -37,3 +37,5 @@ from . import test_v2_field_value_http
 from . import test_v2_content_search
 from . import test_v2_pg_extensions
 from . import test_index_rights
+from . import test_v2_picture_text
+from . import test_v2_node_arguments

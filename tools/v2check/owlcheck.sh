@@ -26,3 +26,4 @@ trap 'rm -f "$merged" "$merged.own"' EXIT
 PYTHON="$(command -v python3 || echo "py -3.13")"
 $PYTHON "$HERE/merge_templates.py" "$ROOT/int_filemanager" "$merged"
 node "$HERE/compile.mjs" "$merged"
+node "$HERE/render_check.mjs"

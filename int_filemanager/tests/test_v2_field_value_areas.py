@@ -6,8 +6,8 @@ from unittest.mock import patch
 from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import tagged
 
-from ..models import int_filemanager_node
-from ..models.int_filemanager_node import MAX_AREAS, MAX_SELECTION_CHARS
+from ..models import int_filemanager_value_recognition
+from ..models.int_filemanager_value_recognition import MAX_AREAS, MAX_SELECTION_CHARS
 from .test_v2_derivative import FakeConverter
 from .test_v2_derivative_kinds import text_result
 from .test_v2_field_value_suggest import FieldValueCase
@@ -148,7 +148,7 @@ class TestV2FieldValueAreas(FieldValueCase):
             with self.subTest(start=start, end=end), self.assertRaises(UserError):
                 self._read(self.date, start, end)
         with (
-            patch.object(int_filemanager_node, "MAX_SELECTION_CHARS", 10),
+            patch.object(int_filemanager_value_recognition, "MAX_SELECTION_CHARS", 10),
             self.assertRaises(UserError),
         ):
             self._read(self.date, 0, length)  # longer than a value can be
@@ -190,7 +190,7 @@ class TestV2FieldValueAreas(FieldValueCase):
         self.assertEqual(self._words(2)["words"], [])
 
     def test_the_words_of_a_page_are_limited_and_checked(self):
-        with patch.object(int_filemanager_node, "MAX_PAGE_WORDS", 3):
+        with patch.object(int_filemanager_value_recognition, "MAX_PAGE_WORDS", 3):
             self.assertEqual(len(self._words(1)["words"]), 3)
         for page_number in ("1", 1.5, True, None):
             with self.subTest(page=page_number), self.assertRaises(UserError):

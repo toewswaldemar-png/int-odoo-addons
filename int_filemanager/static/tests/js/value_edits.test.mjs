@@ -11,7 +11,7 @@ import {
   rowMarkers,
   typeText,
   valuesToSave,
-} from "../../src/int_filemanager/v2/value_review/value_review_edits.js";
+} from "../../src/int_filemanager/v2/properties/value_edits.js";
 
 function suggestion(text, start, ruleId = 5) {
   return {source_text: text, start, rule_id: ruleId, value: {value_text: text}};

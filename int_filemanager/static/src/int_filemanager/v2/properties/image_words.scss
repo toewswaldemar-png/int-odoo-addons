@@ -1,0 +1,31 @@
+// The layer over a picture: the words to click on, and the outlines of the found values.
+// Both look like those drawn over the pages of the PDF viewer (viewer_overlay.js).
+.o_int_filemanager_image_words {
+    pointer-events: none;
+
+    .o_int_filemanager_word {
+        pointer-events: none;
+    }
+
+    &.o_word_mode .o_int_filemanager_word {
+        pointer-events: auto;
+        cursor: crosshair;
+
+        &:hover,
+        &.o_picking {
+            background: rgba($o-action, 0.2);
+        }
+    }
+
+    .o_int_filemanager_value_box {
+        pointer-events: none;
+        box-sizing: border-box;
+        border: 1px solid $o-gray-600;
+        border-radius: 2px;
+
+        &.o_active {
+            border: 2px solid $o-action;
+            background: rgba($o-action, 0.12);
+        }
+    }
+}

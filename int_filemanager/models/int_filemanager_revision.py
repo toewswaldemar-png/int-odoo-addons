@@ -25,6 +25,7 @@ class IntFilemanagerRevision(models.Model):
             ("office", "Office"),
             ("edit", "Edit"),
             ("restore", "Restore"),
+            ("copy", "Copy"),
             ("import", "Import"),
         ],
         required=True,

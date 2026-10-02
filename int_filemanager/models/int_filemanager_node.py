@@ -1,14 +1,13 @@
 import io
-import json
 import logging
 import os
 import re
 import unicodedata
 import uuid
+from collections import defaultdict
 from datetime import timedelta
 
 import psycopg2
-from markupsafe import Markup
 
 from odoo import Command, api, fields, models
 from odoo.exceptions import UserError
@@ -16,7 +15,8 @@ from odoo.fields import Domain
 from odoo.tools import SQL, escape_psql
 from odoo.tools.mimetypes import guess_mimetype
 
-from .. import blobstore, fault, value_suggest, value_types
+# fault: test hooks of the write paths (see its docstring); a no-op in production.
+from .. import blobstore, fault, params
 from .. import derivative_plan as plan
 from . import int_filemanager_derivative as derivative
 
@@ -26,6 +26,12 @@ _logger = logging.getLogger(__name__)
 # Days a node stays in the trash before it is deleted for good.
 DEFAULT_TRASH_RETENTION_DAYS = 30
 TRASH_RETENTION_PARAM = "int_filemanager.trash_retention_days"
+# Expired trash subtrees one run of the purge job deletes.
+TRASH_PURGE_BATCH = 200
+
+# How long a write path waits for a row another request holds before it gives up and
+# the request is retried.
+LOCK_TIMEOUT = "5s"
 
 # Fields that carry rights, position, content or the trash purge time. The record
 # rules only look at where a node is now, so these change through the model methods,
@@ -44,48 +50,20 @@ SERVER_ONLY_FIELDS = frozenset(
     }
 )
 
+# Where the content of a new revision may come from when a client says so; the other
+# origins are set by the server paths that really are that origin.
+CLIENT_REVISION_ORIGINS = ("upload", "edit")
+
 # A name never carries a path: "/" and "\\" would make it one. The rest is what Windows
 # refuses, so that an export or a network drive works for every name in the tree.
 _INVALID_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
 _WINDOWS_RESERVED_NAME = re.compile(r"(con|prn|aux|nul|(com|lpt)[0-9¹²³])(\..*)?", re.I)
 
-# Company names are looked for in the letterhead, the start of the first page.
-NAME_SEARCH_CHARS = 20000
-MAX_SUGGESTED_TAGS = 10
-# Boxes one request may carry, and the longest text a marking may cover.
-MAX_AREAS = 50
-MAX_SELECTION_CHARS = 200
-# Words of one page sent to the review window to click on.
-MAX_PAGE_WORDS = 5000
 # Words of a content search, and their length.
 MAX_SEARCH_TERMS = 10
 MAX_SEARCH_TERM_CHARS = 100
-
-
-def _website_host(website):
-    """ "https://www.example.com/x" -> "example.com"."""
-    host = re.sub(r"^[a-z]+://", "", (website or "").strip().lower())
-    return host.split("/")[0].removeprefix("www.")
-
-
-def _area(field):
-    return None if field.page_area == "anywhere" else field.page_area
-
-
-def _whole_words(text, start, end):
-    """Widen ``[start:end]`` where it cuts a word, up to a blank, tab or line break.
-
-    Looks no further than a marking may be long, so a text without blanks costs no more.
-    """
-    if 0 < start < len(text) and not text[start - 1].isspace():
-        if not text[start].isspace():
-            head = text[max(0, start - MAX_SELECTION_CHARS) : start]
-            start -= len(re.search(r"\S*$", head)[0])
-    if 0 < end < len(text) and not text[end - 1].isspace():
-        if not text[end].isspace():
-            end += len(re.match(r"\S*", text[end : end + MAX_SELECTION_CHARS])[0])
-    return start, end
-
+# Names one availability check may carry.
+MAX_CHECKED_NAMES = 10000
 
 PREVIEW_STATES = [
     ("ready", "Ready"),
@@ -105,19 +83,21 @@ def _remove_if_exists(path):
 
 
 class IntFilemanagerNode(models.Model):
-    """A folder or a file. The content lives in its revisions and their
-    blobs; the node carries identity, position in the tree and rights."""
+    """A folder or a file: its place in the tree and its rights.
+
+    The content lives in the revisions and their blobs.
+    """
 
     _name = "int_filemanager.node"
-    _description = "Filemanager v2 node (folder or file)"
-    _inherit = ["mail.thread"]
+    _description = "Filemanager node (folder or file)"
+    _inherit = ["mail.thread", "int_filemanager.value_recognition"]
     _parent_store = True
     _order = "parent_path"
 
     name = fields.Char(required=True)
     parent_id = fields.Many2one("int_filemanager.node", index=True, ondelete="restrict")
     parent_path = fields.Char(index=True)
-    is_dir = fields.Boolean(default=False)
+    is_dir = fields.Boolean()
     active = fields.Boolean(default=True)
     removal_reason = fields.Selection([("trash", "Trash")])
     scope_id = fields.Many2one("int_filemanager.scope", required=True, index=True)
@@ -163,8 +143,8 @@ class IntFilemanagerNode(models.Model):
         copy=False,
         index=True,
     )
-    # Only the states: the explorer builds the picture URLs from the revision itself.
-    # Thumbnail and large preview image.
+    # Thumbnail and large preview image. Only the states: the explorer builds the
+    # picture URLs from the revision itself.
     preview_state = fields.Selection(PREVIEW_STATES, compute="_compute_preview_states")
     full_preview_state = fields.Selection(
         PREVIEW_STATES, compute="_compute_preview_states"
@@ -177,14 +157,6 @@ class IntFilemanagerNode(models.Model):
         compute="_compute_values_json",
         inverse="_inverse_values_json",
     )
-
-    # Names are unique per folder regardless of case, like on Windows. NULLS NOT
-    # DISTINCT: otherwise two roots (parent_id IS NULL) would never collide.
-    _unique_name_per_parent = models.UniqueIndex(
-        '(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active',
-        "A file or folder with this name already exists here.",
-    )
-
     # When the content last changed (the current revision's creation), what the file
     # list shows as "modified"; write_date would also move on a tag or status edit.
     mtime = fields.Datetime(related="current_revision_id.create_date", store=True)
@@ -192,7 +164,6 @@ class IntFilemanagerNode(models.Model):
     share_ids = fields.One2many(
         "int_filemanager.share", "node_id", domain=[("revoked_at", "=", False)]
     )
-
     # A root, or a folder whose rights scope differs from its parent's: the places where
     # a user's access can begin. Kept as a stored flag so that "what is the top of this
     # user's tree" only has to look at these few rows, not at every node.
@@ -209,14 +180,17 @@ class IntFilemanagerNode(models.Model):
     # It is never handed out, not even to someone who found the file by it.
     content = fields.Char(compute="_compute_content", search="_search_content")
 
-    @api.depends("parent_id", "scope_id", "parent_id.scope_id")
-    def _compute_is_scope_root(self):
-        for node in self:
-            node.is_scope_root = (
-                not node.parent_id or node.parent_id.scope_id != node.scope_id
-            )
+    # Names are unique per folder regardless of case, like on Windows. NULLS NOT
+    # DISTINCT: otherwise two roots (parent_id IS NULL) would never collide.
+    _unique_name_per_parent = models.UniqueIndex(
+        '(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active',
+        "A file or folder with this name already exists here.",
+    )
 
+    # The state of a job is no dependency: the converter changes it without the node.
+    @api.depends("is_dir", "name", "current_revision_id.blob_id")
     def _compute_preview_states(self):
+        # sudo(): revisions, blobs and jobs have no user rights; the node was readable.
         blobs = self.sudo().current_revision_id.blob_id
         # Only the columns that are needed: a job row can carry a long text.
         jobs = (
@@ -246,6 +220,158 @@ class IntFilemanagerNode(models.Model):
                     # No row yet: the cron has not queued it, but it will.
                     node[field_name] = "pending"
 
+    # Not the contact or the stored values: the form keeps the edits that are not saved
+    # yet in this field, and an answer read again would wipe them.
+    @api.depends("is_dir", "current_revision_id")
+    def _compute_values_json(self):
+        # A field is also computed for the nodes read along with the asked one (the
+        # prefetch), and those may be nodes the caller cannot read.
+        readable = self.filtered(lambda n: isinstance(n.id, int))._filtered_access(
+            "read"
+        )
+        shared = self._recognition_shared()
+        for node in self:
+            answer = False
+            if node in readable and not node.is_dir:
+                try:
+                    answer = self._suggest_values(node, [], shared)
+                except (re.error, ValueError, OSError):
+                    # A broken rule or word list: the form is still worth opening.
+                    _logger.exception("could not read the values of node %s", node.id)
+            node.values_json = answer
+
+    def _inverse_values_json(self):
+        for node in self:
+            payload = node.values_json or {}
+            if payload.get("edits"):
+                self.apply_field_values(
+                    node.id, payload.get("revision_id"), payload["edits"]
+                )
+
+    @api.depends("parent_id", "scope_id", "parent_id.scope_id")
+    def _compute_is_scope_root(self):
+        for node in self:
+            node.is_scope_root = (
+                not node.parent_id or node.parent_id.scope_id != node.scope_id
+            )
+
+    @api.depends("parent_id.scope_id")
+    @api.depends_context("uid")
+    def _compute_is_visible_top(self):
+        readable = set(self._readable_scope_ids())
+        for node in self:
+            # sudo(): the parent's scope is compared with the readable ones, not shown.
+            node.is_visible_top = (
+                not node.parent_id or node.parent_id.sudo().scope_id.id not in readable
+            )
+
+    def _search_is_visible_top(self, operator, value):
+        if operator not in ("=", "!=") or not isinstance(value, bool):
+            raise UserError(self.env._("Unsupported search on the top of the tree."))
+        top_ids = [
+            row[0]
+            for row in self.env.execute_query(
+                SQL(
+                    """
+                    SELECT n.id FROM int_filemanager_node n
+                    LEFT JOIN int_filemanager_node p ON p.id = n.parent_id
+                    WHERE n.is_scope_root
+                      AND (n.parent_id IS NULL OR p.scope_id <> ALL(%s))
+                    """,
+                    self._readable_scope_ids() or [0],
+                    to_flush=[
+                        self._fields["parent_id"],
+                        self._fields["scope_id"],
+                        self._fields["is_scope_root"],
+                    ],
+                )
+            )
+        ]
+        # search() applies the caller's rights on top of this list of candidates.
+        return Domain("id", "in" if (operator == "=") == value else "not in", top_ids)
+
+    @api.depends()
+    def _compute_content(self):
+        self.content = False
+
+    def _search_content(self, operator, value):
+        """Return the domain of the files whose read text has every word of ``value``.
+
+        Only the current revision counts. The text is read as the superuser, but the
+        caller's rights on the node narrow the hits down like for any other field.
+        """
+        if operator not in ("ilike", "not ilike"):
+            raise UserError(self.env._("The content can only be searched for words."))
+        terms = str(value or "").split()
+        if len(terms) > MAX_SEARCH_TERMS or any(
+            len(term) > MAX_SEARCH_TERM_CHARS for term in terms
+        ):
+            raise UserError(
+                self.env._("The content search has too many or too long words.")
+            )
+        if not terms:
+            return Domain.TRUE if operator == "ilike" else Domain.FALSE
+        # sudo(): the read texts have no user rights; only a list of hits leaves here.
+        texts = (
+            self.env["int_filemanager.derivative"]
+            .sudo()
+            ._search(
+                [
+                    ("kind", "in", ("text", "words")),
+                    ("state", "=", "done"),
+                    *(("text", "ilike", escape_psql(term)) for term in terms),
+                ]
+            )
+        )
+        found = Domain(
+            "current_revision_id.blob_id", "in", texts.subselect("source_blob_id")
+        )
+        return found if operator == "ilike" else ~found
+
+    def _has_field_access(self, field, operation):
+        """Allow writing the server-only fields to the server alone."""
+        if (
+            operation == "write"
+            and field.name in SERVER_ONLY_FIELDS
+            and not self.env.su
+        ):
+            return False
+        return super()._has_field_access(field, operation)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        return super().create(
+            [
+                dict(vals, name=self._clean_name(vals["name"]))
+                if "name" in vals
+                else vals
+                for vals in vals_list
+            ]
+        )
+
+    def write(self, vals):
+        if "name" in vals:
+            vals = dict(vals, name=self._clean_name(vals["name"]))
+        return super().write(vals)
+
+    def action_restore(self):
+        """Restore the selected nodes from the trash."""
+        for node in self:
+            self.restore(node.id, f"ui-restore-{uuid.uuid4().hex}")
+        return True
+
+    def action_delete_permanently(self):
+        """Delete the selected nodes for good; needs the purge right."""
+        for node in self:
+            self.delete_permanently(node.id, f"ui-delete-{uuid.uuid4().hex}")
+        return True
+
+    def action_create_share_link(self):
+        """Create a share link for this file."""
+        self.ensure_one()
+        self.env["int_filemanager.share"].create_link(self.id)
+        return True
+
     @api.model
     def request_previews(self, node_ids):
         """Move the thumbnails of the nodes on screen to the front of the queue.
@@ -268,84 +394,21 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def _readable_scope_ids(self):
+        """Return the ids of the scopes the caller may read."""
+        # sudo(): the caller has no right on the scope list, only the ids come back.
         Scope = self.env["int_filemanager.scope"].sudo()
         groups = self.env.user.all_group_ids.ids
         return Scope.search([("read_group_ids", "in", groups)]).ids
 
-    @api.depends_context("uid")
-    def _compute_is_visible_top(self):
-        readable = set(self._readable_scope_ids())
-        for node in self:
-            node.is_visible_top = (
-                not node.parent_id or node.parent_id.sudo().scope_id.id not in readable
-            )
-
-    def _search_is_visible_top(self, operator, value):
-        if operator not in ("=", "!=") or not isinstance(value, bool):
-            raise UserError(self.env._("Unsupported search on the top of the tree."))
-        # Raw SQL below: what the ORM still holds back must reach the database first.
-        self.flush_model()
-        cr = self.env.cr
-        cr.execute(
-            SQL(
-                """
-                SELECT n.id FROM int_filemanager_node n
-                LEFT JOIN int_filemanager_node p ON p.id = n.parent_id
-                WHERE n.is_scope_root
-                  AND (n.parent_id IS NULL OR p.scope_id <> ALL(%s))
-                """,
-                self._readable_scope_ids() or [0],
-            )
-        )
-        top_ids = [row[0] for row in cr.fetchall()]
-        # search() applies the caller's rights on top of this list of candidates.
-        return [("id", "in" if (operator == "=") == value else "not in", top_ids)]
-
-    def _compute_content(self):
-        self.content = False
-
-    def _search_content(self, operator, value):
-        """Files whose read text contains every word of ``value``, in any order.
-
-        Only the current revision counts. The text is read as the superuser, but the
-        answer is a list of hits, which the caller's rights on the node then narrow
-        down like for any other field: nothing is revealed about files the caller
-        cannot see.
-        """
-        if operator not in ("ilike", "not ilike"):
-            raise UserError(self.env._("The content can only be searched for words."))
-        terms = str(value or "").split()
-        if len(terms) > MAX_SEARCH_TERMS or any(
-            len(term) > MAX_SEARCH_TERM_CHARS for term in terms
-        ):
-            raise UserError(
-                self.env._("The content search has too many or too long words.")
-            )
-        if not terms:
-            return Domain.TRUE if operator == "ilike" else Domain.FALSE
-        texts = (
-            self.env["int_filemanager.derivative"]
-            .sudo()
-            ._search(
-                [
-                    ("kind", "in", ("text", "words")),
-                    ("state", "=", "done"),
-                    *(("text", "ilike", escape_psql(term)) for term in terms),
-                ]
-            )
-        )
-        found = Domain(
-            "current_revision_id.blob_id", "in", texts.subselect("source_blob_id")
-        )
-        return found if operator == "ilike" else ~found
-
     @api.model
+    @api.readonly
     def tree_children(self, parent_id):
         """Return the visible sub-folders of ``parent_id`` for the sidebar tree.
 
         Without ``parent_id``, return the top of what the caller can see. One level
         per call, so the cost depends on the opened level, not on the whole tree.
         """
+        parent_id = params.optional_id(self.env, parent_id, "parent_id")
         level = (
             [("parent_id", "=", parent_id)]
             if parent_id
@@ -362,16 +425,17 @@ class IntFilemanagerNode(models.Model):
             with_children = {parent.id for parent, _count in grouped}
         return [
             {"id": f.id, "name": f.name, "has_children": f.id in with_children}
-            for f in sorted(folders, key=lambda f: f.name.casefold())
+            for f in folders.sorted(lambda f: f.name.casefold())
         ]
 
     @api.model
+    @api.readonly
     def breadcrumb(self, node_id):
         """Return ``[{id, name}]`` from the topmost visible folder down to the node.
 
         Ancestors the caller cannot read are left out, not revealed.
         """
-        node = self.browse(node_id).exists()
+        node = self.browse(params.require_id(self.env, node_id, "node_id")).exists()
         if not node:
             return []
         node.check_access("read")
@@ -381,20 +445,26 @@ class IntFilemanagerNode(models.Model):
         return [{"id": i, "name": names[i]} for i in ids if i in names]
 
     @api.model
+    @api.readonly
     def existing_names(self, parent_id, names):
         """Return which of ``names`` are already taken below ``parent_id``.
 
         Compared like the unique index (case-insensitive, NFC). The SQL query only
         finds candidates; search() then applies the caller's rights.
         """
-        names = [unicodedata.normalize("NFC", n) for n in names or []]
+        parent_id = params.optional_id(self.env, parent_id, "parent_id")
+        if (
+            not isinstance(names, list | tuple)
+            or len(names) > MAX_CHECKED_NAMES
+            or not all(isinstance(n, str) for n in names)
+        ):
+            raise UserError(self.env._("%(argument)s is not valid.", argument="names"))
+        names = [unicodedata.normalize("NFC", n) for n in names]
         if not names:
             return []
         if parent_id:
             self.browse(parent_id).check_access("read")
-        self.flush_model()
-        cr = self.env.cr
-        cr.execute(
+        rows = self.env.execute_query(
             SQL(
                 """
                 SELECT id FROM int_filemanager_node
@@ -405,9 +475,14 @@ class IntFilemanagerNode(models.Model):
                 """,
                 parent_id or None,
                 names,
+                to_flush=[
+                    self._fields["parent_id"],
+                    self._fields["active"],
+                    self._fields["name"],
+                ],
             )
         )
-        found = self.search([("id", "in", [row[0] for row in cr.fetchall()])])
+        found = self.search([("id", "in", [row[0] for row in rows])])
         return [
             {
                 "id": n.id,
@@ -417,24 +492,6 @@ class IntFilemanagerNode(models.Model):
             }
             for n in found
         ]
-
-    def action_restore(self):
-        """Restore the selected nodes from the trash."""
-        for node in self:
-            self.restore(node.id, f"ui-restore-{uuid.uuid4().hex}")
-        return True
-
-    def action_delete_permanently(self):
-        """Delete the selected nodes for good; needs the purge right."""
-        for node in self:
-            self.delete_permanently(node.id, f"ui-delete-{uuid.uuid4().hex}")
-        return True
-
-    def action_create_share_link(self):
-        """Create a share link for this file."""
-        self.ensure_one()
-        self.env["int_filemanager.share"].create_link(self.id)
-        return True
 
     def _display_path(self):
         """Return the node's path, e.g. ``/root/sub/file.txt``, for logs and messages.
@@ -452,7 +509,8 @@ class IntFilemanagerNode(models.Model):
         NFC, so that "e" + combining accent and the precomposed letter cannot exist
         side by side as two different names.
         """
-        name = unicodedata.normalize("NFC", name or "").strip()
+        name = unicodedata.normalize("NFC", name if isinstance(name, str) else "")
+        name = name.strip()
         if not name or name in (".", ".."):
             raise UserError(self.env._("This is not a valid file or folder name."))
         if (
@@ -469,26 +527,10 @@ class IntFilemanagerNode(models.Model):
             )
         return name
 
-    def _has_field_access(self, field, operation):
-        if (
-            operation == "write"
-            and field.name in SERVER_ONLY_FIELDS
-            and not self.env.su
-        ):
-            return False
-        return super()._has_field_access(field, operation)
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        for vals in vals_list:
-            if "name" in vals:
-                vals["name"] = self._clean_name(vals["name"])
-        return super().create(vals_list)
-
-    def write(self, vals):
-        if "name" in vals:
-            vals = dict(vals, name=self._clean_name(vals["name"]))
-        return super().write(vals)
+    @api.model
+    def _require_node(self, node_id, argument):
+        """Return the node with the id the client sent, which must be an id at all."""
+        return self.browse(params.require_id(self.env, node_id, argument))
 
     @api.model
     def _create_below(self, parent, vals):
@@ -498,25 +540,83 @@ class IntFilemanagerNode(models.Model):
         theirs to choose, they follow from the parent.
         """
         parent.check_access("write")
-        return self._create_node(parent, vals)
+        return self._create_nodes([(parent, vals)])
 
     @api.model
-    def _create_node(self, parent, vals):
-        """Create a node below ``parent`` without checking rights; the caller did."""
-        # No "created" chatter message per node: there are too many of them.
+    def _create_nodes(self, placed):
+        """Create the nodes of ``[(parent, vals)]`` without checking rights.
+
+        The caller did. Each node takes the scope of its parent.
+        """
+        # sudo(): users have no create right on nodes; the callers checked the write
+        # right on the parent. No "created" chatter message per node: too many of them.
         return (
             self.sudo()
             .with_context(mail_create_nolog=True)
-            .create(dict(vals, parent_id=parent.id, scope_id=parent.scope_id.id))
+            .create(
+                [
+                    dict(vals, parent_id=parent.id, scope_id=parent.scope_id.id)
+                    for parent, vals in placed
+                ]
+            )
         )
+
+    @api.model
+    def _create_checked(self, parent, vals):
+        """Create a node below ``parent`` and tell the user if the name is taken."""
+        try:
+            with self.env.cr.savepoint():
+                node = self._create_below(parent, vals)
+        except psycopg2.errors.UniqueViolation:
+            raise UserError(
+                self.env._(
+                    "A file or folder named %(name)s already exists here.",
+                    name=vals["name"],
+                )
+            ) from None
+        self._touch_active_parent(parent)
+        return node
+
+    @api.model
+    def _content_bytes(self, content):
+        """Return the content a client sent (base64 text or bytes) as bytes."""
+        if not isinstance(content, str | bytes):
+            raise UserError(
+                self.env._("%(argument)s is not valid.", argument="content")
+            )
+        try:
+            return blobstore.decode_content(content)
+        except ValueError:  # binascii.Error is one
+            raise UserError(
+                self.env._("%(argument)s is not valid.", argument="content")
+            ) from None
+
+    def _stage_content(self, content, key):
+        """Write ``content`` to a temp file; return ``(path, sha256, size)``."""
+        tmp_path = blobstore.write_stream_to_temp(self.env, io.BytesIO(content), key)
+        sha256, size = blobstore.hash_file(tmp_path)
+        return tmp_path, sha256, size
+
+    def _blob_of_staged(self, tmp_path, sha256, size, content):
+        """Link the staged file into the blob store; return its blob row.
+
+        The temp file stays: the caller removes it once the transaction has committed.
+        """
+        blobstore.adopt_hashed(self.env, tmp_path, sha256, keep_tmp=True)
+        # sudo(): blobs have no user rights; the caller checked the rights on the node.
+        blob = self.env["int_filemanager.blob"].sudo()._get_or_create(sha256, size)
+        blobstore.ensure_on_disk(self.env, sha256, tmp_path)
+        if content and not blob.mime:
+            # The bytes are in hand: no need to read the file again.
+            blob.mime = guess_mimetype(content) or False
+        return blob
 
     @api.model
     def create_file(self, parent_id, name, content, operation_key):
         """Create a file from content small enough for one request.
 
-        The caller's rights on the folder are checked first, so a denied request
-        stops before anything reaches the blob store. A name collision raises
-        instead of replacing the existing file.
+        A denied request stops before anything reaches the blob store. A name
+        collision raises instead of replacing the existing file.
         """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
@@ -524,64 +624,27 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
-        content = blobstore.decode_content(content)
-        parent = self.browse(parent_id)
+        parent = self._require_node(parent_id, "parent_id")
+        content = self._content_bytes(content)
 
         fault.fault_point("node_create_before_check")
-        try:
-            with self.env.cr.savepoint():
-                node = self._create_below(
-                    parent,
-                    {
-                        "name": name,
-                        "is_dir": False,
-                        "mime": guess_mimetype(content) if content else False,
-                    },
-                )
-        except psycopg2.errors.UniqueViolation:
-            raise UserError(
-                self.env._(
-                    "A file or folder named %(name)s already exists here.", name=name
-                )
-            ) from None
-        self._touch_active_parent(parent)
+        node = self._create_checked(parent, {"name": name, "is_dir": False})
 
-        tmp_path = blobstore.write_stream_to_temp(
-            self.env, io.BytesIO(content), f"create_{operation.id}"
-        )
-        sha256, size = blobstore.hash_file(tmp_path)
-        blobstore.adopt_hashed(self.env, tmp_path, sha256, keep_tmp=True)
-
-        # Blobs and revisions have no user rights at all; sudo() is safe here because
-        # _create_below() above already checked the caller against the scope.
-        blob = self.env["int_filemanager.blob"].sudo()._get_or_create(sha256, size)
-        blobstore.ensure_on_disk(self.env, sha256, tmp_path)
-        if content and not blob.mime:
-            # The bytes are in hand: no need to read the file again.
-            blob.mime = guess_mimetype(content) or False
-        revision = (
-            self.env["int_filemanager.revision"]
-            .sudo()
-            .create(
-                {
-                    "node_id": node.id,
-                    "blob_id": blob.id,
-                    "revision_no": 1,
-                    "origin": "upload",
-                    "operation_id": operation.id,
-                    "size": size,
-                }
-            )
-        )
-        node.sudo().write({"current_revision_id": revision.id, "size": size})
+        tmp_path, sha256, size = self._stage_content(content, f"create_{operation.id}")
+        blob = self._blob_of_staged(tmp_path, sha256, size, content)
+        result = self._attach_revision(node, None, blob.id, size, "upload", operation)
         fault.fault_point("node_create_after_insert")
 
-        result = {"node_id": node.id, "revision_id": revision.id, "sha256": sha256}
+        result["sha256"] = sha256
         operation.write({"result": result})
         # The blob is already linked under its hash; the temp file goes only once
         # the transaction has committed (postcommit does not run on rollback).
         self.env.cr.postcommit.add(lambda: _remove_if_exists(tmp_path))
         return result
+
+    def _set_lock_timeout(self):
+        """Bound how long this transaction waits for a row lock."""
+        self.env.cr.execute(SQL("SET LOCAL lock_timeout TO %s", LOCK_TIMEOUT))
 
     def _touch_active_parent(self, parent):
         """Write the target folder's row before putting something below it.
@@ -595,20 +658,21 @@ class IntFilemanagerNode(models.Model):
             return
         if not parent.is_dir:
             raise UserError(self.env._("The target is not a folder."))
-        cr = self.env.cr
-        cr.execute("SET LOCAL lock_timeout TO '5s'")
-        cr.execute(
+        self._set_lock_timeout()
+        rows = self.env.execute_query(
             SQL(
                 "UPDATE int_filemanager_node"
                 " SET write_date = (now() AT TIME ZONE 'utc')"
                 " WHERE id = %s AND active RETURNING id",
                 parent.id,
+                to_flush=self._fields["active"],
             )
         )
-        if not cr.fetchone():
+        if not rows:
             raise UserError(
                 self.env._("The target folder is in the trash; restore it first.")
             )
+        parent.invalidate_recordset(["write_date"])
 
     @api.model
     def create_folder(self, parent_id, name, operation_key):
@@ -619,36 +683,36 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
-        parent = self.browse(parent_id)
-        try:
-            with self.env.cr.savepoint():
-                node = self._create_below(parent, {"name": name, "is_dir": True})
-        except psycopg2.errors.UniqueViolation:
-            raise UserError(
-                self.env._(
-                    "A file or folder named %(name)s already exists here.", name=name
-                )
-            ) from None
-        self._touch_active_parent(parent)
+        parent = self._require_node(parent_id, "parent_id")
+        node = self._create_checked(parent, {"name": name, "is_dir": True})
 
         result = {"node_id": node.id}
         operation.write({"result": result})
         return result
 
-    def _lock_and_check_base_revision(self, node, base_revision_id):
-        """Lock the node and check it did not change since ``base_revision_id``.
-
-        Waits for the lock: lock_for_update() skips locked rows and fails at
-        once. A lock timeout propagates so that the request is retried.
-        Returns the current revision as seen under the lock.
-        """
+    def _lock_node(self, node):
+        """Wait for the row lock of ``node``; a lock timeout propagates for a retry."""
+        # Not lock_for_update(): that skips locked rows and fails at once, while a
+        # second request should wait a moment and then see the first one's result.
+        # FOR NO KEY UPDATE like the core's allow_referencing lock: revisions, values
+        # and uploads that point at the node can still be inserted meanwhile; what is
+        # written under the lock (name, place, scope, revision) is no identifier.
         fault.fault_point("node_lock_before_wait")
-        cr = self.env.cr
-        cr.execute("SET LOCAL lock_timeout TO '5s'")
-        cr.execute(
-            SQL("SELECT id FROM int_filemanager_node WHERE id = %s FOR UPDATE", node.id)
+        self._set_lock_timeout()
+        self.env.execute_query(
+            SQL(
+                "SELECT id FROM int_filemanager_node WHERE id = %s FOR NO KEY UPDATE",
+                node.id,
+            )
         )
         fault.fault_point("node_lock_acquired")
+
+    def _lock_and_check_base_revision(self, node, base_revision_id):
+        """Lock the node, check it did not change since ``base_revision_id``.
+
+        Return the current revision as seen under the lock.
+        """
+        self._lock_node(node)
         node.invalidate_recordset(["current_revision_id"])
 
         current = node.current_revision_id
@@ -715,21 +779,24 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
-        content = blobstore.decode_content(content)
-        node = self.browse(node_id)
+        origin = params.require_choice(
+            self.env, origin, "origin", CLIENT_REVISION_ORIGINS
+        )
+        node = self._require_node(node_id, "node_id")
         node.check_access("write")
+        base_revision_id = params.optional_id(
+            self.env, base_revision_id, "base_revision_id"
+        )
+        content = self._content_bytes(content)
 
         current = self._lock_and_check_base_revision(node, base_revision_id)
         fault.fault_point("revision_write_before_check")
 
-        tmp_path = blobstore.write_stream_to_temp(
-            self.env, io.BytesIO(content), f"revise_{operation.id}"
-        )
-        sha256, size = blobstore.hash_file(tmp_path)
+        tmp_path, sha256, size = self._stage_content(content, f"revise_{operation.id}")
 
         # sudo() only to read the blob's hash; the node's rights were checked above.
         if current and current.sudo().blob_id.sha256 == sha256:
-            os.remove(tmp_path)
+            _remove_if_exists(tmp_path)
             result = {
                 "node_id": node.id,
                 "revision_id": current.id,
@@ -739,10 +806,7 @@ class IntFilemanagerNode(models.Model):
             operation.write({"result": result})
             return result
 
-        blobstore.adopt_hashed(self.env, tmp_path, sha256, keep_tmp=True)
-        blob = self.env["int_filemanager.blob"].sudo()._get_or_create(sha256, size)
-        blobstore.ensure_on_disk(self.env, sha256, tmp_path)
-
+        blob = self._blob_of_staged(tmp_path, sha256, size, content)
         result = self._attach_revision(node, current, blob.id, size, origin, operation)
         result["sha256"] = sha256
         fault.fault_point("revision_write_after_insert")
@@ -760,10 +824,15 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
-        node = self.browse(node_id)
+        node = self._require_node(node_id, "node_id")
+        base_revision_id = params.optional_id(
+            self.env, base_revision_id, "base_revision_id"
+        )
         node.check_access("write")
 
-        old_revision = self.env["int_filemanager.revision"].browse(revision_id)
+        old_revision = self.env["int_filemanager.revision"].browse(
+            params.require_id(self.env, revision_id, "revision_id")
+        )
         old_revision.check_access("read")
         if old_revision.node_id.id != node.id:
             raise UserError(self.env._("This revision does not belong to this file."))
@@ -797,35 +866,26 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
-        source = self.browse(node_id)
+        source = self._require_node(node_id, "node_id")
         source.check_access("read")
         if not source.is_dir and not source.current_revision_id:
             raise UserError(
                 self.env._("This file has no content yet; nothing to copy.")
             )
 
-        target_parent = self.browse(target_parent_id)
+        target_parent = self._require_node(target_parent_id, "target_parent_id")
         if source.is_dir and target_parent.parent_path.startswith(source.parent_path):
             raise UserError(self.env._("A folder cannot be copied into itself."))
 
-        try:
-            with self.env.cr.savepoint():
-                new_node = self._create_below(
-                    target_parent, self._copy_vals(source, new_name)
-                )
-        except psycopg2.errors.UniqueViolation:
-            raise UserError(
-                self.env._(
-                    "A file or folder named %(name)s already exists here.",
-                    name=new_name,
-                )
-            ) from None
-        self._touch_active_parent(target_parent)
-
-        result = self._attach_copy_content(source, new_node, operation)
+        new_node = self._create_checked(
+            target_parent, self._copy_vals(source, new_name)
+        )
         if source.is_dir:
             copied = self._copy_children(source, new_node, operation)
             result = {"node_id": new_node.id, "copied": copied + 1}
+        else:
+            [revision] = self._attach_copied_revisions([(source, new_node)], operation)
+            result = {"node_id": new_node.id, "revision_id": revision.id}
         operation.write({"result": result})
         return result
 
@@ -835,45 +895,106 @@ class IntFilemanagerNode(models.Model):
             "name": name,
             "is_dir": source.is_dir,
             "mime": source.mime,
-            "tag_ids": [(6, 0, source.tag_ids.ids)],
+            "tag_ids": [Command.set(source.tag_ids.ids)],
             "status_id": source.status_id.id,
             "partner_id": source.partner_id.id,
         }
 
-    def _attach_copy_content(self, source, new_node, operation):
-        if source.is_dir or not source.current_revision_id:
-            return {"node_id": new_node.id}
-        return self._attach_revision(
-            new_node,
-            None,
-            source.current_revision_id.blob_id.id,
-            source.current_revision_id.size,
-            "restore",
-            operation,
+    def _attach_copied_revisions(self, copies, operation):
+        """Give each copied file a first revision on the content of its original.
+
+        ``copies`` is a list of ``(original, copy)``; return the new revisions in
+        the same order. All revisions are created in one call.
+        """
+        # sudo(): users cannot create revisions or point a node at one; the callers
+        # checked the rights on the folder the copies lie in, and the originals
+        # were found by a search of the caller.
+        revisions = (
+            self.env["int_filemanager.revision"]
+            .sudo()
+            .create(
+                [
+                    {
+                        "node_id": new.id,
+                        "blob_id": old.current_revision_id.blob_id.id,
+                        "revision_no": 1,
+                        "origin": "copy",
+                        "operation_id": operation.id,
+                        "size": old.current_revision_id.size,
+                    }
+                    for old, new in copies
+                ]
+            )
         )
+        for (old, new), revision in zip(copies, revisions, strict=True):
+            new.sudo().write(
+                {
+                    "current_revision_id": revision.id,
+                    "size": revision.size,
+                    "mime": old.mime,
+                }
+            )
+        return revisions
 
     def _copy_children(self, source, new_top, operation):
         """Copy what the caller can see below ``source`` into ``new_top``.
 
-        Parents come before their children, so every new parent exists in time.
-        The caller checked the write right on the folder ``new_top`` lies in, and
-        every copy takes its scope.
+        Return how many nodes were created. The caller checked the write right on
+        the folder ``new_top`` lies in, and every copy takes its scope. The nodes
+        are created one tree level at a time, so every new parent exists in time and
+        a big folder costs a few calls, not one per node.
         """
-        mapping = {source.id: new_top}
-        copied = 0
-        descendants = self.search(
-            [("id", "child_of", source.id), ("id", "!=", source.id)],
-            order="parent_path",
-        )
-        for old in descendants:
-            new_parent = mapping.get(old.parent_id.id)
-            if not new_parent:
-                continue  # parent was not visible to the caller, so neither is this
-            new = self._create_node(new_parent, self._copy_vals(old, old.name))
-            mapping[old.id] = new
-            self._attach_copy_content(old, new, operation)
-            copied += 1
-        return copied
+        by_depth = defaultdict(list)
+        for old in self.search(
+            [("id", "child_of", source.id), ("id", "!=", source.id)]
+        ):
+            by_depth[old.parent_path.count("/")].append(old)
+
+        new_of = {source.id: new_top}
+        files = []
+        for depth in sorted(by_depth):
+            # A parent the caller could not see is not copied, so neither is this.
+            level = [old for old in by_depth[depth] if old.parent_id.id in new_of]
+            created = self._create_nodes(
+                [
+                    (new_of[old.parent_id.id], self._copy_vals(old, old.name))
+                    for old in level
+                ]
+            )
+            for old, new in zip(level, created, strict=True):
+                new_of[old.id] = new
+                if not old.is_dir and old.current_revision_id:
+                    files.append((old, new))
+        if files:
+            self._attach_copied_revisions(files, operation)
+        return len(new_of) - 1
+
+    @api.model
+    def _check_move_target(self, node, new_parent_id):
+        """Return the folder to move ``node`` into, once the caller may write there.
+
+        The record rules only check the node's current scope, not the destination.
+        """
+        new_parent = self.browse(new_parent_id)
+        new_parent.check_access("write")
+        if new_parent.parent_path.startswith(node.parent_path):
+            raise UserError(self.env._("A folder cannot be moved into itself."))
+        return new_parent
+
+    @api.model
+    def _move_vals(self, node, new_parent_id, new_name):
+        """Return ``(vals, new_parent)`` for renaming ``node`` and moving it if asked.
+
+        ``new_parent`` is empty when the node stays where it is.
+        """
+        vals = {"name": new_name}
+        new_parent = self.browse()
+        if new_parent_id and new_parent_id != node.parent_id.id:
+            new_parent = self._check_move_target(node, new_parent_id)
+            vals["parent_id"] = new_parent.id
+            if new_parent.scope_id != node.scope_id:
+                vals["scope_id"] = new_parent.scope_id.id
+        return vals, new_parent
 
     @api.model
     def rename_or_move(self, node_id, new_parent_id, new_name, operation_key):
@@ -881,8 +1002,7 @@ class IntFilemanagerNode(models.Model):
 
         Only rows change, no file is touched. Moving into another scope moves
         what shares the node's scope along; a folder below it with a scope of
-        its own keeps it. The write right on the destination is checked
-        explicitly: record rules only check the node's current scope.
+        its own keeps it.
         """
         operation, is_new = self.env["int_filemanager.operation"]._get_or_create(
             operation_key
@@ -890,30 +1010,14 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
-        node = self.browse(node_id)
+        node = self._require_node(node_id, "node_id")
         node.check_access("write")
+        new_parent_id = params.optional_id(self.env, new_parent_id, "new_parent_id")
 
-        vals = {"name": new_name}
-        new_scope_id = None
-        new_parent = self.browse()
-        if new_parent_id and new_parent_id != node.parent_id.id:
-            new_parent = self.browse(new_parent_id)
-            new_parent.check_access("write")
-            if new_parent.parent_path.startswith(node.parent_path):
-                raise UserError(self.env._("A folder cannot be moved into itself."))
-            vals["parent_id"] = new_parent_id
-            if new_parent.scope_id != node.scope_id:
-                new_scope_id = new_parent.scope_id.id
-                vals["scope_id"] = new_scope_id
+        vals, new_parent = self._move_vals(node, new_parent_id, new_name)
 
-        fault.fault_point("node_lock_before_wait")
-        cr = self.env.cr
-        cr.execute("SET LOCAL lock_timeout TO '5s'")
-        # LockNotAvailable propagates uncaught, same reasoning as create_new_revision.
-        cr.execute(
-            SQL("SELECT id FROM int_filemanager_node WHERE id = %s FOR UPDATE", node_id)
-        )
-        fault.fault_point("node_lock_acquired")
+        # A LockNotAvailable propagates, same reasoning as in create_new_revision.
+        self._lock_node(node)
         if not node.active:
             raise UserError(
                 self.env._("This item is in the trash; restore it before moving it.")
@@ -923,9 +1027,7 @@ class IntFilemanagerNode(models.Model):
         fault.fault_point("node_tree_before_write")
         self._touch_active_parent(new_parent)
         # What shares the old scope is read before the node changes it.
-        inheriting = (
-            self._inheriting_descendants(node) if new_scope_id is not None else None
-        )
+        inheriting = self._inheriting_descendants(node) if "scope_id" in vals else None
         try:
             with self.env.cr.savepoint():
                 # sudo(): the position and scope fields are not writable by users;
@@ -940,7 +1042,7 @@ class IntFilemanagerNode(models.Model):
             ) from None
 
         if inheriting:
-            self._set_scope(inheriting, new_scope_id)
+            self._set_scope(inheriting, vals["scope_id"])
 
         result = {"node_id": node.id}
         operation.write({"result": result})
@@ -952,6 +1054,7 @@ class IntFilemanagerNode(models.Model):
         A folder with a scope of its own is left out, with everything below it:
         the caller may not even see it, and its rights are not the node's to give.
         """
+        # sudo(): this follows the scope of rows the caller may not read.
         scope_id = node.sudo().scope_id.id
         descendants = (
             self.sudo()
@@ -997,10 +1100,10 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
-        node = self.browse(node_id)
+        node = self._require_node(node_id, "node_id")
         node.check_access("write")
 
-        subtree = self.search([("id", "child_of", node_id)])
+        subtree = self.search([("id", "child_of", node.id)])
         # The write below is sudo(), which skips the record rules of every row.
         subtree.check_access("write")
         fault.fault_point("node_tree_before_write")
@@ -1028,11 +1131,11 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
-        node = self.browse(node_id)
+        node = self._require_node(node_id, "node_id")
         node.check_access("write")
 
         subtree = self.with_context(active_test=False).search(
-            [("id", "child_of", node_id)]
+            [("id", "child_of", node.id)]
         )
         # The write below is sudo(), which skips the record rules of every row.
         subtree.check_access("write")
@@ -1071,17 +1174,18 @@ class IntFilemanagerNode(models.Model):
         if not is_new:
             return operation.result
 
-        node = self.browse(node_id)
+        node = self._require_node(node_id, "node_id")
         node.check_access("unlink")
 
         self._unlink_subtree(node)
 
-        result = {"node_id": node_id}
+        result = {"node_id": node.id}
         operation.write({"result": result})
         return result
 
     @api.model
     def _unlink_subtree(self, root):
+        """Delete ``root`` with everything below it; return how many nodes went."""
         subtree = self.with_context(active_test=False).search(
             [("id", "child_of", root.id)]
         )
@@ -1095,6 +1199,7 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     def _trash_retention_days(self):
+        # sudo(): a setting of the module, not data of the caller.
         return int(
             self.env["ir.config_parameter"]
             .sudo()
@@ -1102,805 +1207,58 @@ class IntFilemanagerNode(models.Model):
         )
 
     @api.model
-    def _expired_trash_roots(self):
-        """Return the top nodes of trashed subtrees older than the retention."""
+    def _expired_trash_domain(self):
+        """Return the domain of the tops of trash subtrees older than the retention."""
         cutoff = fields.Datetime.now() - timedelta(days=self._trash_retention_days())
-        expired = self.with_context(active_test=False).search(
-            [("removal_reason", "=", "trash"), ("trashed_at", "<", cutoff)]
+        expired = Domain("removal_reason", "=", "trash") & Domain(
+            "trashed_at", "<", cutoff
         )
-        return expired.filtered(lambda n: n.parent_id not in expired)
+        # Spelled out: NOT (parent_id IN ...) is no answer for a node without parent.
+        return expired & (
+            Domain("parent_id", "=", False) | ~Domain("parent_id", "any", expired)
+        )
 
     @api.model
-    def _purge_expired_trash(self, limit=200):
-        """Delete trashed subtrees older than the retention; return how many.
-
-        One savepoint per subtree, so one that fails does not block the others.
-        """
-        purged = 0
-        for root in self._expired_trash_roots()[:limit]:
-            try:
-                with self.env.cr.savepoint():
-                    self._unlink_subtree(root)
-                purged += 1
-            except Exception:
-                _logger.exception("could not purge trashed node %s", root.id)
-        return purged
+    def _expired_trash_roots(self, limit=None):
+        """Return up to ``limit`` tops of trashed subtrees older than the retention."""
+        return self.with_context(active_test=False).search(
+            self._expired_trash_domain(), limit=limit
+        )
 
     @api.model
-    def _cron_purge_trash(self):
-        self._purge_expired_trash()
+    def _purge_root(self, root):
+        """Delete one expired subtree; return whether it went.
 
-    # ------------------------------------------------------------------
-    # value recognition
-    # ------------------------------------------------------------------
-
-    @api.model
-    def suggest_field_values(self, node_id, areas=None):
-        """Suggest values for the extraction fields from the file's current text.
-
-        Nothing is stored: rules change at any time, and stored suggestions would go
-        stale. ``state`` is "ready", "pending" (the text is still being read) or
-        "none" (no text to read, e.g. a picture); ``revision_id`` is the revision the
-        suggestions come from, to be sent back when they are confirmed.
-
-        :param areas: boxes the user drew, ``[{"page", "x0", "top", "x1", "bottom"}]``
-            with the place as shares (0 to 1) of the page. A value printed in a box
-            goes before the same kind of value outside; everything outside is still
-            found. ``areas`` in the answer has one entry per box: how many values
-            lie in it and the label-value pairs no field took.
+        A savepoint per subtree, so that one that cannot go (a right, a row still in
+        use) does not block the others.
         """
-        node = self.browse(node_id)
-        node.check_access("read")
-        boxes = self._parse_areas(areas)
-        revision = node.current_revision_id
-        if node.is_dir or not revision:
-            return {"state": "none", "revision_id": False}
-        state, page = self._recognition_page(node, revision)
-        if state != "ready":
-            return {"state": state, "revision_id": revision.id}
-        own = self._own_company_values()
-        options = self._recognition_options()
-
-        def slow(rule_id, seconds):
-            _logger.warning(
-                "extraction rule %s took %.1f s on node %s", rule_id, seconds, node.id
-            )
-
-        partner = self._suggest_partner(page.text, own, options)
-        suggestions, unassigned = value_suggest.suggest(
-            page,
-            self._extraction_specs(self._sender(node, partner)),
-            skip=lambda value_type, value: self._is_own_value(own, value_type, value),
-            slow=slow,
-            areas=boxes,
-            **options,
-        )
-        codes = {
-            c.name: c.id
-            for c in self.env["res.currency"].sudo().search([("active", "=", True)])
-        }
-        confirmed = {v.field_id.id: v for v in node.field_value_ids}
-        return {
-            "state": "ready",
-            "revision_id": revision.id,
-            "review_state": node.review_state,
-            # Width and height of the pages in the unit of the value boxes; a page
-            # not listed is taken as A4.
-            "page_sizes": {str(n): list(size) for n, size in page.sizes.items()},
-            "fields": [
-                {
-                    "field_id": f.id,
-                    "name": f.name,
-                    "value_type": f.value_type,
-                    "suggestions": [
-                        self._json_suggestion(s.as_dict(), codes)
-                        for s in suggestions.get(f.id, [])
-                    ],
-                    "confirmed": confirmed[f.id].value_text
-                    if f.id in confirmed
-                    else False,
-                    # Where the stored value was read from, shaped like a suggestion,
-                    # with the boxes of the words as they are now.
-                    "confirmed_place": self._place_of(confirmed[f.id], page)
-                    if f.id in confirmed
-                    else False,
-                }
-                for f in self.env["int_filemanager.extraction_field"].search(
-                    [("active", "=", True)]
-                )
-            ],
-            "unassigned": [
-                self._json_value(u, codes) for u in unassigned if u["area"] is None
-            ],
-            "areas": [
-                {
-                    "index": index,
-                    "values": sum(
-                        1
-                        for found in suggestions.values()
-                        if page.in_box(found[0].start, found[0].end, box)
-                    )
-                    + sum(1 for u in unassigned if u["area"] == index),
-                    "unassigned": [
-                        self._json_value(u, codes)
-                        for u in unassigned
-                        if u["area"] == index
-                    ],
-                }
-                for index, box in enumerate(boxes)
-            ],
-            "partner": partner,
-            "tags": self._suggest_tags(page.text),
-            "warnings": self._suggest_warnings(partner, suggestions),
-        }
-
-    @staticmethod
-    def _place_of(value, page):
-        """Where a stored value is printed, shaped like a suggestion, or False."""
-        if not value.page:
-            return False
-        place = {
-            "page": value.page,
-            "x0": value.x0,
-            "top": value.top,
-            "x1": value.x1,
-            "bottom": value.bottom,
-        }
-        return page.refit(place)
-
-    def _compute_values_json(self):
-        for node in self:
-            answer = False
-            if node.id and not node.is_dir:
-                try:
-                    answer = self.suggest_field_values(node.id)
-                except Exception:
-                    # The form is still worth opening without the values.
-                    _logger.exception("could not read the values of node %s", node.id)
-            node.values_json = answer
-
-    def _inverse_values_json(self):
-        for node in self:
-            payload = node.values_json or {}
-            if payload.get("edits"):
-                self.apply_field_values(
-                    node.id, payload.get("revision_id"), payload["edits"]
-                )
-
-    def _suggest_warnings(self, partner, suggestions):
-        """Hints for the reviewer about values that look wrong; nothing is stored.
-
-        An IBAN that none of the bank accounts of the sender has: the protection
-        against a forged invoice with a new account. Without a known sender or
-        accounts there is nothing to compare with.
-        """
-        if not partner:
-            return []
-        accounts = (
-            self.env["res.partner.bank"]
-            .sudo()
-            .search([("partner_id", "child_of", partner["id"])])
-        )
-        known = {a.sanitized_acc_number for a in accounts if a.sanitized_acc_number}
-        if not known:
-            return []
-        warnings = []
-        for field in self.env["int_filemanager.extraction_field"].search(
-            [("active", "=", True), ("value_type", "=", "iban")]
-        ):
-            best = (suggestions.get(field.id) or [None])[0]
-            if best and best.value["value_text"] not in known:
-                warnings.append(
-                    {
-                        "type": "iban_differs",
-                        "field_id": field.id,
-                        "message": self.env._(
-                            "%(field)s: this IBAN is not one of the bank accounts "
-                            "of %(partner)s.",
-                            field=field.name,
-                            partner=partner["name"],
-                        ),
-                    }
-                )
-        return warnings
-
-    @api.model
-    def page_words(self, node_id, revision_id, page_number):
-        """The words of one page of a file with their places, to click on.
-
-        :returns: ``{"state", "revision_id", "words"}``; each word is ``[x0, top,
-            x1, bottom, start, end]`` in the unit of the value boxes, ``start`` and
-            ``end`` the offsets in the text of the file. "changed" when the file has a
-            newer revision than ``revision_id``.
-        """
-        node = self.browse(node_id)
-        node.check_access("read")
-        if not isinstance(page_number, int) or isinstance(page_number, bool):
-            raise UserError(self.env._("The page is not valid."))
-        revision = node.current_revision_id
-        if node.is_dir or not revision:
-            return {"state": "none", "revision_id": False, "words": []}
-        if revision.id != revision_id:
-            return {"state": "changed", "revision_id": revision.id, "words": []}
-        state, page = self._recognition_page(node, revision)
-        if state != "ready":
-            return {"state": state, "revision_id": revision.id, "words": []}
-        words = [
-            [w[1], w[2], w[3], w[4], w[5], w[6]]
-            for w in page.words
-            if w[0] == page_number
-        ]
-        return {
-            "state": "ready",
-            "revision_id": revision.id,
-            "words": words[:MAX_PAGE_WORDS],
-        }
-
-    def _parse_areas(self, areas):
-        """The boxes of a request as tuples ``(page, x0, top, x1, bottom)``."""
-        areas = areas or []
-        if len(areas) > MAX_AREAS:
-            raise UserError(self.env._("There are too many boxes."))
-        boxes = []
-        for area in areas:
-            try:
-                page = area["page"]
-                x0, top, x1, bottom = (
-                    float(area[k]) for k in ("x0", "top", "x1", "bottom")
-                )
-                valid = (
-                    isinstance(page, int)
-                    and not isinstance(page, bool)
-                    and page >= 1
-                    and 0.0 <= x0 < x1 <= 1.0
-                    and 0.0 <= top < bottom <= 1.0
-                )
-            except (KeyError, TypeError, ValueError):
-                valid = False
-            if not valid:
-                raise UserError(self.env._("A box is not valid."))
-            boxes.append((page, x0, top, x1, bottom))
-        return boxes
-
-    def _recognition_options(self):
-        """Currencies as printed (symbol or code) and the defaults of the company."""
-        # Settings, not data of the user: read whatever the user's own rights are.
-        company = self.env.company.sudo()
-        currencies = {}
-        for currency in (
-            self.env["res.currency"].sudo().search([("active", "=", True)])
-            + company.currency_id
-        ):
-            currencies[currency.symbol] = currency.name
-            currencies[currency.name] = currency.name
-        if "EUR" in currencies:
-            currencies["Euro"] = "EUR"
-        return {
-            "currencies": currencies,
-            "default_currency": company.currency_id.name,
-            "default_country": (company.country_id.code or "DE").upper(),
-        }
-
-    def _recognition_page(self, node, revision):
-        """("ready", Page) of the revision's text and words, or (state, None)."""
-        jobs = (
-            self.env["int_filemanager.derivative"]
-            .sudo()
-            .search(
-                [
-                    ("source_blob_id", "=", revision.blob_id.id),
-                    "|",
-                    "&",
-                    ("kind", "=", "words"),
-                    ("spec", "=", plan.WORDS_SPEC),
-                    "&",
-                    ("kind", "=", "text"),
-                    ("spec", "=", plan.TEXT_SPEC),
-                ]
-            )
-        )
-        done = jobs.filtered(lambda j: j.state == "done")
-        words_job = done.filtered(lambda j: j.kind == "words" and j.derived_blob_id)[:1]
-        if words_job:
-            words = self._read_word_list(words_job.derived_blob_id)
-            if words is not None:
-                return "ready", value_suggest.Page(
-                    words["text"], words["words"], words.get("pages")
-                )
-        text_job = done.filtered(lambda j: j.kind == "text" and j.text)[:1]
-        if text_job:
-            return "ready", value_suggest.Page(text_job.text)
-        if jobs.filtered(lambda j: j.state in ("pending", "running")):
-            return "pending", None
-        # Not queued yet (the queue runs by cron), but planned for this kind of file.
-        planned = {item.kind for item in plan.job_plan(node.name)}
-        if not jobs and planned & {"words", "text"}:
-            return "pending", None
-        return "none", None
-
-    def _read_word_list(self, blob):
-        path = blobstore.blob_path(self.env, blob.sha256)
         try:
-            if os.path.getsize(path) > derivative.MAX_WORDS_BYTES:
-                return None
-            with open(path, encoding="utf-8") as f:
-                data = json.load(f)
-        except (OSError, ValueError):
-            _logger.warning(
-                "word list %s could not be read", blob.sha256, exc_info=True
-            )
-            return None
-        if not isinstance(data, dict) or data.get("version") != 2:
-            return None
-        text, words = data.get("text"), data.get("words")
-        if not isinstance(text, str) or not isinstance(words, list):
-            return None
-        # Only well-formed words that point into the text; a broken entry is left
-        # out rather than breaking the whole suggestion.
-        data["words"] = [
-            w
-            for w in words
-            if isinstance(w, list)
-            and len(w) == 7
-            and all(isinstance(x, int | float) for x in w)
-            and 0 <= w[5] <= w[6] <= len(text)
-        ]
-        return data
-
-    def _sender(self, node, suggested):
-        """The sender whose learned labels apply: the file's contact, else the one
-        suggested; only a contact the user may read."""
-        partner = node.partner_id.commercial_partner_id
-        if not partner and suggested:
-            partner = self.env["res.partner"].browse(suggested["id"])
-        return partner._filtered_access("read")
-
-    def _extraction_specs(self, sender=None):
-        """The active fields and rules as the recognition needs them, with the labels
-        learned for the sender."""
-        specs = []
-        # Users have no access to the learned labels themselves: the list would show
-        # which senders there are documents from, also in scopes they cannot read.
-        hints = (
-            self.env["int_filemanager.extraction_hint"]
-            .sudo()
-            .search(
-                [("partner_id", "=", sender.id), ("field_id.active", "=", True)]
-                if sender
-                else [("id", "=", False)]
-            )
-        )
-        for field in hints.field_id:
-            specs.append(
-                value_suggest.FieldSpec(
-                    field.id,
-                    field.value_type,
-                    unit=field.unit or None,
-                    hints={h.label: h.id for h in hints if h.field_id == field},
-                    area=_area(field),
-                )
-            )
-        rules = self.env["int_filemanager.extraction_rule"].search(
-            [("field_id.active", "=", True)]
-        )
-        for rule in rules:
-            f = rule.field_id
-            spec = value_suggest.FieldSpec(
-                f.id, f.value_type, unit=f.unit or None, rule_id=rule.id, area=_area(f)
-            )
-            if rule.mode == "keyword":
-                spec.keywords = rule._keyword_list()
-            else:
-                flags = re.IGNORECASE if rule.ignore_case else 0
-                pattern = re.compile(rule.pattern, flags)
-                spec.patterns = [(rule.id, pattern, rule.group_index)]
-            specs.append(spec)
-        return specs
-
-    def _own_company_values(self):
-        """VAT numbers, bank accounts and mail domains of the own companies."""
-        partners = (
-            self.env["res.company"]
-            .sudo()
-            .search([("partner_id", "!=", False)])
-            .partner_id
-        )
-        accounts = (
-            self.env["res.partner.bank"]
-            .sudo()
-            .search([("partner_id", "in", partners.ids)])
-        )
-        domains = set()
-        for partner in partners:
-            if partner.email and "@" in partner.email:
-                domains.add(partner.email.rsplit("@", 1)[1].strip().lower())
-            if partner.website:
-                domains.add(_website_host(partner.website))
-        return {
-            "partner_ids": set(partners.commercial_partner_id.ids),
-            "vat": {re.sub(r"[^A-Z0-9]", "", p.vat.upper()) for p in partners if p.vat},
-            "iban": {
-                a.sanitized_acc_number for a in accounts if a.sanitized_acc_number
-            },
-            "domains": domains - {""},
-        }
-
-    @api.model
-    def _is_own_value(self, own, value_type, value):
-        text = value.get("value_text") or ""
-        if value_type in ("iban", "vat"):
-            return text in own[value_type]
-        if value_type == "email":
-            return text.rsplit("@", 1)[-1] in own["domains"]
-        return False
-
-    def _suggest_partner(self, text, own, options):
-        """The sender, found like account's _import_retrieve_customer does: VAT
-        number, bank account, mail address or its domain, then the name; never an
-        own company, and only a contact the user may read."""
-        partners = self.env["res.partner"].sudo()
-
-        def found(records, via):
-            # Access is checked on the company that is returned, not on the contact
-            # that led to it.
-            commercial = records.commercial_partner_id.filtered(
-                lambda p: p.id not in own["partner_ids"]
-            )
-            readable = commercial.with_env(self.env)._filtered_access("read")
-            if not readable:
-                return None
-            partner = readable[0]
-            return {"id": partner.id, "name": partner.display_name, "via": via}
-
-        def values(value_type):
-            return sorted(
-                {
-                    c.value["value_text"]
-                    for c in value_types.find(value_type, text, **options)
-                    if not self._is_own_value(own, value_type, c.value)
-                }
-            )
-
-        for vat in values("vat"):
-            # Stored with or without the country prefix.
-            domain = ["|", ("vat", "=ilike", vat), ("vat", "=ilike", vat[2:])]
-            if hit := found(partners.search(domain, limit=5), "vat"):
-                return hit
-        if ibans := values("iban"):
-            accounts = (
-                self.env["res.partner.bank"]
-                .sudo()
-                .search([("sanitized_acc_number", "in", ibans)], limit=5)
-            )
-            if hit := found(accounts.partner_id, "iban"):
-                return hit
-        addresses = values("email")
-        for address in addresses:
-            records = partners.search([("email", "=ilike", address)], limit=5)
-            if hit := found(records, "email"):
-                return hit
-        # Another address of the same company: its domain is the company's website.
-        # A mail provider's domain is nobody's website, so it never matches.
-        for domain in sorted({a.rsplit("@", 1)[1] for a in addresses}):
-            records = partners.search([("website", "ilike", domain)], limit=20)
-            records = records.filtered(
-                lambda p, d=domain: _website_host(p.website) == d
-            )
-            if hit := found(records, "email"):
-                return hit
-        # Names last: companies whose whole name stands in the letterhead (the
-        # first page), compared in the database rather than name by name.
-        first_page = text.split("\f", 1)[0][:NAME_SEARCH_CHARS]
-        tokens = [t.strip(",;:()").lower() for t in first_page.split()]
-        phrases = {
-            " ".join(tokens[i : i + n])
-            for n in range(1, 7)
-            for i in range(len(tokens) - n + 1)
-        }
-        phrases = [p for p in phrases if len(p) >= 5]
-        if phrases:
-            self.env.cr.execute(
-                """
-                SELECT id FROM res_partner
-                WHERE active AND is_company AND length(name) >= 5
-                  AND lower(regexp_replace(name, '[[:space:]]+', ' ', 'g')) = ANY(%s)
-                ORDER BY length(name) DESC
-                LIMIT 20
-                """,
-                [phrases],
-            )
-            ids = [row[0] for row in self.env.cr.fetchall()]
-            if hit := found(partners.browse(ids), "name"):
-                return hit
-        return False
-
-    def _suggest_tags(self, text):
-        """Tags whose name stands in the text as a whole word or phrase."""
-        words = re.findall(r"\w+", text.lower())
-        single, joined = set(words), f" {' '.join(words)} "
-        result = []
-        for tag in self.env["int_filemanager.tag"].search([("name", "!=", False)]):
-            parts = re.findall(r"\w+", tag.name.lower())
-            if not parts:
-                continue
-            if (
-                parts[0] in single
-                if len(parts) == 1
-                else f" {' '.join(parts)} " in joined
-            ):
-                result.append({"id": tag.id, "name": tag.name})
-                if len(result) == MAX_SUGGESTED_TAGS:
-                    break
-        return result
-
-    @api.model
-    def _json_value(self, value, codes):
-        """A value of value_types as JSON, with the currency as a record id."""
-        result = {}
-        for key, item in value.items():
-            if key == "currency_code":
-                result["currency_id"] = codes.get(item, False)
-            elif hasattr(item, "isoformat"):
-                result[key] = item.isoformat()
-            else:
-                result[key] = item
-        return result
-
-    @api.model
-    def _json_suggestion(self, suggestion, codes):
-        return {**suggestion, "value": self._json_value(suggestion["value"], codes)}
-
-    @api.model
-    def read_selection(self, node_id, revision_id, field_id, start, end):
-        """Read the marked text of a file as a value of a field.
-
-        :param revision_id: the revision the marking was made on; if the file has
-            a newer one by now, ``state`` is "changed" and nothing is read
-        :param start: offset in the text of the file where the marking begins
-        :param end: offset where it ends; a marking that cuts a word takes the
-            whole word
-        :returns: ``{"state", "revision_id", "suggestion", "message"}``. ``suggestion``
-            is the value in the form of :meth:`suggest_field_values` (direction
-            "selection"), or False when the text is no value of the field; then
-            ``message`` says so. Nothing is stored: confirming goes through
-            :meth:`apply_field_values`, which reads the text again.
-        """
-        node = self.browse(node_id)
-        node.check_access("read")
-        field = self.env["int_filemanager.extraction_field"].browse(field_id)
-        if not field.exists():
-            raise UserError(self.env._("This field does not exist any more."))
-        revision = node.current_revision_id
-        if node.is_dir or not revision:
-            return {"state": "none", "revision_id": False}
-        if revision.id != revision_id:
-            return {"state": "changed", "revision_id": revision.id}
-        state, page = self._recognition_page(node, revision)
-        if state != "ready":
-            return {"state": state, "revision_id": revision.id}
-        if not (
-            isinstance(start, int)
-            and isinstance(end, int)
-            and 0 <= start < end <= len(page.text)
-            # Blanks are squeezed below, so the range may be longer than the text.
-            and end - start <= 4 * MAX_SELECTION_CHARS
-        ):
-            raise UserError(self.env._("The marking is not valid."))
-        start, end = _whole_words(page.text, start, end)
-        marked = page.text[start:end]
-        text = " ".join(marked.split())
-        # Not over a page break: the place of the value would belong to no page.
-        if not text or len(text) > MAX_SELECTION_CHARS or "\f" in marked:
-            raise UserError(self.env._("The marking is not valid."))
-        result = {"state": "ready", "revision_id": revision.id}
-        try:
-            parsed = self._parse_confirmed(field, text, self._recognition_options())
-        except UserError:
-            labels = dict(field._fields["value_type"]._description_selection(self.env))
-            message = self.env._(
-                "%(text)s cannot be read as: %(type)s.",
-                text=text,
-                type=labels[field.value_type],
-            )
-            return {**result, "suggestion": False, "message": message}
-        codes = {
-            c.name: c.id
-            for c in self.env["res.currency"].sudo().search([("active", "=", True)])
-        }
-        box = dict(
-            zip(
-                ("page", "x0", "top", "x1", "bottom"),
-                page.box(start, end) or (0, 0.0, 0.0, 0.0, 0.0),
-                strict=True,
-            )
-        )
-        suggestion = {
-            "value": parsed,
-            "source_text": text,
-            "start": start,
-            "end": end,
-            **box,
-            "label": "",
-            "direction": "selection",
-            "tier": None,
-            "rule_id": None,
-            "hint_id": None,
-            "in_area": False,
-        }
-        return {**result, "suggestion": self._json_suggestion(suggestion, codes)}
-
-    @api.model
-    def apply_field_values(
-        self, node_id, revision_id, values, partner_id=False, tag_ids=None
-    ):
-        """Store the confirmed values of the extraction fields on a file.
-
-        :param revision_id: the revision the values were read from; if the file has
-            a newer one by now, nothing is stored
-        :param values: ``[{"field_id", "text", "source", "rule_id", "start"}]`` -
-            ``text`` as printed or typed, an empty one removes the field's value;
-            ``source`` "rule" for an accepted suggestion (``rule_id`` the rule that
-            found it, ``start`` its place in the text), "manual" for a typed value.
-            Every text is read again here with the field's type: nothing parsed by
-            the client is taken over.
-        :param partner_id: the confirmed sender, False to leave it as it is
-        :param tag_ids: tags to add to the file
-        :returns: ``{field_id: value_text}`` of the file's values after the change
-        """
-        node = self.browse(node_id)
-        node.check_access("write")
-        # Under the node's lock, like a new revision: a revision stored meanwhile by
-        # another request makes these values stale.
-        self._lock_and_check_base_revision(node, revision_id)
-        if partner_id:
-            self.env["res.partner"].browse(partner_id).check_access("read")
-        tags = self.env["int_filemanager.tag"].browse(tag_ids or [])
-        tags.check_access("read")
-
-        options = self._recognition_options()
-        _state, page = self._recognition_page(node, node.current_revision_id)
-        Value = self.env["int_filemanager.field_value"].sudo()
-        existing = {v.field_id.id: v for v in node.sudo().field_value_ids}
-        stored, removed, learn = [], [], []
-        for item in values:
-            field = self.env["int_filemanager.extraction_field"].browse(
-                item["field_id"]
-            )
-            if not field.exists():
-                raise UserError(self.env._("This field does not exist any more."))
-            text = (item.get("text") or "").strip()
-            if not text:
-                if field.id in existing:
-                    existing.pop(field.id).unlink()
-                    removed.append(field)
-                continue
-            parsed = self._parse_confirmed(field, text, options)
-            from_rule = item.get("source") == "rule"
-            vals = {
-                "node_id": node.id,
-                "field_id": field.id,
-                "revision_id": revision_id,
-                "source": "rule" if from_rule else "manual",
-                "rule_id": (from_rule and item.get("rule_id")) or False,
-                "source_text": text,
-                "value_text": parsed["value_text"],
-                "value_date": parsed.get("value_date") or False,
-                "value_date_to": parsed.get("value_date_to") or False,
-                "value_number": parsed.get("value_number") or 0.0,
-                "currency_id": self._currency_id(parsed.get("currency_code")),
-                "unit": parsed.get("unit") or False,
-                "page": 0,
-                "x0": 0.0,
-                "top": 0.0,
-                "x1": 0.0,
-                "bottom": 0.0,
-            }
-            label = None
-            if page:
-                label, printed = value_suggest.label_of_value(
-                    page,
-                    field.value_type,
-                    parsed["value_text"],
-                    near=item.get("start"),
-                    unit=field.unit or None,
-                    **options,
-                )
-                box = printed and page.box(printed.start, printed.end)
-                if box:
-                    vals.update(
-                        zip(("page", "x0", "top", "x1", "bottom"), box, strict=False)
-                    )
-            if field.id in existing:
-                existing[field.id].write(vals)
-            else:
-                existing[field.id] = Value.create(vals)
-            stored.append((field, parsed["value_text"]))
-            if label:
-                learn.append((field, label, page.box(label.start, label.end)))
-
-        if partner_id and node.partner_id.id != partner_id:
-            node.partner_id = partner_id
-        if tags:
-            node.tag_ids = [Command.link(tag.id) for tag in tags]
-        self._learn_labels(node.partner_id, learn)
-        node.sudo().review_state = "reviewed"
-        if stored or removed:
-            self._post_confirmed_values(node, stored, removed)
-        return {v.field_id.id: v.value_text for v in existing.values()}
-
-    def _parse_confirmed(self, field, text, options):
-        """The value of a confirmed text, read with the field's type; UserError if none.
-
-        A number typed without its unit or currency is read with the field's.
-        """
-        unit = field.unit or None
-        if field.value_type == "amount" and field.currency_id:
-            options = {**options, "default_currency": field.currency_id.name}
-        attempts = [text]
-        if field.value_type == "quantity":
-            attempts.append(f"{text} {field.unit}")
-        elif field.value_type == "amount":
-            code = field.currency_id.name or options["default_currency"]
-            attempts.append(f"{text} {code}")
-        for attempt in attempts:
-            parsed = value_types.parse(field.value_type, attempt, unit=unit, **options)
-            if parsed:
-                return parsed
-        raise UserError(
-            self.env._(
-                "%(field)s: %(text)s cannot be read as a value of this field.",
-                field=field.name,
-                text=text,
-            )
-        )
-
-    def _currency_id(self, code):
-        if not code:
+            with self.env.cr.savepoint():
+                self._unlink_subtree(root)
+        except (UserError, psycopg2.Error):
+            _logger.exception("could not purge trashed node %s", root.id)
             return False
-        return (
-            self.env["res.currency"]
-            .sudo()
-            .with_context(active_test=False)
-            .search([("name", "=", code)], limit=1)
-            .id
-        )
+        return True
 
-    def _learn_labels(self, partner, learned):
-        """Remember for the sender which label named which field; the last one wins."""
-        own = self._own_company_values()["partner_ids"]
-        partner = partner.commercial_partner_id
-        if not partner or partner.id in own:
-            return
-        Hint = self.env["int_filemanager.extraction_hint"].sudo()
-        for field, label, box in learned:
-            norm = value_suggest.normalize(label.text)
-            if not norm:
-                continue
-            vals = {
-                "field_id": field.id,
-                "direction": label.direction,
-                "page": box[0] if box else 0,
-                "x0": box[1] if box else 0.0,
-                "top": box[2] if box else 0.0,
-                "last_date": fields.Datetime.now(),
-            }
-            hint = Hint.search(
-                [("partner_id", "=", partner.id), ("label", "=", norm)], limit=1
+    @api.model
+    def _purge_expired_trash(self, limit=TRASH_PURGE_BATCH):
+        """Delete up to ``limit`` expired trash subtrees; return how many went."""
+        return sum(self._purge_root(root) for root in self._expired_trash_roots(limit))
+
+    @api.model
+    def _cron_purge_trash(self, limit=TRASH_PURGE_BATCH):
+        """Delete the expired trash subtrees, committing after each one."""
+        roots = self._expired_trash_roots(limit)
+        remaining = (
+            len(roots)
+            if len(roots) < limit
+            else self.with_context(active_test=False).search_count(
+                self._expired_trash_domain()
             )
-            if hint:
-                vals["hit_count"] = hint.hit_count + 1 if hint.field_id == field else 1
-                hint.write(vals)
-            else:
-                Hint.create({**vals, "partner_id": partner.id, "label": norm})
-
-    def _post_confirmed_values(self, node, stored, removed):
-        """A note on the file: who confirmed which values, for later questions."""
-        lines = [Markup("<li>%s: %s</li>") % (f.name, text) for f, text in stored]
-        lines += [
-            Markup("<li>%s: %s</li>") % (f.name, self.env._("removed")) for f in removed
-        ]
-        node.message_post(
-            body=Markup("<p>%s</p><ul>%s</ul>")
-            % (self.env._("Values confirmed"), Markup("").join(lines)),
-            subtype_xmlid="mail.mt_note",
         )
+        cron = self.env["ir.cron"]
+        cron._commit_progress(remaining=remaining)
+        for root in roots:
+            self._purge_root(root)
+            if not cron._commit_progress(1):
+                return

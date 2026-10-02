@@ -3,102 +3,108 @@
 
   <!-- The values found in a file, in the properties form. -->
   <t t-name="int_filemanager.v2.ValuesField">
-    <div class="o_int_filemanager_values">
-      <div class="d-flex flex-wrap align-items-center gap-2 pb-3 d-empty-none">
-        <button
-          t-if="hasRows and hasUnconfirmed and !props.readonly"
-          type="button"
-          class="btn btn-secondary"
-          t-on-click="onAcceptAll"
-        >
+        <div class="o_int_filemanager_values">
+            <div class="d-flex flex-wrap align-items-center gap-2 pb-3 d-empty-none">
+                <button
+                    t-if="hasRows and hasUnconfirmed and !props.readonly"
+                    type="button"
+                    class="btn btn-secondary"
+                    t-on-click="onAcceptAll"
+                >
           <i
-          class="fa fa-check me-1"
-          role="img"
-          aria-label="Accept"
-        />Accept found values
+                    class="fa fa-check me-1"
+                    role="img"
+                    aria-label="Accept"
+                />Accept found values
         </button>
-        <button
-          t-if="partner and !props.readonly"
-          type="button"
-          class="btn btn-secondary"
-          t-on-click="onUsePartner"
-        >
+                <button
+                    t-if="partner and !props.readonly"
+                    type="button"
+                    class="btn btn-secondary"
+                    t-on-click="onUsePartner"
+                >
           <i class="fa fa-user me-1" role="img" aria-label="Contact" />Contact: <t
-          t-esc="partner.name"
-        />
+                    t-esc="partner.name"
+                />
         </button>
-      </div>
-      <div
-        t-foreach="warnings"
-        t-as="warning"
-        t-key="warning_index"
-        class="alert alert-warning"
-        role="alert"
-        t-esc="warning.message"
-      />
-      <div t-if="status === 'pending'" class="alert alert-info" role="alert">
+            </div>
+            <div
+                t-foreach="warnings"
+                t-as="warning"
+                t-key="warning_index"
+                class="alert alert-warning"
+                role="alert"
+                t-esc="warning.message"
+            />
+            <div t-if="status === 'pending'" class="alert alert-info" role="alert">
         <i
-        class="fa fa-circle-o-notch fa-spin me-2"
-        role="img"
-        aria-label="Loading"
-      />The text of this file is still being read. Open the properties again in a moment.
+                class="fa fa-circle-o-notch fa-spin me-2"
+                role="img"
+                aria-label="Loading"
+            />The text of this file is being read. The values appear here when it is done.
       </div>
-      <div t-elif="status === 'none'" class="text-muted">
+            <div t-elif="status === 'none' and canReadText" class="text-muted pb-2">
+                <p class="mb-2">No text has been read from this picture yet.</p>
+                <button type="button" class="btn btn-secondary" t-on-click="onReadText">
+          <i class="fa fa-eye me-1" role="img" aria-label="Read" />Read text
+        </button>
+            </div>
+            <div t-elif="status === 'none'" class="text-muted">
         This file has no text to look for values in.
       </div>
-      <div t-elif="status === 'ready' and !hasRows" class="text-muted pb-2">
+            <div t-elif="status === 'ready' and !hasRows" class="text-muted pb-2">
         Nothing in this file matches a field.
       </div>
-      <Record
-        t-if="status === 'ready' and hasForm"
-        t-key="state.rev"
-        fields="fields"
-        fieldNames="Object.keys(fields)"
-        values="values"
-        hooks="hooks"
-        t-slot-scope="data"
-      >
-        <FormRenderer
-          record="data.record"
-          archInfo="archInfo"
-          readonly="props.readonly"
-        />
-      </Record>
-    </div>
-  </t>
+            <Record
+                t-if="status === 'ready' and hasForm"
+                t-key="state.rev"
+                fields="fields"
+                fieldNames="Object.keys(fields)"
+                values="values"
+                hooks="hooks"
+                t-slot-scope="data"
+            >
+                <FormRenderer
+                    record="data.record"
+                    archInfo="archInfo"
+                    readonly="props.readonly"
+                />
+            </Record>
+        </div>
+    </t>
 
   <!-- The row that adds a field of the catalogue. -->
   <t t-name="int_filemanager.v2.AddField">
-    <AutoComplete
-      id="props.id"
-      value="''"
-      sources="sources"
-      placeholder="placeholder"
-      resetOnSelect="true"
-    />
-  </t>
+        <AutoComplete
+            id="props.id"
+            value="''"
+            sources="sources"
+            placeholder="placeholder"
+            resetOnSelect="true"
+        />
+    </t>
 
   <!-- One value: Odoo's autocomplete input, listing the values found in the file. -->
   <t t-name="int_filemanager.v2.ValueInput">
-    <div class="d-flex align-items-center gap-2">
-      <span t-if="props.readonly" t-esc="value" />
-      <AutoComplete
-        t-else=""
-        class="'flex-grow-1 min-w-0'"
-        id="props.id"
-        value="value"
-        sources="sources"
-        input="inputRef"
-        onFocus.bind="onFocus"
-      />
-      <i
-        t-if="row and row.uncertain"
-        class="fa fa-exclamation-triangle text-warning"
-        role="img"
-        aria-label="Please check this value"
-        data-tooltip="Please check this value"
-      />
-    </div>
-  </t>
+        <div class="d-flex align-items-center gap-2">
+            <span t-if="props.readonly" t-esc="value" />
+            <AutoComplete
+                t-else=""
+                class="'flex-grow-1 min-w-0'"
+                id="props.id"
+                value="value"
+                sources="sources"
+                input="inputRef"
+                onFocus.bind="onFocus"
+            />
+            <i
+                t-if="row and row.uncertain"
+                class="fa fa-exclamation-triangle text-warning"
+                role="img"
+                aria-label="Please check this value"
+                data-tooltip="Please check this value"
+            />
+        </div>
+    </t>
 
 </templates>

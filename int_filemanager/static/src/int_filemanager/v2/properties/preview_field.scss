@@ -2,27 +2,56 @@
 // body of the dialog (margins, header, footer, the padding of the sheet), so the dialog
 // needs no scrollbar of its own. The hint above the document takes room from it.
 .o_int_filemanager_preview {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 15rem);
-  min-height: 20rem;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 15rem);
+    min-height: 20rem;
 
-  iframe,
-  img,
-  video {
-    flex: 1 1 0;
-    min-height: 0;
-    width: 100%;
-    border: 0;
-  }
+    iframe,
+    video {
+        flex: 1 1 0;
+        min-height: 0;
+        width: 100%;
+        border: 0;
+    }
 
-  img,
-  video {
-    object-fit: contain;
-  }
+    video {
+        object-fit: contain;
+    }
 
-  // The button of the separate window sits in the corner.
-  .o_int_filemanager_preview_hint {
-    padding-right: 3rem;
-  }
+    // The picture is shown as large as the room allows, whole and in its own shape; the frame
+    // has exactly that size, so the layer over it (words, outlines) lies on the picture and
+    // not on the empty bands around it. --ratio is the width over the height of the picture.
+    .o_int_filemanager_picture {
+        flex: 1 1 0;
+        min-height: 0;
+        width: 100%;
+        container-type: size;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .o_int_filemanager_picture_frame {
+        position: relative;
+        // Until the picture is loaded its shape is not known.
+        visibility: hidden;
+        aspect-ratio: var(--ratio, 1);
+        width: #{"min(100cqw, calc(100cqh * var(--ratio, 1)))"};
+
+        &.o_loaded {
+            visibility: visible;
+        }
+
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    // The button of the separate window sits in the corner.
+    .o_int_filemanager_preview_hint {
+        padding-right: 3rem;
+    }
 }

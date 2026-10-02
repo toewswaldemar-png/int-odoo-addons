@@ -4,7 +4,8 @@
 # Deviations from the OCA template (this is not an OCA repository):
 # - no OCA packaging/README generation hooks (oca-gen-addon-readme, oca-fix-manifest-website,
 #   oca-update-pre-commit-excluded-addons, oca-gen-external-dependencies, whool-init)
-# - existing code is excluded (LEGACY block), docs and shell/PHP scripts are not checked
+# - existing code is excluded (LEGACY block), docs, tools/ (developer scripts, converter service)
+#   and shell/PHP scripts are not checked
 # Run: pre-commit run --files <files>   |   pre-commit run --all-files
 exclude: |
   (?x)
@@ -13,7 +14,7 @@ exclude: |
   /static/description/index\.html$|/static/(src/)?lib/|/build/|/dist/|/tests/samples/.*|
   (LICENSE.*|COPYING.*)|
   # Not module code
-  ^docs/|^scripts/|^CLAUDE\.md$|^Dockerfile$|^README\.md$|readme/.*\.(rst|md)$|
+  ^docs/|^scripts/|^tools/|^CLAUDE\.md$|^Dockerfile$|^README\.md$|readme/.*\.(rst|md)$|
   # Third-party vendored code inside our modules
   /vendor/|
   # LEGACY (existing code is not reformatted, see scripts/lint/sync_legacy_excludes.py)

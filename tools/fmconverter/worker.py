@@ -94,13 +94,18 @@ MAX_FORM_FIELDS_PER_PAGE = 5000
 # A document longer than this is refused rather than OCR'd for hours.
 MAX_OCR_PAGES = int(os.environ.get("CONVERTER_MAX_OCR_PAGES", "2000"))
 MAX_WORDS = 500_000
+# Pictures whose text is read on request, and the resolution assumed for one that has none.
+PICTURE_WORD_EXTENSIONS = frozenset({"jpg", "jpeg", "png"})
+PICTURE_DEFAULT_DPI = 300
 OCR_LANGUAGES = os.environ.get("CONVERTER_OCR_LANGUAGES", "deu+eng")
 # OCRmyPDF parallelises across pages itself; capped so two OCR runs (unlikely, but
 # possible after a restart) or other jobs still get a fair share of the machine.
 OCR_INTERNAL_JOBS = int(os.environ.get("CONVERTER_OCR_INTERNAL_JOBS", "4"))
 # How long the OCR tool itself may take; separate from TOOL_TIMEOUT_S (the quick
 # helper calls: pdfinfo, ffprobe, ...), which stays short.
-OCR_TOOL_TIMEOUT_S = int(os.environ.get("CONVERTER_OCR_TOOL_TIMEOUT_S", str(TOOL_TIMEOUT_S)))
+OCR_TOOL_TIMEOUT_S = int(
+    os.environ.get("CONVERTER_OCR_TOOL_TIMEOUT_S", str(TOOL_TIMEOUT_S))
+)
 
 
 class NotApplicable(Exception):
@@ -496,7 +501,11 @@ def _is_scanned_page(page):
     for image in page.images:
         width = min(image["x1"], page.width) - max(image["x0"], 0)
         height = min(image["bottom"], page.height) - max(image["top"], 0)
-        if width > 0 and height > 0 and width * height / area >= SCANNED_PAGE_IMAGE_SHARE:
+        if (
+            width > 0
+            and height > 0
+            and width * height / area >= SCANNED_PAGE_IMAGE_SHARE
+        ):
             return True
     return False
 
@@ -504,7 +513,9 @@ def _is_scanned_page(page):
 def _separator(previous, word):
     """What goes between two words: a space, a tab (column gap) or a line break."""
     height = max(previous["bottom"] - previous["top"], 1.0)
-    if word["x0"] < previous["x0"] or abs(word["top"] - previous["top"]) > max(3.0, height / 2):
+    if word["x0"] < previous["x0"] or abs(word["top"] - previous["top"]) > max(
+        3.0, height / 2
+    ):
         return "\n"
     if word["x0"] - previous["x1"] > COLUMN_GAP_HEIGHTS * height:
         return "\t"
@@ -783,23 +794,29 @@ def _pdf_page_count(source):
     return 0
 
 
-def _run_ocr(source, workdir, mode):
+def _run_ocr(source, workdir, mode, picture=False):
     """OCR the whole document in one run; return the path to the searchable copy.
 
     ``mode`` is "force-ocr" (read every page as a picture) or "redo-ocr" (replace
-    only the invisible text a scanner put in, keep real text).
+    only the invisible text a scanner put in, keep real text). ``picture`` says that
+    ``source`` is a JPEG or PNG, which the tool turns into a one-page PDF first.
     """
     output = os.path.join(workdir, f"{mode}.pdf")
+    # A picture without a resolution of its own has no size on paper; the size only
+    # scales the positions, which are used as shares of the page.
+    picture_options = ["--image-dpi", str(PICTURE_DEFAULT_DPI)] if picture else []
     result = run_tool(
         [
             "ocrmypdf", f"--{mode}", "-l", OCR_LANGUAGES, "--output-type", "pdf",
             "--jobs", str(OCR_INTERNAL_JOBS), "--optimize", "0", "--fast-web-view", "0",
-            source, output,
+            *picture_options, source, output,
         ],
         timeout=OCR_TOOL_TIMEOUT_S,
     )  # fmt: skip
     if result.returncode != 0 or not os.path.exists(output):
-        raise RuntimeError("ocrmypdf: " + (result.stderr or result.stdout).decode()[-200:])
+        raise RuntimeError(
+            "ocrmypdf: " + (result.stderr or result.stdout).decode()[-200:]
+        )
     return output
 
 
@@ -822,6 +839,8 @@ def make_words(source, ext, output):
     when the scanner already put text in: this can take a long time for a long
     document, which is why the server answers such a request asynchronously.
     """
+    if ext in PICTURE_WORD_EXTENSIONS:
+        return _make_picture_words(source, output)
     if ext != "pdf":
         raise NotApplicable("words are only taken from PDF bytes")
     pages, text, words, scanned = _read_pdf(source)
@@ -842,7 +861,26 @@ def make_words(source, ext, output):
                 mode = "force-ocr"
                 ocr_path = _run_ocr(source, workdir, mode)
             pages, text, words, _scanned = _read_pdf(ocr_path)
-        tool = "ocrmypdf+pdfplumber" if mode == "force-ocr" else "ocrmypdf-redo+pdfplumber"
+        tool = (
+            "ocrmypdf+pdfplumber" if mode == "force-ocr" else "ocrmypdf-redo+pdfplumber"
+        )
+    _write_words(output, pages, text, words, mode)
+    return tool
+
+
+def _make_picture_words(source, output):
+    """Text and word positions of a JPEG or PNG: read as the one page of a PDF.
+
+    Only done on request, never for every picture: most are photos, not documents.
+    """
+    with tempfile.TemporaryDirectory(dir=os.path.dirname(output)) as workdir:
+        ocr_path = _run_ocr(source, workdir, "force-ocr", picture=True)
+        pages, text, words, _scanned = _read_pdf(ocr_path)
+    _write_words(output, pages, text, words, "force-ocr")
+    return "ocrmypdf+pdfplumber"
+
+
+def _write_words(output, pages, text, words, mode):
     with open(output, "w", encoding="utf-8") as f:
         json.dump(
             {
@@ -856,7 +894,6 @@ def make_words(source, ext, output):
             ensure_ascii=False,
             separators=(",", ":"),
         )
-    return tool
 
 
 def make_meta(source, ext, output):

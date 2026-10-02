@@ -27,6 +27,7 @@ V2_MODELS = (
     "int_filemanager_extraction_rule",
     "int_filemanager_field_value",
     "int_filemanager_extraction_hint",
+    "int_filemanager_value_recognition",
 )
 V2_PATH_HINTS = (
     "static/src/int_filemanager/v2/",
@@ -87,6 +88,8 @@ def main():
         print(len(owned), "terms")
         return
     dictionary = json.load(open(sys.argv[3], encoding="utf-8"))
+    # Terms of the v1 code that were translated by hand stay as long as the dictionary has them.
+    owned += [e for e in entries if not is_v2(e) and e["msgid"] in dictionary]
     missing = sorted({e["msgid"] for e in owned if e["msgid"] not in dictionary})
     if missing:
         print("MISSING:")

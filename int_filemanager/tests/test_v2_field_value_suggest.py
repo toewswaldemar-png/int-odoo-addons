@@ -182,7 +182,7 @@ class TestV2FieldValueSuggest(FieldValueCase):
         with (
             patch.object(value_suggest, "SLOW_PATTERN_SECONDS", -1),
             self.assertLogs(
-                "odoo.addons.int_filemanager.models.int_filemanager_node"
+                "odoo.addons.int_filemanager.models.int_filemanager_value_recognition"
             ) as logs,
         ):
             self._suggest(node)

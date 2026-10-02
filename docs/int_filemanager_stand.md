@@ -10,7 +10,7 @@ odoo-ls ohne Befund im eigenen Code, `i18n/de.po` vollständig, Gegenlese durch 
 
 | Schritt | fertig, wenn | Stand |
 |---|---|---|
-| 3 Fundament (Datenmodell, Blob-Speicher, Schreibwege, Rechte) | je Grundregel ein grüner Test, für I1–I6 und I9 auch mit Abbruch mitten im Vorgang; Rechte-Tests für Nicht-Admins über alle Wege **und alle Tabellen**; kein `sudo` auf Nutzereingaben | fertig; 17 Rennszenarien (`tools/v2check/race.sh`) auf Tower zuletzt 2026-09-30 grün |
+| 3 Fundament (Datenmodell, Blob-Speicher, Schreibwege, Rechte) | je Grundregel ein grüner Test, für I1–I6 und I9 auch mit Abbruch mitten im Vorgang; Rechte-Tests für Nicht-Admins über alle Wege **und alle Tabellen**; kein `sudo` auf Nutzereingaben | fertig; 16 Rennszenarien (`tools/v2check/race.sh`) auf Tower zuletzt 2026-10-02 grün |
 | 4 Oberfläche (Explorer auf `int_filemanager.node`) | alle Funktionen (außer Office/Einliefern) in der Oberfläche bedienbar; Upload 3 GB mit Abbruch und Fortsetzen | gebaut; Abnahme frei durch den Nutzer, nicht per Checkliste |
 | 5 Vorschau, Text, Metadaten, OCR mit Wortpositionen | Vorschau für die häufigen Formate (inkl. HEIC/RAW/TIFF, Video-Standbild, Office, PDF, Scans mit OCR); Metadaten; Fehler sichtbar statt still; Odoo-Prozess bleibt bei defekten Dateien stabil; Test, dass Odoo Ergebnisse nie dekodiert (I13) | fertig im Server; Verwalter-Werkzeuge (Diagnose, "neu erzeugen", Konfiguration) **nicht** gebaut |
 | 5 Werterkennung | (eigene Scheiben, siehe Entscheidungen 5) | Server (Katalog, Erkennung, Lernen pro Absender, Spalten-/Rechte-Entwurf), Volltextsuche, Formularfelder, **Eigenschaften-Formular** (Rechtsklick → Eigenschaften) gebaut; Wortklick nur für PDF |
@@ -26,6 +26,8 @@ Zuletzt geprüft (2026-10-01): pre-commit grün, 555 Odoo-Tests, 76 Umwandler-Te
 (`pruefautomatik_2026-10-02.md`, `odoo_regeln/`); Docker-Läufe auf Tower und pre-commit auf Windows noch nicht verifiziert.
 **Review 2026-10-02:** gesamtes Modul gegen alle Regeldateien gelesen (Ergebnis in 3.1 bis 3.5); dabei wurde nichts ausgeführt, auch nicht pre-commit,
 `test_lint`, odoo-ls oder die Tests. Ein pre-commit-Hook ist auf dem Arbeitsrechner nicht installiert (`.git/hooks` leer, `pre_commit` fehlt).
+**Umbau `int_filemanager_node.py` 2026-10-02** (3.6): pre-commit (ruff, pylint-odoo) auf den geänderten Dateien grün, 642 Odoo-Tests (davon 22 neu), 16 Rennszenarien,
+`v2check.sh` (odoo-ls, `test_lint`) ohne neue Befunde (12 alte im bestehenden Code); nichts davon committet.
 
 ## 2. Nächste Schritte (in dieser Reihenfolge)
 
@@ -150,12 +152,11 @@ Hilfsmethoden. Behoben und mit `tests/test_v2_orm_rights.py` abgesichert (14 Tes
 - **Follower-Zeile je Knoten:** beim Anlegen ist nur `mail_create_nolog` gesetzt, nicht `mail_create_nosubscribe` (`create_file`, `create_folder`,
   `copy_node`, `_copy_children`, `_finish_now`); Odoo legt dadurch je Knoten eine Zeile in `mail_followers` an (bei der Übernahme von 1,8 TB Hunderttausende).
 - **Textdatei-Editor ohne Größenlimit:** `controller_mutations.js` (`onEditText`) lädt jede `.txt`/`.log`/`.csv`/`.json`/`.md` vollständig in den Browser.
-- **Eingabeprüfung der öffentlichen Methoden:** `apply_field_values` greift ungeprüft auf `item["field_id"]` zu, `existing_names`, `upload_chunk` und
-  `create_link` nehmen beliebige Typen; schlechte Eingabe endet als 500 statt als `UserError`. Nicht ausnutzbar, aber unsauber.
-- **Rechenaufwand beim Öffnen des Formulars:** `_compute_values_json` liest je Knoten den ganzen Text und fängt jeden Fehler mit `except Exception`;
-  `_suggest_tags` lädt alle Tags; `_learn_labels` sucht je Feld. Für einzelne Dokumente unkritisch.
+- **Eingabeprüfung der öffentlichen Methoden:** am Knoten behoben (3.6); `upload_chunk` und `create_link` nehmen noch beliebige Typen, schlechte Eingabe
+  endet dort als 500 statt als `UserError`. Nicht ausnutzbar, aber unsauber. Die Prüfhelfer stehen in `params.py`.
+- **Rechenaufwand beim Öffnen des Formulars:** `_learn_labels` sucht je Feld (nur beim Speichern, für einzelne Dokumente unkritisch).
 - **Crons:** der Rückgabewert von `_commit_progress` (Restzeit) wird in `_cron_finish_pending`, `_cron_build_zips` und `_cron_run` ignoriert; die Regel
-  verlangt, bei 0 sofort zurückzukehren.
+  verlangt, bei 0 sofort zurückzukehren (`_cron_purge_trash` am Knoten ist umgestellt, 3.6).
 - Die Prüf-Client-Aktion `value_review` ist noch geladen und im Menü, obwohl entschieden war, sie zu entfernen (Schritt 2 oben); das Modul hat zwei
   Wurzelmenüs ("Dateimanager" und "Files").
 - `tests/tower/bootstrap_fixtures.py` enthält ein festes Testpasswort (`race_driver_pw_1`) und liegt im Modulordner; beides nur für die Testinstanz gedacht.
@@ -165,16 +166,13 @@ Hilfsmethoden. Behoben und mit `tests/test_v2_orm_rights.py` abgesichert (14 Tes
 Nach den Regeldateien in `docs/odoo_regeln/` geordnet; Stand der Prüfung per Lesen, kein Werkzeuglauf.
 
 - **Python/ORM:**
-  - Roh-SQL ohne `odoo.tools.SQL`: f-String in `models/int_filemanager_derivative.py` (`_enqueue_missing`, mit `# noqa: S608`) und gut 15 weitere
-    `cr.execute("...", [...])` in `int_filemanager_blob.py`, `_derivative.py`, `_node.py` und `_upload.py` (Hausregel: `SQL()`).
-  - `except Exception` ohne konkreten Typ an vier Stellen: `int_filemanager_node.py` (`_purge_expired_trash`, `_compute_values_json`),
-    `int_filemanager_upload.py` (`_finish_pending_one`), `int_filemanager_zip_job.py` (`_build_one`).
+  - Roh-SQL ohne `odoo.tools.SQL`: f-String in `models/int_filemanager_derivative.py` (`_enqueue_missing`, mit `# noqa: S608`) und gut 10 weitere
+    `cr.execute("...", [...])` in `int_filemanager_blob.py`, `_derivative.py` und `_upload.py` (Hausregel: `SQL()`); `_node.py` ist umgestellt.
+  - `except Exception` ohne konkreten Typ an zwei Stellen: `int_filemanager_upload.py` (`_finish_pending_one`), `int_filemanager_zip_job.py` (`_build_one`).
   - `_remove_if_exists` steht dreimal (`_node`, `_upload`, `_zip_job`), obwohl `blobstore.remove_if_exists` existiert.
-  - Reihenfolge im Modell `int_filemanager.node`: Felder (`mtime`, `share_ids`, `is_scope_root`, `is_visible_top`, `content`) stehen nach `_unique_name_per_parent`;
-    `tag_ids` hat ein überflüssiges `string="Tags"`; `is_dir` hat den Standardwert `default=False`.
-  - Acht lesende öffentliche Methoden ohne `@api.readonly` (`request_previews` schreibt und ist ausgenommen): `tree_children`, `breadcrumb`, `existing_names`,
-    `suggest_field_values`, `page_words`, `read_selection`, `upload_status`, `zip_job_status` (Entscheidungen, Abschnitt 8).
-  - Docstrings: 16 von 147 haben mehr als fünf Zeilen (Hausregel: wenige Zeilen), 30 öffentliche Funktionen haben keinen.
+  - Zwei lesende öffentliche Methoden ohne `@api.readonly`: `upload_status`, `zip_job_status` (Entscheidungen, Abschnitt 8); am Knoten ist es gesetzt.
+  - Docstrings: außerhalb von `_node.py` und `_value_recognition.py` haben noch Dateien mehr als fünf Zeilen (Hausregel: wenige Zeilen) und öffentliche
+    Funktionen keinen.
   - In `value_suggest.py` überschreibt `Page.in_area` die Parameter `start` und `end`; Kommentare mit Fundgeschichte ("test collection").
 - **Sprache und Verweise (Hausregel 8):**
   - `__init__.py`: deutscher Docstring, "Phase 5", Verweis auf das gelöschte `docs/int_filemanager_ausbau.md`.
@@ -192,7 +190,7 @@ Nach den Regeldateien in `docs/odoo_regeln/` geordnet; Stand der Prüfung per Le
   - IDs: `action_int_filemanager_node` statt `int_filemanager_node_action`; Views ohne `_view_` im Namen; Menü `menu_int_filemanager_v2_root`.
   - Redundantes `string=` an `name` und `size` in `int_filemanager_node_views.xml`.
   - `position="replace"` in `v2/list_view.xml` und `v2/kanban_view.xml` ohne Begründungskommentar an der Stelle.
-- **Benennung "v2":** Beschreibungen der Modelle ("Filemanager v2 ..."), Routen `/int_filemanager/v2/...`, Registry-Schlüssel `int_filemanager_v2_*`,
+- **Benennung "v2":** Beschreibungen der Modelle außer dem Knoten ("Filemanager v2 ..."), Routen `/int_filemanager/v2/...`, Registry-Schlüssel `int_filemanager_v2_*`,
   Dateiname `controllers/int_filemanager_v2.py` (Regel: `controllers/<modul>.py`). Der Freigabe-Link `/int_filemanager/v2/share/<token>` geht an Kunden;
   eine spätere Umbenennung bricht diese Links, deshalb **vor Schritt 8 entscheiden**.
 - **JavaScript/Owl:**
@@ -228,6 +226,38 @@ Nach der Regel "bestehenden Code nicht umformatieren" nicht angefasst; bekannt a
 - Doppelte Fehlerinjektion (`publish_service.fault_point` und `fault.py`), doppelte Dialoge und Größenformatierung (`shared/`, `native_ui/` und `v2/`).
 - `native_ui/native_search_model.js`: rekursive Suche mit `=like` ohne Maskierung von `_` und `%` im Ordnernamen (findet Dateien von Nachbarordnern).
 - `int_filemanager.linkable.mixin`: `search_count` je Datensatz in der Liste (N+1).
+
+### 3.6 Prüfung und Umbau von `int_filemanager_node.py` (2026-10-02)
+
+Die größte Python-Datei (1930 Zeilen) wurde gegen die Regeldateien gelesen und dann umgebaut. Was der Odoo-Kern im Test-Image sagt, wurde dort nachgesehen:
+
+- **Aufteilung:** die Werterkennung (42 % der Datei) steht jetzt in `models/int_filemanager_value_recognition.py` (abstraktes Modell
+  `int_filemanager.value_recognition`, vom Knoten geerbt; die RPC-Aufrufe am Knoten bleiben gleich). `params.py` prüft die Argumente der öffentlichen Methoden
+  (`require_id`, `optional_id`, `require_ids`, `require_text`, `require_choice`). Der Knoten folgt der Reihenfolge der Regeln (Felder, Index, Compute/Suche,
+  CRUD, Actions, Geschäftsmethoden); die längsten Methoden sind von 103 auf unter 65 Zeilen geteilt.
+- **Eingaben:** jede öffentliche Methode am Knoten prüft ihre Argumente und antwortet mit `UserError` statt 500. Im Kern belegt: `check_access` auf einem leeren
+  Recordset prüft nur das Modell, ein leerer Elternordner (`None`) wurde also nicht abgewiesen. Der Vorgangsschlüssel muss ein Text von höchstens 200 Zeichen
+  sein, `create_new_revision` nimmt vom Client nur die Herkunft `upload` oder `edit`, Inhalt muss Bytes oder gültiges Base64 sein.
+- **Cron:** `_cron_purge_trash` meldet den Fortschritt (`_commit_progress`), committet je Teilbaum und hört bei abgelaufener Zeit auf; die abgelaufenen Wurzeln
+  werden in der Datenbank mit Limit gesucht, nicht mehr alle geladen und dann abgeschnitten. Fehler eines Teilbaums werden mit konkreten Typen gefangen.
+- **SQL:** `execute_query(SQL(..., to_flush=...))` statt `cr.execute` plus `flush_model()`; die Namenssuche des Absenders mit `IN (SELECT unnest(...))`. Gemessen
+  auf Tower mit 20 000 Firmen und 18 000 Wortgruppen: 19,3 s mit `= ANY(Array)`, 54 ms mit dem Hash-Join. `_touch_active_parent` invalidiert `write_date`.
+- **Sperre:** `FOR NO KEY UPDATE` statt `FOR UPDATE`. Der Kern nimmt es mit `allow_referencing=True` für Zeilen, auf die andere zeigen und deren Kennung sich nicht
+  ändert; `lock_for_update()` selbst wartet nicht (SKIP LOCKED, `LockError`), deshalb bleibt der eigene wartende Weg (`_lock_node`). Alle 16 Rennszenarien grün.
+- **`@api.readonly`:** gesetzt an `tree_children`, `breadcrumb`, `existing_names`, `suggest_field_values`, `page_words`, `read_selection`. Im Kern: JSON-2 und
+  `call_kw` lesen die Markierung; ein schreibgeschützter Cursor wird nur mit Lese-Replikat benutzt, bei einem Schreibversuch wird mit einem Schreib-Cursor
+  wiederholt. Geprüft in einer Transaktion `READ ONLY` auf Tower: alle sechs laufen durch, ein Schreibversuch wird blockiert.
+- **Kopieren:** je Baumebene ein `create` für die Knoten und ein `create` für alle Fassungen statt eines je Knoten; die Fassungen einer Kopie haben die
+  Herkunft `copy` (vorher `restore`).
+- **Compute-Felder:** `@api.depends` an `preview_state`, `values_json`, `is_visible_top` und `content`. `values_json` hängt bewusst nur an `is_dir` und der
+  Fassung, nicht am Kontakt: das Formular hält die noch nicht gespeicherten Eingaben in diesem Feld. Die Kenndaten (Währungen, eigene Firmen) werden einmal
+  je Aufruf gelesen, und für Knoten, die das Prefetch mitberechnet und die der Nutzer nicht lesen darf, wird nichts berechnet.
+- **Kommentare:** `sudo()` begründet, Docstrings im Imperativ, höchstens sechs Zeilen; "v2" aus der Modellbeschreibung entfernt (`de.po` neu gebaut).
+- **Berichtigung der Review:** `string="Tags"` an `tag_ids` ist kein Verstoß (ohne `string` hieße das Feld "Tag", `orm/fields.py`), es bleibt.
+- **Tests:** `tests/test_v2_node_arguments.py` (22 Tests): falsche Argumente für alle Methoden, Herkunft, Markierung `_readonly`, Kopieren in wenigen
+  Aufrufen, Fortschritt und Abbruch des Crons, ein Teilbaum, der nicht gelöscht werden kann, `values_json` für unlesbare Nachbarn.
+- **Offen:** `upload_chunk`, `create_link` und die übrigen Modelle prüfen ihre Argumente noch nicht mit `params.py`; `_remove_if_exists` steht noch in `_upload` und
+  `_zip_job`.
 
 ## 4. Arbeitsweise des Nutzers
 
@@ -282,7 +312,7 @@ Nach der Regel "bestehenden Code nicht umformatieren" nicht angefasst; bekannt a
 
 - **Ziel:** die Dateien vom Share `Daten` (Tower, ca. 1,8 TB) kommen in den neuen Dateimanager in Odoo; danach schreibt nur noch Odoo.
 - **Bausteine im Datenmodell:** Knoten (`int_filemanager.node`: Ordner oder Datei, Name je Ordner ohne Groß/Klein eindeutig, auch eine leere Datei hat eine
-  Fassung), Fassung (`.revision`, wird nie verändert), Inhalt (`.blob`, Datei im Speicher mit Prüfsumme), abgeleitete Daten (`.derivative`: Vorschau, Text,
+  Fassung; die Werterkennung erbt er von `int_filemanager.value_recognition`), Fassung (`.revision`, wird nie verändert), Inhalt (`.blob`, Datei im Speicher mit Prüfsumme), abgeleitete Daten (`.derivative`: Vorschau, Text,
   Metadaten, nur über eine eigene Route mit den Rechten der Fassung ausgeliefert), Rechte-Bereich (`.scope`: wer lesen, schreiben, verwalten, endgültig löschen darf).
 - **Schreiben** läuft immer gleich: Rechte und Vorgangsnummer prüfen → neuer Inhalt als Datenstrom in den Speicher (Prüfsumme dabei, Zwischendatei bleibt bis zum
   Abschluss, unbenutzte räumt der Aufräumjob) → kurze Datenbank-Transaktion mit Prüfung, ob inzwischen jemand anderes geändert hat → erst danach Wirkungen nach außen.

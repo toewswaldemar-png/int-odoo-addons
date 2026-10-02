@@ -4,13 +4,18 @@ import test from "node:test";
 
 import {
   DEFAULT_PAGE_SIZE,
+  OUTLINE_PADDING_X,
+  OUTLINE_PADDING_Y,
+  boxStyle,
   markers,
+  outlineBox,
   pageSize,
   relativeBox,
+  selectWords,
   shownFields,
   wordBox,
   wrapIndex,
-} from "../../src/int_filemanager/v2/value_review/value_review_geometry.js";
+} from "../../src/int_filemanager/v2/properties/value_geometry.js";
 
 const SIZES = {1: [200, 400], 2: [100, 100]};
 
@@ -82,4 +87,32 @@ test("a word is placed in shares of its page", () => {
     width: 0.4,
     height: 0.1,
   });
+});
+
+test("a box is placed in percent of its page", () => {
+  assert.equal(
+    boxStyle({left: 0.1, top: 0.25, width: 0.5, height: 0.125}),
+    "left:10%;top:25%;width:50%;height:12.5%"
+  );
+});
+
+test("an outline stands a little outside the text, the same in both directions", () => {
+  const box = {left: 0.1, top: 0.2, width: 0.3, height: 0.1};
+  const outline = outlineBox(box, [200, 400]);
+  assert.equal(outline.left, 0.1 - OUTLINE_PADDING_X / 200);
+  assert.equal(outline.top, 0.2 - OUTLINE_PADDING_Y / 400);
+  assert.equal(outline.width, 0.3 + (2 * OUTLINE_PADDING_X) / 200);
+  assert.equal(outline.height, 0.1 + (2 * OUTLINE_PADDING_Y) / 400);
+});
+
+test("words chosen from either side cover the text between them", () => {
+  const words = [
+    [0, 0, 1, 1, 0, 5],
+    [0, 0, 1, 1, 6, 11],
+    [0, 0, 1, 1, 12, 20],
+    [0, 0, 1, 1, 21, 25],
+  ];
+  assert.deepEqual(selectWords(words, 1, 1), {first: 1, last: 1, start: 6, end: 11});
+  assert.deepEqual(selectWords(words, 1, 3), {first: 1, last: 3, start: 6, end: 25});
+  assert.deepEqual(selectWords(words, 3, 1), selectWords(words, 1, 3));
 });

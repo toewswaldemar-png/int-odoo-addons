@@ -2,6 +2,10 @@ import psycopg2
 
 from odoo import api, fields, models
 
+from .. import params
+
+MAX_KEY_CHARS = 200
+
 
 class IntFilemanagerOperation(models.Model):
     """One write operation, identified by the client's operation key.
@@ -25,6 +29,9 @@ class IntFilemanagerOperation(models.Model):
         If the operation is not new, the caller returns ``operation.result``
         instead of writing again.
         """
+        params.require_text(
+            self.env, key, "operation_key", MAX_KEY_CHARS, non_empty=True
+        )
         operation = self.search([("key", "=", key)], limit=1)
         if operation:
             return operation, False

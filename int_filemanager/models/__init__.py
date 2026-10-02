@@ -13,6 +13,7 @@ from . import ir_attachment
 from . import res_partner
 from . import res_config_settings
 from . import int_filemanager_scope
+from . import int_filemanager_value_recognition
 from . import int_filemanager_node
 from . import int_filemanager_blob
 from . import int_filemanager_revision

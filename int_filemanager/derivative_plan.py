@@ -56,6 +56,9 @@ AUDIO_EXTENSIONS = frozenset("mp3 flac m4a ogg oga opus wav wma aac".split())
 OFFICE_EXTENSIONS = frozenset("doc docx odt rtf xls xlsx ods ppt pptx odp".split())
 TEXT_EXTENSIONS = frozenset("txt md csv tsv log json xml html htm ini yml yaml".split())
 PDF_EXTENSIONS = frozenset({"pdf"})
+# Pictures whose text can be read, but only when someone asks for it: most of them are
+# photos, not documents. The converter takes the same ones (PICTURE_WORD_EXTENSIONS).
+READABLE_PICTURE_EXTENSIONS = frozenset({"jpg", "jpeg", "png"})
 
 
 @dataclasses.dataclass(frozen=True)
@@ -130,6 +133,11 @@ def job_plan(name):
     if klass == "text":
         return [JobPlan("text", TEXT_SPEC)]
     return []
+
+
+def can_read_text(name):
+    """Whether the text of a picture of this name can be asked for."""
+    return file_extension(name) in READABLE_PICTURE_EXTENSIONS
 
 
 def has_tile(name):

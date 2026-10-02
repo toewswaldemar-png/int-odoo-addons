@@ -17,9 +17,8 @@ import threading
 import unittest
 from unittest import mock
 
-from PIL import Image
-
 import worker
+from PIL import Image
 
 BLOB_ROOT = tempfile.mkdtemp(prefix="fmconv_blobs_")
 os.environ["CONVERTER_BLOB_ROOT"] = BLOB_ROOT
@@ -139,7 +138,16 @@ class ConverterTest(unittest.TestCase):
         path = os.path.join(BLOB_ROOT, f"make_audio.{ext}")
         cover_path = os.path.join(BLOB_ROOT, "cover.jpg")
         Image.new("RGB", (120, 90), "purple").save(cover_path, "JPEG")
-        args = ["ffmpeg", "-nostdin", "-v", "error", "-f", "lavfi", "-i", "sine=duration=1"]
+        args = [
+            "ffmpeg",
+            "-nostdin",
+            "-v",
+            "error",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=duration=1",
+        ]
         if cover:
             args += ["-i", cover_path, "-map", "0:a", "-map", "1:v", "-c:v", "copy"]
         args += ["-metadata", "title=Test Title", "-metadata", "artist=Test Artist",
@@ -236,7 +244,9 @@ class ConverterTest(unittest.TestCase):
         page.add_resource(font, pikepdf.Name.Font, name=pikepdf.Name("/FHidden"))
         # Text render mode 3: invisible, exactly how OCR text layers are drawn.
         page.contents_add(
-            pdf.make_stream(f"BT /FHidden 24 Tf 3 Tr 20 60 Td ({hidden_text}) Tj ET".encode()),
+            pdf.make_stream(
+                f"BT /FHidden 24 Tf 3 Tr 20 60 Td ({hidden_text}) Tj ET".encode()
+            ),
             prepend=False,
         )
         buf = io.BytesIO()
@@ -397,7 +407,9 @@ class ConverterTest(unittest.TestCase):
         self.assertEqual(result["ocr"], "none")
         self.assertIn("Hello converter, digital page", result["text"])
         self.assertEqual(len(result["pages"]), 1)
-        self.assertEqual(result["pages"][0], {"width": 595.0, "height": 842.0, "rotation": 0})
+        self.assertEqual(
+            result["pages"][0], {"width": 595.0, "height": 842.0, "rotation": 0}
+        )
         page, x0, top, x1, bottom, start, end = self.word(result, "Hello")
         self.assertEqual(page, 1)
         self.assertLess(x0, x1)
@@ -542,7 +554,8 @@ class ConverterTest(unittest.TestCase):
         result = self.words(pdf)
         self.assert_ranges_match_the_text(result)
         self.assertEqual(
-            result["text"], "Antrag auf Leistung 2026\nErika Mustermann\n300/0154989/5/25"
+            result["text"],
+            "Antrag auf Leistung 2026\nErika Mustermann\n300/0154989/5/25",
         )
         page, x0, top, x1, bottom, _start, _end = self.word(result, "Erika")
         self.assertEqual(page, 1)
@@ -558,10 +571,13 @@ class ConverterTest(unittest.TestCase):
     def test_a_pdf_without_a_form_is_read_as_before(self):
         pdf = self.make_pdf("Hello converter, digital page")
         with_empty_form = self.make_form_pdf(
-            [("name", "Tx", "", (200, 690, 400, 710))], text="Hello converter, digital page"
+            [("name", "Tx", "", (200, 690, 400, 710))],
+            text="Hello converter, digital page",
         )
         self.assertEqual(self.words(pdf)["text"], "Hello converter, digital page")
-        self.assertEqual(self.words(with_empty_form)["text"], "Hello converter, digital page")
+        self.assertEqual(
+            self.words(with_empty_form)["text"], "Hello converter, digital page"
+        )
 
     def test_a_choice_field_gives_the_shown_text_not_the_stored_value(self):
         pdf = self.make_form_pdf(
@@ -575,7 +591,9 @@ class ConverterTest(unittest.TestCase):
                 }
             ]
         )
-        self.assertEqual(self.words(pdf)["text"], "Antrag auf Leistung 2026\nDeutschland")
+        self.assertEqual(
+            self.words(pdf)["text"], "Antrag auf Leistung 2026\nDeutschland"
+        )
 
     def test_check_boxes_and_radio_buttons_are_ignored(self):
         pdf = self.make_form_pdf(
@@ -591,8 +609,20 @@ class ConverterTest(unittest.TestCase):
     def test_hidden_and_password_fields_are_ignored(self):
         pdf = self.make_form_pdf(
             [
-                {"T": "hidden", "FT": "Tx", "V": "Versteckt", "Rect": [1, 1, 99, 20], "F": 2},
-                {"T": "secret", "FT": "Tx", "V": "Passwort", "Rect": [1, 30, 99, 50], "Ff": 1 << 13},
+                {
+                    "T": "hidden",
+                    "FT": "Tx",
+                    "V": "Versteckt",
+                    "Rect": [1, 1, 99, 20],
+                    "F": 2,
+                },
+                {
+                    "T": "secret",
+                    "FT": "Tx",
+                    "V": "Passwort",
+                    "Rect": [1, 30, 99, 50],
+                    "Ff": 1 << 13,
+                },
                 ("shown", "Tx", "Sichtbar", (200, 690, 400, 710)),
             ]
         )
@@ -604,7 +634,9 @@ class ConverterTest(unittest.TestCase):
         pdf = pikepdf.open(io.BytesIO(self.make_pdf("Antrag auf Leistung 2026")))
         parent = pdf.make_indirect(
             pikepdf.Dictionary(
-                FT=pikepdf.Name.Tx, T=pikepdf.String("parent"), V=pikepdf.String("Geerbt")
+                FT=pikepdf.Name.Tx,
+                T=pikepdf.String("parent"),
+                V=pikepdf.String("Geerbt"),
             )
         )
         kid = pdf.make_indirect(
@@ -618,7 +650,9 @@ class ConverterTest(unittest.TestCase):
         pdf.Root.AcroForm = pdf.make_indirect(pikepdf.Dictionary(Fields=[parent]))
         buf = io.BytesIO()
         pdf.save(buf)
-        self.assertEqual(self.words(buf.getvalue())["text"], "Antrag auf Leistung 2026\nGeerbt")
+        self.assertEqual(
+            self.words(buf.getvalue())["text"], "Antrag auf Leistung 2026\nGeerbt"
+        )
 
     def test_form_values_in_utf16_and_latin1_are_decoded(self):
         utf16 = b"\xfe\xff" + "M\u00fcller \u20ac".encode("utf-16-be")
@@ -638,7 +672,15 @@ class ConverterTest(unittest.TestCase):
         # 0xe4 is the same in both.
         value = b"5 " + bytes([0xA0, 0x20, 0x46, 0xE4]) + b"l"
         pdf = self.make_form_pdf([("a", "Tx", value, (200, 690, 400, 710))])
-        expected = "Antrag auf Leistung 2026" + chr(10) + "5 " + chr(0x20AC) + " F" + chr(0xE4) + "l"
+        expected = (
+            "Antrag auf Leistung 2026"
+            + chr(10)
+            + "5 "
+            + chr(0x20AC)
+            + " F"
+            + chr(0xE4)
+            + "l"
+        )
         self.assertEqual(self.words(pdf)["text"], expected)
 
     def test_a_word_list_format_it_does_not_make_is_refused(self):
@@ -651,7 +693,9 @@ class ConverterTest(unittest.TestCase):
         )
         result = self.words(pdf)
         self.assert_ranges_match_the_text(result)
-        self.assertEqual(result["text"], "Antrag auf Leistung 2026\nMusterweg 1\n12345 Stadt")
+        self.assertEqual(
+            result["text"], "Antrag auf Leistung 2026\nMusterweg 1\n12345 Stadt"
+        )
         first = self.word(result, "Musterweg")
         last = self.word(result, "Stadt")
         # Two lines share the height of the box (from the top: 202 to 242).
@@ -786,7 +830,9 @@ class ConverterTest(unittest.TestCase):
         self.assertEqual(result["ocr"], "force-ocr")
         self.assertIn("SCANNEDTEXT", result["text"].upper())
         found = next(
-            w for w in result["words"] if result["text"][w[5] : w[6]].upper() == "SCANNEDTEXT"
+            w
+            for w in result["words"]
+            if result["text"][w[5] : w[6]].upper() == "SCANNEDTEXT"
         )
         self.assertEqual(found[0], 1)
         self.assertGreater(found[3], found[1])
@@ -868,7 +914,90 @@ class ConverterTest(unittest.TestCase):
 
     def test_words_is_only_for_pdf_bytes(self):
         self.assert_refused(
-            store(b"not a pdf"), "not_applicable", "PDF", kind="words", spec="v2", ext="txt"
+            store(b"not a pdf"),
+            "not_applicable",
+            "PDF",
+            kind="words",
+            spec="v2",
+            ext="txt",
+        )
+
+    def make_text_picture(self, text, fmt="PNG", orientation=None, dpi=None):
+        """A picture of ``text`` as a camera or scanner saves it.
+
+        With an ``orientation`` the pixels are turned the way the tag wants them back, so
+        that a viewer showing the picture upright shows the text upright.
+        """
+        from PIL import ImageDraw, ImageFont
+
+        image = Image.new("RGB", (1000, 300), "white")
+        font = ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48
+        )
+        ImageDraw.Draw(image).text((20, 100), text, fill="black", font=font)
+        exif = Image.Exif()
+        if orientation:
+            # Orientation 6 says "turn clockwise to see it upright": store it turned back.
+            image = image.rotate({6: 90, 8: -90, 3: 180}[orientation], expand=True)
+            exif[0x0112] = orientation
+        buf = io.BytesIO()
+        options = {"dpi": (dpi, dpi)} if dpi else {}
+        if fmt == "JPEG":
+            options["exif"] = exif
+        image.save(buf, fmt, **options)
+        return buf.getvalue()
+
+    def picture_words(self, content, ext):
+        status, headers, data = self.tile(store(content), "v6", "words", ext)
+        if status == 202:
+            status, headers, data = self.poll_until_done(json.loads(data)["job_id"])
+        self.assertEqual(status, 200, data)
+        return json.loads(data)
+
+    def test_a_png_is_read_with_word_positions_on_one_page(self):
+        result = self.picture_words(self.make_text_picture("PICTURETEXT"), "png")
+        self.assertEqual(result["ocr"], "force-ocr")
+        self.assertIn("PICTURETEXT", result["text"].upper())
+        self.assertEqual(len(result["pages"]), 1)
+        page = result["pages"][0]
+        found = next(
+            w
+            for w in result["words"]
+            if result["text"][w[5] : w[6]].upper() == "PICTURETEXT"
+        )
+        # The word lies inside the page, which has the shape of the picture.
+        _page, x0, top, x1, bottom = found[:5]
+        self.assertEqual(_page, 1)
+        self.assertTrue(0 <= x0 < x1 <= page["width"])
+        self.assertTrue(0 <= top < bottom <= page["height"])
+        self.assertAlmostEqual(page["width"] / page["height"], 1000 / 300, places=1)
+        self.assert_ranges_match_the_text(result)
+
+    def test_a_jpeg_without_a_resolution_is_read_too(self):
+        for dpi in (None, 96):
+            with self.subTest(dpi=dpi):
+                result = self.picture_words(
+                    self.make_text_picture("JPEGTEXT", fmt="JPEG", dpi=dpi), "jpg"
+                )
+                self.assertIn("JPEGTEXT", result["text"].upper())
+
+    def test_a_picture_turned_by_its_orientation_tag_is_read_upright(self):
+        # The way a phone saves a photo taken sideways: the pixels lie on their side.
+        result = self.picture_words(
+            self.make_text_picture("TURNEDTEXT", fmt="JPEG", orientation=6), "jpeg"
+        )
+        self.assertIn("TURNEDTEXT", result["text"].upper())
+        page = result["pages"][0]
+        self.assertAlmostEqual(page["width"] / page["height"], 1000 / 300, places=1)
+
+    def test_pictures_other_than_jpeg_and_png_have_no_words(self):
+        self.assert_refused(
+            store(b"GIF89a"),
+            "not_applicable",
+            "PDF",
+            kind="words",
+            spec="v6",
+            ext="gif",
         )
 
     def test_an_office_document_becomes_a_pdf_with_its_text(self):
@@ -1027,7 +1156,9 @@ class ConverterTest(unittest.TestCase):
         # A tiny wait budget makes even a quick script exceed it, without having to
         # wait out a real multi-minute OCR run in the test.
         with (
-            mock.patch.object(server, "WORKER", self._slow_worker_script("slow1.py", 0.3)),
+            mock.patch.object(
+                server, "WORKER", self._slow_worker_script("slow1.py", 0.3)
+            ),
             mock.patch.object(server, "WAIT_BUDGET_S", 0.05),
         ):
             status, _headers, data = self.tile(sha256)
@@ -1044,7 +1175,9 @@ class ConverterTest(unittest.TestCase):
 
     def test_a_job_is_only_delivered_once(self):
         with (
-            mock.patch.object(server, "WORKER", self._slow_worker_script("slow2.py", 0.2)),
+            mock.patch.object(
+                server, "WORKER", self._slow_worker_script("slow2.py", 0.2)
+            ),
             mock.patch.object(server, "WAIT_BUDGET_S", 0.05),
         ):
             _status, _headers, data = self.tile(store(jpeg(100, 100)))
