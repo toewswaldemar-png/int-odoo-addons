@@ -33,11 +33,10 @@ Ebene tief, deshalb liegen alle Module flach im Wurzelordner.
 | `.pre-commit-config.yaml`, `.ruff.toml`, `eslint.config.cjs`, `prettier.config.cjs` | Prüfautomatik |
 | [`CLAUDE.md`](CLAUDE.md) | verbindliche Arbeitsregeln für die Arbeit mit Claude Code |
 
-## Branches und Tags
+## Branches
 
 - `master`: Hauptlinie.
 - `feature/<thema>`: Entwicklung je Thema, z. B. `feature/int-filemanager-v2` und `feature/int-liedanzeige`.
-- Tag `int_filemanager-v1`: der Stand von `int_filemanager` vor dem Neubau.
 
 ## Entwickeln
 

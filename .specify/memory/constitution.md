@@ -60,7 +60,7 @@ als Ersatz für eine Codebehebung. Neuer Code wird mit möglichst geringen Recht
 - **Commits:** `[TAG] modul: kurzer Satz` im Imperativ, Tag aus der Liste der Git Guidelines, nur auf ausdrückliche Ansage des Nutzers.
 - **Umgebung:** drei getrennte Unraid-Server (HM-SRV, Tower, Tower 192.168.178.73); nie annehmen, dass ein Stand von einem Server auf einem anderen liegt.
   Prüfläufe nur gegen Wegwerf-Container und -Datenbanken auf der Testinstanz, nie gegen die Live-Instanz.
-- **Neubau** nur auf dem Branch `feature/int-filemanager-v2`; `master` hält den Stand des Tags `int_filemanager-v1`.
+- **Entwicklung** von `int_filemanager` nur auf dem Branch `feature/int-filemanager-v2`.
 
 ## Arbeitsablauf
 

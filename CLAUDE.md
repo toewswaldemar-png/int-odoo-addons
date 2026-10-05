@@ -84,7 +84,7 @@ Die Regeln der Odoo-19-Dokumentation (Quelle `odoo/documentation`, Branch 19.0) 
   live testen, nicht raten.
 - **Produktentscheidungen vorab mit dem Nutzer klären**, nicht impliziten Annahmen folgen.
 - **int_filemanager:** Der Code ist maßgeblich; Projektbeschreibung: `README.md`.
-  Der Neubau entsteht nur auf dem Branch `feature/int-filemanager-v2` (Stand vor dem Neubau: Tag `int_filemanager-v1`). Prüfungen:
+  `int_filemanager` wird nur auf dem Branch `feature/int-filemanager-v2` entwickelt. Prüfungen:
   pre-commit (`py -3.13 -m pre_commit`, Hook installiert) und `tools/v2check/v2check.sh [--quick]` (odoo-ls + `test_lint`,
   `docs/pruefautomatik_2026-10-02.md`).
 - `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher. Workaround:

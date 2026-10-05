@@ -12,4 +12,3 @@ python report_other.py <Ordner mit result_*.json>       # Manifest, XML, Rechte,
 ```
 
 `mine_views_lines.py` zählt zusätzlich Zeilenlängen, View-, Menü- und Gruppen-IDs. Die Python-Zählung benutzt den AST; XML, JS und SCSS sind Textmuster (Näherung).
-`result_ours_new.json` enthält nur die seit dem Tag `int_filemanager-v1` hinzugefügten Dateien.
