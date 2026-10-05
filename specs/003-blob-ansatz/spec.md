@@ -175,11 +175,12 @@ Laufs abschließt, behält seine Datei.
   Merken des Standes ab.
 - Der Abschluss einer großen Datei dauert länger als das Zeitlimit des Proxys (kalte
   Platte).
-- Eine Tabelle, die auf einen Inhalt verweist, ist dem Aufräum-Lauf nicht bekannt.
+- Eine spätere Tabelle (Vorschau, Freigabe) braucht einen Inhalt: Sie verweist auf die
+  Version und trägt keinen eigenen Hash, sonst wäre der Inhalt für den Aufräum-Lauf
+  unsichtbar.
 - Ein Aufräum-Lauf trifft einen Inhalt, dessen Version gleichzeitig kopiert oder
   wiederhergestellt wird.
-- Eine Tabelle hat eine Hash-Spalte, erbt aber den gemeinsamen Baustein nicht (der Lauf
-  sähe sie nicht).
+- Ein Modell außer der Version bekommt eine Hash-Spalte (der Lauf sähe sie nicht).
 
 ## Requirements _(mandatory)_
 
@@ -218,8 +219,9 @@ Laufs abschließt, behält seine Datei.
 - **FR-009**: Beim Abschluss MUSS der Server die Gesamtgröße gegen die angekündigte
   prüfen, den SHA-256 selbst berechnen und, wenn der Client einen erwartet, auf
   Übereinstimmung prüfen.
-- **FR-010**: Ein Vorgang MUSS wiederholbar sein: dieselbe Anfrage mit demselben
-  Schlüssel wirkt genau einmal.
+- **FR-010**: Ein Vorgang MUSS wiederholbar sein: ein wiederholter Teil, Abschluss oder
+  Statusabruf wirkt genau einmal bzw. liefert denselben Stand (über den Status des
+  Uploads, ohne eigenen Schlüssel).
 
 **Auslieferung und Rechte**
 
@@ -234,10 +236,10 @@ Laufs abschließt, behält seine Datei.
 - **FR-013**: Ein Inhalt, auf den keine Version mehr verweist, MUSS nach einer
   Schonfrist entfernt werden, unabhängig davon, auf welchem Weg die Version gelöscht
   wurde (auch durch Löschen des Ordners). Jeder Löschweg MUSS den Inhalt vor dem Löschen
-  markieren; die Schonfrist zählt ab der Markierung. Der Aufräum-Lauf MUSS jede Tabelle
-  kennen, die auf einen Inhalt verweist (gemeinsamer Baustein, kein Handpflegen einer
-  Liste); eine Tabelle mit Hash-Spalte ohne diesen Baustein MUSS ein Test aufdecken. Die
-  Schonfrist MUSS gegen Werte unter einer Mindestdauer geschützt sein.
+  markieren; die Schonfrist zählt ab der Markierung. Nur die Version trägt einen Hash,
+  der Aufräum-Lauf fragt diese Tabelle ab; spätere Tabellen mit Inhaltsbezug verweisen
+  auf die Version, und ein Test MUSS jedes andere Modell mit einer Hash-Spalte
+  aufdecken. Die Schonfrist MUSS gegen Werte unter einer Mindestdauer geschützt sein.
 - **FR-014**: Der Aufräum-Lauf MUSS gleichzeitige Vorgänge schützen (Upload, Kopieren,
   Wiederherstellen): eine Datei, deren Ablage noch nicht abgeschlossen ist oder auf die
   gerade eine Version verweist, darf nicht verloren gehen. Eine einzelne Datei, die sich
@@ -271,9 +273,9 @@ Laufs abschließt, behält seine Datei.
 - **Inhalt**: eine Datei auf der Platte, benannt nach ihrem SHA-256; keine eigene Zeile
   in der Datenbank und keine Rechte.
 - **Verweis**: ein Datensatz (z. B. eine Version), der Hash und Größe eines Inhalts
-  trägt und die Rechte hat; jede Tabelle mit Verweis erbt einen gemeinsamen Baustein.
+  trägt und die Rechte hat; es ist die einzige Tabelle mit Hash.
 - **Upload**: ein laufender, fortsetzbarer Hochladevorgang mit Zwischendatei,
-  angekündigter Größe, Stand und Eigentümer.
+  angekündigter Größe, Stand und Eigentümer (der Anleger).
 - **Merkzettel**: Vermerk je Datei, die beim Ablegen oder Löschen einer Version markiert
   wurde, mit Zeitstempel; nach der Schonfrist entscheidet der Aufräum-Lauf, ob die Datei
   noch gebraucht wird.
@@ -317,7 +319,10 @@ Laufs abschließt, behält seine Datei.
   geprüft.
 - Der Abschluss einer 5-GB-Datei (Hashen, Ablegen) dauert auf dem Tower warm rund 25 s;
   eine Kaltlesung ist nicht gemessen und kann länger als das Proxy-Zeitlimit von 90 s
-  dauern. Deshalb läuft der Abschluss im Hintergrund (Cron mit `_trigger`).
+  dauern. Deshalb läuft der Abschluss im Hintergrund (Cron mit `_trigger`). Das
+  Zeitlimit des Crons (`limit_time_real_cron`, folgt `limit_time_real`, Standard 120 s,
+  Tower 1800 s) gilt weiter und muss für den echten Bestand über der Kaltlesezeit der
+  größten Datei liegen; auf HM-SRV ist es nicht geprüft.
 - Der Filestore liegt auf dem Tower derzeit auf der Cache-SSD (92 GB frei, nicht für
   Terabyte geeignet). Der Ordner `int_filemanager` muss für den echten Bestand auf den
   Array-Share verlegt werden; Odoos Zip-Sicherung (kopiert den Filestore ganz in einen

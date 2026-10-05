@@ -12,13 +12,13 @@ gibt **keine Blob-Tabelle**: Die Version einer Datei trägt den Hash (`sha256`) 
 Größe (`size`) selbst und die Rechte. Das ist Odoos Muster für Anhänge (Dateiname =
 Prüfsumme, Merkzettel, Tabellensperre beim Aufräumen, `ir.attachment._gc_file_store`),
 erweitert um das, was der Core nicht kann: Schreiben als Strom statt als Bytes, SHA-256,
-Größen über 2 GiB und ein fortsetzbarer Upload. Hash und Größe stehen in einem
-**abstrakten Mixin**; jede Tabelle mit Inhaltsverweis erbt es, und der Aufräum-Lauf holt
-sich diese Tabellen zur Laufzeit über `registry.descendants` (Muster aus `analytic_plan`
-und `cloud_storage`, `research.md` E34, V15). Der Mixin ersetzt den Fremdschlüssel, den
-die verworfene Blob-Tabelle geboten hätte. Aufgeräumt wird nach dem Muster des Cores
-(Merkzettel, `LOCK … SHARE MODE` als erste Anweisung, Whitelist-Abfrage in Stapeln),
-ergänzt um eine **Schonfrist am Merkzettel** und **markierte Löschwege**
+Größen über 2 GiB und ein fortsetzbarer Upload. Der Aufräum-Lauf kennt genau diese eine
+Tabelle, so wie `ir.attachment._gc_file_store` seine eine Tabelle kennt. Jede spätere
+Tabelle, die Inhalt braucht (Vorschau, Freigabe), verweist per Many2one auf die Version
+und trägt keinen eigenen Hash; so verweisen im Core alle Modelle auf `ir.attachment`
+(`research.md` E34). Aufgeräumt wird nach dem Muster des Cores (Merkzettel,
+`LOCK … SHARE MODE` als erste Anweisung, Whitelist-Abfrage in Stapeln) in einem eigenen
+Cursor, ergänzt um eine **Schonfrist am Merkzettel** und **markierte Löschwege**
 (`Revision.unlink`, `Node.unlink`). Der Abschluss großer Uploads (Hashen, Ablegen) läuft
 als Hintergrundauftrag über `ir.cron._trigger()`. Bausteine:
 
@@ -31,7 +31,7 @@ als Hintergrundauftrag über `ir.cron._trigger()`. Bausteine:
 3. **Auslieferung** (FR-011, FR-012): `Stream(type='path')` mit `safe_join`,
    Rechtsprüfung an der Version.
 4. **Aufräumen** (FR-013 bis FR-015): `@api.autovacuum`, Merkzettel mit Schonfrist,
-   Tabellensperre über alle Mixin-Tabellen, Löschwege markieren.
+   Tabellensperre, Löschwege markieren.
 5. **Betrieb** (FR-018, FR-019): Ablageort über `--data-dir`, Sicherung als `dump` plus
    Dateiabgleich, Auslieferung über `--x-sendfile`.
 
@@ -41,9 +41,9 @@ als Hintergrundauftrag über `ir.cron._trigger()`. Bausteine:
 ES-Module, Owl 2.8.4) **Primary Dependencies**: nur Odoo-Core und Standardbibliothek
 (`hashlib`, `os`, `shutil`); keine neue Bibliothek **Storage**: Dateien unter
 `config.filestore(<db>)/int_filemanager/`; Datenbank: `sha256` und `size` an der Version
-(über das Mixin), Zeile für den laufenden Upload (`TransientModel`); keine Blob-Tabelle
-**Testing**: Odoo-Tests (`TransactionCase`, `HttpCase`), Echtprozess-Tests für
-Gleichzeitigkeit und Absturz auf einer Wegwerf-Instanz mit zwei Workern **Target
+(Felder der Version), Zeile für den laufenden Upload (`TransientModel`); keine
+Blob-Tabelle **Testing**: Odoo-Tests (`TransactionCase`, `HttpCase`), Echtprozess-Tests
+für Gleichzeitigkeit und Absturz auf einer Wegwerf-Instanz mit zwei Workern **Target
 Platform**: Odoo-Server (Linux, Docker, Unraid), Entwicklung auf Windows **Project
 Type**: Odoo-Addon (Modul `int_filemanager`) **Performance Goals**: Upload einer
 5-GB-Datei ohne Speicherwachstum des Workers über 512 MB; Abschluss unabhängig vom
@@ -56,15 +56,15 @@ Array)
 
 ## Constitution Check
 
-| Grundsatz                       | Prüfung                                                                                                                                                                                                                                                                                                                                                                | Stand                               |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| I. Odoo-Core vor Eigenbau       | `research.md` Tabelle E1–E19, E30–E34 mit Fundstellen und Abschnitt "Odoo-Bausteine je Anforderung"; Eigenbau nur für Streaming-Schreiben, SHA-256, Größen über 2 GiB, Chunk-Protokoll, `os.link`-Ablage und Schonfrist (E1–E3, E9, E10, V11, V13); Aufräumen, Tabellenfindung, Hintergrundabschluss, Meldung, Sicherung, Auslieferung und Zugriff über Core-Bausteine | bestanden                           |
-| II. Odoo-19-Regeln              | Abgleich in `research.md`; Abweichungen in Complexity Tracking                                                                                                                                                                                                                                                                                                         | bestanden                           |
-| III. Owl 2.8.4                  | Upload-Client nutzt Dienste per `useService`, Browser-Funktionen über `@web/core/browser/browser`; keine Owl-3-API                                                                                                                                                                                                                                                     | bestanden (bei Umsetzung zu prüfen) |
-| IV. Prüfautomatik erzwingt      | neue Regeln (Hash-Format, `SQL`, Stapel) in `test_lint`-Läufe und Tests; Schutztest für Spalten `sha256` ohne Mixin; kein neues Werkzeug nötig                                                                                                                                                                                                                         | bestanden                           |
-| V. Verifizieren                 | V2, V3 (teilweise überholt, V17), V5 bis V21 am 2026-10-05 und 2026-10-06 auf dem Tower gemessen oder gelesen (`research.md`); offen: HM-SRV, Kaltlesung, Last bei vielen Merkzetteln und der Echtprozess-Test mit zwei Workern im Odoo-ORM (Pflicht vor Abschluss der Umsetzung)                                                                                      | bestanden mit offenen Messungen     |
-| VI. Produktentscheidungen vorab | Dateigröße, Fortsetzen, Duplikate, Sicherung am 2026-10-05 entschieden; am 2026-10-06 vom Nutzer entschieden: Ansatz D' (Hash an der Version) und Transport der Teile als Multipart-Teil über `file_upload_service` (gemessen, V17–V23)                                                                                                                                | bestanden                           |
-| VII. Ursachen beheben           | jede Behebung mit Test; Gleichzeitigkeit und Absturz mit echten Prozessen                                                                                                                                                                                                                                                                                              | bestanden                           |
+| Grundsatz                       | Prüfung                                                                                                                                                                                                                                                                                                                                      | Stand                               |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| I. Odoo-Core vor Eigenbau       | `research.md` Tabelle E1–E19, E30–E34 mit Fundstellen und Abschnitt "Odoo-Bausteine je Anforderung"; Eigenbau nur für Streaming-Schreiben, SHA-256, Größen über 2 GiB, Chunk-Protokoll, `os.link`-Ablage und Schonfrist (E1–E3, E9, E10, V11, V13); Aufräumen, Hintergrundabschluss, Sicherung, Auslieferung und Zugriff über Core-Bausteine | bestanden                           |
+| II. Odoo-19-Regeln              | Abgleich in `research.md`; Abweichungen in Complexity Tracking                                                                                                                                                                                                                                                                               | bestanden                           |
+| III. Owl 2.8.4                  | Upload-Client nutzt Dienste per `useService`, Browser-Funktionen über `@web/core/browser/browser`; keine Owl-3-API                                                                                                                                                                                                                           | bestanden (bei Umsetzung zu prüfen) |
+| IV. Prüfautomatik erzwingt      | neue Regeln (Hash-Format, `SQL`, Stapel) in `test_lint`-Läufe und Tests; Schutztest, dass nur die Version eine Spalte `sha256` hat; kein neues Werkzeug nötig                                                                                                                                                                                | bestanden                           |
+| V. Verifizieren                 | V2, V3 (teilweise überholt, V17), V5 bis V21 am 2026-10-05 und 2026-10-06 auf dem Tower gemessen oder gelesen (`research.md`); offen: HM-SRV, Kaltlesung, Last bei vielen Merkzetteln und der Echtprozess-Test mit zwei Workern im Odoo-ORM (Pflicht vor Abschluss der Umsetzung)                                                            | bestanden mit offenen Messungen     |
+| VI. Produktentscheidungen vorab | Dateigröße, Fortsetzen, Duplikate, Sicherung am 2026-10-05 entschieden; am 2026-10-06 vom Nutzer entschieden: Ansatz D' (Hash an der Version) und Transport der Teile als Multipart-Teil über `file_upload_service` (gemessen, V17–V23)                                                                                                      | bestanden                           |
+| VII. Ursachen beheben           | jede Behebung mit Test; Gleichzeitigkeit und Absturz mit echten Prozessen                                                                                                                                                                                                                                                                    | bestanden                           |
 
 ## Design
 
@@ -92,26 +92,29 @@ Array)
 
 ### Datenbank
 
-- **Mixin** `int_filemanager.content.mixin` (abstrakt): `sha256` (Char, `size=64`,
-  Index, **kein** Unique, weil viele Versionen denselben Inhalt haben;
-  `models.Constraint` prüft das Hexformat) und `size` (Float, wegen int4 im ORM, bis
-  2^53 exakt). Jede Tabelle mit Inhaltsverweis erbt das Mixin. Es trägt **keine**
-  Methode mit `@api.autovacuum`: Der Läufer sucht Autovacuum-Methoden an jedem Modell
-  der Registry; eine Methode am Mixin würde an jeder erbenden Tabelle einzeln laufen
-  (aus `ir_autovacuum.py` abgeleitet, im Test zu belegen).
-- Version (`int_filemanager.revision`): erbt das Mixin (`sha256`, `size`), ist heute die
-  einzige Tabelle mit Inhaltsverweis. Die Zeilenrechte hängen an der Version und ihrem
-  Knoten. Die Version hängt per `ondelete="cascade"` am Knoten, der Knoten per
-  `restrict` am Elternknoten: Jeder Teilbaum wird nur über `Node.unlink` gelöscht, das
-  alle Versionen darin kennt (E33). Die Aufräum-Methode `_gc_content` liegt an der
-  Version (konkretes Modell, das keine andere Tabelle erbt).
+- Version (`int_filemanager.revision`): trägt `sha256` (Char, `size=64`, Index, **kein**
+  Unique, weil viele Versionen denselben Inhalt haben; ein `models.Constraint` prüft das
+  Hexformat) und `size` (Float, wegen int4 im ORM, bis 2^53 exakt) sowie die
+  Zeilenrechte (an der Version und ihrem Knoten). Die Version hängt per
+  `ondelete="cascade"` am Knoten, der Knoten per `restrict` am Elternknoten: Jeder
+  Teilbaum wird nur über `Node.unlink` gelöscht, das alle Versionen darin kennt (E33).
+  Die Aufräum-Methode `_gc_content` liegt an der Version.
+- **Einzige Tabelle mit Hash:** Der Aufräum-Lauf fragt `int_filemanager_revision` ab,
+  wie `ir.attachment._gc_file_store` `ir_attachment` abfragt. Eine spätere Tabelle, die
+  Inhalt braucht (Vorschau, Freigabe), verweist per Many2one auf die Version und trägt
+  keinen eigenen Hash (E34). Ein kleiner Test sichert die Regel: Kein anderes Modell hat
+  eine Spalte `sha256`. Würde je eine zweite Tabelle mit eigenem Hash nötig, wird der
+  Lauf erweitert (Tabellenliste, `LOCK` und Abfrage über alle); ein abstrakter Baustein
+  mit `registry.descendants` ist dafür gemessen (V15, V16), aber heute nicht gebaut.
 - Upload (`int_filemanager.upload`, `TransientModel`, `_transient_max_hours` =
   Upload-Frist, E32): `expected_size`, `received_size` mit
-  `models.Constraint("CHECK(received_size <= expected_size)")`, `ir.rule` mit
-  `user_id = uid`; sein `unlink` löscht die Zwischendatei.
+  `models.Constraint("CHECK(received_size <= expected_size)")`, Status. Ein
+  Transient-Modell braucht eine Zugriffszeile für Nutzer (`ir.model.access.csv`) und
+  eine `ir.rule` `create_uid = user.id` (`create_uid` gibt es bei Transient-Modellen
+  immer, `_log_access` ist Pflicht; kein eigenes Eigentümerfeld). Sein `unlink` löscht
+  die Zwischendatei.
 - Es gibt keine Zugriffszeile für Blobs und keinen Fremdschlüssel auf den Inhalt. Der
-  Schutz benutzter Inhalte ist das Mixin mit der Registry-Suche (Aufräumen) und der
-  Schutztest (Spalten `sha256` ohne Mixin).
+  Schutz benutzter Inhalte ist der Abgleich des Aufräum-Laufs gegen die Version.
 
 ### Ablegen (Reihenfolge, im Abschlussauftrag)
 
@@ -125,7 +128,7 @@ Array)
 5. **Datei** per `os.link(tmp, final)`; `FileExistsError` ignorieren (der Inhalt liegt
    schon dort, ein vorhandener Name wird nie angefasst, V13); Zwischendatei löschen;
    `fsync` des Ordners.
-6. Commit durch Odoo (Request-Cursor, kein eigener Cursor).
+6. Commit durch Odoo (Cursor des Auftrags, kein eigener Cursor).
 
 Warum diese Reihenfolge: Die Zeile steht (für den Lauf sichtbar, über die Sperre) vor
 der Datei, und der Lauf löscht nur Dateien mit Merkzettel, die älter als die Schonfrist
@@ -141,22 +144,22 @@ die Zwischendatei, die der Upload-Lauf entfernt.
 `_gc_content` an `int_filemanager.revision`, `@api.autovacuum`, Name mit `_`, Muster
 `ir.attachment._gc_file_store`:
 
-1. Neue Transaktion (`commit` wie im Core), `SET LOCAL lock_timeout TO '10s'`, **ein**
-   `LOCK <alle Mixin-Tabellen> IN SHARE MODE` als erste Anweisung (V9, V12, V15). Die
-   Tabellen kommen aus
-   `registry.descendants(['int_filemanager.content.mixin'], '_inherit') - {Mixin}` und
-   ihrem `_table` (`SQL.identifier`). Gelingt die Sperre nicht (`LockNotAvailable`):
+1. **Eigener Cursor** (`with self.env.registry.cursor() as cr`, Kommentar nennt den
+   Grund: frischer Snapshot, die Sperre muss die erste Anweisung der Transaktion sein;
+   der Core erreicht das mit `cr.commit()` am Cron-Cursor, die Hausregel erlaubt
+   `commit` nur im selbst geöffneten Cursor). Darin `SET LOCAL lock_timeout TO '10s'`
+   und `LOCK int_filemanager_revision IN SHARE MODE` als erste Anweisung (V9, V12),
+   Tabelle über `SQL.identifier`. Gelingt die Sperre nicht (`LockNotAvailable`):
    Rollback, Rückgabe ohne Rest, nächster Lauf.
 2. Merkzettel durchgehen, in Stapeln zu `cr.IN_MAX` (nach Alter sortiert, nur Merkzettel
    **älter als die Schonfrist**): Whitelist-Abfrage
-   `SELECT sha256 FROM <t> WHERE sha256 IN %s`, über alle Mixin-Tabellen mit
-   `UNION ALL`. Hash gefunden: nur den Merkzettel löschen. Nicht gefunden: Datei
-   löschen, dann Merkzettel.
-3. `commit` gibt die Sperre frei (nach jedem Stapel, damit Uploads nicht lange warten).
-   Rückgabe wie im Core `(done, remaining)` mit `remaining = len(stapel) == cr.IN_MAX`.
-   Ein Stapel ohne Fortschritt zählt nicht als "übrig"; eine Ausnahme fängt der Läufer
-   selbst (`ir_autovacuum.py`, `_run_vacuum_cleaner`), rollt zurück und stellt die
-   Methode nicht neu an.
+   `SELECT sha256 FROM int_filemanager_revision WHERE sha256 IN %s`. Hash gefunden: nur
+   den Merkzettel löschen. Nicht gefunden: Datei löschen, dann Merkzettel.
+3. Der Commit des eigenen Cursors gibt die Sperre frei (nach jedem Stapel, damit Uploads
+   nicht lange warten). Rückgabe wie im Core `(done, remaining)` mit
+   `remaining = len(stapel) == cr.IN_MAX`. Ein Stapel ohne Fortschritt zählt nicht als
+   "übrig"; eine Ausnahme fängt der Läufer selbst (`ir_autovacuum.py`,
+   `_run_vacuum_cleaner`), rollt zurück und stellt die Methode nicht neu an.
 
 **Löschwege markieren:** `Revision.unlink` schreibt vor dem Löschen für jede betroffene
 Version den Merkzettel (Muster `ir.attachment.unlink` → `_file_delete`, E31).
@@ -189,11 +192,15 @@ also.
 
 ### Upload
 
-Modell `int_filemanager.upload` (laufender Vorgang: Eigentümer, Ziel, `expected_size`,
-`received_size`, Status, Operationsschlüssel). Aufrufe:
+Modell `int_filemanager.upload` (laufender Vorgang: Eigentümer = `create_uid`, Ziel,
+`expected_size`, `received_size`, Status). Es gibt keinen Operationsschlüssel: Die
+Wiederholung wirkt über den Status (offen, wird abgeschlossen, fertig) und die
+Zeilensperre. Aufrufe:
 
 - `upload_init` (Ziel, erwartete Größe, optional Hash): prüft Recht und Gesamtgrenze,
-  legt Zeile und Zwischendatei an.
+  legt Zeile und Zwischendatei an. Der Client merkt sich die `upload_id`; ein
+  wiederholtes `upload_init` ohne sie legt eine zweite Zeile an, deren Rest der
+  Autovacuum entfernt.
 - Teil senden (HTTP-Route, `csrf=True` als Voreinstellung; der Client ruft Odoos
   `file_upload_service.upload(route, [Teil], {buildFormData})` je Teil auf: Multipart
   mit Feld `ufile`, dazu `upload_id` und `offset` im Formular, das CSRF-Token fügt der
@@ -212,13 +219,16 @@ Modell `int_filemanager.upload` (laufender Vorgang: Eigentümer, Ziel, `expected
   über alle Teile ist Eigenbau (der Dienst zeigt Fortschritt je Teil).
 - `upload_status`: `received_size` und Status für das Fortsetzen und den Abschluss.
 - `upload_finish`: setzt den Status "wird abgeschlossen" und stößt den Abschlussauftrag
-  an (`ir.cron._trigger()`); wiederholt mit demselben Operationsschlüssel liefert
-  dasselbe Ergebnis. Der Auftrag (Cron, `_commit_progress`) prüft die Größe, hasht, legt
-  ab (siehe oben) und legt die Version an; danach meldet `bus.bus._sendone` dem Nutzer
-  das Ergebnis, der Client fragt zusätzlich per `upload_status` nach. Damit gilt nicht
-  das Proxy-Zeitlimit (90 s auf dem Tower) und eine Kaltlesung der Datei ist unkritisch;
-  der Abschluss läuft unter dem Zeitlimit des Crons. Dasselbe Muster hat das Modul
-  bereits für den ZIP-Auftrag.
+  an (`ir.cron._trigger()`); ein wiederholter Aufruf bei Status "wird abgeschlossen"
+  oder "fertig" liefert denselben Stand. Der Auftrag (Cron, `_commit_progress`) prüft
+  die Größe, hasht, legt ab (siehe oben) und legt die Version an; das Ergebnis steht im
+  Status des Uploads, der Client fragt es per `upload_status` ab (ohne Bus-Meldung: das
+  Abfragen braucht der Client ohnehin, etwa nach einem Neuladen). Damit gilt nicht das
+  Proxy-Zeitlimit (90 s auf dem Tower). Der Abschluss läuft aber unter dem Zeitlimit des
+  Crons: `limit_time_real_cron` folgt standardmäßig `limit_time_real` (Standard 120 s,
+  Tower 1800 s), und das Hashen lässt sich nicht stückeln (der Zustand von `hashlib` ist
+  nicht speicherbar). Für den echten Bestand muss das Limit des Crons über der
+  Kaltlesezeit der größten Datei liegen (5 GiB am Array rund 2 Minuten).
 
 ### Sicherung
 
@@ -251,8 +261,7 @@ specs/003-blob-ansatz/
 ```text
 int_filemanager/
 ├── content_store.py                     # Pfade, Hash-Prüfung, Merkzettel, Ablegen per os.link, Lesen (reine Funktionen auf dem Filestore)
-├── models/int_filemanager_content_mixin.py  # abstrakt: sha256, size; Hexformat-Prüfung; Tabellenfindung über registry.descendants
-├── models/int_filemanager_revision.py   # erbt das Mixin; unlink markiert; _gc_content (@api.autovacuum)
+├── models/int_filemanager_revision.py   # sha256, size, Hexformat-Prüfung; unlink markiert; _gc_content (@api.autovacuum)
 ├── models/int_filemanager_upload.py     # TransientModel; Abschlussauftrag
 ├── controllers/int_filemanager_content.py   # Auslieferung (Stream) und Teil-Upload per HTTP
 ├── security/                            # Zeilenrechte an der Version und am Upload
@@ -260,13 +269,13 @@ int_filemanager/
 └── tests/
     ├── test_content_store.py            # Hash-Prüfung, Ablegen, Duplikat, Pfadsicherheit
     ├── test_content_upload.py           # Fortsetzen, Duplikate, Lücke, Abschneiden, falsche Größe, falscher Hash, Wiederholung
-    ├── test_content_gc.py               # Schonfrist am Merkzettel, referenziert/unreferenziert, Kaskade vom Knoten, Stapel, mehrere Mixin-Tabellen, Schutztest, Autovacuum läuft einmal
-    └── tower/                           # Echtprozess: zehn gleiche Uploads, Absturz an den Haltepunkten, Aufräumen gegen Schreiben
+    ├── test_content_gc.py               # Schonfrist am Merkzettel, referenziert/unreferenziert, Kaskade vom Knoten, Stapel, Schutztest (nur die Version hat `sha256`), Autovacuum läuft einmal
+
+tools/blob_races/                        # Echtprozess-Skripte, bewusst nicht `test_*` und nicht unter `tests/` (Odoos `test_test_holes` verlangt, dass jede `test_*.py` dort importiert ist): zehn gleiche Uploads, Absturz an den Haltepunkten, Aufräumen gegen Schreiben
 ```
 
 `content_store.py` vermeidet die Verwechslung mit Odoos `ir.attachment`-Filestore.
-Dateiname = voller Modellname (`int_filemanager_content_mixin.py` für
-`int_filemanager.content.mixin`).
+Dateiname = voller Modellname.
 
 ## Tests (aus der Spezifikation)
 
@@ -278,8 +287,8 @@ Dateiname = voller Modellname (`int_filemanager_content_mixin.py` für
 | Kopie einer Version gegen Löschen der Quelle und einen Lauf dazwischen: ohne Schonfrist ginge die Datei verloren, mit Schonfrist bleibt sie                             | FR-013, FR-014, V11    |
 | Teil abgebrochen mitten im Körper, Absturz zwischen Anhängen und `received_size`: nächster Teil ergibt trotzdem eine richtige Datei; falsche Gesamtgröße wird abgelehnt | FR-007, FR-009         |
 | Knoten löschen (Kaskade im Datenbankserver): Datei verschwindet erst nach der Schonfrist ab der Markierung                                                              | FR-013, SC-006, E33    |
-| Mehrere Tabellen mit dem Mixin: eine Datei, die nur eine Tabelle nennt, bleibt; eine nachträglich installierte Tabelle ist ohne Änderung am Lauf geschützt              | FR-013, V15            |
-| Schutztest: Jedes Modell mit einer Spalte `sha256` erbt das Mixin                                                                                                       | FR-013, V16            |
+| Datei mit Verweis einer Version bleibt, Datei ohne Verweis nach der Schonfrist wird entfernt                                                                            | FR-013, SC-006         |
+| Schutztest: Kein anderes Modell als die Version hat eine Spalte `sha256`                                                                                                | FR-013                 |
 | Der Autovacuum `_gc_content` läuft je Lauf genau einmal (nicht je erbender Tabelle)                                                                                     | FR-014                 |
 | 3-GB-Upload mit Abbruch und Fortsetzen, Speichergrenze; Abschluss im Hintergrund nach Kaltlesung                                                                        | SC-001, FR-006, SC-008 |
 | Manipulierter Hash in Eingabe, Datenbank und Merkzettel                                                                                                                 | SC-007, FR-005         |
@@ -291,18 +300,18 @@ Dateiname = voller Modellname (`int_filemanager_content_mixin.py` für
 
 ## Complexity Tracking
 
-| Abweichung                                                                                     | Warum nötig                                                                                                                                                                                            | Einfachere Alternative abgelehnt, weil                                             |
-| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| Eigener Dateispeicher statt `ir.attachment`                                                    | `file_size` ist `int4`, `create` ignoriert `store_fname`/`checksum`/`file_size`, Inhalt nur als Bytes im Speicher, SHA-1 (E1–E3)                                                                       | `Binary(attachment=True)` und `ir.attachment` stellen 5 GB nicht dar               |
-| Hash an der Version statt Blob-Tabelle (D')                                                    | spart Tabelle, eigenen Cursor, `ON CONFLICT`, Savepoints und den Anlege-Wettlauf (V1, V8); die Lücken gegen D (Löschen markiert nichts, mehrere Tabellen) sind mit Core-Mitteln gelöst (E31, E33, E34) | Blob-Tabelle mit Fremdschlüssel (C) ist mehr Eigenbau, als Odoo nötig macht        |
-| Mixin mit Registry-Suche statt Fremdschlüssel                                                  | Der Lauf findet jede Tabelle mit Inhaltsverweis ohne Liste (V15)                                                                                                                                       | Hook-Methode je Tabelle: vergessbar; feste Tabellenliste im Lauf: veraltet         |
-| Schutztest für Spalten `sha256` ohne Mixin                                                     | Eine Tabelle ohne Mixin bleibt dem Lauf unsichtbar (V16)                                                                                                                                               | ohne Test wäre die Lücke unentdeckt                                                |
-| Eigenes Chunk-Protokoll (Ablauf init, Stand, Teile, Abschluss) auf Odoos `file_upload_service` | der Core hat keines (E10, E35); 128 MiB je Anfrage (E4)                                                                                                                                                | ein einziger Multipart-POST scheitert über 128 MiB und lässt sich nicht fortsetzen |
-| `os.link` zum Ablegen                                                                          | der Core schreibt direkt und nicht atomar (E9); auf dem Tower-Dateisystem sieht ein Leser nach `os.replace` auf einen vorhandenen Namen kurz einen fehlenden Namen (V13)                               | `os.replace` oder direktes Schreiben wie im Core                                   |
-| Eigener Merkzettel-Ordner neben dem des Cores                                                  | der Core räumt nur seinen Ordner (E6); ein eigener Ordner vermeidet Eingriffe                                                                                                                          | gemeinsame Liste würde Odoos Aufräumen mit fremden Namen belasten                  |
-| Schonfrist am Merkzettel                                                                       | ohne sie geht bei Kopie gegen Löschen gegen Lauf die Datei verloren (V11)                                                                                                                              | der Core hat sie nicht; D' braucht sie wegen der Kopie                             |
-| Tabellensperre beim Aufräumen (`SHARE MODE`, Lock-Timeout) über alle Mixin-Tabellen            | Core-Muster (E6); macht Prüfung und Löschen gegenüber gleichzeitigen Uploads zu einem Schritt (V9, V12)                                                                                                | Aufräumen ohne Sperre: 6 von 12 Runden verlieren Dateien (V12, Negativkontrolle)   |
-| Hintergrundauftrag für den Abschluss                                                           | Hashen und Ablegen einer 5-GB-Datei kann bei kalter Platte das Proxy-Zeitlimit überschreiten (V5, V6)                                                                                                  | Abschluss im Request ist nur im warmen Fall belegt                                 |
+| Abweichung                                                                                     | Warum nötig                                                                                                                                                                                            | Einfachere Alternative abgelehnt, weil                                                        |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Eigener Dateispeicher statt `ir.attachment`                                                    | `file_size` ist `int4`, `create` ignoriert `store_fname`/`checksum`/`file_size`, Inhalt nur als Bytes im Speicher, SHA-1 (E1–E3)                                                                       | `Binary(attachment=True)` und `ir.attachment` stellen 5 GB nicht dar                          |
+| Hash an der Version statt Blob-Tabelle (D')                                                    | spart Tabelle, eigenen Cursor, `ON CONFLICT`, Savepoints und den Anlege-Wettlauf (V1, V8); die Lücken gegen D (Löschen markiert nichts, mehrere Tabellen) sind mit Core-Mitteln gelöst (E31, E33, E34) | Blob-Tabelle mit Fremdschlüssel (C) ist mehr Eigenbau, als Odoo nötig macht                   |
+| Schutztest: nur die Version hat eine Spalte `sha256`                                           | Eine zweite Tabelle mit eigenem Hash bliebe dem Lauf unsichtbar; die Regel "spätere Tabellen verweisen per Many2one auf die Version" wird so erzwungen                                                 | ohne Test wäre die Lücke unentdeckt                                                           |
+| Eigener Cursor im Aufräum-Lauf                                                                 | Die Sperre muss die erste Anweisung der Transaktion sein; Hausregel: `commit` nur im selbst geöffneten Cursor (der Core committet am Cron-Cursor)                                                      | `cr.commit()` am Cron-Cursor wie `ir.attachment._gc_file_store`: verstößt gegen die Hausregel |
+| Eigenes Chunk-Protokoll (Ablauf init, Stand, Teile, Abschluss) auf Odoos `file_upload_service` | der Core hat keines (E10, E35); 128 MiB je Anfrage (E4)                                                                                                                                                | ein einziger Multipart-POST scheitert über 128 MiB und lässt sich nicht fortsetzen            |
+| `os.link` zum Ablegen                                                                          | der Core schreibt direkt und nicht atomar (E9); auf dem Tower-Dateisystem sieht ein Leser nach `os.replace` auf einen vorhandenen Namen kurz einen fehlenden Namen (V13)                               | `os.replace` oder direktes Schreiben wie im Core                                              |
+| Eigener Merkzettel-Ordner neben dem des Cores                                                  | der Core räumt nur seinen Ordner (E6); ein eigener Ordner vermeidet Eingriffe                                                                                                                          | gemeinsame Liste würde Odoos Aufräumen mit fremden Namen belasten                             |
+| Schonfrist am Merkzettel                                                                       | ohne sie geht bei Kopie gegen Löschen gegen Lauf die Datei verloren (V11)                                                                                                                              | der Core hat sie nicht; D' braucht sie wegen der Kopie                                        |
+| Tabellensperre beim Aufräumen (`SHARE MODE`, Lock-Timeout) auf der Version                     | Core-Muster (E6); macht Prüfung und Löschen gegenüber gleichzeitigen Uploads zu einem Schritt (V9, V12)                                                                                                | Aufräumen ohne Sperre: 6 von 12 Runden verlieren Dateien (V12, Negativkontrolle)              |
+| Hintergrundauftrag für den Abschluss                                                           | Hashen und Ablegen einer 5-GB-Datei kann bei kalter Platte das Proxy-Zeitlimit überschreiten (V5, V6)                                                                                                  | Abschluss im Request ist nur im warmen Fall belegt                                            |
 
 ## Offene Punkte
 
@@ -318,5 +327,5 @@ Dateiname = voller Modellname (`int_filemanager_content_mixin.py` für
 - **Ansatz D' (entschieden 2026-10-06):** Hash an der Version statt Blob-Tabelle;
   Spezifikation, Plan und Recherche sind umgeschrieben, nichts committet.
 - **Echtprozess-Test** im Odoo-ORM mit zwei Workern (`flush`, `unlink`-Überschreibungen,
-  Mixin-Abfrage über mehrere Tabellen unter Last) und die Last bei hunderttausenden
-  Merkzetteln sind noch nicht gemessen.
+  Abgleich unter Last) und die Last bei hunderttausenden Merkzetteln sind noch nicht
+  gemessen.

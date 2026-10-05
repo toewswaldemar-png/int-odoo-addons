@@ -36,8 +36,11 @@
 
 - Entschieden am 2026-10-06: Option D' und Multipart-Transport (siehe `plan.md`,
   Abschnitt "Offene Punkte").
-- Ansatz: Option D' (Hash an der Version, Mixin statt Blob-Tabelle); Spezifikation, Plan
-  und Recherche am 2026-10-06 darauf umgeschrieben und vom Nutzer bestätigt.
+- Ansatz: Option D' (Hash an der Version, keine Blob-Tabelle, kein Mixin);
+  Spezifikation, Plan und Recherche am 2026-10-06 darauf umgeschrieben und nach der
+  Prüfung gegen Odoo-Regeln und Eigenbau bereinigt (Mixin, Operationsschlüssel,
+  Bus-Meldung und Eigentümerfeld entfallen, eigener Cursor im Aufräum-Lauf,
+  Echtprozess-Skripte außerhalb von `tests/`); vom Nutzer bestätigt.
 - Messungen und Prüfungen V1–V23: `research.md`, Abschnitt "Messungen und Prüfungen";
   offen: HM-SRV, die Kaltlesung, der Echtprozess-Test im Odoo-ORM mit zwei Workern und
   die Last bei vielen Merkzetteln.
