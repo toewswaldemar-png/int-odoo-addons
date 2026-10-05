@@ -1,3 +1,0 @@
-object dmBelegeSucheTSP: TdmBelegeSucheTSP
-  OldCreateOrder = True
-end

@@ -1,7 +1,0 @@
-object frmAdrAnspDlg: TfrmAdrAnspDlg
-  Left = 471
-  Top = 254
-  Caption = 'Adressen'
-  PixelsPerInch = 96
-  TextHeight = 13
-end

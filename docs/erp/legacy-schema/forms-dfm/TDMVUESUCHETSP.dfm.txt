@@ -1,3 +1,0 @@
-object dmVueSucheTSP: TdmVueSucheTSP
-  OldCreateOrder = True
-end

@@ -1,9 +1,0 @@
-object dmServer: TdmServer
-  OldCreateOrder = False
-  OnCreate = 'DataModuleCreate'
-  OnDestroy = 'DataModuleDestroy'
-  Left = 809
-  Top = 287
-  Height = 218
-  Width = 214
-end
