@@ -3,7 +3,7 @@
 
 odoo-ls (parse mode) knows the Odoo registry, so it finds what pylint cannot: unknown models and
 fields, models missing from ``depends``, invalid domain fields, wrong call arguments, compute
-methods that do not set their field (docs/pruefautomatik_2026-10-02.md, section 7).
+methods that do not set their field (docs/pruefautomatik_2026-10-02.md, section 4).
 
 Output format (odoo-ls 1.6.0, ``server/src/cli_backend.rs``): ``{"events": [{"type": "diagnostic",
 "uri": "file://...", "diagnostics": [<LSP Diagnostic>]}, {"type": "log", ...}]}`` with LSP
