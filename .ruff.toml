@@ -1,12 +1,13 @@
 # Rendered from OCA/oca-addons-repo-template (odoo_version 19.0, use_ruff) at 0c2edf1.
 target-version = "py310"
+line-length = 120
 fix = true
 
 [lint]
 extend-select = [
     "B",
     "C90",
-    "E501",  # line too long (default 88)
+    "E501",  # line too long (limit: line-length above)
     "I",  # isort
     "UP",  # pyupgrade
 ]
