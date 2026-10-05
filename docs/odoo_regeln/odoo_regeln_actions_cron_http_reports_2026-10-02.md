@@ -32,19 +32,20 @@ Core-Docstring, nicht in der `.rst`.
 - `url`, `target` (Standard `new`; `self`, `download`).
 
 ### Server Actions (`ir.actions.server`)
-- `state`: `code` (Python), `object_create` (`crud_model_id`, `link_field_id`, `fields_lines`), `object_write`
-  (`fields_lines`), `multi` (`child_ids`; die letzte zurückgegebene Aktion gewinnt).
+- `state`: `code` (Python), `object_create` (`crud_model_id`, `link_field_id`), `object_write` (Feldpfad `update_path`, Wert mit
+  `evaluation_type`), `object_copy`, `webhook`, `multi` (`child_ids`; die letzte zurückgegebene Aktion gewinnt); weitere Zustände kommen
+  von Modulen (z. B. `mail`).
 - `code` kann eine Variable `action` setzen = nächste Client-Aktion. **Kontext:** `model`, `record`/`records`,
-  `env`, `datetime`, `dateutil`, `time`, `timezone`, `log(message, level='info')` (Tabelle `ir.logging`),
-  `UserError`.
+  `env`, `uid`, `user`, `datetime`, `dateutil`, `time`, `timezone`, `float_compare`, `Command`, `log(message, level='info')`
+  (Tabelle `ir.logging`), `UserError`.
 - Hausregel (abgeleitet): Logik in Python-Methoden des Moduls, Server-Aktion nur als dünner Aufruf; Code in
   Daten-XML ist schwer zu testen und zu reviewen.
 
 ### Report Actions (`ir.actions.report`)
 - Pflicht: `name`, `model`, `report_name` (externe ID der QWeb-Vorlage). `report_type` Standard `qweb-pdf`
-  (oder `qweb-html`). Als `<record>` statt Kurzform: `binding_model_id` setzen, damit er im Menü "Drucken" erscheint
+  (oder `qweb-html`, `qweb-text`). Als `<record>` statt Kurzform: `binding_model_id` setzen, damit er im Menü "Drucken" erscheint
   (`binding_type` ist implizit `report`).
-- Weitere: `print_report_name` (Python-Ausdruck), `groups_id`, `multi` (nicht im Formular zeigen),
+- Weitere: `print_report_name` (Python-Ausdruck), `group_ids`, `multi` (nicht im Formular zeigen),
   `paperformat_id` (sonst Firmenformat), `attachment_use` (nur einmal erzeugen und aus Anhang neu drucken, z. B.
   gesetzliche Pflicht), `attachment` (Ausdruck für den Dateinamen, Datensatz heißt `object`).
 
@@ -58,14 +59,14 @@ Core-Docstring, nicht in der `.rst`.
 - **Batch-Regel (verbindlich laut Quelle):** Arbeit in Stapel teilen, die **wenige Sekunden** dauern, damit kein
   Worker lange blockiert und kein Timeout auftritt. **Das Framework committet nach jedem Stapel** und ruft die
   Funktion so oft wie nötig erneut auf. **Den Job nicht selbst neu einplanen.**
-- Fortschritt melden: `self.env['ir.cron']._commit_progress(processed, remaining=…)`. Muster mit `limit`-Parameter:
+- Fortschritt melden: `self.env['ir.cron']._commit_progress(processed, remaining=…)` (Signatur `(processed=0, *, remaining=None,
+  deactivate=False)`; liefert die Restzeit in Sekunden, außerhalb eines Crons committet es nur). Muster mit `limit`-Parameter:
   `records = self.search(domain, limit=limit)` → verarbeiten → `remaining = 0 if len(records) == limit else
   self.search_count(domain)` → `_commit_progress(len(records), remaining=remaining)`.
 - **Eigene Schleife** (gemeinsame Ressourcen, eigene Fehlerbehandlung): nach jedem Datensatz
   `_commit_progress(1)` aufrufen; liefert es **0** (keine Restzeit), **sofort zurückkehren**. Je Datensatz
   `try_lock_for_update().filtered_domain(domain)`, bei behandelter Ausnahme `self.env.cr.rollback()` und
-  protokollieren. (Hinweis: das Codebeispiel der Quelle hat einen Syntaxfehler – `try` ohne `:` – Logik, nicht
-  Wortlaut übernehmen.) Absicherung `assert self.env.context.get('cron_id')`.
+  protokollieren. Absicherung `assert self.env.context.get('cron_id')`.
 - **Cron-Funktionen nicht direkt aufrufen:** `IrCron.method_direct_trigger` oder `IrCron._trigger`. Test: über
   `method_direct_trigger` im Registry-Testmodus.
 - **Schutzmaßnahmen:** 3 Fehler/Timeouts in Folge → aktuelle Ausführung übersprungen, "fehlgeschlagen";
@@ -81,8 +82,8 @@ Core-Docstring, nicht in der `.rst`.
 - **Überschreiben:** von der Controller-Klasse erben, Methode überschreiben und **erneut mit `@route()`
   dekorieren** – eine überschriebene Methode ohne Dekorator wird **unveröffentlicht**. Dekoratoren werden
   kombiniert: `@route()` ohne Argumente behält alle vorherigen, angegebene Argumente überschreiben
-  (`@route(auth='user')` macht `/some_url` login-pflichtig). `super()` aufrufen.
-- Dispatcher: `JsonRPCDispatcher` (Typ `jsonrpc`, bis 18.0 `json` – siehe ORM-Changelog 18.1) und `HttpDispatcher`.
+  (`@route(auth='user')` macht `/some_url` login-pflichtig); unveränderte Werte nicht wiederholen (`test_routes`). `super()` aufrufen.
+- Dispatcher: `JsonRPCDispatcher` (Typ `jsonrpc`; `type='json'` ist ein veralteter Alias) und `HttpDispatcher` (Typ `http`).
 - `odoo.http.request` ist pro Request gesetzt.
 - Sicherheit: Routen sind öffentlich erreichbar; `auth`, Rechteprüfung und Eingabevalidierung gehören in die
   Route (Sicherheits-Destillat). Parameter von Routen sind Nutzereingaben → kein `sudo()` darauf.
@@ -106,7 +107,6 @@ Core-Docstring, nicht in der `.rst`.
 - **Eigene Berichte:** Modell `report.<modul.report_name>` (AbstractModel) mit
   `_get_report_values(self, docids, data=None)`; liefert den Renderkontext. **Dann fehlen `docs`, `doc_ids`,
   `doc_model`** – selbst liefern, falls gebraucht.
-- Schriften: in das Bundle **`web.report_assets_common`** (Text der Quelle schreibt `web.reports_assets_common`, das Beispiel `web.report_assets_common` – im Core prüfen; nicht `web.assets_common`/`assets_backend`),
-  `@font-face` in der eingebundenen Datei definieren. (Hinweis: Beispiel der Quelle nutzt noch `.less`; in 19
-  SCSS/CSS laut Assets-Destillat prüfen.)
-- Berichte sind Webseiten: `/report/html/<report_name>/<id>`, `/report/pdf/<report_name>/<id>`.
+- Schriften: in das Bundle **`web.report_assets_common`** (nicht `assets_backend`), `@font-face` in der eingebundenen SCSS-/CSS-Datei
+  definieren.
+- Berichte sind Webseiten: `/report/html/<report_name>/<id>`, `/report/pdf/<report_name>/<id>`, `/report/text/<report_name>/<id>`.

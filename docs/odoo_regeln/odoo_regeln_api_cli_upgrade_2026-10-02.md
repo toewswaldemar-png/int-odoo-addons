@@ -9,7 +9,7 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Externe JSON-2-API (neu in 19.0 – gewünschter Weg für Integrationen)
 
-- **Request:** `POST /json/2/<model>/<method>`; Header `Host`, `Authorization: bearer <API-Key>`,
+- **Request:** `POST /json/2/<model>/<method>` (Modul `rpc`, `auth='bearer'`); Header `Host`, `Authorization: bearer <API-Key>`,
   `Content-Type: application/json` (Charset empfohlen), optional `X-Odoo-Database` (nötig, wenn mehrere DBs und
   `dbfilter` nicht über `Host` filtert), `User-Agent` (empfohlen). Body = JSON-Objekt mit `ids` (leer/fehlend bei
   `@api.model`-Methoden), `context`, und **allen Methodenparametern benannt** (**keine Positionsargumente**).
@@ -21,8 +21,7 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 - **Transaktion:** **jeder Aufruf = eigene Transaktion** (Erfolg = Commit, Fehler = Rollback); keine Ketten in einer
   Transaktion. Daher **zusammengehörige Operationen in einer einzigen Methode** auf dem Server (z. B. `action_*`,
   `search_read`) bündeln – gefährlich bei Reservierungen/Zahlungen. Fehlt eine Methode: in eigenem Modul anlegen.
-- **API-Keys:** UI: Einstellungen → Konto-Sicherheit → neuer Schlüssel (Beschreibung + Laufzeit Pflicht; **max.
-  3 Monate**, interaktiv kurz, z. B. 1 Tag; 160-Bit-Zufallswert, **nur einmal sichtbar**). Programmatisch:
+- **API-Keys:** UI: Einstellungen → Konto-Sicherheit → neuer Schlüssel (Beschreibung + Laufzeit Pflicht; **Höchstlaufzeit je Gruppe** im Feld `api_key_duration` (Standard 90 Tage, ohne Gruppenwert 1 Tag), interaktiv kurz, z. B. 1 Tag; 160-Bit-Zufallswert, **nur einmal sichtbar**). Programmatisch:
   `res.users.apikeys/generate` (`key`, `scope` – `rpc` oder `null`, `name`, `expiration_date` ISO-8601) und `…/revoke`
   (`key`); Standard nur für Nutzer mit Einstellungen-Adminrecht, Freigabe für andere über Systemparameter
   `base.enable_programmatic_api_keys=True`; Limit 10 Schlüssel (`base.programmatic_api_keys_limit`, Überschreitung 422).
@@ -63,17 +62,17 @@ JSON-RPC2 auf `https://extract.api.odoo.com`; Dokumenttypen Rechnung, Kontoauszu
   **nie in Produktion** – lädt `noupdate`-Daten neu), `--addons-path`, `--upgrade-path`, `--pre-upgrade-scripts`,
   `--load`, `-c` (Konfig; sonst `ODOO_RC`, `~/.odoorc`), `-D` (Data-Dir), `-s` (speichern), `--without-demo` (Standard),
   `--with-demo`, `--skip-auto-install`, `--stop-after-init`.
-- **Tests:** `--test-enable`, `--test-file`, `--test-tags [-][tag][/modul][:klasse][.methode]` (impliziert Enable;
+- **Tests:** `--test-enable` (impliziert `--stop-after-init`), `--test-file`, `--test-tags [-][tag][/modul][:klasse][.methode]` (impliziert Enable;
   Standard `standard`; `*` = alle; Include ohne Tag = `standard`, Exclude ohne Tag = `*`); Filterung läuft **zweimal**
   (nach jeder Modulinstallation und am Ende des Ladens). `--screenshots`, `--screencasts` (braucht `ffmpeg`).
 - **Datenbank/HTTP/Logging:** `--db-filter` (Regex mit `%h`/`%d`; wirkt **nicht** auf Cron-Worker), `--no-database-list`,
   `--db_sslmode`, `--unaccent`; `--no-http` (wirkungslos mit `--test-enable`), `-p/--http-port` (8069), `--gevent-port`
   (8072), `--proxy-mode` (**nur hinter Reverse Proxy**), `--x-sendfile`; `--logfile`, `--log-db`, `--log-handler
   LOGGER:LEVEL`, `--log-sql`, `--log-level`.
-- **Developer-Features:** `--dev=xml|reload|qweb|werkzeug|replica|access|all` – **nur Entwicklung, nie Produktion**.
-- **Mehrprozess:** `--workers`, `--limit-request` (8196), `--limit-memory-soft` (2048 MiB), `--limit-memory-hard`
+- **Developer-Features:** `--dev=xml|reload|qweb|replica|access|all` (`all` = access, qweb, reload, xml) – **nur Entwicklung, nie Produktion**.
+- **Mehrprozess:** `--workers`, `--limit-request` (65536), `--limit-memory-soft` (2048 MiB), `--limit-memory-hard`
   (2560 MiB), `--limit-time-cpu` (60), `--limit-time-real` (120), `--max-cron-threads` (2),
-  `--limit-time-worker-cron`.
+  `--limit-time-real-cron` (Standard -1 = wie `--limit-time-real`).
 - **Konfigdatei:** Optionsnamen ohne `--`, `-` → `_`; Ausnahmen: `dbfilter`, `http_enable`, `smtp_server`, `db_name`;
   Abschnitt `[options]`.
 - **Unterbefehle:** `shell` (**läuft in Transaktion, Rollback beim Beenden – nur `env.cr.commit()` schreibt**;

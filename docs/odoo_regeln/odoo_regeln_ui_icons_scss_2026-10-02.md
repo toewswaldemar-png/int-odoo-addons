@@ -39,3 +39,20 @@ Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
 - **Folgerung für eigene Module:** Variablen mit `!default` definieren und im richtigen Bundle laden (siehe
   Assets-Operationen `prepend`/`before`/`after` im JS-Framework-Destillat); Stilnamen und Format nach den Coding Guidelines
   Abschnitt 6 (`$o-<modul>-…`, lokale `$-name`, CSS-Variablen BEM).
+
+## 3. Schlanke Stile (vor jedem eigenen SCSS prüfen)
+
+- **Erst klären, ob eigenes SCSS nötig ist.** Vorhandene Odoo-Klasse, HTML-Tag oder Bootstrap-Klasse suchen; Bootstrap ist an das Odoo-Design angepasst und
+  in Community und Enterprise direkt benutzbar. Eine neue Klasse ist der letzte Weg.
+- **Klasse nach Aufgabe wählen, nicht nur nach Aussehen:** Klassen, die JS-Verhalten auslösen, nicht zweckentfremden; keine Button-Klasse auf einem Titel
+  (falsche Semantik, Migrationsprobleme, uneinheitliches Aussehen).
+- **Browserstandards und Bootstrap Reboot nicht wiederholen:** `display: block` an `div`, `section`, `header`, `footer` ist überflüssig; braucht ein
+  `span` `display: block`, stattdessen das Tag `div` nehmen. Standardwerte: `inline` für `span`, `a`, `em`, `b`; `inline-block` für `button`, `label`,
+  `output`; `vertical-align: middle` für `img`, `svg`; `cursor: pointer` für `summary` und `[role="button"]`; `box-sizing: border-box` überall.
+- **Semantische Tags statt Klasse:** Titel mit `<h1>` bis `<h6>`, nicht mit `span` und eigener Klasse. Die Tags tragen Odoos Gestaltung und folgen
+  Designänderungen von selbst; die eigene Klasse trägt nur, was der Tag nicht liefert (z. B. eine Animation).
+- **Utility-Klassen haben Vorrang vor eigener CSS-Zeile**, sobald es eine gibt (`position-relative`, `d-flex`, `flex-column`, `w-100`, `pe-none`,
+  `overflow-auto`, `object-fit-contain` …). Eine eigene Zeile für eine Eigenschaft, die eine Utility abdeckt, ist ein Prüfpunkt im Review. Eigene
+  Utilities entstehen über die Bootstrap-API, nicht als Einzelklasse.
+- **Lange Klassenlisten lesbar halten:** in QWeb und Owl `class` für Festes, `t-att-class` (Objektform) nur für umgeschaltete Klassen; ein Attribut je
+  Zeile; Reihenfolge der Klassen: Odoo-Komponente, Bootstrap-Komponente, dann Utilities in der Reihenfolge der CSS-Deklarationen (außen nach innen).

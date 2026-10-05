@@ -12,9 +12,11 @@ Zwei datengetriebene Mechanismen, beide an **Gruppen** (`res.groups`) gebunden; 
 Gruppen. Dazu Feldzugriff (`groups=` am Feld) und eigener Code.
 
 ### Gruppen (`res.groups`)
-- `name` (Rolle/Zweck), `category_id` (Modulkategorie → exklusive Auswahl im Nutzerformular),
-  `implied_ids` (Pseudo-Vererbung: eine implizierte Gruppe kann einem Nutzer **explizit entzogen** werden, ohne die
-  implizierende zu entfernen), `comment`.
+- `name` (Rolle/Zweck), `privilege_id` (`res.groups.privilege`: bündelt Gruppen eines Bereichs, hat die Modulkategorie `category_id`
+  → exklusive Auswahl im Nutzerformular), `implied_ids` (Pseudo-Vererbung: eine implizierte Gruppe kann einem Nutzer **explizit entzogen**
+  werden, ohne die implizierende zu entfernen), `comment`.
+- Am Nutzer: `group_ids` (explizit zugewiesen), `all_group_ids` (einschließlich impliziter). `user.has_group('modul.xmlid')` gilt nur
+  für den eigenen Nutzer (sonst `AccessError`), `base.group_no_one` wirkt nur im Debug-Modus.
 
 ### Access Rights (`ir.model.access`, CSV)
 - Gewähren Zugriff auf ein **ganzes Modell** je Operation (`perm_create/read/write/unlink`, alle standardmäßig aus).
@@ -26,7 +28,7 @@ Gruppen. Dazu Feldzugriff (`groups=` am Feld) und eigener Code.
 - Bedingungen, die **je Datensatz** gelten, nach den Access Rights ausgewertet. **Default-allow**: gewähren die
   Access Rights Zugriff und keine Regel greift, ist der Zugriff erlaubt.
 - `domain_force` ist ein **Python-Ausdruck** mit den Variablen `time`, `user` (Singleton), `company_id`
-  (einzelne ID), `company_ids` (Liste von IDs).
+  (einzelne ID), `company_ids` (Liste der **aktivierten** Firmen). Bei `_inherits`-Modellen gelten die Regeln der Elternmodelle mit.
 - `perm_*` haben **andere Semantik** als bei ACL: sie geben an, **für welche Operation** die Regel gilt;
   nicht gewählt = Regel wird dafür nicht geprüft. Standard: alle gewählt.
 - **Global** (keine Gruppe) vs. **Gruppe:**

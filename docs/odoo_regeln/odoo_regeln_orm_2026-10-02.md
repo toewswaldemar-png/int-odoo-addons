@@ -50,7 +50,8 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
   (auch Pfade `'line_ids.value'`).
 - Nicht gespeichert, nicht suchbar, nicht gruppierbar – außer `store=True` (dann suchbar/gruppierbar) oder
   `search='_search_x'` (Methode liefert eine Domain, `Domain(...)`).
-- `store=True` setzt standardmäßig `compute_sudo=True`.
+- `store=True` setzt standardmäßig `compute_sudo=True`. Berechnete Felder werden standardmäßig nicht kopiert (`copy=False`), außer sie sind
+  gespeichert und nicht readonly; `state`-Felder werden ebenfalls nicht kopiert.
 - Computed ist readonly; schreibbar nur mit `inverse='_inverse_x'`.
 - Mehrere Felder von derselben Compute-Methode: erlaubt (alle zuweisen). Dieselbe **Inverse-Methode für mehrere
   Felder: nicht empfohlen** – während des Inverse sind *alle* ihre Felder geschützt und liefern bei Cache-Miss `False`.
@@ -63,6 +64,13 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 - Mit `store=True` gespeichert; `depends=[...]` engt Neuberechnung auf bestimmte Felder ein.
 - **NIE One2many/Many2many in der Kette verketten** (`related='m2m_ids.m2m_ids'` → falsche Aggregation); eigenes
   Many2many-Compute-Feld nutzen. Erlaubt: M2O-Glied, dann O2M/M2M als letztes Glied.
+
+### Many2one
+- `ondelete`: Standard `restrict` bei `required=True`, sonst `set null`; bei einem `TransientModel` auf ein normales Modell `cascade`
+  (Pflichtfeld) bzw. `set null`. `required=True` mit `ondelete='set null'` ist ein Programmierfehler (`ValueError`).
+- `delegate=True` entspricht `_inherits`; `bypass_search_access=True` umgeht die Zugriffsprüfung der Zieltabelle in Suchen (wie `any!`).
+- `index` an Feldern: `True`/`"btree"`, `"btree_not_null"` (viele NULL-Werte), `"trigram"` (Volltext); `company_dependent`-Felder sind standardmäßig
+  `btree_not_null`.
 
 ## 2. Recordsets
 
@@ -86,8 +94,9 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 - **`odoo.fields.Domain` benutzen** (seit 18.1): `Domain('f', '=', v) & Domain(...)`, `|`, `~`,
   `Domain.AND([...])`, `Domain.OR([...])`, `Domain.TRUE`/`FALSE`. Listen-Domains nur noch zum Ein-/Ausgeben
   (`Domain(list)`, `list(domain)`; Präfixnotation `&`, `|`, `!`).
-- Operatoren: `= != > >= < <= =? like ilike =like =ilike in child_of parent_of any any!` (+ `not` davor).
-  `any` prüft Zugriffsrechte, **`any!` umgeht sie** (nur bewusst).
+- Operatoren: `= != > >= < <= =? like ilike =like =ilike in child_of parent_of any any!` (+ `not` davor). Standardoperatoren des Cores sind
+  `any`, `in`, `<`, `>`, `<=`, `>=`, `like`, `ilike`, `=like`, `=ilike` (mit `not`-Varianten) und `any!`; `=`, `!=`, `=?`, `child_of`,
+  `parent_of` werden bei der Optimierung darauf zurückgeführt. `any` prüft Zugriffsrechte, **`any!` umgeht sie** (nur bewusst).
 - Feldausdruck: Feldname oder M2O-Pfad mit Punkt; bei Datumsfeldern `feld.granularity` mit Ganzzahlwert
   (`year_number`, `quarter_number`, `month_number`, `iso_week_number`, `day_of_week`, `day_of_month`,
   `day_of_year`, `hour_number`, `minute_number`, `second_number`).
@@ -134,11 +143,12 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 
 ## 7. Methoden-Dekoratoren und Fehler
 
-- `@api.depends`, `@api.depends_context`, `@api.constrains`, `@api.onchange`, `@api.autovacuum`, `@api.model`,
+- `@api.depends`, `@api.depends_context` (Sonderschlüssel `company`, `uid`, `active_test`), `@api.constrains` (nur einfache Feldnamen),
+  `@api.onchange` (nur einfache Feldnamen), `@api.autovacuum` (Methodenname beginnt mit `_`), `@api.model`,
   `@api.model_create_multi`, `@api.private`, `@api.ondelete`. Details (Parameter, Semantik) stehen nur im
   Docstring des Cores.
-- `@api.private` (18.2) trennt öffentliche Python-Methoden von per RPC erreichbaren – für Methoden, die nicht per
-  RPC aufrufbar sein sollen, nutzen (zusätzlich zu `_`-Präfix, siehe Security-Destillat).
+- `@api.private` (18.2) trennt öffentliche Python-Methoden von per RPC erreichbaren; optional, das `_`-Präfix genügt für
+  Methoden, die nicht per RPC aufrufbar sein sollen (siehe Security-Destillat).
 - Fehler: `odoo.exceptions` – `UserError`, `ValidationError`, `AccessError`, `AccessDenied`, `MissingError`,
   `RedirectWarning`, `CacheMiss`.
 
@@ -146,13 +156,13 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 
 | Seit | Folge für neuen Code |
 |---|---|
-| 19.0 | `odoo.osv` und `_cr/_context/_uid` meiden; dynamische Datums-Domains verfügbar |
+| 19.0 | `odoo.osv` und `_cr/_context/_uid` meiden; dynamische Datums-Domains verfügbar; `read_group` veraltet → `_read_group` (Backend) bzw. `formatted_read_group` (öffentlich, aus dem Modul `web`) |
 | 18.4 | Eigene Domains können SQL einbetten (Changelog: "injecting arbitrary SQL") – nur mit `SQL`-Objekt, nie mit Nutzertext; `reinit`-Option im CLI |
 | 18.3 | Cron-API für Fortschritt mit Batch-Commits (siehe Data/Module-Destillat); Demo-Daten nicht mehr standardmäßig |
-| 18.2 | `read_group` veraltet → `_read_group` (Backend) bzw. `formatted_read_group` (öffentlich); `@api.private`; native Namespaces (PEP 420) für `odoo` |
+| 18.2 | `@api.private`; native Namespaces (PEP 420) für `odoo` |
 | 18.1 | `odoo.Domain`; Constraints/Indizes als Attribute; `json`-Controller heißen `jsonrpc` |
 | 18.0 | `_search_display_name`; `check_access`/`has_access`/`_filtered_access`; `self.env._` |
-| 17.3 | Gruppieren nach Datumsteil-Zahlen in `_read_group` und Domains |
+| 17.3 | Gruppieren nach Datumsteil-Zahlen in `_read_group` und Domains (Zeitstufen `hour`, `day`, `week`, `month`, `quarter`, `year`) |
 | 17.2 | `group_operator` heißt `aggregator`; Gruppieren/Ordnen nach related-Nicht-Store-Feld |
 | 17.0 | `odoo.tools.SQL` |
 | 16.2 | `search_fetch` / `fetch` |

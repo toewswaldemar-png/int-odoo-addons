@@ -60,4 +60,5 @@ Für neue Owl-Templates gilt Owl-Syntax (siehe `docs/odoo_regeln/odoo_regeln_js_
 - **Veraltet:** `t-extend` + `t-jquery` + `t-operation` (jQuery-Selektor; ohne `t-operation` wird JS ausgeführt –
   "schwer zu debuggen und zu warten, vermeiden").
 - Debug: `t-log`, `t-debug` (Haltepunkt); `t-js` gehört zum alten System.
+- Props mit Anzeigetext tragen den Suffix `.translate` (`<Dialog title.translate="Text"/>`), sonst werden sie nicht übersetzt.
 - Namenskonvention Templates: **`addon_name.ComponentName`**.

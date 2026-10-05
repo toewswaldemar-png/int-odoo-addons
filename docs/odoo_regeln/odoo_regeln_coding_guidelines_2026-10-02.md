@@ -11,7 +11,7 @@ Gilt für **neuen** Code, insbesondere `int_filemanager` 2. Englische Fachbegrif
 |---|---|---|
 | 1 | Odoo **Coding Guidelines** 19.0 | offizielle Regeln |
 | 2 | Odoo **Security Pitfalls** (`backend/security.rst`) | von 1 ausdrücklich verlangt, siehe `odoo_regeln_security_2026-10-02.md` |
-| 3 | Odoo **`test_lint`** (`odoo/addons/test_lint/tests/`, im Image `odoo:19.0`) | was Odoos CI maschinell prüft; läuft über **alle** Addon-Pfade, also auch über unsere Module |
+| 3 | Odoo **`test_lint`** (`odoo/addons/test_lint/tests/`, im Image `odoo:19.0`) | was Odoos CI maschinell prüft; der Pylint-Teil prüft den Odoo-Kern und alle Addon-Pfade außerhalb von `<root_path>/addons`, die übrigen Tests alle Addon-Pfade, also auch unsere Module |
 | 4 | **OCA Guidelines** (`OCA/odoo-community.org`, `CONTRIBUTING.rst`) | Community-Regeln (Stand-Datum 2018, teils veraltet; Tests/Commits aktualisiert) |
 | 5 | **OCA-Repo-Vorlage** (`.pre-commit-config.yaml`, `.pylintrc-mandatory`) | was die OCA maschinell prüft |
 | 6 | **odoo-ls**, **upgrade-util** | Odoo-Werkzeuge, keine Regeln (`docs/pruefautomatik_2026-10-02.md`, Abschnitt 2 hier) |
@@ -44,7 +44,7 @@ größere Umstellungen erst als reiner Verschiebe-Commit (`[MOV]`), dann die Än
 - Nur erlaubte Schlüssel (Odoo `test_manifests`): Pflicht `name`, `author`, `license`; übliche optionale (`version`, `summary`, `description`,
   `category`, `depends`, `data`, `demo`, `assets`, `external_dependencies`, `installable`, `application`, `auto_install`, `post_load`, Hooks,
   `countries`, `images`, `icon` …), informativ `contributors`, `maintainer`, `url`, App-Store-Schlüssel. Unbekannte Schlüssel sind ein Fehler.
-- **Keine Schlüssel auf ihren Standardwert setzen** (z. B. `application: False`, `auto_install: False`, `demo: []`); `icon` nicht auf den Standardpfad.
+- **Keine Schlüssel auf ihren Standardwert setzen** (Odoo prüft das für `application`, `auto_install`, `summary`, `description`, `author`, `demo`, `data`, `test`; z. B. `application: False`, `auto_install: False`, `demo: []`); `icon` nicht auf den Standardpfad. `installable: True` ist erlaubt.
 - **Version** `19.0.x.y.z`: x = Datenmodell/Views mit Migrationsbedarf, y = neue Funktion abwärtskompatibel, z = Fehlerbehebung (OCA). Bei brechenden
   Änderungen Migrationsskript in `migrations/19.0.x.y.z/`.
 - **Migrationsskripte** mit `odoo/upgrade-util` schreiben statt eigenem SQL (`from odoo.upgrade import util`: Felder/Modelle umbenennen oder entfernen,
@@ -57,6 +57,7 @@ größere Umstellungen erst als reiner Verschiebe-Commit (`[MOV]`), dann die Än
 
 ### Stil und Imports
 - PEP8; Odoo ignoriert E501 (Zeilenlänge), E301, E302. OCA formatiert automatisch mit **black** (bzw. ruff), räumt mit **autoflake** auf.
+- **Zeilenlänge Python 120 Zeichen** (`.ruff.toml`: `line-length = 120` für `ruff format` und `E501`). JS und XML: Prettier `printWidth: 88`.
 - **Import-Reihenfolge:** 1. Standardbibliothek/externe Bibliotheken, 2. `odoo`-Module, 3. `odoo.addons.*` (selten); innerhalb alphabetisch.
   Beispiel: `from odoo import Command, _, api, fields, models`, `from odoo.fields import Domain`.
 - **Nicht** direkt aus `odoo.orm` importieren, sondern aus `odoo` (`api`, `fields`, `models`).
@@ -94,7 +95,8 @@ größere Umstellungen erst als reiner Verschiebe-Commit (`[MOV]`), dann die Än
   Transaktion, in Schleifen Batches). Kein `except: pass` (OCA `except-pass`). Fehlermeldungen für Nutzer: `UserError`/`ValidationError`/`AccessError`.
 - **Übersetzung:** `self.env._('Literal %s', wert)`, nur feste Zeichenketten, Formatierung **als Argument**, nie vorher (`_('… %s' % x)` und `_('…') % x`
   sind falsch); bei einem Platzhalter `%`, bei mehreren benannt `%(name)s`; `%` statt `.format()`; keine f-Strings (Odoo `gettext-*`, OCA `translation-*`).
-  Feldwerte nicht über `_()` übersetzen (`translate=True` am Feld).
+  Feldwerte nicht über `_()` übersetzen (`translate=True` am Feld). Statische Texte in `UserError`, `ValidationError`, `AccessError`, `AccessDenied` und
+  `MissingError` stehen immer in `_()` (Odoo `missing-gettext`).
 - **`unlink()` überschreiben:** kein `raise` darin, Prüfungen mit `@api.ondelete(at_uninstall=False)` (`raise-unlink-override`).
 - Öffentliche Methoden: keine Parameter namens `ids` oder `context` (`test_naming`).
 - Überschreibungen behalten die **Signatur** der Elternmethode (`test_override_signatures`) und rufen `super()` auf (OCA `method-required-super`).
@@ -113,8 +115,8 @@ größere Umstellungen erst als reiner Verschiebe-Commit (`[MOV]`), dann die Än
   `lambda self: self._default_x()`, damit vererbbar.
 - **Methoden:** `_compute_<feld>`, `_inverse_<feld>`, `_search_<feld>`, `_default_<feld>`, `_selection_<feld>`, `_onchange_<feld>`, `_check_<bedingung>`,
   Aktionen `action_<…>` (mit `self.ensure_one()` bei Einzeldatensatz).
-- **Reihenfolge im Modell:** private Attribute (`_name`, `_description`, `_inherit`, …) → Default-Methoden → Felder → SQL-Constraints/Indizes →
-  Compute/Inverse/Search (in Feldreihenfolge) → Selection-Methoden → `@api.constrains`/`@api.onchange` → CRUD-Überschreibungen → Aktionen → übrige Geschäftsmethoden.
+- **Reihenfolge im Modell (Pflicht):** private Attribute (`_name`, `_description`, `_inherit`, …) → Felder → Methoden. Empfehlung für die Methoden: Defaults →
+  Constraints/Indizes → Compute/Inverse/Search → `@api.constrains`/`@api.onchange` → CRUD-Überschreibungen → Aktionen → übrige Geschäftsmethoden; keine feste Pflichtreihenfolge.
 
 ## 4. Sicherheit
 
@@ -131,11 +133,11 @@ Ausführlich: `odoo_regeln_views_2026-10-02.md`, `odoo_regeln_data_manifest_2026
 - `<record>`: `id` vor `model`; bei `<field>` zuerst `name`, dann Wert/`eval`, dann weitere Attribute. Nach Modell gruppieren. 4 Leerzeichen Einrückung (OCA).
 - `<data>` nur für gemischte `noupdate`-Blöcke; sonst `<odoo>` bzw. `<odoo noupdate="1">`.
 - `<menuitem>` und `<template>` statt `<record>` für Menüs/QWeb.
-- **XML-IDs:** Menü `<model>_menu[_<zweck>]`; View `<model>_view_<typ>`; Aktion `<model>_action[_<detail>]`, Fenster `…_action_view_<typ>`; Gruppe
-  `<module>_group_<name>`; Regel `<model>_rule_<gruppe>`; Demo-Datensätze mit Suffix `demo` (OCA). **Kein** Modulpräfix in der eigenen ID (OCA).
+- **XML-IDs:** Menü `menu_<zweck>` oder `<model>_menu[_<zweck>]`; View `<model>_view_<typ>`; Aktion `<model>_action[_<detail>]` oder `action_<zweck>`, Fenster
+  `…_action_view_<typ>`; Gruppe `<module>_group_<name>`; Regel-ID enthält `rule` (`<model>_rule_<zweck>`); Demo-Datensätze mit Suffix `demo` (OCA). **Kein** Modulpräfix in der eigenen ID (OCA).
   View-`name` = XML-ID mit Punkten.
-- **Geerbte Views:** gleiche ID wie das Original, `name` mit `.inherit.<modul>`; neue Primär-Views ohne Suffix. `position="replace"` vermeiden (wenn doch:
-  Kommentar + hohe `priority`); ein Modul erweitert eine View nur einmal.
+- **Geerbte Views:** gleiche ID wie das Original, `name` mit `.inherit.<modul>`; neue Primär-Views ohne Suffix. `position="replace"` in Backend-Views vermeiden (wenn doch:
+  Kommentar + hohe `priority`; in QWeb- und Owl-Vererbung üblich); ein Modul erweitert eine View nur einmal.
 - Keine veralteten Attribute/Knoten (OCA `xml-deprecated-*`); `ir.filters` mit ausdrücklichem `user_id`.
 
 ## 6. JavaScript, CSS/SCSS
@@ -153,7 +155,8 @@ Ausführlich: `odoo_regeln_js_framework_2026-10-02.md`, `odoo_regeln_ui_icons_sc
 - **CSS-Variablen sind ausschließlich DOM-bezogen** (kontextuelle Anpassung, Standardwert im Komponentenblock); das Design-System steckt in
   SCSS-Variablen, kombiniert über `color: var(--MyComponent-color, #{$o-component-color})`. **Keine CSS-Variablen auf `:root`** (Ausnahme: Templates,
   die über Bundles geteilt werden).
-- JS-Übersetzungen: keine Template-Strings mit Ausdrücken in `_t(...)` (`test_jstranslate`).
+- JS-Übersetzungen: keine Template-Strings mit Ausdrücken in `_t(...)` (`test_jstranslate`). Props mit Anzeigetext in Owl-Templates tragen den Suffix
+  `.translate` (`title.translate="Text"`, Odoo `test_i18n`).
 
 ## 7. Tests
 

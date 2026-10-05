@@ -8,24 +8,21 @@ siehe `docs/odoo_regeln/odoo_regeln_js_fields_2026-10-02.md`), `owl_components.r
 Geprüft: 2026-10-02. QWeb: `docs/odoo_regeln/odoo_regeln_qweb_2026-10-02.md`. JS-Tests: `docs/odoo_regeln/odoo_regeln_js_tests_2026-10-02.md`.
 Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
-**Vorsicht, Quelle teils inkonsistent/veraltet:** `framework_overview.rst` zeigt `this.env._t(...)` und
-`env.services.action_manager`, `javascript_reference.rst` zeigt dagegen `import { _t } from
-"@web/core/l10n/translation"` und `useService`. Maßgeblich ist das jüngere Muster (Import von `_t`, `useService`).
-Bundlenamen (`web.assets_common`) und Beispiele vor Gebrauch im Core des Containers prüfen (Suchraster `CLAUDE.md`).
+Übersetzung: `import { _t } from "@web/core/l10n/translation"`; Dienste: `useService`. Bundlenamen und Beispiele vor Gebrauch im Core des Containers prüfen (Suchraster `CLAUDE.md`).
 
 ## 1. Grundsätze
 
 - **Neuer Code in Owl**, "wenn möglich". Wort "Komponente" = Owl, "Widget" = altes Odoo-Widget.
 - **Native JS-Module** (ES-Module) für alle neuen Dateien; "Odoo-Module" (`odoo.define`) nur für alte, nicht
   umgestellte Dateien; **Plain-JS** nur für externe Bibliotheken und kleine Low-Level-Zwecke (dann als IIFE).
-- JS-Code **ECMAScript-2019-kompatibel** (Quelle Owl-Abschnitt).
+- Moderne Syntax ist erlaubt (`?.`, `??`); kein Ziel "ES2019".
 - Eigenen Code **nicht** in den globalen Scope legen (Namenskonflikte, implizite Reihenfolge).
 - Seit Odoo 14 teilen alle Versionen dieselbe Owl-Version; Änderungen an Owl nur per PR an `odoo/owl`.
 
 ## 2. JavaScript-Module
 
 - Transpiliert werden Dateien unter **`/static/src`** und **`/static/tests`** automatisch (Opt-out mit erster Zeile
-  `/** @odoo-module ignore **/`); in anderen Ordnern per Opt-in `/** @odoo-module **/` in der ersten Zeile.
+  `/** @odoo-module ignore **/`); in anderen Ordnern per Opt-in `/** @odoo-module **/` in der ersten Zeile. Unter `static/src` und `static/tests` **keine** Kopfzeile schreiben.
 - Modulname: `@<addon>/pfad/zur/datei` (ohne `static/src`). **Relative Imports nur innerhalb desselben Addons**;
   addon-übergreifend immer voller Name (`import {x} from "@web/file_a"`). `@web/…` = `web/static/src/…`.
 - Alias für Altcode: `/** @odoo-module alias=web.someName **/` (exportiert `default`; mit `default=0` das ganze
@@ -42,8 +39,9 @@ Bundlenamen (`web.assets_common`) und Beispiele vor Gebrauch im Core des Contain
 - Drei Typen: Code (js), Stil (css/scss), Templates (xml; werden nicht gebündelt, sondern vom Dateisystem gelesen
   und über `/web/webclient/qweb/` geliefert).
 - Bundles im Manifest unter `assets` (Dict Bundlename → Liste von Pfaden, **Glob** erlaubt). Wichtige Bundles:
-  `web.assets_backend` (Webclient), `web.assets_frontend` (Website/Portal), `web.assets_common`, 
-  `web.assets_unit_tests`; Tours: `web.assets_tests`; Berichte: `web.report_assets_common` bzw. `web.reports_assets_common` (Schreibweise in der Quelle uneinheitlich, im Core prüfen; Actions-Destillat).
+  `web.assets_backend` (Webclient), `web.assets_backend_lazy` (nachgeladen), `web.assets_frontend` (Website/Portal),
+  `web.assets_unit_tests` (Hoot-Tests; Tour-Dateien mit `('remove', 'addon/static/tests/tours/**/*')` ausnehmen); Tours: `web.assets_tests`;
+  Berichte: `web.report_assets_common` (Schriften, Stile) und `web.report_assets_pdf`.
   Unterbundles beginnen per Konvention mit `_`.
 - **Operationen** (Tupel): `append` (Standard: nur Pfad), `('prepend', pfad)`, `('before', ziel, pfad)`,
   `('after', ziel, pfad)`, `('include', bundle)`, `('remove', ziel)`, `('replace', ziel, pfad)`.
@@ -54,16 +52,16 @@ Bundlenamen (`web.assets_common`) und Beispiele vor Gebrauch im Core des Contain
   Glob einzeln nennen (`'lib/jquery/jquery.js', 'lib/jquery/**/*'`).
 - **`ir.asset`** (DB, `<asset>`-Kurzform bevorzugen): `name`, `bundle`, `directive`, `path`, `target`, `active`
   (nur bei Erstellung wirksam), `sequence` (16). Haupteinsatz Website (bedingte Assets).
-- **Lazy Loading:** `loadAssets({jsLibs: [...], cssLibs: [...]})`, Hook `useAssets(...)` in `onWillStart`
-  (`@web/core/assets`) für selten gebrauchte große Bibliotheken.
+- **Lazy Loading:** `loadBundle("bundle")`, `loadJS(url)`, `loadCSS(url)` und die Komponente `LazyComponent` (`@web/core/assets`),
+  typisch in `onWillStart`, für selten gebrauchte große Bibliotheken.
 - Entwicklung: Server neu starten, `--dev=xml` (prüft Bundles bei jedem Zugriff; **nicht in Produktion**),
   Debug-Menü "Assets regenerieren", `?debug=assets` (nicht minifiziert + Source-Maps), Seite neu laden (kein HMR).
 
 ## 4. Webclient-Architektur
 
-- `env` (Owl-Umgebung): `qweb`, `bus`, `services`, `debug`, `_t`, `isSmall` (≤ 767 px).
+- `env` (Owl-Umgebung): `bus`, `services`, `debug`, `isReady`, `isSmall` (≤ 767 px).
 - Bausteine: **Registries, Services, Komponenten, Hooks**.
-- **Kontext:** *User-Context* (`user.context`: `allowed_company_ids` – erstes Element = Hauptfirma –, `lang`, `tz`;
+- **Kontext:** *User-Context* (`user.context` aus `@web/core/user`: `allowed_company_ids` – erstes Element = Hauptfirma –, `lang`, `tz`;
   der `orm`-Service hängt ihn automatisch an) und *Action-Context* (Feld `context` der Aktion als String,
   z. B. `{'search_default_customer': 1}`; erweitern mit `doAction(..., {additional_context: {...}})`). Kontext
   **sparsam** nutzen – vieles geht ohne.
@@ -74,8 +72,8 @@ Bundlenamen (`web.assets_common`) und Beispiele vor Gebrauch im Core des Contain
 - **Bus** (`env.bus`, Owl-`EventBus`): Ereignisse wie `WEB_CLIENT_READY`, `ROUTE_CHANGE`, `RPC:REQUEST/RESPONSE`,
   `ACTION_MANAGER:UI-UPDATED`, `CLEAR-CACHES`, `CLEAR-UNCOMMITTED-CHANGES`; Listener per **`useBus`** (räumt beim
   Unmount auf).
-- **`browser`-Objekt** (`@web/core/browser/browser`) statt direkter Browser-Globals (`setTimeout`, `localStorage`,
-  `fetch`, `location` …): **testbar durch Mocking**.
+- **`browser`-Objekt** (`@web/core/browser/browser`) für Speicher und Navigation (`localStorage`, `sessionStorage`, `location`, `history`,
+  `navigator`): **testbar durch Mocking**. `setTimeout`, `fetch` und DOM-Zugriffe dürfen direkt benutzt werden.
 - **Debug-Modus:** `env.debug` (String); `assets` (nicht minifiziert, Source-Maps), `tests` (injiziert
   `web.assets_tests`). Elemente nur im Debug zeigen: `groups="base.group_no_one"`.
 - **Tooltips:** `data-tooltip`, `data-tooltip-position` (`top|bottom|left|right`), `data-tooltip-delay` (400),
@@ -102,18 +100,22 @@ Bundlenamen (`web.assets_common`) und Beispiele vor Gebrauch im Core des Contain
   aktiv sind.
 - Nutzung in Komponenten **nur über `useService("name")`** (verhindert Aufrufe/Fortsetzung nach Zerstörung der
   Komponente; `async`-Flag lässt Aufrufe zerstörter Komponenten hängen).
-- Standardservices: `cookie`, `effect`, `http`, `notification`, `router`, `rpc`, `scroller`, `title`, `user`,
-  `orm`, `action`, `dialog`, `error`.
-  - **`orm`** für Modellmethoden: `this.orm.call("model", "method", [args])` (`/web/dataset/call_kw`).
-  - **`rpc`** (`import { rpc } from "@web/core/network/rpc"`, `rpc("/route", params)`) **nur für Controller**,
-    nicht für Modelle. POST/JSON; Serverfehler kommen mit HTTP 200 und `error`-Schlüssel, werden als Fehler
-    behandelt; Netzwerkfehler → Hinweis, Server wird regelmäßig angepingt.
+- Standardservices (Auswahl): `action`, `command`, `dialog`, `effect`, `field`, `hotkey`, `http`, `menu`, `name`, `notification`, `orm`,
+  `popover`, `title`, `tooltip`, `ui`, `view`, `error`.
+  - **Keine Services**, sondern Module: `user` (`import { user } from "@web/core/user"`), `router` (`@web/core/browser/router`), `cookie`
+    (`@web/core/browser/cookie`) und `rpc` (Funktion aus `@web/core/network/rpc`).
+  - **`orm`** für Modellmethoden: `this.orm.call("model", "method", [args])` (`/web/dataset/call_kw`); weitere Helfer `searchRead`,
+    `webSearchRead`, `read`, `create`, `write`, `unlink`.
+  - **`rpc`** (`rpc("/route", params)`) **nur für Controller**, nicht für Modelle. POST/JSON; Serverfehler kommen mit HTTP 200 und
+    `error`-Schlüssel, werden als Fehler behandelt; Netzwerkfehler → Hinweis, Server wird regelmäßig angepingt.
   - `notification.add(msg, {title, type: warning|danger|success|info, sticky, className, onClose, buttons,
     autocloseDelay})` liefert eine Schließfunktion; von Python über Client-Aktion `display_notification`.
-  - `user`: `context`, `isAdmin`, `isSystem`, `lang`, `tz`, `userId`, `partnerId`, `hasGroup(xmlid)`
-    (async), `updateContext`, `removeFromContext`.
-  - `router`: `current`, `pushState(hash, replace?)` (löst **kein** `ROUTE_CHANGE` aus – Aufrufer aktualisiert die
-    Anzeige), `redirect(url, wait?)`. `title`: `setParts({key: value|null})`. `cookie`: `setCookie`, `deleteCookie`.
+  - `user`: `context`, `isAdmin`, `isSystem`, `isInternalUser`, `lang`, `tz`, `userId`, `partnerId`, `name`, `login`, `settings`,
+    `hasGroup(xmlid)` (async), `updateContext(update)`, `checkAccessRight(model, operation, ids)`, Firmen: `defaultCompany`,
+    `allowedCompanies`, `activeCompanies`, `activeCompany`, `activateCompanies(ids)`.
+  - `router`: `router.current`, `pushState(state)` und `replaceState(state)` (entprellt; lösen **kein** `ROUTE_CHANGE` aus – Aufrufer
+    aktualisiert die Anzeige). `title`-Service: `setParts({key: value|null})`, `getParts()`. `cookie`: `cookie.get(key)`,
+    `cookie.set(key, value, ttl)`, `cookie.delete(key)`.
   - `effect.add({type: "rainbow_man", message, …})`; eigener Effekt über Registry `effects`.
   - `http.get/post` für Low-Level-HTTP.
 
@@ -125,7 +127,7 @@ Bundlenamen (`web.assets_common`) und Beispiele vor Gebrauch im Core des Contain
   Asset-Bundle.
 - **Nie `constructor` überschreiben – `setup()` benutzen** (Konstruktoren sind nicht patchbar).
 - Odoo-Hooks: `useService`, `useBus`, `useAutofocus` (`t-ref="autofocus"`), `usePosition` (`t-ref="popper"`),
-  `usePager`, `useSpellCheck`, `useAssets`; Lifecycle-Hooks (`onWillStart`, `onMounted`, `onWillUnmount`) räumen auf.
+  `usePager`, `useSpellCheck`; Lifecycle-Hooks (`onWillStart`, `onMounted`, `onWillUnmount`) räumen auf.
   `useEffect` ist **nicht** der Effect-Service.
 - Wiederverwendbare Komponenten (`@web/core/…`): `CheckBox`, `ColorList`, `Dropdown`/`DropdownItem`/`DropdownGroup`
   (+ `useDropdownState`; Menüinhalt liegt im Overlay am Dokumentende → Selektoren über `menuClass`/`class`),
@@ -169,7 +171,13 @@ Bundlenamen (`web.assets_common`) und Beispiele vor Gebrauch im Core des Contain
 - **Session:** Daten für den Webclient über `ir.http.session_info()` (Python überschreiben, `super()` aufrufen), in
   JS `import { session } from "@web/session"`. **Nur billige, früh benötigte Daten** – langsames `session_info`
   verzögert den Start für alle.
-- **Views (JS):** Controller + Model + Renderer-Struktur; Dekorationen `decoration-{bf,it,danger,info,muted,primary,
+- **Views (JS):** Controller + Model + Renderer + ArchParser; Registrierung `registry.category("views").add(<type>, {type, Controller, Renderer,
+  Model, ArchParser, props(genericProps, view), …})` – der **Schlüssel entspricht dem `type`**; `js_class="<key>"` am Wurzelelement wählt eine
+  Variante (Unterklassen: `{...kanbanView, Controller: Eigen}`). Ein neuer Typ braucht serverseitig `ir.ui.view.type` per `selection_add`,
+  `_is_qweb_based_view` und `_validate_tag_<typ>` (Vorbild `web_hierarchy`). Der Controller bekommt `arch` als `Element` (`visitXML` aus
+  `@web/core/utils/xml`), `props` nach `standardViewProps` (`@web/views/standard_view_props`); das Model erweitert `Model` und wird mit
+  `useModelWithSampleData(Model, params)` bzw. `useModel` erzeugt (Konstruktor `(env, params, services)`, `static services`), `Layout`
+  aus `@web/search/layout`. Dekorationen `decoration-{bf,it,danger,info,muted,primary,
   success,warning}` → CSS `text-*`, Wert = Python-Ausdruck mit dem Datensatz als Kontext.
 - **Benachrichtigungstypen:** `info` (Rückmeldung, kann nicht fehlschlagen), `success`, `warning` (teilweise/nicht vom
   Nutzer verursacht), `danger` (fehlgeschlagen).

@@ -18,7 +18,7 @@ Namensübersicht, Details in der Quelle bzw. `@odoo/hoot` im Core.
 - **Ablage:** `static/tests/` des Addons. **Dateiname `*.test.js` ist Pflicht** (sonst nicht vom Runner erfasst).
   Ausnahme: `*.hoot.js` = globale Module für den ganzen Testlauf (strenge Einschränkungen: eingeschränkte Imports,
   Speicherverwaltung, keine Seiteneffekte). Andere JS-Dateien = Produktivcode oder Hilfsdateien.
-- **Bundle:** `'web.assets_unit_tests': ['mein_addon/static/tests/**/*']` im Manifest.
+- **Bundle:** `'web.assets_unit_tests': ['mein_addon/static/tests/**/*', ('remove', 'mein_addon/static/tests/tours/**/*')]` im Manifest.
 - **Ausführen:** URL **`/web/tests`** (Debug-Menü → "Run Unit Tests").
 - Jede Testdatei läuft isoliert in einem globalen `describe` (Name = Dateipfad) → **kein eigenes `describe` nötig**,
   Untersuite nur zur Gliederung/Tag-Vergabe.
@@ -63,7 +63,7 @@ Einschließende Filter (`filter`, `id`, `tag`) wirken als **OR**, ausschließend
   "keine `now()`").
 - Netzwerk: `mockFetch`, `mockWebSocket`, `mockWorker`; `mockPermission`, `mockTouch`.
 - **Location-Mock funktioniert nur**, wenn Produktivcode `window.location` über `@web/core/browser` anspricht →
-  Konsequenz für eigenen Code: **immer das `browser`-Objekt statt Browser-Globals benutzen.**
+  Konsequenz für eigenen Code: **Speicher und Navigation über das `browser`-Objekt ansprechen.**
 
 ## 5. Web-Test-Helfer
 

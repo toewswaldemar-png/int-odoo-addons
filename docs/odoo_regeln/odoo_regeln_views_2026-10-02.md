@@ -36,7 +36,7 @@ Community (HM-SRV/Tower betreiben Community → **nicht verfügbar**).
   = Kopie des gefundenen Knotens, zum Umhüllen), `attributes` (`<attribute name="x">Wert</attribute>`; ohne Körper =
   Attribut entfernen; `add`/`remove`/`separator` für Teilwerte, Standardtrenner `,`), `move`
   (`position="move"` auf dem Inhalt; der Locator braucht dann `inside|replace|after|before`).
-- Hausregeln aus den Coding Guidelines: `position="replace"` **vermeiden** (Kommentar + hohe `priority`), ein Modul erweitert
+- Hausregeln aus den Coding Guidelines: `position="replace"` in Backend-Views **vermeiden** (Kommentar + hohe `priority`; in QWeb-Vererbung üblich), ein Modul erweitert
   eine View nur einmal; geerbte View-ID = Original-ID, `name` mit `.inherit.<modul>`.
 
 ## 2. Python-Ausdrücke in Views
@@ -101,7 +101,8 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
 
 ## 6. Liste (`<list>`, früher `<tree>`)
 
-- Wurzel: `string`, `create`, `edit`, `delete`, `import` (True), `export_xlsx` (True), `editable` (`top`/`bottom`;
+- Wurzel: `string`, `create`, `edit`, `delete`, `duplicate`, `js_class`, `import` (True), `export_xlsx` (True), `count_limit`, `group_create`,
+  `group_delete`, `group_edit`, `editable` (`top`/`bottom`;
   Inline-Formular wird aus der Liste abgeleitet; wirkungslos bei `edit="false"`), `multi_edit="1"`,
   `open_form_view` (nur editierbar), `default_group_by`, `default_order`, `decoration-<stil>` (`bf`, `it`, `info`,
   `warning`, `danger`, `muted`, `primary`, `success`), `limit` (80; X2many 40), `groups_limit`, `expand` (langsam bei
@@ -118,7 +119,7 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
 
 ## 7. Suche (`<search>`)
 
-- Keine Anzeige, filtert andere Views; Wurzel ohne Attribute. Kinder: `field`, `filter`, `separator`, `group`,
+- Keine Anzeige, filtert andere Views; Wurzelattribute nur `string`, `class`, `view_types`. Kinder: `field`, `filter`, `separator`, `group`,
   `searchpanel`.
 - **`field`:** `name` Pflicht; `operator` (Standard je Typ: `=` float, `ilike` char, `child_of` many2one),
   `filter_domain` (nutzt `self` für den Nutzerwert; **hat Vorrang vor `operator`**), `context`, `domain`
@@ -139,7 +140,7 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
 - Wurzel: `string`, `create/edit/delete`, `default_group_by`, `default_order`, `class`, `examples` (Registry-Schlüssel),
   `group_create`, `group_delete`, `group_edit`, `groups_draggable`, `records_draggable`, `archivable`, `quick_create`
   (Standard True bei Gruppierung nach many2one/selection/char/boolean), `quick_create_view`, `on_create`, `can_open`,
-  `highlight_color` (Integer-Feld → Kartenrand), `sample`. Maximal 10 Spalten werden geladen.
+  `highlight_color` (Integer-Feld → Kartenrand), `count_limit`, `js_class`, `sample`. Maximal 10 Spalten werden geladen.
 - **`templates`:** mindestens Wurzeltemplate **`card`**, optional **`menu`** (Dropdown am ⋮). **Das ist JS-QWeb,
   kein Owl** – Direktiven wie `t-on-click` gibt es nicht. Felder: `<field name=… widget=…>` (`handle`,
   `kanban_color_picker`, …); Feld nur zum Laden: `<field>` **außerhalb** von `templates`.
@@ -157,11 +158,11 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
   `<template>`; echte QWeb-Views als `ir.ui.view` mit `type` und `model`. Besonderheit: `<nav class="o_qweb_cp_buttons">`
   wandert in die Control-Panel-Buttons. Kontext: `model`, `domain`, `context`, `records` (lazy `search(domain)`);
   Hooks `_qweb_prepare_context(view_id, domain)`, `qweb_render_view(view_id, domain)`.
-- **Graph:** `type` (`bar`|`pie`|`line`), `stacked`, `disable_linking`, `order`, `string`, `sample`; `field` mit
+- **Graph:** `type` (`bar`|`pie`|`line`), `stacked`, `cumulated`, `cumulated_start`, `disable_linking`, `order`, `js_class`, `string`, `sample`; `field` mit
   `name` Pflicht, `invisible`, `type="measure"`, `interval` (`day|week|month|quarter|year`, Standard `month`),
   `string`, `widget` (z. B. `float_time`, `monetary`). **Nur gespeicherte Felder** (Aggregation in der DB; nicht
   gespeicherte Compute-Felder gehen nicht).
-- **Pivot:** `disable_linking`, `display_quantity`, `default_order` (`"foo asc"`), `sample`; `field` mit `type`
+- **Pivot:** `disable_linking`, `display_quantity`, `stacked`, `default_order` (`"foo asc"`), `js_class`, `sample`; `field` mit `type`
   (`row` Standard, `col`, `measure`, `interval`), `interval`, `string`, `invisible`, `widget`. Auch hier nur
   gespeicherte Felder.
 - **Calendar:** `date_start` **Pflicht**; `date_stop` oder `date_delay` (Stunden), `scales`, `mode` (`week`), `color`,

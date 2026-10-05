@@ -29,7 +29,8 @@ sind *autodoc* – Details im Core-Quellcode.
   installierten Modulen**; frische DB: einmal `-i`, bei Änderungen `-u`.
 
 ### Tags und Auswahl
-- Unterklassen von `BaseCase` sind automatisch `standard` + `at_install`.
+- Unterklassen von `BaseCase` sind automatisch `standard` + `at_install`; Tags werden vererbt. Eine Klasse muss genau eines von `at_install`
+  und `post_install` tragen (sonst Warnung); `HttpCase` gehört nach `post_install`.
 - `@tagged(...)` ist ein **Klassen**-Dekorator, wirkt **nicht** auf Funktionen/Methoden (Quelle: "danger").
   `-` vor dem Tag entfernt ihn (`@tagged('-standard', 'nice')`).
 - `post_install` = nach Installation **aller** Module (meist für `HttpCase`): `@tagged('-at_install', 'post_install')`.
@@ -47,11 +48,12 @@ sind *autodoc* – Details im Core-Quellcode.
 - Dateien: `static/tests/tours/<name>.js` + `tests/test_<name>.py` (erbt `HttpCase`, ruft
   `self.start_tour("/web", "tour_name", login="admin")`).
 - **Manifest:** `'assets': {'web.assets_tests': ['mod/static/tests/tours/<name>.js']}`.
-- Registrierung: `import tour from 'web_tour.tour'; tour.register('name', {url: '/web'}, [steps])`.
+- Registrierung: `registry.category("web_tour.tours").add("name", {url: "/odoo", steps: () => [...]})` (`registry` aus `@web/core/registry`).
 - **Step:** Pflicht `trigger` (Selektor, Tour wartet auf sichtbares Element); optional `run` (Aktionsname wie
-  `click`, `fill`, `edit`, `check`, `select`, `drag_and_drop`, … oder async-Funktion), `content` (**empfohlen**:
-  Tooltip und Log), `isActive` (Bedingungen: desktop/mobile, community/enterprise, auto/manual), `tooltipPosition`,
-  `timeout` (Standard 10 s). Vordefinierte Schritte `tour.stepUtils.*`.
+  `click`, `fill`, `edit`, `check`, `select`, `drag_and_drop`, … oder Funktion), `content` (**empfohlen**:
+  Tooltip und Log), `isActive` (Liste von Bedingungen: desktop/mobile, community/enterprise, auto/manual), `tooltipPosition`
+  (`top|bottom|left|right`), `timeout` (0 bis 60000 ms, Standard 10 s), `expectUnloadPage`. Vordefinierte Schritte `stepUtils` aus
+  `@web_tour/tour_utils`.
 - **Die letzten Schritte MÜSSEN den Client in einen stabilen Zustand bringen** (keine laufende Bearbeitung, alle
   Netzwerkrequests fertig), sonst Race Conditions/Fehler beim Teardown.
 - Debuggen: `watch=True` (sichtbares Chrome), `debug=True` (Devtools, Breakpoint; Step-Property `break: true`,
@@ -65,3 +67,4 @@ sind *autodoc* – Details im Core-Quellcode.
 - Jede Fehlerbehebung mit einem Test, der ohne die Behebung fehlschlägt.
 - Mit möglichst geringen Rechten testen (`new_test_user`, `@users`); Flaky-Test-Fallen vermeiden
   (`subTest` setzt DB/Cache nicht zurück; feste Daten statt `now()`; externe Dienste mocken).
+- Gemeinsame Testdaten in `setUpClass`, nicht in `setUp`; Nutzer mit `new_test_user`; Formularverhalten mit `Form`; feste Zeit mit `freeze_time`.

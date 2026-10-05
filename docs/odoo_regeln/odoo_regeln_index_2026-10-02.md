@@ -31,11 +31,11 @@ dann Prüfautomatik).
 | `odoo_regeln_actions_cron_http_reports_2026-10-02.md` | `backend/actions.rst`, `backend/http.rst`, `backend/reports.rst` | Aktionen, Cron, Controller, QWeb-Berichte |
 | `odoo_regeln_mixins_2026-10-02.md` | `backend/mixins.rst` | `mail.thread`, Alias, Aktivitäten, UTM, Website, Rating |
 | `odoo_regeln_js_framework_2026-10-02.md` | `frontend/framework_overview.rst`, `javascript_modules.rst`, `assets.rst`, `registries.rst`, `services.rst`, `hooks.rst`, `patching_code.rst`, `javascript_reference.rst` (ohne Widgets), `owl_components.rst`, `error_handling.rst`, `odoo_editor.rst`, `mobile.rst` | JS-Module, Assets, Registries, Services, Owl, Patchen, Fehler |
-| `odoo_regeln_js_fields_2026-10-02.md` | `frontend/javascript_reference.rst` (Widgets, Client-Aktionen) | Feld-Widget-Katalog |
+| `odoo_regeln_js_fields_2026-10-02.md` | `frontend/javascript_reference.rst` (Widgets, Client-Aktionen) | Feld-Widget-Katalog, Regeln für eigene Felder |
 | `odoo_regeln_qweb_2026-10-02.md` | `frontend/qweb.rst` | QWeb-Direktiven, Escaping, Vererbung |
 | `odoo_regeln_js_tests_2026-10-02.md` | `frontend/unit_testing.rst`, `unit_testing/hoot.rst`, `web_helpers.rst`, `mock_server.rst` | Hoot, Web-Helfer, Mock-Server |
 | `odoo_regeln_views_2026-10-02.md` | `user_interface/view_records.rst`, `view_architectures.rst`, `view_architectures/*.rst` | View-Records, Vererbung, alle View-Typen |
-| `odoo_regeln_ui_icons_scss_2026-10-02.md` | `user_interface/icons.rst`, `scss_inheritance.rst` | Icons, SCSS `!default` |
+| `odoo_regeln_ui_icons_scss_2026-10-02.md` | `user_interface/icons.rst`, `scss_inheritance.rst` | Icons, SCSS `!default`, schlanke Stile |
 | `odoo_regeln_api_cli_upgrade_2026-10-02.md` | `external_api.rst`, `external_rpc_api.rst`, `extract_api.rst`, `cli.rst`, `upgrades/*.rst`, `standard_modules*` | JSON-2, RPC (veraltet), Extract, CLI, Upgrade-Skripte |
 
 ## Verwendung
@@ -47,9 +47,7 @@ dann Prüfautomatik).
   (`create`, `write`, `search`, `Field`-Parameter, `@api.*`, `Request`, `IrCron` …) stehen nur im Docstring des
   Odoo-Quellcodes. Das Destillat enthält dort nur, was in der `.rst` selbst steht. Der Core liegt im Container unter
   `/usr/lib/python3/dist-packages/odoo/` (nicht in diesem Repo, nicht in der Cloud-Sitzung).
-- **Teilweise veraltete Quelle** (nicht nur Tippfehler): `mixins.rst` (Beispielcode), `framework_overview.rst`
-  (`env._t`), `qweb.rst` Abschnitt JavaScript (altes System), `mobile.rst`, Cron-Beispiel (Syntaxfehler),
-  Client-Aktions-Beispiel. Die Destillate markieren das.
+- **Nicht auf Odoo 19 aktualisierte Quelle:** `qweb.rst` Abschnitt JavaScript (altes System) und `mobile.rst`.
 - **Enterprise-only** (Cohort, Gantt, Grid, Map, Mobile-App): in Community nicht verfügbar, nur nachschlagen.
 
 ## Pflege
@@ -63,9 +61,6 @@ dann Prüfautomatik).
 
 ## Offene Folgepunkte
 
-1. Prüfautomatik: Läufe auf Tower und Arbeitsrechner, Altbefunde und offene Entscheidungen siehe
-   `docs/pruefautomatik_2026-10-02.md` (Abschnitte 3–5).
+1. Prüfautomatik: Läufe auf Tower und Arbeitsrechner siehe `docs/pruefautomatik_2026-10-02.md` (Abschnitt 3).
 2. Stichprobe, ob bestehende Module gegen die Destillate verstoßen (z. B. rohes SQL ohne `SQL`, `_cr`/`_context`,
    Listen-Domains, fehlendes `flush_model`/`invalidate_*`); Ergebnis in die Übergabe-Dokumente von `int_filemanager`.
-3. Destillate durch Review gegen die Quelle prüfen lassen, bevor sie als abgenommen gelten (sie wurden in einem
-   Durchgang erstellt, nicht gegenvalidiert).
