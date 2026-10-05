@@ -3,9 +3,8 @@
 Runs inside the Odoo test image on Tower. Both tools check far more than our module:
 odoo-ls reports ~1,800 diagnostics in the Odoo core, and test_lint runs pylint over the
 whole core (which has findings of its own with pylint 3.3), so their exit status says
-nothing about our code. We keep only findings under int_filemanager and split them into
-"new" (file changed since the base tag) and "legacy" (untouched v1 code that the rebuild
-removes). Only new findings fail the check.
+nothing about our code. We keep only findings under int_filemanager; every one of them
+fails the check.
 """
 
 import json
@@ -72,22 +71,14 @@ def test_lint_findings():
 
 
 def main():
-    changed = {
-        line.strip()
-        for line in (WORK / "changed.txt").read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    }
     findings = list(odoo_ls_findings())
     if "--no-test-lint" not in sys.argv:
         findings += list(test_lint_findings())
-    new = [f for f in findings if f[0] in changed]
-    legacy = [f for f in findings if f[0] not in changed]
-    for title, group in (("NEW (must be fixed)", new), ("legacy v1 code", legacy)):
-        print(f"== {title}: {len(group)}")
-        for rel, line, tool, message in sorted(group):
-            print(f"  {rel}:{line} [{tool}] {message[:200]}")
-    print(f"== result: {'FAIL' if new else 'OK'} ({len(changed)} changed files checked as new)")
-    return 1 if new else 0
+    print(f"== findings: {len(findings)}")
+    for rel, line, tool, message in sorted(findings):
+        print(f"  {rel}:{line} [{tool}] {message[:200]}")
+    print(f"== result: {'FAIL' if findings else 'OK'}")
+    return 1 if findings else 0
 
 
 if __name__ == "__main__":

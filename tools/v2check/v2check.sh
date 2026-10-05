@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Odoo test_lint and odoo-ls for int_filemanager on the Tower test instance
-# (both must report nothing in new code).
+# (both must report nothing in int_filemanager).
 #
 # Usage (from the repo, Git Bash):  tools/v2check/v2check.sh [--quick]
 #   --quick  odoo-ls only (~30 s); without it test_lint also runs (~8 min, pylint over the core)
@@ -11,7 +11,6 @@
 set -euo pipefail
 
 HOST="${V2CHECK_HOST:-unraid}"
-BASE_REF="${V2CHECK_BASE_REF:-int_filemanager-v1}"
 BASE=/mnt/user/appdata/fmtest
 WORK="$BASE/v2check"
 IMAGE=odoo:19.0-hm-test
@@ -21,17 +20,9 @@ quick=0
 [[ "${1:-}" == "--quick" ]] && quick=1
 
 cd "$(git rev-parse --show-toplevel)"
-changed="$(mktemp)"
-trap 'rm -f "$changed"' EXIT
-# "New" code = changed since the base tag, plus untracked files.
-{
-  git diff --name-only "$BASE_REF" -- int_filemanager
-  git ls-files --others --exclude-standard -- int_filemanager
-} | sort -u >"$changed"
 
 ssh "$HOST" "rm -rf $BASE/v2src && mkdir -p $BASE/v2src $WORK/data && chmod 777 $WORK/data"
 tar -c --exclude=__pycache__ int_filemanager onlyoffice_odoo | ssh "$HOST" "tar -x -C $BASE/v2src"
-scp -q "$changed" "$HOST:$WORK/changed.txt"
 scp -q tools/v2check/v2check_filter.py "$HOST:$WORK/v2check_filter.py"
 
 echo "== odoo-ls"
