@@ -19,7 +19,7 @@
 #   IMAGE        odoo image                                    (docker: odoo:19.0-hm-test)
 #   OLS_OUT      JSON output                                   (/tmp/odoo_ls_out.json)
 # odoo-ls writes progress noise to stdout/stderr; it goes to $OLS_OUT.log.
-# Extra arguments are passed to odoo_ls_check.py (e.g. --include-legacy --show-info).
+# Extra arguments are passed to odoo_ls_check.py (e.g. --show-info).
 set -euo pipefail
 
 MODE=${MODE:-local}

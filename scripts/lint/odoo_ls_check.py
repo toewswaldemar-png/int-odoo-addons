@@ -11,11 +11,10 @@ severities 1 = error, 2 = warning, 3 = information, 4 = hint.
 
 Rules:
 - only files inside Odoo modules of this repository count (``--root``; not docs/, scripts/);
-- legacy files (see sync_legacy_excludes.py) are skipped unless ``--include-legacy``;
 - severities up to ``--fail-level`` (default 2: errors and warnings) fail the run; level 3
   (e.g. OLS03024) is information, not an error.
 
-Usage: odoo_ls_check.py out.json [--include-legacy] [--fail-level 2] [--show-info]
+Usage: odoo_ls_check.py out.json [--fail-level 2] [--show-info]
 """
 
 import argparse
@@ -24,9 +23,6 @@ import json
 import pathlib
 import sys
 from urllib.parse import unquote, urlparse
-
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import sync_legacy_excludes as legacy  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 SEVERITY = {1: "error", 2: "warning", 3: "info", 4: "hint"}
@@ -41,34 +37,18 @@ def is_module_file(rel, root):
     return len(rel.parts) > 1 and (root / rel.parts[0] / "__manifest__.py").is_file()
 
 
-def is_legacy(rel, legacy_files):
-    parts = rel.parts
-    if parts[0] in legacy.LEGACY_MODULES:
-        return True
-    return rel.as_posix() in legacy_files
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("json_file")
     parser.add_argument("--root", default=str(REPO), help="only report files below this directory")
-    parser.add_argument("--include-legacy", action="store_true")
     parser.add_argument("--fail-level", type=int, default=2, choices=(1, 2, 3, 4))
     parser.add_argument("--show-info", action="store_true", help="also print findings above the fail level")
     args = parser.parse_args()
 
     root = pathlib.Path(args.root).resolve()
-    legacy_files = set()
-    if not args.include_legacy:
-        legacy_files = {
-            path
-            for path in legacy.baseline_files()
-            if path.split("/", 1)[0] in legacy.PARTIAL_MODULES and path not in legacy.REWRITTEN_FILES
-        }
 
     data = json.loads(pathlib.Path(args.json_file).read_text())
     failures, others, by_code = [], [], collections.Counter()
-    skipped_legacy = 0
     for event in data.get("events", []):
         if event.get("type") != "diagnostic":
             continue
@@ -78,9 +58,6 @@ def main():
         except ValueError:
             continue
         if not is_module_file(rel, root):
-            continue
-        if not args.include_legacy and is_legacy(rel, legacy_files):
-            skipped_legacy += len(event.get("diagnostics", []))
             continue
         for diag in event.get("diagnostics", []):
             severity = diag.get("severity", 1)
@@ -100,7 +77,7 @@ def main():
             print(entry)
     print(
         f"odoo-ls: {len(failures)} finding(s) up to level {args.fail_level}, "
-        f"{len(others)} above, {skipped_legacy} in legacy files skipped",
+        f"{len(others)} above",
         file=sys.stderr,
     )
     if by_code:
