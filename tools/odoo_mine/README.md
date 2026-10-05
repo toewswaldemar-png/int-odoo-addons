@@ -1,7 +1,6 @@
 # odoo_mine: Konventionen aus dem Odoo-Quelltext messen
 
 Liest nur. Misst im Odoo-19-Core (Community-Module im Image `odoo:19.0-hm`) und in `int_filemanager`, wie oft Odoo selbst welches Muster benutzt.
-Ergebnis und Auswertung: `docs/odoo_code_prinzipien_2026-10-05.md`.
 
 ```bash
 # im Image des Odoo-Servers, Quelltext liegt unter /usr/lib/python3/dist-packages/odoo/addons
