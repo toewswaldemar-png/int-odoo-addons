@@ -4,3 +4,5 @@ __pycache__/
 node_modules/
 tools/v2check/owlcheck/owl.js
 tools/v2check/owlcheck/core_templates/
+# local copy of the Odoo 19 source (own git repository)
+docs/odoo/
