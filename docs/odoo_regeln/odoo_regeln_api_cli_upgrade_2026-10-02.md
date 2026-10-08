@@ -1,15 +1,17 @@
 # Odoo 19 Regeln: Externe APIs, CLI, Upgrade-Skripte, Standardmodule (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02), `content/developer/reference/`:
+Quellen (nur offiziell, bei Widerspruch gilt der Code vor der Doku): Odoo-19.0-Quellcode (`addons/rpc`, `odoo/http.py`,
+`odoo/addons/base/models/res_users.py`, `odoo/addons/base/security/base_groups.xml`, `odoo/tools/config.py`, `odoo/modules/migration.py`) und
+`odoo/documentation`, Branch 19.0, `content/developer/reference/`:
 `external_api.rst` (JSON-2), `external_rpc_api.rst` (XML-/JSON-RPC, veraltet), `extract_api.rst`, `cli.rst`,
 `upgrades/upgrade_scripts.rst`, `upgrades/upgrade_utils.rst`, `standard_modules*`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/external_api.html> usw.).
-Geprüft: 2026-10-02. Migrationsregel des Repos: `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitte 2 und 8.
+Geprüft: 2026-10-02.
 Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 1. Externe JSON-2-API (neu in 19.0 – gewünschter Weg für Integrationen)
 
-- **Request:** `POST /json/2/<model>/<method>` (Modul `rpc`, `auth='bearer'`); Header `Host`, `Authorization: bearer <API-Key>`,
+- **Request:** `POST /json/2/<model>/<method>` (Modul `rpc`, `controllers/json2.py`, `auth='bearer'`, `Json2Dispatcher` in `odoo/http.py`); Header `Host`, `Authorization: bearer <API-Key>`,
   `Content-Type: application/json` (Charset empfohlen), optional `X-Odoo-Database` (nötig, wenn mehrere DBs und
   `dbfilter` nicht über `Host` filtert), `User-Agent` (empfohlen). Body = JSON-Objekt mit `ids` (leer/fehlend bei
   `@api.model`-Methoden), `context`, und **allen Methodenparametern benannt** (**keine Positionsargumente**).
@@ -28,8 +30,7 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
   **Rotation:** neuen Schlüssel erzeugen → sicher ablegen → Dienste umstellen → alten widerrufen (mit dem neuen
   authentifizieren); je Dienst ein eigener Schlüssel; Schlüssel nie im Quelltext.
 - Dynamische Doku: `/doc` der Instanz (laut Quelle "Under construction").
-- Hinweis der Quelle: Zugriff auf externe API ist bei Odoo **Online** nur im Tarif *Custom*; für selbst betriebenes
-  Community nicht relevant. `int_filemanager` nutzt JSON-2 mit API-Key-Scope.
+- Hinweis der Quelle: Zugriff auf externe API ist bei Odoo **Online** nur im Tarif *Custom*.
 - **Ablösung:** `/xmlrpc`, `/xmlrpc/2`, `/jsonrpc` (Dienste `common`, `db`, `object`) sind **veraltet und werden in
   Odoo 22 (Herbst 2028) entfernt** → für neue Integrationen nur JSON-2. Ersatz: `common.version` → `GET
   /web/version`; `authenticate` entfällt (API-Key; eigene ID über `res.users/context_get`); `object.execute(_kw)` →
@@ -53,7 +54,7 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 JSON-RPC2 auf `https://extract.api.odoo.com`; Dokumenttypen Rechnung, Kontoauszug, Spesen, Bewerbung; Ablauf
 `/parse` (Dokument als Base64: pdf/png/jpg, ein Dokument je Aufruf, Kosten 1 Credit, `account_token`, optional
 `webhook_url`) → `document_token` → `/get_result` (Polling oder Webhook). Testtoken `integration_token`
-(ratenbegrenzt). **Für dieses Repo nicht relevant** (kein IAP; OCR ist in `int_filemanager` ein eigenes Thema).
+(ratenbegrenzt).
 
 ## 4. CLI (`odoo-bin` bzw. `odoo`; im Docker-Image `odoo`)
 
@@ -68,7 +69,7 @@ JSON-RPC2 auf `https://extract.api.odoo.com`; Dokumenttypen Rechnung, Kontoauszu
   `--db_sslmode`, `--unaccent`; `--no-http` (wirkungslos mit `--test-enable`), `-p/--http-port` (8069), `--gevent-port`
   (8072), `--proxy-mode` (**nur hinter Reverse Proxy**), `--x-sendfile`; `--logfile`, `--log-db`, `--log-handler
   LOGGER:LEVEL`, `--log-sql`, `--log-level`.
-- **Developer-Features:** `--dev=xml|reload|qweb|replica|access|all` (`all` = access, qweb, reload, xml) – **nur Entwicklung, nie Produktion**.
+- **Developer-Features:** `--dev=xml|reload|qweb|werkzeug|replica|access|all` (`all` = access, qweb, reload, xml, `ALL_DEV_MODE` in `odoo/tools/config.py`) – **nur Entwicklung, nie Produktion**.
 - **Mehrprozess:** `--workers`, `--limit-request` (65536), `--limit-memory-soft` (2048 MiB), `--limit-memory-hard`
   (2560 MiB), `--limit-time-cpu` (60), `--limit-time-real` (120), `--max-cron-threads` (2),
   `--limit-time-real-cron` (Standard -1 = wie `--limit-time-real`).
@@ -80,9 +81,6 @@ JSON-RPC2 auf `https://extract.api.odoo.com`; Dokumenttypen Rechnung, Kontoauszu
   [--outdated]`, `forcedemo` – **nicht umkehrbar, vorher Dump**), `neutralize` (`--stdout`), `scaffold`, `populate`,
   `cloc` (`cloc_exclude` im Manifest), `obfuscate` (**kein sicheres Anonymisieren**), `deploy` (braucht
   `base_import_module`), `upgrade_code --from 18.0 --to 19.0 [--dry-run]`.
-- **Folgen für dieses Repo:** `odoo shell`/`odoo -u` gegen die Watcher-DB startet einen zweiten Watcher
-  (`CLAUDE.md`) – das ist unabhängig von der Referenz, aber der Shell-Rollback gilt weiter.
-  Tests über `--test-tags /int_filemanager` (und `/test_lint`) auf der Testinstanz.
 
 ## 5. Upgrade-Skripte
 
@@ -94,12 +92,13 @@ JSON-RPC2 auf `https://extract.api.odoo.com`; Dokumenttypen Rechnung, Kontoauszu
 - **Phasen:** `pre` (vor dem Laden des Moduls), `post` (nach Modul und Abhängigkeiten geladen/aktualisiert),
   `end` (nach allen Modulen dieser Version); innerhalb der Phase **lexikalische Reihenfolge** (`pre-10-…`, `pre-20-…`).
 - **`odoo/upgrade-util`** (`from odoo.upgrade import util`; `util.env(cr)` für ORM): Module, Modelle, Felder,
-  Datensätze, ORM, Domains, SQL (`pg`), Misc, Report; Tests über `odoo.upgrade.testing`. Installation: `--upgrade-path=
-  <upgrade-util>/src` oder `pip install git+https://github.com/odoo/upgrade-util@master` (nicht im Image; Odoo.sh:
-  `requirements.txt`). Vorteile: konsistente Daten, indirekte Referenzen, weniger eigener Code.
-  **Hausregel: Helfer statt eigenem SQL** (Coding Guidelines 2).
+  Datensätze, ORM, SQL, Misc, Report; Tests über `odoo.upgrade.testing` (`UpgradeCase`, `IntegrityCase`). Installation: `--upgrade-path=
+  <upgrade-util>/src` oder `pip install git+https://github.com/odoo/upgrade-util@master` (Odoo.sh: `requirements.txt`).
+  Die Funktionen aktualisieren laut Referenz auch direkte und indirekte Referenzen.
+- Modul-Operationen (umbenennen, zusammenführen, entfernen) gehören in ein `base`-Skript bzw. nach einem Major-Upgrade in
+  `--pre-upgrade-scripts` (Referenz upgrade_utils). Der Core lädt Skripte aus `migrations/` und `upgrades/` (`odoo/modules/migration.py`).
 
 ## 6. Standardmodule
 
 `standard_modules/account/*` und `payment/*` sind reine autodoc-Verzeichnisse (Felder von `account.account`,
-`account.tax`, `payment.provider`, `payment.transaction` …). Nicht relevant für dieses Repo; bei Bedarf im Core nachsehen.
+`account.tax`, `payment.provider`, `payment.transaction` …). Details im Core nachsehen.

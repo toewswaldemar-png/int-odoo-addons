@@ -1,25 +1,22 @@
 # Odoo 19 Regeln: ORM (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
-`content/developer/reference/backend/orm.rst` und `backend/orm/changelog.rst`
-(Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/orm.html>).
-Geprüft: 2026-10-02. Index und Einordnung: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
+Quellen (nur diese): Odoo-19-Core (Branch 19.0, `odoo/orm/*.py`, `odoo/addons/base`) und die offizielle
+Entwicklerdokumentation (`developer/reference/backend/orm` und `orm/changelog`,
+<https://www.odoo.com/documentation/19.0/developer/reference/backend/orm.html>).
+**Rangfolge: Core-Code vor Dokumentation.** Wo die Dokumentation veraltet ist, steht hier der Core-Stand.
+Geprüft: 2026-10-02, Korrekturen gegen den Core: 2026-10-08.
 
-**Grenze der Quelle:** `orm.rst` ist größtenteils *autodoc* – Feldparameter, Signaturen und Details von
-`create`/`write`/`search`/`_read_group`/`unlink`/`copy`/`with_context` usw. stehen **nur im Docstring des
-Odoo-Quellcodes**, nicht in der `.rst`. Dieses Destillat enthält nur, was in der `.rst` selbst steht.
-Für alles andere gilt das Suchraster der `CLAUDE.md` (Core-Grep im Container, Punkt 1–5).
+Die Doku-Seite zum ORM ist größtenteils *autodoc*; Details zu Signaturen und Feldparametern stehen im
+Docstring des Cores.
 
-Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[prüfbar]` = maschinell prüfbar
-(pylint-odoo, `test_lint`, odoo-ls).
+Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick.
 
 ## 1. Modelle und Felder
 
 - Felder sind Klassenattribute. **Feld und Methode dürfen nicht gleich heißen** – das letzte überschreibt
   stillschweigend die früheren.
-- Label (`string`) ist standardmäßig der kapitalisierte Feldname; nur setzen, wenn er abweicht
-  (OCA `attribute-string-redundant`).
-- Defaults als Parameter des Feldes: Wert oder `default=lambda self: self._default_x()` (vererbbar).
+- Label (`string`) ist standardmäßig der kapitalisierte Feldname; mit `string` überschreibbar.
+- Defaults als Parameter des Feldes: Wert oder `default=lambda self: self._default_x()`.
 - `_log_access` ist standardmäßig wie `_auto`; **bei `TransientModel` MUSS es aktiv sein**.
 - Reservierte Feldnamen mit Sonderverhalten – nur definieren, wenn das Verhalten gewollt ist:
   `name` (Standard für `_rec_name`), `active` (Archivierung; `action_archive`/`action_unarchive`), `state`
@@ -55,7 +52,6 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 - Computed ist readonly; schreibbar nur mit `inverse='_inverse_x'`.
 - Mehrere Felder von derselben Compute-Methode: erlaubt (alle zuweisen). Dieselbe **Inverse-Methode für mehrere
   Felder: nicht empfohlen** – während des Inverse sind *alle* ihre Felder geschützt und liefern bei Cache-Miss `False`.
-- `no-write-in-compute` (OCA) `[prüfbar]`.
 
 ### Related Fields
 - `related='a_id.b_id.name'`; Standard: **nicht gespeichert, nicht kopiert, readonly, im Superuser-Modus berechnet**.
@@ -64,6 +60,13 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 - Mit `store=True` gespeichert; `depends=[...]` engt Neuberechnung auf bestimmte Felder ein.
 - **NIE One2many/Many2many in der Kette verketten** (`related='m2m_ids.m2m_ids'` → falsche Aggregation); eigenes
   Many2many-Compute-Feld nutzen. Erlaubt: M2O-Glied, dann O2M/M2M als letztes Glied.
+
+### Float und One2many/Many2many
+- Float-Werte nie mit `==` vergleichen: `fields.Float.round`, `is_zero` und `compare` mit der passenden
+  Genauigkeit (`precision_rounding`/`precision_digits`) benutzen; `compare` folgt der `__cmp__`-Semantik
+  (0 = gleich).
+- Schreiben auf One2many/Many2many nur über `Command` (`create`, `update`, `delete`, `unlink`, `link`,
+  `clear`, `set`); per RPC als Tripel mit Zahlen-Kennung.
 
 ### Many2one
 - `ondelete`: Standard `restrict` bei `required=True`, sonst `set null`; bei einem `TransientModel` auf ein normales Modell `cascade`
@@ -82,8 +85,8 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 - Mehrstufiger Relationszugriff entspricht `mapped` (`records.partner_id.bank_ids`).
 - **Cache/Prefetch:** erster Zugriff liest alle einfachen gespeicherten Felder für das ganze Prefetch-Set;
   Prefetch gilt auch für sekundäre Datensätze. Wo Prefetch nicht greift: `search_fetch` / `fetch`.
-  Folgerung (nicht wörtlich in der Quelle): über das Recordset iterieren statt pro ID neu `browse(id)` zu erzeugen,
-  sonst geht das Prefetch-Set verloren.
+  Über das Recordset iterieren statt pro ID neu `browse(id)` zu erzeugen, sonst geht das Prefetch-Set verloren
+  (Performance-Doku, "Good practices").
 - Mengenoperationen (`|`, `&`, `-`, `in`, `<=` …) liefern neue Recordsets; Recordsets sind unveränderlich.
   `filtered`, `filtered_domain` (erhält Reihenfolge seit 15.3), `mapped`, `sorted`, `grouped` statt
   `map`/`sorted()` der Standardbibliothek, wenn ein Recordset weiterverwendet wird.
@@ -92,8 +95,8 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 ## 3. Domains
 
 - **`odoo.fields.Domain` benutzen** (seit 18.1): `Domain('f', '=', v) & Domain(...)`, `|`, `~`,
-  `Domain.AND([...])`, `Domain.OR([...])`, `Domain.TRUE`/`FALSE`. Listen-Domains nur noch zum Ein-/Ausgeben
-  (`Domain(list)`, `list(domain)`; Präfixnotation `&`, `|`, `!`).
+  `Domain.AND([...])`, `Domain.OR([...])`, `Domain.TRUE`/`FALSE`. Die Listenform dient zum Parsen und
+  Serialisieren (`Domain(list)`, `list(domain)`; Präfixnotation `&`, `|`, `!`).
 - Operatoren: `= != > >= < <= =? like ilike =like =ilike in child_of parent_of any any!` (+ `not` davor). Standardoperatoren des Cores sind
   `any`, `in`, `<`, `>`, `<=`, `>=`, `like`, `ilike`, `=like`, `=ilike` (mit `not`-Varianten) und `any!`; `=`, `!=`, `=?`, `child_of`,
   `parent_of` werden bei der Optimierung darauf zurückgeführt. `any` prüft Zugriffsrechte, **`any!` umgeht sie** (nur bewusst).
@@ -111,6 +114,9 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 - `self.env` erbt sich auf abgeleitete Recordsets; `env.uid`, `env.user`, `env.company`, `env.companies`,
   `env.lang`; `env.ref('xmlid')`; `env.is_superuser()/is_admin()/is_system()`.
 - Umgebung ändern nur über `with_context`, `with_user`, `with_company`, `with_env`, `sudo` (neue Recordsets).
+- **`sudo()` kann die Grenzen der Record-Regeln überschreiten** (z. B. Datensätze verschiedener Firmen mischen) und
+  bei Methoden, die einen Datensatz unter mehreren auswählen (Standardfirma, Stückliste), unerwartete Ergebnisse
+  liefern. Im sudo-Modus gibt es für `env.company`/`env.companies` keine Plausibilitätsprüfung der erlaubten Firmen.
 - **Veraltet in 19.0:** `record._cr`, `record._context`, `record._uid` (→ `self.env.cr/context/uid`),
   Modul `odoo.osv`. Übersetzung über `self.env._()` (seit 18.0).
 - `check_access`, `has_access`, `_filtered_access` prüfen Zugriffsrechte **und** Record-Regeln gemeinsam (seit 18.0).
@@ -120,7 +126,7 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 - Rohes SQL **umgeht ORM und Sicherheitsregeln** → nur wenn das ORM es nicht kann (komplexe Joins, Performance);
   Nutzereingaben immer parametrisieren.
 - **`odoo.tools.SQL`** zum Zusammenbauen (`SQL("… %s", wert)`, `SQL.identifier`, `SQL.join`); nie Werte per
-  `+`/`%`/f-String einsetzen (`sql-injection` `[prüfbar]`). Ausführen über `env.execute_query(SQL(...))`
+  `+`/`%`/f-String einsetzen. Ausführen über `env.execute_query(SQL(...))`
   (flusht automatisch, 17.1; `_flush_search` ist veraltet).
 - **Flush vor jeder SQL-Abfrage**, so spezifisch wie möglich: `flush_model([felder])`, `flush_recordset`,
   `flush_all` (sparsam).
@@ -144,9 +150,16 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 ## 7. Methoden-Dekoratoren und Fehler
 
 - `@api.depends`, `@api.depends_context` (Sonderschlüssel `company`, `uid`, `active_test`), `@api.constrains` (nur einfache Feldnamen),
-  `@api.onchange` (nur einfache Feldnamen), `@api.autovacuum` (Methodenname beginnt mit `_`), `@api.model`,
-  `@api.model_create_multi`, `@api.private`, `@api.ondelete`. Details (Parameter, Semantik) stehen nur im
-  Docstring des Cores.
+  `@api.onchange` (nur einfache Feldnamen), `@api.autovacuum` (Methodenname beginnt mit `_`, sonst Assertion), `@api.model`,
+  `@api.model_create_multi`, `@api.private`, `@api.ondelete`. Weitere Details stehen im Docstring des Cores.
+- `@api.constrains` läuft **nur**, wenn die genannten Felder im `create`- oder `write`-Aufruf vorkommen (Felder, die
+  nicht in der View stehen, lösen bei `create` nichts aus); für "Wert fehlt" `create` überschreiben.
+- `@api.onchange`: **kein** `create`/`write`/`unlink`/`read` auf den Pseudo-Datensätzen (undefiniertes Verhalten),
+  stattdessen Felder zuweisen oder `update()`; One2many/Many2many können sich nicht selbst per Onchange ändern.
+- `@api.ondelete(at_uninstall=...)` statt `unlink` überschreiben, damit die Deinstallation des Moduls nicht blockiert
+  wird; `at_uninstall` fast immer `False`; Methodennamen `_unlink_if_<bedingung>` / `_unlink_except_<gegenbedingung>`.
+- `search`, `search_count`, `read` und `fetch` sind Hochebenen-Methoden und **nicht zu überschreiben**; die
+  Umsetzung liegt in `_search`, `_fetch_query` und `_read_format`.
 - `@api.private` (18.2) trennt öffentliche Python-Methoden von per RPC erreichbaren; optional, das `_`-Präfix genügt für
   Methoden, die nicht per RPC aufrufbar sein sollen (siehe Security-Destillat).
 - Fehler: `odoo.exceptions` – `UserError`, `ValidationError`, `AccessError`, `AccessDenied`, `MissingError`,
@@ -156,10 +169,10 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 
 | Seit | Folge für neuen Code |
 |---|---|
-| 19.0 | `odoo.osv` und `_cr/_context/_uid` meiden; dynamische Datums-Domains verfügbar; `read_group` veraltet → `_read_group` (Backend) bzw. `formatted_read_group` (öffentlich, aus dem Modul `web`) |
+| 19.0 | `odoo.osv` und `_cr/_context/_uid` meiden; dynamische Datums-Domains verfügbar |
 | 18.4 | Eigene Domains können SQL einbetten (Changelog: "injecting arbitrary SQL") – nur mit `SQL`-Objekt, nie mit Nutzertext; `reinit`-Option im CLI |
-| 18.3 | Cron-API für Fortschritt mit Batch-Commits (siehe Data/Module-Destillat); Demo-Daten nicht mehr standardmäßig |
-| 18.2 | `@api.private`; native Namespaces (PEP 420) für `odoo` |
+| 18.3 | Cron-API für Fortschritt mit Batch-Commits; Demo-Daten nicht mehr standardmäßig |
+| 18.2 | `read_group` veraltet → `_read_group` (Backend) bzw. `formatted_read_group` (öffentlich, im Core im Modul `web`, `models.py`); `@api.private`; native Namespaces (PEP 420) für `odoo` |
 | 18.1 | `odoo.Domain`; Constraints/Indizes als Attribute; `json`-Controller heißen `jsonrpc` |
 | 18.0 | `_search_display_name`; `check_access`/`has_access`/`_filtered_access`; `self.env._` |
 | 17.3 | Gruppieren nach Datumsteil-Zahlen in `_read_group` und Domains (Zeitstufen `hour`, `day`, `week`, `month`, `quarter`, `year`) |
@@ -170,9 +183,3 @@ Legende: **MUSS/NIE** = Regel der Quelle; *Hinweis* = Verhalten/Fallstrick; `[pr
 | 15.4 | Flush-/Invalidate-API (siehe Abschnitt 5) |
 | 15.3 | `args`→`domain`; `fields_get_keys`/`get_xml_id` veraltet; `limit` an One2many/Many2many entfernt |
 | 15.2 | Index-Typen am Feld; `_sequence` entfernt; `column_format`/`deprecated` an Feldern entfernt |
-
-## 9. Folgen für dieses Repo
-
-- Bestehende Verstöße prüfen (Stichprobe, nicht Teil dieses Destillats): `cr.execute` mit String-Formatierung statt
-  `SQL`, fehlendes `flush_model`/`invalidate_*` um Roh-SQL, Listen-Domains per `+` zusammengeklebt, `_cr`/`_context`
-  im Code. Befund und Plan gehören in die Übergabe-Dokumente von `int_filemanager`, nicht hierher.

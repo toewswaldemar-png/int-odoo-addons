@@ -1,28 +1,32 @@
 # Odoo 19 Regeln: JavaScript-Framework (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02), Verzeichnis
+Quellen: Odoo-19-Entwicklerdokumentation (`odoo/documentation`, Branch 19.0, Verzeichnis
 `content/developer/reference/frontend/`: `framework_overview.rst`, `javascript_modules.rst`, `assets.rst`,
 `registries.rst`, `services.rst`, `hooks.rst`, `patching_code.rst`, `javascript_reference.rst` (ohne Feld-Widgets,
 siehe `docs/odoo_regeln/odoo_regeln_js_fields_2026-10-02.md`), `owl_components.rst`, `error_handling.rst`, `odoo_editor.rst`,
-`mobile.rst`. Web-Wurzel: <https://www.odoo.com/documentation/19.0/developer/reference/frontend/>.
+`mobile.rst`; Web-Wurzel: <https://www.odoo.com/documentation/19.0/developer/reference/frontend/>), Owl-2.8.4-Referenz
+und Odoo-19-Core-Code (Branch 19.0, `addons/web/static/src`). **Rangfolge: Core-Code vor Dokumentation.** Wo die Doku
+veraltet ist, steht der Core-Stand mit Fundstelle (Datei/Funktion). Aussagen ohne Regelcharakter sind als "Core-Praxis" gekennzeichnet.
 Geprüft: 2026-10-02. QWeb: `docs/odoo_regeln/odoo_regeln_qweb_2026-10-02.md`. JS-Tests: `docs/odoo_regeln/odoo_regeln_js_tests_2026-10-02.md`.
 Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
-Übersetzung: `import { _t } from "@web/core/l10n/translation"`; Dienste: `useService`. Bundlenamen und Beispiele vor Gebrauch im Core des Containers prüfen (Suchraster `CLAUDE.md`).
+Übersetzung: `import { _t } from "@web/core/l10n/translation"`; Dienste: `useService`. Bundlenamen und Beispiele gelten für den Core 19.0; bei Widerspruch gilt der Core.
 
 ## 1. Grundsätze
 
 - **Neuer Code in Owl**, "wenn möglich". Wort "Komponente" = Owl, "Widget" = altes Odoo-Widget.
 - **Native JS-Module** (ES-Module) für alle neuen Dateien; "Odoo-Module" (`odoo.define`) nur für alte, nicht
   umgestellte Dateien; **Plain-JS** nur für externe Bibliotheken und kleine Low-Level-Zwecke (dann als IIFE).
-- Moderne Syntax ist erlaubt (`?.`, `??`); kein Ziel "ES2019".
+- Syntax-Ziel laut ESLint-Konfiguration des Core (`web/tooling/_eslintrc.json`): `ecmaVersion` 2022 (`?.`, `??` erlaubt);
+  die Doku (`owl_components`) nennt noch "ES2019" und ist veraltet.
 - Eigenen Code **nicht** in den globalen Scope legen (Namenskonflikte, implizite Reihenfolge).
 - Seit Odoo 14 teilen alle Versionen dieselbe Owl-Version; Änderungen an Owl nur per PR an `odoo/owl`.
 
 ## 2. JavaScript-Module
 
 - Transpiliert werden Dateien unter **`/static/src`** und **`/static/tests`** automatisch (Opt-out mit erster Zeile
-  `/** @odoo-module ignore **/`); in anderen Ordnern per Opt-in `/** @odoo-module **/` in der ersten Zeile. Unter `static/src` und `static/tests` **keine** Kopfzeile schreiben.
+  `/** @odoo-module ignore **/`); in anderen Ordnern per Opt-in `/** @odoo-module **/` in der ersten Zeile
+  (Core: `is_odoo_module` in `odoo/tools/js_transpiler.py`). Core-Praxis: Dateien unter `static/src` und `static/tests` tragen keine Kopfzeile.
 - Modulname: `@<addon>/pfad/zur/datei` (ohne `static/src`). **Relative Imports nur innerhalb desselben Addons**;
   addon-übergreifend immer voller Name (`import {x} from "@web/file_a"`). `@web/…` = `web/static/src/…`.
 - Alias für Altcode: `/** @odoo-module alias=web.someName **/` (exportiert `default`; mit `default=0` das ganze
@@ -33,14 +37,17 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 - Altes System (`odoo.define(name, deps, fn)`): Name `addon.Beschreibung`, eindeutig; **keine zirkulären
   Abhängigkeiten**; fehlende Abhängigkeiten → Modul wird nicht geladen (Konsole: Missing / Failed / Rejected /
   Non loaded modules).
+- Klassische Module sind nicht veraltet und nicht zur Entfernung vorgesehen; bei Problemen mit den Transpiler-Einschränkungen
+  dürfen sie weiter benutzt werden, beide Stile können im selben Addon nebeneinander stehen.
 
 ## 3. Assets
 
-- Drei Typen: Code (js), Stil (css/scss), Templates (xml; werden nicht gebündelt, sondern vom Dateisystem gelesen
-  und über `/web/webclient/qweb/` geliefert).
+- Drei Typen: Code (js), Stil (css/scss), Templates (xml). Core 19.0: XML-Templates werden in das JS-Bundle eingebettet
+  (`generate_xml_bundle`/`js` in `odoo/addons/base/models/assetsbundle.py`, `registerTemplate`); die Doku-Aussage "vom Dateisystem gelesen,
+  über `/web/webclient/qweb/` geliefert" ist veraltet (keine solche Route in `addons/web/controllers`).
 - Bundles im Manifest unter `assets` (Dict Bundlename → Liste von Pfaden, **Glob** erlaubt). Wichtige Bundles:
   `web.assets_backend` (Webclient), `web.assets_backend_lazy` (nachgeladen), `web.assets_frontend` (Website/Portal),
-  `web.assets_unit_tests` (Hoot-Tests; Tour-Dateien mit `('remove', 'addon/static/tests/tours/**/*')` ausnehmen); Tours: `web.assets_tests`;
+  `web.assets_unit_tests` (Hoot-Tests; Core-Praxis: Tour-Dateien mit `('remove', 'addon/static/tests/tours/**/*')` ausnehmen, siehe Manifeste von `web`/`account`); Tours: `web.assets_tests`;
   Berichte: `web.report_assets_common` (Schriften, Stile) und `web.report_assets_pdf`.
   Unterbundles beginnen per Konvention mit `_`.
 - **Operationen** (Tupel): `append` (Standard: nur Pfad), `('prepend', pfad)`, `('before', ziel, pfad)`,
@@ -69,11 +76,12 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
   View-Modifier/Domains.
 - **Domains in JS:** Liste (Präfixnotation, `&` implizit) oder String-Ausdruck (kann Python/Variablen enthalten);
   Klasse `Domain` (`contains`, `toString`, `toList(context)`, statisch `and/or/not/combine`).
-- **Bus** (`env.bus`, Owl-`EventBus`): Ereignisse wie `WEB_CLIENT_READY`, `ROUTE_CHANGE`, `RPC:REQUEST/RESPONSE`,
-  `ACTION_MANAGER:UI-UPDATED`, `CLEAR-CACHES`, `CLEAR-UNCOMMITTED-CHANGES`; Listener per **`useBus`** (räumt beim
-  Unmount auf).
-- **`browser`-Objekt** (`@web/core/browser/browser`) für Speicher und Navigation (`localStorage`, `sessionStorage`, `location`, `history`,
-  `navigator`): **testbar durch Mocking**. `setTimeout`, `fetch` und DOM-Zugriffe dürfen direkt benutzt werden.
+- **Bus** (`env.bus`, Owl-`EventBus`): Ereignisse wie `WEB_CLIENT_READY`, `ACTION_MANAGER:UI-UPDATED`, `MENUS:APP-CHANGED`,
+  `CLEAR-UNCOMMITTED-CHANGES`; Listener per **`useBus`** (`@web/core/utils/hooks`, räumt beim Unmount auf). Core 19.0 (Doku veraltet):
+  `ROUTE_CHANGE` liegt auf `routerBus` (`core/browser/router`), `RPC:REQUEST`, `RPC:RESPONSE` und `CLEAR-CACHES` auf `rpcBus`
+  (`core/network/rpc`) – nicht auf `env.bus`.
+- **`browser`-Objekt** (`@web/core/browser/browser`) für Browser-APIs (u. a. `localStorage`, `sessionStorage`, `location`, `history`,
+  `navigator`, `setTimeout`, `fetch`, `XMLHttpRequest`): Code, der darüber zugreift, ist **testbar durch Mocking** (Doku `framework_overview`).
 - **Debug-Modus:** `env.debug` (String); `assets` (nicht minifiziert, Source-Maps), `tests` (injiziert
   `web.assets_tests`). Elemente nur im Debug zeigen: `groups="base.group_no_one"`.
 - **Tooltips:** `data-tooltip`, `data-tooltip-position` (`top|bottom|left|right`), `data-tooltip-delay` (400),
@@ -89,6 +97,9 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 - **Systray:** `{Component, props?, isDisplayed?(env)}`, Wurzelelement der Komponente `<li>`, `sequence` Standard 50
   (niedrig = rechts). **Hauptkomponenten:** `{Component, props?}`. **Usermenü:** Funktion `(env) → {description,
   callback, href?, hide?, sequence?}`.
+- **Formatter/Parser:** `formatters`: `format(value, options) → string` (`value` ist `false`, wenn kein Wert); `parsers`:
+  `parse(string, options) → Wert`, darf bei ungültiger Eingabe werfen.
+- **Effekte:** Registry `effects`, Funktion `(env, params) → {Component, props} | void`; die Komponente wird im Effekt-Container gemountet.
 - **Feld-Widget:** `registry.category("fields").add("name", {component, supportedTypes: [...]})`.
 - **Client-Aktion:** `registry.category("actions").add("tag", Component)` + `ir.actions.client`-Datensatz mit `tag`.
 
@@ -98,7 +109,7 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
   `registry.category("services")`; `start` darf Wert oder Promise liefern, `null` = kein Wert.
 - **Nicht-Komponenten-Code mit Nebenwirkung in einen Service packen** – Tests können dann wählen, welche Services
   aktiv sind.
-- Nutzung in Komponenten **nur über `useService("name")`** (verhindert Aufrufe/Fortsetzung nach Zerstörung der
+- Nutzung in Komponenten **grundsätzlich über `useService("name")`** (Doku: "generally"; verhindert Aufrufe/Fortsetzung nach Zerstörung der
   Komponente; `async`-Flag lässt Aufrufe zerstörter Komponenten hängen).
 - Standardservices (Auswahl): `action`, `command`, `dialog`, `effect`, `field`, `hotkey`, `http`, `menu`, `name`, `notification`, `orm`,
   `popover`, `title`, `tooltip`, `ui`, `view`, `error`.
@@ -106,10 +117,11 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
     (`@web/core/browser/cookie`) und `rpc` (Funktion aus `@web/core/network/rpc`).
   - **`orm`** für Modellmethoden: `this.orm.call("model", "method", [args])` (`/web/dataset/call_kw`); weitere Helfer `searchRead`,
     `webSearchRead`, `read`, `create`, `write`, `unlink`.
-  - **`rpc`** (`rpc("/route", params)`) **nur für Controller**, nicht für Modelle. POST/JSON; Serverfehler kommen mit HTTP 200 und
+  - **`rpc`** (`rpc("/route", params, settings)`) **nur für Controller**, nicht für Modelle; `settings`: `xhr` (eigenes `XMLHttpRequest`), `silent`
+    (keine Ladeanzeige). POST/JSON; Serverfehler kommen mit HTTP 200 und
     `error`-Schlüssel, werden als Fehler behandelt; Netzwerkfehler → Hinweis, Server wird regelmäßig angepingt.
   - `notification.add(msg, {title, type: warning|danger|success|info, sticky, className, onClose, buttons,
-    autocloseDelay})` liefert eine Schließfunktion; von Python über Client-Aktion `display_notification`.
+    autocloseDelay})` liefert eine Schließfunktion; Standardtyp `warning`; `message` darf ein `markup`-Objekt sein; von Python über Client-Aktion `display_notification`.
   - `user`: `context`, `isAdmin`, `isSystem`, `isInternalUser`, `lang`, `tz`, `userId`, `partnerId`, `name`, `login`, `settings`,
     `hasGroup(xmlid)` (async), `updateContext(update)`, `checkAccessRight(model, operation, ids)`, Firmen: `defaultCompany`,
     `allowedCompanies`, `activeCompanies`, `activeCompany`, `activateCompanies(ids)`.
@@ -126,7 +138,7 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 - Pro Komponente meist 2–3 Dateien am selben Ort: `my_component.js`, `my_component.xml`, optional `.scss`; alle ins
   Asset-Bundle.
 - **Nie `constructor` überschreiben – `setup()` benutzen** (Konstruktoren sind nicht patchbar).
-- Odoo-Hooks: `useService`, `useBus`, `useAutofocus` (`t-ref="autofocus"`), `usePosition` (`t-ref="popper"`),
+- Odoo-Hooks: `useService`, `useBus`, `useAutofocus` (`t-ref="autofocus"`), `usePosition(refName, getTarget, options)` (Core `core/position/position_hook`; Name des `t-ref` ist ein Parameter, die Doku mit Standardname "popper" ist veraltet),
   `usePager`, `useSpellCheck`; Lifecycle-Hooks (`onWillStart`, `onMounted`, `onWillUnmount`) räumen auf.
   `useEffect` ist **nicht** der Effect-Service.
 - Wiederverwendbare Komponenten (`@web/core/…`): `CheckBox`, `ColorList`, `Dropdown`/`DropdownItem`/`DropdownGroup`
@@ -186,10 +198,9 @@ Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 11. Odoo Editor, Mobile
 
-- **Powerbox** (Editor, `/`-Befehle): nur **eine** Instanz, vom Editor selbst – **nie selbst instanziieren**.
-  Befehle/Kategorien über die Editor-Optionen (`commands`, `categories`, `powerboxFilters`); Prioritäten wie
-  `z-index` mit Bedacht wählen; Namen/Beschreibungen mit `_t`. Relevant für `onlyoffice_odoo`/Editor-Themen nur
-  mittelbar.
-- **Mobile (`web_mobile`):** nur Odoo-**Enterprise**-App; Methoden (`showToast`, `vibrate`, `showSnackBar`,
-  `addContact`, `scanBarcode`, `switchAccount`) vor Aufruf auf Verfügbarkeit prüfen; für Community-Betrieb
-  (HM-SRV/Tower) nicht relevant. Quelle nennt noch jQuery-Deferred-Rückgaben – veraltet.
+- **Powerbox** (Editor, `/`-Befehle): Doku (`odoo_editor`): nur **eine** Instanz, vom Editor selbst – nie selbst instanziieren;
+  Prioritäten wie `z-index` mit Bedacht wählen; Namen/Beschreibungen mit `_t`. **Veraltet:** die dokumentierten Editor-Optionen
+  (`commands`, `categories`, `powerboxFilters`) und `web_editor` gibt es im Core 19.0 nicht mehr. Der Powerbox liegt in `html_editor`
+  (`main/powerbox/powerbox_plugin`) und wird über Plugin-Ressourcen erweitert (`powerbox_categories`, `powerbox_items`).
+- **Mobile (`web_mobile`):** laut Doku nur Odoo-**Enterprise**-App; Methoden (`showToast`, `vibrate`, `showSnackBar`,
+  `addContact`, `scanBarcode`, `switchAccount`) vor Aufruf auf Verfügbarkeit prüfen. Die Doku nennt noch jQuery-Deferred-Rückgaben – veraltet.

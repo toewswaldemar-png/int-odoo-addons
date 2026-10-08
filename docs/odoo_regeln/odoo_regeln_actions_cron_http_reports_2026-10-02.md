@@ -1,6 +1,8 @@
 # Odoo 19 Regeln: Aktionen, Cron, Controller, Berichte (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
+Quellen (nur offiziell, bei Widerspruch gilt der Code vor der Doku): Odoo-19.0-Quellcode (`odoo/addons/base/models/ir_cron.py`,
+`ir_actions.py`, `ir_actions_report.py`, `odoo/http.py`, `addons/web/controllers/report.py`, `addons/web/views/report_templates.xml`) und
+`odoo/documentation`, Branch 19.0,
 `content/developer/reference/backend/actions.rst`, `backend/http.rst`, `backend/reports.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/actions.html>, `…/http.html`,
 `…/reports.html`). Geprüft: 2026-10-02. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
@@ -38,14 +40,12 @@ Core-Docstring, nicht in der `.rst`.
 - `code` kann eine Variable `action` setzen = nächste Client-Aktion. **Kontext:** `model`, `record`/`records`,
   `env`, `uid`, `user`, `datetime`, `dateutil`, `time`, `timezone`, `float_compare`, `Command`, `log(message, level='info')`
   (Tabelle `ir.logging`), `UserError`.
-- Hausregel (abgeleitet): Logik in Python-Methoden des Moduls, Server-Aktion nur als dünner Aufruf; Code in
-  Daten-XML ist schwer zu testen und zu reviewen.
 
 ### Report Actions (`ir.actions.report`)
 - Pflicht: `name`, `model`, `report_name` (externe ID der QWeb-Vorlage). `report_type` Standard `qweb-pdf`
   (oder `qweb-html`, `qweb-text`). Als `<record>` statt Kurzform: `binding_model_id` setzen, damit er im Menü "Drucken" erscheint
   (`binding_type` ist implizit `report`).
-- Weitere: `print_report_name` (Python-Ausdruck), `group_ids`, `multi` (nicht im Formular zeigen),
+- Weitere: `print_report_name` (Python-Ausdruck), `group_ids` (Referenz: `groups_id`; im Core `ir_actions_report.py` heißt es `group_ids`), `multi` (nicht im Formular zeigen),
   `paperformat_id` (sonst Firmenformat), `attachment_use` (nur einmal erzeugen und aus Anhang neu drucken, z. B.
   gesetzliche Pflicht), `attachment` (Ausdruck für den Dateinamen, Datensatz heißt `object`).
 
@@ -60,7 +60,7 @@ Core-Docstring, nicht in der `.rst`.
   Worker lange blockiert und kein Timeout auftritt. **Das Framework committet nach jedem Stapel** und ruft die
   Funktion so oft wie nötig erneut auf. **Den Job nicht selbst neu einplanen.**
 - Fortschritt melden: `self.env['ir.cron']._commit_progress(processed, remaining=…)` (Signatur `(processed=0, *, remaining=None,
-  deactivate=False)`; liefert die Restzeit in Sekunden, außerhalb eines Crons committet es nur). Muster mit `limit`-Parameter:
+  deactivate=False)`; liefert im Cron die Restzeit in Sekunden; außerhalb eines Crons committet es nur und liefert `float('inf')`, `_commit_progress` in `ir_cron.py`). Muster mit `limit`-Parameter:
   `records = self.search(domain, limit=limit)` → verarbeiten → `remaining = 0 if len(records) == limit else
   self.search_count(domain)` → `_commit_progress(len(records), remaining=remaining)`.
 - **Eigene Schleife** (gemeinsame Ressourcen, eigene Fehlerbehandlung): nach jedem Datensatz
@@ -69,11 +69,10 @@ Core-Docstring, nicht in der `.rst`.
   protokollieren. Absicherung `assert self.env.context.get('cron_id')`.
 - **Cron-Funktionen nicht direkt aufrufen:** `IrCron.method_direct_trigger` oder `IrCron._trigger`. Test: über
   `method_direct_trigger` im Registry-Testmodus.
-- **Schutzmaßnahmen:** 3 Fehler/Timeouts in Folge → aktuelle Ausführung übersprungen, "fehlgeschlagen";
-  5 Fehler in Folge über ≥ 7 Tage → Cron deaktiviert und DB-Admin benachrichtigt; harte DB-Grenze → Prozess wird
-  beendet.
-- **Bezug zur Hausregel "nie `cr.commit()`":** `_commit_progress` ist der vorgesehene Weg, in Crons zu committen;
-  eigenes `cr.commit()` in Cron-Code ist dadurch nicht nötig.
+- **Schutzmaßnahmen:** 3 Fehler/Timeouts in Folge → aktuelle Ausführung übersprungen, "fehlgeschlagen"
+  (der Core zählt dafür Timeouts: `CONSECUTIVE_TIMEOUT_FOR_FAILURE` in `ir_cron.py`);
+  5 Fehler in Folge über ≥ 7 Tage → Cron deaktiviert und DB-Admin benachrichtigt (`MIN_FAILURE_COUNT_BEFORE_DEACTIVATION`,
+  `MIN_DELTA_BEFORE_DEACTIVATION`); harte DB-Grenze → Prozess wird beendet.
 
 ## 3. Web-Controller
 
@@ -83,10 +82,10 @@ Core-Docstring, nicht in der `.rst`.
   dekorieren** – eine überschriebene Methode ohne Dekorator wird **unveröffentlicht**. Dekoratoren werden
   kombiniert: `@route()` ohne Argumente behält alle vorherigen, angegebene Argumente überschreiben
   (`@route(auth='user')` macht `/some_url` login-pflichtig); unveränderte Werte nicht wiederholen (`test_routes`). `super()` aufrufen.
-- Dispatcher: `JsonRPCDispatcher` (Typ `jsonrpc`; `type='json'` ist ein veralteter Alias) und `HttpDispatcher` (Typ `http`).
+- Dispatcher: `JsonRPCDispatcher` (Typ `jsonrpc`; `type='json'` ist ein veralteter Alias, `odoo/http.py`), `HttpDispatcher` (Typ `http`)
+  und `Json2Dispatcher` (Typ `json2`, für `/json/2`, siehe API-Destillat).
 - `odoo.http.request` ist pro Request gesetzt.
-- Sicherheit: Routen sind öffentlich erreichbar; `auth`, Rechteprüfung und Eingabevalidierung gehören in die
-  Route (Sicherheits-Destillat). Parameter von Routen sind Nutzereingaben → kein `sudo()` darauf.
+- `auth` (Referenz zu `route`): `user`, `bearer` (API-Key im `Authorization`-Header), `public`, `none` (auch ohne Datenbank).
 
 ## 4. QWeb-Berichte
 
@@ -100,7 +99,7 @@ Core-Docstring, nicht in der `.rst`.
   (kostet Performance). Nur den Rumpf übersetzen: `t-call="web.external_layout" t-lang="en_US"`.
 - Barcodes: `<img t-att-src="'/report/barcode/QR/%s' % text"/>` oder mit Query-String
   (`barcode_type`, `value`, `width`, `height`).
-- Bootstrap und FontAwesome nutzbar; lokales CSS in der Vorlage, globales über Vererbung von `report.style`.
+- Bootstrap und FontAwesome nutzbar; lokales CSS in der Vorlage, globales über Vererbung von `web.styles_company_report` (die Referenz nennt noch `report.style`, im 19.0-Core nicht vorhanden, `report_templates.xml`).
 - **Papierformat** (`report.paperformat`): `name` (Pflicht), `format` (A4 Standard oder `custom`; **kein
   Standardformat zusammen mit Seitenmaßen**), `dpi` (90), Ränder in mm, `page_height/width`, `orientation`,
   `header_line`, `header_spacing`.

@@ -1,6 +1,7 @@
 # Odoo 19 Regeln: Datendateien und Manifest (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
+Quellen (nur offiziell, bei Widerspruch gilt der Code vor der Doku): Odoo-19.0-Quellcode (`odoo/modules/module.py`,
+`odoo/tools/convert.py`, `odoo/addons/test_lint/tests/test_manifests.py`) und `odoo/documentation`, Branch 19.0,
 `content/developer/reference/backend/data.rst` und `backend/module.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/data.html>,
 <…/backend/module.html>). Geprüft: 2026-10-02. Ergänzt `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitte 1, 2 und 5.
@@ -13,13 +14,13 @@ Ein einziges Python-Dict. Schlüssel laut Referenz:
 | Schlüssel | Typ / Standard | Regel |
 |---|---|---|
 | `name` | str, **Pflicht** | Anzeigename |
-| `version` | str, Standard `1.0` | 2 bis 5 Zahlenteile; bei höchstens 3 Teilen setzt Odoo `19.0.` davor; beginnt sie mit einer anderen Serie, ist das Modul nicht installierbar (Hausregel: `19.0.x.y.z`) |
+| `version` | str, Standard `1.0` | 2 bis 5 Zahlenteile; bei höchstens 3 Teilen setzt Odoo `19.0.` davor; beginnt sie mit einer anderen Serie, ist das Modul nicht installierbar (`adapt_version`/`check_version` in `odoo/modules/module.py`) |
 | `summary` | str | Kurzbeschreibung |
 | `description` | str, Standard README | reStructuredText |
 | `author`, `website`, `maintainer` | str | Maintainer ist standardmäßig der Autor |
 | `license` | str, Standard `LGPL-3` (fehlt der Schlüssel, warnt Odoo) | `GPL-2`, `GPL-2 or any later version`, `GPL-3`, `GPL-3 or any later version`, `AGPL-3`, `LGPL-3`, `Other OSI approved licence`, `OEEL-1`, `OPL-1`, `Other proprietary` |
 | `category` | str, Standard `Uncategorized` | bestehende Kategorien bevorzugen; unbekannte werden angelegt; Hierarchie mit `/` (`Foo / Bar`) |
-| `depends` | list | Module, die zuerst geladen sein müssen (Funktionen nutzen **oder** Ressourcen ändern). Direkt benötigte Module nennen; `base` ist nicht nötig, wenn ein genanntes Modul davon abhängt; eine leere Liste wird zu `['base']` |
+| `depends` | list | Module, die zuerst geladen sein müssen (Funktionen nutzen **oder** Ressourcen ändern). `base` ist immer installiert, soll laut Referenz aber trotzdem genannt werden, damit das Modul bei einem `base`-Update mitaktualisiert wird; eine leere Liste wird im Core (`Manifest` in `odoo/modules/module.py`) zu `['base']` |
 | `data` | list | immer geladene Dateien, Pfade ab Modulwurzel |
 | `demo` | list | nur im Demo-Modus |
 | `auto_install` | bool oder list, Standard `False` | für "Verbindungsmodule" (`sale_crm`); Liste = Teilmenge der `depends`, leere Liste = immer installieren |
@@ -33,8 +34,10 @@ Ein einziges Python-Dict. Schlüssel laut Referenz:
 | `countries`, `images`, `cloc_exclude` | list | Länderbezug (bei einem Land `l10n` im Modulnamen), Bilder, von `cloc` ausgenommene Pfade |
 | `active` | — | **veraltet** → `auto_install` |
 
-Folgen für dieses Repo: Schlüssel mit Standardwert weglassen (Odoo `test_manifests`, siehe Coding Guidelines 2);
-`external_dependencies` statt `try/except ImportError`-Ersatzklassen; Hooks nur mit Begründung.
+Prüfung durch Odoo (`test_manifests` in `odoo/addons/test_lint/tests/test_manifests.py`): unbekannte Schlüssel schlagen fehl;
+für `application`, `auto_install`, `summary`, `description`, `author`, `demo`, `data` und `test` darf der Wert nicht dem Standardwert
+entsprechen (Schlüssel dann weglassen); ein Modul mit genau einem Land in `countries` soll `l10n` im Namen tragen (Warnung).
+Hooks nur nutzen, wenn Setup/Aufräumen über die API extrem schwierig oder unmöglich ist (Referenz).
 
 ## 2. XML-Datendateien
 
@@ -42,6 +45,7 @@ Folgen für dieses Repo: Schlüssel mit Standardwert weglassen (Odoo `test_manif
   Ergebnisse **vorheriger** Operationen verweisen (Reihenfolge in `data` beachten).
 - **`noupdate`:** `<odoo noupdate="1">` oder Block `<data noupdate="1">` = nur bei Installation (`-i`) geladen;
   ohne = bei Installation und Update (`-i`/`-u`) neu geladen.
+- **`<function>` in `noupdate`:** wird bei Updates übersprungen und läuft nur bei Installation (`_tag_function` in `odoo/tools/convert.py`).
 
 ### `<record>`
 - `model` (Pflicht), `id` (externe ID, **dringend empfohlen**: bei Erstellung für spätere Bezüge, bei
@@ -54,17 +58,18 @@ Folgen für dieses Repo: Schlüssel mit Standardwert weglassen (Odoo `test_manif
 - `search` (Domain; nimmt bei Many2one nur den ersten Treffer), `ref` (externe ID; Many2one/Reference),
   `type` (`xml`/`html` mit `%(external_id)s` und `%%`, `file`, `char`, `base64` mit `file`-Attribut, `int`, `float`,
   `list`/`tuple` mit `<value>`), `eval` (beliebiger Python-Ausdruck; Kontext `time`, `datetime`, `timedelta`,
-  `relativedelta`, `ref`, `obj`).
+  `relativedelta`, `ref`, `obj`; der Core, `_get_eval_context` in `odoo/tools/convert.py`, liefert zusätzlich `Command`, `DateTime`, `version`, `pytz`).
 - `eval` nur, wenn die anderen Formen nicht passen.
 
 ### `<delete>`, `<function>`
-- `<delete model= id=|search=>` (`id` und `search` schließen sich aus).
-- `<function model= name=>` ruft eine Methode auf (Parameter per `eval` oder `<value>`). Methoden, die so aus
-  Daten aufgerufen werden, sind öffentlich → Sicherheits-Destillat beachten.
+- `<delete model= id=|search=>` (die Referenz nennt `id` und `search` exklusiv; `_tag_delete` im Core verarbeitet beide gemeinsam).
+- `<function model= name=>` ruft eine Methode auf (Parameter per `eval` oder `<value>`); Namen mit `__` und unsichere Attribute
+  werden im Core abgelehnt (`_eval_xml` in `odoo/tools/convert.py`).
 
 ### Kurzformen
-- **`<menuitem>`:** `sequence`, `active`, `web_icon`, `parent` (externe ID; ohne: `name` als `/`-getrennter Pfad, Zwischenmenüs werden angelegt;
-  sonst Top-Level), `name` (ohne: Name der verknüpften Aktion, sonst `id`), `groups` (kommagetrennte externe IDs;
+- **`<menuitem>`:** `sequence`, `active`, `web_icon`, `parent` (externe ID; ohne: Top-Level-Menü; verschachtelte `<menuitem>` erben die Eltern-ID. Die Referenz beschreibt außerdem
+  `name` als `/`-getrennten Pfad mit automatisch angelegten Zwischenmenüs – das macht `_tag_menuitem` im Core (`odoo/tools/convert.py`)
+  nicht: `name` bleibt unzerlegt), `name` (ohne: Name der verknüpften Aktion, sonst `id`), `groups` (kommagetrennte externe IDs;
   `-` davor entfernt die Gruppe), `action`, `id`. Für Menüs `<menuitem>` statt `<record>`.
 - **`<template>`:** QWeb-View, nur `arch` nötig; optional `id`, `name`, `key`, `inherit_id` (externe ID), `priority`,
   `primary`, `groups`, `active`, `customize_show`. **`active` am Knoten wirkt nur bei der Erstellung**, nicht bei späteren Updates.

@@ -1,210 +1,122 @@
-# Odoo 19 Regeln: Coding Guidelines (Modul, Manifest, Python, XML, JS/SCSS, Tests) und Hausregeln
+# Odoo 19 Regeln: Coding Guidelines (Modul, Python, XML, JS/SCSS)
 
-Quelle: Odoo-Coding-Guidelines 19.0 (`odoo/documentation`, `content/contributing/development/coding_guidelines.rst`, Commit `eee2e56`,
-Stand 2026-10-02), ergänzt um die OCA-Richtlinien und die Hausregeln dieses Repos (Abschnitt 8). Git: `odoo_regeln_git_guidelines_2026-10-02.md`.
-Gilt für **neuen** Code, insbesondere `int_filemanager` 2. Englische Fachbegriffe bleiben, wo sie im Code so heißen. Index:
-`docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
+Quellen: nur die offizielle Odoo-Dokumentation 19.0 (Coding Guidelines, lokale Kopie `docs/odoo19_reference/contributing/coding_guidelines.md`) und der Odoo-19-Quelltext
+(`odoo/addons/test_lint/tests/`, `ruff.toml` im Odoo-Repository, `addons/web/tooling/`). Marke **[Code]** = steht nur im Quelltext, nicht in der Doku.
+Bei Widerspruch gilt der Quelltext. Überarbeitet 2026-10-08: OCA-Regeln, Hausregeln und alles ohne Beleg wurden entfernt.
+Git: `odoo_regeln_git_guidelines_2026-10-02.md`. Index: `odoo_regeln_index_2026-10-02.md`.
 
-## Quellen und Rangfolge
+## Geltungsbereich (Doku)
 
-| # | Quelle | Art |
-|---|---|---|
-| 1 | Odoo **Coding Guidelines** 19.0 | offizielle Regeln |
-| 2 | Odoo **Security Pitfalls** (`backend/security.rst`) | von 1 ausdrücklich verlangt, siehe `odoo_regeln_security_2026-10-02.md` |
-| 3 | Odoo **`test_lint`** (`odoo/addons/test_lint/tests/`, im Image `odoo:19.0`) | was Odoos CI maschinell prüft; der Pylint-Teil prüft den Odoo-Kern und alle Addon-Pfade außerhalb von `<root_path>/addons`, die übrigen Tests alle Addon-Pfade, also auch unsere Module |
-| 4 | **OCA Guidelines** (`OCA/odoo-community.org`, `CONTRIBUTING.rst`) | Community-Regeln (Stand-Datum 2018, teils veraltet; Tests/Commits aktualisiert) |
-| 5 | **OCA-Repo-Vorlage** (`.pre-commit-config.yaml`, `.pylintrc-mandatory`) | was die OCA maschinell prüft |
-| 6 | **odoo-ls**, **upgrade-util** | Odoo-Werkzeuge, keine Regeln (`docs/pruefautomatik_2026-10-02.md`, Abschnitt 2 hier) |
-
-Rangfolge: Odoo (1–3) vor OCA (4–5). Bei Änderungen an **bestehendem** Code gilt: vorhandenen Stil nicht umformatieren, Diffs klein halten;
-größere Umstellungen erst als reiner Verschiebe-Commit (`[MOV]`), dann die Änderung.
-
----
+Die Guidelines gelten für jedes neue Modul und jede Neuentwicklung. Bei Änderungen an **bestehenden Dateien in einer stabilen Version** hat der vorhandene Dateistil Vorrang;
+bestehende Dateien nicht umformatieren, Diffs minimal halten. In der Entwicklungsversion (master) gelten die Guidelines für geänderten Code oder wenn der größte Teil der Datei
+überarbeitet wird; dann zuerst ein reiner Verschiebe-Commit (move), danach die Änderung.
 
 ## 1. Modul
 
-- **Name mit Präfix** der eigenen Firma/des eigenen Kürzels ("strongly recommended"), hier `int_`. Einzahl (OCA). Erweitert man ein Odoo-Modul,
-  steht dessen Name vorn (OCA: `mail_forward`).
-- **Verzeichnisse:** `models/`, `views/`, `security/`, `data/`, `demo/` (OCA), `controllers/`, `static/`, `wizard/` (Odoo) bzw. `wizards/` (OCA),
-  `report/`, `tests/`, `migrations/<version>/` (pre-/post-migration), `i18n/`.
-- **Dateinamen** nur `[a-z0-9_]`; Ordner 755, Dateien 644.
-  - Modelle: **eine Datei je Hauptmodell**, benannt nach dem Modell (`models/plant_order.py`); jedes geerbte Modell in eigener Datei (`models/res_partner.py`).
-  - Views: `views/<model>_views.xml`, Menüs optional `views/<module>_menus.xml`, Portal/QWeb `<model>_templates.xml`.
-  - Security: `security/ir.model.access.csv`, Gruppen `security/<module>_groups.xml`, Regeln `security/<model>_security.xml`.
-  - Daten: `data/<model>_data.xml`, Demo `data/<model>_demo.xml` (OCA: eigener Ordner `demo/`).
-  - Controller: `controllers/<module>.py` (Odoo; `main.py` gilt als veraltet, OCA nennt noch `main.py`).
-  - Wizard: `wizard/<transient>.py` + `<transient>_views.xml`.
-  - Statisches: `static/src/js|scss|xml|img|css`, Onboarding-Tours für Endnutzer `static/src/js/tours/`, Test-Tours `static/tests/tours/`,
-    Bibliotheken `static/lib/<name>/`, Schriften `static/fonts`, Tests `static/tests/`; eine Komponente je Datei. Keine externen URLs auf
-    Bilder/Bibliotheken, ins Modul kopieren.
-- `__init__.py` in jedem Modul (Odoo `test_dunderinit`).
+- **Name:** Für Community-Module wird ein Präfix wie der Firmenname dringend empfohlen.
+- **Verzeichnisse:** `data/` (Demo- und Daten-XML), `models/`, `controllers/`, `views/`, `static/` (`css/`, `js/`, `img/`, `lib/` …); optional `wizard/` (TransientModels und ihre Views),
+  `report/` (druckbare Berichte und SQL-View-Modelle), `tests/`.
+- **Dateinamen** nur `[a-z0-9_]`. Rechte: Ordner 755, Dateien 644.
+  - **Modelle:** Gruppen zusammengehöriger Modelle je Datei, benannt nach dem Hauptmodell (`models/plant_order.py`); hat das Modul nur ein Modell, heißt die Datei wie das Modul;
+    jedes geerbte Modell in eigener Datei (`models/res_partner.py`).
+  - **Sicherheit:** `security/ir.model.access.csv`, Gruppen `security/<modul>_groups.xml`, Regeln `security/<modell>_security.xml`.
+  - **Views:** Backend-Views `views/<modell>_views.xml`; Hauptmenüs ohne Aktion optional `views/<modul>_menus.xml`; Templates (Portal/Website) `views/<modell>_templates.xml`.
+  - **Daten:** `data/<hauptmodell>_data.xml` bzw. `…_demo.xml`; Daten zu anderen Modulen (z. B. `mail_data.xml`) getrennt nach Zweck.
+  - **Controller:** `controllers/<modulname>.py`; `main.py` gilt als veraltet; erbt man einen Controller eines anderen Moduls, heißt die Datei `<geerbtes_modul>.py` (`portal.py`).
+  - **Wizard:** `wizard/<transient>.py` und `wizard/<transient>_views.xml`.
+  - **Berichte:** SQL-/Statistikberichte `report/<modell>_report.py` + `…_report_views.xml`; druckbare Berichte `…_reports.xml` (Aktionen, Papierformat) + `…_templates.xml`.
+  - **Statisches:** `static/src/js|scss|xml`, `static/src/js/tours` (Endnutzer-Tours), `static/tests/tours` (Test-Tours), `static/lib/<name>/`, `static/fonts`, `static/img`, `static/tests`;
+    eine Komponente je Datei mit sprechendem Namen, Templates und Styles analog. Keine externen URLs auf Bilder oder Bibliotheken, in die Codebasis kopieren.
+- **`__init__.py`** in jedem Modul **[Code]** (`test_dunderinit`).
 
-## 2. Manifest (`__manifest__.py`)
+## 2. Manifest
 
-- Nur erlaubte Schlüssel (Odoo `test_manifests`): Pflicht `name`, `author`, `license`; übliche optionale (`version`, `summary`, `description`,
-  `category`, `depends`, `data`, `demo`, `assets`, `external_dependencies`, `installable`, `application`, `auto_install`, `post_load`, Hooks,
-  `countries`, `images`, `icon` …), informativ `contributors`, `maintainer`, `url`, App-Store-Schlüssel. Unbekannte Schlüssel sind ein Fehler.
-- **Keine Schlüssel auf ihren Standardwert setzen** (Odoo prüft das für `application`, `auto_install`, `summary`, `description`, `author`, `demo`, `data`, `test`; z. B. `application: False`, `auto_install: False`, `demo: []`); `icon` nicht auf den Standardpfad. `installable: True` ist erlaubt.
-- **Version** `19.0.x.y.z`: x = Datenmodell/Views mit Migrationsbedarf, y = neue Funktion abwärtskompatibel, z = Fehlerbehebung (OCA). Bei brechenden
-  Änderungen Migrationsskript in `migrations/19.0.x.y.z/`.
-- **Migrationsskripte** mit `odoo/upgrade-util` schreiben statt eigenem SQL (`from odoo.upgrade import util`: Felder/Modelle umbenennen oder entfernen,
-  Datensätze verschieben, Domains anpassen, SQL-Helfer). Einbinden über `--upgrade-path=<upgrade-util>/src` oder
-  `pip install git+https://github.com/odoo/upgrade-util@master` (im Image nicht enthalten). Dieselben Helfer nutzt Odoo für seine eigenen Versionssprünge.
-- `license` und (OCA) `images` angeben, keine leeren Schlüssel. Externe Python-Pakete/Programme in `external_dependencies`
-  (kein `try: import … except ImportError: … = object` als Ersatz).
+- **[Code]** `test_manifests`: Unbekannte Schlüssel sind ein Fehler. Erlaubt sind die Schlüssel aus `_DEFAULT_MANIFEST` (`odoo/modules/module.py`) sowie `name`, `icon`, `addons_path`, `author`, `license`,
+  `contributors`, `maintainer`, `url`, `price`, `currency`, `support`, `live_test_url`.
+- **[Code]** `application`, `auto_install`, `summary`, `description`, `author`, `demo`, `data`, `test` nicht auf ihren Standardwert setzen; `icon` nicht auf den Standardpfad.
+- **[Code]** `name`, `author`, `license` sind im Code als Pflichtfelder vermerkt; eine fehlende `license` ergibt nur eine Warnung (Standard LGPL-3).
+- Einzelheiten und alle Schlüssel: `odoo_regeln_data_manifest_2026-10-02.md`.
 
 ## 3. Python
 
-### Stil und Imports
-- PEP8; Odoo ignoriert E501 (Zeilenlänge), E301, E302. OCA formatiert automatisch mit **black** (bzw. ruff), räumt mit **autoflake** auf.
-- **Zeilenlänge Python 120 Zeichen** (`.ruff.toml`: `line-length = 120` für `ruff format` und `E501`). JS und XML: Prettier `printWidth: 88`.
-- **Import-Reihenfolge:** 1. Standardbibliothek/externe Bibliotheken, 2. `odoo`-Module, 3. `odoo.addons.*` (selten); innerhalb alphabetisch.
-  Beispiel: `from odoo import Command, _, api, fields, models`, `from odoo.fields import Domain`.
-- **Nicht** direkt aus `odoo.orm` importieren, sondern aus `odoo` (`api`, `fields`, `models`).
-- Veraltete Module nicht benutzen: `csv`, `urllib`, `cgi`, Debugger-Module; kein `input()`.
-- **Englisch** für Namen und Kommentare; Texte für Nutzer über die Übersetzung.
-- Bei umbrochenen Aufrufen/Listen am öffnenden Zeichen umbrechen, **Komma nach dem letzten Element** (OCA).
+### PEP8 und Imports
+- Odoo ignoriert die PEP8-Meldungen E501 (Zeilenlänge), E301 und E302 (Doku). Es gibt keine vorgeschriebene Zeilenlänge.
+- **Import-Reihenfolge** (Doku): 1. Python-Standardbibliothek und externe Bibliotheken (je Zeile eine, sortiert), 2. `odoo`-Untermodule, 3. Odoo-Addons (selten, nur wenn nötig); innerhalb der Gruppen alphabetisch.
+  Beispiel: `from odoo import Command, _, api, fields, models`, `from odoo.fields import Domain`, `from odoo.addons.web.controllers.main import …`.
+- **[Code]** Nicht aus `odoo.orm` importieren, sondern aus `odoo` (`test_orm_import`).
+- **[Code]** `test_pylint`: Funktion `input` verboten; Module `csv`, `urllib`, `cgi` und Debugger-Module (`SUPPORTED_DEBUGGER`) als veraltet gemeldet; aktive Prüfungen u. a. `used-before-assignment`,
+  `undefined-variable`, `eval-used`, `unreachable`, `function-redefined` und die Odoo-Prüfungen aus Abschnitt „Übersetzung“ und „SQL“.
+- **[Code]** `ruff.toml` im Odoo-Repository (automatisch von der Runbot erzeugt) legt die von Odoo geprüften Ruff-Regeln fest; E501 und C901 sind dort ausdrücklich ignoriert, ein Formatierer ist nicht konfiguriert.
+  Die Datei nennt zusätzlich Regeln, die „empfohlen, aber nicht erzwungen“ sind: B904, COM812, E741, EM101, I001, RET, RUF021, RUF102, TID252, UP006, UP007.
 
-### Idiome
-- Lesbarkeit vor Kürze; sprechende Namen; kleine Methoden mit **einer** Aufgabe ("Think extendable": Domains und Kriterien in eigene, überschreibbare
-  Methoden auslagern).
-- `dict(x)`/`list(x)` statt `.clone()`; Dicts direkt mit Werten anlegen; `dict.get('k')` statt `get('k', None)`; `if collection:` statt `if len(...)`;
-  über Dicts direkt iterieren; `setdefault`; Comprehensions.
-- Recordset-Methoden: `filtered`, `mapped`, `sorted`, `grouped`.
-- Keine eigenen Generatoren/Dekoratoren, nur die der Odoo-API.
-- Docstrings für Methoden, Kommentare nur für knifflige Stellen.
+### Idiome (Doku)
+- Lesbarkeit vor Kürze; sprechende Namen; keine überflüssigen Hilfsvariablen; mehrere `return` sind erlaubt, wenn einfacher.
+- Kein `.clone()`, sondern `dict(x)` / `list(x)`; Dicts direkt mit Werten anlegen, `update` für Mehrfachänderungen; `dict.get('key')` statt `get('key', None)`.
+- Comprehensions statt Schleifen mit `append`; `if collection:` statt `if len(collection):`; direkt über Dicts iterieren; `dict.setdefault`.
+- Methoden `filtered`, `mapped`, `sorted` des Recordsets nutzen. Keine eigenen Generatoren und Dekoratoren, nur die der Odoo-API.
+- Dokumentieren: Docstring an Methoden, einfache Kommentare für knifflige Stellen.
 
-### Kommentare und Docstrings
+### Odoo-spezifisch (Doku)
+- **Kontext:** Er ist ein `frozendict`; ändern nur über `with_context(...)`. Kontextschlüssel haben Nebenwirkungen (z. B. `default_<feld>` wirkt auf alle in der Aktion erzeugten Datensätze);
+  eigene Schlüssel mit gutem Namen, gegebenenfalls mit Modulpräfix (Vorbild `mail_create_nosubscribe`, `mail_notrack`).
+- **Erweiterbar bauen („Think extendable“):** Methoden klein halten, eine Verantwortung je Methode; Domains und Kriterien in eigene überschreibbare Methoden auslagern, mit Augenmaß.
+- **Transaktion:** Nie `cr.commit()` oder `cr.rollback()` selbst aufrufen, **außer** auf einem selbst geöffneten Cursor; jedes `cr.commit()` außerhalb des Frameworks braucht einen ausdrücklichen Kommentar
+  (warum nötig, warum korrekt, warum keine Transaktion bricht). Kein `commit()` nötig in `_auto_init`, in Berichten und in `TransientModel`-Methoden.
+  Geplante Aktionen laufen in eigener Transaktion: fängt man dort Fehler und will weitermachen, `rollback`; Fortschritt über `_commit_progress` (`odoo_regeln_actions_cron_http_reports_2026-10-02.md`).
+- **Ausnahmen:** Nur konkrete Typen fangen, `try`-Block so klein wie möglich. Framework-Ausnahmen nur mit `with self.env.cr.savepoint():` abfangen; ab etwa 64 Savepoints je Transaktion wird PostgreSQL langsamer,
+  auf Replikaten ist der Aufwand hoch; in Schleifen Batches begrenzen.
+- **Übersetzung** (Doku): `self.env._('Literal %s', wert)`. Nur für feste, von Hand geschriebene Zeichenketten; Feldwerte über `translate=True` am Feld. Formatierung **als Argument**, nie vorher
+  (`_('… %s' % x)` und `_('…') % x` sind falsch); keine dynamischen Zeichenketten oder Verkettungen. Bei einer Variablen `%` statt `.format()`, bei mehreren benannte Platzhalter `%(name)s`.
+  **[Code]** `test_pylint` prüft das: `gettext-variable` (E8502), `gettext-placeholders` (E8505: mehrere unbenannte Platzhalter), `gettext-repr` (E8506: kein `%r`),
+  `missing-gettext` (E8507: statische Zeichenkette in `UserError`, `ValidationError`, `AccessError`, `AccessDenied`, `MissingError` ohne Übersetzungsaufruf).
+- **[Code] SQL:** `sql-injection` (E8501) meldet möglichen SQL-Einschleusung in `execute`-Aufrufen.
+- **[Code] `unlink()` überschreiben:** Kein `raise` darin (`raise-unlink-override`, E8503); stattdessen eine Methode mit `@api.ondelete(at_uninstall=False)`.
+- **[Code]** Öffentliche Methoden: Parameter dürfen nicht `ids` oder `context` heißen (`test_naming`, wegen RPC).
+- **[Code]** Überschreibungen müssen zur Signatur der Elternmethode passen (`test_override_signatures`).
+- **[Code]** Many2one, die das Gegenstück eines One2many sind, brauchen einen Index (`test_index`); Domains dürfen nicht aus `@api.onchange` zurückgegeben werden (`test_onchange_domains`, veraltet);
+  Docstring-Parameter müssen zur Signatur passen (`test_docstring`).
 
-**Odoo/OCA-Regeln:**
-- **Docstring** an Methoden erklärt den **Zweck**. Werden Parameter dokumentiert (`:param x:`, `:return:`, reStructuredText wie im Odoo-Kern), müssen sie
-  zur Signatur passen (`test_docstring`).
-- **Kommentare nur für knifflige Stellen**; viele Kommentare sind meist ein Zeichen für unklaren Code, dann umbenennen oder aufteilen statt kommentieren.
-- **Pflicht-Kommentare:** jedes `cr.commit()` (warum nötig und korrekt); jedes `position="replace"` in Views (warum unvermeidbar).
-
-**Hausregeln** siehe Abschnitt 8.
-
-### Odoo-spezifisch
-- **Kontext** nur über `with_context(...)`; eigene Kontextschlüssel mit Modulpräfix (Vorbild `mail_notrack`); Vorsicht mit `default_*`-Schlüsseln
-  (wirken auf alle erzeugten Datensätze).
-- **Nie `cr.commit()`/`cr.rollback()`**, außer im **selbst geöffneten** Cursor, dann mit ausdrücklichem Kommentar. Odoo stellt je Request, Test und Cron
-  die Transaktion. Kein `commit()` nötig in `_auto_init`, Reports und `TransientModel`-Methoden. Fängt eine geplante Aktion Fehler und soll weiterlaufen:
-  **rollback**; Crons laufen in eigener Transaktion, Fortschritt über `IrCron._commit_progress`
-  (`odoo_regeln_actions_cron_http_reports_2026-10-02.md`, Abschnitt 2). Pylint-OCA: `invalid-commit`.
-- **Ausnahmen:** nur konkrete Typen fangen, kleiner `try`-Block; Framework-Fehler nur mit `with self.env.cr.savepoint():` abfangen (≤ 64 Savepoints je
-  Transaktion, in Schleifen Batches). Kein `except: pass` (OCA `except-pass`). Fehlermeldungen für Nutzer: `UserError`/`ValidationError`/`AccessError`.
-- **Übersetzung:** `self.env._('Literal %s', wert)`, nur feste Zeichenketten, Formatierung **als Argument**, nie vorher (`_('… %s' % x)` und `_('…') % x`
-  sind falsch); bei einem Platzhalter `%`, bei mehreren benannt `%(name)s`; `%` statt `.format()`; keine f-Strings (Odoo `gettext-*`, OCA `translation-*`).
-  Feldwerte nicht über `_()` übersetzen (`translate=True` am Feld). Statische Texte in `UserError`, `ValidationError`, `AccessError`, `AccessDenied` und
-  `MissingError` stehen immer in `_()` (Odoo `missing-gettext`).
-- **`unlink()` überschreiben:** kein `raise` darin, Prüfungen mit `@api.ondelete(at_uninstall=False)` (`raise-unlink-override`).
-- Öffentliche Methoden: keine Parameter namens `ids` oder `context` (`test_naming`).
-- Überschreibungen behalten die **Signatur** der Elternmethode (`test_override_signatures`) und rufen `super()` auf (OCA `method-required-super`).
-- Many2one, die Gegenstück eines One2many sind: **Index** (`index=True`, `test_index`).
-- Keine Domains aus `@api.onchange` zurückgeben (veraltet).
-- Kein `print`, `logging` über `_logger = logging.getLogger(__name__)`.
-- Externe HTTP-Aufrufe immer mit `timeout` (OCA `external-request-timeout`).
-- Kein Schreiben in Compute-Methoden (`no-write-in-compute`); kein `search([])` über alles ohne Grund (`no-search-all`).
-
-### Namen (Symbole)
-- **Modellnamen:** Punkt-Schreibweise, **mit Modulpräfix**, **Einzahl** (`sale.order`). Transient: `<basismodell>.<aktion>` ohne "wizard"
-  (`account.invoice.make`). SQL-Report: `<basis>.report.<aktion>`.
-- **Klassen** PascalCase. **Variablen** snake_case; Modell-Variablen PascalCase (`Partner = self.env['res.partner']`); `_id`/`_ids` **nur** für IDs,
-  nicht für Datensätze. Konstanten GROSS.
-- **Felder:** Many2one `…_id`, One2many/Many2many `…_ids`. Kein `string=`, wenn er dem Feldnamen entspricht. Standardwerte als
-  `lambda self: self._default_x()`, damit vererbbar.
-- **Methoden:** `_compute_<feld>`, `_inverse_<feld>`, `_search_<feld>`, `_default_<feld>`, `_selection_<feld>`, `_onchange_<feld>`, `_check_<bedingung>`,
-  Aktionen `action_<…>` (mit `self.ensure_one()` bei Einzeldatensatz).
-- **Reihenfolge im Modell (Pflicht):** private Attribute (`_name`, `_description`, `_inherit`, …) → Felder → Methoden. Empfehlung für die Methoden: Defaults →
-  Constraints/Indizes → Compute/Inverse/Search → `@api.constrains`/`@api.onchange` → CRUD-Überschreibungen → Aktionen → übrige Geschäftsmethoden; keine feste Pflichtreihenfolge.
+### Symbole und Namen (Doku)
+- **Modellnamen:** Punktschreibweise mit Modulpräfix, **Einzahl** (`res.partner`). Transient (Wizard): `<basismodell>.<aktion>` ohne das Wort „wizard“ (`account.invoice.make`).
+  SQL-Report: `<basismodell>.report.<aktion>`.
+- **Klassen** PascalCase. **Variablen** snake_case, Modell-Variablen PascalCase (`Partner = self.env['res.partner']`); `_id`/`_ids` nur für IDs, nicht für Datensätze.
+- **Felder:** Many2one `…_id`, One2many/Many2many `…_ids`.
+- **Methodenmuster:** `_compute_<feld>`, `_search_<feld>`, `_default_<feld>`, `_selection_<feld>`, `_onchange_<feld>`, `_check_<bedingung>`; Aktionsmethoden `action_<…>` mit `self.ensure_one()` bei Einzeldatensatz.
+- **Reihenfolge im Modell:** 1. private Attribute (`_name`, `_description`, `_inherit` …), 2. Default-Methoden und `default_get`, 3. Felder, 4. SQL-Constraints und Indizes, 5. Compute-/Inverse-/Search-Methoden in der Reihenfolge der Felder,
+  6. Selection-Methoden, 7. `@api.constrains` und `@api.onchange`, 8. CRUD-Überschreibungen, 9. Aktionsmethoden, 10. übrige Geschäftsmethoden.
 
 ## 4. Sicherheit
 
-Verbindlich und ausführlich: `odoo_regeln_security_2026-10-02.md` (Security Pitfalls, Rechte, `Markup`, `Domain`, `eval`). Kernsätze:
+Die Doku verlangt, die Security Pitfalls zu lesen: `odoo_regeln_security_2026-10-02.md`.
 
-- Öffentliche Methoden sind per RPC mit beliebigen Argumenten aufrufbar; `sudo()` nie auf nutzergesteuerte Eingaben.
-- ORM nicht umgehen; wo SQL nötig ist, `odoo.tools.SQL` mit Parametern.
-- Kein `t-raw`, kein `eval`; HTML in Python nur mit `Markup`.
+## 5. XML (Doku)
 
-## 5. XML
+- **`<record>`:** `id` vor `model`; bei `<field>` zuerst `name`, dann Wert (im Tag oder `eval`), dann weitere Attribute nach Wichtigkeit. Records nach Modell gruppieren, soweit Abhängigkeiten es zulassen.
+- **`<data>`** nur für nicht aktualisierbare Daten mit `noupdate="1"`; enthält die Datei nur solche, `noupdate="1"` am `<odoo>`-Tag und kein `<data>`.
+- **`<menuitem>`** und **`<template>`** sind vorzuziehen gegenüber `<record>`.
+- **XML-IDs:** Menü `<modell>_menu` (Untermenü `<modell>_menu_<zweck>`); View `<modell>_view_<typ>`; Aktion `<modell>_action`, weitere `<modell>_action_<detail>`, Fenster-Aktionen `<modell>_action_view_<typ>`;
+  Gruppe `<modul>_group_<name>`; Regel `<modell>_rule_<gruppe>` (`user`, `public`, `company` …). `name` der View = XML-ID mit Punkten statt Unterstrichen; Aktionen bekommen einen echten Anzeigenamen.
+- **Geerbte Views:** gleiche ID wie das Original, `name` mit Suffix `.inherit.<details>`; neue Primär-Views brauchen das Suffix nicht.
 
-Ausführlich: `odoo_regeln_views_2026-10-02.md`, `odoo_regeln_data_manifest_2026-10-02.md`.
+## 6. JavaScript und CSS/SCSS (Doku)
 
-- `<record>`: `id` vor `model`; bei `<field>` zuerst `name`, dann Wert/`eval`, dann weitere Attribute. Nach Modell gruppieren. 4 Leerzeichen Einrückung (OCA).
-- `<data>` nur für gemischte `noupdate`-Blöcke; sonst `<odoo>` bzw. `<odoo noupdate="1">`.
-- `<menuitem>` und `<template>` statt `<record>` für Menüs/QWeb.
-- **XML-IDs:** Menü `menu_<zweck>` oder `<model>_menu[_<zweck>]`; View `<model>_view_<typ>`; Aktion `<model>_action[_<detail>]` oder `action_<zweck>`, Fenster
-  `…_action_view_<typ>`; Gruppe `<module>_group_<name>`; Regel-ID enthält `rule` (`<model>_rule_<zweck>`); Demo-Datensätze mit Suffix `demo` (OCA). **Kein** Modulpräfix in der eigenen ID (OCA).
-  View-`name` = XML-ID mit Punkten.
-- **Geerbte Views:** gleiche ID wie das Original, `name` mit `.inherit.<modul>`; neue Primär-Views ohne Suffix. `position="replace"` in Backend-Views vermeiden (wenn doch:
-  Kommentar + hohe `priority`; in QWeb- und Owl-Vererbung üblich); ein Modul erweitert eine View nur einmal.
-- Keine veralteten Attribute/Knoten (OCA `xml-deprecated-*`); `ir.filters` mit ausdrücklichem `user_id`.
-
-## 6. JavaScript, CSS/SCSS
-
-Ausführlich: `odoo_regeln_js_framework_2026-10-02.md`, `odoo_regeln_ui_icons_scss_2026-10-02.md`.
-
-- Struktur `static/src/js|scss|xml`, `static/lib/`, `static/tests/`.
-- ESLint (Odoo prüft alle JS-Dateien), prettier (OCA); `use strict` empfohlen (native Module sind es ohnehin); nie minifizierte Bibliotheken; Klassen PascalCase.
-- **CSS-Klassen** mit Präfix `o_<modul>` (Webclient: `o_`), keine ID-Selektoren, Bootstrap-Klassen nutzen, verschachtelte Elemente nach dem
-  "Enkel"-Prinzip (`o_element_entry`, nicht `o_element_wrapper_entries_entry`).
-- **SCSS-Format:** 4 Leerzeichen, max. 80 Zeichen, `{` nach Leerzeichen, `}` in eigener Zeile, eine Deklaration je Zeile. Eigenschaften "von außen nach
-  innen" (Position → Box → Rahmen → Hintergrund → Schrift → Effekte), lokale Variablen zuoberst.
-- **Variablen:** SCSS global `$o-[root]-[element]-[eigenschaft]-[modifier]`, SCSS lokal `$-[name]`, Mixins/Funktionen `o-[name]` (Funktionen mit Verb),
-  CSS-Variablen BEM `--[Root]__[element]-[eigenschaft]--[modifier]`.
-- **CSS-Variablen sind ausschließlich DOM-bezogen** (kontextuelle Anpassung, Standardwert im Komponentenblock); das Design-System steckt in
-  SCSS-Variablen, kombiniert über `color: var(--MyComponent-color, #{$o-component-color})`. **Keine CSS-Variablen auf `:root`** (Ausnahme: Templates,
-  die über Bundles geteilt werden).
-- JS-Übersetzungen: keine Template-Strings mit Ausdrücken in `_t(...)` (`test_jstranslate`). Props mit Anzeigetext in Owl-Templates tragen den Suffix
-  `.translate` (`title.translate="Text"`, Odoo `test_i18n`).
+- **Struktur:** `static/lib` (Bibliotheken in Unterordnern), `static/src` (`css`, `js`, `js/tours`, `scss`, `xml`), `static/fonts`, `static/img`, `static/tests` (`tours` für Test-Tours).
+- **JS:** `use strict` empfohlen; Linter verwenden; nie minifizierte Bibliotheken; Klassen PascalCase.
+- **[Code]** Odoos eigenes Werkzeug `addons/web/tooling` (`_eslintrc.json`, `_package.json`) nutzt ESLint mit Prettier (`printWidth` 100, `tabWidth` 4, doppelte Anführungszeichen, `semi`); `test_eslint` (in `test_lint`) prüft alle JS-Dateien
+  der Module mit `test_lint/tests/eslintrc`, wenn ESLint installiert ist.
+- **[Code]** JS-Übersetzungen: keine Template-Strings mit Ausdrücken in `_t(...)` (`test_jstranslate`); Props mit Anzeigetext in Owl-Templates tragen das Suffix `.translate` (`test_i18n`).
+- **SCSS-Format:** 4 Leerzeichen, keine Tabs, Spalten max. 80 Zeichen, `{` nach einem Leerzeichen, `}` in eigener Zeile, eine Deklaration je Zeile. Eigenschaften von „außen nach innen“ (Position zuerst, dekorative Regeln zuletzt),
+  scoped SCSS-Variablen und CSS-Variablen ganz oben, durch Leerzeile getrennt.
+- **Klassen:** Präfix `o_<modul>` (technischer Modulname bzw. Hauptroute; Webclient nur `o_`), keine ID-Selektoren, keine übermäßig spezifischen Namen; verschachtelte Elemente nach dem „Enkel“-Prinzip
+  (`o_element_entry`, nicht `o_element_wrapper_entries_entry`).
+- **SCSS-Variablen:** global `$o-[root]-[element]-[property]-[modifier]` (root = Komponente oder Modul, Komponente hat Vorrang); lokal `$-[name]`; Mixins und Funktionen `o-[name]`, Funktionen mit Verb im Imperativ, optionale Argumente als `$-[argument]`.
+- **CSS-Variablen:** ausschließlich DOM-bezogen, zur kontextuellen Anpassung; Namen nach BEM `--[Root]__[element]-[property]--[modifier]`. Das Design-System steckt in SCSS-Variablen,
+  kombiniert über `var(--MyComponent-color, #{$o-component-color})`. CSS-Variablen normalerweise **nicht** auf `:root` (Ausnahme: über Bundles geteilte Templates).
 
 ## 7. Tests
 
-Regeln und Hausregeln: `odoo_regeln_testing_2026-10-02.md` und `odoo_regeln_js_tests_2026-10-02.md`. Ergänzend gegen flaky Tests: in
-Klassenvariablen gespeicherte Datensätze tragen ihr altes `env` (Nutzer, sudo, Kontext) mit; feste Daten statt `now()` (`freezegun`); externe Dienste
-mocken (`unittest.mock`, `classPatch`).
+Regeln: `odoo_regeln_testing_2026-10-02.md` und `odoo_regeln_js_tests_2026-10-02.md`.
 
-## 8. Hausregeln dieses Repos
+## 8. Prüfwerkzeuge von Odoo
 
-**Kommentare und Docstrings** (ergänzend, Entscheidung 2026-09-26):
-1. **Warum statt Was:** der Kommentar nennt den Grund, nicht was der Code ohnehin sagt (schlecht: `# increase counter`; gut: `# Blob must be on disk
-   before its row is committed; a crash leaves only an orphan the GC removes.`).
-2. **Keine Verweise auf Dokumente** (Entscheidung 2026-09-28): keine Kürzel (`I1`, `A3` …), keine Konzept-Abschnitte, keine Prüfbericht-Nummern, keine
-   Fundgeschichte ("found on Tower …"). Der Kommentar muss ohne Dokument verständlich sein; wo Code eine Grundregel absichert, steht der Grund im
-   Klartext. Verweise auf Dateien im selben Repo-Ordner (z. B. eine README daneben) sind erlaubt.
-3. **Docstrings wie im Odoo-Kern:** eine Zeile, was die Funktion tut (Imperativ: "Return …", "Create …"); nur wenn nötig danach wenige Zeilen zu
-   Randbedingungen. Kein Ablaufprotokoll, keine Aufzählung der Aufrufer. Docstring an jeder Methode, deren Zweck nicht aus dem Namen folgt (Odoo Guidelines: "docstring on methods"); bei selbsterklärenden
-   Methoden entfällt er (im Odoo-Kern hat ein Viertel der Methoden in `models/` einen, Median 3 Zeilen; gemessen 2026-10-02).
-4. **Odoo-Stellen per Funktionsname, nicht per Zeilennummer** (`# odoo.http.Stream.get_response only uses X-Accel below data_dir/filestore`, nicht
-   `# see http.py:665`); Zeilennummern verschieben sich mit jedem Update.
-5. **Kein auskommentierter Code, keine Autor-/Datumszeilen** (steht in Git); `TODO` nur mit Begründung.
-6. **Begründung einer Änderung in die Commit-Nachricht** (das *Warum*); der Kommentar erklärt, warum der Code *jetzt* so ist.
-7. **Dichte wie im umgebenden Code**; keine Kommentarwände, bei Odoo-typischem Code (Felder, Views) meist keine.
-
-Beispiel:
-
-```python
-def reserve_blob(self):
-    """Create the blob row and commit it before the upload starts."""
-    # Own cursor, so the request transaction stays untouched: committing before streaming
-    # keeps no transaction open for the whole upload (would hold the snapshot, block VACUUM).
-    with self.pool.cursor() as cr:
-        blob = self.env(cr=cr)["int_filemanager.blob"].create({})
-        cr.commit()
-    return blob.id
-```
-
-**Sprache und Namen** (Entscheidung 2026-09-26):
-- Neuer Code **englisch**: Namen, Kommentare, Docstrings, Log-Meldungen, Commits; Oberflächentexte englisch im Code, deutsche Übersetzung in `i18n/de.po`.
-- Modellnamen mit Modulpräfix, z. B. `int_filemanager.node`.
-
-**Code:**
-- `cr.commit()` nur im selbst geöffneten Cursor (Crons mit eigenem Cursor, eigene Server-Prozesse) und mit Kommentar.
-- `sudo()` nie auf Nutzereingaben; jede Stelle begründet.
-- Rohes SQL nur, wo das ORM nicht reicht, mit `odoo.tools.SQL` und Rechteprüfung über das ORM danach.
-- Migrationsskripte mit `odoo/upgrade-util` (ab dem ersten Datenmodell-Wechsel nach Inbetriebnahme).
-- Manifest: keine Schlüssel mit Standardwert; `external_dependencies` angeben (z. B. `wsgidav`) statt `except ImportError`-Ersatz.
-- Öffentlich ist nur, was mit beliebigen Argumenten sicher ist (JSON-2 macht jede öffentliche Modellmethode für jeden angemeldeten Nutzer aufrufbar).
-
-**Werkzeuge:** pre-commit nach OCA-Vorlage (nur für neuen Code), Odoos `test_lint` und odoo-ls müssen ohne Befund im eigenen Code laufen; keine GitHub
-Action. Aufruf, Altbestand und Verifikationsstand: `docs/pruefautomatik_2026-10-02.md`.
+Welche Werkzeuge Odoo selbst mitbringt und was sie prüfen: `docs/pruefautomatik_2026-10-02.md`.

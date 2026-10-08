@@ -1,9 +1,10 @@
 # Odoo 19 Regeln: Performance (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
-`content/developer/reference/backend/performance.rst`
-(Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/performance.html>).
-Geprüft: 2026-10-02. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
+Quellen (nur diese): Odoo-19-Core (Branch 19.0) und die offizielle Entwicklerdokumentation
+`developer/reference/backend/performance`
+(<https://www.odoo.com/documentation/19.0/developer/reference/backend/performance.html>).
+**Rangfolge: Core-Code vor Dokumentation.**
+Geprüft: 2026-10-02, Korrekturen gegen den Core: 2026-10-08.
 
 ## 1. Gute Praxis (die eigentlichen Regeln)
 
@@ -28,7 +29,7 @@ Geprüft: 2026-10-02. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 **Indizes:**
 - `index=True` beschleunigt Suchen (Suchfeld in Views, `search`).
 - **Nicht jedes Feld indizieren:** Indizes kosten Platz und verlangsamen `INSERT`/`UPDATE`/`DELETE`.
-- Zusätzliche Regel aus Odoo `test_lint`: Many2one, das Gegenstück eines One2many ist, bekommt einen Index.
+- Zusätzliche Regel aus Odoo `test_lint` (`test_index`): Many2one, das Gegenstück eines One2many ist, bekommt einen Index.
 
 ## 2. Profiling (Werkzeug, keine Pflichtregeln)
 
@@ -40,7 +41,7 @@ Geprüft: 2026-10-02. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
     mitgezählt werden. `ExecutionContext(...)` trennt mehrfache Aufrufe im Ergebnis.
 - Collectors (Standard: SQL + Periodic): `sql` (`SqlCollector`, Abfragen + Stacktrace, Overhead bei vielen kleinen
   Abfragen), `traces_async` (`PeriodicCollector`, eigener Thread, Intervall 10 ms; zu klein → Speicherprobleme, zu
-  groß → kurze Funktionen gehen verloren; **am besten für Performanzanalyse**), `qweb` (`QwebCollector`, für Views),
+  groß → kurze Funktionen gehen verloren; laut Doku eines der besten Mittel für Performanzanalyse), `qweb` (`QwebCollector`, für Views),
   `traces_sync` (`SyncCollector`, jeder Aufruf, **hoher Overhead**, nur zum Verstehen von Abläufen).
 - Speedscope-Ansichten: Combined, Combined no context, sql (no gap) = reine SQL-Optimierung, sql (density) = SQL vs.
   Python, frames = nur Periodic.
@@ -55,4 +56,4 @@ Geprüft: 2026-10-02. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 ## 3. Prüfbarkeit
 
-Nur Review und Tests (`assertQueryCount`, `@warmup`, `@users`, siehe Testing-Destillat); kein Lint prüft Batching.
+Messbar mit Tests (`assertQueryCount`, `@warmup`, `@users`, siehe Testing-Destillat) und dem Profiler.

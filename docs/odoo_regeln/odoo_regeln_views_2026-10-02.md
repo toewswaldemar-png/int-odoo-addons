@@ -1,28 +1,31 @@
 # Odoo 19 Regeln: Views – Records und Architekturen (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
-`content/developer/reference/user_interface/view_records.rst`, `view_architectures.rst` und die eingebundenen
-Bausteine `view_architectures/*.rst`
+Quellen (Rangfolge: Odoo-19-Code vor Doku): Odoo-19-Core (`odoo/addons/base/models/ir_ui_view.py`,
+`odoo/tools/template_inheritance.py`, RNG-Schemas in `odoo/addons/base/rng/`, Webclient-Code unter
+`addons/web/static/src/views/`) und Odoo-19-Entwicklerdoku (`odoo/documentation`, Branch 19.0,
+`view_records.rst`, `view_architectures.rst` mit den eingebundenen Bausteinen `view_architectures/*.rst`).
+Wo Core und Doku abweichen, gilt der Core.
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/user_interface/view_records.html>,
-`…/view_architectures.html`). Geprüft: 2026-10-02. Ergänzt `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitt 5 (XML).
+`…/view_architectures.html`). Geprüft: 2026-10-02, Core-Abgleich 2026-10-08. Ergänzt `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitt 5 (XML).
 Icons und SCSS: `docs/odoo_regeln/odoo_regeln_ui_icons_scss_2026-10-02.md`. Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
 Legende: **Pflicht** = laut Quelle "Mandatory"; sonst optional. Standardwerte in Klammern. `Enterprise` = nicht in
-Community (HM-SRV/Tower betreiben Community → **nicht verfügbar**).
+Community (**nicht verfügbar**).
 
 ## 1. View-Records (`ir.ui.view`)
 
 - Minimalform: `<record id="ADDON.MODEL_view_TYPE" model="ir.ui.view">` mit `name`, `model`, `arch` (`type="xml"`).
-- Felder: `name` (nur Mnemonik; Odoo-Namen beginnen mit Addon und enden auf View-Typ), `model` (**Pflicht**),
+- Felder: `name` (nur Mnemonik; Odoo-Namen beginnen mit Addon und enden auf View-Typ), `model` (laut Doku **Pflicht**; im Core ist `ir.ui.view.model` ein Char-Feld ohne `required`),
   `arch`, `priority` (niedrigste Priorität = Standardview des Typs; steuert auch die Anwendungsreihenfolge der
   Vererbung), `inherit_id` (Elternview, per `ref`; Addon-Präfix nur nötig, wenn aus anderem Modul), `mode`
   (`extension` = Standard, `primary`).
 - **`mode`:** `extension` – wird die View angefordert, wird die nächste Primär-View gesucht und alle Erweiterungen
   darauf angewendet. `primary` – die nächste Primär-View wird vollständig aufgelöst, dann werden die Specs dieser View
-  angewendet; Ergebnis gilt als deren `arch`. Pflicht-Fall für `primary`: **Delegations-Vererbung** (abgeleitetes
+  angewendet; Ergebnis gilt als deren `arch`. Typischer Fall für `primary` (laut Doku): **Delegations-Vererbung** (abgeleitetes
   Modell braucht eigene Basis-View, sonst greift das Matching nicht).
 - Kontext und Zugriffsrechte beeinflussen, was eine View kann.
-- Typen: form, list (früher `tree`), search, kanban, qweb, graph, pivot, calendar, activity; **Enterprise:** cohort,
+- Typen: form, list (früher `tree`), search, kanban, qweb, graph, pivot, calendar, activity (`activity` kommt per
+  `selection_add` aus dem Modul `mail`, `mail/models/ir_ui_view.py`); **Enterprise:** cohort,
   gantt, grid, map. API: `get_views`, `get_view`.
 
 ### Vererbung
@@ -33,18 +36,22 @@ Community (HM-SRV/Tower betreiben Community → **nicht verfügbar**).
   `<field name="…">` (erstes Feld gleichen Namens, **alle anderen Attribute ignoriert**), beliebiges Element
   (erstes mit gleichem Namen und identischen Attributen; `position`/`version` ignoriert).
 - **`position`** (Standard `inside`): `inside` (anhängen), `after`, `before`, `replace` (`$0` als einzelner Textknoten
-  = Kopie des gefundenen Knotens, zum Umhüllen), `attributes` (`<attribute name="x">Wert</attribute>`; ohne Körper =
-  Attribut entfernen; `add`/`remove`/`separator` für Teilwerte, Standardtrenner `,`), `move`
+  = Kopie des gefundenen Knotens, zum Umhüllen; `mode="inner"` ersetzt nur den Inhalt des Knotens), `attributes` (`<attribute name="x">Wert</attribute>`; ohne Körper =
+  Attribut entfernen; `add`/`remove`/`separator` für Teilwerte, Standardtrenner `,`; bei Attributen mit Python-Ausdruck – `invisible`, `readonly`, `required`,
+  `column_invisible`, `decoration-*` – ist `separator="and"` oder `"or"` Pflicht, sonst Fehler;
+  Core: `apply_inheritance_specs` in `odoo/tools/template_inheritance.py`), `move`
   (`position="move"` auf dem Inhalt; der Locator braucht dann `inside|replace|after|before`).
-- Hausregeln aus den Coding Guidelines: `position="replace"` in Backend-Views **vermeiden** (Kommentar + hohe `priority`; in QWeb-Vererbung üblich), ein Modul erweitert
-  eine View nur einmal; geerbte View-ID = Original-ID, `name` mit `.inherit.<modul>`.
+- Benennung geerbter Views (Odoo Coding Guidelines, "Inheriting XML"): geerbte View-ID = Original-ID, `name` mit
+  `.inherit.<modul>`; neue Primär-Views ohne Suffix.
 
 ## 2. Python-Ausdrücke in Views
 
 Für Modifier (`invisible`, `readonly`, `required`, `column_invisible`, `decoration-*` …) stehen zur Verfügung:
 alle **in der View vorhandenen** Feldnamen (Wert des aktuellen Datensatzes; relationale Felder als ID-Liste; bei
 `column_invisible` in Listen nicht), die Datensatz-ID, `parent` (nur in Subviews relationaler Felder), `context`,
-`uid`, `today` (`YYYY-MM-DD`), `now` (`YYYY-MM-DD hh:mm:ss`).
+`uid`, `today` (`YYYY-MM-DD`), `now` (`YYYY-MM-DD hh:mm:ss`); laut Core zusätzlich `allowed_company_ids` und
+`current_company_id` (`getBasicEvalContext` in `web/static/src/model/relational_model/utils.js`) sowie
+`current_date` (veraltet, `today` verwenden; `web/static/src/core/py_js/py_builtin.js`).
 **Folgerung:** ein Feld, das nur in einem Ausdruck gebraucht wird, muss trotzdem in der View stehen (`invisible`
 genügt).
 
@@ -68,8 +75,18 @@ genügt).
 **Button** (Formular, Liste, Kanban): `type` **Pflicht**, außer `special` gesetzt: `object` (Methode `name` am Modell,
 mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XMLID)d`; Kontext erhält
 `active_model`, `active_id`); `string` (Text bzw. `alt` bei Icon), `icon` (`fa-…` oder `oi-…`), `help`, `context`,
-`groups`, `invisible`, `class`; Formular: `special` (`save`, `cancel` im Dialog), `confirm` (Bestätigungstext),
+`groups`, `invisible`, `class`; Formular: `special` (`save`, `cancel` im Dialog; laut Core-Validierung `_validate_tag_button` auch `add`), `confirm` (Bestätigungstext),
 `data-hotkey` (Alt+Zeichen, `shift+k`); Liste: `column_invisible`.
+
+**Core-Validierung (`ir.ui.view`: `_validate_view`, `_validate_tag_*`, `_validate_attributes`):**
+- `<page>` nur als direktes Kind von `<notebook>`; `<label>` braucht `for` (ohne zugehöriges Feld/Button:
+  `class="o_form_label"`).
+- `domain` an einem Nicht-Relationsfeld ist ein Fehler; `<groupby name=…>` nur auf many2one-Feldern; `group_by` im
+  `context` muss ein konstanter String mit einem Feld des Modells sein (optional `feld:intervall`).
+- `t-`-Direktiven in Archs sind verboten (`Forbidden owl directive`), Ausnahmen: `t-translation` und die
+  Kanban-Whitelist (Abschn. 8); `__comp__` und `data-tooltip*`-Attribute sind verboten.
+- Barrierefreiheit (Warnungen): ein `fa-*`-Icon (Klasse oder Button-`icon`) braucht Text, `title` oder
+  `aria-label`; `a.btn` braucht `role="button"`; `dropdown-menu` braucht `role="menu"`.
 
 ## 4. Formular (`<form>`)
 
@@ -101,7 +118,7 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
 
 ## 6. Liste (`<list>`, früher `<tree>`)
 
-- Wurzel: `string`, `create`, `edit`, `delete`, `duplicate`, `js_class`, `import` (True), `export_xlsx` (True), `count_limit`, `group_create`,
+- Wurzel: `string` (laut RNG-Kommentar in `list_view.rng` veraltet, ohne Wirkung), `create`, `edit`, `delete`, `duplicate`, `js_class`, `import` (True), `export_xlsx` (True), `count_limit`, `group_create`,
   `group_delete`, `group_edit`, `editable` (`top`/`bottom`;
   Inline-Formular wird aus der Liste abgeleitet; wirkungslos bei `edit="false"`), `multi_edit="1"`,
   `open_form_view` (nur editierbar), `default_group_by`, `default_order`, `decoration-<stil>` (`bf`, `it`, `info`,
@@ -119,7 +136,7 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
 
 ## 7. Suche (`<search>`)
 
-- Keine Anzeige, filtert andere Views; Wurzelattribute nur `string`, `class`, `view_types`. Kinder: `field`, `filter`, `separator`, `group`,
+- Keine Anzeige, filtert andere Views; Doku: Wurzel ohne Attribute, laut `search_view.rng` nur `string`. Kinder: `field`, `filter`, `separator`, `group`,
   `searchpanel`.
 - **`field`:** `name` Pflicht; `operator` (Standard je Typ: `=` float, `ilike` char, `child_of` many2one),
   `filter_domain` (nutzt `self` für den Nutzerwert; **hat Vorrang vor `operator`**), `context`, `domain`
@@ -129,8 +146,9 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
   `start_year` −2, `end_year` 0, `default_period`, eigene Unterfilter mit `name`/`string`/`domain`), `invisible`,
   `groups`.
   **ACHTUNG:** direkt aufeinanderfolgende Filter ohne `<separator/>` werden mit **OR** verknüpft.
-- **`searchpanel`:** nur `field`-Kinder: `select` (`one`|`multi`), `icon`, `color`, `groups`; `one`: `hierarchize`,
-  `depth`; `multi`: `enable_counters` (Performance!), `expand`, `limit` (200), `domain`, `groupby`.
+- **`searchpanel`:** höchstens eins je Suche (Core `_validate_tag_search`); `class`/`view_types` am `searchpanel`
+  laut `search_view.rng`; nur `field`-Kinder: `select` (`one`|`multi`), `icon`, `color`, `groups`; `one`: `hierarchize`,
+  `depth`; `multi`: `enable_counters` (Performance!), `expand`, `limit` (200), `domain` (nur mit `select="multi"`, sonst Fehler in `_validate_tag_searchpanel`), `groupby`.
   Performance-Alternative: `search_panel_select_range`/`_multi_range` überschreiben.
 - **Standardwerte** über Aktions-Kontext `search_default_<name>`: Feld = Wert; Filter = Boolean/Zahl; Gruppier-Filter
   mit Zahl 1–99 bestimmen die Reihenfolge.
@@ -141,11 +159,14 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
   `group_create`, `group_delete`, `group_edit`, `groups_draggable`, `records_draggable`, `archivable`, `quick_create`
   (Standard True bei Gruppierung nach many2one/selection/char/boolean), `quick_create_view`, `on_create`, `can_open`,
   `highlight_color` (Integer-Feld → Kartenrand), `count_limit`, `js_class`, `sample`. Maximal 10 Spalten werden geladen.
-- **`templates`:** mindestens Wurzeltemplate **`card`**, optional **`menu`** (Dropdown am ⋮). **Das ist JS-QWeb,
-  kein Owl** – Direktiven wie `t-on-click` gibt es nicht. Felder: `<field name=… widget=…>` (`handle`,
+- **`templates`:** mindestens Wurzeltemplate **`card`**, optional **`menu`** (Dropdown am ⋮). **Kein freies Owl:** der Webclient kompiliert die Arch zu
+  einem Owl-Template; erlaubt sind nur `t-name`, `t-esc`, `t-out`, `t-set`, `t-value`, `t-if`, `t-elif`, `t-else`,
+  `t-foreach`, `t-as`, `t-key`, `t-att*`, `t-call`, `t-debug`, `t-translation` (Core: `_validate_qweb_directive`
+  in `ir_ui_view.py`); andere, z. B. `t-on-click`, lösen einen Validierungsfehler aus. Felder: `<field name=… widget=…>` (`handle`,
   `kanban_color_picker`, …); Feld nur zum Laden: `<field>` **außerhalb** von `templates`.
 - Renderkontext: `record` (je Feld `value` = formatiert, `raw_value` = roh; für Anzeige `<field>` bevorzugen),
-  `widget` (`editable`, `deletable`), `context`, `read_only_mode`, `selection_mode`, `luxon`, `JSON`.
+  `widget` (`editable`, `deletable`), `context`, `selection_mode`, `luxon`, `JSON` (Core: `renderingContext` in `kanban_record.js`; das in der Doku
+  genannte `read_only_mode` gibt es nicht).
 - Buttons/Links mit `type`: `action`, `object`, `open`, `delete`, `archive`, `unarchive`, `set_cover`.
 - Layout: Karte ist Flexbox (Spalte); `<footer>` klebt unten; `aside`/`main` + Klasse `flex-row`;
   `o_kanban_aside_full` entfernt Padding. `<widget name=…>` für Owl-Komponenten aus `view_widgets`.
@@ -154,10 +175,12 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
 
 ## 9. QWeb-View, Graph, Pivot, Calendar, Activity
 
-- **QWeb-View:** kein festes Wurzelelement → `type` muss **explizit** angegeben werden. Frontend-Templates über
-  `<template>`; echte QWeb-Views als `ir.ui.view` mit `type` und `model`. Besonderheit: `<nav class="o_qweb_cp_buttons">`
-  wandert in die Control-Panel-Buttons. Kontext: `model`, `domain`, `context`, `records` (lazy `search(domain)`);
-  Hooks `_qweb_prepare_context(view_id, domain)`, `qweb_render_view(view_id, domain)`.
+- **QWeb-View** (`type='qweb'`): kein festes Wurzelelement → `type` muss **explizit** angegeben werden; der Core
+  verlangt einen `key` (SQL-Constraint in `ir_ui_view.py`). Frontend-/Berichts-Templates über `<template>`.
+  Der Webclient kennt keinen View-Typ `qweb` (`addons/web/models/ir_ui_view.py` nimmt ihn aus den öffenbaren
+  View-Typen aus). Die in der Doku beschriebenen Mechanismen (`<nav class="o_qweb_cp_buttons">`, Kontext
+  `model`/`domain`/`context`/`records`, Hooks `_qweb_prepare_context`, `qweb_render_view`) gibt es im 19.0-Core
+  nicht (Suche in `odoo/` und `addons/` ohne Treffer).
 - **Graph:** `type` (`bar`|`pie`|`line`), `stacked`, `cumulated`, `cumulated_start`, `disable_linking`, `order`, `js_class`, `string`, `sample`; `field` mit
   `name` Pflicht, `invisible`, `type="measure"`, `interval` (`day|week|month|quarter|year`, Standard `month`),
   `string`, `widget` (z. B. `float_time`, `monetary`). **Nur gespeicherte Felder** (Aggregation in der DB; nicht
@@ -180,5 +203,5 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
   **Grid** (`string` Pflicht, Spalten `col`/`range`, `row`, `measure`; Arbeit-in-Arbeit, Server-Hooks
   `_grid_*`, `read_grid`), **Gantt** (`date_start`, `date_stop` Pflicht; viele Attribute: `dependency_field`,
   `default_scale`, `precision`, `thumbnails`, …), **Map** (`res_partner`, `routing` braucht MapBox-Token; OpenStreetMap
-  ohne Token). Nur nachschlagen, nicht verwenden – für Community-Betrieb nicht verfügbar. Details bei Bedarf in
-  `content/developer/reference/user_interface/view_architectures.rst` (Zeilen ab "Cohort").
+  ohne Token). Nur nachschlagen, nicht verwenden – für Community-Betrieb nicht verfügbar. Details bei Bedarf in der
+  Doku-Seite "View architectures" (Abschnitt "Cohort").

@@ -1,9 +1,10 @@
 # Odoo 19 Regeln: JavaScript-Unit-Tests – Hoot, Web-Helfer, Mock-Server (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
+Quellen: Odoo-19-Entwicklerdokumentation (`odoo/documentation`, Branch 19.0,
 `content/developer/reference/frontend/unit_testing.rst`, `unit_testing/hoot.rst`, `unit_testing/web_helpers.rst`,
-`unit_testing/mock_server.rst`
-(Web: <https://www.odoo.com/documentation/19.0/developer/reference/frontend/unit_testing.html> und Unterseiten).
+`unit_testing/mock_server.rst`; Web: <https://www.odoo.com/documentation/19.0/developer/reference/frontend/unit_testing.html> und Unterseiten)
+und Odoo-19-Core-Code (`addons/web/static/lib/hoot`, `lib/hoot-dom`, `tests/_framework`). **Rangfolge: Core-Code vor Dokumentation**;
+Abweichungen der Doku sind vermerkt.
 Geprüft: 2026-10-02. Python-Tests und Tours: `docs/odoo_regeln/odoo_regeln_testing_2026-10-02.md`.
 Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
 
@@ -18,10 +19,12 @@ Namensübersicht, Details in der Quelle bzw. `@odoo/hoot` im Core.
 - **Ablage:** `static/tests/` des Addons. **Dateiname `*.test.js` ist Pflicht** (sonst nicht vom Runner erfasst).
   Ausnahme: `*.hoot.js` = globale Module für den ganzen Testlauf (strenge Einschränkungen: eingeschränkte Imports,
   Speicherverwaltung, keine Seiteneffekte). Andere JS-Dateien = Produktivcode oder Hilfsdateien.
-- **Bundle:** `'web.assets_unit_tests': ['mein_addon/static/tests/**/*', ('remove', 'mein_addon/static/tests/tours/**/*')]` im Manifest.
+- **Bundle:** `'web.assets_unit_tests': ['mein_addon/static/tests/**/*']` im Manifest (Doku). Core-Praxis zusätzlich:
+  `('remove', 'mein_addon/static/tests/tours/**/*')`, damit Tour-Dateien nicht in den Unit-Tests landen (Manifeste von `web`, `account`).
 - **Ausführen:** URL **`/web/tests`** (Debug-Menü → "Run Unit Tests").
 - Jede Testdatei läuft isoliert in einem globalen `describe` (Name = Dateipfad) → **kein eigenes `describe` nötig**,
   Untersuite nur zur Gliederung/Tag-Vergabe.
+- Hooks aus `@odoo/hoot`: `beforeEach`, `afterEach`, `after`; `getFixture()` liefert das Test-Fixture (Standard-`root` der DOM-Abfragen).
 
 ## 2. Runner-Optionen (URL-Parameter oder UI)
 
@@ -41,13 +44,14 @@ Einschließende Filter (`filter`, `id`, `tag`) wirken als **OR**, ausschließend
   `toHaveOuterHTML`, `toHaveProperty`, `toHaveRect`, `toHaveStyle`, `toHaveText`, `toHaveValue`.
 - **Schritte statt Assertionszähler:** `expect.step(wert)` + `expect.verifySteps([...])` (**bevorzugt** gegenüber
   `expect.assertions(n)`); **nicht verbrauchte Schritte lassen den Test scheitern**. Async-Varianten
-  `expect.waitForSteps`, `expect.waitForErrors` (Timeout 2000 ms); `expect.errors(n)` / `expect.verifyErrors([...])`
+  `expect.waitForSteps`, `expect.waitForErrors` (Timeout im Core 10000 ms, `DEFAULT_WAIT_TIMEOUT` in `hoot/core/expect.js`; die Doku nennt 2000 ms); `expect.errors(n)` / `expect.verifyErrors([...])`
   für erwartete Fehler.
 - **Eigene Selektoren:** `:contains(text)`, `:displayed`, `:visible`, `:hidden`, `:empty`, `:eq(n)`, `:first`,
   `:last`, `:focusable`, `:iframe`, `:selected`, `:shadow`, `:scrollable`, `:value(text)`.
 - **Abfragen:** `queryAll`, `queryOne` (erzwingt genau 1 Treffer), `queryFirst`, `queryText`, `queryValue`,
   `queryAttribute`, `queryAll{Texts,Values,Attributes,Properties}`; Optionen `count`, `displayed`, `focusable`,
-  `root`, `visible`. **Warten:** `waitFor`, `waitForNone` (Standard 200 ms), `waitUntil` (5 s).
+  `root`, `visible`. **Warten:** `waitFor`, `waitForNone`, `waitUntil`; Standard-Timeout im Core 10000 ms (`DEFAULT_WAIT_TIMEOUT` in
+  `hoot-dom/helpers/time.js`); die Doku nennt 200 ms bzw. 5 s, ein 200-ms-Standard ist im Core nicht zu finden.
 - **Interaktion (zeigerbasiert):** `click`, `dblclick`, `hover`, `drag` (`moveTo`, `drop`, `cancel`), `check`,
   `uncheck`, `scroll`, `setInputRange`, `pointerDown/Up`. **Ohne Ziel (aktives Element):** `fill` (hängt an),
   `edit` (= `clear` + `fill`), `clear`, `press`, `keyDown/Up`, `select`, `setInputFiles`, `leave`, `resize`, `unload`.
@@ -59,11 +63,10 @@ Einschließende Filter (`filter`, `id`, `tag`) wirken als **OR**, ausschließend
   Navigator, Notification, Permissions, Touch. Timer werden am Testende **alle abgebrochen**.
 - **NICHT gemockt:** `Promise` und OWL-Timer → auf OWL-Rendering mit **`animationFrame()`** warten.
 - Zeit-Helfer: `advanceTime`, `advanceFrame`, `animationFrame`, `microTick`, `tick`, `delay`, `runAllTimers`,
-  `cancelAllTimers`, `mockDate`, `mockTimeZone`, `setFrameRate`. **Feste Daten per `mockDate`** (siehe Python-Regel
-  "keine `now()`").
+  `cancelAllTimers`, `mockDate`, `mockTimeZone`, `setFrameRate`. Feste Daten per `mockDate`.
 - Netzwerk: `mockFetch`, `mockWebSocket`, `mockWorker`; `mockPermission`, `mockTouch`.
-- **Location-Mock funktioniert nur**, wenn Produktivcode `window.location` über `@web/core/browser` anspricht →
-  Konsequenz für eigenen Code: **Speicher und Navigation über das `browser`-Objekt ansprechen.**
+- **Location-Mock funktioniert nur**, wenn Produktivcode `window.location` über `@web/core/browser` anspricht (Doku `05_mocks`).
+  Storage (`localStorage`, `sessionStorage`) mockt Hoot selbst.
 
 ## 5. Web-Test-Helfer
 
@@ -89,7 +92,8 @@ Einschließende Filter (`filter`, `id`, `tag`) wirken als **OR**, ausschließend
   (`name = fields.Char({required: true})`) oder `_fields`, modellspezifische Methoden; dann
   `defineModels({ResPartner})` (gilt für die ganze Datei; in einem Test: nur dort). `_inherit` wirkt **nicht**
   wie erwartet – normale Klassenerweiterung nutzen. Änderungen an `_`-Schlüsseln werden am Testende zurückgesetzt.
-- Standardfelder je Modell: `id`, `display_name`, `created_at`, `updated_at`. `compute`/`related` nur für einfachste
+- Standardfelder je Modell (Core, Klasse `Model` in `tests/_framework/mock_server/mock_model.js`): `id`, `display_name`, `create_date`, `write_date`
+  (die Doku nennt fälschlich `created_at`/`updated_at`). `compute`/`related` nur für einfachste
   Fälle verlässlich.
 - Weitere: `defineMenus`, `defineActions`, `defineParams`.
 - **`onRpc`** (mehrfach, Aufruf **vom letzten zum ersten**; ein Rückgabewert ≠ null/undefined beendet die Kette):

@@ -1,6 +1,7 @@
 # Odoo 19 Regeln: Testen (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
+Quellen (nur offiziell, bei Widerspruch gilt der Code vor der Doku): Odoo-19.0-Quellcode (`odoo/tests/common.py`, `odoo/tools/config.py`,
+`odoo/addons/test_lint/tests/test_test_holes.py`, `addons/web_tour/static/src`) und `odoo/documentation`, Branch 19.0,
 `content/developer/reference/backend/testing.rst`
 (Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/testing.html>).
 Geprüft: 2026-10-02. Ergänzt `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitt 7. JS-Tests (Hoot, Mock-Server,
@@ -36,8 +37,8 @@ sind *autodoc* – Details im Core-Quellcode.
 - `post_install` = nach Installation **aller** Module (meist für `HttpCase`): `@tagged('-at_install', 'post_install')`.
 - **Reines `unittest.TestCase` erbt keine Tags** und läuft sonst nicht → `@tagged('standard', 'at_install')`.
 - `--test-tags` impliziert `--test-enable`, Standardwert `+standard`, Werte sind additiv;
-  Syntax `[-][tag][/modul][:klasse][.methode]` (`--test-tags /int_filemanager`,
-  `--test-tags '/int_filemanager,-slow'`).
+  Syntax `[-][tag][/modul][:klasse][.methode]` (`--test-tags /sale`,
+  `--test-tags '/sale,-slow'`, Beispiele der Referenz).
 
 ### Abfragenzahl
 - `with self.assertQueryCount(n): …` begrenzt die Zahl der SQL-Abfragen; manuell `--log-sql`.
@@ -48,7 +49,8 @@ sind *autodoc* – Details im Core-Quellcode.
 - Dateien: `static/tests/tours/<name>.js` + `tests/test_<name>.py` (erbt `HttpCase`, ruft
   `self.start_tour("/web", "tour_name", login="admin")`).
 - **Manifest:** `'assets': {'web.assets_tests': ['mod/static/tests/tours/<name>.js']}`.
-- Registrierung: `registry.category("web_tour.tours").add("name", {url: "/odoo", steps: () => [...]})` (`registry` aus `@web/core/registry`).
+- Registrierung: `registry.category("web_tour.tours").add("name", {url: "/odoo", steps: () => [...]})` (`registry` aus `@web/core/registry`;
+  so registrieren die Tours im 19.0-Core, z. B. `addons/account/static/tests/tours`; die Referenz zeigt noch `tour.register(...)`).
 - **Step:** Pflicht `trigger` (Selektor, Tour wartet auf sichtbares Element); optional `run` (Aktionsname wie
   `click`, `fill`, `edit`, `check`, `select`, `drag_and_drop`, … oder Funktion), `content` (**empfohlen**:
   Tooltip und Log), `isActive` (Liste von Bedingungen: desktop/mobile, community/enterprise, auto/manual), `tooltipPosition`
@@ -62,9 +64,11 @@ sind *autodoc* – Details im Core-Quellcode.
 - **Onboarding-Tours** (Benutzerführung): `static/src/js/tours/*.js` in `web.assets_backend` plus
   `web_tour.tour`-Datensatz (`name` = JS-Registrierung, `sequence`, `url`, `rainbow_man_message`).
 
-## 4. Hausregeln (ergänzend aus den Coding Guidelines, Abschnitt 7, bleiben gültig)
+## 4. Ergänzungen aus Referenz und Core
 
-- Jede Fehlerbehebung mit einem Test, der ohne die Behebung fehlschlägt.
-- Mit möglichst geringen Rechten testen (`new_test_user`, `@users`); Flaky-Test-Fallen vermeiden
-  (`subTest` setzt DB/Cache nicht zurück; feste Daten statt `now()`; externe Dienste mocken).
-- Gemeinsame Testdaten in `setUpClass`, nicht in `setUp`; Nutzer mit `new_test_user`; Formularverhalten mit `Form`; feste Zeit mit `freeze_time`.
+- Gemeinsame Testdaten gehören laut Referenz in `setUpClass` (einmal je Klasse). `TransactionCase` räumt Record- und Registry-Cache
+  nach jeder Methode auf, aber nicht Modelle/Felder der Registry: wer die Registry ändert, bereitet `self.registry.reset_changes()` vor.
+- `assertQueryCount` (`odoo/tests/common.py`) kennt auch benannte Zähler je Nutzer (`assertQueryCount(admin=3, demo=5)`, für `@users`).
+- Der Core warnt, wenn eine Klasse nicht genau eines von `at_install`/`post_install` trägt und wenn ein `HttpCase` nicht
+  nur `post_install` ist (`odoo/tests/common.py`).
+- Hilfen im Core: `new_test_user`, `users` (Dekorator), `freeze_time` (Klasse, ersetzt `freezegun.freeze_time` in den Odoo-Tests), alle in `odoo/tests/common.py`.

@@ -1,10 +1,10 @@
 # Odoo 19 Regeln: Sicherheit (Destillat)
 
-Quelle: `odoo/documentation`, Branch 19.0, Commit `eee2e56` (2026-10-02),
-`content/developer/reference/backend/security.rst`
-(Web: <https://www.odoo.com/documentation/19.0/developer/reference/backend/security.html>).
-Geprüft: 2026-10-02. Ergänzt `odoo_regeln_coding_guidelines_2026-10-02.md` Abschnitt 4 (dort die Kurzfassung der
-Pitfalls). Index: `docs/odoo_regeln/odoo_regeln_index_2026-10-02.md`.
+Quellen (nur diese): Odoo-19-Core (Branch 19.0) und die offizielle Entwicklerdokumentation
+`developer/reference/backend/security`
+(<https://www.odoo.com/documentation/19.0/developer/reference/backend/security.html>).
+**Rangfolge: Core-Code vor Dokumentation.** Wo die Dokumentation veraltet ist, steht hier der Core-Stand.
+Geprüft: 2026-10-02, Korrekturen gegen den Core: 2026-10-08.
 
 ## 1. Zugriffsmodell
 
@@ -13,10 +13,12 @@ Gruppen. Dazu Feldzugriff (`groups=` am Feld) und eigener Code.
 
 ### Gruppen (`res.groups`)
 - `name` (Rolle/Zweck), `privilege_id` (`res.groups.privilege`: bündelt Gruppen eines Bereichs, hat die Modulkategorie `category_id`
-  → exklusive Auswahl im Nutzerformular), `implied_ids` (Pseudo-Vererbung: eine implizierte Gruppe kann einem Nutzer **explizit entzogen**
+  → exklusive Auswahl im Nutzerformular; Core-Stand 19.0: `res.groups` selbst hat kein `category_id` mehr, die Doku nennt es noch dort),
+  `implied_ids` (Pseudo-Vererbung: eine implizierte Gruppe kann einem Nutzer **explizit entzogen**
   werden, ohne die implizierende zu entfernen), `comment`.
-- Am Nutzer: `group_ids` (explizit zugewiesen), `all_group_ids` (einschließlich impliziter). `user.has_group('modul.xmlid')` gilt nur
-  für den eigenen Nutzer (sonst `AccessError`), `base.group_no_one` wirkt nur im Debug-Modus.
+- Am Nutzer: `group_ids` (explizit zugewiesen), `all_group_ids` (einschließlich impliziter). `user.has_group('modul.xmlid')`
+  (Core: `res.users.has_group`) darf nur für den eigenen Nutzer, im sudo-Modus oder von einem internen Nutzer aufgerufen werden
+  (sonst `AccessError`); `base.group_no_one` wirkt nur im Debug-Modus.
 
 ### Access Rights (`ir.model.access`, CSV)
 - Gewähren Zugriff auf ein **ganzes Modell** je Operation (`perm_create/read/write/unlink`, alle standardmäßig aus).
@@ -42,7 +44,8 @@ Gruppen. Dazu Feldzugriff (`groups=` am Feld) und eigener Code.
 ### Feldzugriff
 - `groups="mod.group_a,mod.group_b"` (kommagetrennte XML-IDs). Gehört der Nutzer zu keiner: Feld wird aus Views
   entfernt, aus `fields_get` entfernt, explizites Lesen/Schreiben → Zugriffsfehler.
-- Quelle vermerkt offene Lücke: Feldgruppen gelten für den Superuser in `fields_get`, aber nicht in `read`/`write`.
+- Core-Stand: der Superuser (sudo-Modus) umgeht `groups` an Feldern überall (`_has_field_access` in `odoo/orm/models.py`,
+  auch von `fields_get` benutzt).
 
 ## 2. Security Pitfalls (verbindlich)
 
@@ -54,8 +57,6 @@ Gruppen. Dazu Feldzugriff (`groups=` am Feld) und eigener Code.
   Methode legen.
 - **Privat allein reicht nicht** – die private Methode muss richtig benutzt werden (Beispiel der Quelle:
   `_set_state` ruft `sudo().write`, wird nur nach Rechteprüfung aufgerufen).
-- Folgerung für dieses Repo: jede `action_*`/öffentliche Methode mit `sudo()` oder Rechtewechsel braucht eine
-  eigene Rechteprüfung am Anfang.
 
 ### ORM nicht umgehen
 - **Nie** `cr` direkt benutzen, wenn das ORM dasselbe kann (verloren gehen Übersetzung, Cache-Invalidierung,
@@ -77,8 +78,9 @@ Gruppen. Dazu Feldzugriff (`groups=` am Feld) und eigener Code.
 ### Nicht escapter Feldinhalt (XSS)
 - **`t-raw` vermeiden** (häufiger XSS-Vektor): die Integrität lässt sich von der Berechnung bis ins DOM kaum
   kontrollieren; ein heute korrekt escaptes `t-raw` kann nach einer Änderung unsicher werden.
-- Struktur und Inhalt trennen: Text als Variablen übergeben, im Template mit **`t-esc`** (bzw. `t-out`)
-  ausgeben, Formatierung per CSS-Klasse (`.subject { font-weight: bold }`).
+- Struktur und Inhalt trennen: Text als Variablen übergeben, im Template mit **`t-out`** (Doku: `t-esc`)
+  ausgeben, Formatierung per CSS-Klasse (`.subject { font-weight: bold }`). Core-Stand 19.0 (`ir_qweb.py`): `t-esc`
+  und `t-raw` sind beide veraltet, die Ausgabe-Direktive ist `t-out`.
 - Nutzerdaten **nie in HTML-Strings verketten** (`"…" + product.name + "…"`).
 
 ### `markupsafe.Markup` (HTML in Python)
@@ -94,7 +96,6 @@ Gruppen. Dazu Feldzugriff (`groups=` am Feld) und eigener Code.
   wird **nicht** nochmal escaped.
 - **Übersetzungen:** HTML und Text trennen. Übersetzungsfunktionen nehmen `Markup`-Parameter und escapen die
   Übersetzung, sobald mindestens einer übergeben wird (`_("Order %s confirmed", Markup("<a>%s</a>") % name)`).
-  Alles in Hausregel: `self.env._(...)`.
 
 ### Escaping vs. Sanitizing
 - **Escaping ist immer zwingend**, wenn Daten (TEXT) mit Code (CODE) gemischt werden – egal wie "sicher" die Daten
@@ -114,15 +115,12 @@ Gruppen. Dazu Feldzugriff (`groups=` am Feld) und eigener Code.
 ### Objektattribute dynamisch lesen
 - **`getattr`/`setattr` mit nutzergesteuertem Namen sind unsicher** (erlauben private Attribute und Methoden).
   Stattdessen **`record[field_name]`** (`__getitem__` des Recordsets).
-- Auch das ist "noch zu optimistisch": ID und Feldname zusätzlich prüfen (Whitelist der erlaubten Felder).
+- Auch das ist "noch zu optimistisch": ID und Feldwert zusätzlich prüfen.
 
-## 3. Prüfbarkeit
+## 3. Prüfbarkeit (Odoo `test_lint`, `odoo/addons/test_lint`)
 
-| Regel | Werkzeug |
+| Regel | Prüfung |
 |---|---|
-| SQL per String-Bau | pylint-odoo / `test_lint` `sql-injection` |
+| SQL per String-Bau | `sql-injection` |
 | `eval` | `eval-used` |
-| f-String/`%` in Übersetzung | `gettext-*`, `translation-*` |
-| `t-raw` | OCA `xml-deprecated-*`, Review |
-| Öffentliche Methode mit `sudo()` ohne Prüfung | nur Review |
-| `any!`, globale Regeln, `group_id` leer in ACL | nur Review |
+| Variablen/Platzhalter in Übersetzungen | `gettext-variable`, `gettext-placeholders`, `gettext-repr` |
