@@ -55,7 +55,68 @@
                     string="Status"
                     context="{'group_by': 'status_id'}"
                 />
+                <!-- The folder tree. int_filemanager.node loads it one level per call
+                     (search_panel_select_range), and limit="0" because a level may have
+                     more than the default 200 folders. -->
+                <searchpanel>
+                    <field
+                        name="parent_id"
+                        string="Folders"
+                        icon="fa-folder"
+                        expand="1"
+                        limit="0"
+                    />
+                    <field
+                        name="tag_ids"
+                        select="multi"
+                        string="Tags"
+                        icon="fa-tags"
+                        expand="1"
+                    />
+                </searchpanel>
             </search>
+        </field>
+    </record>
+
+    <!-- What the "Move to..." and "Copy to..." dialogs pick a folder from: Odoo's own
+         selection dialog, with plain views of the folders. The search view without a folder
+         tree is also the one of the trash list. -->
+    <record id="int_filemanager_node_picker_search" model="ir.ui.view">
+        <field name="name">int_filemanager.node.picker.search</field>
+        <field name="model">int_filemanager.node</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Name" />
+            </search>
+        </field>
+    </record>
+
+    <record id="int_filemanager_node_picker_list" model="ir.ui.view">
+        <field name="name">int_filemanager.node.picker.list</field>
+        <field name="model">int_filemanager.node</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <list create="false" edit="false" delete="false" default_order="name">
+                <field name="name" />
+                <field name="folder_path" string="Path" />
+            </list>
+        </field>
+    </record>
+
+    <record id="int_filemanager_node_picker_kanban" model="ir.ui.view">
+        <field name="name">int_filemanager.node.picker.kanban</field>
+        <field name="model">int_filemanager.node</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <kanban create="false" edit="false" delete="false">
+                <field name="folder_path" />
+                <templates>
+                    <t t-name="card">
+                        <field name="name" class="fw-bold" />
+                        <field name="folder_path" class="text-muted" />
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
@@ -191,6 +252,7 @@
         <field name="res_model">int_filemanager.node</field>
         <field name="view_mode">list</field>
         <field name="view_id" ref="int_filemanager_node_trash_list" />
+        <field name="search_view_id" ref="int_filemanager_node_picker_search" />
         <field
             name="domain"
         >[('removal_reason', '=', 'trash'), '|', ('parent_id', '=', False), ('parent_id.active', '=', True)]</field>
@@ -329,8 +391,22 @@
     <menuitem
         id="menu_int_filemanager_v2_root"
         name="Files"
-        action="action_int_filemanager_node"
         groups="int_filemanager.group_filemanager_user"
         sequence="21"
+    />
+    <menuitem
+        id="menu_int_filemanager_v2_files"
+        name="Files"
+        parent="menu_int_filemanager_v2_root"
+        action="action_int_filemanager_node"
+        sequence="1"
+    />
+    <!-- The trash is a list of its own, no longer a foot line of the folder tree. -->
+    <menuitem
+        id="menu_int_filemanager_v2_trash"
+        name="Trash"
+        parent="menu_int_filemanager_v2_root"
+        action="action_int_filemanager_node_trash"
+        sequence="2"
     />
 </odoo>

@@ -1,9 +1,10 @@
 /** @odoo-module **/
 
 // Folder navigation of the explorer controller: which folder is open, the breadcrumbs
-// (desktop: Odoo's own; mobile: an own header), the sidebar tree and its width, the chatter
-// panel. Mixed into the list and the kanban controller alike (JS has no multiple
-// inheritance: a function taking the base class and returning the extended one).
+// (desktop: Odoo's own; mobile: an own header), the chatter panel. The folder tree is the
+// search panel (search_panel.js), which Odoo lays out and resizes itself. Mixed into the
+// list and the kanban controller alike (JS has no multiple inheritance: a function taking
+// the base class and returning the extended one).
 //
 // The ONLY writer of the open folder is env.searchModel.setFolder(): the list model reloads
 // by itself when the search model notifies, a second writer would race it.
@@ -16,12 +17,9 @@ import {
     useState,
 } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
-import { browser } from "@web/core/browser/browser";
 import { useBus, useService } from "@web/core/utils/hooks";
 
 export const NODE_MODEL = "int_filemanager.node";
-const TREE_WIDTH_LS = "int_filemanager.treeWidth";
-const TREE_WIDTH_DEFAULT = 280;
 
 export const navigationMixin = (Base) =>
     class extends Base {
@@ -35,12 +33,6 @@ export const navigationMixin = (Base) =>
             // The chatter opens as a fixed panel over the right side, below the toolbar row
             // (topPx is measured: the search bar can wrap to two lines).
             this.chatterState = useState({ open: false, topPx: 0 });
-            // On a phone the tree is a bottom sheet instead of a sidebar.
-            this.mobileTreeState = useState({ open: false });
-            this.initialTreeWidth =
-                Number(browser.localStorage.getItem(TREE_WIDTH_LS)) || TREE_WIDTH_DEFAULT;
-            // Set by the tree component when it mounts (registerApi).
-            this.folderTreeApi = null;
             this.folderCrumbs = [];
             this._crumbChains = new Map();
             this._crumbRequest = 0;
@@ -51,17 +43,6 @@ export const navigationMixin = (Base) =>
             this.mobileBreadcrumbState = useState({ collapsed: false });
             this.mobileBreadcrumbNavRef = useRef("mobileBreadcrumbNav");
 
-            // While the tree's resize handle is dragged, Odoo puts pointer-events:none on
-            // <body>, which makes the browser forget the col-resize cursor. It is forced on
-            // <html> instead, which stays hit-testable.
-            useExternalListener(window, "mousedown", (ev) => {
-                if (ev.target.closest(".o_resizable_panel_handle")) {
-                    document.documentElement.classList.add("o_int_filemanager_resizing_tree");
-                }
-            });
-            useExternalListener(window, "mouseup", () => {
-                document.documentElement.classList.remove("o_int_filemanager_resizing_tree");
-            });
             useExternalListener(window, "resize", () => this._measureChatterTop());
 
             // Whatever was on the breadcrumb stack when this controller was created (the
@@ -202,22 +183,6 @@ export const navigationMixin = (Base) =>
             this.env.searchModel.setFolder(record.resId);
         }
 
-        /**
-         * Called by the tree. Closes the phone's bottom sheet after choosing a folder without
-         * sub-folders only (with sub-folders it stays open for the next tap, like Odoo's own
-         * category dropdown).
-         */
-        onFolderTreeSelect(folderId, hasChildren) {
-            if (!folderId) {
-                this.onMobileGoHome();
-                return;
-            }
-            this.env.searchModel.setFolder(folderId);
-            if (!hasChildren) {
-                this.mobileTreeState.open = false;
-            }
-        }
-
         get mobileBreadcrumbs() {
             return [
                 {
@@ -231,7 +196,6 @@ export const navigationMixin = (Base) =>
 
         onMobileGoHome() {
             this.env.searchModel.setFolder(false);
-            this.mobileTreeState.open = false;
         }
 
         // Does the fully rendered crumb row overflow? Then it collapses to first / "…" / last.
@@ -247,17 +211,8 @@ export const navigationMixin = (Base) =>
             }
         }
 
-        onToggleMobileTree() {
-            this.mobileTreeState.open = !this.mobileTreeState.open;
-        }
-
-        // Called by the resizable panel on every pixel of a drag; setItem is cheap enough.
-        onResizeTree(width) {
-            browser.localStorage.setItem(TREE_WIDTH_LS, String(Math.round(width)));
-        }
-
         /** After anything that changes folder contents: refresh the tree level being shown. */
         async refreshTree() {
-            await this.folderTreeApi?.refresh(this.currentFolderId);
+            await this.env.searchModel.reloadFolderLevel(this.currentFolderId);
         }
     };

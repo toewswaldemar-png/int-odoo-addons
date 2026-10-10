@@ -21,7 +21,6 @@
             <t t-call="int_filemanager.v2.ChatterToggle" />
         </xpath>
         <xpath expr="//div[@t-ref='root']" position="inside">
-            <t t-call="int_filemanager.v2.TreeSidebar" />
             <t t-call="int_filemanager.v2.Overlays" />
         </xpath>
     </t>

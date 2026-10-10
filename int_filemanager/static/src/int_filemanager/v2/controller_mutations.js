@@ -12,7 +12,7 @@ import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_d
 import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
 import { useService } from "@web/core/utils/hooks";
 import { NODE_MODEL } from "./controller_navigation.js";
-import { IntFilemanagerV2MoveDialog } from "./move_dialog.js";
+import { SelectCreateDialog } from "@web/views/view_dialogs/select_create_dialog";
 import { IntFilemanagerV2TextEditorDialog } from "./text_editor_dialog.js";
 import { IntFilemanagerV2TextInputDialog } from "./text_input_dialog.js";
 import { IntFilemanagerV2VersionsDialog } from "./versions_dialog.js";
@@ -351,24 +351,42 @@ export const mutationsMixin = (Base) =>
             });
         }
 
+        /**
+         * Picks a destination folder with Odoo's own selection dialog (a list with a search
+         * field and the path of every folder) and hands its id to ``onPicked``. The top is
+         * not a destination; a folder cannot be moved below itself, which the server checks.
+         */
+        _pickFolder(title, records, onPicked) {
+            this.dialog.add(SelectCreateDialog, {
+                title,
+                resModel: NODE_MODEL,
+                domain: [
+                    ["is_dir", "=", true],
+                    ["id", "not in", records.map((record) => record.resId)],
+                ],
+                context: {
+                    list_view_ref: "int_filemanager.int_filemanager_node_picker_list",
+                    kanban_view_ref: "int_filemanager.int_filemanager_node_picker_kanban",
+                    search_view_ref: "int_filemanager.int_filemanager_node_picker_search",
+                },
+                multiSelect: false,
+                noCreate: true,
+                onSelected: ([targetId]) => onPicked(targetId),
+            });
+        }
+
         onMoveSelected() {
             const records = [...this.model.root.selection];
-            this.dialog.add(IntFilemanagerV2MoveDialog, {
-                title: _t("Move to"),
-                confirmLabel: _t("Move here"),
-                startFolderId: this.currentFolderId,
-                confirm: (targetId) => this.moveRecordsTo(records, targetId),
-            });
+            this._pickFolder(_t("Move to"), records, (targetId) =>
+                this.moveRecordsTo(records, targetId)
+            );
         }
 
         onCopySelected() {
             const records = [...this.model.root.selection];
-            this.dialog.add(IntFilemanagerV2MoveDialog, {
-                title: _t("Copy to"),
-                confirmLabel: _t("Copy here"),
-                startFolderId: this.currentFolderId,
-                confirm: (targetId) => this.copyRecordsTo(records, targetId),
-            });
+            this._pickFolder(_t("Copy to"), records, (targetId) =>
+                this.copyRecordsTo(records, targetId)
+            );
         }
 
         // ---------------------------------------------------------------- download

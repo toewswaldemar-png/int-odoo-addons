@@ -18,12 +18,10 @@
             <t t-call="int_filemanager.v2.ChatterToggle" />
         </xpath>
 
-        <!-- Sidebar tree on wide screens (a ResizablePanel, the same core component Discuss uses
-         for its sidebar; the grid placement is in folder_tree_layout.scss). On a phone the
-         control panel is hidden by CSS on the same breakpoint and this header takes its role:
-         search bar first, then a row with the tree toggle and the breadcrumb path. -->
+        <!-- On a phone the control panel is hidden by CSS on the small-screen breakpoint and this
+         header takes its role: search bar first, then the breadcrumb path. The folder tree is
+         Odoo's search panel, which has its own small-screen layout inside the content. -->
         <xpath expr="//div[@t-ref='root']/*[1]" position="before">
-            <t t-call="int_filemanager.v2.TreeSidebar" />
             <div t-if="env.isSmall" class="o_int_filemanager_mobile_header">
                 <div class="d-flex align-items-center gap-1">
                     <Dropdown class="flex-shrink-0">
@@ -58,14 +56,6 @@
                 <div
                     class="o_int_filemanager_mobile_breadcrumb_row d-flex align-items-center gap-1"
                 >
-                    <button
-                        type="button"
-                        class="btn btn-link p-1 flex-shrink-0 o_int_filemanager_mobile_tree_toggle"
-                        aria-label="Folder tree"
-                        t-on-click="onToggleMobileTree"
-                    >
-                        <i class="oi oi-fw oi-panel-right fa-flip-horizontal" />
-                    </button>
                     <!-- t-ref: the controller measures scrollWidth/clientWidth of exactly this element
                to decide whether to collapse. Every segment is flex-shrink-0 + text-nowrap so
                the row really overflows instead of each segment ellipsizing on its own. -->
@@ -137,21 +127,6 @@
                             />
                         </t>
                     </nav>
-                </div>
-                <!-- Tap outside the bottom sheet closes it. -->
-                <div
-                    t-if="mobileTreeState.open"
-                    class="o_int_filemanager_mobile_tree_backdrop"
-                    t-on-click="onToggleMobileTree"
-                />
-                <!-- The same tree component as the sidebar, positioned as a sheet by CSS. Always
-             mounted (not only when open) so its state survives closing. -->
-                <div class="o_int_filemanager_tree_sheet">
-                    <FolderTree
-                        activeId="env.searchModel.folderId || false"
-                        onSelectFolder="(id, hasChildren) => this.onFolderTreeSelect(id, hasChildren)"
-                        registerApi="(api) => this.folderTreeApi = api"
-                    />
                 </div>
             </div>
         </xpath>

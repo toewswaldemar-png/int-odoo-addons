@@ -6,7 +6,6 @@
 import { registry } from "@web/core/registry";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
-import { ResizablePanel } from "@web/core/resizable_panel/resizable_panel";
 import { SearchBar } from "@web/search/search_bar/search_bar";
 import { listView } from "@web/views/list/list_view";
 import { ListController } from "@web/views/list/list_controller";
@@ -14,9 +13,9 @@ import { ListController } from "@web/views/list/list_controller";
 // arch as a <chatter/> tag, so it is mounted here directly.
 import { Chatter } from "@mail/chatter/web_portal/chatter";
 import { filemanagerV2Mixin } from "./controller_mixin.js";
-import { IntFilemanagerV2FolderTree } from "./folder_tree.js";
 import { IntFilemanagerV2ListRenderer } from "./list_renderer.js";
 import { IntFilemanagerV2SearchModel } from "./search_model.js";
+import { IntFilemanagerV2SearchPanel } from "./search_panel.js";
 import { IntFilemanagerV2UploadPanel } from "./upload_panel.js";
 
 export class IntFilemanagerV2ListController extends filemanagerV2Mixin(ListController) {
@@ -28,9 +27,7 @@ export class IntFilemanagerV2ListController extends filemanagerV2Mixin(ListContr
         Chatter,
         Dropdown,
         DropdownItem,
-        ResizablePanel,
         SearchBar,
-        FolderTree: IntFilemanagerV2FolderTree,
         UploadPanel: IntFilemanagerV2UploadPanel,
     };
 
@@ -40,9 +37,6 @@ export class IntFilemanagerV2ListController extends filemanagerV2Mixin(ListContr
         // on by itself in the desktop action, no separate menu entry.
         if (this.env.isSmall) {
             classes.push("o_int_filemanager_mobile");
-            if (this.mobileTreeState.open) {
-                classes.push("o_int_filemanager_mobile_tree_open");
-            }
         }
         // Pushes the list aside for the chatter panel instead of lying under it.
         if (this.chatterState.open) {
@@ -57,4 +51,5 @@ registry.category("views").add("int_filemanager_v2_list", {
     Controller: IntFilemanagerV2ListController,
     Renderer: IntFilemanagerV2ListRenderer,
     SearchModel: IntFilemanagerV2SearchModel,
+    SearchPanel: IntFilemanagerV2SearchPanel,
 });

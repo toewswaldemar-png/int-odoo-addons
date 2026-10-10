@@ -68,28 +68,6 @@
         </button>
     </t>
 
-  <t t-name="int_filemanager.v2.TreeSidebar">
-        <ResizablePanel
-            t-if="!env.isSmall"
-            class="'o_int_filemanager_tree_resizable'"
-            handleSide="'end'"
-            initialWidth="initialTreeWidth"
-            minWidth="180"
-            onResize.bind="onResizeTree"
-        >
-            <div class="o_int_filemanager_tree_sidebar">
-                <!-- Read from the search model, not from a controller field: the folder is known
-             before anything has mounted, so a reload (F5) in a sub-folder opens the tree
-             right there. -->
-                <FolderTree
-                    activeId="env.searchModel.folderId || false"
-                    onSelectFolder="(id, hasChildren) => this.onFolderTreeSelect(id, hasChildren)"
-                    registerApi="(api) => this.folderTreeApi = api"
-                />
-            </div>
-        </ResizablePanel>
-    </t>
-
   <!-- Drop zone overlay, chatter panel and uploads. The drop handling itself is on window
        (controller_uploads.js); this overlay is only to be seen, hence pointer-events: none. -->
   <t t-name="int_filemanager.v2.Overlays">

@@ -95,10 +95,18 @@ class TestNodeArguments(TransactionCase):
 
     def test_the_optional_ids_accept_nothing_but_reject_wrong_types(self):
         Node = self.Node
-        self.assertEqual(Node.tree_children(False), Node.tree_children(None))
+        self.assertEqual(
+            Node.search_panel_select_range("parent_id"),
+            Node.search_panel_select_range("parent_id", comodel_domain=[]),
+        )
         self.assertEqual(Node.existing_names(None, []), [])
         bad = ("1", [1], {"id": 1}, 1.5, True, -1)
-        self._rejects(Node.tree_children, bad)
+        self._rejects(
+            lambda b: Node.search_panel_select_range(
+                "parent_id", comodel_domain=[("parent_id", "=", b)]
+            ),
+            bad,
+        )
         self._rejects(lambda b: Node.existing_names(b, ["a"]), bad)
         self._rejects(
             lambda b: Node.rename_or_move(self.file.id, b, "n", "op-a12"), bad
@@ -228,7 +236,7 @@ class TestNodeArguments(TransactionCase):
 
     def test_the_reading_methods_are_marked_read_only(self):
         reading = (
-            "tree_children",
+            "search_panel_select_range",
             "breadcrumb",
             "existing_names",
             "suggest_field_values",

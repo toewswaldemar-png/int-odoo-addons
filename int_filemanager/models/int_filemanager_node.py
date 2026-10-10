@@ -179,6 +179,9 @@ class IntFilemanagerNode(models.Model):
     # Searchable only: the text read from the document (see the derivative's ``text``).
     # It is never handed out, not even to someone who found the file by it.
     content = fields.Char(compute="_compute_content", search="_search_content")
+    # The names from the top down to this node, for the places that pick a folder by
+    # name. Never stored: it is read for the few rows on screen.
+    folder_path = fields.Char(compute="_compute_folder_path")
 
     # Names are unique per folder regardless of case, like on Windows. NULLS NOT
     # DISTINCT: otherwise two roots (parent_id IS NULL) would never collide.
@@ -289,6 +292,27 @@ class IntFilemanagerNode(models.Model):
         ]
         # search() applies the caller's rights on top of this list of candidates.
         return Domain("id", "in" if (operator == "=") == value else "not in", top_ids)
+
+    @api.depends("parent_path")
+    def _compute_folder_path(self):
+        ids = {
+            int(node_id)
+            for node in self
+            for node_id in (node.parent_path or "").split("/")
+            if node_id
+        }
+        # search() applies the caller's rights: an ancestor the caller cannot read is left
+        # out, like in breadcrumb().
+        names = {
+            node.id: node.name
+            for node in self.with_context(active_test=False).search([("id", "in", list(ids))])
+        }
+        for node in self:
+            node.folder_path = " / ".join(
+                names[int(node_id)]
+                for node_id in (node.parent_path or "").split("/")
+                if node_id and int(node_id) in names
+            )
 
     @api.depends()
     def _compute_content(self):
@@ -402,31 +426,63 @@ class IntFilemanagerNode(models.Model):
 
     @api.model
     @api.readonly
-    def tree_children(self, parent_id):
-        """Return the visible sub-folders of ``parent_id`` for the sidebar tree.
+    def search_panel_select_range(self, field_name, **kwargs):
+        """Return the folders of one level for the folder tree of the search panel.
 
-        Without ``parent_id``, return the top of what the caller can see. One level
-        per call, so the cost depends on the opened level, not on the whole tree.
+        Odoo's own method returns the whole tree in one call. Here the tree is loaded
+        one level at a time, so the cost depends on the opened level, not on the number
+        of folders: ``comodel_domain=[("parent_id", "=", id)]`` asks for the sub-folders
+        of one folder, none for the top of what the caller can see. The records come
+        from the kernel method, so the caller's rights apply; each value also says
+        whether it has sub-folders (``has_children``).
         """
-        parent_id = params.optional_id(self.env, parent_id, "parent_id")
+        if field_name != "parent_id":
+            return super().search_panel_select_range(field_name, **kwargs)
+        parent_id = self._tree_level_parent(kwargs.get("comodel_domain"))
         level = (
-            [("parent_id", "=", parent_id)]
+            Domain("parent_id", "=", parent_id)
             if parent_id
-            else [("is_visible_top", "=", True)]
+            else Domain("is_visible_top", "=", True)
         )
-        folders = self.search([*level, ("is_dir", "=", True)])
+        result = super().search_panel_select_range(
+            field_name,
+            comodel_domain=list(level & Domain("is_dir", "=", True)),
+            enable_counters=False,
+            expand=True,
+            hierarchize=False,
+        )
+        values = result["values"]
         with_children = set()
-        if folders:
+        if values:
             grouped = self._read_group(
-                [("parent_id", "in", folders.ids), ("is_dir", "=", True)],
+                [("parent_id", "in", [v["id"] for v in values]), ("is_dir", "=", True)],
                 ["parent_id"],
                 ["__count"],
             )
             with_children = {parent.id for parent, _count in grouped}
-        return [
-            {"id": f.id, "name": f.name, "has_children": f.id in with_children}
-            for f in folders.sorted(lambda f: f.name.casefold())
-        ]
+        for value in values:
+            value["has_children"] = value["id"] in with_children
+        values.sort(key=lambda value: value["display_name"].casefold())
+        return result
+
+    def _tree_level_parent(self, comodel_domain):
+        """Return the folder id asked for by ``comodel_domain``, False for the top.
+
+        Only ``[("parent_id", "=", id)]`` is understood: the domain comes from the
+        client and must not widen what the tree shows.
+        """
+        if not comodel_domain:
+            return False
+        leaf = (
+            comodel_domain[0]
+            if isinstance(comodel_domain, list | tuple) and len(comodel_domain) == 1
+            else None
+        )
+        if not isinstance(leaf, list | tuple) or list(leaf[:2]) != ["parent_id", "="]:
+            raise UserError(
+                self.env._("%(argument)s is not valid.", argument="comodel_domain")
+            )
+        return params.require_id(self.env, leaf[2] if len(leaf) == 3 else None, "comodel_domain")
 
     @api.model
     @api.readonly

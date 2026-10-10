@@ -407,8 +407,23 @@ class TestTreeNavigation(TransactionCase):
     def _as(self, user):
         return self.env["int_filemanager.node"].with_user(user)
 
+    def _tree(self, user, parent_id=False):
+        """One level of the search panel's folder tree, as the explorer asks for it."""
+        domain = [("parent_id", "=", parent_id)] if parent_id else []
+        result = self._as(user).search_panel_select_range(
+            "parent_id", comodel_domain=domain
+        )
+        return [
+            {
+                "id": value["id"],
+                "name": value["display_name"],
+                "has_children": value["has_children"],
+            }
+            for value in result["values"]
+        ]
+
     def test_roots_are_listed_when_no_parent_is_given(self):
-        result = self._as(self.user).tree_children(False)
+        result = self._tree(self.user, False)
         self.assertEqual([r["name"] for r in result], ["Root"])
         self.assertTrue(result[0]["has_children"])
 
@@ -424,7 +439,7 @@ class TestTreeNavigation(TransactionCase):
             )
         )
         island = self._folder("island", self.root, narrow_only)
-        result = self._as(self.narrow_user).tree_children(False)
+        result = self._tree(self.narrow_user, False)
         # Root itself is not readable for this user; its two narrow-readable folders are
         # the top, as is the island below.
         self.assertEqual(sorted(r["name"] for r in result), ["island", "private"])
@@ -462,7 +477,7 @@ class TestTreeNavigation(TransactionCase):
         self.assertEqual(not_top.name, "beta")
 
     def test_children_are_sorted_without_case_and_flag_their_own_children(self):
-        result = self._as(self.user).tree_children(self.root.id)
+        result = self._tree(self.user, self.root.id)
         # the narrow scope lists self.group too, so "private" is visible here; the
         # test for unreadable folders below covers a real exclusion
         self.assertEqual([r["name"] for r in result], ["Alpha", "beta", "private"])
@@ -479,7 +494,7 @@ class TestTreeNavigation(TransactionCase):
             "op-nav-file",
         )
         self.Node.trash(self.alpha.id, "op-nav-trash")
-        result = self._as(self.user).tree_children(self.root.id)
+        result = self._tree(self.user, self.root.id)
         self.assertEqual([r["name"] for r in result], ["beta", "private"])
 
     def test_unreadable_folders_are_left_out_of_the_tree(self):
@@ -494,10 +509,34 @@ class TestTreeNavigation(TransactionCase):
             )
         )
         closed = self._folder("closed", self.root, outsider_scope)
-        result = self._as(self.user).tree_children(self.root.id)
+        result = self._tree(self.user, self.root.id)
         self.assertNotIn(closed.name, [r["name"] for r in result])
-        narrow = self._as(self.narrow_user).tree_children(self.root.id)
+        narrow = self._tree(self.narrow_user, self.root.id)
         self.assertIn("closed", [r["name"] for r in narrow])
+
+    def test_the_tree_answers_only_for_a_parent_not_for_any_domain(self):
+        Node = self._as(self.user)
+        for domain in (
+            [("name", "=", "Root")],
+            [("parent_id", "!=", self.root.id)],
+            [("parent_id", "=", self.root.id), ("is_dir", "=", False)],
+            [("parent_id", "child_of", self.root.id)],
+            "parent_id = 1",
+        ):
+            with self.subTest(domain=domain), self.assertRaises(UserError):
+                Node.search_panel_select_range("parent_id", comodel_domain=domain)
+
+    def test_the_tree_has_neither_counters_nor_a_parent_field(self):
+        result = self._as(self.user).search_panel_select_range(
+            "parent_id", comodel_domain=[("parent_id", "=", self.root.id)]
+        )
+        self.assertFalse(result["parent_field"])
+        for value in result["values"]:
+            self.assertNotIn("__count", value)
+
+    def test_other_fields_keep_the_kernel_behaviour(self):
+        result = self._as(self.user).search_panel_select_range("status_id")
+        self.assertNotIn("has_children", result["values"][0] if result["values"] else {})
 
     def test_breadcrumb_runs_from_the_top_to_the_node(self):
         crumbs = self._as(self.user).breadcrumb(self.deep.id)

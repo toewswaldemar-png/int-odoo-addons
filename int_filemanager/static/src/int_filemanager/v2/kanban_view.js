@@ -7,13 +7,12 @@
 import { registry } from "@web/core/registry";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
-import { ResizablePanel } from "@web/core/resizable_panel/resizable_panel";
 import { kanbanView } from "@web/views/kanban/kanban_view";
 import { KanbanController } from "@web/views/kanban/kanban_controller";
 import { Chatter } from "@mail/chatter/web_portal/chatter";
 import { filemanagerV2Mixin } from "./controller_mixin.js";
-import { IntFilemanagerV2FolderTree } from "./folder_tree.js";
 import { IntFilemanagerV2SearchModel } from "./search_model.js";
+import { IntFilemanagerV2SearchPanel } from "./search_panel.js";
 import { IntFilemanagerV2UploadPanel } from "./upload_panel.js";
 
 export class IntFilemanagerV2KanbanController extends filemanagerV2Mixin(KanbanController) {
@@ -23,8 +22,6 @@ export class IntFilemanagerV2KanbanController extends filemanagerV2Mixin(KanbanC
         Chatter,
         Dropdown,
         DropdownItem,
-        ResizablePanel,
-        FolderTree: IntFilemanagerV2FolderTree,
         UploadPanel: IntFilemanagerV2UploadPanel,
     };
 
@@ -41,4 +38,5 @@ registry.category("views").add("int_filemanager_v2_kanban", {
     ...kanbanView,
     Controller: IntFilemanagerV2KanbanController,
     SearchModel: IntFilemanagerV2SearchModel,
+    SearchPanel: IntFilemanagerV2SearchPanel,
 });
