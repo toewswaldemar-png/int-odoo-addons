@@ -7,9 +7,9 @@
 // a second writer would race it.
 //
 // The folder id is kept in the URL (int_filemanager_folder) so that F5 stays where it was.
-import {Domain} from "@web/core/domain";
-import {router} from "@web/core/browser/router";
-import {SearchModel} from "@web/search/search_model";
+import { Domain } from "@web/core/domain";
+import { router } from "@web/core/browser/router";
+import { SearchModel } from "@web/search/search_model";
 
 const FOLDER_URL_KEY = "int_filemanager_folder";
 // Odoo rebuilds the URL on every controller mount and drops keys it does not know
@@ -33,14 +33,13 @@ export class IntFilemanagerV2SearchModel extends SearchModel {
      */
     setFolder(folderId) {
         this.folderId = folderId || false;
-        router.replaceState({[FOLDER_URL_KEY]: this.folderId || undefined});
+        router.replaceState({ [FOLDER_URL_KEY]: this.folderId || undefined });
         this._notify();
     }
 
     _isRecursive() {
         const filterActive = this.query.some(
-            (element) =>
-                this.searchItems[element.searchItemId]?.name === RECURSIVE_FILTER_NAME
+            (element) => this.searchItems[element.searchItemId]?.name === RECURSIVE_FILTER_NAME
         );
         return filterActive || Boolean(this.globalContext.int_filemanager_recursive);
     }
@@ -50,11 +49,7 @@ export class IntFilemanagerV2SearchModel extends SearchModel {
         if (this._isRecursive()) {
             // Everything below the folder, not the folder itself.
             return folderId
-                ? new Domain([
-                      "&",
-                      ["id", "child_of", folderId],
-                      ["id", "!=", folderId],
-                  ])
+                ? new Domain(["&", ["id", "child_of", folderId], ["id", "!=", folderId]])
                 : new Domain([]);
         }
         return folderId

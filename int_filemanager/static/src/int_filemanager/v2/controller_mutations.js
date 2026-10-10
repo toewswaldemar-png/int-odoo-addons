@@ -6,26 +6,20 @@
 // then answered from the stored result, never done twice), never through a plain ORM
 // write from the browser: the write methods check the rights and the name rules in one
 // place.
-import {onWillUnmount, useState, useSubEnv} from "@odoo/owl";
-import {_t} from "@web/core/l10n/translation";
-import {ConfirmationDialog} from "@web/core/confirmation_dialog/confirmation_dialog";
-import {useFileViewer} from "@web/core/file_viewer/file_viewer_hook";
-import {useService} from "@web/core/utils/hooks";
-import {NODE_MODEL} from "./controller_navigation.js";
-import {IntFilemanagerV2MoveDialog} from "./move_dialog.js";
-import {IntFilemanagerV2TextEditorDialog} from "./text_editor_dialog.js";
-import {IntFilemanagerV2TextInputDialog} from "./text_input_dialog.js";
-import {IntFilemanagerV2VersionsDialog} from "./versions_dialog.js";
-import {
-    downloadUrl,
-    errorMessage,
-    extOf,
-    newOperationKey,
-    uniqueName,
-} from "./utils.js";
+import { onWillUnmount, useState, useSubEnv } from "@odoo/owl";
+import { _t } from "@web/core/l10n/translation";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
+import { useService } from "@web/core/utils/hooks";
+import { NODE_MODEL } from "./controller_navigation.js";
+import { IntFilemanagerV2MoveDialog } from "./move_dialog.js";
+import { IntFilemanagerV2TextEditorDialog } from "./text_editor_dialog.js";
+import { IntFilemanagerV2TextInputDialog } from "./text_input_dialog.js";
+import { IntFilemanagerV2VersionsDialog } from "./versions_dialog.js";
+import { downloadUrl, errorMessage, extOf, newOperationKey, uniqueName } from "./utils.js";
 
 const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "ogv"]);
-const VIDEO_MIME_TYPES = {mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg"};
+const VIDEO_MIME_TYPES = { mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg" };
 // Formats every browser plays without an extra codec (no mov, no wma).
 const AUDIO_EXTENSIONS = new Set(["mp3", "wav", "flac", "ogg", "m4a", "aac"]);
 const AUDIO_MIME_TYPES = {
@@ -92,11 +86,13 @@ export function viewerFileOf(record) {
             isVideo: false,
             isViewable: true,
             defaultSource: isPdf
-                ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(converted)}#pagemode=none`
+                ? `/web/static/lib/pdfjs/web/viewer.html?file=${encodeURIComponent(
+                      converted
+                  )}#pagemode=none`
                 : converted,
         };
     }
-    const url = downloadUrl(record.resId, {inline: true});
+    const url = downloadUrl(record.resId, { inline: true });
     const ext = extOf(record.data.name);
     const isPdf = ext === "pdf";
     const isVideo = VIDEO_EXTENSIONS.has(ext);
@@ -131,7 +127,7 @@ export const mutationsMixin = (Base) =>
             // its text; the widget reaches this state through the env. It commits through
             // _performRename like the dialog does, never through Odoo's list inline editing,
             // which would write the field directly and skip the rename rules.
-            this.renameState = useState({recordId: null, value: ""});
+            this.renameState = useState({ recordId: null, value: "" });
             useSubEnv({
                 filemanagerRename: {
                     state: this.renameState,
@@ -155,7 +151,7 @@ export const mutationsMixin = (Base) =>
         }
 
         _fail(error) {
-            this.notification.add(errorMessage(error), {type: "danger"});
+            this.notification.add(errorMessage(error), { type: "danger" });
         }
 
         /**
@@ -188,7 +184,7 @@ export const mutationsMixin = (Base) =>
             this.forgetCrumbs();
             await this.reload();
             if (errors.length) {
-                this.notification.add(errors.join("\n"), {type: "danger"});
+                this.notification.add(errors.join("\n"), { type: "danger" });
             }
         }
 
@@ -389,23 +385,16 @@ export const mutationsMixin = (Base) =>
                 return;
             }
             try {
-                const result = await this.orm.call(
-                    "int_filemanager.zip_job",
-                    "request_zip",
-                    [],
-                    {
-                        node_ids: records.map((r) => r.resId),
-                        operation_key: newOperationKey(),
-                    }
-                );
+                const result = await this.orm.call("int_filemanager.zip_job", "request_zip", [], {
+                    node_ids: records.map((r) => r.resId),
+                    operation_key: newOperationKey(),
+                });
                 if (result.mode === "direct") {
                     this._startDownload(result.url);
                 } else {
                     this.notification.add(
-                        _t(
-                            "The download is big and is being prepared. You will be notified."
-                        ),
-                        {type: "info"}
+                        _t("The download is big and is being prepared. You will be notified."),
+                        { type: "info" }
                     );
                 }
             } catch (error) {
@@ -420,7 +409,7 @@ export const mutationsMixin = (Base) =>
                 ? record.data.current_revision_id.id
                 : false;
             this.uploads.rememberBase(record.resId, revisionId);
-            return downloadUrl(record.resId, {revisionId});
+            return downloadUrl(record.resId, { revisionId });
         }
 
         // A real link click: the browser shows its download UI without leaving the page.
@@ -467,26 +456,20 @@ export const mutationsMixin = (Base) =>
         }
 
         onShare(record) {
-            this.actionService.doAction(
-                "int_filemanager.action_int_filemanager_node_share",
-                {
-                    props: {resId: record.resId},
-                    onClose: () => this.reload(),
-                }
-            );
+            this.actionService.doAction("int_filemanager.action_int_filemanager_node_share", {
+                props: { resId: record.resId },
+                onClose: () => this.reload(),
+            });
         }
 
         // Properties: a plain Odoo form in a dialog, saved through the ORM (these fields carry
         // no naming or rights rules of their own beyond the record rules); the values found in
         // the file are confirmed through the same Save.
         onEditDetails(record) {
-            this.actionService.doAction(
-                "int_filemanager.action_int_filemanager_node_details",
-                {
-                    props: {resId: record.resId},
-                    onClose: () => this.reload(),
-                }
-            );
+            this.actionService.doAction("int_filemanager.action_int_filemanager_node_details", {
+                props: { resId: record.resId },
+                onClose: () => this.reload(),
+            });
         }
 
         // ---------------------------------------------------------------- opening
@@ -510,7 +493,7 @@ export const mutationsMixin = (Base) =>
         }
 
         async onEditText(record) {
-            const response = await fetch(downloadUrl(record.resId, {inline: true}));
+            const response = await fetch(downloadUrl(record.resId, { inline: true }));
             if (!response.ok) {
                 this._fail(new Error(_t("The file could not be loaded.")));
                 return;
@@ -543,13 +526,11 @@ export const mutationsMixin = (Base) =>
         // player keeps playing that list when the user navigates on.
         onPlayAudio(record) {
             const files = this.model.root.records
-                .filter(
-                    (r) => !r.data.is_dir && AUDIO_EXTENSIONS.has(extOf(r.data.name))
-                )
+                .filter((r) => !r.data.is_dir && AUDIO_EXTENSIONS.has(extOf(r.data.name)))
                 .map((r) => ({
                     path: String(r.resId),
                     name: r.data.name,
-                    downloadUrl: downloadUrl(r.resId, {inline: true}),
+                    downloadUrl: downloadUrl(r.resId, { inline: true }),
                     mimetype: AUDIO_MIME_TYPES[extOf(r.data.name)],
                     title: "",
                     artist: "",

@@ -15,9 +15,9 @@ import {
     useRef,
     useState,
 } from "@odoo/owl";
-import {_t} from "@web/core/l10n/translation";
-import {browser} from "@web/core/browser/browser";
-import {useBus, useService} from "@web/core/utils/hooks";
+import { _t } from "@web/core/l10n/translation";
+import { browser } from "@web/core/browser/browser";
+import { useBus, useService } from "@web/core/utils/hooks";
 
 export const NODE_MODEL = "int_filemanager.node";
 const TREE_WIDTH_LS = "int_filemanager.treeWidth";
@@ -34,12 +34,11 @@ export const navigationMixin = (Base) =>
 
             // The chatter opens as a fixed panel over the right side, below the toolbar row
             // (topPx is measured: the search bar can wrap to two lines).
-            this.chatterState = useState({open: false, topPx: 0});
+            this.chatterState = useState({ open: false, topPx: 0 });
             // On a phone the tree is a bottom sheet instead of a sidebar.
-            this.mobileTreeState = useState({open: false});
+            this.mobileTreeState = useState({ open: false });
             this.initialTreeWidth =
-                Number(browser.localStorage.getItem(TREE_WIDTH_LS)) ||
-                TREE_WIDTH_DEFAULT;
+                Number(browser.localStorage.getItem(TREE_WIDTH_LS)) || TREE_WIDTH_DEFAULT;
             // Set by the tree component when it mounts (registerApi).
             this.folderTreeApi = null;
             this.folderCrumbs = [];
@@ -49,7 +48,7 @@ export const navigationMixin = (Base) =>
             onWillDestroy(() => {
                 this._destroyed = true;
             });
-            this.mobileBreadcrumbState = useState({collapsed: false});
+            this.mobileBreadcrumbState = useState({ collapsed: false });
             this.mobileBreadcrumbNavRef = useRef("mobileBreadcrumbNav");
 
             // While the tree's resize handle is dragged, Odoo puts pointer-events:none on
@@ -57,15 +56,11 @@ export const navigationMixin = (Base) =>
             // <html> instead, which stays hit-testable.
             useExternalListener(window, "mousedown", (ev) => {
                 if (ev.target.closest(".o_resizable_panel_handle")) {
-                    document.documentElement.classList.add(
-                        "o_int_filemanager_resizing_tree"
-                    );
+                    document.documentElement.classList.add("o_int_filemanager_resizing_tree");
                 }
             });
             useExternalListener(window, "mouseup", () => {
-                document.documentElement.classList.remove(
-                    "o_int_filemanager_resizing_tree"
-                );
+                document.documentElement.classList.remove("o_int_filemanager_resizing_tree");
             });
             useExternalListener(window, "resize", () => this._measureChatterTop());
 
@@ -74,8 +69,7 @@ export const navigationMixin = (Base) =>
             this.rootBreadcrumbCount = this.env.config.breadcrumbs.length;
             // Odoo's own onSelected on the root crumb restores the same controller, which does
             // not leave a folder - so it must also go back to the top.
-            const ownRootCrumb =
-                this.env.config.breadcrumbs[this.rootBreadcrumbCount - 1];
+            const ownRootCrumb = this.env.config.breadcrumbs[this.rootBreadcrumbCount - 1];
             if (ownRootCrumb) {
                 const nativeOnSelected = ownRootCrumb.onSelected;
                 ownRootCrumb.onSelected = () => {
@@ -114,9 +108,7 @@ export const navigationMixin = (Base) =>
         }
 
         get chatterTitle() {
-            return this.chatterRecord
-                ? this.chatterRecord.data.name
-                : _t("Notes / activities");
+            return this.chatterRecord ? this.chatterRecord.data.name : _t("Notes / activities");
         }
 
         onToggleChatterPanel() {
@@ -176,7 +168,7 @@ export const navigationMixin = (Base) =>
             if (request !== this._crumbRequest || this._destroyed) {
                 return; // The user has moved on (or left) while this was loading
             }
-            for (const {id, name} of chain) {
+            for (const { id, name } of chain) {
                 const crumb = {
                     jsId: `int_filemanager_crumb_${id}`,
                     name,
@@ -204,7 +196,7 @@ export const navigationMixin = (Base) =>
             if (!this._crumbChains.has(record.resId)) {
                 this._crumbChains.set(record.resId, [
                     ...known,
-                    {id: record.resId, name: record.data.name},
+                    { id: record.resId, name: record.data.name },
                 ]);
             }
             this.env.searchModel.setFolder(record.resId);

@@ -3,21 +3,21 @@
 // The file explorer as a real Odoo list view on int_filemanager.node. Everything the list
 // and the kanban share is in controller_mixin.js; this class only says which native
 // controller it extends and which template it uses.
-import {registry} from "@web/core/registry";
-import {Dropdown} from "@web/core/dropdown/dropdown";
-import {DropdownItem} from "@web/core/dropdown/dropdown_item";
-import {ResizablePanel} from "@web/core/resizable_panel/resizable_panel";
-import {SearchBar} from "@web/search/search_bar/search_bar";
-import {listView} from "@web/views/list/list_view";
-import {ListController} from "@web/views/list/list_controller";
+import { registry } from "@web/core/registry";
+import { Dropdown } from "@web/core/dropdown/dropdown";
+import { DropdownItem } from "@web/core/dropdown/dropdown_item";
+import { ResizablePanel } from "@web/core/resizable_panel/resizable_panel";
+import { SearchBar } from "@web/search/search_bar/search_bar";
+import { listView } from "@web/views/list/list_view";
+import { ListController } from "@web/views/list/list_controller";
 // The same component Odoo uses for the chatter of every form; only usable inside a form
 // arch as a <chatter/> tag, so it is mounted here directly.
-import {Chatter} from "@mail/chatter/web_portal/chatter";
-import {filemanagerV2Mixin} from "./controller_mixin.js";
-import {IntFilemanagerV2FolderTree} from "./folder_tree.js";
-import {IntFilemanagerV2ListRenderer} from "./list_renderer.js";
-import {IntFilemanagerV2SearchModel} from "./search_model.js";
-import {IntFilemanagerV2UploadPanel} from "./upload_panel.js";
+import { Chatter } from "@mail/chatter/web_portal/chatter";
+import { filemanagerV2Mixin } from "./controller_mixin.js";
+import { IntFilemanagerV2FolderTree } from "./folder_tree.js";
+import { IntFilemanagerV2ListRenderer } from "./list_renderer.js";
+import { IntFilemanagerV2SearchModel } from "./search_model.js";
+import { IntFilemanagerV2UploadPanel } from "./upload_panel.js";
 
 export class IntFilemanagerV2ListController extends filemanagerV2Mixin(ListController) {
     static template = "int_filemanager.v2.ListView";

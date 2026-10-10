@@ -79,10 +79,10 @@ class TestNodeArguments(TransactionCase):
         self._rejects(lambda b: Node.restore(b, "op-a6"), BAD_IDS)
         self._rejects(lambda b: Node.delete_permanently(b, "op-a7"), BAD_IDS)
         self._rejects(lambda b: Node.rename_or_move(b, False, "n", "op-a8"), BAD_IDS)
-        self._rejects(lambda b: Node.breadcrumb(b), BAD_IDS)
-        self._rejects(lambda b: Node.suggest_field_values(b), BAD_IDS)
+        self._rejects(Node.breadcrumb, BAD_IDS)
+        self._rejects(Node.suggest_field_values, BAD_IDS)
         self._rejects(lambda b: Node.page_words(b, 1, 1), BAD_IDS)
-        self._rejects(lambda b: Node.request_text(b), BAD_IDS)
+        self._rejects(Node.request_text, BAD_IDS)
         self._rejects(lambda b: Node.read_selection(b, 1, 1, 0, 1), BAD_IDS)
         self._rejects(lambda b: Node.apply_field_values(b, 1, []), BAD_IDS)
         self._rejects(
@@ -98,7 +98,7 @@ class TestNodeArguments(TransactionCase):
         self.assertEqual(Node.tree_children(False), Node.tree_children(None))
         self.assertEqual(Node.existing_names(None, []), [])
         bad = ("1", [1], {"id": 1}, 1.5, True, -1)
-        self._rejects(lambda b: Node.tree_children(b), bad)
+        self._rejects(Node.tree_children, bad)
         self._rejects(lambda b: Node.existing_names(b, ["a"]), bad)
         self._rejects(
             lambda b: Node.rename_or_move(self.file.id, b, "n", "op-a12"), bad
@@ -328,13 +328,13 @@ class TestCopyAndPurge(TransactionCase):
                 type(self.Node),
                 "_create_nodes",
                 autospec=True,
-                side_effect=lambda *a, **k: node_create(*a, **k),
+                side_effect=node_create,
             ) as nodes,
             patch.object(
                 type(Revision),
                 "create",
                 autospec=True,
-                side_effect=lambda *a, **k: revision_create(*a, **k),
+                side_effect=revision_create,
             ) as revisions,
         ):
             result = self.Node.copy_node(top.id, self.root.id, "top copy", "op-cp-1")
