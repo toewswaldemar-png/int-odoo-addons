@@ -39,3 +39,4 @@ from . import test_v2_pg_extensions
 from . import test_index_rights
 from . import test_v2_picture_text
 from . import test_v2_node_arguments
+from . import test_document

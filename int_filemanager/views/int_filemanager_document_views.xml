@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="int_filemanager_document_view_list" model="ir.ui.view">
+        <field name="name">int_filemanager.document.list</field>
+        <field name="model">int_filemanager.document</field>
+        <field name="arch" type="xml">
+            <!-- multi_edit: select documents and edit the folder of one of them to move them all. -->
+            <list multi_edit="1">
+                <field name="name" />
+                <field name="folder_id" />
+                <field name="size" widget="int_filemanager_v2_size" />
+                <field name="write_date" string="Modified" />
+                <field name="tag_ids" widget="many2many_tags" optional="show" />
+            </list>
+        </field>
+    </record>
+
+    <record id="int_filemanager_document_view_form" model="ir.ui.view">
+        <field name="name">int_filemanager.document.form</field>
+        <field name="model">int_filemanager.document</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget
+                        name="web_ribbon"
+                        title="Archived"
+                        bg_color="text-bg-danger"
+                        invisible="active"
+                    />
+                    <group>
+                        <field name="active" invisible="1" />
+                        <field name="data" filename="name" />
+                        <field name="name" />
+                        <field name="folder_id" />
+                        <field name="mimetype" />
+                        <field name="size" widget="int_filemanager_v2_size" />
+                        <field name="tag_ids" widget="many2many_tags" />
+                    </group>
+                </sheet>
+                <chatter />
+            </form>
+        </field>
+    </record>
+
+    <record id="int_filemanager_document_view_search" model="ir.ui.view">
+        <field name="name">int_filemanager.document.search</field>
+        <field name="model">int_filemanager.document</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="folder_id" />
+                <field name="tag_ids" />
+                <filter
+                    name="filter_archived"
+                    string="Archived"
+                    domain="[('active', '=', False)]"
+                />
+                <!-- Odoo's own search panel. expand="1": all folders in one call, not looked
+                     up again at every search; limit="0": the default 200 would end in an
+                     error message with more folders. No counters (they count all documents
+                     at every search). -->
+                <searchpanel>
+                    <field
+                        name="folder_id"
+                        string="Folders"
+                        icon="fa-folder"
+                        expand="1"
+                        limit="0"
+                    />
+                    <field
+                        name="tag_ids"
+                        select="multi"
+                        string="Tags"
+                        icon="fa-tags"
+                        expand="1"
+                    />
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_filemanager_document_action" model="ir.actions.act_window">
+        <field name="name">Documents</field>
+        <field name="res_model">int_filemanager.document</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+        id="int_filemanager_document_menu"
+        name="Documents"
+        parent="menu_int_filemanager_v2_root"
+        action="int_filemanager_document_action"
+        sequence="0"
+    />
+</odoo>

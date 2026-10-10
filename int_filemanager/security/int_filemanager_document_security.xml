@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="int_filemanager_document_rule_company" model="ir.rule">
+        <field name="name">Filemanager document: multi-company</field>
+        <field name="model_id" ref="model_int_filemanager_document" />
+        <field
+            name="domain_force"
+        >['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>
