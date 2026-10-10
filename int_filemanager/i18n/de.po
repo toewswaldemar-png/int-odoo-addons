@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 19.0-20260908\n"
+"Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 12:41+0000\n"
-"PO-Revision-Date: 2026-10-02 12:41+0000\n"
+"POT-Creation-Date: 2026-10-09 19:10+0000\n"
+"PO-Revision-Date: 2026-10-09 19:10+0000\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -35,6 +35,18 @@ msgstr "%(field)s: %(text)s lässt sich nicht als Wert dieses Felds lesen."
 #: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
 msgid "%(field)s: this IBAN is not one of the bank accounts of %(partner)s."
 msgstr "%(field)s: Diese IBAN gehört zu keinem der Bankkonten von %(partner)s."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "%(stem)s (copy %(number)s)%(extension)s"
+msgstr "%(stem)s (Kopie %(number)s)%(extension)s"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "%(stem)s (copy)%(extension)s"
+msgstr "%(stem)s (Kopie)%(extension)s"
 
 #. module: int_filemanager
 #. odoo-python
@@ -160,15 +172,18 @@ msgid "Accept found values"
 msgstr "Gefundene Werte übernehmen"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_needaction
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_needaction
 msgid "Action Needed"
 msgstr "Aktion erforderlich"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__active
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__active
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__active
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__active
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__active
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__active
 msgid "Active"
 msgstr "Aktiv"
@@ -187,7 +202,6 @@ msgstr "Adressfenster"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_navigation.js:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/folder_tree.js:0
 msgid "All folders"
 msgstr "Alle Ordner"
 
@@ -213,6 +227,7 @@ msgid "Applied automatically"
 msgstr "Automatisch übernommen"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_attachment_count
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_attachment_count
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_attachment_count
 msgid "Attachment Count"
@@ -271,7 +286,6 @@ msgstr "Kamera"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/move_dialog.xml:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/text_editor_dialog.xml:0
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/text_input_dialog.xml:0
@@ -313,17 +327,16 @@ msgid "Collapse"
 msgstr "Einklappen"
 
 #. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/folder_tree.js:0
-msgid "Collapse folder"
-msgstr "Ordner einklappen"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__status_color
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__color
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__color
 msgid "Color"
 msgstr "Farbe"
+
+#. module: int_filemanager
+#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_v2_configuration
+msgid "Configuration"
+msgstr "Konfiguration"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -381,12 +394,6 @@ msgstr "Kopie"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Copy here"
-msgstr "Hierher kopieren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 msgid "Copy to"
 msgstr "Kopieren nach"
 
@@ -410,6 +417,7 @@ msgstr "Link erzeugen"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__create_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__create_uid
@@ -417,6 +425,7 @@ msgstr "Link erzeugen"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__create_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__create_uid
@@ -437,6 +446,7 @@ msgstr "Erstellt von"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__create_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__create_date
@@ -444,6 +454,7 @@ msgstr "Erstellt von"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__create_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__mtime
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__create_date
@@ -532,6 +543,7 @@ msgstr "Verwerfen"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__display_name
@@ -539,6 +551,7 @@ msgstr "Verwerfen"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable_mixin__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__display_name
@@ -651,12 +664,6 @@ msgstr "Fehler"
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.js:0
 msgid "Expand"
 msgstr "Ausklappen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/folder_tree.js:0
-msgid "Expand folder"
-msgstr "Ordner aufklappen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__expected_size
@@ -798,6 +805,7 @@ msgstr "Dateimanager v2: alte ZIP-Downloads entfernen"
 
 #. module: int_filemanager
 #: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node
+#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_v2_files
 #: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_v2_root
 msgid "Files"
 msgstr "Dateien"
@@ -822,14 +830,23 @@ msgstr "Wird abgeschlossen …"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/name_field.xml:0
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__folder_id
 msgid "Folder"
 msgstr "Ordner"
 
 #. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/list_view.xml:0
-msgid "Folder tree"
-msgstr "Ordnerbaum"
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__folder_path
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__folder_path
+msgid "Folder Path"
+msgstr "Ordnerpfad"
+
+#. module: int_filemanager
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action
+#: model:ir.ui.menu,name:int_filemanager.int_filemanager_folder_menu
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
+msgid "Folders"
+msgstr "Ordner"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
@@ -837,12 +854,14 @@ msgid "Folders only"
 msgstr "Nur Ordner"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_follower_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_follower_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_follower_ids
 msgid "Followers"
 msgstr "Follower"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_partner_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_partner_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_partner_ids
 msgid "Followers (Partners)"
@@ -875,6 +894,7 @@ msgid ""
 msgstr "Gruppe des regulären Ausdrucks, die den Wert enthält; 0 ist der ganze Treffer."
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__has_message
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__has_message
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__has_message
 msgid "Has Message"
@@ -904,6 +924,7 @@ msgstr "IBAN"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__id
@@ -911,6 +932,7 @@ msgstr "IBAN"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable_mixin__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__id
@@ -934,12 +956,15 @@ msgid "ID"
 msgstr "ID"
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_needaction
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_needaction
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__message_needaction
 msgid "If checked, new messages require your attention."
 msgstr "Wenn markiert, erfordern neue Nachrichten Ihre Aufmerksamkeit."
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_error
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_sms_error
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_has_error
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_has_sms_error
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__message_has_error
@@ -992,6 +1017,7 @@ msgid "Is Dir"
 msgstr "Ist Ordner"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_is_follower
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_is_follower
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_is_follower
 msgid "Is Follower"
@@ -1048,6 +1074,7 @@ msgstr "Zuletzt bestätigt"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__write_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__write_uid
@@ -1055,6 +1082,7 @@ msgstr "Zuletzt bestätigt"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__write_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__write_uid
@@ -1075,6 +1103,7 @@ msgstr "Zuletzt aktualisiert von"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__write_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__write_date
@@ -1082,6 +1111,7 @@ msgstr "Zuletzt aktualisiert von"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__write_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__write_date
@@ -1147,12 +1177,14 @@ msgid "Manual"
 msgstr "Von Hand"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_error
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_has_error
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_has_error
 msgid "Message Delivery error"
 msgstr "Nachrichten-Zustellfehler"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_ids
 msgid "Messages"
@@ -1196,6 +1228,7 @@ msgid "Mode"
 msgstr "Art"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_list
 msgid "Modified"
@@ -1222,12 +1255,6 @@ msgstr "1 Eintrag in den Papierkorb verschieben?"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Move here"
-msgstr "Hierher verschieben"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 msgid "Move to"
 msgstr "Verschieben nach"
 
@@ -1246,16 +1273,19 @@ msgstr "Verschieben nach ..."
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/native_ui/zip_contents_dialog.xml:0
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__name
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_file_search
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_picker_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.portal_files
 #: model_terms:ir.ui.view,arch_db:int_filemanager.portal_shared_files
@@ -1370,24 +1400,28 @@ msgid "Number"
 msgstr "Nummer"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction_counter
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_needaction_counter
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_needaction_counter
 msgid "Number of Actions"
 msgstr "Anzahl der Aktionen"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_error_counter
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_has_error_counter
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_has_error_counter
 msgid "Number of errors"
 msgstr "Anzahl der Fehler"
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_needaction_counter
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_needaction_counter
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__message_needaction_counter
 msgid "Number of messages requiring action"
 msgstr "Anzahl der Nachrichten, die eine Aktion erfordern"
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_error_counter
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_has_error_counter
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__message_has_error_counter
 msgid "Number of messages with delivery error"
@@ -1477,12 +1511,14 @@ msgid "Pages"
 msgstr "Seiten"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__parent_id
 msgid "Parent"
 msgstr "Übergeordneter Ordner"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__parent_path
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_path
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__parent_path
 msgid "Parent Path"
 msgstr "Übergeordneter Pfad"
@@ -1493,6 +1529,14 @@ msgstr "Übergeordneter Pfad"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__partner_id
 msgid "Partner"
 msgstr "Partner"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__path
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__path
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__path
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_picker_list
+msgid "Path"
+msgstr "Pfad"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -1743,6 +1787,7 @@ msgid "Running"
 msgstr "Läuft"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_sms_error
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_has_sms_error
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_has_sms_error
 msgid "SMS Delivery error"
@@ -1833,6 +1878,7 @@ msgstr "Notizen/Aktivitäten anzeigen"
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__size
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__size
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__size
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__size
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__size
@@ -1914,8 +1960,10 @@ msgstr "Lieferbeginn"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/native_ui/document_review_dialog.xml:0
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__tag_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__tag_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__tag_ids
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_file_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
 msgid "Tags"
@@ -1987,6 +2035,12 @@ msgstr "Der Download ist groß und wird vorbereitet. Sie werden benachrichtigt."
 #: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
 msgid "The file could not be loaded."
 msgstr "Die Datei konnte nicht geladen werden."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "The folder %(name)s is not empty. Move or delete what is in it first."
+msgstr "Der Ordner %(name)s ist nicht leer. Verschieben oder löschen Sie zuerst, was darin liegt."
 
 #. module: int_filemanager
 #. odoo-python
@@ -2238,10 +2292,9 @@ msgid "Total amount"
 msgstr "Gesamtbetrag"
 
 #. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/folder_tree.xml:0
 #: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node_trash
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__removal_reason__trash
+#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_v2_trash
 msgid "Trash"
 msgstr "Papierkorb"
 
@@ -2402,12 +2455,14 @@ msgid "WebDAV"
 msgstr "WebDAV"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__website_message_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__website_message_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__website_message_ids
 msgid "Website Messages"
 msgstr "Website-Nachrichten"
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__website_message_ids
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__website_message_ids
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__website_message_ids
 msgid "Website communication history"
@@ -2475,6 +2530,11 @@ msgstr "im Dokument (Wort anklicken oder über mehrere Wörter ziehen). Esc bric
 #: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
 msgid "removed"
 msgstr "entfernt"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__document_ids
+msgid "Document"
+msgstr "Dokument"
 
 #. module: int_filemanager
 #. odoo-python
