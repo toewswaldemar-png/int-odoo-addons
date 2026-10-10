@@ -46,6 +46,10 @@ def apply_xpath(root, xpath):
     target = resolve(root, xpath.get("expr"))
     position = xpath.get("position", "inside")
     children = list(xpath)
+    if position == "attributes":
+        for attribute in children:
+            target.set(attribute.get("name"), attribute.text or "")
+        return
     parents = parent_map(root)
     if position == "inside":
         target.extend(children)

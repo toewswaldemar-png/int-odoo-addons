@@ -19,6 +19,8 @@ for name in list kanban; do
   ssh "$HOST" "docker run --rm --entrypoint cat $IMAGE $CORE/src/views/$name/${name}_controller.xml" \
     >"$HERE/core_templates/${name}_controller.xml"
 done
+ssh "$HOST" "docker run --rm --entrypoint cat $IMAGE $CORE/src/search/search_panel/search_panel.xml" \
+  >"$HERE/core_templates/search_panel.xml"
 [[ -d "$HERE/node_modules" ]] || (cd "$HERE" && npm install --no-audit --no-fund >/dev/null)
 
 merged="$(mktemp)"
