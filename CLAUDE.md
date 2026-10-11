@@ -69,10 +69,7 @@ Maßstab für Code, Konventionen und Prüfungen sind **ausschließlich** der Odo
 - **Claims immer verifizieren**, nie "sollte sicher funktionieren" — im Code nachsehen,
   live testen, nicht raten.
 - **Produktentscheidungen vorab mit dem Nutzer klären**, nicht impliziten Annahmen folgen.
-- **int_filemanager:** Der Code ist maßgeblich; Projektbeschreibung: `README.md`.
-  `int_filemanager` wird nur auf dem Branch `feature/int-filemanager-v2` entwickelt. Prüfungen:
-  pre-commit (`py -3.13 -m pre_commit`, Hook installiert) und `tools/v2check/v2check.sh [--quick]` (odoo-ls + `test_lint`,
-  `docs/pruefautomatik_2026-10-02.md`).
-- `odoo shell` / `odoo -u` gegen die Watcher-DB startet einen zweiten Watcher. Workaround:
-  vorher `int_filemanager.watcher_enabled` auf `false`, danach zurück auf `true` (der laufende Server prüft den
-  Schalter nur beim Start, sein Watcher läuft weiter).
+- **int_filemanager:** Der Code ist maßgeblich; Projektbeschreibung: `README.md`. Prüfungen:
+  pre-commit (`py -3.13 -m pre_commit`, Hook installiert), `tools/check/tests.sh` (Modultests in einer Wegwerf-Datenbank auf dem Tower)
+  und `tools/check/check.sh [--quick]` (odoo-ls + `test_lint`, `docs/pruefautomatik_2026-10-02.md`).
+  `tools/check/ui_instance.sh` hält eine Test-Instanz zum Ausprobieren im Browser (Port 8085) auf dem Stand des Arbeitsbaums.

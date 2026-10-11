@@ -6,35 +6,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 19:10+0000\n"
-"PO-Revision-Date: 2026-10-09 19:10+0000\n"
+"POT-Creation-Date: 2026-10-11 21:02+0000\n"
+"PO-Revision-Date: 2026-10-11 21:02+0000\n"
 "Last-Translator: \n"
-"Language: de\n"
 "Language-Team: \n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-#: code:addons/int_filemanager/params.py:0
-msgid "%(argument)s is not valid."
-msgstr "%(argument)s ist ungültig."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "%(field)s: %(text)s cannot be read as a value of this field."
-msgstr "%(field)s: %(text)s lässt sich nicht als Wert dieses Felds lesen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "%(field)s: this IBAN is not one of the bank accounts of %(partner)s."
-msgstr "%(field)s: Diese IBAN gehört zu keinem der Bankkonten von %(partner)s."
 
 #. module: int_filemanager
 #. odoo-python
@@ -49,2487 +29,85 @@ msgid "%(stem)s (copy)%(extension)s"
 msgstr "%(stem)s (Kopie)%(extension)s"
 
 #. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "%(text)s cannot be read as: %(type)s."
-msgstr "%(text)s lässt sich nicht lesen als: %(type)s."
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_document_name_per_folder
+msgid "A document with this name already exists in this folder."
+msgstr "Ein Dokument mit diesem Namen existiert in diesem Ordner bereits."
 
 #. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "%s could not be prepared."
-msgstr "%s konnte nicht vorbereitet werden."
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_folder_name_per_parent
+msgid "A folder with this name already exists here."
+msgstr "Ein Ordner mit diesem Namen existiert hier bereits."
 
 #. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.js:0
-msgid ""
-"%s earlier upload(s) were interrupted. Select the same file(s) again to "
-"continue where they stopped."
-msgstr "%s frühere(r) Upload(s) wurden unterbrochen. Wählen Sie dieselben Dateien erneut aus, um dort fortzufahren, wo sie gestoppt haben."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "%s is ready."
-msgstr "%s ist bereit."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_blob_sha256_uniq
-msgid "A blob with this hash already exists."
-msgstr "Ein Blob mit diesem Hash existiert bereits."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "A box is not valid."
-msgstr "Ein Kasten ist ungültig."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_field_value_node_field_uniq
-msgid "A document has one value per field."
-msgstr "Ein Dokument hat je Feld einen Wert."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_extraction_field.py:0
-msgid "A field named %(name)s already exists."
-msgstr "Ein Feld namens %(name)s existiert bereits."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
-msgid "A file or folder named %(name)s already exists here."
-msgstr "Eine Datei oder ein Ordner namens %(name)s existiert hier bereits."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_node_unique_name_per_parent
-msgid "A file or folder with this name already exists here."
-msgstr "Eine Datei oder ein Ordner mit diesem Namen existiert hier bereits."
-
-#. module: int_filemanager
-#. odoo-javascript
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "A folder cannot be copied into itself."
-msgstr "Ein Ordner kann nicht in sich selbst kopiert werden."
-
-#. module: int_filemanager
-#. odoo-javascript
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "A folder cannot be moved into itself."
-msgstr "Ein Ordner kann nicht in sich selbst verschoben werden."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid ""
-"A name must not contain / \\ : * ? \" < > | or control characters, end with "
-"a dot, or be a reserved Windows name such as CON, NUL or COM1 (with or "
-"without an extension)."
-msgstr "Ein Name darf keines der Zeichen / \ : * ? \" < > | oder Steuerzeichen enthalten, nicht mit einem Punkt enden und kein reservierter Windows-Name wie CON, NUL oder COM1 sein (auch nicht mit Dateiendung)."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_revision_revision_no_uniq
-msgid "A node cannot have two revisions with the same number."
-msgstr "Ein Knoten kann nicht zwei Revisionen mit derselben Nummer haben."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_extraction_field.py:0
-msgid "A quantity field needs a unit, for example kWh."
-msgstr "Ein Mengenfeld braucht eine Einheit, zum Beispiel kWh."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_scope_name_uniq
-msgid "A scope with this name already exists."
-msgstr "Ein Bereich mit diesem Namen existiert bereits."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_extraction_hint_partner_label_uniq
-msgid "A sender's label names one field."
-msgstr "Eine Beschriftung eines Absenders steht für ein Feld."
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_hint__direction__above
-msgid "Above"
-msgstr "Darüber"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "Accept"
-msgstr "Übernehmen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "Accept found values"
-msgstr "Gefundene Werte übernehmen"
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_tag_name_uniq
+msgid "A tag with this name already exists."
+msgstr "Ein Tag mit diesem Namen existiert bereits."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_needaction
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_needaction
 msgid "Action Needed"
 msgstr "Aktion erforderlich"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__active
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__active
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__active
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__active
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__active
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__active
 msgid "Active"
 msgstr "Aktiv"
 
 #. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.js:0
-msgid "Add field"
-msgstr "Feld hinzufügen"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__page_area__address
-msgid "Address window"
-msgstr "Adressfenster"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_navigation.js:0
-msgid "All folders"
-msgstr "Alle Ordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__amount
-msgid "Amount"
-msgstr "Betrag"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_annual_consumption
-msgid "Annual consumption"
-msgstr "Jahresverbrauch"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__page_area__anywhere
-msgid "Anywhere"
-msgstr "Überall"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__review_state__automatic
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Applied automatically"
-msgstr "Automatisch übernommen"
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_search
+msgid "Archived"
+msgstr "Archiviert"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_attachment_count
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_attachment_count
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_attachment_count
 msgid "Attachment Count"
 msgstr "Anzahl der Anhänge"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__attempts
-msgid "Attempts"
-msgstr "Versuche"
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__child_ids
+msgid "Child"
+msgstr "Unterordner"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__base_revision_id
-msgid "Base Revision"
-msgstr "Basisrevision"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_base_price
-msgid "Base price"
-msgstr "Grundpreis"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_hint__direction__before
-msgid "Before"
-msgstr "Davor"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_hint__direction__below
-msgid "Below"
-msgstr "Darunter"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_billing_period
-msgid "Billing period"
-msgstr "Abrechnungszeitraum"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__blob_id
-msgid "Blob"
-msgstr "Blob"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__bottom
-msgid "Bottom"
-msgstr "Unten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
-msgid "By"
-msgstr "Von"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__camera
-msgid "Camera"
-msgstr "Kamera"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/text_editor_dialog.xml:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/text_input_dialog.xml:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
-msgid "Cancel"
-msgstr "Abbrechen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.xml:0
-msgid "Cancel upload"
-msgstr "Upload abbrechen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
-msgid "Choose the value of"
-msgstr "Wählen Sie den Wert von"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Clear"
-msgstr "Leeren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/shared.xml:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Close"
-msgstr "Schließen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.js:0
-msgid "Collapse"
-msgstr "Einklappen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__status_color
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__color
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__color
 msgid "Color"
 msgstr "Farbe"
 
 #. module: int_filemanager
-#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_v2_configuration
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__company_id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__company_id
+msgid "Company"
+msgstr "Unternehmen"
+
+#. module: int_filemanager
+#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_configuration
 msgid "Configuration"
 msgstr "Konfiguration"
 
 #. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Connection lost - continue to resume"
-msgstr "Verbindung verloren - fortsetzen, um weiterzumachen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-#: model:ir.model,name:int_filemanager.model_res_partner
-msgid "Contact"
-msgstr "Kontakt"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_contact_person
-msgid "Contact person"
-msgstr "Ansprechpartner"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "Contact:"
-msgstr "Kontakt:"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__content
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__content
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Content"
-msgstr "Inhalt"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.xml:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Continue"
-msgstr "Weiter"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_contract_number
-msgid "Contract number"
-msgstr "Vertragsnummer"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__converter_job_id
-msgid "Converter Job"
-msgstr "Umwandlungsauftrag"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_revision__origin__copy
-msgid "Copy"
-msgstr "Kopie"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Copy to"
-msgstr "Kopieren nach"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Copy to..."
-msgstr "Kopieren nach ..."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Create"
-msgstr "Anlegen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Create link"
-msgstr "Link erzeugen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scan_log__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__create_uid
 msgid "Created by"
 msgstr "Erstellt von"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__mtime
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scan_log__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__create_date
 msgid "Created on"
 msgstr "Erstellt am"
 
 #. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_credit_note_number
-msgid "Credit note number"
-msgstr "Gutschriftnummer"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__currency_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__currency_id
-msgid "Currency"
-msgstr "Währung"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_extraction_field__currency_id
-msgid "Currency of an amount printed without one."
-msgstr "Währung eines Betrags, der ohne Währung gedruckt ist."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__current_revision_id
-msgid "Current Revision"
-msgstr "Aktuelle Revision"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_customer_number
-msgid "Customer number"
-msgstr "Kundennummer"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__date
-msgid "Date"
-msgstr "Datum"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_trash_list
-msgid "Delete permanently"
-msgstr "Endgültig löschen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_trash_list
-msgid "Deleted on"
-msgstr "Gelöscht am"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_delivery_note_number
-msgid "Delivery note number"
-msgstr "Lieferscheinnummer"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__depends_on_id
-msgid "Depends On"
-msgstr "Abhängig von"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__derived_blob_id
-msgid "Derived Blob"
-msgstr "Abgeleiteter Blob"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__direction
-msgid "Direction"
-msgstr "Richtung"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Discard"
-msgstr "Verwerfen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable_mixin__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scan_log__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_value_recognition__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_ir_attachment__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_res_partner__display_name
 msgid "Display Name"
 msgstr "Anzeigename"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_document_date
-msgid "Document date"
-msgstr "Dokumentdatum"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__done
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_upload__state__done
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__done
-msgid "Done"
-msgstr "Fertig"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
-msgid "Download"
-msgstr "Herunterladen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__download_count
-msgid "Download Count"
-msgstr "Anzahl Downloads"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Downloads"
-msgstr "Downloads"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/shared.xml:0
-msgid "Drop files or folders here to upload"
-msgstr "Dateien oder Ordner hier ablegen zum Hochladen"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_due_date
-msgid "Due date"
-msgstr "Fällig am"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__duration
-msgid "Duration"
-msgstr "Dauer"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.js:0
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_revision__origin__edit
-msgid "Edit"
-msgstr "Bearbeiten"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_email
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__email
-msgid "Email"
-msgstr "E-Mail"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_energy_price
-msgid "Energy price"
-msgstr "Arbeitspreis"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_extraction_rule.py:0
-msgid "Enter a regular expression."
-msgstr "Geben Sie einen regulären Ausdruck ein."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_extraction_rule.py:0
-msgid "Enter at least one keyword."
-msgstr "Geben Sie mindestens ein Stichwort ein."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__error
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__error
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__error
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__error
-msgid "Error"
-msgstr "Fehler"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.js:0
-msgid "Expand"
-msgstr "Ausklappen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__expected_size
-msgid "Expected Size"
-msgstr "Erwartete Größe"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__expires_at
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__expires_at
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__expires_at
-msgid "Expires At"
-msgstr "Läuft ab am"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__failed
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__full_preview_state__failed
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__failed
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_upload__state__failed
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__failed
-msgid "Failed"
-msgstr "Fehlgeschlagen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__field_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__field_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__field_id
-msgid "Field"
-msgstr "Feld"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__field_value_ids
-msgid "Field Value"
-msgstr "Feldwert"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__file_name
-msgid "File Name"
-msgstr "Dateiname"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_share_log
-msgid "Filemanager Freigabe-Protokoll"
-msgstr "Dateimanager Freigabe-Protokoll"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_node
-msgid "Filemanager node (folder or file)"
-msgstr "Dateimanager-Knoten (Ordner oder Datei)"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_zip_job
-msgid "Filemanager v2 ZIP download job"
-msgstr "Dateimanager v2 ZIP-Download-Auftrag"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_blob
-msgid "Filemanager v2 blob (content, by hash)"
-msgstr "Dateimanager v2 Blob (Inhalt, nach Hash)"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_upload
-msgid "Filemanager v2 chunked upload in progress"
-msgstr "Dateimanager v2 laufender Stück-Upload"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_derivative
-msgid "Filemanager v2 derived file"
-msgstr "Dateimanager v2 abgeleitete Datei"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_extraction_field
-msgid "Filemanager v2 extraction field"
-msgstr "Dateimanager v2 Erkennungsfeld"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_extraction_rule
-msgid "Filemanager v2 extraction rule"
-msgstr "Dateimanager v2 Erkennungsregel"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_field_value
-msgid "Filemanager v2 field value"
-msgstr "Dateimanager v2 Feldwert"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_extraction_hint
-msgid "Filemanager v2 learned label"
-msgstr "Dateimanager v2 gelernte Beschriftung"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_revision
-msgid "Filemanager v2 revision"
-msgstr "Dateimanager v2 Revision"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_scope
-msgid "Filemanager v2 rights scope"
-msgstr "Dateimanager v2 Rechte-Bereich"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_share
-msgid "Filemanager v2 share link"
-msgstr "Dateimanager v2 Freigabe-Link"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_operation
-msgid "Filemanager v2 write operation (idempotency key)"
-msgstr "Dateimanager v2 Schreibvorgang (Idempotenzschlüssel)"
-
-#. module: int_filemanager
-#: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_build_zips_ir_actions_server
-msgid "Filemanager v2: build big ZIP downloads"
-msgstr "Dateimanager v2: große ZIP-Downloads erstellen"
-
-#. module: int_filemanager
-#: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_expire_orphaned_uploads_ir_actions_server
-msgid "Filemanager v2: clean up orphaned uploads"
-msgstr "Dateimanager v2: verwaiste Uploads aufräumen"
-
-#. module: int_filemanager
-#: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_derivatives_ir_actions_server
-msgid "Filemanager v2: create thumbnails and previews"
-msgstr "Dateimanager v2: Vorschaubilder erzeugen"
-
-#. module: int_filemanager
-#: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_finish_pending_uploads_ir_actions_server
-msgid "Filemanager v2: finish large uploads"
-msgstr "Dateimanager v2: große Uploads abschließen"
-
-#. module: int_filemanager
-#: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_purge_trash_ir_actions_server
-msgid "Filemanager v2: purge expired trash"
-msgstr "Dateimanager v2: abgelaufene Papierkorb-Einträge löschen"
-
-#. module: int_filemanager
-#: model:ir.actions.server,name:int_filemanager.ir_cron_int_filemanager_expire_zips_ir_actions_server
-msgid "Filemanager v2: remove old ZIP downloads"
-msgstr "Dateimanager v2: alte ZIP-Downloads entfernen"
-
-#. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node
-#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_v2_files
-#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_v2_root
-msgid "Files"
-msgstr "Dateien"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Files only"
-msgstr "Nur Dateien"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__finished_at
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__finished_at
-msgid "Finished At"
-msgstr "Beendet am"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Finishing…"
-msgstr "Wird abgeschlossen …"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/name_field.xml:0
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__folder_id
-msgid "Folder"
-msgstr "Ordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__folder_path
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__folder_path
-msgid "Folder Path"
-msgstr "Ordnerpfad"
-
-#. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action
-#: model:ir.ui.menu,name:int_filemanager.int_filemanager_folder_menu
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Folders"
-msgstr "Ordner"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Folders only"
-msgstr "Nur Ordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_follower_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_follower_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_follower_ids
-msgid "Followers"
-msgstr "Follower"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_partner_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_partner_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_partner_ids
-msgid "Followers (Partners)"
-msgstr "Follower (Partner)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__full_preview_state
-msgid "Full Preview State"
-msgstr "Status der großen Vorschau"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__gps_lat
-msgid "Gps Lat"
-msgstr "GPS Breitengrad"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__gps_lon
-msgid "Gps Lon"
-msgstr "GPS Längengrad"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__group_index
-msgid "Group Index"
-msgstr "Gruppe"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_extraction_rule__group_index
-msgid ""
-"Group of the regular expression that holds the value; 0 is the whole match."
-msgstr "Gruppe des regulären Ausdrucks, die den Wert enthält; 0 ist der ganze Treffer."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__has_message
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__has_message
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__has_message
-msgid "Has Message"
-msgstr "Hat Nachricht"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__height
-msgid "Height"
-msgstr "Höhe"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__hint_ext
-msgid "Hint Ext"
-msgstr "Endungshinweis"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__hit_count
-msgid "Hit Count"
-msgstr "Anzahl Bestätigungen"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_iban
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__iban
-msgid "IBAN"
-msgstr "IBAN"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable_mixin__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scan_log__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_value_recognition__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__id
-#: model:ir.model.fields,field_description:int_filemanager.field_ir_attachment__id
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__id
-#: model:ir.model.fields,field_description:int_filemanager.field_res_partner__id
-msgid "ID"
-msgstr "ID"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_needaction
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_needaction
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__message_needaction
-msgid "If checked, new messages require your attention."
-msgstr "Wenn markiert, erfordern neue Nachrichten Ihre Aufmerksamkeit."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_error
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_sms_error
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_has_error
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_has_sms_error
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__message_has_error
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__message_has_sms_error
-msgid "If checked, some messages have a delivery error."
-msgstr "Wenn markiert, weisen einige Nachrichten einen Zustellfehler auf."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__ignore_case
-msgid "Ignore Case"
-msgstr "Groß-/Kleinschreibung ignorieren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.js:0
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_revision__origin__import
-msgid "Import"
-msgstr "Import"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Include subfolders"
-msgstr "Unterordner einbeziehen"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_inquiry_number
-msgid "Inquiry number"
-msgstr "Anfragenummer"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_instalment
-msgid "Instalment"
-msgstr "Abschlag"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
-#: code:addons/int_filemanager/models/int_filemanager_zip_job.py:0
-msgid "Internal error."
-msgstr "Interner Fehler."
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_invoice_number
-msgid "Invoice number"
-msgstr "Rechnungsnummer"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__is_dir
-msgid "Is Dir"
-msgstr "Ist Ordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_is_follower
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_is_follower
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_is_follower
-msgid "Is Follower"
-msgstr "Ist Follower"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__is_scope_root
-msgid "Is Scope Root"
-msgstr "Ist Bereichswurzel"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__is_visible_top
-msgid "Is Visible Top"
-msgstr "Ist sichtbare Spitze"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.xml:0
-msgid "Keep both"
-msgstr "Beide behalten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.xml:0
-msgid "Keep both for all"
-msgstr "Für alle beide behalten"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__key
-msgid "Key"
-msgstr "Schlüssel"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__keywords
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_rule__mode__keyword
-msgid "Keywords"
-msgstr "Stichwörter"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__kind
-msgid "Kind"
-msgstr "Art"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__label
-msgid "Label"
-msgstr "Beschriftung"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__last_date
-msgid "Last Date"
-msgstr "Zuletzt bestätigt"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scan_log__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__write_uid
-msgid "Last Updated by"
-msgstr "Zuletzt aktualisiert von"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scan_log__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__write_date
-msgid "Last Updated on"
-msgstr "Zuletzt aktualisiert am"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__last_used
-msgid "Last Used"
-msgstr "Zuletzt verwendet"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__lease_until
-msgid "Lease Until"
-msgstr "Reserviert bis"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_hint__direction__left
-msgid "Left"
-msgstr "Links"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Links without login"
-msgstr "Links ohne Anmeldung"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "Loading"
-msgstr "Wird geladen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
-msgid "Loading…"
-msgstr "Wird geladen …"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__manage_group_ids
-msgid "Manage groups"
-msgstr "Verwalten erlaubt für"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_mandate_reference
-msgid "Mandate reference"
-msgstr "Mandatsreferenz"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_field_value__source__manual
-msgid "Manual"
-msgstr "Von Hand"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_error
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_has_error
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_has_error
-msgid "Message Delivery error"
-msgstr "Nachrichten-Zustellfehler"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_ids
-msgid "Messages"
-msgstr "Nachrichten"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__meta
-msgid "Meta"
-msgstr "Metadaten (Rohdaten)"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__meta
-msgid "Metadata"
-msgstr "Metadaten"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_meter_number
-msgid "Meter number"
-msgstr "Zählernummer"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_meter_reading
-msgid "Meter reading"
-msgstr "Zählerstand"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__mime
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__mime
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__mime
-msgid "Mime"
-msgstr "MIME-Typ"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_minimum_term
-msgid "Minimum term"
-msgstr "Mindestlaufzeit"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__mode
-msgid "Mode"
-msgstr "Art"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_list
-msgid "Modified"
-msgstr "Geändert"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Move"
-msgstr "Verschieben"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Move %s items to the trash?"
-msgstr "%s Einträge in den Papierkorb verschieben?"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Move 1 item to the trash?"
-msgstr "1 Eintrag in den Papierkorb verschieben?"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Move to"
-msgstr "Verschieben nach"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Move to the trash"
-msgstr "In den Papierkorb verschieben"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Move to..."
-msgstr "Verschieben nach ..."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/native_ui/zip_contents_dialog.xml:0
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__name
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_file_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_picker_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.portal_files
-#: model_terms:ir.ui.view,arch_db:int_filemanager.portal_shared_files
-msgid "Name"
-msgstr "Name"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Name of the new folder"
-msgstr "Name des neuen Ordners"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.js:0
-msgid "Names already in use"
-msgstr "Namen bereits vergeben"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.js:0
-msgid "Network drive"
-msgstr "Netzlaufwerk"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/list_view.xml:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/shared.xml:0
-msgid "New"
-msgstr "Neu"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/list_view.xml:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/shared.xml:0
-msgid "New folder"
-msgstr "Neuer Ordner"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "New name"
-msgstr "Neuer Name"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__next_try_at
-msgid "Next Try At"
-msgstr "Nächster Versuch am"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "No text has been read from this picture yet."
-msgstr "Aus diesem Bild wurde noch kein Text gelesen."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__node_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__node_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__node_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__node_id
-msgid "Node"
-msgstr "Knoten"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__node_ids_json
-msgid "Node Ids Json"
-msgstr "Knoten-IDs (JSON)"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__full_preview_state__none
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__none
-msgid "None"
-msgstr "Keine"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__not_applicable
-msgid "Not applicable"
-msgstr "Nicht anwendbar"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__review_state__unreviewed
-msgid "Not reviewed"
-msgstr "Nicht geprüft"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_navigation.js:0
-msgid "Notes / activities"
-msgstr "Notizen / Aktivitäten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "Nothing in this file matches a field."
-msgstr "In dieser Datei passt nichts zu einem Feld."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/zip_stream.py:0
-msgid "Nothing to download."
-msgstr "Nichts zum Herunterladen."
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_notice_period
-msgid "Notice period"
-msgstr "Kündigungsfrist"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__number
-msgid "Number"
-msgstr "Nummer"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction_counter
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_needaction_counter
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_needaction_counter
-msgid "Number of Actions"
-msgstr "Anzahl der Aktionen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_error_counter
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_has_error_counter
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_has_error_counter
-msgid "Number of errors"
-msgstr "Anzahl der Fehler"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_needaction_counter
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_needaction_counter
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__message_needaction_counter
-msgid "Number of messages requiring action"
-msgstr "Anzahl der Nachrichten, die eine Aktion erfordern"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_error_counter
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__message_has_error_counter
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__message_has_error_counter
-msgid "Number of messages with delivery error"
-msgstr "Anzahl der Nachrichten mit Zustellfehler"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.js:0
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_revision__origin__office
-msgid "Office"
-msgstr "Office"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_extraction_rule__keywords
-msgid "One label per line, as printed before, beside or above the value."
-msgstr "Eine Beschriftung je Zeile, so wie sie vor, neben oder über dem Wert gedruckt ist."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "Only single files with content can be shared by link."
-msgstr "Nur einzelne Dateien mit Inhalt können per Link freigegeben werden."
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_upload__state__open
-msgid "Open"
-msgstr "Offen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_navigation.js:0
-msgid "Open a folder first"
-msgstr "Zuerst einen Ordner öffnen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_uploads.js:0
-msgid "Open a folder first, then upload into it."
-msgstr "Öffnen Sie zuerst einen Ordner und laden Sie dann dorthin hoch."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
-msgid "Open preview in a separate window."
-msgstr "Vorschau in einem separaten Fenster öffnen."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__operation_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__operation_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__operation
-msgid "Operation"
-msgstr "Vorgang"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_sale_order_number
-msgid "Order number"
-msgstr "Auftragsnummer"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__origin
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__origin
-msgid "Origin"
-msgstr "Herkunft"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_trash_list
-msgid "Original location"
-msgstr "Ursprünglicher Ort"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__page
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__page
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__page
-msgid "Page"
-msgstr "Seite"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__page_area
-msgid "Page Area"
-msgstr "Stelle auf der Seite"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__pages
-msgid "Pages"
-msgstr "Seiten"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__parent_id
-msgid "Parent"
-msgstr "Übergeordneter Ordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__parent_path
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_path
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__parent_path
-msgid "Parent Path"
-msgstr "Übergeordneter Pfad"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__partner_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__partner_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__partner_id
-msgid "Partner"
-msgstr "Partner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__path
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_protected_folder__path
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_log__path
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_picker_list
-msgid "Path"
-msgstr "Pfad"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Pause"
-msgstr "Pausieren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Paused"
-msgstr "Pausiert"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__pending
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__full_preview_state__pending
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__pending
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__pending
-msgid "Pending"
-msgstr "Ausstehend"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__period
-msgid "Period or duration"
-msgstr "Zeitraum oder Dauer"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "Please check this value"
-msgstr "Bitte diesen Wert prüfen"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_blob__state__present
-msgid "Present"
-msgstr "Vorhanden"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__preview
-msgid "Preview"
-msgstr "Vorschau"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__preview_pdf
-msgid "Preview PDF"
-msgstr "Vorschau-PDF"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__preview_state
-msgid "Preview State"
-msgstr "Vorschau-Status"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__preview
-msgid "Preview image"
-msgstr "Vorschaubild (groß)"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_price_guarantee
-msgid "Price guarantee"
-msgstr "Preisgarantie"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__priority
-msgid "Priority"
-msgstr "Priorität"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_upload__state__processing
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_zip_job__state__processing
-msgid "Processing"
-msgstr "In Bearbeitung"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-#: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node_details
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
-msgid "Properties"
-msgstr "Eigenschaften"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_purchase_order_number
-msgid "Purchase order number"
-msgstr "Bestellnummer"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__purge_group_ids
-msgid "Purge groups"
-msgstr "Endgültig löschen erlaubt für"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_trash_list
-msgid "Put it back where it was"
-msgstr "An den ursprünglichen Ort zurücklegen"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__quantity
-msgid "Quantity with unit"
-msgstr "Menge mit Einheit"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_quotation_number
-msgid "Quotation number"
-msgstr "Angebotsnummer"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "Read"
-msgstr "Lesen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__read_group_ids
-msgid "Read groups"
-msgstr "Lesen erlaubt für"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "Read text"
-msgstr "Text erkennen"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__full_preview_state__ready
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__preview_state__ready
-msgid "Ready"
-msgstr "Bereit"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__received_size
-msgid "Received Size"
-msgstr "Empfangene Größe"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_recipient
-msgid "Recipient"
-msgstr "Empfänger"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__pattern
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_rule__mode__regex
-msgid "Regular expression"
-msgstr "Regulärer Ausdruck"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__removal_reason
-msgid "Removal Reason"
-msgstr "Löschgrund"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_uploads.js:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Rename"
-msgstr "Umbenennen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.xml:0
-msgid "Replace (new version)"
-msgstr "Ersetzen (neue Version)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.xml:0
-msgid "Replace all"
-msgstr "Alle ersetzen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_revision__origin__restore
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_trash_list
-msgid "Restore"
-msgstr "Wiederherstellen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.js:0
-msgid "Restored"
-msgstr "Wiederhergestellt"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid ""
-"Restoring would collide with an existing file or folder of the same name."
-msgstr "Das Wiederherstellen würde mit einer vorhandenen Datei oder einem Ordner gleichen Namens kollidieren."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_operation__result
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__result
-msgid "Result"
-msgstr "Ergebnis"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__review_state
-msgid "Review State"
-msgstr "Prüfstatus"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__review_state__reviewed
-msgid "Reviewed"
-msgstr "Geprüft"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__revision_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__revision_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__revision
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__revision_ids
-msgid "Revision"
-msgstr "Revision"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__revision_no
-msgid "Revision No"
-msgstr "Revisionsnummer"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Revoke"
-msgstr "Widerrufen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Revoke this link"
-msgstr "Diesen Link widerrufen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__revoked_at
-msgid "Revoked At"
-msgstr "Widerrufen am"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__rule_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__rule_id
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_field_value__source__rule
-msgid "Rule"
-msgstr "Regel"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__state__running
-msgid "Running"
-msgstr "Läuft"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_sms_error
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__message_has_sms_error
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__message_has_sms_error
-msgid "SMS Delivery error"
-msgstr "SMS-Zustellfehler"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/text_editor_dialog.xml:0
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Save"
-msgstr "Speichern"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
-msgid "Saved"
-msgstr "Gespeichert"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__scope_id
-msgid "Scope"
-msgstr "Bereich"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.js:0
-msgid "Search a field..."
-msgstr "Feld suchen…"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
-msgid "Select"
-msgstr "Auswählen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/shared.xml:0
-msgid "Select a file or folder to see its notes and activities."
-msgstr "Wählen Sie eine Datei oder einen Ordner aus, um Notizen und Aktivitäten zu sehen."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.js:0
-msgid "Select in the document..."
-msgstr "Im Dokument wählen …"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__sequence
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_pattern__sequence
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_rule__sequence
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_status__sequence
-msgid "Sequence"
-msgstr "Reihenfolge"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__sha256
-msgid "Sha256"
-msgstr "SHA-256"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-#: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node_share
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__share_ids
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Share"
-msgstr "Freigeben"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__shared_partner_ids
-msgid "Shared with"
-msgstr "Freigegeben für"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Shared with portal contacts"
-msgstr "Freigegeben für Portal-Kontakte"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/shared.xml:0
-msgid "Show notes / activities"
-msgstr "Notizen/Aktivitäten anzeigen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__size
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__size
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__size
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_revision__size
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_version__size
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__size
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_list
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_trash_list
-msgid "Size"
-msgstr "Größe"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.xml:0
-msgid "Skip"
-msgstr "Überspringen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.xml:0
-msgid "Skip all"
-msgstr "Alle überspringen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__source
-msgid "Source"
-msgstr "Herkunft"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__source_blob_id
-msgid "Source Blob"
-msgstr "Quell-Blob"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__source_text
-msgid "Source Text"
-msgstr "Text im Dokument"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__spec
-msgid "Spec"
-msgstr "Spezifikation"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
-msgid ""
-"Specify either a target folder and name for a new file, or an existing file "
-"to revise - not both."
-msgstr "Bitte entweder einen Zielordner und Namen für eine neue Datei angeben oder eine vorhandene Datei zum Überarbeiten - nicht beides."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__started_at
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_write_journal__started_at
-msgid "Started At"
-msgstr "Gestartet am"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_blob__state
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__state
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__state
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_zip_job__state
-msgid "State"
-msgstr "Status"
-
-#. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.action_filemanager_status
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__status_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__status_id
-#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_status
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_file_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Status"
-msgstr "Status"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_supply_start
-msgid "Supply start"
-msgstr "Lieferbeginn"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/native_ui/document_review_dialog.xml:0
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__tag_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__tag_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__tag_ids
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_file_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Tags"
-msgstr "Tags"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__taken_at
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__taken_at
-msgid "Taken At"
-msgstr "Aufgenommen am"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__target_name
-msgid "Target Name"
-msgstr "Zielname"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__target_node_id
-msgid "Target Node"
-msgstr "Zielknoten"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__target_parent_id
-msgid "Target Parent"
-msgstr "Zielordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_upload__temp_file
-msgid "Temp File"
-msgstr "Temporäre Datei"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__text
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__text
-msgid "Text"
-msgstr "Text"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__words
-msgid "Text and word positions"
-msgstr "Text und Wortpositionen"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "The content can only be searched for words."
-msgstr "Der Inhalt lässt sich nur nach Wörtern durchsuchen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "The content search has too many or too long words."
-msgstr "Die Inhaltssuche hat zu viele oder zu lange Wörter."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.js:0
-msgid "The document is not ready yet."
-msgstr "Das Dokument ist noch nicht bereit."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "The download is big and is being prepared. You will be notified."
-msgstr "Der Download ist groß und wird vorbereitet. Sie werden benachrichtigt."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "The file could not be loaded."
-msgstr "Die Datei konnte nicht geladen werden."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
-msgid "The folder %(name)s is not empty. Move or delete what is in it first."
-msgstr "Der Ordner %(name)s ist nicht leer. Verschieben oder löschen Sie zuerst, was darin liegt."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "The marking is not valid."
-msgstr "Die Markierung ist ungültig."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "The page is not valid."
-msgstr "Die Seite ist ungültig."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_extraction_rule.py:0
-msgid ""
-"The regular expression has %(count)s group(s); group %(index)s does not "
-"exist."
-msgstr "Der reguläre Ausdruck hat %(count)s Gruppe(n); Gruppe %(index)s gibt es nicht."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_extraction_rule.py:0
-msgid "The regular expression is not valid: %(error)s"
-msgstr "Der reguläre Ausdruck ist ungültig: %(error)s"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "The target folder is in the trash; restore it first."
-msgstr "Der Zielordner liegt im Papierkorb; bitte zuerst wiederherstellen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "The target is not a folder."
-msgstr "Das Ziel ist kein Ordner."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_field_value__source_text
-msgid "The text as printed in the document."
-msgstr "Der Text, wie er im Dokument gedruckt ist."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.js:0
-msgid "The text of the picture is not ready yet."
-msgstr "Der Text des Bildes ist noch nicht fertig gelesen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "The text of this file cannot be read."
-msgstr "Der Text dieser Datei kann nicht gelesen werden."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid ""
-"The text of this file is being read. The values appear here when it is done."
-msgstr "Der Text dieser Datei wird gelesen. Die Werte erscheinen hier, sobald er fertig ist."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_extraction_field.py:0
-msgid ""
-"The type of a field cannot change once documents have values for it. Archive"
-" it and create a new field instead."
-msgstr "Die Art eines Felds lässt sich nicht mehr ändern, sobald Dokumente Werte dafür haben. Archivieren Sie es und legen Sie stattdessen ein neues Feld an."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_field_value.py:0
-msgid "The value of %(field)s does not fit its type."
-msgstr "Der Wert von %(field)s passt nicht zu seiner Art."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_field_value.py:0
-msgid ""
-"The value of %(field)s names a revision or rule that belongs elsewhere."
-msgstr "Der Wert von %(field)s nennt eine Fassung oder Regel, die woanders hingehört."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "There are too many boxes."
-msgstr "Es sind zu viele Kästen."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/conflict_dialog.xml:0
-msgid ""
-"These names already exist in the folder. Choose what happens to each file."
-msgstr "Diese Namen existieren im Ordner bereits. Wählen Sie, was mit jeder Datei geschehen soll."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_derivative_source_kind_spec_uniq
-msgid "This blob already has this derived file."
-msgstr "Zu diesem Blob gibt es diese abgeleitete Datei bereits."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_trash_list
-msgid "This cannot be undone. Delete permanently?"
-msgstr "Das kann nicht rückgängig gemacht werden. Endgültig löschen?"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
-msgid "This chunk does not continue where the upload left off."
-msgstr "Dieses Stück setzt den Upload nicht dort fort, wo er aufgehört hat."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_zip_job.py:0
-msgid "This download does not exist any more."
-msgstr "Dieser Download existiert nicht mehr."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "This field does not exist any more."
-msgstr "Dieses Feld gibt es nicht mehr."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "This file changed since you loaded it; reload and try again."
-msgstr "Diese Datei hat sich seit dem Laden geändert; bitte neu laden und erneut versuchen."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.js:0
-msgid "This file changed. Open the properties again."
-msgstr "Die Datei hat sich geändert. Öffnen Sie die Eigenschaften neu."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "This file has no content yet; nothing to copy."
-msgstr "Diese Datei hat noch keinen Inhalt; nichts zu kopieren."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.xml:0
-msgid "This file has no text to look for values in."
-msgstr "Diese Datei hat keinen Text, in dem nach Werten gesucht werden könnte."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "This is not a valid file or folder name."
-msgstr "Das ist kein gültiger Datei- oder Ordnername."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "This item is in the trash; restore it before moving it."
-msgstr "Dieses Element liegt im Papierkorb; bitte vor dem Verschieben wiederherstellen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This link does not exist any more."
-msgstr "Dieser Link existiert nicht mehr."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_upload_operation_id_uniq
-msgid "This operation already has an upload in progress."
-msgstr "Für diesen Vorgang läuft bereits ein Upload."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_operation_key_uniq
-msgid "This operation key was already used."
-msgstr "Dieser Vorgangsschlüssel wurde bereits verwendet."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "This revision does not belong to this file."
-msgstr "Diese Revision gehört nicht zu dieser Datei."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_share_token_uniq
-msgid "This share token already exists."
-msgstr "Dieses Freigabe-Token existiert bereits."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
-msgid "This upload does not exist any more."
-msgstr "Dieser Upload existiert nicht mehr."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
-msgid "This upload has not received any data yet."
-msgstr "Für diesen Upload wurden noch keine Daten empfangen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
-msgid "This upload is already being processed; it cannot be cancelled."
-msgstr "Dieser Upload wird bereits verarbeitet und kann nicht mehr abgebrochen werden."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
-msgid "This upload is not open for more chunks."
-msgstr "Dieser Upload ist nicht offen für weitere Stücke."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_upload.py:0
-msgid "This upload is not open."
-msgstr "Dieser Upload ist nicht offen."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__thumbnail
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_derivative__kind__tile
-msgid "Thumbnail"
-msgstr "Vorschaubild"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__token
-msgid "Token"
-msgstr "Token"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__tool
-msgid "Tool"
-msgstr "Werkzeug"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__tool_version
-msgid "Tool Version"
-msgstr "Werkzeugversion"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__top
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__top
-msgid "Top"
-msgstr "Oben"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_total_amount
-msgid "Total amount"
-msgstr "Gesamtbetrag"
-
-#. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.action_int_filemanager_node_trash
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_node__removal_reason__trash
-#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_v2_trash
-msgid "Trash"
-msgstr "Papierkorb"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__trashed_at
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__trashed_at
-msgid "Trashed At"
-msgstr "Gelöscht am"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__unit
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__unit
-msgid "Unit"
-msgstr "Einheit"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_extraction_field__unit
-msgid "Unit a quantity is given in, for example kWh or ct/kWh."
-msgstr "Einheit einer Menge, zum Beispiel kWh oder ct/kWh."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_node.py:0
-msgid "Unsupported search on the top of the tree."
-msgstr "Diese Suche auf der Spitze des Baums wird nicht unterstützt."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_uploads.js:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.js:0
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_revision__origin__upload
-msgid "Upload"
-msgstr "Hochladen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/list_view.xml:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/shared.xml:0
-msgid "Upload files"
-msgstr "Dateien hochladen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/list_view.xml:0
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/shared.xml:0
-msgid "Upload folder"
-msgstr "Ordner hochladen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Upload new version"
-msgstr "Neue Version hochladen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_uploads.js:0
-msgid "Upload under another name"
-msgstr "Unter anderem Namen hochladen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Uploads"
-msgstr "Uploads"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__url
-msgid "Url"
-msgstr "URL"
-
-#. module: int_filemanager
-#: model:int_filemanager.extraction_field,name:int_filemanager.extraction_field_vat
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__vat
-msgid "VAT number"
-msgstr "USt-IdNr."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_share_form
-msgid "Valid until"
-msgstr "Gültig bis"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__value_date
-msgid "Value Date"
-msgstr "Datum (Wert)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__value_date_to
-msgid "Value Date To"
-msgstr "Datum bis (Wert)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__value_number
-msgid "Value Number"
-msgstr "Zahl (Wert)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__value_text
-msgid "Value Text"
-msgstr "Wert"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_field__value_type
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__value_type
-msgid "Value Type"
-msgstr "Art des Werts"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_value_recognition
-msgid "Value recognition of a file"
-msgstr "Werterkennung einer Datei"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__values_json
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_details_form
-msgid "Values"
-msgstr "Werte"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "Values confirmed"
-msgstr "Werte bestätigt"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/values_field.js:0
-msgid "Values found in the file"
-msgstr "In der Datei gefundene Werte"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Values not reviewed"
-msgstr "Werte nicht geprüft"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/controller_mutations.js:0
-msgid "Versions"
-msgstr "Versionen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.js:0
-msgid "Versions of %s"
-msgstr "Versionen von %s"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/upload_panel.xml:0
-msgid "Waiting…"
-msgstr "Wartet …"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_revision__origin__webdav
-msgid "WebDAV"
-msgstr "WebDAV"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__website_message_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_file__website_message_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_node__website_message_ids
-msgid "Website Messages"
-msgstr "Website-Nachrichten"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__website_message_ids
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_file__website_message_ids
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_node__website_message_ids
-msgid "Website communication history"
-msgstr "Website-Kommunikationsverlauf"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_extraction_field__page_area
-msgid ""
-"Where the value is printed. The address window is the addressee's address on"
-" the first page of a letter, top left."
-msgstr "Wo der Wert abgedruckt ist. Das Adressfenster ist die Anschrift des Adressaten auf der ersten Seite eines Briefs, links oben."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_derivative__width
-msgid "Width"
-msgstr "Breite"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "With tags"
-msgstr "Mit Tags"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_node_search
-msgid "Without tags"
-msgstr "Ohne Tags"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_extraction_field__value_type__word
-msgid "Word"
-msgstr "Wort"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_scope__write_group_ids
-msgid "Write groups"
-msgstr "Schreiben erlaubt für"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__x0
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extraction_hint__x0
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__x0
-msgid "X0"
-msgstr "X0"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_extracted_value__x1
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_field_value__x1
-msgid "X1"
-msgstr "X1"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/versions_dialog.xml:0
-msgid "current"
-msgstr "aktuell"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/v2/properties/preview_field.xml:0
-msgid "in the document (click a word or drag over several). Esc cancels."
-msgstr "im Dokument (Wort anklicken oder über mehrere Wörter ziehen). Esc bricht ab."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_value_recognition.py:0
-msgid "removed"
-msgstr "entfernt"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__document_ids
@@ -2537,31 +115,182 @@ msgid "Document"
 msgstr "Dokument"
 
 #. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/filemanager_file.py:0
-msgid "Only entries in the trash can be deleted permanently."
-msgstr "Nur Einträge im Papierkorb können endgültig gelöscht werden."
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_document_action
+#: model:ir.ui.menu,name:int_filemanager.int_filemanager_document_menu
+msgid "Documents"
+msgstr "Dokumente"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__data
+msgid "File"
+msgstr "Datei"
+
+#. module: int_filemanager
+#: model:ir.module.category,name:int_filemanager.module_category_int_filemanager
+#: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_root
+#: model:res.groups.privilege,name:int_filemanager.privilege_int_filemanager
+msgid "Filemanager"
+msgstr "Dateimanager"
+
+#. module: int_filemanager
+#: model:res.groups,name:int_filemanager.group_filemanager_admin
+msgid "Filemanager Administrator"
+msgstr "Dateimanager Administrator"
+
+#. module: int_filemanager
+#: model:res.groups,name:int_filemanager.group_filemanager_user
+msgid "Filemanager User"
+msgstr "Dateimanager Nutzer"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_document
+msgid "Filemanager document"
+msgstr "Dateimanager-Dokument"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_folder
+msgid "Filemanager folder"
+msgstr "Dateimanager-Ordner"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_tag
+msgid "Filemanager tag"
+msgstr "Dateimanager-Tag"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__folder_id
+msgid "Folder"
+msgstr "Ordner"
+
+#. module: int_filemanager
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action
+#: model:ir.ui.menu,name:int_filemanager.int_filemanager_folder_menu
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Folders"
+msgstr "Ordner"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_follower_ids
+msgid "Followers"
+msgstr "Follower"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "Follower (Partner)"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__has_message
+msgid "Has Message"
+msgstr "Hat Nachricht"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__id
+msgid "ID"
+msgstr "ID"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "Wenn markiert, erfordern neue Nachrichten Ihre Aufmerksamkeit."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_error
+msgid "If checked, some messages have a delivery error."
+msgstr "Wenn markiert, weisen einige Nachrichten einen Zustellfehler auf."
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_is_follower
+msgid "Is Follower"
+msgstr "Ist Follower"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__write_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_uid
+msgid "Last Updated by"
+msgstr "Zuletzt aktualisiert von"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__write_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_date
+msgid "Last Updated on"
+msgstr "Zuletzt aktualisiert am"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_error
+msgid "Message Delivery error"
+msgstr "Nachrichten-Zustellfehler"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_ids
+msgid "Messages"
+msgstr "Nachrichten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__mimetype
+msgid "Mimetype"
+msgstr "Dateityp"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+msgid "Modified"
+msgstr "Geändert"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__name
+msgid "Name"
+msgstr "Name"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction_counter
+msgid "Number of Actions"
+msgstr "Anzahl der Aktionen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_error_counter
+msgid "Number of errors"
+msgstr "Anzahl der Fehler"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr "Anzahl der Nachrichten, die eine Aktion erfordern"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "Anzahl der Nachrichten mit Zustellfehler"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_id
+msgid "Parent"
+msgstr "Übergeordneter Ordner"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_path
+msgid "Parent Path"
+msgstr "Übergeordneter Pfad"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__size
+msgid "Size"
+msgstr "Größe"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__tag_ids
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Tags"
+msgstr "Tags"
 
 #. module: int_filemanager
 #. odoo-python
-#: code:addons/int_filemanager/models/filemanager_file.py:0
-msgid "Only entries in the trash can be restored."
-msgstr "Nur Einträge im Papierkorb können wiederhergestellt werden."
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "The folder %(name)s is not empty. Move or delete what is in it first."
+msgstr "Der Ordner %(name)s ist nicht leer. Verschieben oder löschen Sie zuerst, was darin liegt."
 
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/filemanager_file.py:0
-msgid "Rename one entry at a time."
-msgstr "Benennen Sie jeweils nur einen Eintrag um."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/filemanager_file.py:0
-msgid "The recognised values are not valid."
-msgstr "Die erkannten Werte sind ungültig."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/index_utils.py:0
-msgid "This entry is not in the trash."
-msgstr "Dieser Eintrag liegt nicht im Papierkorb."

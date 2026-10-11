@@ -16,7 +16,7 @@ pre-commit ist nur der Läufer (`.pre-commit-config.yaml`); es gehören keine we
 Coding Guidelines verbieten, bestehende Dateien zur Anpassung an die Guidelines umzuformatieren. Das Ruff-Hook ignoriert die Regeln, die Odoo in der Kopfzeile der `ruff.toml` als „empfohlen, aber nicht erzwungen“
 nennt (B904, COM812, E741, EM101, I001, RET, RUF021, RUF102, TID252, TRY002, UP006, UP007).
 `docs/`, `scripts/`, `tools/`, `CLAUDE.md`, `README.md`, `Dockerfile`, `/vendor/`, `static/lib/` und `.svg`-Dateien werden von pre-commit nicht geprüft.
-`tools/v2check/v2check.sh` ist der gebündelte Aufruf für `int_filemanager` 2 auf Tower; er läuft unabhängig von `scripts/lint/`.
+`tools/check/check.sh` ist der gebündelte Aufruf für `int_filemanager` auf Tower (odoo-ls und `test_lint`); er läuft unabhängig von `scripts/lint/`. `tools/check/tests.sh` führt die Modultests in einer Wegwerf-Datenbank aus.
 
 ## 2. Aufruf
 
@@ -39,7 +39,7 @@ Läuft mit `--test-tags /test_lint`. Quelle: `odoo/addons/test_lint/tests/`.
 - **`test_pylint`:** Pylint mit `used-before-assignment`, `undefined-variable`, `eval-used`, `unreachable`, `function-redefined`, `sql-injection` (E8501), `raise-unlink-override` (E8503), `gettext-variable` (E8502),
   `gettext-placeholders` (E8505), `gettext-repr` (E8506) und `missing-gettext` (E8507: statische Zeichenkette in `UserError`, `ValidationError`, `AccessError`, `AccessDenied`, `MissingError` ohne Übersetzungsaufruf);
   verbotene Funktion `input`; veraltete Module `csv`/`urllib`/`cgi` und Debugger-Module. Geprüft werden der Odoo-Kern (`odoo/`) und alle Addon-Pfade **außerhalb** von `<root_path>/addons`:
-  Im Git-Checkout liegen die Core-Addons daneben und werden mitgeprüft, im Docker-Image liegen sie darunter und entfallen. Der Core selbst kann Pylint-Befunde haben; `tools/v2check/v2check_filter.py` filtert auf `int_filemanager`.
+  Im Git-Checkout liegen die Core-Addons daneben und werden mitgeprüft, im Docker-Image liegen sie darunter und entfallen. Der Core selbst kann Pylint-Befunde haben; `tools/check/check_filter.py` filtert auf `int_filemanager`.
 - **`test_manifests`:** Unbekannte Manifest-Schlüssel sind ein Fehler; `application`, `auto_install`, `summary`, `description`, `author`, `demo`, `data`, `test` dürfen nicht auf dem Standardwert stehen; `icon` nicht auf dem Standardpfad.
   Dass `name`, `author`, `license` Pflicht sind, ist im Code nur als Kommentar vermerkt; eine fehlende `license` ergibt nur eine Warnung.
 - **Weitere Tests:** `__init__.py` im Modul (`test_dunderinit`), Docstring ↔ Signatur (`test_docstring`), ESLint über die JS-Dateien der Module mit `test_lint/tests/eslintrc` (`test_eslint`; wird übersprungen, wenn ESLint fehlt),
@@ -53,7 +53,7 @@ Läuft mit `--test-tags /test_lint`. Quelle: `odoo/addons/test_lint/tests/`.
 `odoo_ls_server --parse -c <Odoo-Pfad> -a <Addon-Pfad> -t <Addon-Pfad> --python <python> --stdlib <typeshed>/stdlib -s <typeshed>/stubs -o out.json` schreibt alle Befunde als JSON (Aufruf aus der Projektdoku Dritter,
 im Repo von `odoo/odoo-ls` nicht geprüft). Es findet, was Pylint nicht sehen kann, weil es die Odoo-Registry kennt: unbekanntes Modell, Modell nicht in `depends`, Feld existiert nicht, ungültiges Domain-Feld,
 Methode existiert nicht, Compute-Methode setzt das Feld nicht, Related-Feld mit falschem Typ, falsche Aufrufargumente; dazu ESLint (oxc) für JS. Fallstricke: (1) `typeshed.zip` aus dem Release gehört dazu, sonst bricht der Lauf ab;
-(2) Bibliotheken außerhalb des Images (z. B. `wsgidav` in `/mnt/pylib`) per `PYTHONPATH` sichtbar machen, sonst Fehlalarme; (3) die Ausgabe enthält auch Befunde aus dem Odoo-Kern, nach eigenen Pfaden filtern;
+(2) Bibliotheken außerhalb des Images per `PYTHONPATH` sichtbar machen, sonst Fehlalarme; (3) die Ausgabe enthält auch Befunde aus dem Odoo-Kern, nach eigenen Pfaden filtern;
 (4) Hinweise mit Stufe 3 (z. B. `OLS03024`) sind Information, kein Fehler. Das Programm beendet sich unabhängig von den Befunden normal, deshalb wertet `scripts/lint/odoo_ls_check.py` das JSON aus.
 
 ## 5. Grenzen

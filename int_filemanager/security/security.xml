@@ -1,185 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <record id="module_category_int_filemanager" model="ir.module.category">
-        <field name="name">Dateimanager</field>
+        <field name="name">Filemanager</field>
     </record>
 
     <record id="privilege_int_filemanager" model="res.groups.privilege">
-        <field name="name">Dateimanager</field>
-        <field name="category_id" ref="module_category_int_filemanager"/>
+        <field name="name">Filemanager</field>
+        <field name="category_id" ref="module_category_int_filemanager" />
     </record>
 
     <record id="group_filemanager_user" model="res.groups">
-        <field name="name">Dateimanager Nutzer</field>
-        <field name="privilege_id" ref="privilege_int_filemanager"/>
+        <field name="name">Filemanager User</field>
+        <field name="privilege_id" ref="privilege_int_filemanager" />
     </record>
 
     <record id="group_filemanager_admin" model="res.groups">
-        <field name="name">Dateimanager Administrator</field>
-        <field name="privilege_id" ref="privilege_int_filemanager"/>
-        <field name="implied_ids" eval="[(4, ref('group_filemanager_user'))]"/>
-        <field name="comment">Voller Zugriff unabhängig von Schutzordner-Einträgen; darf Schutzordner
-            verwalten und über Schutzgrenzen hinweg umbenennen/verschieben.</field>
+        <field name="name">Filemanager Administrator</field>
+        <field name="privilege_id" ref="privilege_int_filemanager" />
+        <field name="implied_ids" eval="[(4, ref('group_filemanager_user'))]" />
     </record>
-
-    <!-- Drei strukturelle, globale Record Rules (kein groups-Feld -> gelten
-         für alle) auf int_filemanager.file, je eine pro Operation. Der
-         domain_force-INHALT ist hier nur ein sicherer Platzhalter
-         ("alles offen", entspricht dem heutigen Verhalten ohne
-         Schutzordner) - acl_rules.py überschreibt ihn bei jeder Änderung an
-         int_filemanager.protected_folder mit der tatsächlichen,
-         admin-/schutzordner-abhängigen Domain.
-
-         noupdate="1" auf allen sechs Regeln (2026-09-15, Live-Bug gefunden):
-         ohne dieses Attribut schreibt JEDES Modul-Upgrade (-u, nicht nur
-         -i/Erstinstallation) domain_force wieder auf den Platzhalter oben
-         zurueck - Odoo laedt XML-Daten-Records ohne noupdate bei jedem
-         Upgrade erneut. Das hat den Schutz fuer "Kunden und Angebote"
-         mehrfach still aufgehoben, nachdem er ueber die UI korrekt gesetzt
-         war (jedes der zahlreichen "-u int_filemanager"-Upgrades heute hat
-         ihn zurueckgesetzt, ohne dass das irgendwo sichtbar gemeldet wurde -
-         live an ir_rule.domain_force nachgewiesen, nicht nur vermutet). Mit
-         noupdate="1" fasst ein gewoehnliches Upgrade domain_force gar nicht
-         mehr an; nur eine echte Neuinstallation startet wieder beim
-         Platzhalter (dort gibt es aber noch keine Schutzordner-Eintraege zu
-         verlieren). Zusaetzliche Absicherung siehe _register_hook() in
-         models/filemanager_protected_folder.py - laeuft bei jedem
-         Registry-Aufbau (auch reiner Neustart, nicht nur Upgrade) und baut
-         die Regeln aus dem aktuellen Schutzordner-Stand neu auf, falls doch
-         einmal etwas den Platzhalter wiederherstellt.
-
-         noupdate als Attribut direkt auf <record> ist in diesem Odoo-Schema
-         UNGUELTIG (live per RelaxNG-Validierung gegen import_xml.rng
-         nachgewiesen, nicht nur vermutet - "Element odoo has extra content:
-         record"), deshalb hier als <data noupdate="1">-Wrapper um alle
-         sechs Regeln statt als Einzelattribut. -->
-    <data noupdate="1">
-    <record id="rule_file_protected_read" model="ir.rule">
-        <field name="name">Filemanager: geschützte Ordner (Lesen)</field>
-        <field name="model_id" ref="model_int_filemanager_file"/>
-        <field name="domain_force">[(1,'=',1)]</field>
-        <field name="perm_read">True</field>
-        <field name="perm_write">False</field>
-        <field name="perm_create">False</field>
-        <field name="perm_unlink">False</field>
-    </record>
-
-    <record id="rule_file_protected_write" model="ir.rule">
-        <field name="name">Filemanager: geschützte Ordner (Schreiben)</field>
-        <field name="model_id" ref="model_int_filemanager_file"/>
-        <field name="domain_force">[(1,'=',1)]</field>
-        <field name="perm_read">False</field>
-        <field name="perm_write">True</field>
-        <field name="perm_create">False</field>
-        <field name="perm_unlink">False</field>
-    </record>
-
-    <record id="rule_file_protected_unlink" model="ir.rule">
-        <field name="name">Filemanager: geschützte Ordner (Löschen)</field>
-        <field name="model_id" ref="model_int_filemanager_file"/>
-        <field name="domain_force">[(1,'=',1)]</field>
-        <field name="perm_read">False</field>
-        <field name="perm_write">False</field>
-        <field name="perm_create">False</field>
-        <field name="perm_unlink">True</field>
-    </record>
-
-    <!-- Papierkorb-Sichtbarkeit (docs/int_filemanager_papierkorb_konzept.md): eigene, STATISCHE
-         Regel, unabhaengig von den drei generierten Schutzordner-Regeln oben - reine
-         trashed/trashed_by-Sichtbarkeit hat nichts mit Pfad-Praefixen zu tun, keine
-         Verflechtung mit acl_rules.py noetig. Ein Nutzer sieht/bearbeitet nur eigene
-         (trashed_by=ich) Papierkorb-Eintraege, Admins alle - Sicherheit dahinter: ein Nutzer
-         kann ohnehin nur loeschen (und landet damit automatisch in seinem eigenen Papierkorb),
-         wofuer er zum Loeschzeitpunkt schon Loeschrecht hatte (authz.require(rel_path,
-         "unlink"), unveraendert) - der Papierkorb zeigt also nie mehr, als er schon loeschen
-         durfte. Alle vier Operationen in EINER Regel (anders als die drei Schutzordner-Regeln
-         oben, die pro Operation unterschiedliche Bedingungen haben - hier ist die Bedingung
-         fuer read/write/unlink identisch). NICHT im noupdate="1"-Block oben: nichts schreibt
-         domain_force hier zur Laufzeit um, ein gewoehnliches Modul-Upgrade darf sie also
-         jederzeit neu aus dem XML laden. -->
-    <record id="rule_file_trash_visibility" model="ir.rule">
-        <field name="name">Filemanager: Papierkorb nur eigene Einträge + Admins</field>
-        <field name="model_id" ref="model_int_filemanager_file"/>
-        <field name="domain_force">['|', ('trashed','=',False), '|', ('trashed_by','=',user.id), (1,'=',1) if user.has_group('int_filemanager.group_filemanager_admin') else (0,'=',1)]</field>
-        <field name="perm_read">True</field>
-        <field name="perm_write">True</field>
-        <field name="perm_create">True</field>
-        <field name="perm_unlink">True</field>
-    </record>
-
-    <!-- Dieselbe Bauart auf int_filemanager.version - eine Version erbt den
-         Schutz ihrer zugehörigen Datei (file_id.path), damit niemand ohne
-         Leserecht auf die Datei trotzdem alte Versionsinhalte über das
-         Versions-Modell/die Versions-Route lesen kann. -->
-    <record id="rule_version_protected_read" model="ir.rule">
-        <field name="name">Filemanager: geschützte Ordner (Versionen lesen)</field>
-        <field name="model_id" ref="model_int_filemanager_version"/>
-        <field name="domain_force">[(1,'=',1)]</field>
-        <field name="perm_read">True</field>
-        <field name="perm_write">False</field>
-        <field name="perm_create">False</field>
-        <field name="perm_unlink">False</field>
-    </record>
-
-    <record id="rule_version_protected_write" model="ir.rule">
-        <field name="name">Filemanager: geschützte Ordner (Versionen schreiben)</field>
-        <field name="model_id" ref="model_int_filemanager_version"/>
-        <field name="domain_force">[(1,'=',1)]</field>
-        <field name="perm_read">False</field>
-        <field name="perm_write">True</field>
-        <field name="perm_create">False</field>
-        <field name="perm_unlink">False</field>
-    </record>
-
-    <record id="rule_version_protected_unlink" model="ir.rule">
-        <field name="name">Filemanager: geschützte Ordner (Versionen löschen)</field>
-        <field name="model_id" ref="model_int_filemanager_version"/>
-        <field name="domain_force">[(1,'=',1)]</field>
-        <field name="perm_read">False</field>
-        <field name="perm_write">False</field>
-        <field name="perm_create">False</field>
-        <field name="perm_unlink">True</field>
-    </record>
-
-    <!-- Dieselbe Bauart nochmal auf int_filemanager.extracted_value (2026-09-19, siehe
-         docs/int_filemanager_ocr_selbstdefinierte_felder.md) - ein erkannter Wert haengt am
-         geschuetzten file_id, genau wie eine Version. Ohne diese Regeln koennte ein interner
-         Nutzer ohne Leserecht auf einen geschuetzten Ordner (z.B. "Kunden und Angebote") die
-         daraus erkannten Werte trotzdem ueber die Listen-/Pivot-Ansicht lesen - das waere ein
-         Leck des Schutzordner-Konzepts genau an der Stelle, an der ein echtes Datensatz-Modell
-         (statt eines reinen Felds auf int_filemanager.file) einen neuen Angriffspunkt eroeffnet.
-         write/unlink hier trotz perm_write=0/perm_unlink=0 in ir.model.access.csv (dort bewusst
-         nur lesend fuer Nutzer, echte Schreib-/Loeschvorgaenge laufen ausschliesslich sudo() ueber
-         filemanager_file.py::_apply_extracted_values) - dieselbe scheinbare Redundanz
-         besteht bereits bei int_filemanager.version oben, als Verteidigung in der Tiefe falls die
-         Basis-ACL je gelockert wird. -->
-    <record id="rule_extracted_value_protected_read" model="ir.rule">
-        <field name="name">Filemanager: geschützte Ordner (Erkannte Werte lesen)</field>
-        <field name="model_id" ref="model_int_filemanager_extracted_value"/>
-        <field name="domain_force">[(1,'=',1)]</field>
-        <field name="perm_read">True</field>
-        <field name="perm_write">False</field>
-        <field name="perm_create">False</field>
-        <field name="perm_unlink">False</field>
-    </record>
-
-    <record id="rule_extracted_value_protected_write" model="ir.rule">
-        <field name="name">Filemanager: geschützte Ordner (Erkannte Werte schreiben)</field>
-        <field name="model_id" ref="model_int_filemanager_extracted_value"/>
-        <field name="domain_force">[(1,'=',1)]</field>
-        <field name="perm_read">False</field>
-        <field name="perm_write">True</field>
-        <field name="perm_create">False</field>
-        <field name="perm_unlink">False</field>
-    </record>
-
-    <record id="rule_extracted_value_protected_unlink" model="ir.rule">
-        <field name="name">Filemanager: geschützte Ordner (Erkannte Werte löschen)</field>
-        <field name="model_id" ref="model_int_filemanager_extracted_value"/>
-        <field name="domain_force">[(1,'=',1)]</field>
-        <field name="perm_read">False</field>
-        <field name="perm_write">False</field>
-        <field name="perm_create">False</field>
-        <field name="perm_unlink">True</field>
-    </record>
-    </data>
 </odoo>

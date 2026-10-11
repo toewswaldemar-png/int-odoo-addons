@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <menuitem
+        id="menu_int_filemanager_root"
+        name="Filemanager"
+        groups="int_filemanager.group_filemanager_user"
+        sequence="20"
+    />
+</odoo>

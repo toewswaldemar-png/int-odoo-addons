@@ -62,15 +62,15 @@
     <!-- Managing the folders is configuration, like Odoo's product categories: the folder
          tree itself is the search panel of the documents. -->
     <menuitem
-        id="menu_int_filemanager_v2_configuration"
+        id="menu_int_filemanager_configuration"
         name="Configuration"
-        parent="menu_int_filemanager_v2_root"
+        parent="menu_int_filemanager_root"
         sequence="99"
     />
     <menuitem
         id="int_filemanager_folder_menu"
         name="Folders"
-        parent="menu_int_filemanager_v2_configuration"
+        parent="menu_int_filemanager_configuration"
         action="int_filemanager_folder_action"
         sequence="1"
     />

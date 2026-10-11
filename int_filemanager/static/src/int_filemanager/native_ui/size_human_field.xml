@@ -1,5 +1,0 @@
-<templates xml:space="preserve">
-    <t t-name="int_filemanager.SizeField">
-        <span t-esc="formattedValue"/>
-    </t>
-</templates>

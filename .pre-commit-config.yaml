@@ -2,7 +2,7 @@
 # - Python: ruff with Odoo's own ruff.toml (copied from the Odoo repository)
 # - JavaScript: ESLint + Prettier with Odoo's own addons/web/tooling configuration (.eslintrc.json)
 # Neither hook rewrites files: Odoo's guidelines forbid reformatting existing code.
-# docs/, scripts/, tools/ (developer scripts, converter service) are not checked.
+# docs/, scripts/, tools/ (developer scripts) are not checked.
 exclude: |
   (?x)
   \.svg$|/static/(src/)?lib/|/build/|/dist/|
