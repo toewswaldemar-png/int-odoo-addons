@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 18:16+0000\n"
-"PO-Revision-Date: 2026-10-12 18:16+0000\n"
+"POT-Creation-Date: 2026-10-12 19:06+0000\n"
+"PO-Revision-Date: 2026-10-12 19:06+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -38,7 +38,18 @@ msgid "A tag with this name already exists."
 msgstr "Ein Tag mit diesem Namen existiert bereits."
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_folder_id
+msgid "Access Folder"
+msgstr "Bestimmender Ordner"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_mode
+msgid "Access Mode"
+msgstr "Zugriff"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_needaction
 msgid "Action Needed"
 msgstr "Aktion erforderlich"
 
@@ -47,6 +58,21 @@ msgstr "Aktion erforderlich"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__active
 msgid "Active"
 msgstr "Aktiv"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__open
+msgid "All filemanager users"
+msgstr "Alle Dateimanager-Nutzer"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_group_ids
+msgid "Allowed groups"
+msgstr "Erlaubte Gruppen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_user_ids
+msgid "Allowed users"
+msgstr "Erlaubte Benutzer"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
@@ -58,6 +84,7 @@ msgstr "Archiviert"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_attachment_count
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_attachment_count
 msgid "Attachment Count"
 msgstr "Anzahl der Anhänge"
 
@@ -188,16 +215,19 @@ msgstr "Ordner"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_follower_ids
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_follower_ids
 msgid "Followers"
 msgstr "Follower"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_partner_ids
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_partner_ids
 msgid "Followers (Partners)"
 msgstr "Follower (Partner)"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__has_message
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__has_message
 msgid "Has Message"
 msgstr "Hat Nachricht"
 
@@ -211,16 +241,19 @@ msgstr "ID"
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_needaction
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__message_needaction
 msgid "If checked, new messages require your attention."
 msgstr "Wenn markiert, erfordern neue Nachrichten Ihre Aufmerksamkeit."
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_error
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__message_has_error
 msgid "If checked, some messages have a delivery error."
 msgstr "Wenn markiert, weisen einige Nachrichten einen Zustellfehler auf."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_is_follower
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_is_follower
 msgid "Is Follower"
 msgstr "Ist Follower"
 
@@ -239,12 +272,19 @@ msgid "Last Updated on"
 msgstr "Zuletzt aktualisiert am"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__inherit
+msgid "Like the parent folder"
+msgstr "Wie der übergeordnete Ordner"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_error
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_has_error
 msgid "Message Delivery error"
 msgstr "Nachrichten-Zustellfehler"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_ids
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_ids
 msgid "Messages"
 msgstr "Nachrichten"
 
@@ -273,23 +313,32 @@ msgstr "Für %(name)s ist in diesem Ordner kein freier Name übrig."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction_counter
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_needaction_counter
 msgid "Number of Actions"
 msgstr "Anzahl der Aktionen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_error_counter
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_has_error_counter
 msgid "Number of errors"
 msgstr "Anzahl der Fehler"
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_needaction_counter
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__message_needaction_counter
 msgid "Number of messages requiring action"
 msgstr "Anzahl der Nachrichten, die eine Aktion erfordern"
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_has_error_counter
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "Anzahl der Nachrichten mit Zustellfehler"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__restricted
+msgid "Only the users and groups allowed"
+msgstr "Nur die erlaubten Benutzer und Gruppen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__origin_path
@@ -363,3 +412,11 @@ msgstr "Dieser Ordner existiert nicht."
 #: code:addons/int_filemanager/static/src/int_filemanager/document_list_controller.xml:0
 msgid "Upload"
 msgstr "Hochladen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__access_mode
+msgid ""
+"Who sees this folder and its documents. A top folder that is not open to all"
+" is seen by the users and groups listed on it and by its followers (and by "
+"the administrators)."
+msgstr "Wer diesen Ordner und seine Dokumente sieht. Ein Ordner oberster Ebene, der nicht für alle offen ist, ist für die aufgeführten Benutzer und Gruppen sowie für seine Follower sichtbar (und für die Administratoren)."

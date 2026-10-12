@@ -23,7 +23,7 @@ class TestFolderAndDocument(TransactionCase):
             groups="base.group_user,int_filemanager.int_filemanager_group_user",
         )
         cls.outsider = new_test_user(cls.env, login="doc_outsider", groups="base.group_user")
-        cls.top = cls.Folder.create({"name": "Top"})
+        cls.top = cls.Folder.create({"name": "Top", "access_mode": "open"})
         cls.sub = cls.Folder.create({"name": "Sub", "parent_id": cls.top.id})
 
     def _document(self, name="a.txt", content=b"hello", folder=None):

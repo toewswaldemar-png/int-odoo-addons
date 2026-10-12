@@ -34,7 +34,9 @@ class TestDocumentStream(DownloadCase, TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.folder = cls.env["int.filemanager.folder"].create({"name": "Downloads"})
+        cls.folder = cls.env["int.filemanager.folder"].create(
+            {"name": "Downloads", "access_mode": "open"}
+        )
 
     def test_a_document_is_streamed_from_its_blob(self):
         document = self._document("report.pdf", b"%PDF-1.4 content")
@@ -81,7 +83,9 @@ class TestDocumentDownload(DownloadCase, HttpCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.folder = cls.env["int.filemanager.folder"].create({"name": "Downloads"})
+        cls.folder = cls.env["int.filemanager.folder"].create(
+            {"name": "Downloads", "access_mode": "open"}
+        )
         cls.user = new_test_user(
             cls.env,
             login="download_user",

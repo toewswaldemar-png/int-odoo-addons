@@ -20,7 +20,9 @@ class TestDocumentUpload(HttpCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.Document = cls.env["int.filemanager.document"]
-        cls.folder = cls.env["int.filemanager.folder"].create({"name": "Uploads"})
+        cls.folder = cls.env["int.filemanager.folder"].create(
+            {"name": "Uploads", "access_mode": "open"}
+        )
         cls.user = new_test_user(
             cls.env,
             login="upload_user",

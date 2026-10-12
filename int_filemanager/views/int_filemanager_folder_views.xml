@@ -9,6 +9,7 @@
             <list multi_edit="1" duplicate="0">
                 <field name="name" />
                 <field name="parent_id" />
+                <field name="access_mode" />
                 <field name="company_id" groups="base.group_multi_company" />
             </list>
         </field>
@@ -30,9 +31,22 @@
                         <field name="active" invisible="1" />
                         <field name="name" />
                         <field name="parent_id" />
+                        <field name="access_mode" />
+                        <field
+                            name="access_user_ids"
+                            widget="many2many_tags"
+                            invisible="access_mode != 'restricted'"
+                        />
+                        <field
+                            name="access_group_ids"
+                            widget="many2many_tags"
+                            invisible="access_mode != 'restricted'"
+                        />
                         <field name="company_id" groups="base.group_multi_company" />
                     </group>
                 </sheet>
+                <!-- Followers see the folder as well ("Add followers" in the chatter). -->
+                <chatter />
             </form>
         </field>
     </record>
