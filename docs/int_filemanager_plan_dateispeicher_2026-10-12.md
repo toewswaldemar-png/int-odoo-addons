@@ -1,6 +1,6 @@
 # int_filemanager: Plan eigener Dateispeicher im Odoo-Filestore (Stand 2026-10-12)
 
-Stand: Plan, noch nichts umgesetzt. Entscheidungen des Nutzers vom 12.10.2026: SHA-256 statt SHA-1; `mail.thread` bleibt,
+Stand 13.10.2026: Stufen 1 bis 6 sind gebaut und gepusht (Speicher, Rechte, Download, Upload, Oberfläche, Aufräumer, Einlesen). Betrieb (Abschnitt 2), Messung (Stufe 7) und Bestandslauf (Stufe 8) entfallen vorerst: Die bereits eingelesenen Dateien auf der Test-Instanz reichen (Entscheidung des Nutzers 13.10.). Entscheidungen des Nutzers vom 12.10.2026: SHA-256 statt SHA-1; `mail.thread` bleibt,
 Tracking beim Einlesen aus; Einlese-Wurzel ist ganz `/mnt/hm-daten`, alles kommt in Odoo.
 Grundlage: Prototyp (gemessen), Regeln in `docs/odoo_regeln/`, Odoo-19-Quelltext in `docs/odoo/` (Commit `7a74539`, 10.10.).
 Das Image `odoo:19.0-hm-test` (`19.0.post20260817`) weicht davon leicht ab (z. B. `file_size` in `ir_attachment.py` Zeile 475 statt 476);
@@ -26,7 +26,9 @@ Der Plan wurde am 12.10. von einer zweiten Instanz gegengelesen und gegen den Qu
   - Die 128-MiB-Grenze (`http.py:247`) gehört **nicht** dazu: Sie liegt in der HTTP-Schicht, jede Upload-Route braucht die Funktion `max_content_length`
     (nativ geht auch der Systemparameter `web.max_file_upload_size`, `ir_http.py:298`).
 
-## 2. Betrieb vor dem Einlesen (Freigabe durch den Nutzer nötig)
+## 2. Betrieb für einen späteren Echtbetrieb (entfällt vorerst)
+
+Nicht beauftragt (Entscheidung des Nutzers 13.10.2026). Die Tabelle bleibt als geprüfter Wissensstand, falls der Bestand später auf dem Live-System eingelesen werden soll; dann braucht jede Maßnahme die Freigabe des Nutzers.
 
 | # | Maßnahme | Stand / Grund |
 |---|---|---|
@@ -88,8 +90,8 @@ Vor jeder Stufe die zugehörigen Regeln lesen. Jede Stufe mit Tests.
 | 4 Oberfläche | Liste, Formular, Suchpanel (`limit="0"`, `expand="1"`), Download-Knopf, „Neu“ entfällt, Übersetzungen. | Views; Coding §5 |
 | 5 Aufräumer | **Gebaut** (12.10.). Eigene Prüfliste `<filestore>/int_filemanager/.checklist/<aa>/<sha256>` (leere Dateien wie `ir.attachment._mark_for_gc`; Odoos eigene Liste kommt nicht in Frage, sein Aufräumer würde unsere Blobs löschen, `ir_attachment.py:223-245`). Eingetragen wird beim Löschen eines Dokuments (nach dem Löschen der Zeile wie `ir.attachment.unlink`), beim Ändern der Prüfsumme und **vor** dem Ablegen eines neuen Blobs (wie `_file_write`, damit ein Rollback aufgeräumt wird). `@api.autovacuum _gc_blobs`: `cr.commit()`, `SET LOCAL lock_timeout`, `LOCK … IN SHARE MODE` als erste Anweisung der Transaktion (REPEATABLE READ, PostgreSQL-Doku zu `LOCK`), Blobs ohne Zeile (auch ohne archivierte auszunehmen: alle Zeilen zählen) löschen, Eintrag entfernen, `cr.commit()`. Anders als der Kern in Stapeln zu 1.000 (`GC_BATCH`) mit Rückgabe `(erledigt, Rest)`, damit die Sperre nie lange hält (`ir_autovacuum.py`: ein Tupel mit Rest ≠ 0 wird wiederholt). Kontextschlüssel `int_filemanager_lock_timeout` (Test). `@api.autovacuum _gc_blob_uploads`: Temp-Dateien in `.upload/` älter als `int_filemanager.upload_max_age_hours` (Standard 24). Kein Vollscan des Filestores. Wettlauf in der echten Datenbank gemessen: der Aufräumer wartete 3,5 s auf eine offene Sitzung mit einem neuen Dokument gleichen Inhalts, sah danach die Zeile und ließ den Blob stehen. | Perf; Coding §3 |
 | 6 Einlesen | Scan legt Zeilen an. Lauf als Cron: Stapel kurz, `_commit_progress`, Savepoint je Datei, Zeilenstatus und Dokument im selben Commit, Kontext `tracking_disable=True` (überspringt Abonnieren, Log und Tracking, `mail_thread.py:324, 385`). Je Zeile `try_lock_for_update`, damit ein zweiter Cron-Lauf sie nicht doppelt nimmt. `os.walk(followlinks=False)`, `realpath` muss innerhalb der Wurzel bleiben, Symlinks überspringen und melden. Keine öffentliche Methode mit Pfadparameter. Vorab-Bericht für Namenskonflikte und Sonderfälle, Idempotenz (siehe Abschnitt 3), Wiederaufnahme. | ACH §2; Security §2; Coding §3 |
-| 7 Betrieb/Messung | Aufräumer einstellen, Betriebsdoku, Prüfliste B1–B8 abnehmen. Stichprobe von einigen GB vom Bestand: Zeit, Platz, Durchsatz. Nutzer testet im Browser. | Perf |
-| 8 Bestandslauf | Einlesen des Bestands, Zählung gegen die Freigabe, Stichproben-Prüfsummen. | |
+| 7 Betrieb/Messung (entfällt vorerst) | Aufräumer einstellen, Betriebsdoku, Prüfliste B1–B8 abnehmen. Stichprobe von einigen GB vom Bestand: Zeit, Platz, Durchsatz. Nutzer testet im Browser. | Perf |
+| 8 Bestandslauf (entfällt vorerst) | Einlesen des Bestands, Zählung gegen die Freigabe, Stichproben-Prüfsummen. | |
 
 Ausführung über `tools/check/tests.sh` (Wegwerf-Datenbank) und `tools/check/ui_instance.sh` (Browser-Probe). Committet wird nur auf Ansage.
 
