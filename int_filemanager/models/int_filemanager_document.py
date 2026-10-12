@@ -1,18 +1,30 @@
 import contextlib
 import hashlib
+import itertools
 import os
 import re
+import time
 import unicodedata
 import uuid
 
+import psycopg2.errors
 from psycopg2 import IntegrityError
 
 from odoo import api, fields, models
 from odoo.exceptions import MissingError, UserError
 from odoo.http import Stream
+from odoo.tools import SQL
 
 BLOB_FOLDER = "int_filemanager"
 UPLOAD_FOLDER = ".upload"
+# The blobs to look at: one empty file per checksum, like the core's "checklist" for attachments
+# (its cleaner would delete our blobs, so the lists must stay apart).
+CHECKLIST_FOLDER = ".checklist"
+# Blobs looked at per run of the cleaner; each run holds the lock of the table (see _gc_blobs).
+GC_BATCH = 1000
+GC_LOCK_TIMEOUT = "10s"
+UPLOAD_AGE_PARAMETER = "int_filemanager.upload_max_age_hours"
+DEFAULT_UPLOAD_MAX_AGE_HOURS = 24
 CHECKSUM_REGEX = re.compile(r"[0-9a-f]{64}")
 CHUNK_SIZE = 1024 * 1024
 # The head of a file is enough for ``guess_mimetype`` (it reads no more than this).
@@ -96,7 +108,22 @@ class IntFilemanagerDocument(models.Model):
         # the storage runs as superuser. Creating is closed by the missing access right.
         if not self.env.su:
             vals = {key: value for key, value in vals.items() if key not in STORAGE_FIELDS}
-        return super().write(vals)
+        old_checksums = set(self.mapped("checksum")) if "checksum" in vals else set()
+        result = super().write(vals)
+        if old_checksums:
+            # Another file: the blob it had may be free now (the cleaner looks).
+            for checksum in old_checksums - {vals["checksum"]}:
+                self._mark_blob_for_gc(checksum)
+        return result
+
+    def unlink(self):
+        # First delete the rows, then mark the blobs, like ir.attachment.unlink. A blob that
+        # another document uses (or an archived one) is kept by the cleaner.
+        checksums = set(self.mapped("checksum"))
+        result = super().unlink()
+        for checksum in checksums:
+            self._mark_blob_for_gc(checksum)
+        return result
 
     def action_download(self):
         """Let the browser download the file (the route is the core's, see ``_to_http_stream``)."""
@@ -129,9 +156,7 @@ class IntFilemanagerDocument(models.Model):
         :param mimetype: type given by the client, if any
         :return: ``{"tmp_path", "checksum", "size", "mimetype"}``
         """
-        upload_dir = os.path.join(
-            self.env["ir.attachment"]._filestore(), BLOB_FOLDER, UPLOAD_FOLDER
-        )
+        upload_dir = self._upload_dir()
         os.makedirs(upload_dir, exist_ok=True)
         tmp_path = os.path.join(upload_dir, uuid.uuid4().hex)
         self.env.cr.postrollback.add(lambda: _remove_file(tmp_path))
@@ -179,8 +204,90 @@ class IntFilemanagerDocument(models.Model):
         if os.path.exists(path):
             _remove_file(tmp_path)
             return
+        # Before the blob exists, put it on the checklist: if this transaction is rolled back,
+        # the cleaner finds the blob without a document and deletes it (like the core does).
+        self._mark_blob_for_gc(checksum)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         os.replace(tmp_path, path)
+
+    @api.model
+    def _upload_dir(self):
+        return os.path.join(self.env["ir.attachment"]._filestore(), BLOB_FOLDER, UPLOAD_FOLDER)
+
+    @api.model
+    def _checklist_dir(self):
+        return os.path.join(self.env["ir.attachment"]._filestore(), BLOB_FOLDER, CHECKLIST_FOLDER)
+
+    @api.model
+    def _mark_blob_for_gc(self, checksum):
+        """Put the blob on the checklist: the cleaner deletes it if no document uses it."""
+        self._blob_path(checksum)  # only a checksum goes into a path
+        folder = os.path.join(self._checklist_dir(), checksum[:2])
+        os.makedirs(folder, exist_ok=True)
+        with open(os.path.join(folder, checksum), "ab"):
+            pass
+
+    @api.model
+    def _checklist_entries(self):
+        """The checksums on the checklist (a generator, the list may be long)."""
+        for folder, _subfolders, names in os.walk(self._checklist_dir()):
+            for name in names:
+                if CHECKSUM_REGEX.fullmatch(name):
+                    yield name, os.path.join(folder, name)
+
+    @api.autovacuum
+    def _gc_blobs(self):
+        """Delete the blobs on the checklist that no document uses (any more).
+
+        Like ``ir.attachment._gc_file_store``: the table of the documents is locked against
+        writers while the rows are looked at, so a document that is being created (its row
+        is made before its blob) is either seen or waits until the cleaner is done. Unlike the
+        core, one run takes a batch only: the lock must not be held for a long time, and
+        ``(done, remaining)`` makes Odoo call it again.
+        """
+        cr = self.env.cr
+        if not os.path.isdir(self._checklist_dir()):
+            return 0, 0
+        # Continue in a new transaction: the LOCK must be the first statement of it, otherwise
+        # its snapshot (REPEATABLE READ) may not hold what concurrent transactions just wrote.
+        cr.commit()
+        timeout = self.env.context.get("int_filemanager_lock_timeout", GC_LOCK_TIMEOUT)
+        cr.execute(SQL("SET LOCAL lock_timeout TO %s", timeout))
+        try:
+            cr.execute(SQL("LOCK %s IN SHARE MODE", SQL.identifier(self._table)))
+        except psycopg2.errors.LockNotAvailable:
+            cr.rollback()  # a writer is busy; the next run tries again
+            return 0, 0
+        entries = list(itertools.islice(self._checklist_entries(), GC_BATCH))
+        used = {
+            checksum
+            for [checksum] in self.sudo()
+            .with_context(active_test=False)
+            ._read_group([("checksum", "in", [name for name, _path in entries])], ["checksum"])
+        }
+        for checksum, marker in entries:
+            if checksum not in used:
+                _remove_file(self._blob_path(checksum))
+            _remove_file(marker)
+        cr.commit()  # releases the lock
+        remaining = any(True for _entry in itertools.islice(self._checklist_entries(), 1))
+        return len(entries), int(remaining)
+
+    @api.autovacuum
+    def _gc_blob_uploads(self):
+        """Delete the temporary files of uploads that never ended (a crash leaves them)."""
+        upload_dir = self._upload_dir()
+        if not os.path.isdir(upload_dir):
+            return
+        value = self.env["ir.config_parameter"].sudo().get_param(UPLOAD_AGE_PARAMETER)
+        try:
+            hours = int(value) if value else DEFAULT_UPLOAD_MAX_AGE_HOURS
+        except ValueError:
+            hours = DEFAULT_UPLOAD_MAX_AGE_HOURS
+        oldest_kept = time.time() - hours * 3600
+        for entry in os.scandir(upload_dir):
+            if entry.is_file() and entry.stat().st_mtime < oldest_kept:
+                _remove_file(entry.path)
 
     @api.model
     def _create_from_stream(self, stream, name, folder, mimetype=None, **values):
