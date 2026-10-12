@@ -3,7 +3,7 @@
 # hand in a browser (DB fmv2_ui on fmtest_pg, container fmv2_ui, port 8085).
 # Run again to update it to the latest working tree (the database is kept; the module is
 # upgraded). `ui_instance.sh reset` drops the database and starts from scratch.
-# Never touches the live Odoo. The test login is written to $R/LOGIN.txt on Tower.
+# /mnt/hm-daten (the stock to read in) is mounted read-only. Never touches the live Odoo. The test login is written to $R/LOGIN.txt on Tower.
 set -euo pipefail
 
 HOST="${CHECK_HOST:-unraid}"
@@ -55,7 +55,7 @@ fi
 echo "== upgrade + start"
 ssh "$HOST" "docker run --rm --network fmtest-net $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB -u int_filemanager --i18n-overwrite \
   --stop-after-init --workers=0 --no-http --log-level=warn >$R/upgrade.log 2>&1"
-ssh "$HOST" "docker run -d --name $NAME --network fmtest-net -p $PORT:8069 $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB --log-level=info >/dev/null"
+ssh "$HOST" "docker run -d --name $NAME --network fmtest-net -p $PORT:8069 $MOUNTS -v /mnt/user/Daten:/mnt/hm-daten:ro $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB --log-level=info >/dev/null"
 
 ip="$(ssh "$HOST" "hostname -I | awk '{print \$1}'")"
 echo "http://$ip:$PORT/odoo/action-int_filemanager.int_filemanager_document_action   (login: cat $R/LOGIN.txt on Tower)"

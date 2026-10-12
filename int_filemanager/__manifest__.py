@@ -11,9 +11,14 @@
         "security/ir.model.access.csv",
         "security/int_filemanager_folder_security.xml",
         "security/int_filemanager_document_security.xml",
+        "security/int_filemanager_import_security.xml",
         "views/int_filemanager_menus.xml",
         "views/int_filemanager_folder_views.xml",
         "views/int_filemanager_document_views.xml",
+        "views/int_filemanager_import_views.xml",
+        "views/int_filemanager_import_line_views.xml",
+        "views/res_config_settings_views.xml",
+        "data/int_filemanager_import_data.xml",
     ],
     "assets": {
         "web.assets_backend": [
