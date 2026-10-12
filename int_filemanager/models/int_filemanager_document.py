@@ -98,6 +98,15 @@ class IntFilemanagerDocument(models.Model):
             vals = {key: value for key, value in vals.items() if key not in STORAGE_FIELDS}
         return super().write(vals)
 
+    def action_download(self):
+        """Let the browser download the file (the route is the core's, see ``_to_http_stream``)."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/web/content/{self._name}/{self.id}/content?download=true",
+            "target": "download",
+        }
+
     @api.model
     def _blob_path(self, checksum):
         """The absolute path of the blob with this SHA-256 checksum."""

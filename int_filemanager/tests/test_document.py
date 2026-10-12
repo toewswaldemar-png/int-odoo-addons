@@ -281,6 +281,24 @@ class TestFolderAndDocument(TransactionCase):
 
     # --- moving and listing --------------------------------------------------
 
+    def test_the_download_action_points_to_the_route_of_the_content(self):
+        document = self._document()
+        action = document.with_user(self.user).action_download()
+        self.assertEqual(action["type"], "ir.actions.act_url")
+        self.assertEqual(action["target"], "download")
+        self.assertEqual(
+            action["url"],
+            f"/web/content/int.filemanager.document/{document.id}/content?download=true",
+        )
+        with self.assertRaises(ValueError):
+            (document + self._document("b.txt")).action_download()
+
+    def test_the_list_has_the_upload_and_the_download_button(self):
+        views = self.Document.get_views([(False, "list"), (False, "form")])
+        self.assertIn('js_class="int_filemanager_document_list"', views["views"]["list"]["arch"])
+        for view_type in ("list", "form"):
+            self.assertIn('name="action_download"', views["views"][view_type]["arch"])
+
     def test_the_lists_move_by_multi_edit_and_nothing_is_duplicated_or_created_by_hand(self):
         views = self.Document.get_views([(False, "list"), (False, "form")])
         self.assertIn('multi_edit="1"', views["views"]["list"]["arch"])

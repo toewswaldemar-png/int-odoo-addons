@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-11 21:02+0000\n"
-"PO-Revision-Date: 2026-10-11 21:02+0000\n"
+"POT-Creation-Date: 2026-10-12 18:16+0000\n"
+"PO-Revision-Date: 2026-10-12 18:16+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -17,21 +17,15 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_document.py:0
-msgid "%(stem)s (copy %(number)s)%(extension)s"
-msgstr "%(stem)s (Kopie %(number)s)%(extension)s"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_document.py:0
-msgid "%(stem)s (copy)%(extension)s"
-msgstr "%(stem)s (Kopie)%(extension)s"
-
-#. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_document_name_per_folder
 msgid "A document with this name already exists in this folder."
 msgstr "Ein Dokument mit diesem Namen existiert in diesem Ordner bereits."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "A file needs a name."
+msgstr "Eine Datei braucht einen Namen."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_folder_name_per_parent
@@ -68,9 +62,20 @@ msgid "Attachment Count"
 msgstr "Anzahl der Anhänge"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__checksum
+msgid "Checksum"
+msgstr "Prüfsumme"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__child_ids
 msgid "Child"
 msgstr "Unterordner"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/document_list_controller.js:0
+msgid "Choose a folder in the panel on the left first."
+msgstr "Wählen Sie zuerst im Bereich links einen Ordner."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__color
@@ -87,6 +92,11 @@ msgstr "Unternehmen"
 #: model:ir.ui.menu,name:int_filemanager.menu_int_filemanager_configuration
 msgid "Configuration"
 msgstr "Konfiguration"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__content
+msgid "Content"
+msgstr "Inhalt"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__create_uid
@@ -106,6 +116,7 @@ msgstr "Erstellt am"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__display_name
 msgid "Display Name"
 msgstr "Anzeigename"
 
@@ -121,9 +132,15 @@ msgid "Documents"
 msgstr "Dokumente"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__data
-msgid "File"
-msgstr "Datei"
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+msgid "Download"
+msgstr "Herunterladen"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_ir_binary
+msgid "File streaming helper model for controllers"
+msgstr "Hilfsmodell zum Übertragen von Dateien für Controller"
 
 #. module: int_filemanager
 #: model:ir.module.category,name:int_filemanager.module_category_int_filemanager
@@ -188,6 +205,7 @@ msgstr "Hat Nachricht"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__id
+#: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__id
 msgid "ID"
 msgstr "ID"
 
@@ -248,6 +266,12 @@ msgid "Name"
 msgstr "Name"
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "No free name for %(name)s in this folder."
+msgstr "Für %(name)s ist in diesem Ordner kein freier Name übrig."
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction_counter
 msgid "Number of Actions"
 msgstr "Anzahl der Aktionen"
@@ -268,6 +292,11 @@ msgid "Number of messages with delivery error"
 msgstr "Anzahl der Nachrichten mit Zustellfehler"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__origin_path
+msgid "Origin Path"
+msgstr "Ursprünglicher Pfad"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_id
 msgid "Parent"
 msgstr "Übergeordneter Ordner"
@@ -276,6 +305,12 @@ msgstr "Übergeordneter Ordner"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_path
 msgid "Parent Path"
 msgstr "Übergeordneter Pfad"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/controllers/int_filemanager.py:0
+msgid "Send exactly one file per request."
+msgstr "Senden Sie genau eine Datei pro Anfrage."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__size
@@ -289,8 +324,42 @@ msgid "Tags"
 msgstr "Tags"
 
 #. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_document_checksum_is_sha256
+msgid "The checksum must be a SHA-256 in lowercase hexadecimal."
+msgstr "Die Prüfsumme muss ein SHA-256 in Kleinbuchstaben-Hexadezimal sein."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "The file of a document is set by the upload only."
+msgstr "Die Datei eines Dokuments wird nur durch das Hochladen gesetzt."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "The file of this document is missing."
+msgstr "Die Datei dieses Dokuments fehlt."
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_folder.py:0
 msgid "The folder %(name)s is not empty. Move or delete what is in it first."
 msgstr "Der Ordner %(name)s ist nicht leer. Verschieben oder löschen Sie zuerst, was darin liegt."
 
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/controllers/int_filemanager.py:0
+msgid "There is no space left to store the file."
+msgstr "Es ist kein Speicherplatz mehr für die Datei vorhanden."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/controllers/int_filemanager.py:0
+msgid "This folder does not exist."
+msgstr "Dieser Ordner existiert nicht."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/document_list_controller.xml:0
+msgid "Upload"
+msgstr "Hochladen"

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t
+        t-name="int_filemanager.DocumentListView.Buttons"
+        t-inherit="web.ListView.Buttons"
+        t-inherit-mode="primary"
+    >
+        <xpath expr="." position="inside">
+            <!-- A label opens the file dialog of the hidden input without any script. -->
+            <label class="btn btn-primary o_int_filemanager_upload">
+                <input
+                    type="file"
+                    multiple="multiple"
+                    class="d-none"
+                    t-on-change.stop="onFilesSelected"
+                />
+                Upload
+            </label>
+        </xpath>
+    </t>
+</templates>
