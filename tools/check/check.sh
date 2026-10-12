@@ -25,12 +25,22 @@ ssh "$HOST" "rm -rf $BASE/v2src && mkdir -p $BASE/v2src $WORK/data && chmod 777 
 tar -c --exclude=__pycache__ int_filemanager | ssh "$HOST" "tar -x -C $BASE/v2src"
 scp -q tools/check/check_filter.py "$HOST:$WORK/check_filter.py"
 
+# A missing tool must not look like a clean result: stop loudly.
+require() {
+  ssh "$HOST" "test $1" || { echo "check.sh: $2" >&2; exit 1; }
+}
+require "-x $BASE/odoo-ls/odoo_ls_server -a -d $BASE/odoo-ls/typeshed/stdlib" \
+  "odoo-ls is missing in $BASE/odoo-ls (odoo_ls_server and typeshed/ from the odoo/odoo-ls release)"
+[[ $quick == 1 ]] || require "-d $BASE/lintlib/pylint" \
+  "pylint is missing in $BASE/lintlib (pip install --target, see docs/pruefautomatik_2026-10-02.md)"
+
 echo "== odoo-ls"
-ssh "$HOST" "docker run --rm --user root --network none --entrypoint /ols/odoo_ls_server \
+ssh "$HOST" "rm -f $WORK/odoo_ls.json; docker run --rm --user root --network none --entrypoint /ols/odoo_ls_server \
   -v $BASE/odoo-ls:/ols -v $BASE/v2src:/mnt/v2src:ro -v $WORK:/work $IMAGE \
   --parse -c /usr/lib/python3/dist-packages -a /mnt/v2src -t /mnt/v2src --python /usr/bin/python3 \
   --stdlib /ols/typeshed/stdlib -s /ols/typeshed/stubs -o /work/odoo_ls.json --log-level error \
-  >/dev/null 2>&1"
+  >/dev/null 2>&1" || { echo "check.sh: odoo-ls failed" >&2; exit 1; }
+require "-s $WORK/odoo_ls.json" "odoo-ls wrote no result"
 
 filter_args=""
 if [[ $quick == 1 ]]; then
