@@ -14,12 +14,12 @@ class TestFolderAndDocument(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.Folder = cls.env["int_filemanager.folder"]
-        cls.Document = cls.env["int_filemanager.document"]
+        cls.Folder = cls.env["int.filemanager.folder"]
+        cls.Document = cls.env["int.filemanager.document"]
         cls.user = new_test_user(
             cls.env,
             login="doc_user",
-            groups="base.group_user,int_filemanager.group_filemanager_user",
+            groups="base.group_user,int_filemanager.int_filemanager_group_user",
         )
         cls.outsider = new_test_user(cls.env, login="doc_outsider", groups="base.group_user")
         cls.top = cls.Folder.create({"name": "Top"})
@@ -87,7 +87,7 @@ class TestFolderAndDocument(TransactionCase):
         document = self._document("report.pdf", b"%PDF-1.4 content")
         attachment = self.env["ir.attachment"].search(
             [
-                ("res_model", "=", "int_filemanager.document"),
+                ("res_model", "=", "int.filemanager.document"),
                 ("res_field", "=", "data"),
                 ("res_id", "=", document.id),
             ]
@@ -164,7 +164,7 @@ class TestFolderAndDocument(TransactionCase):
         self.assertFalse(parents["Top"])
 
     def test_the_search_panel_offers_the_tags(self):
-        tag = self.env["int_filemanager.tag"].create({"name": "Invoice"})
+        tag = self.env["int.filemanager.tag"].create({"name": "Invoice"})
         self._document().tag_ids = tag
         result = self.Document.with_user(self.user).search_panel_select_multi_range(
             "tag_ids", expand=True
@@ -185,7 +185,7 @@ class TestFolderAndDocument(TransactionCase):
     # --- moving and copying ---------------------------------------------------
 
     def test_a_copy_keeps_the_content_the_tags_and_gets_a_free_name(self):
-        tag = self.env["int_filemanager.tag"].create({"name": "Copied"})
+        tag = self.env["int.filemanager.tag"].create({"name": "Copied"})
         original = self._document("report.pdf", b"content")
         original.tag_ids = tag
         copy = original.copy()

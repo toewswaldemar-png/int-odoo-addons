@@ -2,7 +2,7 @@ from odoo import fields, models
 
 
 class IntFilemanagerTag(models.Model):
-    _name = "int_filemanager.tag"
+    _name = "int.filemanager.tag"
     _description = "Filemanager tag"
     _order = "name"
 

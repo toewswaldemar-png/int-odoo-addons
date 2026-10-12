@@ -36,9 +36,9 @@ if [[ -z "$exists" ]]; then
   ssh "$HOST" "docker run --rm -i --network fmtest-net $MOUNTS -v $R:/out $IMAGE odoo shell -c /etc/odoo/odoo.conf -d $DB --no-http --log-level=warn" <<'PY' 2>&1 | grep -E '^(LOGIN|SEED)' || true
 import secrets
 env = env  # noqa: F821 - injected by odoo shell
-group_user = env.ref("int_filemanager.group_filemanager_user")
-group_admin = env.ref("int_filemanager.group_filemanager_admin")
-folder = env["int_filemanager.folder"].sudo().create({"name": "Test"})
+group_user = env.ref("int_filemanager.int_filemanager_group_user")
+group_admin = env.ref("int_filemanager.int_filemanager_group_admin")
+folder = env["int.filemanager.folder"].sudo().create({"name": "Test"})
 password = secrets.token_urlsafe(9)
 env["res.users"].sudo().create({
     "name": "Files tester",

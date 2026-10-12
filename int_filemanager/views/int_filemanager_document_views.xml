@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <record id="int_filemanager_document_view_list" model="ir.ui.view">
-        <field name="name">int_filemanager.document.list</field>
-        <field name="model">int_filemanager.document</field>
+        <field name="name">int.filemanager.document.view.list</field>
+        <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
             <!-- multi_edit: select documents and edit the folder of one of them to move them all. -->
             <list multi_edit="1">
@@ -16,8 +16,8 @@
     </record>
 
     <record id="int_filemanager_document_view_form" model="ir.ui.view">
-        <field name="name">int_filemanager.document.form</field>
-        <field name="model">int_filemanager.document</field>
+        <field name="name">int.filemanager.document.view.form</field>
+        <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
             <form>
                 <sheet>
@@ -43,8 +43,8 @@
     </record>
 
     <record id="int_filemanager_document_view_search" model="ir.ui.view">
-        <field name="name">int_filemanager.document.search</field>
-        <field name="model">int_filemanager.document</field>
+        <field name="name">int.filemanager.document.view.search</field>
+        <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
             <search>
                 <field name="name" />
@@ -81,7 +81,7 @@
 
     <record id="int_filemanager_document_action" model="ir.actions.act_window">
         <field name="name">Documents</field>
-        <field name="res_model">int_filemanager.document</field>
+        <field name="res_model">int.filemanager.document</field>
         <field name="view_mode">list,form</field>
     </record>
 

@@ -133,12 +133,12 @@ msgid "Filemanager"
 msgstr "Dateimanager"
 
 #. module: int_filemanager
-#: model:res.groups,name:int_filemanager.group_filemanager_admin
+#: model:res.groups,name:int_filemanager.int_filemanager_group_admin
 msgid "Filemanager Administrator"
 msgstr "Dateimanager Administrator"
 
 #. module: int_filemanager
-#: model:res.groups,name:int_filemanager.group_filemanager_user
+#: model:res.groups,name:int_filemanager.int_filemanager_group_user
 msgid "Filemanager User"
 msgstr "Dateimanager Nutzer"
 

@@ -5,16 +5,16 @@ from odoo.exceptions import UserError
 class IntFilemanagerFolder(models.Model):
     """A folder: an ordinary record with a parent, nothing else."""
 
-    _name = "int_filemanager.folder"
+    _name = "int.filemanager.folder"
     _description = "Filemanager folder"
     _parent_store = True
     _order = "name"
 
     name = fields.Char(required=True)
-    parent_id = fields.Many2one("int_filemanager.folder", index=True, ondelete="restrict")
+    parent_id = fields.Many2one("int.filemanager.folder", index=True, ondelete="restrict")
     parent_path = fields.Char(index=True)
-    child_ids = fields.One2many("int_filemanager.folder", "parent_id")
-    document_ids = fields.One2many("int_filemanager.document", "folder_id")
+    child_ids = fields.One2many("int.filemanager.folder", "parent_id")
+    document_ids = fields.One2many("int.filemanager.document", "folder_id")
     active = fields.Boolean(default=True)
     company_id = fields.Many2one(
         "res.company", default=lambda self: self.env.company, index=True
@@ -30,7 +30,7 @@ class IntFilemanagerFolder(models.Model):
     @api.ondelete(at_uninstall=False)
     def _unlink_except_not_empty(self):
         # active_test=False: an archived folder or document still keeps its place.
-        Document = self.env["int_filemanager.document"].with_context(active_test=False)
+        Document = self.env["int.filemanager.document"].with_context(active_test=False)
         for folder in self.with_context(active_test=False):
             if folder.child_ids or Document.search_count([("folder_id", "=", folder.id)]):
                 raise UserError(

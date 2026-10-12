@@ -11,14 +11,14 @@ class IntFilemanagerDocument(models.Model):
     nothing here stores or reads bytes itself.
     """
 
-    _name = "int_filemanager.document"
+    _name = "int.filemanager.document"
     _description = "Filemanager document"
     _inherit = ["mail.thread"]
     _order = "name"
 
     name = fields.Char(required=True)
     folder_id = fields.Many2one(
-        "int_filemanager.folder", required=True, index=True, ondelete="restrict"
+        "int.filemanager.folder", required=True, index=True, ondelete="restrict"
     )
     data = fields.Binary(string="File", attachment=True, required=True)
     mimetype = fields.Char(compute="_compute_mimetype", store=True)
@@ -26,7 +26,7 @@ class IntFilemanagerDocument(models.Model):
     size = fields.Float(compute="_compute_size", store=True)
     active = fields.Boolean(default=True)
     tag_ids = fields.Many2many(
-        "int_filemanager.tag",
+        "int.filemanager.tag",
         "int_filemanager_document_tag_rel",
         "document_id",
         "tag_id",
