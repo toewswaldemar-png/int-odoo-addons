@@ -1,5 +1,9 @@
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import SQL
+
+# Names shown when a restore is refused because they are taken.
+CLASH_NAMES_SHOWN = 5
 
 
 class IntFilemanagerFolder(models.Model):
@@ -75,6 +79,79 @@ class IntFilemanagerFolder(models.Model):
         for folder in self:
             inherits = folder.access_mode == "inherit" and folder.parent_id
             folder.access_folder_id = folder.parent_id.access_folder_id if inherits else folder
+
+    def write(self, vals):
+        # Archiving or restoring a folder does it on everything below, like a project does it on
+        # its tasks (project.project.write). The core's docstring of action_archive says to
+        # override write for that.
+        cascade = "active" in vals and not self.env.context.get("int_filemanager_cascade")
+        if cascade and vals["active"]:
+            self._check_restorable()
+        result = super().write(vals)
+        if cascade:
+            self._cascade_active(vals["active"])
+        return result
+
+    def _below(self, active):
+        """The folders and documents below these folders (they included) that are not yet ``active``.
+
+        Superuser: archiving is one act for the whole tree, also for what the user does not see.
+        """
+        folders = self.sudo().with_context(active_test=False)
+        below = folders.search([("id", "child_of", self.ids), ("active", "!=", active)])
+        documents = (
+            self.env["int.filemanager.document"]
+            .sudo()
+            .with_context(active_test=False)
+            .search([("folder_id", "child_of", self.ids), ("active", "!=", active)])
+        )
+        return below, documents
+
+    def _cascade_active(self, active):
+        below, documents = self._below(active)
+        below.with_context(int_filemanager_cascade=True).write({"active": active})
+        documents.with_context(int_filemanager_cascade=True).write({"active": active})
+
+    def _check_restorable(self):
+        """Refuse to restore what cannot come back: below an archived folder, or with a name
+        that is taken (the names are unique among the active ones, case aside)."""
+        for folder in self:
+            if folder.parent_id and not folder.parent_id.active:
+                raise UserError(
+                    self.env._(
+                        "Restore the folder %(parent)s first, it contains %(name)s.",
+                        parent=folder.parent_id.display_name,
+                        name=folder.name,
+                    )
+                )
+        below, _documents = self._below(True)
+        folders = below | self
+        taken = self.env.execute_query(
+            SQL(
+                """
+                SELECT min(name) FROM int_filemanager_folder
+                WHERE (active OR id IN %(folders)s)
+                  AND (coalesce(parent_id, 0) IN (
+                        SELECT coalesce(parent_id, 0) FROM int_filemanager_folder
+                        WHERE id IN %(roots)s)
+                       OR parent_id IN %(folders)s)
+                GROUP BY parent_id, lower(name COLLATE "und-x-icu")
+                HAVING count(*) > 1
+                UNION ALL
+                SELECT min(name) FROM int_filemanager_document
+                WHERE folder_id IN %(folders)s
+                GROUP BY folder_id, lower(name COLLATE "und-x-icu")
+                HAVING count(*) > 1
+                """,
+                folders=tuple(folders.ids) or (0,),
+                roots=tuple(self.ids),
+            )
+        )
+        if taken:
+            names = ", ".join(sorted({name for [name] in taken})[:CLASH_NAMES_SHOWN])
+            raise UserError(
+                self.env._("Restoring is not possible, these names are taken: %(names)s", names=names)
+            )
 
     @api.ondelete(at_uninstall=False)
     def _unlink_except_not_empty(self):

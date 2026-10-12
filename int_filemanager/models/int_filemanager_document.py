@@ -108,6 +108,16 @@ class IntFilemanagerDocument(models.Model):
         # the storage runs as superuser. Creating is closed by the missing access right.
         if not self.env.su:
             vals = {key: value for key, value in vals.items() if key not in STORAGE_FIELDS}
+        if vals.get("active") and not self.env.context.get("int_filemanager_cascade"):
+            for document in self.filtered(lambda document: not document.active):
+                if not document.folder_id.active:
+                    raise UserError(
+                        self.env._(
+                            "Restore the folder %(folder)s first, it contains %(name)s.",
+                            folder=document.folder_id.display_name,
+                            name=document.name,
+                        )
+                    )
         old_checksums = set(self.mapped("checksum")) if "checksum" in vals else set()
         result = super().write(vals)
         if old_checksums:
