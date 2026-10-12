@@ -4,8 +4,10 @@
         <field name="name">int.filemanager.document.view.list</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- multi_edit: select documents and edit the folder of one of them to move them all. -->
-            <list multi_edit="1">
+            <!-- multi_edit: select documents and edit the folder of one of them to move them all.
+                 No new, import or duplicate: documents come from the upload and the reading in
+                 only (the users have no right to create them). -->
+            <list multi_edit="1" create="0" import="0" duplicate="0">
                 <field name="name" />
                 <field name="folder_id" />
                 <field name="size" widget="int_filemanager_size" />
@@ -19,7 +21,7 @@
         <field name="name">int.filemanager.document.view.form</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <form>
+            <form create="0" duplicate="0">
                 <sheet>
                     <widget
                         name="web_ribbon"
@@ -29,7 +31,6 @@
                     />
                     <group>
                         <field name="active" invisible="1" />
-                        <field name="data" filename="name" />
                         <field name="name" />
                         <field name="folder_id" />
                         <field name="mimetype" />

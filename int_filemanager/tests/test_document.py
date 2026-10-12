@@ -1,4 +1,5 @@
-import base64
+import io
+import os
 
 from psycopg2 import IntegrityError
 
@@ -9,7 +10,7 @@ from odoo.tools import mute_logger
 
 @tagged("post_install", "-at_install")
 class TestFolderAndDocument(TransactionCase):
-    """Folders and documents are ordinary records: no own methods, Odoo's own storage."""
+    """Folders and documents are ordinary records; a document's file lies in a blob."""
 
     @classmethod
     def setUpClass(cls):
@@ -26,13 +27,16 @@ class TestFolderAndDocument(TransactionCase):
         cls.sub = cls.Folder.create({"name": "Sub", "parent_id": cls.top.id})
 
     def _document(self, name="a.txt", content=b"hello", folder=None):
-        return self.Document.create(
-            {
-                "name": name,
-                "folder_id": (folder or self.sub).id,
-                "data": base64.b64encode(content),
-            }
+        document = self.Document._create_from_stream(
+            io.BytesIO(content), name, folder or self.sub
         )
+        self.addCleanup(self._remove_blob, document.checksum)
+        return document
+
+    def _remove_blob(self, checksum):
+        path = self.Document._blob_path(checksum)
+        if os.path.exists(path):
+            os.unlink(path)
 
     # --- folders --------------------------------------------------------------
 
@@ -83,33 +87,39 @@ class TestFolderAndDocument(TransactionCase):
 
     # --- documents ------------------------------------------------------------
 
-    def test_the_content_lives_in_an_odoo_attachment(self):
+    def test_the_content_lies_in_a_blob_and_not_in_an_attachment(self):
         document = self._document("report.pdf", b"%PDF-1.4 content")
-        attachment = self.env["ir.attachment"].search(
-            [
-                ("res_model", "=", "int.filemanager.document"),
-                ("res_field", "=", "data"),
-                ("res_id", "=", document.id),
-            ]
+        with open(self.Document._blob_path(document.checksum), "rb") as blob:
+            self.assertEqual(blob.read(), b"%PDF-1.4 content")
+        self.assertFalse(
+            self.env["ir.attachment"].search(
+                [("res_model", "=", "int.filemanager.document"), ("res_id", "=", document.id)]
+            )
         )
-        self.assertEqual(len(attachment), 1)
-        self.assertEqual(attachment.raw, b"%PDF-1.4 content")
-        self.assertEqual(base64.b64decode(document.data), b"%PDF-1.4 content")
 
-    def test_size_and_mimetype_follow_the_content_and_the_name(self):
+    def test_size_and_type_are_set_by_the_storage_and_stay_when_the_name_changes(self):
         document = self._document("report.pdf", b"x" * 1500)
         self.assertEqual(document.size, 1500)
         self.assertEqual(document.mimetype, "application/pdf")
-        document.write({"data": base64.b64encode(b"y" * 10), "name": "notes.txt"})
-        self.assertEqual(document.size, 10)
-        self.assertEqual(document.mimetype, "text/plain")
+        document.name = "notes.txt"
+        self.assertEqual(document.mimetype, "application/pdf")
 
-    def test_an_unknown_extension_is_a_binary_file(self):
-        self.assertEqual(self._document("blob.zzz").mimetype, "application/octet-stream")
+    def test_an_unknown_extension_is_judged_by_the_content(self):
+        self.assertEqual(self._document("blob.zzz", b"\x00\x01\x02").mimetype, "application/octet-stream")
+        self.assertEqual(self._document("notes.zzz", b"plain words").mimetype, "text/plain")
 
     def test_a_document_needs_a_folder(self):
         with self.assertRaises(IntegrityError), mute_logger("odoo.sql_db"):
-            self.Document.create({"name": "x", "data": base64.b64encode(b"x")})
+            self.Document.create({"name": "x", "checksum": "a" * 64})
+
+    def test_a_checksum_is_a_sha256(self):
+        for bad in ("abc", "A" * 64, "g" * 64, "a" * 63):
+            with self.subTest(checksum=bad), self.assertRaises(IntegrityError), mute_logger(
+                "odoo.sql_db"
+            ):
+                self.Document.create(
+                    {"name": "x", "folder_id": self.sub.id, "checksum": bad}
+                )
 
     def test_a_document_name_is_unique_per_folder_without_regard_to_case(self):
         self._document("a.txt")
@@ -127,16 +137,49 @@ class TestFolderAndDocument(TransactionCase):
 
     def test_a_filemanager_user_works_with_folders_and_documents(self):
         folder = self.Folder.with_user(self.user).create({"name": "Mine"})
-        document = self.Document.with_user(self.user).create(
-            {
-                "name": "mine.txt",
-                "folder_id": folder.id,
-                "data": base64.b64encode(b"mine"),
-            }
+        document = self.Document.with_user(self.user)._create_from_stream(
+            io.BytesIO(b"mine"), "mine.txt", folder
         )
+        self.addCleanup(self._remove_blob, document.checksum)
         document.write({"name": "mine2.txt"})
         document.unlink()
         folder.unlink()
+
+    def test_a_user_cannot_create_a_document_directly(self):
+        with self.assertRaises(AccessError):
+            self.Document.with_user(self.user).create(
+                {"name": "x", "folder_id": self.sub.id, "checksum": "a" * 64}
+            )
+
+    def test_a_user_cannot_change_checksum_size_or_type(self):
+        document = self._document("a.txt", b"hello")
+        before = (document.checksum, document.size, document.mimetype)
+        document.with_user(self.user).write(
+            {"name": "b.txt", "checksum": "b" * 64, "size": 99, "mimetype": "evil/type"}
+        )
+        self.assertEqual(document.name, "b.txt")
+        self.assertEqual((document.checksum, document.size, document.mimetype), before)
+
+    def test_the_storage_may_change_checksum_size_and_type(self):
+        document = self._document("a.txt", b"hello")
+        document.sudo().write({"size": 99, "mimetype": "text/x"})
+        self.assertEqual((document.size, document.mimetype), (99, "text/x"))
+
+    def test_the_origin_path_is_for_administrators_only(self):
+        document = self._document()
+        document.sudo().origin_path = "/mnt/data/a.txt"
+        as_user = document.with_user(self.user)
+        with self.assertRaises(AccessError):
+            as_user.origin_path  # noqa: B018
+        self.assertNotIn("origin_path", self.Document.with_user(self.user).fields_get())
+        self.assertEqual(document.sudo().origin_path, "/mnt/data/a.txt")
+
+    def test_a_user_sorts_and_filters_by_size(self):
+        small, large = self._document("s.txt", b"x"), self._document("l.txt", b"x" * 10)
+        found = self.Document.with_user(self.user).search(
+            [("size", ">", 0)], order="size desc"
+        )
+        self.assertEqual(found[:2], large + small)
 
     def test_without_the_group_nothing_is_readable(self):
         with self.assertRaises(AccessError):
@@ -182,35 +225,16 @@ class TestFolderAndDocument(TransactionCase):
         self.assertEqual(found, here + below)
         self.assertNotIn(elsewhere, found)
 
-    # --- moving and copying ---------------------------------------------------
+    # --- moving and listing --------------------------------------------------
 
-    def test_a_copy_keeps_the_content_the_tags_and_gets_a_free_name(self):
-        tag = self.env["int.filemanager.tag"].create({"name": "Copied"})
-        original = self._document("report.pdf", b"content")
-        original.tag_ids = tag
-        copy = original.copy()
-        self.assertEqual(copy.name, "report (copy).pdf")
-        self.assertEqual(copy.folder_id, original.folder_id)
-        self.assertEqual(copy.tag_ids, tag)
-        self.assertEqual(copy.size, original.size)
-        self.assertEqual(base64.b64decode(copy.data), b"content")
-        self.assertEqual(copy.mimetype, "application/pdf")
-
-    def test_copying_again_counts_up_and_a_given_name_is_kept(self):
-        original = self._document("a.txt")
-        first, second = original.copy(), original.copy()
-        self.assertEqual((first.name, second.name), ("a (copy).txt", "a (copy 2).txt"))
-        self.assertEqual(original.copy({"name": "chosen.txt"}).name, "chosen.txt")
-
-    def test_a_copy_of_several_documents(self):
-        both = self._document("a.txt") + self._document("b.txt")
-        self.assertEqual(
-            sorted(both.copy().mapped("name")), ["a (copy).txt", "b (copy).txt"]
-        )
-
-    def test_the_lists_move_by_multi_edit_and_folders_cannot_be_duplicated(self):
-        views = self.Document.get_views([(False, "list")])
+    def test_the_lists_move_by_multi_edit_and_nothing_is_duplicated_or_created_by_hand(self):
+        views = self.Document.get_views([(False, "list"), (False, "form")])
         self.assertIn('multi_edit="1"', views["views"]["list"]["arch"])
+        for view_type in ("list", "form"):
+            arch = views["views"][view_type]["arch"]
+            self.assertIn('duplicate="0"', arch)
+            self.assertIn('create="0"', arch)
+        self.assertIn('import="0"', views["views"]["list"]["arch"])
         views = self.Folder.get_views([(False, "list"), (False, "form")])
         for view_type in ("list", "form"):
             self.assertIn('duplicate="0"', views["views"][view_type]["arch"])

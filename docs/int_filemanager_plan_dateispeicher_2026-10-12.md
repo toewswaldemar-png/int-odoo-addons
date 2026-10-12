@@ -47,7 +47,7 @@ Der Plan wurde am 12.10. von einer zweiten Instanz gegengelesen und gegen den Qu
 - `int.filemanager.document` (erbt weiter `mail.thread`): `name`, `folder_id`, `checksum` (Char, Pflicht, indiziert), `size` (Float), `mimetype`, `active`,
   `tag_ids`, `company_id` (von der Ordner-Firma abgeleitet), `origin_path`.
   - Schreibschutz wie `ir.attachment` (`ir_attachment.py:476-478`, `741`, `780`): `size`, `mimetype`, `checksum` mit `readonly=True` (wirkt nur in der Oberfläche,
-    `odoo19_reference/backend/orm/02_fields.md:22`); `create` und `write` werfen diese Schlüssel aus den Werten, außer bei `self.env.su` (Prüfung nicht über den Kontext, den setzt der RPC-Client selbst).
+    `odoo19_reference/backend/orm/02_fields.md:22`); `write` wirft diese Schlüssel aus den Werten, außer bei `self.env.su`; `create` ist durch das fehlende `perm_create` geschlossen (ein Wächter wäre toter Code) (Prüfung nicht über den Kontext, den setzt der RPC-Client selbst).
     Der Speicherweg läuft über eine private Methode mit `sudo()`. Die Felder bleiben lesbar, sortierbar und filterbar, es gibt keine Anzeigefelder.
     `origin_path`: `groups="base.group_system"` (Serverpfad, Nutzer sehen und sortieren ihn nicht; `sudo()` umgeht `groups`, Security §1).
   - Keine Berechtigung `perm_create` für die Nutzergruppe an `int.filemanager.document` (default-deny, Security §1): Dokumente entstehen nur über Upload und Einlesen mit `sudo()`.
@@ -63,7 +63,7 @@ Der Plan wurde am 12.10. von einer zweiten Instanz gegengelesen und gegen den Qu
     über die Import-Zeilen (Unique je Auftrag und Pfad) oder über einen Unique-Index auf `md5(origin_path)`.
   - Namen werden beim Einlesen auf NFC normalisiert (der Unique-Index vergleicht byteweise, zusammengesetztes und zerlegtes „ä“ wären zwei Namen).
   - Ein Firmenwechsel an einem Ordner mit Inhalt wird abgelehnt (das gespeicherte Related-Feld würde sonst alle Dokumente darin schreiben).
-  - Liste und Formular mit `import="0"` und `create="0"`, damit der Odoo-Import keine leeren Dokumente anlegt.
+  - Liste und Formular mit `import="0"`, `create="0"` und `duplicate="0"` (Kopieren entfällt), damit der Odoo-Import keine leeren Dokumente anlegt.
 - `int.filemanager.import` (Auftrag) und `int.filemanager.import.line` (eine Zeile je Datei: Pfad, Größe, mtime, Status, Meldung).
 - Einstellungen über `res.config.settings` (nur `base.group_system`): Einlese-Wurzelpfad, Alter für Temp-Dateien in `.upload/` (Standard 1 Tag), Upload-Obergrenze.
 - Dateinamen nach Modellname, `models/ir_binary.py` für den Hook, `controllers/int_filemanager.py`. Coding Guidelines §1.
@@ -113,7 +113,7 @@ Ausführung über `tools/check/tests.sh` (Wegwerf-Datenbank) und `tools/check/ui
 - Speicher: 1 und 2,5 GiB, Duplikate, Rollback, Aufräumer inklusive Wettlauf, Prüfsummen-Regex. Die großen Dateien unter eigenem Tag, nicht im Standardlauf.
 - Typ: docx/xlsx/pptx bleiben OOXML-Typ, html/svg/xml werden `text/plain` (auch für Admins und im Einlese-Cron), über `_check_contents` mit den beiden Kontexten.
 - Hook: Download, Range, ETag, 304/416, Rechte, Mehrfirmen, x_sendfile-Header (Konfiguration im Test setzen).
-- Pseudo-Feld: read, copy, Export, write → Fehler. Feldschutz: `checksum`, `size`, `mimetype` per RPC-`write`/`create` ohne `su` verworfen (Wert bleibt unverändert), mit `su` gesetzt; `origin_path` für Nutzer nicht lesbar; `create` per RPC ohne `perm_create` → Fehler.
+- Pseudo-Feld: read, copy, Export, write → Fehler. Feldschutz: `checksum`, `size`, `mimetype` per RPC-`write` ohne `su` verworfen (Wert bleibt unverändert), mit `su` gesetzt; `origin_path` für Nutzer nicht lesbar; `create` per RPC ohne `perm_create` → Fehler.
 - Upload: 413 ohne die Funktion, Konflikt-Nummerierung (inklusive gleichzeitiger Uploads), Ordner Pflicht.
 - Einlesen: Neustart-Simulation, Fehlerzeile, Idempotenz, zweiter Cron-Lauf, Sonderfälle, Namenskonflikte, Symlinks, NFC-Namen, `tracking_disable`.
 - Archiv-Kaskade (Mengentest, Stapel) und Wiederherstellen-Konflikt.
