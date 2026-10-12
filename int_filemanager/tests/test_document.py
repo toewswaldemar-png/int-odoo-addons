@@ -122,10 +122,64 @@ class TestFolderAndDocument(TransactionCase):
                 )
 
     def test_a_document_name_is_unique_per_folder_without_regard_to_case(self):
-        self._document("a.txt")
+        values = {"folder_id": self.sub.id, "checksum": "a" * 64}
+        self.Document.create({**values, "name": "a.txt"})
         with self.assertRaises(IntegrityError), mute_logger("odoo.sql_db"):
-            self._document("A.TXT")
+            self.Document.create({**values, "name": "A.TXT"})
         self.assertTrue(self._document("a.txt", folder=self.top))
+
+    # --- names ----------------------------------------------------------------
+
+    def test_a_taken_name_gets_a_number(self):
+        names = [self._document("a.txt", content=bytes([n])).name for n in range(3)]
+        self.assertEqual(names, ["a.txt", "a (2).txt", "a (3).txt"])
+
+    def test_the_number_comes_before_the_extension_and_case_does_not_matter(self):
+        self._document("a.txt")
+        self.assertEqual(self._document("A.TXT").name, "A (2).TXT")
+
+    def test_a_number_that_is_taken_is_skipped(self):
+        self._document("a (2).txt")
+        self.assertEqual(
+            [self._document("a.txt").name, self._document("a.txt").name],
+            ["a.txt", "a (3).txt"],
+        )
+
+    def test_an_archived_document_gives_its_name_back(self):
+        self._document("a.txt").active = False
+        self.assertEqual(self._document("a.txt").name, "a.txt")
+
+    def test_the_same_name_in_two_folders_stays(self):
+        self._document("a.txt")
+        self.assertEqual(self._document("a.txt", folder=self.top).name, "a.txt")
+
+    def test_two_documents_with_the_same_content_share_one_blob(self):
+        first, second = self._document("a.txt"), self._document("b.txt")
+        self.assertEqual(first.checksum, second.checksum)
+        blob_folder = os.path.dirname(self.Document._blob_path(first.checksum))
+        self.assertEqual(os.listdir(blob_folder).count(first.checksum), 1)
+
+    def test_a_name_is_cleaned(self):
+        cases = {
+            "C:\\fakepath\\x.txt": "x.txt",
+            "dir/sub/y.txt": "y.txt",
+            "a\u0308.txt": "\u00e4.txt",  # "a" plus a combining mark becomes one character
+            "li\nne.txt": "line.txt",
+            "  padded.txt  ": "padded.txt",
+        }
+        for given, expected in cases.items():
+            with self.subTest(given=given):
+                self.assertEqual(self.Document._clean_name(given), expected)
+
+    def test_a_name_without_content_is_refused(self):
+        for bad in ("", "  ", ".", "..", "dir/", None):
+            with self.subTest(name=bad), self.assertRaises(UserError):
+                self.Document._clean_name(bad)
+
+    def test_a_long_name_keeps_its_extension(self):
+        name = self.Document._clean_name("x" * 400 + ".pdf")
+        self.assertEqual(len(name), 255)
+        self.assertTrue(name.endswith("x.pdf"))
 
     def test_moving_a_document_is_a_write(self):
         document = self._document()

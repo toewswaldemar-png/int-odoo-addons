@@ -2,7 +2,10 @@ import contextlib
 import hashlib
 import os
 import re
+import unicodedata
 import uuid
+
+from psycopg2 import IntegrityError
 
 from odoo import api, fields, models
 from odoo.exceptions import MissingError, UserError
@@ -14,6 +17,9 @@ CHECKSUM_REGEX = re.compile(r"[0-9a-f]{64}")
 CHUNK_SIZE = 1024 * 1024
 # The head of a file is enough for ``guess_mimetype`` (it reads no more than this).
 HEAD_SIZE = 2048
+NAME_MAX_LENGTH = 255
+# Names tried for one upload ("a.txt", "a (2).txt", ...) before giving up.
+NAME_TRIES = 1000
 # Set by the storage only (see ``write``), like the core does for ``ir.attachment``.
 STORAGE_FIELDS = ("checksum", "size", "mimetype")
 
@@ -136,7 +142,10 @@ class IntFilemanagerDocument(models.Model):
             if not written:
                 _remove_file(tmp_path)
         # The core's rules: client type, then file name, then the head; html, svg and xml
-        # become text/plain (office formats excepted), for every user.
+        # become text/plain (office formats excepted), for every user. A client that sends
+        # "any binary" says nothing: the core would skip the file name for it.
+        if mimetype == "application/octet-stream":
+            mimetype = None
         values = (
             self.env["ir.attachment"]
             .with_context(image_no_postprocess=True, attachments_mime_plainxml=True)
@@ -178,29 +187,86 @@ class IntFilemanagerDocument(models.Model):
         :param values: more field values, e.g. ``tag_ids``
         :return: the document, with the environment of the caller
         """
+        name = self._clean_name(name)
         stored = self._store_stream(stream, name, mimetype)
         try:
-            document = (
-                self.sudo()
-                .create(
-                    {
-                        **values,
-                        "name": name,
-                        "folder_id": folder.id,
-                        "checksum": stored["checksum"],
-                        "size": stored["size"],
-                        "mimetype": stored["mimetype"],
-                    }
-                )
-                .with_env(self.env)
-            )
-            # The row must exist before the blob does: the cleaner looks at the rows.
-            document.sudo().flush_recordset(["checksum"])
+            document = self._create_numbered(stored, name, folder, **values)
             self._publish_blob(stored["tmp_path"], stored["checksum"])
         finally:
-            # Nothing is left of a failed attempt (e.g. a name that is taken).
+            # Nothing is left of a failed attempt.
             _remove_file(stored["tmp_path"])
         return document
+
+    @api.model
+    def _clean_name(self, name):
+        """A name as the browser or the disk gives it, made fit for a document.
+
+        Only the last part of a path stays, the characters are composed (NFC: an "ä" typed
+        as one character and as "a" plus a mark are one name), control characters go.
+        """
+        name = (name or "").replace("\\", "/").rsplit("/", 1)[-1]
+        name = unicodedata.normalize("NFC", name)
+        name = "".join(char for char in name if unicodedata.category(char) != "Cc").strip()
+        if name in ("", ".", ".."):
+            raise UserError(self.env._("A file needs a name."))
+        if len(name) > NAME_MAX_LENGTH:
+            stem, extension = os.path.splitext(name)
+            name = stem[: NAME_MAX_LENGTH - len(extension)] + extension
+        return name
+
+    @api.model
+    def _create_numbered(self, stored, name, folder, **values):
+        """Create the document under ``name``, or under the first free ``stem (2).ext``.
+
+        Two documents of a folder cannot share a name (case aside). The names that are taken
+        are looked up in one go; one that slips through (another case, a parallel upload) is
+        caught by the unique index of the database. Odoo does not retry on that error.
+        """
+        stem, extension = os.path.splitext(name)
+
+        def numbered(number):
+            return name if number == 1 else f"{stem} ({number}){extension}"
+
+        taken = {
+            document.name.lower()
+            for document in self.sudo().search_fetch(
+                [
+                    ("folder_id", "=", folder.id),
+                    ("name", "in", [numbered(number) for number in range(1, 101)]),
+                ],
+                ["name"],
+            )
+        }
+        constraint = self._name_per_folder.full_name(self)
+        for number in range(1, NAME_TRIES + 1):
+            candidate = numbered(number)
+            if candidate.lower() in taken:
+                continue
+            try:
+                with self.env.cr.savepoint():
+                    document = (
+                        self.sudo()
+                        .create(
+                            {
+                                **values,
+                                "name": candidate,
+                                "folder_id": folder.id,
+                                "checksum": stored["checksum"],
+                                "size": stored["size"],
+                                "mimetype": stored["mimetype"],
+                            }
+                        )
+                        .with_env(self.env)
+                    )
+                    # The row must exist before the blob does: the cleaner looks at the rows.
+                    document.sudo().flush_recordset(["checksum"])
+            except IntegrityError as error:
+                if error.diag.constraint_name != constraint:
+                    raise
+                taken.add(candidate.lower())
+            else:
+                return document
+        raise UserError(self.env._("No free name for %(name)s in this folder.", name=name))
 
     def _to_http_stream(self):
         """The blob as a stream for the download.
