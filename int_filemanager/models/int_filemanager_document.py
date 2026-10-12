@@ -5,6 +5,8 @@ import re
 import uuid
 
 from odoo import api, fields, models
+from odoo.exceptions import MissingError, UserError
+from odoo.http import Stream
 
 BLOB_FOLDER = "int_filemanager"
 UPLOAD_FOLDER = ".upload"
@@ -55,6 +57,15 @@ class IntFilemanagerDocument(models.Model):
         related="folder_id.company_id", store=True, index=True
     )
     origin_path = fields.Char(groups="base.group_system", copy=False)
+    # A binary field that holds nothing: ``ir.binary`` only streams a record's *binary field*
+    # (``/web/content/<model>/<id>/content``). The bytes come from the blob, see
+    # ``_to_http_stream``; reading the field yields False, it is not in the views.
+    content = fields.Binary(
+        compute="_compute_content",
+        inverse="_inverse_content",
+        copy=False,
+        exportable=False,
+    )
 
     _name_per_folder = models.UniqueIndex(
         '(folder_id, lower(name COLLATE "und-x-icu")) WHERE active',
@@ -66,6 +77,12 @@ class IntFilemanagerDocument(models.Model):
     )
     # A hash index only finds an equal path (a btree index fails above about 2.7 KB).
     _origin_path_index = models.Index("USING hash (origin_path)")
+
+    def _compute_content(self):
+        self.content = False
+
+    def _inverse_content(self):
+        raise UserError(self.env._("The file of a document is set by the upload only."))
 
     def write(self, vals):
         # ``readonly`` holds in the interface only: through RPC a user could point a document
@@ -184,3 +201,27 @@ class IntFilemanagerDocument(models.Model):
             # Nothing is left of a failed attempt (e.g. a name that is taken).
             _remove_file(stored["tmp_path"])
         return document
+
+    def _to_http_stream(self):
+        """The blob as a stream for the download.
+
+        ``ir.binary._record_to_stream`` calls it. The stream is a path, so with
+        ``--x-sendfile`` the proxy delivers the file and Odoo's thread is free. The checksum is
+        the ETag (the blob never changes), the request is cached and answered with 304 or a range
+        by the core.
+        """
+        self.ensure_one()
+        path = self._blob_path(self.checksum)
+        try:
+            size = os.stat(path).st_size
+        except FileNotFoundError:
+            raise MissingError(self.env._("The file of this document is missing.")) from None
+        return Stream(
+            type="path",
+            path=path,
+            mimetype=self.mimetype,
+            download_name=self.name,
+            etag=self.checksum,
+            last_modified=self.write_date,
+            size=size,
+        )
