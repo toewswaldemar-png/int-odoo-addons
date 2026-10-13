@@ -3,11 +3,8 @@
     <t t-name="int_filemanager.DocumentPreview">
         <!-- The classes of mail.AttachmentView: the style of o_attachment_preview is for them. -->
         <div t-if="state.file and state.file.isViewable" class="o-mail-Attachment">
-            <h3
-                t-if="!state.file.isPdf"
-                class="mt0 mb8 ps-2 text-muted text-center"
-                t-out="state.file.name"
-            />
+            <!-- No title with the name, as the core's has: the form beside shows it, and the
+                 title would push the picture down out of the height the style gives it. -->
             <div t-if="state.file.isImage" class="o-mail-Attachment-imgContainer">
                 <img class="img img-fluid d-block" t-att-src="state.file.defaultSource" alt="" />
             </div>
