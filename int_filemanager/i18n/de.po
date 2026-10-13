@@ -875,3 +875,20 @@ msgstr "Gesamtgröße"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
 msgid "e.g. Test seminars"
 msgstr "z. B. Testseminare"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/document_name_field.js:0
+msgid "Document name"
+msgstr "Dokumentname"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+msgid "Properties"
+msgstr "Eigenschaften"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "Select exactly one document."
+msgstr "Wählen Sie genau ein Dokument aus."
