@@ -137,12 +137,28 @@ class IntFilemanagerDocument(models.Model):
 
     def action_download(self):
         """Let the browser download the file (the route is the core's, see ``_to_http_stream``)."""
-        self.ensure_one()
+        self._check_one_selected()
         return {
             "type": "ir.actions.act_url",
             "url": f"/web/content/{self._name}/{self.id}/content?download=true",
             "target": "download",
         }
+
+    def action_open_form(self):
+        """Open the form of the document: the list has no button for it in each row."""
+        self._check_one_selected()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": self._name,
+            "res_id": self.id,
+            "view_mode": "form",
+            "views": [(False, "form")],
+        }
+
+    def _check_one_selected(self):
+        # The buttons in the head of the list act on every ticked row; these act on one.
+        if len(self) != 1:
+            raise UserError(self.env._("Select exactly one document."))
 
     @api.model
     def _blob_path(self, checksum):

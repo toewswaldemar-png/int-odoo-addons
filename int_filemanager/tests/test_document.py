@@ -290,14 +290,31 @@ class TestFolderAndDocument(TransactionCase):
             action["url"],
             f"/web/content/int.filemanager.document/{document.id}/content?download=true",
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(UserError):
             (document + self._document("b.txt")).action_download()
 
-    def test_the_list_has_the_upload_and_the_download_button(self):
+    def test_the_properties_action_opens_the_form_of_the_one_document(self):
+        document = self._document()
+        action = document.with_user(self.user).action_open_form()
+        self.assertEqual(action["type"], "ir.actions.act_window")
+        self.assertEqual((action["res_model"], action["res_id"]), (document._name, document.id))
+        self.assertEqual(action["view_mode"], "form")
+        with self.assertRaises(UserError):
+            (document + self._document("b.txt")).action_open_form()
+        with self.assertRaises(UserError):
+            self.Document.browse().action_open_form()
+
+    def test_the_list_has_the_upload_and_the_buttons_for_the_ticked_rows(self):
         views = self.Document.get_views([(False, "list"), (False, "form")])
-        self.assertIn('js_class="int_filemanager_document_list"', views["views"]["list"]["arch"])
-        for view_type in ("list", "form"):
-            self.assertIn('name="action_download"', views["views"][view_type]["arch"])
+        arch = views["views"]["list"]["arch"]
+        self.assertIn('js_class="int_filemanager_document_list"', arch)
+        # The buttons are in the head of the list, none is in a row.
+        head = arch[arch.index("<header>") : arch.index("</header>")]
+        for name in ("action_open_form", "action_download"):
+            self.assertIn(f'name="{name}"', head)
+            self.assertEqual(arch.count(f'name="{name}"'), 1)
+        self.assertIn('widget="int_filemanager_document_name"', arch)
+        self.assertIn('name="action_download"', views["views"]["form"]["arch"])
 
     def test_the_lists_move_by_multi_edit_and_nothing_is_duplicated_or_created_by_hand(self):
         views = self.Document.get_views([(False, "list"), (False, "form")])

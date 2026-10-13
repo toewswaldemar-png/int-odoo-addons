@@ -14,18 +14,16 @@
                 import="0"
                 duplicate="0"
             >
-                <field name="name" />
+                <!-- The buttons for the ticked rows: a row has none, a click on it shows the file. -->
+                <header>
+                    <button name="action_open_form" type="object" string="Properties" icon="fa-pencil" />
+                    <button name="action_download" type="object" string="Download" icon="fa-download" />
+                </header>
+                <field name="name" widget="int_filemanager_document_name" />
                 <field name="folder_id" />
                 <field name="size" widget="int_filemanager_size" />
                 <field name="write_date" string="Modified" />
                 <field name="tag_ids" widget="many2many_tags" optional="show" />
-                <button
-                    name="action_download"
-                    type="object"
-                    string="Download"
-                    icon="fa-download"
-                    title="Download"
-                />
             </list>
         </field>
     </record>
