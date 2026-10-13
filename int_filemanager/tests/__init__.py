@@ -1,5 +1,6 @@
 from . import test_chatter
 from . import test_document
+from . import test_document_analysis
 from . import test_document_cleaner
 from . import test_document_download
 from . import test_document_storage

@@ -34,6 +34,32 @@
         </field>
     </record>
 
+    <record id="int_filemanager_document_view_pivot" model="ir.ui.view">
+        <field name="name">int.filemanager.document.view.pivot</field>
+        <field name="model">int.filemanager.document</field>
+        <field name="arch" type="xml">
+            <!-- Where the space goes. The rows are the file types: there are few of them, a
+                 row for each folder would be thousands. Another grouping: click "Total" in
+                 the head of the rows; the search panel narrows to a folder first. The size is
+                 a sum of many files, so its formatter shows a decimal (see size_field.js). -->
+            <pivot string="Documents" default_order="size desc">
+                <field name="mimetype" type="row" />
+                <field name="size" type="measure" widget="int_filemanager_size" />
+            </pivot>
+        </field>
+    </record>
+
+    <record id="int_filemanager_document_view_graph" model="ir.ui.view">
+        <field name="name">int.filemanager.document.view.graph</field>
+        <field name="model">int.filemanager.document</field>
+        <field name="arch" type="xml">
+            <graph string="Documents" type="bar" order="desc">
+                <field name="mimetype" />
+                <field name="size" type="measure" widget="int_filemanager_size" />
+            </graph>
+        </field>
+    </record>
+
     <record id="int_filemanager_document_view_form" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.form</field>
         <field name="model">int.filemanager.document</field>
@@ -111,11 +137,27 @@
                     invisible="1"
                     domain="[('my_activity_date_deadline', '&gt;', 'today')]"
                 />
+                <!-- The groups of the "Group By" menu, also the ones of the graph. -->
+                <group>
+                    <filter
+                        name="group_by_folder"
+                        string="Folder"
+                        context="{'group_by': 'folder_id'}"
+                    />
+                    <filter
+                        name="group_by_mimetype"
+                        string="Mimetype"
+                        context="{'group_by': 'mimetype'}"
+                    />
+                    <filter name="group_by_tag" string="Tags" context="{'group_by': 'tag_ids'}" />
+                </group>
                 <!-- Odoo's own search panel. expand="1": all folders in one call, not looked
                      up again at every search; limit="0": the default 200 would end in an
                      error message with more folders. No counters (they count all documents
-                     at every search). -->
-                <searchpanel>
+                     at every search). view_types: the core shows the panel in the list and
+                     the kanban only; here also in the pivot and the graph, to narrow them to
+                     a folder. -->
+                <searchpanel view_types="list,kanban,pivot,graph">
                     <field
                         name="folder_id"
                         string="Folders"
@@ -138,7 +180,7 @@
     <record id="int_filemanager_document_action" model="ir.actions.act_window">
         <field name="name">Documents</field>
         <field name="res_model">int.filemanager.document</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">list,pivot,graph,form</field>
     </record>
 
     <menuitem
