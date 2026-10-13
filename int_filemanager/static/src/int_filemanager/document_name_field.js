@@ -17,6 +17,11 @@ export class DocumentNameField extends CharField {
         return this.props.record.data.mimetype;
     }
 
+    /** Whether a click on the picture shows the file (see `DocumentListRenderer`). */
+    get isPreviewable() {
+        return documentFileFromRecord(this.props.record).isViewable;
+    }
+
     /** The address of the small picture, only for an image (the route answers others with a
      * placeholder, or with the whole file). `unique` lets the browser keep it for good: the
      * checksum changes with the content. */

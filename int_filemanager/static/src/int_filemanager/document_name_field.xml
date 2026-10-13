@@ -11,6 +11,7 @@
                 <img
                     t-if="thumbnailUrl"
                     class="o_int_filemanager_thumbnail"
+                    t-att-class="{ 'o_int_filemanager_previewable': isPreviewable }"
                     t-att-src="thumbnailUrl"
                     loading="lazy"
                     alt=""
@@ -19,6 +20,7 @@
                 <span
                     t-else=""
                     class="o_image o_int_filemanager_thumbnail"
+                    t-att-class="{ 'o_int_filemanager_previewable': isPreviewable }"
                     t-att-data-mimetype="mimetype"
                 />
                 <span t-esc="formattedValue" />

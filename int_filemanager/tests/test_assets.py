@@ -28,6 +28,9 @@ CORE_PARTS = {
     "@mail/chatter/web/form_compiler": ("div.o_attachment_preview", "AttachmentView"),
     # DocumentKanbanRecord: the click on a card (as the core's `product.document` takes it).
     "@web/views/kanban/kanban_record": ("onGlobalClick(", "CANCEL_GLOBAL_CLICK"),
+    # DocumentListRenderer: the click on the picture of a row; the rest of the row keeps the
+    # core's click, which ends in `openRecord`.
+    "@web/views/list/list_renderer": ("onCellClicked(", "openRecord("),
     # DocumentListController: the button "Properties" opens the form as a click on a row does.
     "@web/views/list/list_controller": ("beforeExecuteActionButton(", "selectRecord("),
 }

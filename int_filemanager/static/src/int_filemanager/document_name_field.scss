@@ -5,3 +5,8 @@ span.o_image.o_int_filemanager_thumbnail {
     height: 32px;
     object-fit: cover;
 }
+
+// A click on the picture shows the file; the rest of the row opens the form.
+.o_int_filemanager_thumbnail.o_int_filemanager_previewable {
+    cursor: pointer;
+}
