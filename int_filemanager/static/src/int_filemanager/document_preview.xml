@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="int_filemanager.DocumentPreview">
+        <!-- The classes of mail.AttachmentView: the style of o_attachment_preview is for them. -->
+        <div t-if="state.file and state.file.isViewable" class="o-mail-Attachment">
+            <h3
+                t-if="!state.file.isPdf"
+                class="mt0 mb8 ps-2 text-muted text-center"
+                t-out="state.file.name"
+            />
+            <div t-if="state.file.isImage" class="o-mail-Attachment-imgContainer">
+                <img class="img img-fluid d-block" t-att-src="state.file.defaultSource" alt="" />
+            </div>
+            <iframe
+                t-elif="state.file.isPdf or state.file.isText"
+                class="border-0"
+                t-att-src="state.file.defaultSource"
+                t-att-title="state.file.name"
+            />
+            <video t-elif="state.file.isVideo" class="w-100 mw-100" controls="controls">
+                <source
+                    t-att-data-type="state.file.mimetype"
+                    t-att-src="state.file.defaultSource"
+                />
+            </video>
+        </div>
+    </t>
+</templates>

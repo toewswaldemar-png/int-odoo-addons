@@ -1,0 +1,12 @@
+// The picture on the card: the width of the card, a fixed height, the whole picture shown.
+.o_int_filemanager_card_picture {
+    display: block;
+    width: 100%;
+    height: 8rem;
+    object-fit: contain;
+}
+
+span.o_image.o_int_filemanager_card_picture {
+    // The core's symbol of the file type (mimetypes.scss), larger than in the list.
+    background-size: 4rem;
+}

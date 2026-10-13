@@ -58,3 +58,26 @@ export function documentFileFromRecord(record) {
     const { name, mimetype, checksum, size } = record.data;
     return new DocumentFile({ id: record.resId, name, mimetype, checksum, size });
 }
+
+/**
+ * @param {Object} orm the orm service
+ * @param {Number} id
+ * @returns {Promise<DocumentFile>} the document with the values the viewers need
+ */
+export async function readDocumentFile(orm, id) {
+    const [values] = await orm.read(MODEL, [id], ["name", "mimetype", "checksum", "size"]);
+    return new DocumentFile(values);
+}
+
+/**
+ * The files a viewer goes through for a click on a record of the list or the kanban.
+ * @param {Object[]} records the records of the page
+ * @param {Object} record the record that was clicked; it may be missing among `records`
+ * @returns {{file: DocumentFile, files: DocumentFile[]}} `file` is one of `files`: the viewer
+ *      finds the file to start with among them by identity
+ */
+export function documentFilesFromRecords(records, record) {
+    const inPage = records.includes(record) ? records : [record];
+    const files = inPage.map(documentFileFromRecord);
+    return { file: files[inPage.indexOf(record)], files };
+}

@@ -88,6 +88,6 @@ class TestDocumentAnalysis(TransactionCase):
         # The core shows the search panel in the list and the kanban only.
         self.assertIn('view_types="list,kanban,pivot,graph"', views["search"]["arch"])
 
-    def test_the_action_offers_the_pivot_and_the_graph(self):
+    def test_the_action_offers_the_kanban_the_pivot_and_the_graph(self):
         action = self.env.ref("int_filemanager.int_filemanager_document_action")
-        self.assertEqual(action.view_mode, "list,pivot,graph,form")
+        self.assertEqual(action.view_mode, "list,kanban,pivot,graph,form")

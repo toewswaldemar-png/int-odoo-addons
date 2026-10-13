@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="int_filemanager.DocumentThumbnailField">
+        <img
+            t-if="thumbnailUrl"
+            class="o_int_filemanager_card_picture"
+            t-att-src="thumbnailUrl"
+            loading="lazy"
+            alt=""
+            draggable="false"
+        />
+        <span
+            t-else=""
+            class="o_image o_int_filemanager_card_picture"
+            t-att-data-mimetype="mimetype"
+        />
+    </t>
+</templates>

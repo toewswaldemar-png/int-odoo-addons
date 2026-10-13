@@ -34,6 +34,43 @@
         </field>
     </record>
 
+    <record id="int_filemanager_document_view_kanban" model="ir.ui.view">
+        <field name="name">int.filemanager.document.view.kanban</field>
+        <field name="model">int.filemanager.document</field>
+        <field name="arch" type="xml">
+            <!-- A click on a card shows the file (see DocumentKanbanController), as a click on
+                 a row of the list does; the form is in the menu of the card. No new: documents
+                 come from the upload and the reading in only. -->
+            <kanban
+                js_class="int_filemanager_document_kanban"
+                create="0"
+                quick_create="0"
+                group_create="0"
+            >
+                <field name="checksum" />
+                <templates>
+                    <t t-name="menu">
+                        <a role="menuitem" type="object" name="action_open_form" class="dropdown-item">
+                            Properties
+                        </a>
+                        <a role="menuitem" type="object" name="action_download" class="dropdown-item">
+                            Download
+                        </a>
+                    </t>
+                    <t t-name="card">
+                        <field name="mimetype" widget="int_filemanager_document_thumbnail" />
+                        <field name="name" class="fw-bold text-truncate d-block mt-2" />
+                        <div class="d-flex justify-content-between text-muted small">
+                            <field name="folder_id" class="text-truncate" />
+                            <field name="size" widget="int_filemanager_size" />
+                        </div>
+                        <field name="tag_ids" widget="many2many_tags" />
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <record id="int_filemanager_document_view_pivot" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.pivot</field>
         <field name="model">int.filemanager.document</field>
@@ -64,7 +101,8 @@
         <field name="name">int.filemanager.document.view.form</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <form create="0" duplicate="0">
+            <!-- js_class: the preview of the file beside the form (see DocumentFormRenderer). -->
+            <form js_class="int_filemanager_document_form" create="0" duplicate="0">
                 <header>
                     <button
                         name="action_download"
@@ -81,8 +119,14 @@
                         bg_color="text-bg-danger"
                         invisible="active"
                     />
+                    <!-- The core docks the preview beside the form from the width XXL on; below
+                         it this button shows the file. -->
+                    <div class="d-xxl-none mb-3">
+                        <widget name="int_filemanager_preview_button" />
+                    </div>
                     <group>
                         <field name="active" invisible="1" />
+                        <field name="checksum" invisible="1" />
                         <field name="name" />
                         <field name="folder_id" />
                         <field name="mimetype" />
@@ -90,6 +134,9 @@
                         <field name="tag_ids" widget="many2many_tags" />
                     </group>
                 </sheet>
+                <!-- Filled by DocumentFormRenderer, in the layout of the core: the form on the
+                     left, the preview on the right, the chatter below. -->
+                <div class="o_attachment_preview" />
                 <chatter />
             </form>
         </field>
@@ -180,7 +227,7 @@
     <record id="int_filemanager_document_action" model="ir.actions.act_window">
         <field name="name">Documents</field>
         <field name="res_model">int.filemanager.document</field>
-        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="view_mode">list,kanban,pivot,graph,form</field>
     </record>
 
     <menuitem

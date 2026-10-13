@@ -2,7 +2,7 @@ import { useService } from "@web/core/utils/hooks";
 import { FileUploadProgressContainer } from "@web/core/file_upload/file_upload_progress_container";
 import { FileUploadProgressDataRow } from "@web/core/file_upload/file_upload_progress_record";
 import { ListRenderer } from "@web/views/list/list_renderer";
-import { documentFileFromRecord } from "./document_file";
+import { documentFilesFromRecords } from "./document_file";
 import { useDocumentFileViewer } from "./document_file_viewer";
 
 /**
@@ -31,12 +31,7 @@ export class DocumentListRenderer extends ListRenderer {
      */
     async onCellClicked(record, column, ev, newWindow) {
         if (!newWindow && !ev.target.special_click && !this.props.list.selection.length) {
-            // The viewer finds the file to start with among the files by identity.
-            const records = this.props.list.records.includes(record)
-                ? this.props.list.records
-                : [record];
-            const files = records.map(documentFileFromRecord);
-            const file = files[records.indexOf(record)];
+            const { file, files } = documentFilesFromRecords(this.props.list.records, record);
             if (file.isViewable) {
                 this.fileViewer.open(file, files);
                 return;

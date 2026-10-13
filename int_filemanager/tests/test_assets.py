@@ -12,8 +12,23 @@ TEMPLATES = (
     "int_filemanager.DocumentListRenderer",
     "int_filemanager.DocumentListView.Buttons",
     "int_filemanager.DocumentNameField",
+    "int_filemanager.DocumentPreview",
+    "int_filemanager.DocumentPreviewButton",
+    "int_filemanager.DocumentThumbnailField",
     "int_filemanager.SizeField",
 )
+
+# What the module takes from the core without an extension point built for it (the name of the
+# module and a piece of its source that the module's own code relies on). The bundle is
+# minified: no spaces around the signs.
+CORE_PARTS = {
+    # DocumentFormRenderer: the preview beside the form is the mail module's layout with its
+    # own component and `hasFile`.
+    "@mail/chatter/web/form_renderer": ("mailComponents", "hasFile(", "mailLayout("),
+    "@mail/chatter/web/form_compiler": ("div.o_attachment_preview", "AttachmentView"),
+    # DocumentKanbanController: a click on a card ends in `openRecord`.
+    "@web/views/kanban/kanban_controller": ("openRecord(",),
+}
 
 
 @tagged("post_install", "-at_install")
@@ -39,9 +54,16 @@ class TestAssets(TransactionCase):
         ours = {name for name in self.modules if name.startswith(MODULE_PREFIX)}
         for name in (
             "document_dropzone",
+            "document_form_renderer",
+            "document_form_view",
+            "document_kanban_controller",
+            "document_kanban_view",
             "document_list_controller",
             "document_list_renderer",
             "document_list_view",
+            "document_preview",
+            "document_preview_button",
+            "document_thumbnail_field",
             "size_field",
         ):
             self.assertIn(f"{MODULE_PREFIX}int_filemanager/{name}", ours)
@@ -57,6 +79,20 @@ class TestAssets(TransactionCase):
             if name.startswith(MODULE_PREFIX)
         }
         self.assertEqual({name: deps for name, deps in missing.items() if deps}, {})
+
+    def _source(self, module):
+        """The part of the bundle that defines ``module``."""
+        start = self.script.index(f"odoo.define('{module}'")
+        end = self.script.find("odoo.define(", start + 1)
+        return self.script[start:end]
+
+    def test_the_parts_of_the_core_that_the_module_relies_on_are_there(self):
+        # A new Odoo may rename them; then the preview beside the form or the click on a card
+        # would silently stop working (the build does not notice).
+        for module, pieces in CORE_PARTS.items():
+            source = self._source(module)
+            for piece in pieces:
+                self.assertIn(piece, source, f"{piece} is gone from {module}")
 
     def test_the_templates_are_in_the_bundle(self):
         # The name is also in the class that uses the template: look for the registration.
