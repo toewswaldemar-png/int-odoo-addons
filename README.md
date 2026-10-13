@@ -6,7 +6,7 @@ Eigene Odoo-19-Module, dazu die Werkzeuge, Regeln und Unterlagen für ihre Entwi
 
 | Modul | Wofür |
 |---|---|
-| [`int_filemanager`](int_filemanager/) | Dateimanager aus Odoos eigenen Bausteinen: Ordner (mit Eltern-Ordner) und Dokumente als gewöhnliche Datensätze; die Datei liegt in einem Binary-Feld, das Odoo selbst in `ir.attachment` und im Filestore ablegt. Suchpanel als Ordnerbaum, Tags, Chatter, Mehrfirmen-Regel. Erweiterungen (Versionen, Portal, Office im Browser, Texterkennung, Import) sind als eigene Module geplant. |
+| [`int_filemanager`](int_filemanager/) | Dateimanager aus Odoos eigenen Bausteinen (hängt nur von `base` und `mail` ab): Ordner (mit Eltern-Ordner) und Dokumente als gewöhnliche Datensätze. Die Dateien liegen als Blobs (SHA-256) in einem eigenen Ordner des Odoo-Filestores, nicht in `ir.attachment`; Upload und Download laufen als Stream, auch für sehr große Dateien. Rechte pro Ordner (erlaubte Benutzer und Gruppen, Follower, Mehrfirmen-Regel), Archivieren und Wiederherstellen samt Inhalt, Tags, Chatter mit Tracking und Aktivitäten. Oberfläche: Liste, Kanban, Pivot und Graph mit Suchpanel als Ordnerbaum, Vorschau der Datei neben dem Formular, Hochladen per Knopf oder Drag & Drop. Einlesen eines Serverordners (Prüfbericht, dann Kopieren per Cron), Aufräumer für unbenutzte Blobs. Nicht enthalten: Versionen, Portal, Office im Browser, Texterkennung. |
 | [`int_repair_workshop`](int_repair_workshop/) | Werkstattfelder am Reparaturauftrag (Auftragsart, Eingangsdatum, Resttage, sieben Werkstattstufen mit Mitarbeiter) und eine Listenansicht. Die Liste ist eine Übersicht, **keine** Belegmaske für Kunde, Kostenvoranschlag oder Versand |
 | [`int_generic`](int_generic/) | Sammelmodul für kleine Anpassungen ohne Bindung an eine Business-App (derzeit: Spaltenreihenfolge in Listenansichten per Drag & Drop); braucht nicht mehr als `base` und `web` |
 | [`int_fleet_kanban_width`](int_fleet_kanban_width/) | Die Spalten des Fahrzeug-Kanban teilen sich die verfügbare Breite, statt zu scrollen; eigenes Modul, weil es an `fleet` hängt |
@@ -34,8 +34,7 @@ Ebene tief, deshalb liegen alle Module flach im Wurzelordner.
 
 ## Branches
 
-- `master`: Hauptlinie.
-- `feature/<thema>`: Entwicklung je Thema, z. B. `feature/int-filemanager-kern` und `feature/int-liedanzeige`.
+- `master`: Hauptlinie und einziger Branch; gearbeitet wird direkt darauf.
 
 ## Entwickeln
 
