@@ -60,6 +60,26 @@ msgid "Active"
 msgstr "Aktiv"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_ids
+msgid "Activities"
+msgstr "Aktivitäten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_exception_decoration
+msgid "Activity Exception Decoration"
+msgstr "Kennzeichnung von Aktivitätsausnahmen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_state
+msgid "Activity State"
+msgstr "Status der Aktivität"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_type_icon
+msgid "Activity Type Icon"
+msgstr "Symbol des Aktivitätstyps"
+
+#. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__open
 msgid "All filemanager users"
 msgstr "Alle Dateimanager-Nutzer"
@@ -226,10 +246,30 @@ msgid "Followers (Partners)"
 msgstr "Follower (Partner)"
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__activity_type_icon
+msgid "Font awesome icon e.g. fa-tasks"
+msgstr "FontAwesome-Icon, z. B. fa-tasks"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Future Activities"
+msgstr "Anstehende Aktivitäten"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__has_message
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__has_message
 msgid "Has Message"
 msgstr "Hat Nachricht"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_exception_icon
+msgid "Icon"
+msgstr "Icon"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__activity_exception_icon
+msgid "Icon to indicate an exception activity."
+msgstr "Icon, um eine Ausnahmeaktivität anzuzeigen."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__id
@@ -272,6 +312,11 @@ msgid "Last Updated on"
 msgstr "Zuletzt aktualisiert am"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Late Activities"
+msgstr "Verspätete Aktivitäten"
+
+#. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__inherit
 msgid "Like the parent folder"
 msgstr "Wie der übergeordnete Ordner"
@@ -299,11 +344,41 @@ msgid "Modified"
 msgstr "Geändert"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "My Activities"
+msgstr "Meine Aktivitäten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__my_activity_date_deadline
+msgid "My Activity Deadline"
+msgstr "Frist für meine Aktivitäten"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__name
 msgid "Name"
 msgstr "Name"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+msgid "Next Activity"
+msgstr "Nächste Aktivität"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_date_deadline
+msgid "Next Activity Deadline"
+msgstr "Nächste Aktivitätsfrist"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_summary
+msgid "Next Activity Summary"
+msgstr "Zusammenfassung der nächsten Aktivität"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_type_id
+msgid "Next Activity Type"
+msgstr "Nächster Aktivitätstyp"
 
 #. module: int_filemanager
 #. odoo-python
@@ -356,6 +431,11 @@ msgid "Parent Path"
 msgstr "Übergeordneter Pfad"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_user_id
+msgid "Responsible User"
+msgstr "Verantwortlicher Benutzer"
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/controllers/int_filemanager.py:0
 msgid "Send exactly one file per request."
@@ -406,6 +486,16 @@ msgstr "Es ist kein Speicherplatz mehr für die Datei vorhanden."
 #: code:addons/int_filemanager/controllers/int_filemanager.py:0
 msgid "This folder does not exist."
 msgstr "Dieser Ordner existiert nicht."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Today Activities"
+msgstr "Heutige Aktivitäten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__activity_exception_decoration
+msgid "Type of the exception activity on record."
+msgstr "Typ der Ausnahmeaktivität im Datensatz."
 
 #. module: int_filemanager
 #. odoo-javascript
