@@ -270,6 +270,10 @@ class IntFilemanagerDocument(models.Model):
         is made before its blob) is either seen or waits until the cleaner is done. Unlike the
         core, one run takes a batch only: the lock must not be held for a long time, and
         ``(done, remaining)`` makes Odoo call it again.
+
+        A blob counts as used only if a *document* has its checksum (``used`` below). Whoever
+        lets another model keep blobs of this storage must add that model's checksums there,
+        or the cleaner deletes them.
         """
         cr = self.env.cr
         if not os.path.isdir(self._checklist_dir()):

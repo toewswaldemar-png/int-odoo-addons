@@ -7,7 +7,7 @@
     "license": "LGPL-3",
     "depends": ["base", "mail"],
     "data": [
-        "security/security.xml",
+        "security/int_filemanager_groups.xml",
         "security/ir.model.access.csv",
         "security/int_filemanager_folder_security.xml",
         "security/int_filemanager_document_security.xml",
