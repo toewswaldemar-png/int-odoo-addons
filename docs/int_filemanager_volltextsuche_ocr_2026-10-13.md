@@ -9,7 +9,7 @@ Grundlagen: Odoo-19-Quelltext (Klon `GitHub\odoo`, Commit `8d05257`, 10.08.2026)
 
 Stand der Prüfung (2026-10-13): Das Konzept wurde gegen den Odoo-19-Quelltext (frischer Klon, Commit `0f577f1`; `8d05257` war im Shallow-Klon nicht abrufbar, die
 Zeilen stimmen bis auf ±3) und in einer Wegwerf-Umgebung (Odoo 19, Postgres 16.15, `ocrmypdf` 17.13.0, Tesseract 5.3.4) geprüft. Die Korrekturen daraus sind eingearbeitet
-(Abschnitte 3, 4, 6, 7a, 9, 10, 11); was eine Produktentscheidung braucht, steht unter „Offene Entscheidungen“ in Abschnitt 12.
+(Abschnitte 3, 4, 6, 7a, 9, 10, 11); die Produktentscheidungen vom selben Tag stehen in Abschnitt 12.
 
 ## 1. Ziel
 
@@ -24,11 +24,11 @@ markiert werden. Die Rechte pro Ordner gelten unverändert auch für die Suche.
 | Stufen | Stufe A: Volltextsuche ohne OCR. Stufe B: OCR. |
 | Extraktion Office/Text | `attachment_indexation` (Core-Modul) als Abhängigkeit, `ir.attachment._index`. Nebenwirkung akzeptiert: alle künftigen Anhänge der Instanz werden mitindexiert. |
 | Extraktion PDF | Alle PDFs seitenweise mit `pdfminer` über den Cron-Weg (Seitenzahlen, gemischte PDFs), nicht über `_index` des Cores. *Annahme, bei „ja“ zum Paperless-Vergleich gesetzt.* |
-| Größengrenze im Odoo-Prozess | 50 MB, größere Dateien wartet der Cron-Weg ab (Widerspruch zu `skipped` in Abschnitt 11: offene Entscheidung 1 in Abschnitt 12). |
+| Größengrenze im Odoo-Prozess | 50 MB (Einstellung). Eine größere Datei bekommt `skipped` und eine `message`; wer die Grenze anhebt, stellt die Zeile wieder auf `pending`. |
 | Suche | Postgres-Volltext (`to_tsvector('german', …)`, GIN), Umlautfaltung ä/ö/ü/ß → ae/oe/ue/ss. |
-| Viewer | Treffermarkierung per pdf.js `#page=N&search=…`, als eigener Schritt nach der Suche. |
+| Viewer | Treffermarkierung per pdf.js `#page=N&search=…`, als eigener Schritt nach der Suche. Übergeben werden die Wortformen, die im Dokument tatsächlich stehen (aus dem Textauszug der Treffer-Seite, z. B. `ts_headline`), nicht die eingetippte Suche. |
 | Treffer-Ansicht | Mit Textauszug und Seite, eigener Schritt nach Stufe A. |
-| OCR-Umfang | PDFs und Bilder. Bilder nur in Ordnern mit Schalter „Texterkennung für Bilder“ (erbt vom Elternordner); PDFs immer. |
+| OCR-Umfang | PDFs und Bilder. Bilder nur in Ordnern mit Schalter „Texterkennung für Bilder“ (erbt vom Elternordner); PDFs immer. Der Schalter löst nur die OCR aus: ist der Text da, sind alle Dokumente mit dieser Prüfsumme darüber auffindbar, auch in Ordnern ohne Schalter (gleicher Inhalt, kein Rechteproblem). |
 | OCR-PDF | Dauerhaft als abgeleiteter Blob (nur für Scans). Original unverändert. Viewer zeigt das OCR-PDF, Download liefert das Original. |
 | Ausführung | Kein eigener Container, nichts mit Docker. **Der Odoo-Cron (`ir.cron`) arbeitet selbst**; nur `ocrmypdf` läuft als Kindprozess. |
 | Große Scans | Abschnittsweise OCR (`--pages`), Standard. *Annahme.* |
@@ -37,6 +37,11 @@ markiert werden. Die Rechte pro Ordner gelten unverändert auch für die Suche.
 
 ## 3. Zielbild Stufe A (Volltextsuche)
 
+- **Anlage und Zustände der Textzeilen:** Der Cron legt Zeilen für Dokumente ohne Textzeile an (Bestand und Neues, kein Eingriff in den Upload; ein Index
+  auf der Prüfsumme der Zeilen genügt für die Suche „Dokumente ohne Zeile“). Archivierte Dokumente werden nicht verarbeitet. Fehlt der Blob, wird die Zeile
+  `failed` (`message`). Neu verarbeitet wird bei geänderter Engine-Version; `empty` wird wieder `pending`, wenn die OCR eingeschaltet wird; `skipped` (Größengrenze)
+  wird `pending`, wenn die Grenze angehoben wird. Der Fortschritt der Abschnitts-OCR steht als Feld an der Zeile (nächste Seite) und wird nicht aus „Seiten ohne
+  Text“ abgeleitet, weil leere Trennblätter auch nach der OCR ohne Text bleiben.
 - **Modell `int.filemanager.text`** je Prüfsumme des Blobs (nicht je Dokument; doppelte Dateien teilen sich eine Zeile): `checksum` (eindeutig, Regex wie
   beim Dokument), `state` (`pending`, `done`, `empty`, `skipped`, `failed`), `message`, Seitenzahl, Engine-Version, OCR-Zustand (Abschnitt 4).
 - **Modell `int.filemanager.text.page`**: `text_id`, `page`, `content` (Text). Office und Textdateien bekommen eine Zeile (Seite 1).
@@ -62,7 +67,9 @@ markiert werden. Die Rechte pro Ordner gelten unverändert auch für die Suche.
 
 ## 4. Zielbild Stufe B (OCR im Odoo-Cron)
 
-Ein `ir.cron` (Methode `_cron_ocr`, hohe `priority`-Zahl, damit er im Durchlauf zuletzt kommt). Jeder Aufruf verarbeitet einen Stapel.
+Ein `ir.cron` (Methode `_cron_ocr`, hohe `priority`-Zahl, damit er im Durchlauf zuletzt kommt) macht beides: erst Zeilen anlegen und Text extrahieren
+(Stufe A, Abschnitt 3), dann, wenn die OCR aktiv ist, die OCR. Beide teilen sich ein Zeitbudget. Jeder Aufruf verarbeitet einen Stapel. Ist die OCR aus, läuft nur
+die Extraktion.
 
 1. **Einstieg:** aktiv? Zeitfenster offen? Werkzeuge vorhanden? Sonst `_commit_progress(0, remaining=0)` (der Cron ruht bis zum nächsten Intervall).
    **Zeitbudget** nach Betriebsart (geprüft, 7a):
@@ -119,7 +126,6 @@ Cron-Thread oder -Worker schläft dann bis zu 60 s (`SLEEP_INTERVAL`) bis zum n�
 |---|---|---|
 | Betrieb | OCR aktiv | aus |
 | | Zeitfenster (Start- und Endstunde, Zeitzone, am Wochenende ganztägig) | leer = immer |
-| | Parallele Jobs | 1 |
 | | Kerne je Job (`-j`) | 1 |
 | | CPU-Priorität (`nice`) | 19 |
 | | Zeitreserve unter dem Odoo-Limit | 15 s |
@@ -259,7 +265,9 @@ Dazu aus der Prüfung (2026-10-13):
 - Faltung: `Übung`/`uebung` auch in einer Datenbank mit `LC_CTYPE C` (Testdatenbank mit `LC_CTYPE C` anlegen).
 - Cron: Budget erschöpft bei wartenden Zeilen → `_commit_progress(0, remaining=n)` (Status „teilweise“); `0` und `-1` für `limit_time_real_cron` je Betriebsart.
 - Aufräumer: OCR-PDF einer Textzeile bleibt erhalten, solange die Zeile existiert; Textzeile und OCR-PDF verschwinden mit dem letzten Dokument.
-- Archivieren und Wiederherstellen eines Dokuments; Zeile ohne Blob (Datei weg).
+- Archivieren und Wiederherstellen eines Dokuments; Zeile ohne Blob (Datei weg) → `failed`; Cron legt Zeilen für Dokumente ohne Zeile an (nicht für archivierte);
+  `skipped` → `pending` nach Anheben der Grenze; Bilder-Schalter: Text einer Prüfsumme ist auch über das Dokument im Ordner ohne Schalter auffindbar; Markierungsterme
+  kommen aus dem Textauszug, nicht aus der Eingabe.
 
 ## 12. Offen / ungemessen
 
@@ -272,22 +280,17 @@ Dazu aus der Prüfung (2026-10-13):
   Neuaufbaus bei geänderter Faltung); Postgres 17 (geprüft wurde 16.15).
 - Wie viel CPU-Zeit `pdfminer` für große Dateien im Odoo-Prozess braucht (gemessen: 300 dichte Seiten 15,3 s; 50-MB-Dateien nicht).
 
-**Offene Entscheidungen** (Produktentscheidungen, vor dem Bau zu klären):
-1. **Datei über der Größengrenze** (Abschnitt 2 sagt „wartet der Cron-Weg ab“, Abschnitt 11 testet `skipped`): wartet sie auf den Cron-Weg, oder wird sie `skipped`?
-2. **Cron in Stufe A:** Extraktion (Office, Text, PDF-Text) läuft im Odoo-Prozess über einen Cron, Abschnitt 4 beschreibt `_cron_ocr` als Stufe B. Ein Cron für beides
-   oder zwei?
-3. **„Parallele Jobs“** (Abschnitt 5) hat im sequentiellen Ablauf (Abschnitt 4) kein Gegenstück: streichen, oder den Ablauf auf mehrere Kindprozesse auslegen?
-4. **Ordnerschalter „Texterkennung für Bilder“ und gleiche Prüfsumme:** Liegt dasselbe Bild in einem Ordner mit und einem ohne Schalter, ist der Text für beide
-   durchsuchbar (die Suche läuft über die Prüfsumme). Ist das gewollt?
-5. **Markierung im Viewer:** Die tatsächlichen Wortformen des Treffers (z. B. aus `ts_headline`) an pdf.js übergeben oder die eingetippte Suche?
-6. **Anlage der Textzeilen:** Beim Anlegen des Dokuments (Hook in `_create_numbered`) oder durch einen Cron, der Dokumente ohne Zeile sucht (Bestand)? Dazu: Wann wird neu
-   verarbeitet (Engine-Version, OCR wird eingeschaltet, `empty` → `pending`), wie wird mit archivierten Dokumenten und fehlendem Blob verfahren, und wo liegt der
-   Fortschritt der Abschnitts-OCR (leere Trennblätter dürfen nicht als „noch offen“ zählen)?
-7. **`attachment_indexation`:** Nebenwirkung bleibt „akzeptiert“; mit den Zahlen aus 7a noch einmal bestätigen, oder eine Entschärfung prüfen.
+**Entschieden am 2026-10-13** (Produktentscheidungen aus der Prüfung):
+1. **Datei über der Größengrenze:** `skipped` mit `message`; die Grenze ist eine Einstellung (Abschnitte 2, 5).
+2. **Cron:** ein `ir.cron` `_cron_ocr` für Extraktion und OCR (Abschnitt 4).
+3. **„Parallele Jobs“:** gestrichen; ein Kindprozess zugleich, mehr Durchsatz über „Kerne je Job“ (Abschnitt 5).
+4. **Ordnerschalter für Bilder:** löst nur die OCR aus, die Suche folgt ihm nicht (Abschnitt 2).
+5. **Markierung im Viewer:** Wortformen des Treffers aus dem Textauszug (Abschnitt 2).
+6. **Textzeilen:** der Cron legt sie für Dokumente ohne Zeile an; Regeln für Neu-Verarbeitung, Archiv und fehlenden Blob in Abschnitt 3.
+7. **`attachment_indexation`:** Nebenwirkung bleibt akzeptiert, die Messwerte stehen in Abschnitt 9 und 7a.
 
 ## 13. Reihenfolge
 
-0. Offene Entscheidungen 1 bis 3 und 6 aus Abschnitt 12 klären (sie bestimmen Modelle und Cron).
 1. Stufe A: Textmodelle, Index, Suchfeld, Rechte, Cron (Extraktion Office/Text und PDF-Text), Aufräumer, Tests.
 2. Viewer-Anbindung (vorher JS-Regeln `js_framework`, `js_fields` lesen), Treffer-Ansicht.
 3. Messung an einer Stichprobe (~50 PDFs) in einer Wegwerf-Umgebung.
