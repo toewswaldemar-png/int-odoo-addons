@@ -7,6 +7,10 @@ nur als Beleg für Verhalten, nicht als Designgrundlage; Werte der Odoo-Konfigur
 Grundlagen: Odoo-19-Quelltext (Klon `GitHub\odoo`, Commit `8d05257`, 10.08.2026), Regeln in `docs/odoo_regeln/`, Messungen im Live-Container
 (Odoo 19.0-20260908, Postgres 17.11, `ocrmypdf` 17.12.1, Tesseract 5.3.4), Paperless-ngx v3.3.1 (Quelltext gelesen, GPL-3.0: nur Ideen, kein Code).
 
+Stand der Prüfung (2026-10-13): Das Konzept wurde gegen den Odoo-19-Quelltext (frischer Klon, Commit `0f577f1`; `8d05257` war im Shallow-Klon nicht abrufbar, die
+Zeilen stimmen bis auf ±3) und in einer Wegwerf-Umgebung (Odoo 19, Postgres 16.15, `ocrmypdf` 17.13.0, Tesseract 5.3.4) geprüft. Die Korrekturen daraus sind eingearbeitet
+(Abschnitte 3, 4, 6, 7a, 9, 10, 11); was eine Produktentscheidung braucht, steht unter „Offene Entscheidungen“ in Abschnitt 12.
+
 ## 1. Ziel
 
 Dokumente des Filemanagers (Ordner und Dokumente, Blobs im eigenen Speicher) sollen nach ihrem **Inhalt** durchsuchbar sein:
@@ -20,7 +24,7 @@ markiert werden. Die Rechte pro Ordner gelten unverändert auch für die Suche.
 | Stufen | Stufe A: Volltextsuche ohne OCR. Stufe B: OCR. |
 | Extraktion Office/Text | `attachment_indexation` (Core-Modul) als Abhängigkeit, `ir.attachment._index`. Nebenwirkung akzeptiert: alle künftigen Anhänge der Instanz werden mitindexiert. |
 | Extraktion PDF | Alle PDFs seitenweise mit `pdfminer` über den Cron-Weg (Seitenzahlen, gemischte PDFs), nicht über `_index` des Cores. *Annahme, bei „ja“ zum Paperless-Vergleich gesetzt.* |
-| Größengrenze im Odoo-Prozess | 50 MB, größere Dateien wartet der Cron-Weg ab. |
+| Größengrenze im Odoo-Prozess | 50 MB, größere Dateien wartet der Cron-Weg ab (Widerspruch zu `skipped` in Abschnitt 11: offene Entscheidung 1 in Abschnitt 12). |
 | Suche | Postgres-Volltext (`to_tsvector('german', …)`, GIN), Umlautfaltung ä/ö/ü/ß → ae/oe/ue/ss. |
 | Viewer | Treffermarkierung per pdf.js `#page=N&search=…`, als eigener Schritt nach der Suche. |
 | Treffer-Ansicht | Mit Textauszug und Seite, eigener Schritt nach Stufe A. |
@@ -36,14 +40,23 @@ markiert werden. Die Rechte pro Ordner gelten unverändert auch für die Suche.
 - **Modell `int.filemanager.text`** je Prüfsumme des Blobs (nicht je Dokument; doppelte Dateien teilen sich eine Zeile): `checksum` (eindeutig, Regex wie
   beim Dokument), `state` (`pending`, `done`, `empty`, `skipped`, `failed`), `message`, Seitenzahl, Engine-Version, OCR-Zustand (Abschnitt 4).
 - **Modell `int.filemanager.text.page`**: `text_id`, `page`, `content` (Text). Office und Textdateien bekommen eine Zeile (Seite 1).
-  Textobergrenze je Zeile **500.000 Zeichen**, darüber wird gekürzt und `message` vermerkt (siehe 9, `tsvector`-Grenze).
+  Textobergrenze je Zeile **in Bytes** (Richtwert 650.000 Bytes UTF-8, Zeichen × 1,5 < 1.048.575; nicht gemessen, siehe 7a), darüber wird gekürzt und `message`
+  vermerkt (siehe 9, `tsvector`-Grenze). Eine Grenze in Zeichen schützt nicht (7a). `content` mit `prefetch=False` (Core-Muster `index_content`);
+  `_log_access = False` ist bei Millionen Zeilen eine Option (Core: `ir_model.py:1448`).
 - **Index**: `models.Index("USING gin (to_tsvector('german', <Faltung>(content)))")`. Die Faltung (`replace`/`lower`-Kette, alles `immutable`) steht an
-  genau einer Stelle und wird in Index und Suche gleich benutzt.
-- **Suchfeld `content_search`** am Dokument: berechnet, nicht gespeichert, mit `search='_search_content_search'`. Die Methode liefert
-  `[('checksum', 'in', SQL(…))]` (Unterabfrage mit `websearch_to_tsquery('german', <Faltung>(%s))`) und bei anderen Operatoren `NotImplemented`.
-  Die Suche läuft über die Dokumente, deshalb gelten die Ordnerregeln (`ir.rule`) unverändert.
+  genau einer Stelle und wird in Index und Suche gleich benutzt. **Die Faltung muss unabhängig von der Datenbank-Locale sein:** `lower()` und die
+  Konfiguration `german` hängen an `LC_CTYPE`; in einer Datenbank mit `LC_CTYPE C` bleibt `Ü` groß und wird nicht gefaltet (7a). Deshalb Großbuchstaben
+  ausdrücklich mappen (`Ä`/`Ö`/`Ü` vor `lower`). Ändert sich die Faltung später, baut das Modul-Update den ganzen GIN-Index neu auf (kein `CONCURRENTLY`).
+- **Suchfeld `content_search`** am Dokument: berechnet, nicht gespeichert, mit `search='_search_content_search'`. Die Methode liefert eine Domain mit der
+  Unterabfrage `checksum IN (SELECT … websearch_to_tsquery('german', <Faltung>(%s)))` und bei nicht unterstützten Operatoren `NotImplemented`. Angenommen
+  werden `ilike` (Vorgabe der Suchansicht bei Char) und `=`; `not ilike` löst der ORM über die Negation. Bevorzugt `Domain.custom(to_sql=…)` (Muster des Cores,
+  z. B. `analytic_mixin.py:112`); `[('checksum', 'in', SQL(…))]` läuft in 19 ebenfalls ohne Warnung (geprüft).
+  Die Suche läuft über die Dokumente, deshalb gelten die Ordnerregeln (`ir.rule`) unverändert; eine gleiche Prüfsumme in einem unsichtbaren Ordner verrät
+  nichts, weil der Inhalt byte-gleich ist (geprüft, 7a).
 - **Rechte**: keine ACL für Nutzer auf den Textmodellen (kein Zugriff), Lesen nur für „Filemanager Administrator“. Textauszüge entstehen erst für
-  sichtbare Treffer.
+  sichtbare Treffer; die öffentliche Methode dafür ruft `check_access('read')` selbst auf (Sicherheits-Destillat, öffentliche Methoden).
+- **Aufräumen**: Textzeilen und abgeleitete OCR-PDFs ohne Dokument (auch archivierte, `active_test=False`) löscht ein `@api.autovacuum`; die Blobs gehen über
+  die Checkliste (siehe 9).
 - **Suchansicht**: `<field name="content_search" string="Content">` neben dem Namen; kombiniert sich mit Suchpanel und Tags.
 - **Textdateien** werden selbst dekodiert (UTF-8, dann Latin-1): der Basis-`_index` liefert nur ASCII-Folgen ab 4 Zeichen und zerhackt Umlaute.
 
@@ -51,9 +64,17 @@ markiert werden. Die Rechte pro Ordner gelten unverändert auch für die Suche.
 
 Ein `ir.cron` (Methode `_cron_ocr`, hohe `priority`-Zahl, damit er im Durchlauf zuletzt kommt). Jeder Aufruf verarbeitet einen Stapel.
 
-1. **Einstieg:** aktiv? Zeitfenster offen? Werkzeuge vorhanden? Zeitbudget aus der Odoo-Konfiguration: `limit_time_real_cron`; `-1` heißt
-   `limit_time_real` (Standard 120 s), `0` heißt kein Limit (dann eigener Deckel). Davon die Zeitreserve und die schon laufende Zeit des Durchlaufs
-   abziehen (`threading.current_thread().start_time`, intern; fehlt es, eigener Zähler). Sonst `_commit_progress(0, remaining=0)`.
+1. **Einstieg:** aktiv? Zeitfenster offen? Werkzeuge vorhanden? Sonst `_commit_progress(0, remaining=0)` (der Cron ruht bis zum nächsten Intervall).
+   **Zeitbudget** nach Betriebsart (geprüft, 7a):
+   - Prefork: `limit_time_real_cron` `-1` heißt `limit_time_real` (Standard 120 s), `0` kein Limit (dann eigener Deckel), `n > 0` heißt `n`.
+   - Threaded: `n > 0` heißt `n`; **`0` und `-1` heißen beide `limit_time_real`** (`0` ist hier nicht „kein Limit“, der Hilfetext der Option gilt nur für Prefork).
+   Davon die Zeitreserve und die schon laufende Zeit abziehen: Threaded `threading.current_thread().start_time` (je Datenbank-Durchlauf gesetzt); **im Prefork
+   fehlt das Attribut**, dort zählt ein Eigenzähler ab Aufruf (er kennt die Zeit zuvor gelaufener Crons desselben Durchlaufs nicht, die Reserve deckt das ab).
+   **Prefork hat zusätzlich ein CPU-Budget:** `limit_time_cpu` (60 s) je Durchlauf gilt für den Odoo-Prozess selbst, also auch für `pdfminer` und `_index_*`; wird
+   es überschritten, beendet sich der Cron-Worker. Die Arbeit im Prozess wird deshalb auch nach CPU-Zeit (`time.process_time()`) begrenzt, wo `resource` vorhanden ist.
+   **Reicht das Budget nicht mehr, während Zeilen warten** (Core ruft die Methode nach einem langen Aufruf bis zu 10-mal erneut), liefert der Aufruf
+   `_commit_progress(0, remaining=<Zahl der wartenden Zeilen>)`: dann gilt der Cron als „teilweise erledigt“ und kommt sofort wieder an die Reihe. `remaining=0`
+   würde ihn als „fertig“ werten (`ir_cron.py` `_run_job`, `match`), er ruhte bis zum nächsten Intervall.
 2. **Aufräumen:** `running`-Zeilen sind zu Beginn eines Aufrufs veraltet (der Core lässt von einem Cron nie zwei Läufe gleichzeitig zu) und gehen
    auf `pending` zurück (Zähler +1). Jobordner früherer Läufe werden gelöscht.
 3. **Holen:** bis zu N Dateien mit `try_lock_for_update`, deren geschätzte Dauer ins Restbudget passt.
@@ -62,9 +83,11 @@ Ein `ir.cron` (Methode `_cron_ocr`, hohe `priority`-Zahl, damit er im Durchlauf 
 5. **OCR in Abschnitten:** `ocrmypdf --skip-text --pages a-b` als Kindprozess auf dem Ergebnis des Vorlaufs. Erster Abschnitt klein, misst die Zeit
    je Seite; Abschnittsgröße = Restbudget / gemessene Zeit je Seite. Überschreitet ein Abschnitt die Frist: Prozessbaum beenden (`SIGTERM`, nach 5 s
    `SIGKILL`, mit `psutil`), Abschnitt halbieren, wiederholen. Zwischenergebnis liegt im Modulspeicher (nicht in `/tmp`).
-6. **Start des Kindprozesses** nur mit Standardbibliothek: ein Inline-Start (`sys.executable -c …`) hebt `RLIMIT_AS` und `RLIMIT_CPU` auf den Hard-Wert,
-   setzt `os.nice` und ersetzt sich per `execvp` durch `ocrmypdf`. Umgebung: `OMP_THREAD_LIMIT=1`, `TMPDIR` = Jobordner. Keine GNU-Präfixprogramme.
-   Auf Systemen ohne `resource` (Windows) startet er ohne diesen Schritt.
+6. **Start des Kindprozesses** nur mit Standardbibliothek: ein Inline-Start (`sys.executable -c …`) hebt `RLIMIT_AS` auf den Hard-Wert (Odoo setzt es in **beiden**
+   Betriebsarten und der Kindprozess erbt es), setzt `os.nice` und ersetzt sich per `execvp` durch `ocrmypdf`. `RLIMIT_CPU` braucht keine Anhebung: im Prefork
+   ist `SIGXCPU` im Cron-Thread blockiert und die Signalmaske erbt der Kindprozess (das CPU-Limit tötet ihn nicht, geprüft), im Threaded-Betrieb gibt es keines.
+   `nice` ist relativ (`os.nice(n)`), der Prefork-Cron-Worker startet schon mit 10: die Einstellung als absoluten Wert setzen (`os.nice(wert - os.nice(0))`).
+   Umgebung: `OMP_THREAD_LIMIT=1`, `TMPDIR` = Jobordner (Windows: `TEMP`/`TMP`). Keine GNU-Präfixprogramme. Auf Systemen ohne `resource` (Windows) startet er ohne diesen Schritt.
 7. **Bilder:** DPI aus Metadaten, sonst Einstellung, sonst Schätzung `Breite / (21/2.54)` (A4), Warnung unter 70 dpi; Alphakanal entfernen.
 8. **Fertig:** Text je Seite aus dem endgültigen PDF lesen (nicht aus der Sidecar-Datei, siehe 9). Bei OCR das PDF als abgeleiteten Blob über
    `_store_stream` und `_publish_blob` ablegen, Seiten und Status schreiben, `_commit_progress(n, remaining=…)`, Jobordner löschen.
@@ -83,9 +106,12 @@ Ein `ir.cron` (Methode `_cron_ocr`, hohe `priority`-Zahl, damit er im Durchlauf 
 | Frist trotz kleinstem Abschnitt | `failed: zu langsam` |
 | Platte voll | pausieren |
 
-**Warum nicht anders:** Läuft eine Cron-Pass länger als das Odoo-Limit, lädt der Threaded-Server neu (`server.py:735-755`) oder der Prefork-Watchdog
-beendet den Worker (`server.py:1018-1027`). Dieselbe Datei käme wieder dran; nach 3 Zeitüberschreitungen führt der Core den Cron nicht mehr aus
-(`CONSECUTIVE_TIMEOUT_FOR_FAILURE`). Deshalb eigene Frist und Abschnitte statt „ganze Datei und hoffen“.
+**Warum nicht anders:** Läuft eine Cron-Pass länger als das Odoo-Limit, lädt der Threaded-Server neu (`server.py:735-755`; die Prüfung läuft nur alle 60 s, gemessen
+wurden 65 s bis zur Meldung) oder der Prefork-Watchdog beendet den Worker (`server.py:1018-1027`). Dieselbe Datei käme wieder dran; nach 3 Zeitüberschreitungen führt
+der Core den Cron nicht mehr aus (`CONSECUTIVE_TIMEOUT_FOR_FAILURE`). Deshalb eigene Frist und Abschnitte statt „ganze Datei und hoffen“.
+
+**Takt:** Bleibt der Cron „teilweise erledigt“, legt der Core den neuen Trigger ohne `NOTIFY` an (nur mit der Umgebungsvariablen `ODOO_NOTIFY_CRON_CHANGES`). Der
+Cron-Thread oder -Worker schläft dann bis zu 60 s (`SLEEP_INTERVAL`) bis zum nächsten Durchlauf; der Durchsatz rechnet mit Arbeit plus dieser Pause.
 
 ## 5. Einstellungen (Odoo-Einstellungen, nur Systemadministratoren)
 
@@ -122,12 +148,17 @@ Am Ordner: Schalter „Texterkennung für Bilder“. Die Einstellungen zeigen ei
 | Cron ruft die Methode ≥ 10-mal und ≥ 10 s lang; Teilfortschritt plant sofort neu | `ir_cron.py:481-495`, `_reschedule_asap` 660 |
 | `timed_out_counter`, 3 Zeitüberschreitungen | `ir_cron.py:803-821, 35, ~430` |
 | `thread.start_time` je Durchlauf über alle fälligen Crons; Limit löst Neustart aus | `server.py:~600, 508-531, 735-755` |
-| Prefork-Worker: `RLIMIT_CPU` = bisherige CPU + `limit_time_cpu` (60 s), `RLIMIT_AS` = `limit_memory_hard` (2560 MiB), von Kindprozessen geerbt | `server.py:78, 1294-1304`; `config.py:474, 484` |
-| Defaults: `limit_time_real` 120, `limit_time_real_cron` -1 (= `limit_time_real`), `max_cron_threads` 2 | `config.py:443, 487-493` |
+| Prefork-Worker: `RLIMIT_CPU` = bisherige CPU + `limit_time_cpu` (60 s) je Durchlauf; Überschreitung beendet den Worker (`signal_time_expired_handler`). `RLIMIT_AS` = `limit_memory_hard` (2560 MiB), auch im Threaded-Betrieb gesetzt (`server.py:645`) und vom Kindprozess geerbt. Das CPU-Limit erbt das Kind zwar, aber `SIGXCPU` ist im Cron-Thread blockiert (`Worker._runloop`) und die Maske wird mitvererbt | `server.py:78, 645, 1294-1304`; `config.py:474, 484` |
+| Defaults: `limit_time_real` 120, `limit_time_real_cron` -1 (= `limit_time_real`), `max_cron_threads` 2. `0` heißt nur im Prefork „kein Limit“ (`server.py:899-901`); im Threaded-Betrieb gilt dann `limit_time_real` (`server.py:520-526`) | `config.py:443, 487-493` |
+| `_commit_progress(processed=0, *, remaining=None, deactivate=False) -> float`: committet, liefert die Sekunden bis Jobstart + 10 s (`MIN_TIME_PER_JOB`), nicht bis zum Odoo-Limit; außerhalb eines Crons `inf` | `ir_cron.py:846-890`, `_run_job` |
+| `remaining=0` wertet der Core als „fertig“ (`FULLY_DONE`), `remaining>0` ohne Fortschritt als „teilweise“; Reihenfolge der Crons `ORDER BY failure_count, priority, id`; `numbercall`/`doall` gibt es nicht mehr | `ir_cron.py` `_run_job`, `_get_all_ready_jobs`, Felder 93-110 |
+| Der Core lässt von einem Cron nie zwei Läufe gleichzeitig zu: Zeilensperre `FOR NO KEY UPDATE SKIP LOCKED` auf `ir_cron`, gehalten über den ganzen Job, auch bei `method_direct_trigger` | `ir_cron.py:317-345`, `method_direct_trigger` |
 | Watchdog beendet Prefork-Cron-Worker per `SIGKILL` | `server.py:1018-1027` |
 | pdf.js 4.8.69: `#search=…&phrase=true`, `#page=N`; Core baut `viewer.html?file=…#pagemode=none` | `viewer.js:1109`; `file_model.js:33` |
-| `set_param` signalisiert Cache-Änderung | `ir_config_parameter.py:107` |
+| `create`, `write`, `unlink` des Parameters leeren den Cache `stable` (`set_param` selbst signalisiert nichts); der Cron prüft das Signal bei jedem Aufruf (`_callback`) | `ir_config_parameter.py:107, 115, 119`; `ir_cron.py` `_callback` |
 | Der Core nutzt `tsvector` nirgends | Suche in `odoo/` und `addons/` ohne Treffer |
+| Suchmethode: `NotImplemented` für nicht unterstützte Operatoren; der ORM versucht dann verwandte Operatoren | `fields.py:152-157` |
+| `pdfminer` steht nicht in Odoos `requirements.txt` und nicht in den Debian-Paketen (nur `setup/package.dfwine`); `psutil` und `openpyxl` sind Requirements | `requirements.txt`, `server.py:23` |
 
 ## 7. Belege: Messungen (Live-Container, nur als Verhalten)
 
@@ -149,6 +180,26 @@ Am Ordner: Schalter „Texterkennung für Bilder“. Die Einstellungen zeigen ei
 | Postgres: `german` ohne Faltung | `Müller` → `mull`, `Mueller` → `muell` (verschieden); mit Faltung beide `muell`, `Straße`/`Strasse` → `strass` |
 | `replace`, `translate`, `lower`, `to_tsvector(config, text)` | `immutable`, damit indexierbar; `websearch_to_tsquery` verträgt kaputte Eingaben |
 
+## 7a. Belege: Prüfung vom 2026-10-13 (Wegwerf-Umgebung, Postgres 16.15, `ocrmypdf` 17.13.0)
+
+| Messung | Ergebnis |
+|---|---|
+| Threaded, `limit_time_real=10`, `limit_time_real_cron=0`, Cron 100 s | `virtual real time limit (65/10s) reached`, „Initiating server reload“: `0` ist hier nicht „kein Limit“; die Prüfung läuft nur alle 60 s |
+| `_commit_progress` im Cron | Rückgabe zählt von 9,0 s auf 0 (Jobstart + 10 s); die Methode lief 10-mal, dann „partially done (#loop 10 … duration 10.39s)" |
+| Prefork: Cron-Methode | `start_time` fehlt (Thread „Worker WorkerCron … workthread“), `RLIMIT_CPU` (60, -1), `RLIMIT_AS` (2.684.354.560, -1), `nice` 10, Signalmaske `SIGINT/QUIT/USR1/USR2/XCPU` blockiert, vom Kindprozess geerbt |
+| Prefork: Kindprozess mit CPU-Limit 4 s, 12 s CPU-Last | läuft durch (`SIGXCPU` blockiert), Exit 0 |
+| Threaded: Cron-Methode | `start_time` gesetzt, `RLIMIT_CPU` (-1, -1), `RLIMIT_AS` 2.684.354.560 (auch vom Kindprozess geerbt), `nice` 0 |
+| Prefork: 80 s CPU-Last im Cron-Prozess | nach 60 s: „Worker CPU time limit (60) reached … Exception occurred, exiting“, Worker neu gestartet |
+| `tsvector`-Grenze: 494.999 kyrillische Zeichen (934.999 Bytes, 55.000 verschiedene Wörter) | `INSERT` mit Index scheitert: „string is too long for tsvector (1100000 bytes, max 1048575 bytes)“. Lateinisch: 469k Zeichen (80.000 Zahlen) und 480k Zeichen (80.000 Codes zu 5 Zeichen) gehen noch |
+| Faltung in Datenbank mit `LC_CTYPE C` | `lower('ÜBER')` bleibt `ÜBER`; `Übung` wird Lexem `Übung`, nicht `uebung`. Mit `C.UTF-8` korrekt (`ueb`, `uebung`) |
+| GIN-Index über `to_tsvector('german', <Faltung>(content))` per `models.Index("USING gin (…)")` | wird angelegt; Suche mit derselben Faltung nutzt den Bitmap-Index |
+| Suchfeld: Nutzer ohne Zugriff auf den Ordner | findet das Dokument im gesperrten Ordner nicht; ein sichtbares Dokument mit gleicher Prüfsumme wird gefunden (Inhalt byte-gleich, kein Leck); archivierte Dokumente fallen heraus; `!=` und `like` ergeben `UserError` |
+| `attachment_indexation` installiert: `ir.attachment.create` mit 300-Seiten-PDF (1 MB) | 20,2 s, 1.695.086 Zeichen `index_content`; 50 Seiten 3,0 s |
+| dasselbe mit xlsx, 200.000 Zeilen (4,1 MB) | 5,5 s, 6.703.704 Zeichen, Speicherspitze 381 MB; läuft synchron im HTTP-Request |
+| `ocrmypdf`-Stichprobe: Sidecar-Platzhalter, `--skip-text` (Exit 0), ohne (Exit 6), kaputte Datei (2), `DpiError`, ohne Dateiendung, Abschnitts-OCR 1-2 dann 3-4, Abbruch | wie in Abschnitt 7 beschrieben bestätigt (Abbruch: `ocrmypdf.io.*` bleibt im `TMPDIR`, keine Ausgabedatei) |
+
+Nicht geprüft: `LC_CTYPE` der Live-Datenbank, Windows, das Verhalten von pdf.js bei geändertem Hash im Browser, GIN-Leistung bei Millionen Seiten, Postgres 17.
+
 ## 8. Paperless-ngx im Vergleich
 
 Gleich: Sidecar-Platzhalter (Text dann aus dem PDF, `extract_text` in `parsers/tesseract.py`), Original unverändert mit getrenntem Archiv-PDF nur für Scans
@@ -164,19 +215,32 @@ Einstellung; Seitenlimit, Bildpixel, Ausrichten, Drehen, Bereinigen.
 ## 9. Stolpersteine
 
 - Sidecar-Datei nicht indexieren (Platzhalter für Textseiten); Text immer aus dem fertigen PDF je Seite lesen.
-- `tsvector` bricht ab 1 MB: der Fehler träte schon beim `INSERT` auf; deshalb Obergrenze je Zeile und Seitenmodell.
-- Aufräumer `_gc_blobs` kennt abgeleitete Blobs nicht (Docstring warnt): Prüfsummen der OCR-PDFs als „benutzt“ ergänzen.
+- `tsvector` bricht ab 1 MB (Bytes, nicht Zeichen): der Fehler tritt schon beim `INSERT` auf und bricht den ganzen Cron-Stapel ab. Deshalb Obergrenze in Bytes je
+  Zeile, Seitenmodell und der `INSERT` je Zeile in einem Savepoint (Fehler → `failed` mit `message`).
+- Aufräumer `_gc_blobs` kennt abgeleitete Blobs nicht (Docstring warnt): Prüfsummen der OCR-PDFs als „benutzt“ ergänzen **und die Texttabelle wie die
+  Dokumenttabelle sperren** (`LOCK … IN SHARE MODE`, feste Reihenfolge). Sonst ist ein frisch veröffentlichtes OCR-PDF bis zum Commit der Textzeile für den
+  Aufräumer unbenutzt (aus dem Code gelesen, nicht getestet).
+- Textzeilen und OCR-PDFs haben keinen Fremdschlüssel zu den Dokumenten: ohne Aufräumer (Abschnitt 3) bleiben sie nach dem Löschen der Datei liegen.
 - `_publish_blob` setzt gleiches Dateisystem voraus (`os.replace`): OCR-PDFs über `_store_stream` ablegen.
-- Odoo-Prefork vererbt `RLIMIT_CPU` und `RLIMIT_AS` an Kindprozesse; ohne Anhebung bräche eine lange OCR ab.
-- Core-`_index` für PDF trennt keine Seiten und erkennt keine gemischten PDFs; für Textdateien liefert die Basis nur ASCII.
+- Odoo setzt `RLIMIT_AS` in beiden Betriebsarten und der Kindprozess erbt es; das erbte CPU-Limit wirkt im Prefork nicht (`SIGXCPU` blockiert), dafür begrenzt
+  `limit_time_cpu` den Odoo-Prozess selbst (Abschnitt 4 Schritt 1).
+- Core-`_index` für PDF trennt keine Seiten und erkennt keine gemischten PDFs; für Textdateien liefert die Basis nur ASCII. Textdateien: Latin-1 dekodiert alles, bei
+  Windows-Dateien ist cp1252 genauer; UTF-16 mit BOM wird nicht erkannt.
 - Der Cron belegt einen von standardmäßig zwei Cron-Threads (`max_cron_threads`).
 - Zombies: nach einem Servercrash bleiben verwaiste OCR-Prozesse bis zum Containerende; Frist und Jobordner-Aufräumen begrenzen den Schaden.
-- `attachment_indexation` schaltet die Indexierung für alle Anhänge der Instanz ein.
+- `attachment_indexation` schaltet die Indexierung für alle Anhänge der Instanz ein, synchron im Request und ohne Größengrenze (7a: 300-Seiten-PDF 20 s, xlsx mit
+  200.000 Zeilen 5,5 s und 381 MB). Zusätzlich liegen die Texte in `ir_attachment.index_content`.
+- `pdfminer` ist keine Odoo-Requirement: das Image oder die Umgebung muss es mitbringen; `attachment_indexation` warnt nur im Log, wenn es fehlt.
+- Die Markierung im Viewer ist wörtlich (`pdf.js` `search=`), die Suche nicht (Stemming, Faltung): `Mueller` findet `Müller`, markiert wird nichts.
 
 ## 10. Änderungen am Bestand (Realitätscheck)
 
 - Neu: Textmodelle, Index, Suchfeld, Cron, Einstellungen, Status, Ordner-Schalter, Treffer-Ansicht, Viewer-Anbindung.
-- Zu ändern: `_gc_blobs` (benutzte Prüfsummen), `DocumentFile.defaultSource` (PDF-Adresse mit `#page=…&search=…`, Quelle: OCR-PDF oder Original).
+- Zu ändern: `_gc_blobs` (benutzte Prüfsummen und Sperre der Texttabelle), `DocumentFile.defaultSource` (PDF-Adresse mit `#page=…&search=…`, Quelle: OCR-PDF oder Original).
+  **Serverseite der Auslieferung:** `/web/content/int.filemanager.document/<id>/content` liefert über `ir.binary._record_to_stream` und `_to_http_stream` heute
+  nur das Original. Für das OCR-PDF braucht es eine Variante (Parameter oder zweites Binärfeld), die dieselbe Zugriffsprüfung über das Dokument macht und die
+  Prüfsumme des OCR-PDFs als ETag nimmt; Download liefert weiter das Original.
+- Neu zusätzlich: Aufräumer für Textzeilen und OCR-PDFs ohne Dokument (Abschnitt 3); Anlage der Textzeilen (Abschnitt 12, offen).
 - Manifest: `depends` um `attachment_indexation` erweitern; Aufteilung der Datei `int_filemanager_text.py` nach Coding Guidelines (Datei je Modell).
 - Das Live-Image `int-filemanager-odoo:19.0-ocr` hat `ocrmypdf`, Tesseract (`deu`, `eng`, `osd`), Ghostscript, qpdf, `img2pdf`; es fehlen `unpaper`,
   `pngquant`, `jbig2`, `pdftotext`. Das Test-Image `odoo:19.0-hm-test` ist nicht geprüft; Tests, die `ocrmypdf` brauchen, überspringen sich ohne das Programm.
@@ -188,18 +252,43 @@ doppelte Datei teilt eine Textzeile; Kürzung bei Überlänge; Größengrenze �
 Abschnittsplanung und Halbierung (mit simuliertem Kindprozess); Fehlerzuordnung je Exit-Code; Jobordner wird gelöscht; Einstellungen wirken ohne Neustart.
 Tests mit echtem `ocrmypdf` nur, wenn das Programm vorhanden ist.
 
+Dazu aus der Prüfung (2026-10-13):
+- Sicherheit: gleiche Prüfsumme in einem Ordner, den der Nutzer nicht sieht (Treffer nur über die sichtbare Kopie); Zugriff auf die Methode des Textauszugs mit
+  fremden IDs (`AccessError`); `not ilike`; archivierte Dokumente.
+- `tsvector`: Text unter der Obergrenze in Zeichen, aber über 1 MB in Bytes (kyrillisch) wird gekürzt oder `failed`, der Stapel bricht nicht ab.
+- Faltung: `Übung`/`uebung` auch in einer Datenbank mit `LC_CTYPE C` (Testdatenbank mit `LC_CTYPE C` anlegen).
+- Cron: Budget erschöpft bei wartenden Zeilen → `_commit_progress(0, remaining=n)` (Status „teilweise“); `0` und `-1` für `limit_time_real_cron` je Betriebsart.
+- Aufräumer: OCR-PDF einer Textzeile bleibt erhalten, solange die Zeile existiert; Textzeile und OCR-PDF verschwinden mit dem letzten Dokument.
+- Archivieren und Wiederherstellen eines Dokuments; Zeile ohne Blob (Datei weg).
+
 ## 12. Offen / ungemessen
 
 - Overhead der Abschnitte bei sehr großen Dateien (jeder Abschnitt schreibt das PDF neu).
 - OCR-Durchsatz und Qualität auf echten Scans; Platzbedarf von Texten, Index und OCR-PDFs.
 - Verhalten unter Last auf einem geteilten Host.
-- Ob `threading.current_thread().start_time` in allen Betriebsarten gesetzt ist (Prefork: eigener Zähler nötig).
 - `OMP_THREAD_LIMIT=1` und dessen Wirkung auf Durchsatz nicht selbst gemessen (aus Paperless übernommen).
 - Bestand für spätere Läufe: mindestens 79.411 PDFs (Zählung brach nach 100 s ab = Untergrenze).
+- `LC_CTYPE` der Live-Datenbank; Windows; pdf.js im Browser bei geändertem Hash im bestehenden Frame; GIN-Index und Unterabfrage bei Millionen Seiten (Zeit des
+  Neuaufbaus bei geänderter Faltung); Postgres 17 (geprüft wurde 16.15).
+- Wie viel CPU-Zeit `pdfminer` für große Dateien im Odoo-Prozess braucht (gemessen: 300 dichte Seiten 15,3 s; 50-MB-Dateien nicht).
+
+**Offene Entscheidungen** (Produktentscheidungen, vor dem Bau zu klären):
+1. **Datei über der Größengrenze** (Abschnitt 2 sagt „wartet der Cron-Weg ab“, Abschnitt 11 testet `skipped`): wartet sie auf den Cron-Weg, oder wird sie `skipped`?
+2. **Cron in Stufe A:** Extraktion (Office, Text, PDF-Text) läuft im Odoo-Prozess über einen Cron, Abschnitt 4 beschreibt `_cron_ocr` als Stufe B. Ein Cron für beides
+   oder zwei?
+3. **„Parallele Jobs“** (Abschnitt 5) hat im sequentiellen Ablauf (Abschnitt 4) kein Gegenstück: streichen, oder den Ablauf auf mehrere Kindprozesse auslegen?
+4. **Ordnerschalter „Texterkennung für Bilder“ und gleiche Prüfsumme:** Liegt dasselbe Bild in einem Ordner mit und einem ohne Schalter, ist der Text für beide
+   durchsuchbar (die Suche läuft über die Prüfsumme). Ist das gewollt?
+5. **Markierung im Viewer:** Die tatsächlichen Wortformen des Treffers (z. B. aus `ts_headline`) an pdf.js übergeben oder die eingetippte Suche?
+6. **Anlage der Textzeilen:** Beim Anlegen des Dokuments (Hook in `_create_numbered`) oder durch einen Cron, der Dokumente ohne Zeile sucht (Bestand)? Dazu: Wann wird neu
+   verarbeitet (Engine-Version, OCR wird eingeschaltet, `empty` → `pending`), wie wird mit archivierten Dokumenten und fehlendem Blob verfahren, und wo liegt der
+   Fortschritt der Abschnitts-OCR (leere Trennblätter dürfen nicht als „noch offen“ zählen)?
+7. **`attachment_indexation`:** Nebenwirkung bleibt „akzeptiert“; mit den Zahlen aus 7a noch einmal bestätigen, oder eine Entschärfung prüfen.
 
 ## 13. Reihenfolge
 
-1. Stufe A: Textmodelle, Index, Suchfeld, Rechte, Cron (Extraktion Office/Text und PDF-Text), Tests.
+0. Offene Entscheidungen 1 bis 3 und 6 aus Abschnitt 12 klären (sie bestimmen Modelle und Cron).
+1. Stufe A: Textmodelle, Index, Suchfeld, Rechte, Cron (Extraktion Office/Text und PDF-Text), Aufräumer, Tests.
 2. Viewer-Anbindung (vorher JS-Regeln `js_framework`, `js_fields` lesen), Treffer-Ansicht.
 3. Messung an einer Stichprobe (~50 PDFs) in einer Wegwerf-Umgebung.
 4. Stufe B: OCR-Cron mit Abschnitten, Einstellungen, Status, Ordner-Schalter.
