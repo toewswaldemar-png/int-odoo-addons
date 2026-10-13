@@ -333,3 +333,17 @@ class TestImport(TransactionCase):
         )
         order = self._order()
         self.assertEqual(self.Import.with_user(admin).search([]), order)
+
+    def test_the_lines_of_another_company_are_not_seen(self):
+        other = self.env["res.company"].create({"name": "Other company"})
+        admin = new_test_user(
+            self.env,
+            login="import_line_admin",
+            groups="base.group_user,int_filemanager.int_filemanager_group_admin",
+        )
+        mine = self._order(company_id=admin.company_id.id)
+        theirs = self._order(company_id=other.id)
+        for order in (mine, theirs):
+            self.Line.create({"import_id": order.id, "path": "a.txt", "name": "a.txt"})
+        lines = self.Line.with_user(admin).search([])
+        self.assertEqual(lines.import_id, mine)
