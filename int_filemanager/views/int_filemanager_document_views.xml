@@ -24,6 +24,12 @@
                 <field name="size" widget="int_filemanager_size" />
                 <field name="write_date" string="Modified" />
                 <field name="tag_ids" widget="many2many_tags" optional="show" />
+                <field
+                    name="activity_ids"
+                    string="Next Activity"
+                    widget="list_activity"
+                    optional="hide"
+                />
             </list>
         </field>
     </record>
@@ -75,6 +81,35 @@
                     name="filter_archived"
                     string="Archived"
                     domain="[('active', '=', False)]"
+                />
+                <!-- The filters the activity menu of the top bar sets (search_default_<name>,
+                     see the activity menu of the mail module): without them it would show every
+                     document. Not offered in the filter menu, as in the core's views. -->
+                <separator invisible="1" />
+                <filter
+                    name="filter_activities_my"
+                    string="My Activities"
+                    invisible="1"
+                    domain="[('activity_user_id', '=', uid)]"
+                />
+                <separator invisible="1" />
+                <filter
+                    name="activities_overdue"
+                    string="Late Activities"
+                    invisible="1"
+                    domain="[('my_activity_date_deadline', '&lt;', 'today')]"
+                />
+                <filter
+                    name="activities_today"
+                    string="Today Activities"
+                    invisible="1"
+                    domain="[('my_activity_date_deadline', '=', 'today')]"
+                />
+                <filter
+                    name="activities_upcoming_all"
+                    string="Future Activities"
+                    invisible="1"
+                    domain="[('my_activity_date_deadline', '&gt;', 'today')]"
                 />
                 <!-- Odoo's own search panel. expand="1": all folders in one call, not looked
                      up again at every search; limit="0": the default 200 would end in an

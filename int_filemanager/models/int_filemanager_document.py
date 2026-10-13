@@ -52,18 +52,22 @@ class IntFilemanagerDocument(models.Model):
 
     _name = "int.filemanager.document"
     _description = "Filemanager document"
-    _inherit = ["mail.thread"]
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "name"
 
-    name = fields.Char(required=True)
+    name = fields.Char(required=True, tracking=True)
     folder_id = fields.Many2one(
-        "int.filemanager.folder", required=True, index=True, ondelete="restrict"
+        "int.filemanager.folder",
+        required=True,
+        index=True,
+        ondelete="restrict",
+        tracking=True,
     )
     checksum = fields.Char(readonly=True, required=True, index=True)
     # Float, not Integer: an int4 column overflows above 2 GiB.
     size = fields.Float(readonly=True)
     mimetype = fields.Char(readonly=True)
-    active = fields.Boolean(default=True)
+    active = fields.Boolean(default=True, tracking=True)
     tag_ids = fields.Many2many(
         "int.filemanager.tag",
         "int_filemanager_document_tag_rel",

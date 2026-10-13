@@ -22,12 +22,14 @@ class IntFilemanagerFolder(models.Model):
     _parent_store = True
     _order = "name"
 
-    name = fields.Char(required=True)
-    parent_id = fields.Many2one("int.filemanager.folder", index=True, ondelete="restrict")
+    name = fields.Char(required=True, tracking=True)
+    parent_id = fields.Many2one(
+        "int.filemanager.folder", index=True, ondelete="restrict", tracking=True
+    )
     parent_path = fields.Char(index=True)
     child_ids = fields.One2many("int.filemanager.folder", "parent_id")
     document_ids = fields.One2many("int.filemanager.document", "folder_id")
-    active = fields.Boolean(default=True)
+    active = fields.Boolean(default=True, tracking=True)
     company_id = fields.Many2one(
         "res.company", default=lambda self: self.env.company, index=True
     )
@@ -39,6 +41,7 @@ class IntFilemanagerFolder(models.Model):
         ],
         required=True,
         default="inherit",
+        tracking=True,
         help="Who sees this folder and its documents. A top folder that is not open to all is "
         "seen by the users and groups listed on it and by its followers (and by the "
         "administrators).",
@@ -49,6 +52,7 @@ class IntFilemanagerFolder(models.Model):
         "folder_id",
         "user_id",
         string="Allowed users",
+        tracking=True,
     )
     access_group_ids = fields.Many2many(
         "res.groups",
@@ -56,6 +60,7 @@ class IntFilemanagerFolder(models.Model):
         "folder_id",
         "group_id",
         string="Allowed groups",
+        tracking=True,
     )
     # The folder whose ``access_mode`` and followers decide for this one: itself, or the
     # nearest parent that does not say "like the parent". The record rules look at it.
@@ -108,9 +113,15 @@ class IntFilemanagerFolder(models.Model):
         return below, documents
 
     def _cascade_active(self, active):
+        # mail_notrack: the change is logged once, on the folder the user archived or restored;
+        # not once more for each folder and document below it.
         below, documents = self._below(active)
-        below.with_context(int_filemanager_cascade=True).write({"active": active})
-        documents.with_context(int_filemanager_cascade=True).write({"active": active})
+        below.with_context(int_filemanager_cascade=True, mail_notrack=True).write(
+            {"active": active}
+        )
+        documents.with_context(int_filemanager_cascade=True, mail_notrack=True).write(
+            {"active": active}
+        )
 
     def _check_restorable(self):
         """Refuse to restore what cannot come back: below an archived folder, or with a name
