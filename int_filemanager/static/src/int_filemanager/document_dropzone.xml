@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="int_filemanager.DocumentDropzone">
+        <Dropzone extraClass="props.extraClass" onDrop="props.onDrop" ref="props.ref">
+            <h4><t t-out="message" /> <i class="fa fa-download" /></h4>
+        </Dropzone>
+    </t>
+</templates>

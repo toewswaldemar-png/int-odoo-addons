@@ -1,3 +1,4 @@
+from . import test_assets
 from . import test_chatter
 from . import test_document
 from . import test_document_analysis
