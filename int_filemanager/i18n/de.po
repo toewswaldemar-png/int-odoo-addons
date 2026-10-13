@@ -174,6 +174,12 @@ msgid "Document"
 msgstr "Dokument"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/document_thumbnail_field.js:0
+msgid "Document picture"
+msgstr "Dokumentbild"
+
+#. module: int_filemanager
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_document_action
 #: model:ir.ui.menu,name:int_filemanager.int_filemanager_document_menu
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_graph
@@ -183,6 +189,7 @@ msgstr "Dokumente"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
 msgid "Download"
 msgstr "Herunterladen"
@@ -446,6 +453,12 @@ msgstr "Übergeordneter Ordner"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_path
 msgid "Parent Path"
 msgstr "Übergeordneter Pfad"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/document_preview_button.xml:0
+msgid "Preview"
+msgstr "Vorschau"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_user_id
@@ -990,6 +1003,7 @@ msgid "Document name"
 msgstr "Dokumentname"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
 msgid "Properties"
 msgstr "Eigenschaften"
