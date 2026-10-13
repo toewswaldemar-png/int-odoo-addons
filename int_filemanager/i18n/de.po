@@ -175,6 +175,8 @@ msgstr "Dokument"
 #. module: int_filemanager
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_document_action
 #: model:ir.ui.menu,name:int_filemanager.int_filemanager_document_menu
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_graph
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_pivot
 msgid "Documents"
 msgstr "Dokumente"
 
@@ -223,6 +225,7 @@ msgstr "Dateimanager-Tag"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__folder_id
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Folder"
 msgstr "Ordner"
 
@@ -335,6 +338,7 @@ msgstr "Nachrichten"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__mimetype
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Mimetype"
 msgstr "Dateityp"
 
