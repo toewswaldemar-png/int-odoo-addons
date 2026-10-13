@@ -8,6 +8,7 @@ from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import TransactionCase, new_test_user, tagged
 
 ROOT_PARAMETER = "int_filemanager.import_root"
+CRON_XMLID = "int_filemanager.int_filemanager_import_cron"
 
 
 def remove(path):
@@ -51,10 +52,14 @@ class TestImport(TransactionCase):
             {"name": "Test", "source_path": source_path, "target_folder_id": self.target.id, **values}
         )
 
+    def _cron_import(self):
+        """The model as the scheduled action sees it (it refuses to run without its id)."""
+        return self.Import.with_context(cron_id=self.env.ref(CRON_XMLID).id)
+
     def _cron(self):
         """Run the scheduled action as Odoo does, without the commit a test must not make."""
         with patch.object(self.env.cr, "commit"):
-            self.Import._cron_run()
+            self._cron_import()._cron_run()
         self.env.invalidate_all()
 
     def _check(self, order):
@@ -293,12 +298,16 @@ class TestImport(TransactionCase):
             return 0 if len(calls) == 2 else 1
 
         with patch.object(type(self.env["ir.cron"]), "_commit_progress", commit_progress):
-            self.Import._cron_run()
+            self._cron_import()._cron_run()
         self.env.invalidate_all()
         self.assertEqual(order.state, "running")
         self.assertEqual(len(self.target.document_ids), 2)
         self._cron()
         self.assertEqual((order.state, len(self.target.document_ids)), ("done", 4))
+
+    def test_the_scheduled_action_refuses_a_call_from_elsewhere(self):
+        with self.assertRaises(AssertionError):
+            self.Import._cron_run()
 
     def test_stop_returns_to_the_last_calm_state(self):
         order = self._order()

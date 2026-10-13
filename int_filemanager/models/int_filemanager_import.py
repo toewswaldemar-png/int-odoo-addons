@@ -13,6 +13,8 @@ _logger = logging.getLogger(__name__)
 
 IMPORT_ROOT_PARAMETER = "int_filemanager.import_root"
 CRON_XMLID = "int_filemanager.int_filemanager_import_cron"
+# Why ``_run_order`` stopped working on an order.
+ENDED, BUSY, TIME_UP = "ended", "busy", "time_up"
 
 
 class Source(NamedTuple):
@@ -191,6 +193,9 @@ class IntFilemanagerImport(models.Model):
     def _restart_scan(self):
         """Throw away the lines and begin with the folder itself."""
         self.ensure_one()
+        # SQL, not ``unlink``: an order has a line for every folder and file of the disk (many
+        # thousands), which ``unlink`` would load and check one by one. Hence the flush before
+        # and the invalidation after.
         self.env["int.filemanager.import.line"].flush_model()
         self.env.execute_query(
             SQL("DELETE FROM int_filemanager_import_line WHERE import_id = %s", self.id)
@@ -249,37 +254,50 @@ class IntFilemanagerImport(models.Model):
         (``_commit_progress``): after a restart the work goes on where it stopped. When the time
         is up it returns with work left, Odoo calls it again at once.
         """
+        assert self.env.context.get("cron_id") == self.env.ref(CRON_XMLID).id, (
+            "Meant for cron usage only"
+        )
         cron = self.env["ir.cron"]
         busy = False
         for record in self.search([("state", "in", ("scanning", "running"))], order="id"):
-            while True:
-                # Locked for the length of one step: a user who stops the order waits for it.
-                if not record.try_lock_for_update():
-                    busy = True
-                    break
-                scanning = record.state == "scanning"
-                if not scanning and record.state != "running":
-                    break  # stopped meanwhile
-                try:
-                    source = record._source()
-                except UserError as error:
-                    # The settings or the folder changed under the order: stop it, say why.
-                    _logger.warning("Reading in %s stopped: %s", record.name, error.args[0])
-                    record.action_stop()
-                    record.message = error.args[0]
-                    cron._commit_progress()
-                    break
-                processed = (
-                    record._scan_step(source) if scanning else record._copy_step(source)
-                )
-                if not processed:
-                    record.state = "scanned" if scanning else "done"
-                    cron._commit_progress()
-                    break
-                if not cron._commit_progress(processed):
-                    cron._commit_progress(remaining=1)
-                    return
+            outcome = record._run_order()
+            if outcome == TIME_UP:
+                cron._commit_progress(remaining=1)
+                return
+            busy = busy or outcome == BUSY
         cron._commit_progress(remaining=int(busy))
+
+    def _run_order(self):
+        """Do the steps of this order one after the other, each one committed.
+
+        :return: why it ended: ``ENDED`` (done, stopped or stopped by a problem), ``BUSY``
+            (another transaction holds the order; the next run tries again) or ``TIME_UP``
+        """
+        self.ensure_one()
+        cron = self.env["ir.cron"]
+        while True:
+            # Locked for the length of one step: a user who stops the order waits for it.
+            if not self.try_lock_for_update():
+                return BUSY
+            scanning = self.state == "scanning"
+            if not scanning and self.state != "running":
+                return ENDED  # stopped meanwhile
+            try:
+                source = self._source()
+            except UserError as error:
+                # The settings or the folder changed under the order: stop it, say why.
+                _logger.warning("Reading in %s stopped: %s", self.name, error.args[0])
+                self.action_stop()
+                self.message = error.args[0]
+                cron._commit_progress()
+                return ENDED
+            processed = self._scan_step(source) if scanning else self._copy_step(source)
+            if not processed:
+                self.state = "scanned" if scanning else "done"
+                cron._commit_progress()
+                return ENDED
+            if not cron._commit_progress(processed):
+                return TIME_UP
 
     def _scan_step(self, source):
         """List one more folder; return how many were listed (0: all are)."""
