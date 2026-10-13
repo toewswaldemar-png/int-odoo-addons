@@ -1,13 +1,13 @@
-import { useFileViewer } from "@web/core/file_viewer/file_viewer_hook";
 import { useService } from "@web/core/utils/hooks";
 import { FileUploadProgressContainer } from "@web/core/file_upload/file_upload_progress_container";
 import { FileUploadProgressDataRow } from "@web/core/file_upload/file_upload_progress_record";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { documentFileFromRecord } from "./document_file";
+import { useDocumentFileViewer } from "./document_file_viewer";
 
 /**
  * The list with the progress of the running uploads above it. A click on a row shows the
- * file in the core's file viewer (the arrow keys go through the files of the page); what a
+ * file in the file viewer (the arrow keys go through the files of the page); what a
  * browser cannot show opens the form, where the download is.
  */
 export class DocumentListRenderer extends ListRenderer {
@@ -21,7 +21,7 @@ export class DocumentListRenderer extends ListRenderer {
     setup() {
         super.setup();
         this.fileUploadService = useService("file_upload");
-        this.fileViewer = useFileViewer();
+        this.fileViewer = useDocumentFileViewer();
     }
 
     /**
