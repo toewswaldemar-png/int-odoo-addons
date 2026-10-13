@@ -44,6 +44,14 @@ class TestDocumentPreview(TransactionCase):
         self.assertIn('widget="int_filemanager_document_thumbnail"', arch)
         self.assertIn('create="0"', arch)
         # The form and the download are in the menu of the card: a click on it shows the file.
-        for method in ("action_open_form", "action_download"):
-            self.assertIn(f'name="{method}"', arch)
-            self.assertTrue(hasattr(self.Document, method))
+        # The form opens by type="open" (the pager over the cards), not by the method of the model.
+        self.assertIn('type="open"', arch)
+        self.assertNotIn('name="action_open_form"', arch)
+        self.assertIn('name="action_download"', arch)
+        self.assertTrue(hasattr(self.Document, "action_download"))
+
+    def test_the_list_keeps_the_button_that_the_controller_turns_into_a_click_on_a_row(self):
+        # DocumentListController.beforeExecuteActionButton looks for the name of this method.
+        arch = self._views("list")["list"]["arch"]
+        self.assertIn('name="action_open_form"', arch)
+        self.assertTrue(hasattr(self.Document, "action_open_form"))

@@ -26,8 +26,10 @@ CORE_PARTS = {
     # own component and `hasFile`.
     "@mail/chatter/web/form_renderer": ("mailComponents", "hasFile(", "mailLayout("),
     "@mail/chatter/web/form_compiler": ("div.o_attachment_preview", "AttachmentView"),
-    # DocumentKanbanController: a click on a card ends in `openRecord`.
-    "@web/views/kanban/kanban_controller": ("openRecord(",),
+    # DocumentKanbanRecord: the click on a card (as the core's `product.document` takes it).
+    "@web/views/kanban/kanban_record": ("onGlobalClick(", "CANCEL_GLOBAL_CLICK"),
+    # DocumentListController: the button "Properties" opens the form as a click on a row does.
+    "@web/views/list/list_controller": ("beforeExecuteActionButton(", "selectRecord("),
 }
 
 
@@ -56,7 +58,8 @@ class TestAssets(TransactionCase):
             "document_dropzone",
             "document_form_renderer",
             "document_form_view",
-            "document_kanban_controller",
+            "document_kanban_record",
+            "document_kanban_renderer",
             "document_kanban_view",
             "document_list_controller",
             "document_list_renderer",

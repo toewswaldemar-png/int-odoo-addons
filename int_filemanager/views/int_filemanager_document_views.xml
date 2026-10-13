@@ -38,9 +38,10 @@
         <field name="name">int.filemanager.document.view.kanban</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- A click on a card shows the file (see DocumentKanbanController), as a click on
-                 a row of the list does; the form is in the menu of the card. No new: documents
-                 come from the upload and the reading in only. -->
+            <!-- A click on a card shows the file (see DocumentKanbanRecord), as a click on a
+                 row of the list does; the form is in the menu of the card (type="open": the
+                 form with the pager over the cards). No new: documents come from the upload
+                 and the reading in only. -->
             <kanban
                 js_class="int_filemanager_document_kanban"
                 create="0"
@@ -50,9 +51,7 @@
                 <field name="checksum" />
                 <templates>
                     <t t-name="menu">
-                        <a role="menuitem" type="object" name="action_open_form" class="dropdown-item">
-                            Properties
-                        </a>
+                        <a role="menuitem" type="open" class="dropdown-item">Properties</a>
                         <a role="menuitem" type="object" name="action_download" class="dropdown-item">
                             Download
                         </a>

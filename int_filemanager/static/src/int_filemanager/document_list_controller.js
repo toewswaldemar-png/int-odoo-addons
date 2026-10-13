@@ -52,6 +52,22 @@ export class DocumentListController extends ListController {
     }
 
     /**
+     * @override
+     * "Properties" (a button for the ticked row): the form opens as a click on a row of a core
+     * list opens it, with the pager over the rows of the page. The method of the model would
+     * open an action of its own: one record, and no list in the breadcrumb. With more rows
+     * ticked the method stays, it tells the user to choose one.
+     */
+    async beforeExecuteActionButton(clickParams) {
+        const { selection } = this.model.root;
+        if (clickParams.name === "action_open_form" && selection.length === 1) {
+            await this.openRecord(selection[0]);
+            return false;
+        }
+        return super.beforeExecuteActionButton(...arguments);
+    }
+
+    /**
      * @param {Object} upload an upload of the `file_upload` service
      * @returns {Promise} settles when the upload has ended, with or without an error
      */
