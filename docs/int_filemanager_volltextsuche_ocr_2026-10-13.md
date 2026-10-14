@@ -416,3 +416,108 @@ Weiter offen:
    Das Formular springt nicht zur Fundstelle (nicht umgesetzt). Die Suche findet `Haus` nicht in `Häuser` (Faltung → `haeuser` → Stamm `haeus`).
 3. Stufe B erst, wenn Wiederaufnahme, OCR-Modi, Prefork-Budget und Verwaltung der abgeleiteten PDFs widerspruchsfrei spezifiziert und getestet sind: OCR-Cron mit Abschnitten nach Zeitbudget,
    Einstellungen, Status, Ordner-Schalter.
+
+## 14. Plan Stufe B (OCR), geklärt am 2026-10-14
+
+Status: **gebaut (B1 bis B8, 14.10.2026), nicht committet.** Die Abschnitte B1 bis B7 unten tragen den Stand des Baus; der Plan ist sonst unverändert. Er ersetzt in Abschnitt 4 und 5 überall, wo er abweicht. Grundlage: Code von Stufe A (`int_filemanager_text.py`, `tools/extract_text.py`), die
+Messungen B0 unten und die Entscheidungen vom selben Tag.
+
+### 14.1 Entschieden (Nutzer, 14.10.)
+
+1. **Bilder:** nur der Text wird behalten, kein OCR-PDF (der Viewer zeigt das Bild).
+2. **Gemischte Seiten** (Bild mit digitalem Text): Version 1 ohne; nur `--skip-text`. Nachrüsten möglich, siehe B0-Messungen.
+3. **Einstellungen:** sieben statt zwölf: OCR aktiv (aus), Sprachen (`deu+eng`), Kerne je Job (1), CPU-Priorität (19), Ausrichten und Drehen (an), Ausgabetyp (`pdf`/`pdfa`),
+   Versuche (gibt es: `max_attempts`). Weggefallen: Zeitfenster, Seitenlimit, Bildpixel, Bereinigen, Bild-DPI (bei `DpiError` wird aus der A4-Breite geschätzt).
+4. **Platz:** die OCR-PDFs erscheinen nur im Status der Einstellungen (Gesamtgröße), nicht in der Auswertung „Wohin der Platz geht“.
+
+### 14.2 Aufbau
+
+- **Eigener OCR-Zustand** an `int.filemanager.text`, getrennt vom Lese-Zustand (`state` bleibt unberührt, Tests von Stufe A bleiben gültig): `ocr_state` (leer, `wait`, `running`, `done`,
+  `failed`, `skipped`), `ocr_next_page`, `ocr_file` (Name der gültigen Zwischendatei) und `ocr_file_size`, `ocr_attempts`, `ocr_message`, `ocr_seconds_per_page`, `ocr_checksum` und `ocr_size` des
+  fertigen OCR-PDFs, `scan_pages` (Seiten ohne Text nach dem Lesen). Der Cron hängt die OCR hinter das Lesen und die Zeilenanlage (Lesen und neue Zeilen haben Vorrang).
+- **Wann OCR nötig ist:** Lesen fertig, `scan_pages > 0`, OCR aktiv. Eine Seite zählt als ohne Text bei weniger als 20 Zeichen ohne Leerraum. Der Fortschritt kommt nie aus „Seiten ohne Text“
+  (leere Trennblätter bleiben leer), sondern aus `ocr_next_page`. Wird die OCR eingeschaltet, setzt der Requeue-Schritt `ocr_state = wait` für alle fertigen Zeilen mit `scan_pages > 0`.
+- **Abschnitt:** `ocrmypdf --skip-text --pages a-b` (mit Ausrichten und Drehen laut Einstellung) liest die gültige Zwischendatei (beim ersten Abschnitt das Original) und schreibt eine neue Datei mit
+  neuer Versionsnummer im Namen. Danach, im selben Commit: Seitentexte der Abschnittsseiten aus der neuen Datei in die vorhandenen Seitenzeilen schreiben (gleicher Kindprozess `extract_text.py`
+  mit zusätzlichem Argument „letzte Seite“), `ocr_next_page`, `ocr_file`, `ocr_file_size`, `ocr_attempts = 0`. Erst nach dem Commit wird die alte Zwischendatei gelöscht. Neue Treffer sind sofort suchbar.
+- **Größe des Abschnitts:** erster Abschnitt je Datei höchstens 10 Seiten, danach `ocr_seconds_per_page` (geglättet, nach jedem Abschnitt aus der gemessenen Zeit abzüglich 6 s Festaufwand).
+  Seiten = (Restzeit − 6 s) × 0,7 / Sekunden je Seite, mindestens 1, höchstens 100. Ergibt das weniger als eine Seite, endet der Lauf mit `remaining > 0`.
+- **Frist gerissen:** Prozessbaum mit `psutil` beenden, Abschnitt halbieren, `ocr_seconds_per_page` verdoppeln. Ein Versuch zählt nur, wenn eine einzelne Seite
+  mit mindestens 60 s Frist scheitert; sonst war nur die Restzeit zu knapp.
+- **Ende:** Die letzte Zwischendatei geht durch `_store_stream` und `_publish_blob` zum OCR-PDF (Blob), `ocr_checksum`, `ocr_size`, `ocr_state = done`, danach wird der Jobordner gelöscht.
+  `state` wird neu bestimmt (`empty` wird `done`, wenn jetzt Text da ist).
+- **Neu lesen** (Engine-Wechsel, „Read again“): hat die Zeile ein OCR-PDF, liest der Kindprozess **dieses** (es enthält digitalen und erkannten Text), nicht das Original. Sonst wären die Scans wieder
+  leer und würden erneut erkannt. Das OCR-PDF fällt nur mit einem eigenen Knopf „Erkennung wiederholen“ weg.
+- **Bilder** (JPEG, PNG, TIFF; BMP, GIF und WebP gingen im Test ebenfalls): Zeile nur, wenn ein Dokument mit dieser Prüfsumme in einem Ordner mit Schalter „Texterkennung für Bilder“
+  liegt (Auswahl erbt vom Elternordner, gespeicherte rekursive Hilfsspalte wie `access_folder_id`). Text lesen, **kein** PDF behalten. Bei `DpiError` einmal mit DPI aus der A4-Breite.
+  Mehrseitige TIFF: wie PDF in Abschnitten (gemessen, siehe unten).
+  **Ordnerschalter (14.10., Nutzer: ja):** Auswahlfeld mit Erben (Standard jedes Ordners), An, Aus, im Ordnerformular unter „Zugriff“ (`int_filemanager_folder_views.xml`). **Wurzel gilt als Aus**: ohne
+  Eingriff werden nirgends Bilder erkannt; zusätzlich muss „OCR aktiv“ an sein (Standard aus). Wer das Feld sieht: Empfehlung nur Filemanager-Administratoren (`groups=` an der Feldeinbindung der Ansicht,
+  nicht am Feld), **noch nicht bestätigt**. Optional später: Listenspalte (mit `multi_edit` mehrere Ordner umstellen), nicht geplant.
+- **Auslieferung:** zweites Pseudo-Binärfeld `ocr_content` am Dokument; der `ir.binary`-Hook liefert das OCR-PDF mit derselben Zugriffsprüfung über das Dokument, ETag = `ocr_checksum`. Das Dokument
+  bekommt ein berechnetes Feld `ocr_checksum` (per `sudo`, ein SQL je Seite), das `DocumentFile` mitliest: `urlRoute` nimmt das OCR-PDF, wenn eines da ist. Download bleibt das Original.
+- **Aufräumer:** `_gc_blobs` zählt die `ocr_checksum` der Textzeilen als benutzt und sperrt die Texttabelle mit (`LOCK … IN SHARE MODE`, feste Reihenfolge Dokument, dann Text). Zwischendateien und Jobordner
+  von Zeilen, die nicht mehr `running` sind oder nicht mehr existieren, löscht ein Autovacuum. `_gc_texts` bleibt.
+- **Start des Kindprozesses:** kleines Skript `tools/start_ocr.py` (nur Standardbibliothek): `RLIMIT_AS` auf den Hard-Wert, `os.nice(wert − os.nice(0))`, `OMP_THREAD_LIMIT=1`, `TMPDIR` = Jobordner,
+  dann `execvp`. Windows: direkter Start per `subprocess`.
+- **Status in den Einstellungen:** Version von `ocrmypdf`, Tesseract und Sprachpakete (fehlt eine: OCR hält an, Meldung), Zahlen je `ocr_state`, Seiten in der Warteschlange mit grober Restdauer
+  (Seiten × `ocr_seconds_per_page`), Gesamtgröße der OCR-PDFs, `LC_CTYPE` der Datenbank (Warnung bei `C`: Großbuchstaben werden dann nicht gefaltet), Hinweis auf `limit_time_real_cron`.
+
+### 14.3 Abstürze und Wiederaufnahme
+
+| Absturz | Folge |
+|---|---|
+| Während `ocrmypdf` | keine Ausgabe (gemessen); Abschnitt wiederholen |
+| Neue Datei geschrieben, Commit fehlt | die Zeile zeigt auf die alte Datei; die neue (Versionsnummer größer) ist verwaist und wird gelöscht |
+| Zeile zeigt auf eine fehlende Datei oder andere Größe | OCR beginnt bei Seite 1 mit dem Original, zählt nicht als Versuch |
+| Nach `_publish_blob`, vor dem Commit | Blob steht auf der Checkliste (Aufräumer), der Schritt ist wiederholbar |
+| `running` beim Start eines Laufs | zurück auf `wait`, `ocr_attempts` + 1 |
+
+Fehlerzuordnung der Exit-Codes wie in Abschnitt 4, ergänzt um B0: 8 (Passwort zum Öffnen) → `failed` mit Meldung; kaputte, leere oder falsche Dateien → Exit 2, `failed`.
+
+### 14.4 Reihenfolge
+
+B1 Felder, Ordner-Schalter, `_gc_blobs`-Erweiterung **(14.10. gebaut, getestet, nicht committet: Felder an `int.filemanager.text`, Ordnerfelder `ocr_images`/`ocr_images_active`, Schalter nur für Filemanager-Administratoren sichtbar (Ansicht), `_gc_blobs` sperrt beide Tabellen und kennt `ocr_checksum`, Textzeile markiert ihr OCR-PDF beim Löschen/Ersetzen)**. B2 `tools/start_ocr.py`. **(14.10. gebaut und getestet, nicht committet: `tools/start_ocr.py <nice> <Jobordner> <Programm> …`, Konstante `START_OCR`, `tests/test_text_start_ocr.py`; Windows-Zweig lokal von Hand geprüft)** B3 Planer und Fehlerzuordnung als reine Funktionen (Test mit Stub-Programm). **(14.10. gebaut und getestet, nicht committet: `tools/ocr_plan.py` mit `section_pages`, `measured_seconds_per_page`, `smoothed`, `after_timeout`, `classify`, `section_command`, `estimate_dpi`; `tests/test_text_ocr_plan.py` mit 35 Tests, davon Stub-Programm über `start_ocr.py` und zwei mit echtem `ocrmypdf`. Entscheidungen beim Bau: ohne Messung gilt 5 s je Seite; Exit 127 und 3 stoppen die OCR; Exit 1 und 9 stoppen sie auch (falsche Argumente); Exit 2 ohne DPI-Text und 8 sind endgültig; Exit 6 und leeres Ergebnis einmal mit `--force-ocr`; Plattenvoll pausiert.)** B4 Cron-Erweiterung mit Wiederaufnahme,
+Veröffentlichung und Budget. **(14.10. gebaut und getestet, nicht committet.** `_cron_ocr` hat nach Lesen, Requeue und Zeilenanlage den Schritt `_ocr_queue` (Seiten ohne Text zählen: `scan_pages`, -1 = noch nicht gezählt; `ocr_state = wait`, wenn „OCR aktiv“) und `_ocr_step` (ein Abschnitt je Schritt). Abschnitt: Zeile `running` + Commit, `start_ocr.py` mit `ocrmypdf` im Jobordner `<Filestore>/int_filemanager/.ocr/<Zeilen-ID>/`, Ausgabe `upto-<letzte Seite>.pdf.tmp`, fsync, atomar umbenannt; Seitentexte der Abschnittsseiten (Kindprozess `extract_text.py` mit neuem Argument „letzte Seite“) ersetzen die Seitenzeilen im selben Commit wie `ocr_next_page`/`ocr_file`/`ocr_file_size`; alte Zwischendatei und Jobordner werden per `postcommit` gelöscht. Frist: Prozessbaum mit `psutil` beenden; `after_timeout` verdoppelt die Zeit je Seite (halbiert damit die nächste Größe); weniger als 5 s Laufzeit lehren nichts. Fehlercodes laut `ocr_plan.classify`; Block/Pause über Systemparameter `int_filemanager.ocr_blocked` (eine Stunde). Ende: OCR-PDF nur behalten, wenn mindestens eine Seite durch die OCR Text bekam (`ocr_found_pages`, nicht über `scan_pages`: ein kurzer Text zählt weiter als „Scan“); sonst keine zweite Kopie. Neu lesen liest die gültige Zwischendatei, sonst das OCR-PDF, sonst das Original (`_text_source`). `action_recognize_again` (Admin) wirft die OCR weg. Aufräumer `_gc_ocr_jobs`. Einstellungen (Systemparameter, Oberfläche in B7): `ocr_enabled`, `ocr_languages`, `ocr_jobs`, `ocr_nice`, `ocr_deskew`, `ocr_output_type`. Gefunden beim Bau: ohne Korrektur wäre eine Datei mit sehr hoher Zeit je Seite nie mehr drangekommen (Planer probiert dann eine einzelne Seite, wenn die Zeit für einen fairen Versuch reicht; ein kurzer Lauf senkt die „faire“ Zeit).) B5 Auslieferung und Viewer (Browser-Test macht der Nutzer). **(14.10. gebaut, Python getestet, nicht committet; Browser-Test steht aus.** Dokument: Pseudo-Binärfeld `ocr_content` (liefert `_to_ocr_http_stream` über den `ir.binary`-Hook, ETag = `ocr_checksum`, gleiche Zugriffsprüfung wie `content`) und berechnetes Feld `ocr_checksum` (`search_fetch` auf die Textzeilen, ein SQL je Seite). JS: `DocumentFile.urlRoute` nimmt für PDFs mit `ocr_checksum` die Route `ocr_content`, `unique` = `ocr_checksum`, `downloadUrl` bleibt das Original; `ocr_checksum` in den Feldabhängigkeiten von Namens-, Treffer- und Vorschau-Widget und in Kanban/Formular. Hinweis: der Download-Knopf im pdf.js-Rahmen speichert das angezeigte (OCR-)PDF, der Download-Knopf der Zeile das Original. Tests `test_document_ocr_download.py` (11).) B6 Bilder. **(14.10. gebaut und getestet, nicht committet.** Zeile für ein Bild nur, wenn „OCR aktiv“ an ist und ein Dokument mit der Prüfsumme in einem Ordner mit `ocr_images_active` liegt (`_missing_where`, `IMAGE_TYPES`: JPEG, PNG, TIFF, BMP, GIF, WebP). Die Zeile entsteht schon als `state = empty`, `ocr_state = wait` (`_new_row_values`): die OCR ist das Lesen. Seitenzahl und Breite liefert das Kindprogramm `tools/image_info.py` (der Odoo-Prozess kann nur PNG/JPEG/GIF/BMP: `odoo/tools/image.py` setzt `Image._initialized = 2`, TIFF/WebP gibt es dort nicht). `DpiError` → einmal mit DPI aus der A4-Breite, unter 70 dpi steht eine Warnung in `ocr_message`. Kein OCR-PDF für Bilder. „Neu lesen“ eines Bildes setzt die OCR zurück (`_reset`). Mehrseitiges TIFF läuft in Abschnitten (erster Abschnitt liest das TIFF, die folgenden das Zwischen-PDF). Echte Tests mit PNG, JPEG, BMP, GIF, WebP, TIFF (zwei Seiten, auch in Einzelseiten-Abschnitten) bestehen.) B7 Einstellungen, Status, Spalten in der Admin-Liste. **(14.10. gebaut und getestet, nicht committet.** Einstellungsseite, Block „Text in scans“: OCR aktiv, Sprachen, Kerne, Priorität (Auswahl 19/10/5/0, weil Odoo eine 0 in Zahlenfeldern nicht speichert), Seiten (Ausrichten/Drehen als Auswahl „1“/„0“, weil ein Haken mit Standard „an“ nicht abwählbar wäre), Ausgabetyp; Status: Zustand mit Grund („Ready“, „Off“, „Stopped: …“, „Paused: the disk is full“), Programme mit Version und Sprachen, Zahlen je `ocr_state`, offene Seiten mit grober Restdauer, Gesamtgröße der OCR-PDFs, Hinweise (`LC_CTYPE C`, `limit_time_real_cron`), Knopf „Show the scans“ (Aktion `int_filemanager_text_ocr_action`). Admin-Liste der Texte: Spalten, Filter und Gruppierung für die Erkennung, Knopf „Recognize again“ in Liste und Formular. Tests `test_text_ocr_settings.py` (17).) B8 Übersetzungen, einmal volle Prüfung. **(14.10. erledigt: 93 neue Texte ins Deutsche; `tools/check/i18n_export.sh` kann mit `I18N_LANG=de_DE` auch eine Sprache exportieren, taugt aber nicht zum Erneuern der `de.po` (Übersetzungen, die an Texten anderer Module hängen, gehen dabei verloren): die Datei wird aus der `.pot` und den alten Übersetzungen zusammengeführt, bestehende Einträge bleiben unverändert. Volle Suite 431 Tests, nur der bekannte `test_import`-Fehler.)**
+Das Test-Image hat `ocrmypdf` 17.12.1 (`deu`, `eng`, `osd`), Tests mit echtem Programm sind möglich; reine Logik mit einem Stub.
+
+### 14.4a Gegenlese durch Codex, 2026-10-14
+
+Nur lesend (`codex exec -p review`), sechs Befunde, alle am Code geprüft:
+
+| Befund | Entscheidung |
+|---|---|
+| Fehler des Dateisystems (`ENOSPC`, `EDQUOT`, `EIO`) nach dem Commit von `running` rollen den Schritt zurück, die Zeile bleibt `running` und zählt als Absturz | **behoben**: der Teil nach dem Commit läuft in `try/except OSError` und der Abschluss in einem Savepoint; Platte voll pausiert wie `disk_full`, anderer Fehler zählt einen Versuch (`_ocr_io_failed`). Die alte Abschnittsdatei wird erst ganz am Ende des Schritts zum Löschen vorgemerkt (ein Savepoint macht `postcommit`-Einträge nicht rückgängig) |
+| `_work_left` startete nach Ablauf der Frist Programme (Werkzeugabfrage, bis 2 × 20 s); der Leser bekam bis zu 10 s über die Frist hinaus | **behoben**: `_work_left` fragt nur Einstellung und Sperre; das Programm bekommt die Frist minus `MIN_READ_SECONDS`; Zeitgrenze der Abfrage 10 s. **Nicht übernommen**: die Rückgabe von `_commit_progress` auswerten. Odoo setzt `cron_end_time` auf zehn Sekunden nach Jobbeginn (`MIN_TIME_PER_JOB`), die Rückgabe ist also nach zehn Sekunden immer 0; der Plan (Abschnitt 4, Schritt 1) nutzt bewusst die eigene Frist, in Prefork echt gemessen (Läufe 35 s, kein Kill) |
+| Bei Läufen unter 30 s kam eine langsame Seite nie mehr dran (`fair + FIXED_SECONDS` unerreichbar) | **behoben**: `section_pages` verlangt nur `seconds_left >= fair` |
+| `ocr_images` war nur in der Ansicht auf Administratoren beschränkt, per RPC schrieb jeder Nutzer | **behoben**: `groups` am Feld; Tests mit normalem Nutzer (anlegen, umbenennen, verschieben, Schreiben des Feldes verweigert) |
+| Nach `kill()` wurde nicht auf die getöteten Prozesse gewartet; der Test ließ Zombies zu | **behoben** (zweites `wait_procs`, der Test verlangt, dass das Programm selbst verschwunden ist). **Rest**: Enkelprozesse (Tesseract, Ghostscript), deren Elternprozess mit stirbt, übernimmt der erste Prozess des Containers; reapt er nicht, bleiben Zombies: Container mit `--init` starten |
+| Exit-Code-Tabelle nur gegen eigene Attrappen geprüft | **behoben, mit Fund**: Tests mit echtem `ocrmypdf` für 6 (Text auf der Seite), 3 (Sprache fehlt), 8 (Passwort) und falsche Option. Dabei fiel auf: ein unbekannter Parameter gibt ebenfalls Exit 2, und die Hilfe im Fehlertext nennt `--image-dpi`, die DPI-Erkennung schlug daran an (Wiederholung mit DPI statt Abbruch). Jetzt: `usage: ocrmypdf` im Text ist `bad_setup` (stoppt die OCR), die DPI-Erkennung sucht nur `resolution (dpi)` |
+
+### 14.5 B0: Messungen vom 2026-10-14 (Tower, Wegwerf-Umgebung, gelöscht)
+
+| Messung | Ergebnis |
+|---|---|
+| Test-Image `odoo:19.0-hm-test` und Live-Image `odoo:19.0-hm` | beide: `ocrmypdf` 17.12.1, Tesseract (`deu`, `eng`, `osd`), Ghostscript, qpdf, `pikepdf`, `img2pdf`, `psutil`, `pdfminer.six` 20260107; kein `unpaper` |
+| Bestand (4.967 PDFs, bis zu 30 Seiten je Datei, 56.567 Seiten): Seitenarten | Text oder Vektor 88,8 %; Scan ohne Text 3,19 %; Scan mit vorhandener Textebene 2,65 %; Bild mit viel Text 2,7 %; Bild mit wenig digitalem Text 0,79 %; leer 1,7 %. Hochgerechnet auf 175.355 Seiten etwa 5.600 Scanseiten ohne Text |
+| Wirklich ganzseitiges Bild (mindestens 1400 × 1400) plus wenig sichtbarer Text | 174 Seiten in 83 Dateien (0,3 %), meist Titel-, Kalender- und Einladungsseiten, kaum gestempelte Scans |
+| Verschlüsselt, signiert, defekt im Bestand | 239 verschlüsselt (alle ohne Öffnungspasswort, keine mit Scanseiten), 0 signiert, 4 nicht lesbar |
+| Gemischte Seite (Scan plus Stempel, künstlich) | `--skip-text` 30 Zeichen (nur der Stempel); `--redo-ocr` 2.274; `--force-ocr` 2.001; `--redo-ocr --rotate-pages` geht (Exit 0); `--redo-ocr --deskew` Exit 1 |
+| Mehrseitiges TIFF (6 Seiten) | `--pages 1-2` erkennt nur 1 bis 2, die Ausgabe behält alle 6 Seiten; ohne `--pages` alle 6 |
+| Verschlüsseltes PDF | mit Öffnungspasswort Exit 8; nur Besitzerpasswort Exit 0, Text erkannt |
+| Defekt | abgeschnittenes PDF Exit 2 `InputFileError`; leere Datei und Textdatei als `.pdf` Exit 2 `UnsupportedImageFormatError` |
+| Bildformate mit `--image-dpi` | PNG, JPEG, BMP, GIF, WebP, TIFF alle Exit 0 |
+| Qualität an echten Seiten (14 Seiten mit fremder OCR-Textebene, Seite auf 300 dpi gerendert, Tesseract `deu+eng`, Vergleich der Wörter ab 4 Buchstaben) | Übereinstimmung im Mittel 91,6 %: Buchscans 98 bis 100 %, Handy-Scans von Formularen 77 bis 91 % (Umlautwörter bis 62 %). Das ist Übereinstimmung mit einer anderen Engine, keine Wahrheit |
+| **Prefork echt** (2 Worker, `limit_time_real` 120, 1 Cron-Thread, Stufe A mit 4 PDFs zu je 1.500 Seiten) | jeder Lauf „partially done“ nach 35,1 bis 35,6 s (120 − 70 − 15), Pause 68 s, kein Kill, keine Ausnahmen; ein PDF braucht zwei bis drei Läufe |
+
+### 14.6 Durchsatz (gerechnet, kein Gesamtlauf)
+
+Etwa 5.600 Scanseiten im Bestand des Towers: 17,5 Seiten/min bei `-j4` (rund 5,5 h reine Arbeit), bei `-j1` rund viermal so lang. Der Takt kommt dazu: Threaded etwa 64 % Auslastung bei 120 s Limit,
+Prefork mit 120 s Limit nur 35 s je Lauf (rund 37 %). Für einen Bestandslauf `limit_time_real_cron` auf einige hundert Sekunden und `-j2` bis `-j4`. HM-SRV unbekannt (dort nicht nachgezählt).
+
+### 14.7 Offen, nicht blockierend
+
+- `LC_CTYPE` und Bestand auf HM-SRV (von hier nicht erreichbar); der Status warnt bei `LC_CTYPE C`.
+- Signierte PDFs: im Bestand keine, Verhalten von `ocrmypdf` ungeprüft; fällt über die Fehlerzuordnung in `failed`, das Original bleibt abrufbar.
+- Qualität echter Scans gegen abgetippte Wahrheit; Windows echt; Postgres 17.
+- `--redo-ocr` für Seiten mit Bild und Text (14.1 Nr. 2): nur bei Bedarf.
