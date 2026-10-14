@@ -33,7 +33,7 @@ for lines in settings["pages"]:
     pages.append(image)
 stream = io.BytesIO()
 options = {"dpi": (dpi, dpi)} if dpi else {}
-if form == "TIFF" and len(pages) > 1:
+if form in ("TIFF", "MPO") and len(pages) > 1:
     options.update(save_all=True, append_images=pages[1:])
 pages[0].save(stream, form, **options)
 sys.stdout.buffer.write(stream.getvalue())
@@ -144,6 +144,11 @@ class TestImageInfo(PicturesCase, TextCase):
         self.assertEqual(self._info(picture([["one"]], form="WEBP", width=500)), (1, 500))
         self.assertEqual(self._info(picture([["one"]], form="PNG", width=600)), (1, 600))
 
+    def test_a_jpeg_with_a_second_picture_inside_is_one_page(self):
+        # The "MPO" of many phones: Pillow counts two frames, ocrmypdf makes one page of it.
+        content = picture([["one"], ["two"]], form="MPO", width=400)
+        self.assertEqual(self._info(content), (1, 400))
+
     def test_a_file_that_is_no_picture_gives_nothing(self):
         self.assertIsNone(self._info(b"this is no picture"))
         self.assertIsNone(_image_info("/nonexistent/path/to/nothing"))
@@ -252,6 +257,12 @@ class TestRealPictureRecognition(PicturesCase, TextCase):
         document, row = self._recognize(picture([["Garden roses in autumn"]], dpi=200), "dpi.png")
         self.assertEqual((row.ocr_state, row.ocr_message), ("done", False))
         self.assertEqual(self._found("roses"), document)
+
+    def test_a_jpeg_with_a_second_picture_inside_is_recognized_as_one_page(self):
+        content = picture([["Cherries on the first picture"], ["Plums on the second one"]], form="MPO", dpi=200)
+        document, row = self._recognize(content, "phone.jpg")
+        self.assertEqual((row.ocr_state, row.page_count), ("done", 1), row.ocr_message)
+        self.assertEqual(self._found("cherries"), document)
 
     def test_a_tiff_with_two_pages_is_recognized_whole(self):
         content = picture([["Apples on page one"], ["Oranges on page two"]], form="TIFF", dpi=200)

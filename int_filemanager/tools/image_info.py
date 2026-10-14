@@ -3,7 +3,9 @@
     python image_info.py <path>
 
 Answers one JSON line: ``{"frames": n, "width": w}``, or ``{"error": "..."}`` for a file that is
-no image. Only the header is read. It runs as a child process of the scheduled action because
+no image. Only the header is read. Only a TIFF has several pages: the other formats count as one
+picture although Pillow reports more frames for some (a JPEG of a phone with a second, smaller
+picture inside, "MPO", shows two), and ``ocrmypdf`` makes one page of them. It runs as a child process of the scheduled action because
 the Odoo process knows only the formats PNG, JPEG, GIF and BMP (``odoo.tools.image`` loads no
 other plug-ins of Pillow), and TIFF and WebP are among those that the recognition reads.
 """
@@ -20,7 +22,8 @@ def main(argv):
     Image.MAX_IMAGE_PIXELS = None
     try:
         with Image.open(argv[1]) as image:
-            answer = {"frames": getattr(image, "n_frames", 1), "width": image.size[0]}
+            frames = getattr(image, "n_frames", 1) if image.format == "TIFF" else 1
+            answer = {"frames": frames, "width": image.size[0]}
     except Exception as error:  # noqa: BLE001 (whatever a broken file makes Pillow raise)
         answer = {"error": f"{type(error).__name__}: {error}"}
     sys.stdout.write(json.dumps(answer) + "\n")
