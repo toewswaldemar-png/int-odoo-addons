@@ -2,6 +2,9 @@ import { onWillDestroy, useEffect, useState } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { FileViewer } from "@web/core/file_viewer/file_viewer";
 import { registry } from "@web/core/registry";
+import { attachDoubleTap } from "./double_tap";
+import { useFileViewerFrameZoom } from "./file_viewer_frame_zoom_hook";
+import { useFileViewerSwipe } from "./file_viewer_swipe_hook";
 
 // The zoom of the PDF viewer the core ships (`addons/web/static/lib/pdfjs/web/viewer.js`):
 // the same range, the same steps, the zoom around the point under the fingers or the pointer.
@@ -24,15 +27,20 @@ let nextViewerId = 1;
  * only (wheel, buttons, drag) and zooms about the middle of the screen, so a touch screen
  * cannot zoom an image at all; a PDF can, it is shown by the browser. The mouse keeps the
  * core's ways (wheel, buttons, keys, drag); the state is the core's own (`state.scale`,
- * `translate`), the fingers only drive it.
+ * `translate`), the fingers only drive it. Two fingers zoom and take the image along when they
+ * move; a finger that is left goes on moving it; a double tap sets the zoom back. One finger
+ * swipes to the next or the previous file, for every type of file (`useFileViewerSwipe`); a
+ * text zooms with two fingers in its frame (`useFileViewerFrameZoom`).
  */
 export class DocumentFileViewer extends FileViewer {
     setup() {
         super.setup();
         this.minScale = MIN_SCALE;
+        useFileViewerSwipe(this);
+        useFileViewerFrameZoom(this);
         /** @type {Map<number, {x: number, y: number}>} the fingers on the image */
         this.touches = new Map();
-        /** @type {{distance: number}|null} set while two fingers zoom */
+        /** @type {{x: number, y: number, distance: number}|null} the two fingers that zoom, at the last event */
         this.pinch = null;
         // Where the zoomer lies now, in px from its place in the middle (see `updateZoomerStyle`).
         this.shift = { x: 0, y: 0 };
@@ -54,7 +62,13 @@ export class DocumentFileViewer extends FileViewer {
                 for (const type of TOUCH_EVENTS) {
                     image.addEventListener(type, handlers[type]);
                 }
+                // A double tap on a picture that is zoomed sets the zoom back.
+                const detachDoubleTap = attachDoubleTap(image, {
+                    canDoubleTap: () => this.state.scale !== 1,
+                    onDoubleTap: () => this.resetZoom(),
+                });
                 return () => {
+                    detachDoubleTap();
                     for (const type of TOUCH_EVENTS) {
                         image.removeEventListener(type, handlers[type]);
                     }
@@ -325,7 +339,7 @@ export class DocumentFileViewer extends FileViewer {
         } else if (this.touches.size === 2) {
             // The second finger ends the move of the first and starts the zoom.
             this.onMouseupImage();
-            this.pinch = { distance: this.fingers.distance };
+            this.pinch = this.fingers;
         }
     }
 
@@ -340,11 +354,15 @@ export class DocumentFileViewer extends FileViewer {
         if (!this.pinch) {
             this.onMousemoveView(ev);
         } else if (this.touches.size === 2) {
-            // The image grows with the distance of the fingers, about their middle, and does
-            // not move while they zoom (the PDF viewer does not move either).
+            // The image grows with the distance of the fingers, about their middle as it was,
+            // and then goes along with the middle to where it is now.
             const { x, y, distance } = this.fingers;
-            this.zoomAt((this.state.scale * distance) / this.pinch.distance, x, y);
-            this.pinch = { distance };
+            const { x: fromX, y: fromY } = this.pinch;
+            this.zoomAt((this.state.scale * distance) / this.pinch.distance, fromX, fromY);
+            this.translate.x += x - fromX;
+            this.translate.y += y - fromY;
+            this.updateZoomerStyle();
+            this.pinch = { x, y, distance };
         }
     }
 
@@ -354,9 +372,12 @@ export class DocumentFileViewer extends FileViewer {
             return;
         }
         if (this.pinch) {
-            // The finger left over does not move the image: it waits until all are up.
-            if (!this.touches.size) {
+            if (this.touches.size < 2) {
                 this.pinch = null;
+                // The finger that is left goes on moving the image from where it is.
+                for (const { x, y } of this.touches.values()) {
+                    this.onMousedownImage({ button: 0, clientX: x, clientY: y });
+                }
             }
             return;
         }
