@@ -78,8 +78,10 @@ wieder auf.
 **Wann:** „OCR aktiv“ an, Zeile gelesen und `scan_pages > 0`. Eine Seite zählt als Scan, wenn sie ein Bild oder eine Form in ihren Ressourcen hat
 (`XObject`, vom Reader gemeldet) und weniger als 20 Zeichen ohne Leerraum Text; das Ergebnis steht beim Lesen als `scan` in der Seitenzeile. Leere
 Trennblätter ohne Bild zählen nicht. Grenze: ein Bild, das als Inline-Bild im Inhaltsstrom steht (kein `XObject`), wird nicht erkannt. Gemischte Seiten
-(digitaler Text plus eingescanntes Bild) bleiben unberührt (`--skip-text`). Gemessen am Bestand (Stichprobe von 500 PDFs) gingen vorher 43 % der
-PDF-Erkennungszeit an Dateien, die nur wenige kurze oder leere Seiten hatten und nichts fanden.
+(digitaler Text plus eingescanntes Bild) bleiben unberührt (`--skip-text`). Messung (14.10., 500 zufällige PDFs = 480 Zeilen, 4 Kerne, `-j2`, alter und neuer
+Code nacheinander): Warteschlange 75 Dateien mit 9.007 Seiten, jetzt 52 Dateien mit 1.583 Seiten; Erkennungszeit 3.767 s, jetzt 3.164 s (−16 %). Die
+Zeit an Dateien, die nichts fanden, sank von 587 s auf 95 s; der Rest ist echte Erkennung (rund 1.450 Seiten mit neuem Text, 2,1 s je Seite) und bleibt.
+Text danach gleich bis auf eine Seite (1.452 gegen 1.451 Seiten mit neuem Text): sie hatte kein `XObject`, die Erkennung fand dort Text.
 
 **Ablauf je Schritt (ein Abschnitt):**
 1. Zeile auf `running`, Commit (ein Absturz wird beim nächsten Lauf als Versuch gezählt).
@@ -206,5 +208,5 @@ der Datenbank, `limit_time_real_cron`). Die Liste „Texte der Dateien“ (Admin
   erkannten PDFs); OCR für gemischte Seiten (`--redo-ocr` ist mit Ausrichten nicht kombinierbar, im Bestand sehr selten); ein eigener Dienst oder Container.
 - **Paperless-ngx als Vergleich:** gleich sind Original unverändert plus Archiv-PDF nur für Scans, ein Prozess je Dokument, `skip_text`, Sidecar nicht
   indexieren. Anders: Cron statt Celery/Redis, Rechte zur Abfragezeit über Odoo-Regeln, Postgres-Volltext statt Tantivy, Abschnitts-OCR mit eigener Frist.
-- **Ungemessen:** Gesamtlauf am echten Bestand mit der Seitenauswahl (erwartet etwa die halbe PDF-Erkennungszeit; Messung mit derselben Stichprobe steht aus), Anteil der Trennblätter, Windows im Betrieb, Postgres 17, eine echte gemischte Seite für
+- **Ungemessen:** Gesamtlauf am ganzen Bestand (4.967 PDFs; die Stichprobe mal etwa 10 gerechnet: rund 2,4 h Lesen und 8,8 h Erkennen), Anteil der Trennblätter, Windows im Betrieb, Postgres 17, eine echte gemischte Seite für
   `--redo-ocr`, die gespeicherte `tsvector`-Spalte in voller Größe.
