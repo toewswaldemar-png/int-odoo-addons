@@ -1,6 +1,11 @@
 import { FileModelMixin } from "@web/core/file_viewer/file_model";
+import { url } from "@web/core/utils/urls";
 
 export const MODEL = "int.filemanager.document";
+// The binary fields that the content route serves: the file as it was uploaded, and the PDF that
+// the text recognition made of a scan (it has a text layer that the PDF viewer can search).
+const CONTENT_FIELD = "content";
+const OCR_FIELD = "ocr_content";
 // What the browser shows in an <img>; the core's list adds svg, tiff and ico, which a document
 // never has (svg is stored as text) or a browser does not show.
 const IMAGE_MIMETYPES = ["image/bmp", "image/gif", "image/jpeg", "image/png", "image/webp"];
@@ -18,6 +23,11 @@ const MEDIA_MIMETYPES = [
 // A text file is read whole into the viewer: above this size it is offered as a download.
 export const TEXT_MAX_SIZE = 2 * 1024 * 1024;
 
+/** @returns {string} the route of the core that serves a binary field of a document */
+function contentRoute(id, field) {
+    return `/web/content/${MODEL}/${id}/${field}`;
+}
+
 /**
  * A document as the core's file viewer wants a file. The core's model builds the addresses
  * of attachments; a document's bytes lie in a blob, served by the content route of the
@@ -26,16 +36,37 @@ export const TEXT_MAX_SIZE = 2 * 1024 * 1024;
 export class DocumentFile extends FileModelMixin(Object) {
     /**
      * @param {{id: number, name: string, mimetype: string, checksum: string, size: number,
-     *      hit?: {page: number, terms: string[]}}} values `hit` is the place in the file that a
-     *      full text search found: a PDF opens on its page and the viewer marks the words
+     *      ocr_checksum?: string|false, hit?: {page: number, terms: string[]}}} values
+     *      `hit` is the place in the file that a full text search found: a PDF opens on its
+     *      page and the viewer marks the words. `ocr_checksum` is the checksum of the PDF that
+     *      the text recognition made of a scan: the viewer shows that one (it can be searched),
+     *      the download is the original
      */
     constructor(values) {
         super();
         Object.assign(this, values);
     }
 
+    /** The recognized PDF if there is one, else the file. */
     get urlRoute() {
-        return `/web/content/${MODEL}/${this.id}/content`;
+        return contentRoute(this.id, this.isPdf && this.ocr_checksum ? OCR_FIELD : CONTENT_FIELD);
+    }
+
+    /** @override The browser keeps a file for good: its checksum changes with the content. */
+    get urlQueryParams() {
+        const params = super.urlQueryParams;
+        if (this.isPdf && this.ocr_checksum) {
+            params.unique = this.ocr_checksum;
+        }
+        return params;
+    }
+
+    /** @override The download is the file that was uploaded, never the recognized PDF. */
+    get downloadUrl() {
+        return url(contentRoute(this.id, CONTENT_FIELD), {
+            ...super.urlQueryParams,
+            download: true,
+        });
     }
 
     /**
@@ -67,14 +98,22 @@ export class DocumentFile extends FileModelMixin(Object) {
 
 /**
  * @param {Object} record a record of the model `int.filemanager.document` with name, mimetype,
- *      checksum and size loaded (and `content_hits`, if the list was searched by the full text)
+ *      checksum, ocr_checksum and size loaded (and `content_hits`, if the list was searched by the full text)
  * @param {Number} [hitIndex] which of the hits of the record the file shows
  * @returns {DocumentFile}
  */
 export function documentFileFromRecord(record, hitIndex = 0) {
-    const { name, mimetype, checksum, size, content_hits } = record.data;
+    const { name, mimetype, checksum, size, ocr_checksum, content_hits } = record.data;
     const hit = content_hits?.hits?.[hitIndex];
-    return new DocumentFile({ id: record.resId, name, mimetype, checksum, size, hit });
+    return new DocumentFile({
+        id: record.resId,
+        name,
+        mimetype,
+        checksum,
+        size,
+        ocr_checksum,
+        hit,
+    });
 }
 
 /**
@@ -83,7 +122,11 @@ export function documentFileFromRecord(record, hitIndex = 0) {
  * @returns {Promise<DocumentFile>} the document with the values the viewers need
  */
 export async function readDocumentFile(orm, id) {
-    const [values] = await orm.read(MODEL, [id], ["name", "mimetype", "checksum", "size"]);
+    const [values] = await orm.read(
+        MODEL,
+        [id],
+        ["name", "mimetype", "checksum", "size", "ocr_checksum"]
+    );
     return new DocumentFile(values);
 }
 

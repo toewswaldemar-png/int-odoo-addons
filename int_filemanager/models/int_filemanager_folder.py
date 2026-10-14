@@ -72,6 +72,28 @@ class IntFilemanagerFolder(models.Model):
         index=True,
     )
 
+    ocr_images = fields.Selection(
+        [
+            ("inherit", "Like the parent folder"),
+            ("on", "On"),
+            ("off", "Off"),
+        ],
+        string="Text recognition in images",
+        # The administrators only: a field that is only left out of the view could be written
+        # through RPC by every user of the filemanager, and would start the recognition of images.
+        groups="int_filemanager.int_filemanager_group_admin",
+        required=True,
+        default="inherit",
+        help="Whether the text in the images of this folder (JPEG, PNG, TIFF ...) is recognized, "
+        "so that the search finds it. A top folder that says 'like the parent folder' is off. "
+        "Nothing is recognized unless the text recognition is switched on in the settings.",
+    )
+    # What ``ocr_images`` comes to for this folder after the parent is looked at.
+    ocr_images_active = fields.Boolean(
+        string="Images are recognized here",
+        compute="_compute_ocr_images_active", store=True, recursive=True
+    )
+
     # Names are unique per folder regardless of case, like on Windows. NULLS NOT
     # DISTINCT: otherwise two top folders (parent_id IS NULL) would never collide.
     _name_per_parent = models.UniqueIndex(
@@ -84,6 +106,15 @@ class IntFilemanagerFolder(models.Model):
         for folder in self:
             inherits = folder.access_mode == "inherit" and folder.parent_id
             folder.access_folder_id = folder.parent_id.access_folder_id if inherits else folder
+
+    @api.depends("ocr_images", "parent_id.ocr_images_active")
+    def _compute_ocr_images_active(self):
+        for folder in self:
+            if folder.ocr_images == "inherit":
+                # A top folder has no parent to ask: off.
+                folder.ocr_images_active = folder.parent_id.ocr_images_active
+            else:
+                folder.ocr_images_active = folder.ocr_images == "on"
 
     def write(self, vals):
         # Archiving or restoring a folder does it on everything below, like a project does it on

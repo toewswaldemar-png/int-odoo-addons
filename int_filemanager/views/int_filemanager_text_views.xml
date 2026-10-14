@@ -24,6 +24,13 @@
                         icon="fa-refresh"
                         confirm="The text of the ticked files is thrown away and read again."
                     />
+                    <button
+                        name="action_recognize_again"
+                        type="object"
+                        string="Recognize again"
+                        icon="fa-eye"
+                        confirm="The recognition of the ticked files is thrown away and done again from the original."
+                    />
                 </header>
                 <field name="document_id" />
                 <field name="document_count" optional="show" />
@@ -33,6 +40,12 @@
                 <field name="next_page" optional="hide" />
                 <field name="attempts" optional="hide" />
                 <field name="message" />
+                <field name="ocr_state" widget="badge" optional="hide" />
+                <field name="scan_pages" optional="hide" />
+                <field name="ocr_next_page" optional="hide" />
+                <field name="ocr_found_pages" optional="hide" />
+                <field name="ocr_size" widget="int_filemanager_size" optional="hide" />
+                <field name="ocr_message" optional="hide" />
                 <field name="write_date" string="Last change" optional="show" />
                 <field name="checksum" optional="hide" />
             </list>
@@ -51,6 +64,13 @@
                         string="Read again"
                         invisible="state in ('pending', 'running')"
                         confirm="The text of this file is thrown away and read again."
+                    />
+                    <button
+                        name="action_recognize_again"
+                        type="object"
+                        string="Recognize again"
+                        invisible="state in ('pending', 'running') or ocr_state == 'running'"
+                        confirm="The recognition of this file is thrown away and done again from the original."
                     />
                     <field name="state" widget="statusbar" statusbar_visible="pending,done" />
                 </header>
@@ -73,6 +93,23 @@
                     <group invisible="not message">
                         <field name="message" />
                     </group>
+                    <group string="Text recognition" invisible="not ocr_state and not scan_pages">
+                        <group>
+                            <field name="ocr_state" widget="badge" />
+                            <field name="scan_pages" />
+                            <field name="ocr_next_page" invisible="not ocr_state" />
+                            <field name="ocr_attempts" invisible="not ocr_state" />
+                        </group>
+                        <group>
+                            <field name="ocr_found_pages" invisible="not ocr_state" />
+                            <field name="ocr_seconds_per_page" invisible="not ocr_state" />
+                            <field name="ocr_checksum" invisible="not ocr_checksum" />
+                            <field name="ocr_size" widget="int_filemanager_size" invisible="not ocr_checksum" />
+                        </group>
+                    </group>
+                    <group invisible="not ocr_message">
+                        <field name="ocr_message" />
+                    </group>
                 </sheet>
             </form>
         </field>
@@ -91,8 +128,29 @@
                 <filter name="filter_skipped" string="Skipped" domain="[('state', '=', 'skipped')]" />
                 <filter name="filter_empty" string="Without text" domain="[('state', '=', 'empty')]" />
                 <filter name="filter_done" string="Done" domain="[('state', '=', 'done')]" />
+                <separator />
+                <filter
+                    name="filter_ocr_waiting"
+                    string="Recognition waiting"
+                    domain="[('ocr_state', 'in', ('wait', 'running'))]"
+                />
+                <filter
+                    name="filter_ocr_failed"
+                    string="Recognition failed"
+                    domain="[('ocr_state', '=', 'failed')]"
+                />
+                <filter
+                    name="filter_ocr_done"
+                    string="Recognized"
+                    domain="[('ocr_state', '=', 'done')]"
+                />
                 <group>
                     <filter name="group_state" string="State" context="{'group_by': 'state'}" />
+                    <filter
+                        name="group_ocr_state"
+                        string="Recognition"
+                        context="{'group_by': 'ocr_state'}"
+                    />
                     <filter name="group_mimetype" string="Type" context="{'group_by': 'mimetype'}" />
                 </group>
             </search>
@@ -104,6 +162,15 @@
         <field name="res_model">int.filemanager.text</field>
         <field name="view_mode">list,form</field>
         <field name="context">{'search_default_filter_failed': 1}</field>
+    </record>
+
+    <!-- The scans: what the text recognition has or will do (from the settings). -->
+    <record id="int_filemanager_text_ocr_action" model="ir.actions.act_window">
+        <field name="name">Scans</field>
+        <field name="res_model">int.filemanager.text</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('ocr_state', '!=', False)]</field>
+        <field name="context">{'search_default_group_ocr_state': 1}</field>
     </record>
 
     <menuitem

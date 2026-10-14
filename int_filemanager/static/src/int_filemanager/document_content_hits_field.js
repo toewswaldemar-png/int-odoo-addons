@@ -23,12 +23,16 @@ export class DocumentContentHitsField extends Component {
     }
 
     /**
-     * A PDF has pages; the text of any other file lies in blocks that no viewer shows as such.
+     * A PDF has pages; the text of a picture is one piece (no label); the text of any other
+     * file lies in blocks that no viewer shows as such.
      * @param {{page: number}} hit
      * @returns {string}
      */
     label(hit) {
-        const { isPdf } = documentFileFromRecord(this.props.record);
+        const { isPdf, isImage } = documentFileFromRecord(this.props.record);
+        if (isImage) {
+            return "";
+        }
         return isPdf
             ? _t("p. %(page)s", { page: hit.page })
             : _t("Block %(page)s", { page: hit.page });
@@ -46,6 +50,7 @@ export const documentContentHitsField = {
     fieldDependencies: [
         { name: "mimetype", type: "char" },
         { name: "checksum", type: "char" },
+        { name: "ocr_checksum", type: "char" },
         { name: "size", type: "float" },
     ],
 };

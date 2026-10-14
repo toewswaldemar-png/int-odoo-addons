@@ -42,6 +42,11 @@
                             widget="many2many_tags"
                             invisible="access_mode != 'restricted'"
                         />
+                        <!-- Only the administrators choose which folders have their images read. -->
+                        <field
+                            name="ocr_images"
+                            groups="int_filemanager.int_filemanager_group_admin"
+                        />
                         <field name="company_id" groups="base.group_multi_company" />
                     </group>
                 </sheet>

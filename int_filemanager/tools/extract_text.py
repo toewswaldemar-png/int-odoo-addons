@@ -1,6 +1,6 @@
 """Read the text of a file, page by page. Runs as a child process of the scheduled action.
 
-    python extract_text.py <path> <mimetype> <first page> <block size> <cut size> <memory MiB>
+    python extract_text.py <path> <mimetype> <first page> <block size> <cut size> <memory MiB> [<last page>]
 
 It does not import Odoo (standard library, ``lxml`` and ``pdfminer`` only), so the parent can
 bound it in time and memory and kill it: one page of a PDF can take minutes, and in the Odoo
@@ -17,7 +17,8 @@ The answer is one JSON object per line on stdout:
 Office and text files have no pages: their text is cut into blocks of at most ``block size``
 bytes, numbered like pages. A page or block starts at ``first page``; earlier ones are skipped
 (the parent has them from a run that was stopped). ``cut size`` is the most bytes of UTF-8 one
-PDF page may have; ``memory MiB`` is how much the process may grow.
+PDF page may have; ``memory MiB`` is how much the process may grow. ``last page`` (PDF only)
+ends the reading there: the text recognition reads the pages of the section it just made.
 """
 
 import codecs
@@ -249,8 +250,11 @@ def iter_plain(path):
             yield line.rstrip("\r\n")
 
 
-def iter_pdf(path, first_page, report_pages):
-    """Yield ``(page number, text)`` from ``first_page`` on; ``report_pages(n)`` gets the count."""
+def iter_pdf(path, first_page, report_pages, last_page=0):
+    """Yield ``(page number, text)`` from ``first_page`` to ``last_page`` (0: the end).
+
+    ``report_pages(n)`` gets the count of pages of the file.
+    """
     from pdfminer.converter import TextConverter  # noqa: PLC0415
     from pdfminer.layout import LAParams  # noqa: PLC0415
     from pdfminer.pdfdocument import PDFDocument, PDFPasswordIncorrect  # noqa: PLC0415
@@ -277,6 +281,8 @@ def iter_pdf(path, first_page, report_pages):
         for number, page in enumerate(PDFPage.create_pages(document), 1):
             if number < first_page:
                 continue
+            if last_page and number > last_page:
+                break
             with io.StringIO() as content, TextConverter(
                 manager, content, laparams=laparams
             ) as device:
@@ -314,9 +320,9 @@ def emit(**message):
     sys.stdout.flush()
 
 
-def run(path, mimetype, first_page, block_size, cut_size):
+def run(path, mimetype, first_page, block_size, cut_size, last_page=0):
     if mimetype == PDF:
-        for number, text in iter_pdf(path, first_page, lambda count: emit(pages=count)):
+        for number, text in iter_pdf(path, first_page, lambda count: emit(pages=count), last_page):
             text, was_cut = cut(clean(text), cut_size)
             emit(page=number, text=text, **({"cut": True} if was_cut else {}))
         return
@@ -340,9 +346,10 @@ def run(path, mimetype, first_page, block_size, cut_size):
 def main(argv):
     path, mimetype = argv[1], argv[2]
     first_page, block_size, cut_size, memory_mib = (int(value) for value in argv[3:7])
+    last_page = int(argv[7]) if len(argv) > 7 else 0
     limit_memory(memory_mib)
     try:
-        run(path, mimetype, first_page, block_size, cut_size)
+        run(path, mimetype, first_page, block_size, cut_size, last_page)
     except MemoryError:
         emit(error="memory", message="The file needs more memory than the budget.")
         return 0

@@ -32,6 +32,7 @@ export const documentPreviewButton = {
         { name: "name", type: "char" },
         { name: "mimetype", type: "char" },
         { name: "checksum", type: "char" },
+        { name: "ocr_checksum", type: "char" },
         { name: "size", type: "float" },
     ],
 };

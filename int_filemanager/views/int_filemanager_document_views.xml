@@ -56,6 +56,7 @@
                 group_create="0"
             >
                 <field name="checksum" />
+                <field name="ocr_checksum" />
                 <templates>
                     <t t-name="menu">
                         <a role="menuitem" type="open" class="dropdown-item">Properties</a>
@@ -133,6 +134,7 @@
                     <group>
                         <field name="active" invisible="1" />
                         <field name="checksum" invisible="1" />
+                        <field name="ocr_checksum" invisible="1" />
                         <field name="name" />
                         <field name="folder_id" />
                         <field name="mimetype" />

@@ -98,6 +98,24 @@ class IntFilemanagerDocument(models.Model):
         copy=False,
         exportable=False,
     )
+    # The same for the PDF that the text recognition made of a scan (it has a text layer, the
+    # viewer searches in it). Served by ``_to_ocr_http_stream`` for the viewer only: the
+    # download is the original.
+    ocr_content = fields.Binary(
+        string="Recognized PDF (file)",
+        compute="_compute_ocr_content",
+        inverse="_inverse_content",
+        copy=False,
+        exportable=False,
+    )
+    # The checksum of that PDF, empty if there is none; the viewer asks for it to choose the
+    # address, and it changes the address of the file when the PDF changes.
+    ocr_checksum = fields.Char(
+        string="Recognized PDF",
+        compute="_compute_ocr_checksum",
+        copy=False,
+        exportable=False,
+    )
     # The text inside the file, for the search only (the pages are in ``int.filemanager.text``).
     # Not "Content": that is the label of the binary field above, Odoo warns of two alike.
     content_search = fields.Char(
@@ -130,6 +148,23 @@ class IntFilemanagerDocument(models.Model):
 
     def _inverse_content(self):
         raise UserError(self.env._("The file of a document is set by the upload only."))
+
+    def _compute_ocr_content(self):
+        self.ocr_content = False
+
+    def _compute_ocr_checksum(self):
+        # The text rows are for the administrators; the checksum of the PDF is no secret to
+        # whoever may read the document it belongs to.
+        Text = self.env["int.filemanager.text"].sudo()
+        found = {
+            row.checksum: row.ocr_checksum
+            for row in Text.search_fetch(
+                [("checksum", "in", self.mapped("checksum")), ("ocr_checksum", "!=", False)],
+                ["checksum", "ocr_checksum"],
+            )
+        }
+        for document in self:
+            document.ocr_checksum = found.get(document.checksum, False)
 
     def _compute_content_search(self):
         self.content_search = False
@@ -377,9 +412,10 @@ class IntFilemanagerDocument(models.Model):
         core, one run takes a batch only: the lock must not be held for a long time, and
         ``(done, remaining)`` makes Odoo call it again.
 
-        A blob counts as used only if a *document* has its checksum (``used`` below). Whoever
-        lets another model keep blobs of this storage must add that model's checksums there,
-        or the cleaner deletes them.
+        A blob counts as used if a *document* has its checksum, or a text row has it as its
+        recognized PDF (``used`` below). Whoever lets another model keep blobs of this storage
+        must add that model's checksums there and lock its table with the others, or the
+        cleaner deletes them. The tables are locked in a fixed order (documents, then texts).
         """
         cr = self.env.cr
         if not os.path.isdir(self._checklist_dir()):
@@ -389,18 +425,21 @@ class IntFilemanagerDocument(models.Model):
         cr.commit()
         timeout = self.env.context.get("int_filemanager_lock_timeout", GC_LOCK_TIMEOUT)
         cr.execute(SQL("SET LOCAL lock_timeout TO %s", timeout))
+        Text = self.env["int.filemanager.text"]
         try:
-            cr.execute(SQL("LOCK %s IN SHARE MODE", SQL.identifier(self._table)))
+            for table in (self._table, Text._table):
+                cr.execute(SQL("LOCK %s IN SHARE MODE", SQL.identifier(table)))
         except psycopg2.errors.LockNotAvailable:
             cr.rollback()  # a writer is busy; the next run tries again
             return 0, 0
         entries = list(itertools.islice(self._checklist_entries(), GC_BATCH))
+        names = [name for name, _path in entries]
         used = {
             checksum
             for [checksum] in self.sudo()
             .with_context(active_test=False)
-            ._read_group([("checksum", "in", [name for name, _path in entries])], ["checksum"])
-        }
+            ._read_group([("checksum", "in", names)], ["checksum"])
+        } | Text._used_ocr_checksums(names)
         for checksum, marker in entries:
             if checksum not in used:
                 _remove_file(self._blob_path(checksum))
@@ -519,6 +558,32 @@ class IntFilemanagerDocument(models.Model):
             else:
                 return document
         raise UserError(self.env._("No free name for %(name)s in this folder.", name=name))
+
+    def _to_ocr_http_stream(self):
+        """The recognized PDF of the file as a stream, for the viewer.
+
+        ``ir.binary._record_to_stream`` calls it for the field ``ocr_content``: the way in is the
+        document, so the rights and rules of the document decide, as for ``content``. The
+        checksum of the PDF is the ETag.
+        """
+        self.ensure_one()
+        checksum = self.ocr_checksum
+        if not checksum:
+            raise MissingError(self.env._("The text recognition made no PDF of this document."))
+        path = self._blob_path(checksum)
+        try:
+            stat = os.stat(path)
+        except FileNotFoundError:
+            raise MissingError(self.env._("The recognized PDF of this document is missing.")) from None
+        return Stream(
+            type="path",
+            path=path,
+            mimetype="application/pdf",
+            download_name=self.name,
+            etag=checksum,
+            last_modified=stat.st_mtime,
+            size=stat.st_size,
+        )
 
     def _to_http_stream(self):
         """The blob as a stream for the download.
