@@ -2,6 +2,10 @@
 # Exports every translatable term of int_filemanager (Python, XML views, JS, QWeb) from a
 # fresh install on the Tower test instance into a .pot next to this script's output dir:
 #   tools/check/i18n_export.sh  ->  prints the path of the fetched file (tmp)
+# With I18N_LANG=de_DE it installs the module with its translation of that language (i18n/de.po)
+# and exports that language instead: Odoo writes the file in its own layout (line breaks, order),
+# the way to bring a hand-merged .po back into the form Odoo would export.
+#   I18N_LANG=de_DE tools/check/i18n_export.sh /tmp/de.po
 # Odoo's own exporter finds the terms in static/src (JS _t(), QWeb text) too.
 set -euo pipefail
 
@@ -11,6 +15,13 @@ R="$BASE/v2i18n"
 IMAGE=odoo:19.0-hm-test
 DB=fmv2_i18n
 OUT="${1:-/tmp/int_filemanager.pot}"
+LANGUAGE="${I18N_LANG:-pot}"
+LOAD=""
+EXTENSION=pot
+if [[ "$LANGUAGE" != pot ]]; then
+  LOAD="--load-language=$LANGUAGE"
+  EXTENSION=po
+fi
 
 cd "$(git rev-parse --show-toplevel)"
 cleanup() {
@@ -26,10 +37,10 @@ ssh "$HOST" "sed -e 's/^db_name = .*/db_name = $DB/' -e 's#^data_dir = .*#data_d
   $BASE/config_v2/odoo.conf > $R/config/odoo.conf"
 ssh "$HOST" "docker exec fmtest_pg dropdb -U odoo --if-exists $DB && docker run --rm --network fmtest-net \
   -v $R/config:/etc/odoo:ro -v $R/addons:/mnt/extra-addons:ro -v $R/data:/var/lib/odoo -v $R/out:/out $IMAGE \
-  odoo -c /etc/odoo/odoo.conf -d $DB -i int_filemanager --stop-after-init --workers=0 --no-http --log-level=warn \
+  odoo -c /etc/odoo/odoo.conf -d $DB -i int_filemanager $LOAD --stop-after-init --workers=0 --no-http --log-level=warn \
   >$R/install.log 2>&1 && docker run --rm --network fmtest-net \
   -v $R/config:/etc/odoo:ro -v $R/addons:/mnt/extra-addons:ro -v $R/data:/var/lib/odoo -v $R/out:/out $IMAGE \
-  odoo i18n export -c /etc/odoo/odoo.conf -d $DB -o /out/int_filemanager.pot int_filemanager \
+  odoo i18n export -c /etc/odoo/odoo.conf -d $DB -l $LANGUAGE -o /out/int_filemanager.$EXTENSION int_filemanager \
   >$R/export.log 2>&1"
-scp -q "$HOST:$R/out/int_filemanager.pot" "$OUT"
+scp -q "$HOST:$R/out/int_filemanager.$EXTENSION" "$OUT"
 echo "$OUT"
