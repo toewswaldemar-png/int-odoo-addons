@@ -24,8 +24,8 @@ keinen Dienst. Alles geschieht in Schritten, die einzeln committet werden, und i
   `empty`, `skipped`, `failed`; dazu Seitenzahl, `next_page` (Wiederaufnahme), Versuche, `engine_version` (wer das Lesen ändert, erhöht sie: dann wird neu
   gelesen), `memory_limit_mib`. Erkennung getrennt davon: `ocr_state` (`wait`, `running`, `done`, `skipped`, `failed`), `ocr_next_page`, `ocr_file` und
   `ocr_file_size` (letzte ganze Zwischendatei), Versuche, Sekunden je Seite, `ocr_found_pages`, `ocr_checksum`/`ocr_size` des erkannten PDFs,
-  `scan_pages` (Seiten ohne Text, -1 = noch nicht gezählt).
-- **`int.filemanager.text.page`:** `text_id`, `page`, `content`. PDFs: eine Zeile je Seite. Office- und Textdateien: Blöcke von höchstens 64 KB als
+  `scan_pages` (Scanseiten, -1 = noch nicht gezählt).
+- **`int.filemanager.text.page`:** `text_id`, `page`, `content`, `scan` (Bild auf der Seite und kaum Text; Teilindex nur über diese Zeilen). PDFs: eine Zeile je Seite. Office- und Textdateien: Blöcke von höchstens 64 KB als
   Pseudo-Seiten. Obergrenze je Zeile in Bytes (650.000), darüber wird gekürzt und vermerkt (`tsvector` bricht bei 1 MB, schon beim `INSERT`).
 - **Rechte:** keine ACL für Nutzer auf den Textmodellen, Lesen nur für Filemanager-Administratoren. Gesucht wird über die Dokumente, deshalb gelten die
   Ordnerregeln; eine gleiche Prüfsumme in einem unsichtbaren Ordner verrät nichts, weil der Inhalt byte-gleich ist. Das Ordnerfeld
@@ -75,29 +75,33 @@ wieder auf.
 
 ## 7. Texterkennung (Stufe B)
 
-**Wann:** „OCR aktiv“ an, Zeile gelesen und `scan_pages > 0` (eine Seite zählt als Scan bei weniger als 20 Zeichen ohne Leerraum; leere Trennblätter laufen
-also einmal durch `ocrmypdf`). Gemischte Seiten (digitaler Text plus eingescanntes Bild) bleiben unberührt (`--skip-text`).
+**Wann:** „OCR aktiv“ an, Zeile gelesen und `scan_pages > 0`. Eine Seite zählt als Scan, wenn sie ein Bild oder eine Form in ihren Ressourcen hat
+(`XObject`, vom Reader gemeldet) und weniger als 20 Zeichen ohne Leerraum Text; das Ergebnis steht beim Lesen als `scan` in der Seitenzeile. Leere
+Trennblätter ohne Bild zählen nicht. Grenze: ein Bild, das als Inline-Bild im Inhaltsstrom steht (kein `XObject`), wird nicht erkannt. Gemischte Seiten
+(digitaler Text plus eingescanntes Bild) bleiben unberührt (`--skip-text`). Gemessen am Bestand (Stichprobe von 500 PDFs) gingen vorher 43 % der
+PDF-Erkennungszeit an Dateien, die nur wenige kurze oder leere Seiten hatten und nichts fanden.
 
 **Ablauf je Schritt (ein Abschnitt):**
 1. Zeile auf `running`, Commit (ein Absturz wird beim nächsten Lauf als Versuch gezählt).
-2. `tools/start_ocr.py` startet `ocrmypdf --skip-text --pages a-b` im Jobordner `<Filestore>/int_filemanager/.ocr/<Zeilen-ID>/`: Adressraum-Grenze auf
+2. Die Abschnittsseiten sind die nächsten Scanseiten ab `ocr_next_page` (Zeilen mit `scan`, bei Bildern die Seiten des Bildes). `tools/start_ocr.py`
+   startet `ocrmypdf --skip-text --pages 3,7,12-14` (nur diese Seiten, die übrigen übernimmt `ocrmypdf` unverändert) im Jobordner `<Filestore>/int_filemanager/.ocr/<Zeilen-ID>/`: Adressraum-Grenze auf
    den Hard-Wert, absolute Priorität (`nice`), `OMP_THREAD_LIMIT=1`, `TMPDIR` im Jobordner, dann `execvp`. Ausgabe `upto-<letzte Seite>.pdf.tmp`, `fsync`,
    atomar umbenannt. Windows: direkter Start, Beenden per `psutil`.
 3. Frist gerissen: der ganze Prozessbaum wird beendet (`SIGTERM`, nach 5 s `SIGKILL`), die Zeit je Seite verdoppelt sich (der nächste Abschnitt wird
    kleiner). Ein Versuch gegen die Datei zählt nur, wenn eine einzelne Seite eine faire Zeit hatte (60 s, in kurzen Läufen 80 % des Budgets) und trotzdem nicht fertig wurde. Ist
    die Zeit je Seite so groß geworden, dass keine Seite mehr passt, wird trotzdem eine einzelne Seite versucht, wenn die Restzeit fair ist (sonst käme
    die Datei nie mehr dran).
-4. Erfolg: der Text der Abschnittsseiten wird aus der neuen Datei gelesen und ersetzt die Seitenzeilen, im selben Commit wie `ocr_next_page`, `ocr_file`
+4. Erfolg: der Text genau der Abschnittsseiten wird aus der neuen Datei gelesen (der Reader bekommt die Seitenliste) und ersetzt die Seitenzeilen, im selben Commit wie `ocr_next_page` (letzte Abschnittsseite + 1), `ocr_file`
    und `ocr_file_size`. Die alte Zwischendatei wird erst nach dem Commit gelöscht (`postcommit`, ganz am Ende des Schritts). Neue Treffer sind sofort suchbar.
-5. Letzter Abschnitt: das erkannte PDF geht durch `_store_stream` und `_publish_blob` in den Speicher und wird nur behalten, wenn die Erkennung mindestens
+5. Letzter Abschnitt (keine Scanseite mehr ab `ocr_next_page`): das erkannte PDF geht durch `_store_stream` und `_publish_blob` in den Speicher und wird nur behalten, wenn die Erkennung mindestens
    einer Seite Text gab (sonst wäre es eine zweite Kopie für nichts). Der Jobordner wird gelöscht, `state` neu bestimmt (`empty` → `done`).
    Dateisystemfehler im Schritt laufen in einem Savepoint und werden der Zeile zugeordnet (Platte voll → Pause, sonst ein Versuch).
 
-**Größe des Abschnitts:** `(Restzeit − 6 s) × 0,7 / Sekunden je Seite`, mindestens 1, höchstens 100, ohne Messung höchstens 10 Seiten bei angenommenen 5 s je
+**Größe des Abschnitts (Seitenzahl):** `(Restzeit − 6 s) × 0,7 / Sekunden je Seite`, mindestens 1, höchstens 100, ohne Messung höchstens 10 Seiten bei angenommenen 5 s je
 Seite; die Zeit je Seite wird nach jedem Abschnitt geglättet (Hälfte alt, Hälfte neu, ohne den festen Aufwand von 6 s).
 
 **Wiederaufnahme nach Absturz:** Zeile zeigt immer auf die letzte ganze Zwischendatei. Fehlt sie oder hat sie eine andere Größe, beginnt die Erkennung bei
-Seite 1 mit dem Original und verbraucht keinen Versuch. Ein Abschnitt zweimal mit `--skip-text` ändert das Ergebnis nicht. Zeilen, die beim Start eines Laufs
+Seite 1 mit dem Original und verbraucht keinen Versuch (die Scanseiten werden aus den Seitenzeilen neu bestimmt). Ein Abschnitt zweimal mit `--skip-text` ändert das Ergebnis nicht. Zeilen, die beim Start eines Laufs
 noch `running` sind, gehen auf `wait` zurück (+1 Versuch).
 
 **Fehlerzuordnung** (`tools/ocr_plan.py`, `classify`, reine Funktion; Exit-Codes von `ocrmypdf`):
@@ -202,5 +206,5 @@ der Datenbank, `limit_time_real_cron`). Die Liste „Texte der Dateien“ (Admin
   erkannten PDFs); OCR für gemischte Seiten (`--redo-ocr` ist mit Ausrichten nicht kombinierbar, im Bestand sehr selten); ein eigener Dienst oder Container.
 - **Paperless-ngx als Vergleich:** gleich sind Original unverändert plus Archiv-PDF nur für Scans, ein Prozess je Dokument, `skip_text`, Sidecar nicht
   indexieren. Anders: Cron statt Celery/Redis, Rechte zur Abfragezeit über Odoo-Regeln, Postgres-Volltext statt Tantivy, Abschnitts-OCR mit eigener Frist.
-- **Ungemessen:** Gesamtlauf am echten Bestand (Anteil der Trennblätter, Gesamtdauer), Windows im Betrieb, Postgres 17, eine echte gemischte Seite für
+- **Ungemessen:** Gesamtlauf am echten Bestand mit der Seitenauswahl (erwartet etwa die halbe PDF-Erkennungszeit; Messung mit derselben Stichprobe steht aus), Anteil der Trennblätter, Windows im Betrieb, Postgres 17, eine echte gemischte Seite für
   `--redo-ocr`, die gespeicherte `tsvector`-Spalte in voller Größe.
