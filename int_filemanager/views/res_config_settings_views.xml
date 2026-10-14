@@ -16,6 +16,121 @@
                             <field name="int_filemanager_import_root" placeholder="/mnt/hm-daten" />
                         </setting>
                     </block>
+                    <block title="Search in files" name="int_filemanager_text_block">
+                        <setting
+                            id="int_filemanager_text_time"
+                            string="Time reserve"
+                            help="The text of the files is read in the background. A run stops this many seconds before Odoo's own time limit."
+                        >
+                            <field name="int_filemanager_time_reserve" />
+                        </setting>
+                        <setting
+                            id="int_filemanager_text_memory"
+                            string="Memory per file"
+                            help="Reading one file may use this much memory (MiB). A file that needs more is skipped."
+                        >
+                            <field name="int_filemanager_memory_mib" />
+                        </setting>
+                        <setting
+                            id="int_filemanager_text_sizes"
+                            string="Text sizes"
+                            help="Blocks of text for files without pages (KiB), and the largest page of a PDF (bytes)."
+                        >
+                            <div class="content-group">
+                                <div class="row mt8">
+                                    <label class="col-lg-4" for="int_filemanager_text_block_kib" />
+                                    <field name="int_filemanager_text_block_kib" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_text_cut_bytes" />
+                                    <field name="int_filemanager_text_cut_bytes" />
+                                </div>
+                            </div>
+                        </setting>
+                        <setting
+                            id="int_filemanager_text_search"
+                            string="Search"
+                            help="Memory (MiB) the database may use for one search in the text; the number of tries for a file that stops the reading."
+                        >
+                            <div class="content-group">
+                                <div class="row mt8">
+                                    <label class="col-lg-4" for="int_filemanager_work_mem_mib" />
+                                    <field name="int_filemanager_work_mem_mib" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_max_attempts" />
+                                    <field name="int_filemanager_max_attempts" />
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Reading of the files" name="int_filemanager_text_status_block">
+                        <setting
+                            id="int_filemanager_text_status"
+                            string="Status"
+                            help="The text of the files is read in the background; only what is done can be found by the search in the files."
+                        >
+                            <div class="content-group">
+                                <div class="row mt8">
+                                    <label class="col-lg-4" for="int_filemanager_text_done" />
+                                    <field name="int_filemanager_text_done" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_text_empty" />
+                                    <field name="int_filemanager_text_empty" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_text_pending" />
+                                    <field name="int_filemanager_text_pending" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_text_running" />
+                                    <field name="int_filemanager_text_running" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_text_missing" />
+                                    <field name="int_filemanager_text_missing" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_text_skipped" />
+                                    <field name="int_filemanager_text_skipped" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_text_failed" />
+                                    <field name="int_filemanager_text_failed" />
+                                </div>
+                                <div class="mt8">
+                                    <button
+                                        name="%(int_filemanager.int_filemanager_text_action)d"
+                                        type="action"
+                                        string="Show the files"
+                                        class="btn-link"
+                                        icon="oi-arrow-right"
+                                    />
+                                </div>
+                            </div>
+                        </setting>
+                        <setting
+                            id="int_filemanager_text_run"
+                            string="Scheduled action"
+                            help="How long one run of the scheduled action lasts, which program reads the PDF files, and when it ran last."
+                        >
+                            <div class="content-group">
+                                <div class="row mt8">
+                                    <label class="col-lg-4" for="int_filemanager_text_budget" />
+                                    <field name="int_filemanager_text_budget" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_text_reader" />
+                                    <field name="int_filemanager_text_reader" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_text_lastcall" />
+                                    <field name="int_filemanager_text_lastcall" />
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

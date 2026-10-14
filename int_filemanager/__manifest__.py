@@ -18,8 +18,10 @@
         "views/int_filemanager_document_views.xml",
         "views/int_filemanager_import_views.xml",
         "views/int_filemanager_import_line_views.xml",
+        "views/int_filemanager_text_views.xml",
         "views/res_config_settings_views.xml",
         "data/int_filemanager_import_data.xml",
+        "data/int_filemanager_text_data.xml",
     ],
     "assets": {
         "web.assets_backend": [

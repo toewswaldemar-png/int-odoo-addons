@@ -149,6 +149,7 @@
                 <field name="name" />
                 <field name="folder_id" />
                 <field name="tag_ids" />
+                <field name="content_search" string="Full text" />
                 <filter
                     name="filter_archived"
                     string="Archived"

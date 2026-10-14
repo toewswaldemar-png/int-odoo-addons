@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="int_filemanager_text_view_list" model="ir.ui.view">
+        <field name="name">int.filemanager.text.view.list</field>
+        <field name="model">int.filemanager.text</field>
+        <field name="arch" type="xml">
+            <!-- The rows are made and filled by the scheduled action: nothing is made or changed
+                 by hand. Only "Read again" acts on the ticked rows. -->
+            <list
+                create="0"
+                edit="0"
+                delete="0"
+                import="0"
+                duplicate="0"
+                decoration-danger="state == 'failed'"
+                decoration-warning="state == 'skipped'"
+                decoration-muted="state in ('empty', 'done')"
+            >
+                <header>
+                    <button
+                        name="action_read_again"
+                        type="object"
+                        string="Read again"
+                        icon="fa-refresh"
+                        confirm="The text of the ticked files is thrown away and read again."
+                    />
+                </header>
+                <field name="document_id" />
+                <field name="document_count" optional="show" />
+                <field name="mimetype" optional="show" />
+                <field name="state" widget="badge" />
+                <field name="page_count" optional="show" />
+                <field name="next_page" optional="hide" />
+                <field name="attempts" optional="hide" />
+                <field name="message" />
+                <field name="write_date" string="Last change" optional="show" />
+                <field name="checksum" optional="hide" />
+            </list>
+        </field>
+    </record>
+
+    <record id="int_filemanager_text_view_form" model="ir.ui.view">
+        <field name="name">int.filemanager.text.view.form</field>
+        <field name="model">int.filemanager.text</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0" duplicate="0">
+                <header>
+                    <button
+                        name="action_read_again"
+                        type="object"
+                        string="Read again"
+                        invisible="state in ('pending', 'running')"
+                        confirm="The text of this file is thrown away and read again."
+                    />
+                    <field name="state" widget="statusbar" statusbar_visible="pending,done" />
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="document_id" />
+                            <field name="document_count" />
+                            <field name="mimetype" />
+                            <field name="checksum" />
+                        </group>
+                        <group>
+                            <field name="page_count" />
+                            <field name="next_page" />
+                            <field name="attempts" />
+                            <field name="engine_version" />
+                            <field name="memory_limit_mib" invisible="state != 'skipped'" />
+                        </group>
+                    </group>
+                    <group invisible="not message">
+                        <field name="message" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_filemanager_text_view_search" model="ir.ui.view">
+        <field name="name">int.filemanager.text.view.search</field>
+        <field name="model">int.filemanager.text</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="mimetype" />
+                <field name="checksum" />
+                <field name="message" />
+                <filter name="filter_waiting" string="Waiting" domain="[('state', 'in', ('pending', 'running'))]" />
+                <filter name="filter_failed" string="Failed" domain="[('state', '=', 'failed')]" />
+                <filter name="filter_skipped" string="Skipped" domain="[('state', '=', 'skipped')]" />
+                <filter name="filter_empty" string="Without text" domain="[('state', '=', 'empty')]" />
+                <filter name="filter_done" string="Done" domain="[('state', '=', 'done')]" />
+                <group>
+                    <filter name="group_state" string="State" context="{'group_by': 'state'}" />
+                    <filter name="group_mimetype" string="Type" context="{'group_by': 'mimetype'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_filemanager_text_action" model="ir.actions.act_window">
+        <field name="name">Texts of the files</field>
+        <field name="res_model">int.filemanager.text</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_failed': 1}</field>
+    </record>
+
+    <menuitem
+        id="int_filemanager_text_menu"
+        name="Texts of the files"
+        parent="menu_int_filemanager_root"
+        action="int_filemanager_text_action"
+        groups="int_filemanager.int_filemanager_group_admin"
+        sequence="30"
+    />
+</odoo>

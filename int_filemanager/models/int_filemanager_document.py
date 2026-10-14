@@ -12,8 +12,11 @@ from psycopg2 import IntegrityError
 
 from odoo import api, fields, models
 from odoo.exceptions import MissingError, UserError
+from odoo.fields import Domain
 from odoo.http import Stream
 from odoo.tools import SQL
+
+from .int_filemanager_text_page import folded
 
 BLOB_FOLDER = "int_filemanager"
 UPLOAD_FOLDER = ".upload"
@@ -90,6 +93,14 @@ class IntFilemanagerDocument(models.Model):
         copy=False,
         exportable=False,
     )
+    # The text inside the file, for the search only (the pages are in ``int.filemanager.text``).
+    # Not "Content": that is the label of the binary field above, Odoo warns of two alike.
+    content_search = fields.Char(
+        string="Full text",
+        compute="_compute_content_search",
+        search="_search_content_search",
+        exportable=False,
+    )
 
     _name_per_folder = models.UniqueIndex(
         '(folder_id, lower(name COLLATE "und-x-icu")) WHERE active',
@@ -107,6 +118,58 @@ class IntFilemanagerDocument(models.Model):
 
     def _inverse_content(self):
         raise UserError(self.env._("The file of a document is set by the upload only."))
+
+    def _compute_content_search(self):
+        self.content_search = False
+
+    def _search_content_search(self, operator, value):
+        """Documents whose file has these words in it (``websearch`` syntax: quotes, ``-``, ``or``).
+
+        Words, not letters: ``Mueller`` finds ``Müller`` and the other way round, ``Haus`` finds
+        ``Häuser``, ``Hau`` finds nothing. A text belongs to a blob, so every document with the
+        checksum is found; the rules of the folders still decide which of them the user sees,
+        as the search runs over the documents. Equal checksum means equal content, nothing
+        is given away by a hit in a folder the user cannot see.
+        """
+        if operator == "ilike" and isinstance(value, str):
+            values = [value]
+        elif operator == "in" and value and all(isinstance(item, str) for item in value):
+            values = list(value)  # the ORM turns ``=`` into ``in``
+        else:
+            return NotImplemented
+        domains = [Domain.custom(to_sql=self._content_sql(item)) for item in values if item.strip()]
+        return Domain.OR(domains) if domains else Domain.TRUE
+
+    @api.model
+    def _content_sql(self, words):
+        def to_sql(model, alias, query):
+            # A word that is on most pages makes the list of hits so long that PostgreSQL, with
+            # the small standard memory, works it out again and again (minutes instead of
+            # seconds). More memory for this transaction only, and no parallel workers (each
+            # would take that much again).
+            work_mem = model.env["int.filemanager.text"]._setting("work_mem_mib")
+            model.env.cr.execute(
+                SQL(
+                    "SELECT set_config('work_mem', %s, true),"
+                    " set_config('max_parallel_workers_per_gather', '0', true)",
+                    f"{work_mem}MB",
+                )
+            )
+            return SQL(
+                """
+                %(checksum)s IN (
+                    SELECT text.checksum
+                      FROM int_filemanager_text_page page
+                      JOIN int_filemanager_text text ON text.id = page.text_id
+                     WHERE to_tsvector('german', %(content)s)
+                           @@ websearch_to_tsquery('german', %(words)s))
+                """,
+                checksum=model._field_to_sql(alias, "checksum", query),
+                content=SQL(folded("page.content")),
+                words=SQL(folded("%s::text"), words),
+            )
+
+        return to_sql
 
     def write(self, vals):
         # ``readonly`` holds in the interface only: through RPC a user could point a document
