@@ -135,4 +135,22 @@
             </xpath>
         </field>
     </record>
+
+    <!-- The settings of the module in the menu, as the core modules do it (the context "module"
+         opens the page at the section of the module). -->
+    <record id="res_config_settings_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'int_filemanager', 'bin_size': False}</field>
+    </record>
+
+    <menuitem
+        id="res_config_settings_menu"
+        name="Settings"
+        parent="menu_int_filemanager_root"
+        action="res_config_settings_action"
+        groups="base.group_system"
+        sequence="90"
+    />
 </odoo>

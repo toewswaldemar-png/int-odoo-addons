@@ -44,7 +44,9 @@ env["res.users"].sudo().create({
     "name": "Files tester",
     "login": "tester",
     "password": password,
-    "group_ids": [(6, 0, [env.ref("base.group_user").id, group_user.id, group_admin.id])],
+    "group_ids": [
+        (6, 0, [env.ref("base.group_user").id, env.ref("base.group_system").id, group_user.id, group_admin.id]),
+    ],
 })
 env.cr.commit()
 open("/out/LOGIN.txt", "w").write(f"login: tester\npassword: {password}\n")
