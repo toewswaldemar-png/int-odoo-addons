@@ -410,5 +410,9 @@ Weiter offen:
    (Threaded und Prefork, Zeitbudget je Betriebsart, Wiederholaufrufe kehren sofort zurück), Aufräumer, Tests (inklusive Sicherheit und `LC_CTYPE C`). Die Entscheidungen in Abschnitt 12 sind gefallen;
    offen sind nur Dinge, die Stufe A nicht blockieren.
 2. Viewer-Anbindung (vorher JS-Regeln `js_framework`, `js_fields` lesen; Browser-Test des Hash-Wechsels), Treffer-Ansicht.
+   **(14.10.) Gebaut, abgenommen, gepusht (da89207):** Suchfeld setzt die Wörter per `context="{'int_filemanager_words': self}"` in den Kontext, Feld `content_hits`
+   (`int.filemanager.text.page._content_hits`) liefert Seiten und Textauszüge, Listenspalte nur bei Volltextsuche. Der Hash `search=` von pdf.js blieb ungenutzt: er startet
+   die Suche zu früh und setzt das Wort an den oberen Rand; der Viewer markiert nach dem Laden selbst (nur ganze Wörter, zentriert über `scrollMatchIntoView`).
+   Das Formular springt nicht zur Fundstelle (nicht umgesetzt). Die Suche findet `Haus` nicht in `Häuser` (Faltung → `haeuser` → Stamm `haeus`).
 3. Stufe B erst, wenn Wiederaufnahme, OCR-Modi, Prefork-Budget und Verwaltung der abgeleiteten PDFs widerspruchsfrei spezifiziert und getestet sind: OCR-Cron mit Abschnitten nach Zeitbudget,
    Einstellungen, Status, Ordner-Schalter.
