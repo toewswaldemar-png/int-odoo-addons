@@ -1,13 +1,13 @@
 """The rules of the text recognition, as plain functions: no Odoo, no files, no processes.
 
-The scheduled action cuts a file into sections of pages and runs ``ocrmypdf`` on one section at
-a time (see ``start_ocr.py``). What decides how it goes lives here, so each rule can be tried
+The scheduled action cuts the pages of a file that are scans into sections and runs ``ocrmypdf``
+on one section at a time (see ``start_ocr.py``). What decides how it goes lives here, so each rule can be tried
 with numbers alone:
 
 - ``section_pages``, ``measured_seconds_per_page``, ``smoothed``, ``after_timeout``: how many
   pages the next section has, and what a section that ran out of time teaches;
 - ``classify``: what to do after ``ocrmypdf`` ended (exit code and error text);
-- ``section_command``: the arguments for one section;
+- ``page_ranges``, ``section_command``: the page list and the arguments for one section;
 - ``estimate_dpi``: the resolution of an image that has none.
 
 Times are seconds. The answers that are words ("done", "again" ...) are constants below.
@@ -176,12 +176,22 @@ def estimate_dpi(width_pixels):
     return max(round(width_pixels / A4_WIDTH_INCHES), 1)
 
 
+def page_ranges(numbers):
+    """The pages as ``ocrmypdf --pages`` takes them: ``[3, 7, 12, 13, 14]`` is ``"3,7,12-14"``."""
+    parts = []
+    for number in sorted(set(numbers)):
+        if parts and number == parts[-1][1] + 1:
+            parts[-1][1] = number
+        else:
+            parts.append([number, number])
+    return ",".join(str(first) if first == last else f"{first}-{last}" for first, last in parts)
+
+
 def section_command(
     program,
     source,
     target,
-    first_page,
-    last_page,
+    pages,
     *,
     languages,
     jobs,
@@ -190,9 +200,9 @@ def section_command(
     add=frozenset(),
     image_dpi=None,
 ):
-    """The command line for one section: ``ocrmypdf`` on pages ``first_page`` to ``last_page``.
+    """The command line for one section: ``ocrmypdf`` on the page numbers in ``pages``.
 
-    Without ``FORCE`` pages that have text are left alone (``--skip-text``); with it every page
+    The other pages of the file are taken over as they are. Without ``FORCE`` pages that have text are left alone (``--skip-text``); with it every page
     is rasterized and read. Deskew and rotation are left out where the caller says so.
 
     :param add: what an earlier try of this section added, see ``classify``
@@ -202,7 +212,7 @@ def section_command(
         program,
         "--force-ocr" if FORCE in add else "--skip-text",
         "--pages",
-        f"{first_page}-{last_page}",
+        page_ranges(pages),
         "-l",
         languages,
         "-j",

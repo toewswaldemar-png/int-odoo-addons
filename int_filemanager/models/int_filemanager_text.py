@@ -28,7 +28,7 @@ _logger = logging.getLogger(__name__)
 
 CRON_XMLID = "int_filemanager.int_filemanager_text_cron"
 # Whoever changes how the text is read raises this: the texts are read again.
-ENGINE_VERSION = 1
+ENGINE_VERSION = 2
 
 PDF = "application/pdf"
 OFFICE_TYPES = (
@@ -62,8 +62,8 @@ IMAGE_INFO = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "
 OCR_FOLDER = ".ocr"
 # What a run of the recognition says: it did a step, it has nothing to do, it has no time left.
 OCR_PROGRESS, OCR_IDLE, OCR_NO_TIME = "progress", "idle", "no_time"
-# A page with less text than this (letters, without white space) counts as a scan; only the
-# start of the page is looked at.
+# A page with a picture and less text than this (letters, without white space) counts as a scan;
+# only the start of the page is looked at.
 SCAN_PAGE_CHARS = 20
 SCAN_PAGE_LOOK = 2000
 # The setup (a missing language, a full disk) keeps the recognition from starting for this long.
@@ -174,6 +174,11 @@ def _last_line(text):
     """The last line of a text that has something in it, short (for a message)."""
     lines = [line.strip() for line in (text or "").splitlines() if line.strip()]
     return lines[-1][:200] if lines else ""
+
+
+def _is_scan_text(text):
+    """Whether this is (almost) no text: the start of the page, without white space, is short."""
+    return len("".join(text[:SCAN_PAGE_LOOK].split())) < SCAN_PAGE_CHARS
 
 
 class IntFilemanagerText(models.Model):
@@ -346,20 +351,27 @@ class IntFilemanagerText(models.Model):
         Text.flush_model()
         counts = dict.fromkeys(("wait", "running", "done", "skipped", "failed"), 0)
         counts.update(Text._read_group([("ocr_state", "!=", False)], ["ocr_state"], ["__count"]))
-        # A picture whose pages are not counted yet counts as one page.
+        # A picture whose pages are not counted yet counts as one page; a PDF has its scans left.
+        self.env["int.filemanager.text.page"].flush_model()
         [[pages_left, seconds_left]] = self.env.execute_query(
             SQL(
                 """
                 SELECT coalesce(sum(left_pages), 0),
                        coalesce(sum(left_pages * CASE WHEN ocr_seconds_per_page > 0
                                                       THEN ocr_seconds_per_page ELSE %s END), 0)
-                  FROM (SELECT ocr_seconds_per_page,
-                               CASE WHEN page_count > 0 THEN greatest(page_count - ocr_next_page + 1, 0)
-                                    ELSE 1 END AS left_pages
-                          FROM int_filemanager_text
-                         WHERE ocr_state IN ('wait', 'running')) waiting
+                  FROM (SELECT item.ocr_seconds_per_page,
+                               CASE WHEN coalesce(item.page_count, 0) <= 0 THEN 1
+                                    WHEN item.mimetype IN %s
+                                    THEN greatest(item.page_count - item.ocr_next_page + 1, 0)
+                                    ELSE (SELECT count(*) FROM int_filemanager_text_page page
+                                           WHERE page.text_id = item.id AND page.scan
+                                             AND page.page >= item.ocr_next_page)
+                               END AS left_pages
+                          FROM int_filemanager_text item
+                         WHERE item.ocr_state IN ('wait', 'running')) waiting
                 """,
                 ocr_plan.DEFAULT_SECONDS_PER_PAGE,
+                IMAGE_TYPES,
             )
         )
         [[pdf_size]] = Text._read_group([], [], ["ocr_size:sum"])
@@ -714,7 +726,7 @@ class IntFilemanagerText(models.Model):
         return Document._blob_path(self.checksum)
 
     @api.model
-    def _reader_command(self, path, mimetype, first_page, last_page=0):
+    def _reader_command(self, path, mimetype, first_page, pages=()):
         return [
             sys.executable,
             "-I",
@@ -725,17 +737,19 @@ class IntFilemanagerText(models.Model):
             str(self._setting("text_block_kib") * 1024),
             str(self._setting("text_cut_bytes")),
             str(self._setting("memory_mib")),
-            str(last_page),
+            ",".join(str(number) for number in pages),
         ]
 
     @api.model
-    def _run_reader(self, path, mimetype, first_page, seconds, last_page=0):
+    def _run_reader(self, path, mimetype, first_page, seconds, pages=()):
         """Run the reader for at most ``seconds`` and collect what it says.
 
-        :return: ``{"pages": [(n, text, cut)], "count", "done", "error", "message", "timeout",
-            "exit"}``; a reader that was stopped at the limit has given the pages it finished
+        :param pages: the page numbers to read (a PDF); none: from ``first_page`` to the end
+        :return: ``{"pages": [(n, text, cut, image)], "count", "done", "error", "message",
+            "timeout", "exit"}``; a reader that was stopped at the limit has given the pages it
+            finished; ``image`` is whether the page has a picture (``None``: not a PDF page)
         """
-        command = self._reader_command(path, mimetype, first_page, last_page)
+        command = self._reader_command(path, mimetype, first_page, pages)
         process = subprocess.Popen(  # noqa: S603 (own script, own interpreter, no shell)
             command,
             stdin=subprocess.DEVNULL,
@@ -769,7 +783,7 @@ class IntFilemanagerText(models.Model):
             except ValueError:
                 continue  # the last line of a reader that was killed
             if "page" in data:
-                result["pages"].append((data["page"], data["text"], bool(data.get("cut"))))
+                result["pages"].append((data["page"], data["text"], bool(data.get("cut")), data.get("image")))
             elif "pages" in data:
                 result["count"] = data["pages"]
             elif data.get("done"):
@@ -844,16 +858,24 @@ class IntFilemanagerText(models.Model):
         An entry for the search is limited to 1 MB; it is not the size of the text that decides
         but the number of different words, so the limit in bytes cannot rule it out. The
         pages are written together, and one by one only if that failed.
-        :param pages: ``[(number, text, was_cut)]``
+        :param pages: ``[(number, text, was_cut, has_picture)]``
         :return: notes for the row, for pages that were cut
         """
         Page = self.env["int.filemanager.text.page"]
         notes = [
             self.env._("Page %(page)s was cut at the size limit.", page=number)
-            for number, _text, was_cut in pages
+            for number, _text, was_cut, _picture in pages
             if was_cut
         ]
-        values = [{"text_id": self.id, "page": number, "content": text} for number, text, _cut in pages]
+        values = [
+            {
+                "text_id": self.id,
+                "page": number,
+                "content": text,
+                "scan": bool(picture) and _is_scan_text(text),
+            }
+            for number, text, _cut, picture in pages
+        ]
         try:
             with self.env.cr.savepoint():
                 Page.create(values)
@@ -881,30 +903,23 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _scan_page_counts(self, ids):
-        """``{row id: number of pages with (almost) no text}``; rows without such a page are left out.
-
-        Only the start of a page is looked at (a page of 500 KB would cost a lot to measure).
-        """
+        """``{row id: number of scans (pages with a picture and (almost) no text)}``; rows without one are left out."""
         self.env["int.filemanager.text.page"].flush_model()
         return dict(
             self.env.execute_query(
                 SQL(
                     """
                     SELECT text_id, count(*) FROM int_filemanager_text_page
-                     WHERE text_id IN %s
-                       AND length(regexp_replace(
-                               left(coalesce(content, ''), %s), '[[:space:]]', '', 'g')) < %s
+                     WHERE text_id IN %s AND scan
                      GROUP BY text_id
                     """,
                     tuple(ids),
-                    SCAN_PAGE_LOOK,
-                    SCAN_PAGE_CHARS,
                 )
             )
         )
 
     def _count_scan_pages(self):
-        """The pages of this PDF that have (almost) no text: scans. Other files have none."""
+        """The pages of this PDF that are scans. Other files have none."""
         self.ensure_one()
         if self.mimetype != PDF:
             return 0
@@ -1057,6 +1072,37 @@ class IntFilemanagerText(models.Model):
             whole = False
         return path if whole else False
 
+    def _ocr_pages_left(self):
+        """How many pages the recognition has still to do: the scans from ``ocr_next_page`` on.
+
+        A picture has its frames (no rows of pages); a PDF has the pages that are scans.
+        """
+        self.ensure_one()
+        if self.mimetype in IMAGE_TYPES:
+            return max(self.page_count - self.ocr_next_page + 1, 0)
+        return len(self._ocr_pages(None))
+
+    def _ocr_pages(self, limit):
+        """The numbers of the next ``limit`` pages to recognize, in order (``None``: all)."""
+        self.ensure_one()
+        if self.mimetype in IMAGE_TYPES:
+            last = self.page_count if limit is None else min(self.page_count, self.ocr_next_page + limit - 1)
+            return list(range(self.ocr_next_page, last + 1))
+        self.env["int.filemanager.text.page"].flush_model()
+        rows = self.env.execute_query(
+            SQL(
+                """
+                SELECT page FROM int_filemanager_text_page
+                 WHERE text_id = %s AND scan AND page >= %s
+                 ORDER BY page LIMIT %s
+                """,
+                self.id,
+                self.ocr_next_page,
+                limit,
+            )
+        )
+        return [number for [number] in rows]
+
     def _ocr_section(self, deadline):
         """Recognize the next section of the pages of this file, within the time.
 
@@ -1084,8 +1130,7 @@ class IntFilemanagerText(models.Model):
                 self._ocr_fail("bad_file")
                 return OCR_PROGRESS
             self.write({"page_count": info[0]})
-        first = self.ocr_next_page
-        left = self.page_count - first + 1
+        left = self._ocr_pages_left()
         if left < 1:
             self._ocr_finish()
             return OCR_PROGRESS
@@ -1095,7 +1140,8 @@ class IntFilemanagerText(models.Model):
         pages = ocr_plan.section_pages(run_until - time.monotonic(), self.ocr_seconds_per_page, left, fair)
         if not pages:
             return OCR_NO_TIME
-        last = first + pages - 1
+        numbers = self._ocr_pages(pages)
+        last = numbers[-1]
         row_id, max_attempts = self.id, self._setting("max_attempts")
         self.write({"ocr_state": "running"})
         self.env["ir.cron"]._commit_progress()
@@ -1115,8 +1161,7 @@ class IntFilemanagerText(models.Model):
                     tools["program"],
                     source,
                     target,
-                    first,
-                    last,
+                    numbers,
                     languages=options["languages"],
                     jobs=options["jobs"],
                     output_type=options["output_type"],
@@ -1151,7 +1196,7 @@ class IntFilemanagerText(models.Model):
             else:
                 # In a savepoint: a fault of the disk half way leaves nothing half done in the database.
                 with self.env.cr.savepoint():
-                    row._ocr_conclude(outcome, stderr, (first, last, target, name, pages, used, deadline), dpi)
+                    row._ocr_conclude(outcome, stderr, (numbers, target, name, used, deadline), dpi)
         except OSError as error:
             self._ocr_io_failed(row_id, error)
         return OCR_PROGRESS
@@ -1227,9 +1272,9 @@ class IntFilemanagerText(models.Model):
     def _ocr_conclude(self, outcome, stderr, section, dpi=None):
         """Do what the rules say about the end of the program (see ``ocr_plan.classify``)."""
         self.ensure_one()
-        first, last, target, name, pages, used, deadline = section
+        numbers, target, name, used, deadline = section
         if outcome.action == ocr_plan.DONE:
-            self._ocr_accept(first, last, target, name, pages, used, deadline)
+            self._ocr_accept(numbers, target, name, used, deadline)
             if dpi and dpi < ocr_plan.LOW_DPI and self.ocr_state != "failed":
                 self.ocr_message = self.env._(
                     "The picture has no resolution; %(dpi)s dpi was assumed, the text may not be recognized.",
@@ -1249,31 +1294,34 @@ class IntFilemanagerText(models.Model):
             self._ocr_block(outcome.reason, _last_line(stderr))
             self.write({"ocr_state": "wait"})
 
-    def _ocr_accept(self, first, last, target, name, pages, used, deadline):
-        """Take over a finished section: its file, and the text of its pages, in one commit."""
+    def _ocr_accept(self, numbers, target, name, used, deadline):
+        """Take over a finished section: its file, and the text of its pages, in one commit.
+
+        :param numbers: the page numbers of the section; the pages up to the last one are done
+        """
         self.ensure_one()
+        last = numbers[-1]
         final = os.path.join(self._job_dir(), name)
         with open(target, "r+b") as handle:
             os.fsync(handle.fileno())
         os.replace(target, final)
-        result = self._run_reader(final, PDF, first, max(deadline - time.monotonic(), MIN_READ_SECONDS), last)
-        numbers = {number for number, _text, _cut in result["pages"]}
-        if result["error"] or not result["done"] or numbers != set(range(first, last + 1)):
+        result = self._run_reader(final, PDF, 1, max(deadline - time.monotonic(), MIN_READ_SECONDS), numbers)
+        if result["error"] or not result["done"] or {page[0] for page in result["pages"]} != set(numbers):
             _remove_file(final)
             self._ocr_after_failure(self.env._("The text of the recognized pages could not be read."))
             return
         old = self.ocr_file
         old_pages = self.env["int.filemanager.text.page"].search(
-            [("text_id", "=", self.id), ("page", "in", sorted(numbers))]
+            [("text_id", "=", self.id), ("page", "in", numbers)]
         )
         before = {page.page: len("".join((page.content or "").split())) for page in old_pages}
         found = sum(
-            1 for number, text, _cut in result["pages"] if len("".join(text.split())) > before.get(number, 0)
+            1 for number, text, _cut, _picture in result["pages"] if len("".join(text.split())) > before.get(number, 0)
         )
         old_pages.unlink()
         self._store_pages(result["pages"])
         seconds_per_page = ocr_plan.smoothed(
-            self.ocr_seconds_per_page, ocr_plan.measured_seconds_per_page(pages, used)
+            self.ocr_seconds_per_page, ocr_plan.measured_seconds_per_page(len(numbers), used)
         )
         self.write(
             {
@@ -1286,7 +1334,7 @@ class IntFilemanagerText(models.Model):
                 "ocr_seconds_per_page": seconds_per_page,
             }
         )
-        if last >= self.page_count:
+        if not self._ocr_pages_left():
             self._ocr_finish()
         # Last: this is done once the transaction is committed, whatever happens until then.
         if old and old != name:

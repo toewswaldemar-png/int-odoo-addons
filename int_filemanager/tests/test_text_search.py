@@ -230,7 +230,7 @@ class TestTextRows(TextCase):
         self.assertTrue(self._text_of(document))
 
     def test_the_text_of_a_file_without_text_is_empty(self):
-        document = self._document("a.pdf", text_files.pdf([""]))
+        document = self._document("a.pdf", text_files.pdf([""], pictures=[0]))
         self._read_all()
         row = self._text_of(document)
         self.assertEqual((row.state, row.page_count), ("empty", 1))

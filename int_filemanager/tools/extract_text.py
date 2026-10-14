@@ -1,6 +1,6 @@
 """Read the text of a file, page by page. Runs as a child process of the scheduled action.
 
-    python extract_text.py <path> <mimetype> <first page> <block size> <cut size> <memory MiB> [<last page>]
+    python extract_text.py <path> <mimetype> <first page> <block size> <cut size> <memory MiB> [<pages>]
 
 It does not import Odoo (standard library, ``lxml`` and ``pdfminer`` only), so the parent can
 bound it in time and memory and kill it: one page of a PDF can take minutes, and in the Odoo
@@ -10,15 +10,17 @@ The answer is one JSON object per line on stdout:
 
 - ``{"pages": n}``: the number of pages (PDF only), first
 - ``{"page": n, "text": "..."}``: one page, as soon as it is done; ``"cut": true`` if the text
-  was cut at the size limit
+  was cut at the size limit; a PDF page also says ``"image": true`` if it has a picture or a
+  form in its resources (a scan has one, an empty sheet has none)
 - ``{"done": true}``: the end
 - ``{"error": "<kind>", "message": "..."}``: kind is ``corrupt``, ``encrypted`` or ``memory``
 
 Office and text files have no pages: their text is cut into blocks of at most ``block size``
 bytes, numbered like pages. A page or block starts at ``first page``; earlier ones are skipped
 (the parent has them from a run that was stopped). ``cut size`` is the most bytes of UTF-8 one
-PDF page may have; ``memory MiB`` is how much the process may grow. ``last page`` (PDF only)
-ends the reading there: the text recognition reads the pages of the section it just made.
+PDF page may have; ``memory MiB`` is how much the process may grow. ``pages`` (PDF only) is a
+list of page numbers, ``3,7,12``: only these are read (``first page`` is then ignored). The text
+recognition reads the pages of the section it just made.
 """
 
 import codecs
@@ -250,10 +252,19 @@ def iter_plain(path):
             yield line.rstrip("\r\n")
 
 
-def iter_pdf(path, first_page, report_pages, last_page=0):
-    """Yield ``(page number, text)`` from ``first_page`` to ``last_page`` (0: the end).
+def has_picture(page, resolve1):
+    """Whether the resources of a page name a picture or a form (``XObject``)."""
+    try:
+        return bool(resolve1(resolve1(page.resources).get("XObject")))
+    except Exception:  # noqa: BLE001 (a broken page: it is no scan we know of)
+        return False
 
-    ``report_pages(n)`` gets the count of pages of the file.
+
+def iter_pdf(path, first_page, report_pages, pages=None):
+    """Yield ``(page number, text, has a picture)`` from ``first_page`` to the end.
+
+    ``pages`` (a set of numbers) limits it to these pages. ``report_pages(n)`` gets the count
+    of pages of the file.
     """
     from pdfminer.converter import TextConverter  # noqa: PLC0415
     from pdfminer.layout import LAParams  # noqa: PLC0415
@@ -279,10 +290,13 @@ def iter_pdf(path, first_page, report_pages, last_page=0):
         # ``extract_pages`` would give no text for the invisible text a scan has after OCR.
         laparams = LAParams(detect_vertical=True, boxes_flow=None)
         for number, page in enumerate(PDFPage.create_pages(document), 1):
-            if number < first_page:
+            if pages is not None:
+                if number > max(pages, default=0):
+                    break
+                if number not in pages:
+                    continue
+            elif number < first_page:
                 continue
-            if last_page and number > last_page:
-                break
             with io.StringIO() as content, TextConverter(
                 manager, content, laparams=laparams
             ) as device:
@@ -291,7 +305,7 @@ def iter_pdf(path, first_page, report_pages, last_page=0):
                 except Exception:  # noqa: BLE001 (a broken page: the others may be fine)
                     content.seek(0)
                     content.truncate()
-                yield number, content.getvalue()
+                yield number, content.getvalue(), has_picture(page, resolve1)
 
 
 def limit_memory(budget_mib):
@@ -320,11 +334,11 @@ def emit(**message):
     sys.stdout.flush()
 
 
-def run(path, mimetype, first_page, block_size, cut_size, last_page=0):
+def run(path, mimetype, first_page, block_size, cut_size, pages=None):
     if mimetype == PDF:
-        for number, text in iter_pdf(path, first_page, lambda count: emit(pages=count), last_page):
+        for number, text, picture in iter_pdf(path, first_page, lambda count: emit(pages=count), pages):
             text, was_cut = cut(clean(text), cut_size)
-            emit(page=number, text=text, **({"cut": True} if was_cut else {}))
+            emit(page=number, text=text, image=picture, **({"cut": True} if was_cut else {}))
         return
     if mimetype == DOCX:
         pieces = iter_zip(path, iter_docx)
@@ -346,10 +360,10 @@ def run(path, mimetype, first_page, block_size, cut_size, last_page=0):
 def main(argv):
     path, mimetype = argv[1], argv[2]
     first_page, block_size, cut_size, memory_mib = (int(value) for value in argv[3:7])
-    last_page = int(argv[7]) if len(argv) > 7 else 0
+    pages = {int(number) for number in argv[7].split(",")} if len(argv) > 7 and argv[7] else None
     limit_memory(memory_mib)
     try:
-        run(path, mimetype, first_page, block_size, cut_size, last_page)
+        run(path, mimetype, first_page, block_size, cut_size, pages)
     except MemoryError:
         emit(error="memory", message="The file needs more memory than the budget.")
         return 0

@@ -174,7 +174,7 @@ class TestOcrCommand(BaseCase):
 
     def _command(self, **kwargs):
         values = {"languages": "deu+eng", "jobs": 2, "output_type": "pdf"}
-        return plan.section_command("ocrmypdf", "in.pdf", "out.pdf", 3, 7, **{**values, **kwargs})
+        return plan.section_command("ocrmypdf", "in.pdf", "out.pdf", [3, 4, 5, 6, 7], **{**values, **kwargs})
 
     def test_the_command_for_a_plain_section(self):
         self.assertEqual(
@@ -184,6 +184,21 @@ class TestOcrCommand(BaseCase):
                 "--output-type", "pdf", "--quiet", "--deskew", "--rotate-pages", "in.pdf", "out.pdf",
             ],
         )  # fmt: skip
+
+    def test_the_pages_are_given_as_a_list_of_ranges(self):
+        for numbers, expected in (
+            ([3, 7, 12, 13, 14], "3,7,12-14"),
+            ([5], "5"),
+            ([1, 2], "1-2"),
+            ([9, 2, 3, 3], "2-3,9"),
+            ([], ""),
+        ):
+            with self.subTest(numbers=numbers):
+                self.assertEqual(plan.page_ranges(numbers), expected)
+        command = plan.section_command(
+            "ocrmypdf", "in.pdf", "out.pdf", [2, 4, 5], languages="eng", jobs=1, output_type="pdf"
+        )
+        self.assertEqual(command[command.index("--pages") + 1], "2,4-5")
 
     def test_deskew_and_rotation_can_be_left_out(self):
         command = self._command(deskew_and_rotate=False)
@@ -252,7 +267,7 @@ class TestOcrWithPrograms(BaseCase):
                 with self.subTest(add=add):
                     target = os.path.join(folder, f"out{index}.pdf")
                     command = plan.section_command(
-                        "ocrmypdf", source, target, 1, 2,
+                        "ocrmypdf", source, target, [1, 2],
                         languages="eng", jobs=1, output_type="pdf", add=add,
                     )  # fmt: skip
                     ended, stderr = self._run(folder, command)
@@ -300,7 +315,7 @@ class TestOcrWithPrograms(BaseCase):
             with open(source, "wb") as handle:
                 handle.write(b"this is not a pdf")
             command = plan.section_command(
-                "ocrmypdf", source, os.path.join(folder, "out.pdf"), 1, 1,
+                "ocrmypdf", source, os.path.join(folder, "out.pdf"), [1],
                 languages="eng", jobs=1, output_type="pdf",
             )  # fmt: skip
             ended, stderr = self._run(folder, command)

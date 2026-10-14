@@ -18,9 +18,14 @@ def escape(text):
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def pdf(pages):
-    """A PDF with the text of each entry of ``pages`` on its own page (Helvetica, WinAnsi)."""
+def pdf(pages, pictures=()):
+    """A PDF with the text of each entry of ``pages`` on its own page (Helvetica, WinAnsi).
+
+    The pages whose index is in ``pictures`` also show a picture (one grey pixel), as a scan does.
+    """
     count = len(pages)
+    pictures = set(pictures)
+    picture = 4 + 2 * count
     kids = " ".join(f"{4 + 2 * index} 0 R" for index in range(count))
     objects = [
         b"<< /Type /Catalog /Pages 2 0 R >>",
@@ -29,13 +34,20 @@ def pdf(pages):
     ]
     for index, text in enumerate(pages):
         escaped = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-        content = f"BT /F1 12 Tf 72 720 Td ({escaped}) Tj ET".encode("cp1252")
+        draw = " q 72 0 0 72 72 600 cm /Im0 Do Q" if index in pictures else ""
+        content = f"BT /F1 12 Tf 72 720 Td ({escaped}) Tj ET{draw}".encode("cp1252")
+        xobject = f" /XObject << /Im0 {picture} 0 R >>" if index in pictures else ""
         objects.append(
             f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents {5 + 2 * index} 0 R"
-            " /Resources << /Font << /F1 3 0 R >> >> >>".encode()
+            f" /Resources << /Font << /F1 3 0 R >>{xobject} >> >>".encode()
         )
         objects.append(
             f"<< /Length {len(content)} >>\nstream\n".encode() + content + b"\nendstream"
+        )
+    if pictures:
+        objects.append(
+            b"<< /Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray"
+            b" /BitsPerComponent 8 /Length 1 >>\nstream\n\x80\nendstream"
         )
     out = b"%PDF-1.4\n"
     offsets = []

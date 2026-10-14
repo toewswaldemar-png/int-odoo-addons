@@ -165,19 +165,19 @@ class TestPictureRecognition(PicturesCase, OcrCase):
 
     def test_a_picture_is_recognized_found_and_keeps_no_pdf(self):
         document, row = self._picture_row(picture([["The plumber"]], width=400))
-        self._output("1-1", ["The plumber sent an invoice"])
+        self._output("1", ["The plumber sent an invoice"])
         self.assertEqual(self._step(), OCR_PROGRESS)
         self.assertEqual((row.ocr_state, row.state, row.page_count), ("done", "done", 1))
         self.assertFalse(row.ocr_checksum)
         self.assertEqual(self._found("plumber"), document)
         self.assertTrue(os.path.isfile(self.Document._blob_path(document.checksum)))
         [call] = self._calls()
-        self.assertEqual(call[call.index("--pages") + 1], "1-1")
+        self.assertEqual(call[call.index("--pages") + 1], "1")
         self.assertEqual(call[-2], self.Document._blob_path(document.checksum))
 
     def test_a_picture_without_a_resolution_is_tried_again_with_an_estimate(self):
         _document, row = self._picture_row(picture([["Hello"]], width=400))
-        self._output("1-1", ["The estimate worked"])
+        self._output("1", ["The estimate worked"])
         self._save_config(mode="needs_dpi")
         self._step()
         first, second = self._calls()
@@ -188,7 +188,7 @@ class TestPictureRecognition(PicturesCase, OcrCase):
 
     def test_a_good_estimate_needs_no_warning(self):
         _document, row = self._picture_row(picture([["Hello"]], width=1654))
-        self._output("1-1", ["The estimate worked"])
+        self._output("1", ["The estimate worked"])
         self._save_config(mode="needs_dpi")
         self._step()
         self.assertEqual(row.ocr_state, "done")
@@ -207,7 +207,7 @@ class TestPictureRecognition(PicturesCase, OcrCase):
         content = picture([["page one"], ["page two"], ["page three"]], form="TIFF", width=400, dpi=200)
         document, row = self._picture_row(content, "scan.tiff")
         self._output("1-2", ["first page text", "second page text", ""])
-        self._output("3-3", ["first page text", "second page text", "third page text"])
+        self._output("3", ["first page text", "second page text", "third page text"])
         with patch.object(ocr_plan, "FIRST_SECTION_PAGES", 2), patch.object(ocr_plan, "MAX_SECTION_PAGES", 2):
             while row.ocr_state == "wait":
                 self._step()

@@ -100,7 +100,7 @@ class OcrCase(TextCase):
         """A PDF for the stub to give when it is asked for ``pages`` ("1-2"); ``texts`` per page."""
         path = os.path.join(self.work, f"out-{pages}.pdf")
         with open(path, "wb") as handle:
-            handle.write(text_files.pdf(texts))
+            handle.write(text_files.pdf(texts, pictures=range(len(texts))))
         self.config["outputs"][pages] = path
         self._save_config()
 
@@ -111,8 +111,8 @@ class OcrCase(TextCase):
             return [json.loads(line) for line in handle]
 
     def _scan(self, pages=3, name="scan.pdf"):
-        """A PDF of pages without text, read, and queued for the recognition."""
-        document = self._document(name, text_files.pdf([""] * pages))
+        """A PDF of pages with a picture and no text, read, and queued for the recognition."""
+        document = self._document(name, text_files.pdf([""] * pages, pictures=range(pages)))
         self._read_all()
         self.Text._ocr_queue(100)
         return document, self._text_of(document)
@@ -129,10 +129,29 @@ class TestScans(OcrCase):
     """Which files need the recognition."""
 
     def test_the_pages_without_text_are_counted_when_a_pdf_is_read(self):
-        document = self._document("a.pdf", text_files.pdf(["A page with plenty of words", "", "x"]))
+        document = self._document(
+            "a.pdf", text_files.pdf(["A page with plenty of words", "", "x"], pictures=range(3))
+        )
         self._read_all()
         row = self._text_of(document)
         self.assertEqual((row.state, row.page_count, row.scan_pages), ("done", 3, 2))
+
+    def test_a_page_without_a_picture_is_no_scan(self):
+        document = self._document("a.pdf", text_files.pdf(["Plenty of words on this page", "", "x"], pictures=[2]))
+        self._read_all()
+        row = self._text_of(document)
+        self.assertEqual((row.state, row.scan_pages), ("done", 1))
+        scans = self.env["int.filemanager.text.page"].search([("text_id", "=", row.id), ("scan", "=", True)])
+        self.assertEqual(scans.mapped("page"), [3])
+        self.Text._ocr_queue(100)
+        self.assertEqual(row.ocr_state, "wait")
+
+    def test_a_file_of_empty_sheets_is_not_queued(self):
+        document = self._document("a.pdf", text_files.pdf(["", "", ""]))
+        self._read_all()
+        self.Text._ocr_queue(100)
+        row = self._text_of(document)
+        self.assertEqual((row.state, row.scan_pages, row.ocr_state), ("empty", 0, False))
 
     def test_a_file_without_pages_has_no_scans(self):
         document = self._document("a.txt", b"some text")
@@ -149,7 +168,9 @@ class TestScans(OcrCase):
         self.assertFalse(row.ocr_state)
 
     def test_a_row_read_before_the_recognition_existed_is_counted_and_queued(self):
-        document = self._document("a.pdf", text_files.pdf(["", "words enough for a page of text"]))
+        document = self._document(
+            "a.pdf", text_files.pdf(["", "words enough for a page of text"], pictures=range(2))
+        )
         self._read_all()
         row = self._text_of(document)
         row.write({"scan_pages": -1, "ocr_state": False})
@@ -239,7 +260,7 @@ class TestRecognition(OcrCase):
         texts = ["alpha one", "alpha two", "alpha three", "alpha four", "alpha five"]
         for first, last in ((1, 2), (3, 4), (5, 5)):
             done = texts[:last] + [""] * (5 - last)
-            self._output(f"{first}-{last}", done)
+            self._output(f"{first}-{last}" if first != last else str(first), done)
         with patch.object(ocr_plan, "FIRST_SECTION_PAGES", 2), patch.object(ocr_plan, "MAX_SECTION_PAGES", 2):
             self._step()
             self.assertEqual((row.ocr_state, row.ocr_next_page, row.ocr_file), ("wait", 3, "upto-2.pdf"))
@@ -250,11 +271,57 @@ class TestRecognition(OcrCase):
             self._step()
         self.assertEqual((row.ocr_state, row.state), ("done", "done"))
         calls = self._calls()
-        self.assertEqual([call[call.index("--pages") + 1] for call in calls], ["1-2", "3-4", "5-5"])
+        self.assertEqual([call[call.index("--pages") + 1] for call in calls], ["1-2", "3-4", "5"])
         job = self._job(row)
         self.assertEqual(calls[1][-2], os.path.join(job, "upto-2.pdf"))
         self.assertEqual(calls[2][-2], os.path.join(job, "upto-4.pdf"))
         self.assertEqual(self._found("alpha five"), document)
+
+    def _mixed(self):
+        """Seven pages: scans on 2, 3, 5 and 7; text on 1 and 4; an empty sheet on 6."""
+        words = "A page with plenty of words"
+        texts = [words, "", "", words, "", "", ""]
+        document = self._document("mixed.pdf", text_files.pdf(texts, pictures=[1, 2, 4, 6]))
+        self._read_all()
+        self.Text._ocr_queue(100)
+        return document, self._text_of(document)
+
+    def _mixed_output(self, pages):
+        texts = ["x", "recognized 2", "recognized 3", "x", "recognized 5", "x", "recognized 7"]
+        self._output(pages, texts)
+
+    def test_only_the_scans_of_a_file_are_asked_for(self):
+        document, row = self._mixed()
+        self.assertEqual((row.scan_pages, row.ocr_state), (4, "wait"))
+        self._mixed_output("2-3,5,7")
+        self._step()
+        [call] = self._calls()
+        self.assertEqual(call[call.index("--pages") + 1], "2-3,5,7")
+        self.assertEqual((row.ocr_state, row.ocr_found_pages), ("done", 4))
+        self.assertEqual(self._found("recognized 5"), document)
+        self.assertEqual(self._found("plenty of words"), document)
+
+    def test_sections_are_cut_from_the_list_of_scans(self):
+        _document, row = self._mixed()
+        self._mixed_output("2-3")
+        self._mixed_output("5,7")
+        with patch.object(ocr_plan, "FIRST_SECTION_PAGES", 2), patch.object(ocr_plan, "MAX_SECTION_PAGES", 2):
+            self._step()
+            self.assertEqual((row.ocr_state, row.ocr_next_page, row.ocr_file), ("wait", 4, "upto-3.pdf"))
+            self._step()
+        self.assertEqual([call[call.index("--pages") + 1] for call in self._calls()], ["2-3", "5,7"])
+        self.assertEqual((row.ocr_state, row.ocr_found_pages), ("done", 4))
+
+    def test_a_file_whose_last_scan_is_done_is_finished_before_its_last_page(self):
+        _document, row = self._mixed()
+        self._mixed_output("2-3,5")
+        with patch.object(ocr_plan, "FIRST_SECTION_PAGES", 3), patch.object(ocr_plan, "MAX_SECTION_PAGES", 3):
+            self._step()
+            self.assertEqual(row.ocr_state, "wait")
+            self._mixed_output("7")
+            self._step()
+        self.assertEqual(row.ocr_state, "done")
+        self.assertEqual(self._step(), OCR_IDLE)
 
     def test_the_row_points_to_the_new_file_and_the_old_one_goes_when_committed(self):
         _document, row = self._scan(4)
@@ -571,7 +638,7 @@ class TestRecognition(OcrCase):
     # --- the scheduled action ----------------------------------------------------
 
     def test_the_scheduled_action_reads_queues_and_recognizes(self):
-        document = self._document("scan.pdf", text_files.pdf(["", ""]))
+        document = self._document("scan.pdf", text_files.pdf(["", ""], pictures=range(2)))
         self._output("1-2", ["from the action one", "from the action two"])
         self._run()
         row = self._text_of(document)
@@ -652,6 +719,19 @@ class TestRecognition(OcrCase):
         self.assertEqual(row.ocr_state, "failed")
 
 
+def joined_pdf(*contents):
+    """The pages of the PDFs ``contents`` one after the other, as one PDF."""
+    import pikepdf  # noqa: PLC0415
+
+    joined = pikepdf.Pdf.new()
+    for content in contents:
+        with pikepdf.Pdf.open(io.BytesIO(content)) as part:
+            joined.pages.extend(part.pages)
+    stream = io.BytesIO()
+    joined.save(stream)
+    return stream.getvalue()
+
+
 def scan_pdf(lines_per_page):
     """A PDF made of pictures of text, as a scanner makes it (no text in it)."""
     from PIL import Image, ImageDraw, ImageFont  # noqa: PLC0415
@@ -704,6 +784,31 @@ class TestRealRecognition(TextCase):
         row._reset()
         self._read_all()
         self.assertEqual(self._found("gardening"), document)
+
+    def test_a_mixed_file_gets_the_text_of_its_scans_and_keeps_the_rest(self):
+        document = self._document(
+            "mixed.pdf",
+            joined_pdf(
+                text_files.pdf(["A page that is text and has plenty of words in it"]),
+                scan_pdf([["Second page about gardening"]]),
+                text_files.pdf([""]),
+                scan_pdf([["Fourth page about pears"]]),
+            ),
+        )
+        self._read_all()
+        row = self._text_of(document)
+        self.assertEqual((row.page_count, row.scan_pages), (4, 2))
+        self.Text._ocr_queue(100)
+        while row.ocr_state == "wait":
+            self.assertEqual(self.Text._ocr_step(time.monotonic() + 300), OCR_PROGRESS)
+        self.assertEqual((row.ocr_state, row.scan_pages, row.ocr_found_pages), ("done", 0, 2), row.ocr_message)
+        self.assertEqual(self._found("gardening"), document)
+        self.assertEqual(self._found("pears"), document)
+        self.assertEqual(self._found("plenty of words"), document)
+        # Read again, the recognized PDF has the same four pages.
+        row._reset()
+        self._read_all()
+        self.assertEqual((row.page_count, row.scan_pages), (4, 0))
 
     def test_sections_of_one_page_give_the_same_result(self):
         document = self._document(

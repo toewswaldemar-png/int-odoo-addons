@@ -18,15 +18,15 @@ PDF = "application/pdf"
 class TestTextReader(TransactionCase):
     """The child process that reads the text of a file, as the scheduled action starts it."""
 
-    def _read(self, content, mimetype, first=1, block=64 * 1024, cut=650000, memory=1024, last=None):
+    def _read(self, content, mimetype, first=1, block=64 * 1024, cut=650000, memory=1024, pages=None):
         """Run the reader on ``content``: the lines of its answer, as objects."""
         with tempfile.TemporaryDirectory() as folder:
             path = os.path.join(folder, "file")
             with open(path, "wb") as handle:
                 handle.write(content)
             command = [sys.executable, "-I", READER, path, mimetype, str(first), str(block), str(cut), str(memory)]
-            if last:
-                command.append(str(last))
+            if pages:
+                command.append(",".join(str(number) for number in pages))
             done = subprocess.run(command, capture_output=True, check=True, timeout=120)
         return [json.loads(line) for line in done.stdout.decode().splitlines()]
 
@@ -47,11 +47,15 @@ class TestTextReader(TransactionCase):
         answer = self._read(text_files.pdf(["one", "two", "three"]), PDF, first=3)
         self.assertEqual(list(self._pages(answer)), [3])
 
-    def test_a_pdf_can_be_read_up_to_a_last_page(self):
-        answer = self._read(text_files.pdf(["one", "two", "three", "four"]), PDF, first=2, last=3)
-        self.assertEqual(list(self._pages(answer)), [2, 3])
-        self.assertEqual(answer[0], {"pages": 4})
+    def test_a_pdf_can_be_read_for_a_list_of_pages(self):
+        answer = self._read(text_files.pdf(["one", "two", "three", "four", "five"]), PDF, pages=[2, 4])
+        self.assertEqual(list(self._pages(answer)), [2, 4])
+        self.assertEqual(answer[0], {"pages": 5})
         self.assertEqual(answer[-1], {"done": True})
+
+    def test_a_pdf_page_says_whether_it_has_a_picture(self):
+        answer = self._read(text_files.pdf(["one", "", "three"], pictures=[1, 2]), PDF)
+        self.assertEqual([entry["image"] for entry in answer if "page" in entry], [False, True, True])
 
     def test_a_page_above_the_limit_is_cut_and_says_so(self):
         answer = self._read(text_files.pdf(["x" * 300]), PDF, cut=100)

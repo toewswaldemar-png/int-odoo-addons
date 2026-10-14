@@ -30,14 +30,22 @@ class TestOcrStatus(OcrCase):
 
     def test_the_pages_still_to_do_and_the_time_for_them(self):
         self.Text.search([("ocr_state", "!=", False)]).write({"ocr_state": False})
-        self._row("a", ocr_state="wait", page_count=10, ocr_next_page=4, ocr_seconds_per_page=2)
-        self._row("b", ocr_state="running", page_count=5, ocr_next_page=1)
+        pdf = {"mimetype": "application/pdf"}
+        first = self._row("a", ocr_state="wait", page_count=10, ocr_next_page=4, ocr_seconds_per_page=2, **pdf)
+        second = self._row("b", ocr_state="running", page_count=5, ocr_next_page=1, **pdf)
         self._row("c", ocr_state="wait")  # a picture: its pages are not counted yet
         self._row("d", ocr_state="done", page_count=50)
+        self._row("e", ocr_state="wait", page_count=4, ocr_next_page=2, mimetype="image/tiff")
+        # Scans on 2, 5, 6 and 9 of the first (2 is done), on 1 and 3 of the second.
+        pages = [(first, number, True) for number in (2, 5, 6, 9)]
+        pages += [(second, 1, True), (second, 2, False), (second, 3, True)]
+        self.env["int.filemanager.text.page"].create(
+            [{"text_id": text.id, "page": number, "scan": scan} for text, number, scan in pages]
+        )
         status = self.Text._ocr_status()
-        self.assertEqual(status["pages_left"], 7 + 5 + 1)
-        # 7 pages at 2 s, 5 and 1 at the guess of 5 s.
-        self.assertEqual(status["seconds_left"], 7 * 2 + 6 * 5)
+        self.assertEqual(status["pages_left"], 3 + 2 + 1 + 3)
+        # 3 pages at 2 s, the 6 others at the guess of 5 s.
+        self.assertEqual(status["seconds_left"], 3 * 2 + 6 * 5)
 
     def test_the_size_of_the_recognized_pdfs(self):
         before = self.Text._ocr_status()["pdf_size"]
@@ -100,7 +108,13 @@ class TestOcrSettings(OcrCase):
     def test_the_pages_to_do_are_shown_with_the_time(self):
         self.Text.search([("ocr_state", "!=", False)]).write({"ocr_state": False})
         self.Text.create(
-            {"checksum": "a" * 64, "ocr_state": "wait", "page_count": 720, "ocr_seconds_per_page": 5}
+            {
+                "checksum": "a" * 64,
+                "mimetype": "image/tiff",
+                "ocr_state": "wait",
+                "page_count": 720,
+                "ocr_seconds_per_page": 5,
+            }
         )
         left = self._settings().int_filemanager_ocr_left
         self.assertIn("720 pages", left)

@@ -143,11 +143,14 @@ class IntFilemanagerTextPage(models.Model):
     page = fields.Integer(required=True)
     # Not read along with the other fields: it is large.
     content = fields.Text(prefetch=False)
+    # A scan: the page has a picture and (almost) no text. The recognition reads these pages only.
+    scan = fields.Boolean()
 
     # Also the index of ``text_id`` (its first column) for the cascade and the lookups.
     _page_per_text = models.UniqueIndex(
         "(text_id, page)", "A text has one entry per page."
     )
+    _scan_index = models.Index("(text_id, page) WHERE scan")
     _content_index = models.Index(f"USING gin (to_tsvector('german', {folded('content')}))")
 
     @api.model
