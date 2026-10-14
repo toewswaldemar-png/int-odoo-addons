@@ -23,6 +23,8 @@ CHECKLIST_FOLDER = ".checklist"
 # Blobs looked at per run of the cleaner; each run holds the lock of the table (see _gc_blobs).
 GC_BATCH = 1000
 GC_LOCK_TIMEOUT = "10s"
+# First key of the advisory lock that publishers of one checksum take (see _publish_blob).
+BLOB_LOCK_NAME = "int_filemanager.blob"
 UPLOAD_AGE_PARAMETER = "int_filemanager.upload_max_age_hours"
 DEFAULT_UPLOAD_MAX_AGE_HOURS = 24
 CHECKSUM_REGEX = re.compile(r"[0-9a-f]{64}")
@@ -228,9 +230,24 @@ class IntFilemanagerDocument(models.Model):
 
         Call it after the document is created and flushed: the cleaner of the blobs
         (it waits for this transaction) then sees the document. A blob that exists already has
-        the same content and stays.
+        the same content and stays: it is never replaced, a reader that has it open or is about
+        to open it must not find a gap (``os.replace`` over a name can fail a reader on a
+        network share).
+
+        Two transactions that publish the same checksum at once take turns: the first places the
+        blob, the second finds it after the lock and only removes its own temporary file.
         """
         path = self._blob_path(checksum)
+        if os.path.exists(path):
+            _remove_file(tmp_path)
+            return
+        # One publisher per checksum, until this transaction ends (a blob placed by a
+        # transaction that is rolled back stays on the disk, the cleaner sees to it). Look again
+        # after the lock: the transaction we waited for may have placed it. The two-key form is
+        # a key space of its own, the core's one-key locks (``mail_thread``) cannot clash.
+        self.env.cr.execute(
+            SQL("SELECT pg_advisory_xact_lock(hashtext(%s), hashtext(%s))", BLOB_LOCK_NAME, checksum)
+        )
         if os.path.exists(path):
             _remove_file(tmp_path)
             return
