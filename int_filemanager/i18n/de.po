@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 10:12+0000\n"
-"PO-Revision-Date: 2026-10-14 10:12+0000\n"
+"POT-Creation-Date: 2026-10-14 13:02+0000\n"
+"PO-Revision-Date: 2026-10-14 13:02+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -15,6 +15,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "%(pages)s pages"
+msgstr "%(pages)s Seiten"
 
 #. module: int_filemanager
 #. odoo-python
@@ -27,6 +33,12 @@ msgstr "%(seconds)s s (%(mode)s-Server, Limit von Odoo %(limit)s s)"
 #: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "%(seconds)s s (Odoo has no limit)"
 msgstr "%(seconds)s s (Odoo hat kein Limit)"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "(about %(time)s hours of work)"
+msgstr "(etwa %(time)s Stunden Arbeit)"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -75,6 +87,18 @@ msgstr "Ein Ordner: sein Inhalt wurde bei der Prüfung aufgelistet."
 #: code:addons/int_filemanager/models/int_filemanager_text.py:0
 msgid "A page takes longer than the time of one run."
 msgstr "Eine Seite braucht länger als die Zeit eines Durchlaufs."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid ""
+"A run of the scheduled action is as long as the limit of Odoo for it "
+"(limit_time_real_cron). A longer limit gives the recognition more work per "
+"run."
+msgstr ""
+"Ein Lauf der geplanten Aktion dauert so lange wie das Limit von Odoo dafür "
+"(limit_time_real_cron). Ein längeres Limit gibt der Texterkennung mehr "
+"Arbeit je Lauf."
 
 #. module: int_filemanager
 #. odoo-python
@@ -272,6 +296,20 @@ msgid "Content"
 msgstr "Inhalt"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_jobs
+msgid "Cores"
+msgstr "Kerne"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"Cores one recognition may use, and how much of the processor it takes when "
+"the server is busy."
+msgstr ""
+"Wie viele Kerne eine Texterkennung nutzen darf und wie viel vom Prozessor "
+"sie nimmt, wenn der Server ausgelastet ist."
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__create_uid
@@ -335,6 +373,7 @@ msgstr "Dokumente"
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__done
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__done
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
 msgid "Done"
@@ -397,6 +436,7 @@ msgstr "Wegen des Namens ausgeschlossen."
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__error
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__failed
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_line_view_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
@@ -574,11 +614,24 @@ msgid ""
 msgstr "Wie lange ein Durchlauf der geplanten Aktion dauert, welches Programm die PDF-Dateien liest und wann sie zuletzt lief."
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_jobs
+msgid "How many processor cores one text recognition may use."
+msgstr "Wie viele Prozessorkerne eine Texterkennung nutzen darf."
+
+#. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_memory_mib
 msgid ""
 "How much memory the reading of one file may use. A file that needs more is "
 "skipped, and read again if this is raised."
 msgstr "Wie viel Speicher das Lesen einer Datei höchstens braucht. Eine Datei, die mehr braucht, wird übersprungen und erneut gelesen, wenn der Wert erhöht wird."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_nice
+msgid ""
+"How much of the processor the recognition takes when the server is busy."
+msgstr ""
+"Wie viel vom Prozessor die Texterkennung nimmt, wenn der Server ausgelastet "
+"ist."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__id
@@ -616,6 +669,11 @@ msgid "If checked, some messages have a delivery error."
 msgstr "Wenn markiert, weisen einige Nachrichten einen Zustellfehler auf."
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__ocr_images_active
+msgid "Images are recognized here"
+msgstr "Bilder werden hier erkannt"
+
+#. module: int_filemanager
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_import_action
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__import_id
 #: model:ir.ui.menu,name:int_filemanager.int_filemanager_import_menu
@@ -638,6 +696,12 @@ msgstr "Ist Follower"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__kind
 msgid "Kind"
 msgstr "Art"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_languages
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Languages"
+msgstr "Sprachen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_cut_bytes
@@ -685,7 +749,13 @@ msgid "Late Activities"
 msgstr "Verspätete Aktivitäten"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_deskew__0
+msgid "Leave the pages as they are"
+msgstr "Seiten so lassen, wie sie sind"
+
+#. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__inherit
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__ocr_images__inherit
 msgid "Like the parent folder"
 msgstr "Wie der übergeordnete Ordner"
 
@@ -719,6 +789,26 @@ msgstr "Aufgelistet"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
 msgid "Lists the folder and shows what would be read in. Nothing is copied."
 msgstr "Listet den Ordner auf und zeigt, was eingelesen würde. Es wird nichts kopiert."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Load on the server"
+msgstr "Last auf dem Server"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__10
+msgid "Low"
+msgstr "Niedrig"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__19
+msgid "Lowest: the web pages come first"
+msgstr "Am niedrigsten: Die Webseiten gehen vor"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__5
+msgid "Medium"
+msgstr "Mittel"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
@@ -833,6 +923,11 @@ msgid "Next Page"
 msgstr "Nächste Seite"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_next_page
+msgid "Next page to recognize"
+msgstr "Nächste zu erkennende Seite"
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "No free name for %(name)s in this folder."
@@ -850,6 +945,11 @@ msgid "No text"
 msgstr "Kein Text"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__0
+msgid "Normal: like the web pages"
+msgstr "Normal: wie die Webseiten"
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
 msgid "Not a regular file."
@@ -859,6 +959,11 @@ msgstr "Keine gewöhnliche Datei."
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_missing
 msgid "Not yet looked at"
 msgstr "Noch nicht angesehen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_notes
+msgid "Notes"
+msgstr "Hinweise"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction_counter
@@ -883,6 +988,22 @@ msgstr "Anzahl der Nachrichten, die eine Aktion erfordern"
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "Anzahl der Nachrichten mit Zustellfehler"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__ocr_images__off
+msgid "Off"
+msgstr "Aus"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Off."
+msgstr "Aus."
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__ocr_images__on
+msgid "On"
+msgstr "An"
 
 #. module: int_filemanager
 #. odoo-python
@@ -915,9 +1036,24 @@ msgid "Origin Path"
 msgstr "Ursprünglicher Pfad"
 
 #. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_output_type__pdf
+msgid "PDF"
+msgstr "PDF"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_reader
 msgid "PDF reader"
 msgstr "PDF-Leser"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_output_type__pdfa
+msgid "PDF/A (archive)"
+msgstr "PDF/A (Archiv)"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_output_type
+msgid "PDF/A takes longer and makes the file bigger."
+msgstr "PDF/A dauert länger und macht die Datei größer."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__page
@@ -942,6 +1078,21 @@ msgid "Page Count"
 msgstr "Seitenzahl"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_deskew
+msgid "Pages"
+msgstr "Seiten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_found_pages
+msgid "Pages with recognized text"
+msgstr "Seiten mit erkanntem Text"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__scan_pages
+msgid "Pages without text"
+msgstr "Seiten ohne Text"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__parent_id
 msgid "Parent"
@@ -958,6 +1109,12 @@ msgid "Path"
 msgstr "Pfad"
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Paused: the disk is full."
+msgstr "Pausiert: Der Speicherplatz ist voll."
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__pending_count
 msgid "Pending Count"
 msgstr "Offen"
@@ -967,6 +1124,16 @@ msgstr "Offen"
 #: code:addons/int_filemanager/static/src/int_filemanager/document_preview_button.xml:0
 msgid "Preview"
 msgstr "Vorschau"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_nice
+msgid "Priority"
+msgstr "Priorität"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_tools
+msgid "Programs"
+msgstr "Programme"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__progress
@@ -1015,6 +1182,80 @@ msgstr "Das Lesen einer Datei darf so viel Speicher (MiB) brauchen. Eine Datei, 
 
 #. module: int_filemanager
 #. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Ready."
+msgstr "Bereit."
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_state
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_state
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
+msgid "Recognition"
+msgstr "Texterkennung"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
+msgid "Recognition failed"
+msgstr "Texterkennung fehlgeschlagen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_message
+msgid "Recognition message"
+msgstr "Meldung der Texterkennung"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_attempts
+msgid "Recognition tries"
+msgstr "Versuche der Texterkennung"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
+msgid "Recognition waiting"
+msgstr "Texterkennung wartet"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_form
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_list
+msgid "Recognize again"
+msgstr "Erneut erkennen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_enabled
+msgid "Recognize the text in scans"
+msgstr "Text in Scans erkennen"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
+msgid "Recognized"
+msgstr "Erkannt"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__ocr_checksum
+msgid "Recognized PDF"
+msgstr "Erkanntes PDF"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_checksum
+msgid "Recognized PDF (checksum)"
+msgstr "Erkanntes PDF (Prüfsumme)"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__ocr_content
+msgid "Recognized PDF (file)"
+msgstr "Erkanntes PDF (Datei)"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_size
+msgid "Recognized PDF (size)"
+msgstr "Erkanntes PDF (Größe)"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_pdf_size
+msgid "Recognized PDFs"
+msgstr "Erkannte PDFs"
+
+#. module: int_filemanager
+#. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
 msgid "Renamed, the name was taken."
 msgstr "Umbenannt, der Name war vergeben."
@@ -1054,6 +1295,11 @@ msgid "Restoring is not possible, these names are taken: %(names)s"
 msgstr "Wiederherstellen ist nicht möglich, diese Namen sind vergeben: %(names)s"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Result"
+msgstr "Ergebnis"
+
+#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
 msgid "Retry the failed"
 msgstr "Fehlgeschlagene wiederholen"
@@ -1067,9 +1313,60 @@ msgstr "Wurzelordner"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_running
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__running
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__running
 msgid "Running"
 msgstr "Läuft"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_enabled
+msgid ""
+"Scanned pages (PDF files without text) get a text layer, so that the search "
+"finds their words. Pictures are read in the folders that have it switched "
+"on. The files themselves are not changed."
+msgstr ""
+"Gescannte Seiten (PDF-Dateien ohne Text) bekommen eine Textebene, damit die "
+"Suche ihre Wörter findet. Bilder werden in den Ordnern gelesen, bei denen "
+"das eingeschaltet ist. Die Dateien selbst werden nicht verändert."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"Scanned pages (PDF files without text) get a text layer, so that the search "
+"finds their words. The files themselves are not changed; the new PDF is "
+"shown in the preview, the download is the original. Pictures are read in the"
+" folders that have it switched on (folder form, Text recognition in images)."
+msgstr ""
+"Gescannte Seiten (PDF-Dateien ohne Text) bekommen eine Textebene, damit die "
+"Suche ihre Wörter findet. Die Dateien selbst werden nicht verändert; das "
+"neue PDF erscheint in der Vorschau, der Download ist das Original. Bilder "
+"werden in den Ordnern gelesen, bei denen das eingeschaltet ist "
+"(Ordnerformular, Texterkennung für Bilder)."
+
+#. module: int_filemanager
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_text_ocr_action
+msgid "Scans"
+msgstr "Scans"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_done
+msgid "Scans done"
+msgstr "Scans erledigt"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_failed
+msgid "Scans failed"
+msgstr "Scans fehlgeschlagen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_running
+msgid "Scans running"
+msgstr "Scans laufen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_wait
+msgid "Scans waiting"
+msgstr "Scans warten"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
@@ -1085,6 +1382,21 @@ msgstr "Suche"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
 msgid "Search in files"
 msgstr "Suche in Dateien"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_seconds_per_page
+msgid "Seconds per page"
+msgstr "Sekunden je Seite"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_file
+msgid "Section file"
+msgstr "Abschnittsdatei"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_file_size
+msgid "Section file size"
+msgstr "Größe der Abschnittsdatei"
 
 #. module: int_filemanager
 #. odoo-python
@@ -1121,6 +1433,11 @@ msgid "Show the files"
 msgstr "Dateien anzeigen"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Show the scans"
+msgstr "Scans anzeigen"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__size
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__size
 msgid "Size"
@@ -1129,6 +1446,7 @@ msgstr "Größe"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_skipped
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__skipped
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__skipped
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__skipped
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
 msgid "Skipped"
@@ -1168,6 +1486,11 @@ msgid ""
 msgstr ""
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_left
+msgid "Still to do"
+msgstr "Noch zu tun"
+
+#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
 msgid "Stop"
 msgstr "Anhalten"
@@ -1177,6 +1500,52 @@ msgstr "Anhalten"
 #: code:addons/int_filemanager/models/int_filemanager_import.py:0
 msgid "Stop the reading in first."
 msgstr "Halten Sie zuerst das Einlesen an."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Stopped."
+msgstr "Angehalten."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Stopped: Tesseract lacks a language that is asked for."
+msgstr "Angehalten: Tesseract fehlt eine Sprache, die verlangt wird."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Stopped: ocrmypdf or Tesseract is not installed on the server."
+msgstr ""
+"Angehalten: ocrmypdf oder Tesseract ist auf dem Server nicht installiert."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Stopped: the program does not take the settings."
+msgstr "Angehalten: Das Programm nimmt die Einstellungen nicht an."
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_deskew__1
+msgid "Straighten and turn the pages"
+msgstr "Seiten geraderichten und drehen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_deskew
+msgid ""
+"Straightening and turning make the recognition better and the time longer."
+msgstr ""
+"Geraderichten und Drehen verbessern die Erkennung und verlängern die Zeit."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"Straightening and turning make the recognition better and the time longer. "
+"PDF/A takes longer and makes the file bigger."
+msgstr ""
+"Geraderichten und Drehen verbessern die Erkennung und verlängern die Zeit. "
+"PDF/A dauert länger und macht die Datei größer."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__tag_ids
@@ -1196,6 +1565,21 @@ msgstr "Textblock (KiB)"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Text in scans"
+msgstr "Text in Scans"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_form
+msgid "Text recognition"
+msgstr "Texterkennung"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__ocr_images
+msgid "Text recognition in images"
+msgstr "Texterkennung für Bilder"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
 msgid "Text sizes"
 msgstr "Textgrößen"
 
@@ -1212,12 +1596,38 @@ msgid "The checksum must be a SHA-256 in lowercase hexadecimal."
 msgstr "Die Prüfsumme muss ein SHA-256 in Kleinbuchstaben-Hexadezimal sein."
 
 #. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_text_ocr_checksum_is_sha256
+msgid ""
+"The checksum of the recognized PDF must be a SHA-256 in lowercase "
+"hexadecimal."
+msgstr ""
+"Die Prüfsumme des erkannten PDFs muss ein SHA-256 in Kleinbuchstaben-"
+"Hexadezimal sein."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid ""
+"The database has the character set C: capital umlauts are not folded, so the"
+" search finds a word with a capital Ü only by its capital."
+msgstr ""
+"Die Datenbank hat den Zeichensatz C: Großbuchstaben mit Umlaut werden nicht "
+"gefaltet, die Suche findet ein Wort mit großem Ü deshalb nur mit dem großen "
+"Buchstaben."
+
+#. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_work_mem_mib
 msgid ""
 "The database may use this much memory for one search in the text of the "
 "files (for this search only). A word that is on very many pages needs it, or"
 " takes minutes."
 msgstr "Die Datenbank darf für eine Suche im Text der Dateien so viel Speicher nutzen (nur für diese Suche). Ein Wort, das auf sehr vielen Seiten steht, braucht ihn, sonst dauert es Minuten."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The file cannot be read by the text recognition."
+msgstr "Die Texterkennung kann die Datei nicht lesen."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1242,6 +1652,12 @@ msgstr "Die Datei liegt nicht unterhalb des Wurzelordners."
 #: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
 msgid "The file keeps changing while it is copied."
 msgstr "Die Datei ändert sich ständig, während sie kopiert wird."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The file needs a password."
+msgstr "Die Datei braucht ein Passwort."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1311,6 +1727,30 @@ msgid "The folders and files come below this folder."
 msgstr "Die Ordner und Dateien kommen unter diesen Ordner."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The image has no usable resolution."
+msgstr "Das Bild hat keine brauchbare Auflösung."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The image is too large for the text recognition."
+msgstr "Das Bild ist für die Texterkennung zu groß."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "The languages of the text, as Tesseract names them, joined by +."
+msgstr "Die Sprachen des Textes, wie Tesseract sie nennt, mit + verbunden."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_languages
+msgid ""
+"The languages of the text, as Tesseract names them, joined by +: deu+eng."
+msgstr ""
+"Die Sprachen des Textes, wie Tesseract sie nennt, mit + verbunden: deu+eng."
+
+#. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_import_line__parent_id
 msgid "The line of the folder this one lies in."
 msgstr "Die Zeile des Ordners, in dem dieser liegt."
@@ -1331,6 +1771,16 @@ msgstr "Der Name ist kein gültiges UTF-8."
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid ""
+"The picture has no resolution; %(dpi)s dpi was assumed, the text may not be "
+"recognized."
+msgstr ""
+"Das Bild hat keine Auflösung; angenommen wurden %(dpi)s dpi, der Text wird "
+"vielleicht nicht erkannt."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
 msgid "The reader did not come back, the server was stopped."
 msgstr "Der Leser kam nicht zurück, der Server wurde angehalten."
 
@@ -1339,6 +1789,30 @@ msgstr "Der Leser kam nicht zurück, der Server wurde angehalten."
 #: code:addons/int_filemanager/models/int_filemanager_text.py:0
 msgid "The reader stopped (exit code %(code)s)."
 msgstr "Der Leser hat angehalten (Exit-Code %(code)s)."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_list
+msgid ""
+"The recognition of the ticked files is thrown away and done again from the "
+"original."
+msgstr ""
+"Die Texterkennung der markierten Dateien wird verworfen und vom Original aus"
+" neu gemacht."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_form
+msgid ""
+"The recognition of this file is thrown away and done again from the "
+"original."
+msgstr ""
+"Die Texterkennung dieser Datei wird verworfen und vom Original aus neu "
+"gemacht."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "The recognized PDF of this document is missing."
+msgstr "Das erkannte PDF dieses Dokuments fehlt."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1376,6 +1850,12 @@ msgid ""
 msgstr "Der Text der Dateien wird im Hintergrund gelesen; die Suche in den Dateien findet nur, was schon fertig ist."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The text of the recognized pages could not be read."
+msgstr "Der Text der erkannten Seiten konnte nicht gelesen werden."
+
+#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_list
 msgid "The text of the ticked files is thrown away and read again."
 msgstr "Der Text der angekreuzten Dateien wird verworfen und erneut gelesen."
@@ -1384,6 +1864,43 @@ msgstr "Der Text der angekreuzten Dateien wird verworfen und erneut gelesen."
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_form
 msgid "The text of this file is thrown away and read again."
 msgstr "Der Text dieser Datei wird verworfen und erneut gelesen."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The text recognition did not come back, the server was stopped."
+msgstr ""
+"Die Texterkennung hat sich nicht gemeldet, der Server wurde angehalten."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The text recognition found no text."
+msgstr "Die Texterkennung hat keinen Text gefunden."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The text recognition gave no file."
+msgstr "Die Texterkennung hat keine Datei geliefert."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "The text recognition made no PDF of this document."
+msgstr "Die Texterkennung hat von diesem Dokument kein PDF gemacht."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The text recognition refused pages that have text."
+msgstr "Die Texterkennung hat Seiten abgelehnt, die schon Text haben."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_text.py:0
+msgid "The text recognition stopped with an error several times."
+msgstr "Die Texterkennung ist mehrmals mit einem Fehler abgebrochen."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1457,6 +1974,11 @@ msgid "Type of the exception activity on record."
 msgstr "Typ der Ausnahmeaktivität im Datensatz."
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_output_type
+msgid "Type of the new PDF"
+msgstr "Art des neuen PDFs"
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/document_list_controller.xml:0
 msgid "Upload"
@@ -1464,10 +1986,33 @@ msgstr "Hochladen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_pending
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__wait
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__pending
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
 msgid "Waiting"
 msgstr "Wartet"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__ocr_images
+msgid ""
+"Whether the text in the images of this folder (JPEG, PNG, TIFF ...) is "
+"recognized, so that the search finds it. A top folder that says 'like the "
+"parent folder' is off. Nothing is recognized unless the text recognition is "
+"switched on in the settings."
+msgstr ""
+"Ob der Text in den Bildern dieses Ordners (JPEG, PNG, TIFF ...) erkannt "
+"wird, damit die Suche ihn findet. Ein oberster Ordner, der „Wie der "
+"übergeordnete Ordner“ sagt, ist aus. Es wird nichts erkannt, solange die "
+"Texterkennung in den Einstellungen nicht eingeschaltet ist."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"Which scans are done and what is still to do. Nothing is recognized while "
+"the state is not Ready."
+msgstr ""
+"Welche Scans fertig sind und was noch zu tun ist. Es wird nichts erkannt, "
+"solange der Zustand nicht „Bereit“ ist."
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__access_mode
@@ -1484,6 +2029,11 @@ msgid "Without text"
 msgstr "Ohne Text"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "deu+eng"
+msgstr "deu+eng"
+
+#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
 msgid "e.g. Test seminars"
 msgstr "z. B. Testseminare"
@@ -1491,8 +2041,32 @@ msgstr "z. B. Testseminare"
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "no language"
+msgstr "keine Sprache"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "not installed"
+msgstr "nicht installiert"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "not installed: PDF files are not read"
 msgstr "nicht installiert: PDF-Dateien werden nicht gelesen"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "ocrmypdf %(version)s, Tesseract with %(languages)s"
+msgstr "ocrmypdf %(version)s, Tesseract mit %(languages)s"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "ocrmypdf is there, Tesseract is not"
+msgstr "ocrmypdf ist da, Tesseract nicht"
 
 #. module: int_filemanager
 #. odoo-javascript
