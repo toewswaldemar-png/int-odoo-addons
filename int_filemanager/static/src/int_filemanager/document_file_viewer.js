@@ -62,6 +62,81 @@ export class DocumentFileViewer extends FileViewer {
             },
             () => [this.imageRef.el]
         );
+        useEffect(
+            (iframe) => {
+                if (!iframe) {
+                    return;
+                }
+                const onLoad = () => this.showHit(iframe);
+                iframe.addEventListener("load", onLoad);
+                return () => iframe.removeEventListener("load", onLoad);
+            },
+            () => [this.iframeViewerPdfRef.el]
+        );
+    }
+
+    /**
+     * Mark the words of the hit in the PDF viewer of the iframe and show the first one in the
+     * middle of the screen. The viewer (`PDFViewerApplication`, the same origin) is told after
+     * its pages are there and it stands on the page of the hit, so its search begins on that
+     * page. The viewer scrolls the first word to 50 px below the upper edge; see
+     * `centerSelectedMatch` for how it is put in the middle.
+     * @param {HTMLIFrameElement} iframe
+     */
+    async showHit(iframe) {
+        const hit = this.state.file.hit;
+        const app = iframe.contentWindow?.PDFViewerApplication;
+        if (!hit?.terms?.length || !app) {
+            return;
+        }
+        await app.initializedPromise;
+        const search = () => {
+            if (!iframe.isConnected) {
+                return;
+            }
+            app.pdfViewer.currentPageNumber = hit.page;
+            this.centerSelectedMatch(app);
+            app.eventBus.dispatch("find", {
+                source: this,
+                type: "",
+                query: hit.terms,
+                caseSensitive: false,
+                // Whole words, as the search of the server finds them: not `pegel` in `Kanalausspielpegel`.
+                entireWord: true,
+                highlightAll: true,
+                findPrevious: false,
+                matchDiacritics: true,
+            });
+        };
+        if (app.pdfViewer.pagesCount) {
+            search();
+        } else {
+            app.eventBus.on("pagesloaded", search, { once: true });
+        }
+    }
+
+    /**
+     * Put the word that the search selects in the middle of the screen. The viewer scrolls to
+     * it once, when it draws the text of the page (`scrollMatchIntoView` of its find
+     * controller, called for the selected word at every draw, but scrolling only the first
+     * time); the word is then centered in the same call, whenever the viewer has moved. No
+     * waiting: it happens at the moment the viewer scrolls, and not at all when it only draws
+     * the page again (zoom).
+     * @param {Object} app the `PDFViewerApplication` of the iframe
+     */
+    centerSelectedMatch(app) {
+        const finder = app.findController;
+        const container = app.appConfig.viewerContainer;
+        const scrollMatchIntoView = finder.scrollMatchIntoView.bind(finder);
+        finder.scrollMatchIntoView = (params) => {
+            const { scrollTop, scrollLeft } = container;
+            scrollMatchIntoView(params);
+            if (container.scrollTop !== scrollTop || container.scrollLeft !== scrollLeft) {
+                params.element
+                    .querySelector(".highlight.selected")
+                    ?.scrollIntoView({ block: "center", inline: "center" });
+            }
+        };
     }
 
     /**

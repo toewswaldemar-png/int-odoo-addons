@@ -37,6 +37,11 @@ HEAD_SIZE = 2048
 NAME_MAX_LENGTH = 255
 # Names tried for one upload ("a.txt", "a (2).txt", ...) before giving up.
 NAME_TRIES = 1000
+# The context key with the words of the full text search (see ``content_hits``), and how many
+# of them, and how long, are looked at.
+CONTENT_WORDS_KEY = "int_filemanager_words"
+CONTENT_WORDS_MAX = 10
+CONTENT_WORD_LENGTH = 200
 # Set by the storage only (see ``write``), like the core does for ``ir.attachment``.
 STORAGE_FIELDS = ("checksum", "size", "mimetype")
 
@@ -101,6 +106,13 @@ class IntFilemanagerDocument(models.Model):
         search="_search_content_search",
         exportable=False,
     )
+    # Where the words of the full text search are, for the column of the list: set only while
+    # the list is searched by them (the search puts them in the context, see the search view).
+    content_hits = fields.Json(
+        string="Found in the text",
+        compute="_compute_content_hits",
+        exportable=False,
+    )
 
     _name_per_folder = models.UniqueIndex(
         '(folder_id, lower(name COLLATE "und-x-icu")) WHERE active',
@@ -122,11 +134,32 @@ class IntFilemanagerDocument(models.Model):
     def _compute_content_search(self):
         self.content_search = False
 
+    @api.depends_context(CONTENT_WORDS_KEY)
+    def _compute_content_hits(self):
+        """The pages of the files that have the words of the search, with an excerpt each.
+
+        The words come from the context: the search view sets them from what was typed in the
+        field "Full text". Whoever sets them by hand only gets excerpts of files they can read
+        anyway (the field is read for readable documents), and no more than they could search.
+        """
+        words = self.env.context.get(CONTENT_WORDS_KEY) or []
+        if isinstance(words, str):
+            words = [words]
+        elif not isinstance(words, (list, tuple)):
+            words = []
+        words = [word[:CONTENT_WORD_LENGTH] for word in words if isinstance(word, str) and word.strip()]
+        found = self.env["int.filemanager.text.page"]._content_hits(
+            self.mapped("checksum"), words[:CONTENT_WORDS_MAX]
+        )
+        for document in self:
+            document.content_hits = found.get(document.checksum, False)
+
     def _search_content_search(self, operator, value):
         """Documents whose file has these words in it (``websearch`` syntax: quotes, ``-``, ``or``).
 
-        Words, not letters: ``Mueller`` finds ``Müller`` and the other way round, ``Haus`` finds
-        ``Häuser``, ``Hau`` finds nothing. A text belongs to a blob, so every document with the
+        Words, not letters: ``Mueller`` finds ``Müller`` and the other way round, ``Rechnung`` finds
+        ``Rechnungen``, ``Rechn`` finds nothing. A plural with an umlaut is another word: ``Haus``
+        does not find ``Häuser`` (the folding makes ``haeuser``, the stemmer cuts ``haeus``). A text belongs to a blob, so every document with the
         checksum is found; the rules of the folders still decide which of them the user sees,
         as the search runs over the documents. Equal checksum means equal content, nothing
         is given away by a hit in a folder the user cannot see.
@@ -143,18 +176,7 @@ class IntFilemanagerDocument(models.Model):
     @api.model
     def _content_sql(self, words):
         def to_sql(model, alias, query):
-            # A word that is on most pages makes the list of hits so long that PostgreSQL, with
-            # the small standard memory, works it out again and again (minutes instead of
-            # seconds). More memory for this transaction only, and no parallel workers (each
-            # would take that much again).
-            work_mem = model.env["int.filemanager.text"]._setting("work_mem_mib")
-            model.env.cr.execute(
-                SQL(
-                    "SELECT set_config('work_mem', %s, true),"
-                    " set_config('max_parallel_workers_per_gather', '0', true)",
-                    f"{work_mem}MB",
-                )
-            )
+            model.env["int.filemanager.text"]._use_search_memory()
             return SQL(
                 """
                 %(checksum)s IN (

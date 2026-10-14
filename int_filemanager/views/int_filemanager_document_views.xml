@@ -24,6 +24,13 @@
                 <field name="size" widget="int_filemanager_size" />
                 <field name="write_date" string="Modified" />
                 <field name="tag_ids" widget="many2many_tags" optional="show" />
+                <!-- Where the words of the full text search are: only while that field is searched
+                     (its context sets the words, see the search view). -->
+                <field
+                    name="content_hits"
+                    widget="int_filemanager_content_hits"
+                    column_invisible="not context.get('int_filemanager_words')"
+                />
                 <field
                     name="activity_ids"
                     string="Next Activity"
@@ -149,7 +156,12 @@
                 <field name="name" />
                 <field name="folder_id" />
                 <field name="tag_ids" />
-                <field name="content_search" string="Full text" />
+                <!-- The words typed here go to the context: the list shows where they are. -->
+                <field
+                    name="content_search"
+                    string="Full text"
+                    context="{'int_filemanager_words': self}"
+                />
                 <filter
                     name="filter_archived"
                     string="Archived"

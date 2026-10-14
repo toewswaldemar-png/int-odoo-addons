@@ -178,6 +178,22 @@ class IntFilemanagerText(models.Model):
             return default
 
     @api.model
+    def _use_search_memory(self):
+        """More memory for the full text search, in this transaction only.
+
+        A word that is on most pages makes the list of hits so long that PostgreSQL, with the
+        small standard memory, works it out again and again (minutes instead of seconds). No
+        parallel workers either (each would take that much again).
+        """
+        self.env.cr.execute(
+            SQL(
+                "SELECT set_config('work_mem', %s, true),"
+                " set_config('max_parallel_workers_per_gather', '0', true)",
+                f"{self._setting('work_mem_mib')}MB",
+            )
+        )
+
+    @api.model
     def _limit_seconds(self):
         """How long one run of a scheduled action may take at most, from its start.
 

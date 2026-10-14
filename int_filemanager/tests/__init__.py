@@ -12,4 +12,5 @@ from . import test_folder_archive
 from . import test_import
 from . import test_text_reader
 from . import test_text_search
+from . import test_text_hits
 from . import test_text_admin

@@ -10,7 +10,9 @@ import { useDocumentFileViewer } from "./document_file_viewer";
  * (the thumbnail or the symbol of the file type) shows the file in the file viewer (the arrow
  * keys go through the files of the page); a click on the rest of the row opens the form, as in
  * every list of the core (with the pager over the rows of the page), also for a file that a
- * browser cannot show.
+ * browser cannot show. After a full text search the list shows where the words are (the column
+ * of `DocumentContentHitsField`): a click on a hit shows the file on that page, the picture
+ * shows it on the first.
  */
 export class DocumentListRenderer extends ListRenderer {
     static template = "int_filemanager.DocumentListRenderer";
@@ -28,19 +30,24 @@ export class DocumentListRenderer extends ListRenderer {
 
     /**
      * @override
-     * Only a click on the picture is taken. Rows that are ticked keep the core's behavior (a
-     * click ticks or unticks, the multi edit works); so does a click for a new window (Ctrl,
-     * middle button).
+     * Only a click on the picture or on a hit is taken. Rows that are ticked keep the core's
+     * behavior (a click ticks or unticks, the multi edit works); so does a click for a new
+     * window (Ctrl, middle button).
      */
     async onCellClicked(record, column, ev, newWindow) {
+        const hit = ev.target.closest?.(".o_int_filemanager_hit");
         const isPicture = Boolean(ev.target.closest?.(".o_int_filemanager_thumbnail"));
         if (
-            isPicture &&
+            (isPicture || hit) &&
             !newWindow &&
             !ev.target.special_click &&
             !this.props.list.selection.length
         ) {
-            const { file, files } = documentFilesFromRecords(this.props.list.records, record);
+            const { file, files } = documentFilesFromRecords(
+                this.props.list.records,
+                record,
+                Number(hit?.dataset.hitIndex || 0)
+            );
             if (file.isViewable) {
                 this.fileViewer.open(file, files);
                 return;

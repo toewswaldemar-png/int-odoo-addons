@@ -25,7 +25,9 @@ export const TEXT_MAX_SIZE = 2 * 1024 * 1024;
  */
 export class DocumentFile extends FileModelMixin(Object) {
     /**
-     * @param {{id: number, name: string, mimetype: string, checksum: string, size: number}} values
+     * @param {{id: number, name: string, mimetype: string, checksum: string, size: number,
+     *      hit?: {page: number, terms: string[]}}} values `hit` is the place in the file that a
+     *      full text search found: a PDF opens on its page and the viewer marks the words
      */
     constructor(values) {
         super();
@@ -34,6 +36,20 @@ export class DocumentFile extends FileModelMixin(Object) {
 
     get urlRoute() {
         return `/web/content/${MODEL}/${this.id}/content`;
+    }
+
+    /**
+     * @override
+     * The PDF viewer takes the page from the hash of its address (`page`; `viewer.js`,
+     * `setHash`). The words are marked by `DocumentFileViewer` after the load: the `search` of
+     * the hash starts at the wrong time, and the viewer then puts the word at the top edge.
+     */
+    get defaultSource() {
+        const source = super.defaultSource;
+        if (!this.isPdf || !this.hit) {
+            return source;
+        }
+        return `${source}&${new URLSearchParams({ page: this.hit.page })}`;
     }
 
     get isImage() {
@@ -51,12 +67,14 @@ export class DocumentFile extends FileModelMixin(Object) {
 
 /**
  * @param {Object} record a record of the model `int.filemanager.document` with name, mimetype,
- *      checksum and size loaded
+ *      checksum and size loaded (and `content_hits`, if the list was searched by the full text)
+ * @param {Number} [hitIndex] which of the hits of the record the file shows
  * @returns {DocumentFile}
  */
-export function documentFileFromRecord(record) {
-    const { name, mimetype, checksum, size } = record.data;
-    return new DocumentFile({ id: record.resId, name, mimetype, checksum, size });
+export function documentFileFromRecord(record, hitIndex = 0) {
+    const { name, mimetype, checksum, size, content_hits } = record.data;
+    const hit = content_hits?.hits?.[hitIndex];
+    return new DocumentFile({ id: record.resId, name, mimetype, checksum, size, hit });
 }
 
 /**
@@ -73,11 +91,15 @@ export async function readDocumentFile(orm, id) {
  * The files a viewer goes through for a click on a record of the list or the kanban.
  * @param {Object[]} records the records of the page
  * @param {Object} record the record that was clicked; it may be missing among `records`
+ * @param {Number} [hitIndex] the hit of `record` that was clicked; the other files show their
+ *      first hit
  * @returns {{file: DocumentFile, files: DocumentFile[]}} `file` is one of `files`: the viewer
  *      finds the file to start with among them by identity
  */
-export function documentFilesFromRecords(records, record) {
+export function documentFilesFromRecords(records, record, hitIndex = 0) {
     const inPage = records.includes(record) ? records : [record];
-    const files = inPage.map(documentFileFromRecord);
+    const files = inPage.map((each) =>
+        documentFileFromRecord(each, each === record ? hitIndex : 0)
+    );
     return { file: files[inPage.indexOf(record)], files };
 }
