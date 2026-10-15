@@ -2,7 +2,7 @@ import { Component } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
-import { documentFileFromRecord } from "./document_file";
+import { documentFileFromRecord } from "../../document_file";
 
 /**
  * Where the words of the full text search are in a file: up to three hits, each with the page

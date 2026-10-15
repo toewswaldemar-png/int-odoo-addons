@@ -1,7 +1,7 @@
 import { Component } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
-import { documentFileFromRecord } from "./document_file";
+import { documentFileFromRecord } from "../document_file";
 import { useDocumentFileViewer } from "./document_file_viewer";
 
 /**

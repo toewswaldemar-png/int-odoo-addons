@@ -1,6 +1,6 @@
 import { Component, onWillStart, onWillUpdateProps, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { readDocumentFile } from "./document_file";
+import { readDocumentFile } from "../document_file";
 
 /**
  * The preview beside the form of a document, in the place of the core's `AttachmentView`.

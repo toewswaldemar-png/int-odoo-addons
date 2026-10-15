@@ -1,6 +1,6 @@
 import { CANCEL_GLOBAL_CLICK, KanbanRecord } from "@web/views/kanban/kanban_record";
-import { documentFilesFromRecords } from "./document_file";
-import { useDocumentFileViewer } from "./document_file_viewer";
+import { documentFilesFromRecords } from "../../document_file";
+import { useDocumentFileViewer } from "../../file_viewer/document_file_viewer";
 
 /**
  * A card of the kanban of documents: a click on it shows the file in the file viewer, as a click

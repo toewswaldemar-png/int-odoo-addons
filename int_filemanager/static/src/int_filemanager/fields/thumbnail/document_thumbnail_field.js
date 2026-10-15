@@ -3,7 +3,7 @@ import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { imageUrl } from "@web/core/utils/urls";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
-import { documentFileFromRecord, MODEL } from "./document_file";
+import { documentFileFromRecord, MODEL } from "../../document_file";
 
 const THUMBNAIL_SIZE = 256;
 

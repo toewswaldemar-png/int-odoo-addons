@@ -2,8 +2,8 @@ import { useService } from "@web/core/utils/hooks";
 import { FileUploadProgressContainer } from "@web/core/file_upload/file_upload_progress_container";
 import { FileUploadProgressDataRow } from "@web/core/file_upload/file_upload_progress_record";
 import { ListRenderer } from "@web/views/list/list_renderer";
-import { documentFilesFromRecords } from "./document_file";
-import { useDocumentFileViewer } from "./document_file_viewer";
+import { documentFilesFromRecords } from "../../document_file";
+import { useDocumentFileViewer } from "../../file_viewer/document_file_viewer";
 
 /**
  * The list with the progress of the running uploads above it. A click on the picture of a row

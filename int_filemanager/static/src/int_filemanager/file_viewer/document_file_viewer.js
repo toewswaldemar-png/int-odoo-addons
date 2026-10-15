@@ -2,10 +2,10 @@ import { onWillDestroy, useEffect, useState } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { FileViewer } from "@web/core/file_viewer/file_viewer";
 import { registry } from "@web/core/registry";
-import { attachDoubleTap } from "./double_tap";
+import { attachDoubleTap } from "../touch/double_tap";
 import { useFileViewerFrameZoom } from "./file_viewer_frame_zoom_hook";
 import { useFileViewerSwipe } from "./file_viewer_swipe_hook";
-import { createVelocityTracker, FLING_EASING, flingPlan } from "./momentum";
+import { createVelocityTracker, FLING_EASING, flingPlan } from "../touch/momentum";
 
 // The zoom of the PDF viewer the core ships (`addons/web/static/lib/pdfjs/web/viewer.js`):
 // the same range, the same steps, the zoom around the point under the fingers or the pointer.

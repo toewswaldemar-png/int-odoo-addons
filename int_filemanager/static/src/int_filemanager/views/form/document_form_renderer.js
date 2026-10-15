@@ -1,6 +1,6 @@
 import { FormRenderer } from "@web/views/form/form_renderer";
-import { documentFileFromRecord } from "./document_file";
-import { DocumentPreview } from "./document_preview";
+import { documentFileFromRecord } from "../../document_file";
+import { DocumentPreview } from "../../file_viewer/document_preview";
 
 /**
  * The form of a document with the preview of its file beside it, in the layout the core gives

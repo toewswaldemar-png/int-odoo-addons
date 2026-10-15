@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "@odoo/owl";
 import { localization } from "@web/core/l10n/localization";
 import { useFrameDocuments } from "./file_viewer_frames_hook";
-import { attachSwipe } from "./swipe";
+import { attachSwipe } from "../touch/swipe";
 
 // What a swipe must not start on: the buttons of the viewer (the arrows, the toolbar, the
 // header) are for the finger to press.

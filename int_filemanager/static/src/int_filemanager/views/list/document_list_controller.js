@@ -2,7 +2,7 @@ import { useCustomDropzone } from "@web/core/dropzone/dropzone_hook";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { ListController } from "@web/views/list/list_controller";
-import { DocumentDropzone } from "./document_dropzone";
+import { DocumentDropzone } from "../../dropzone/document_dropzone";
 
 export const UPLOAD_ROUTE = "/int_filemanager/upload";
 const FINISHED_STATES = ["loaded", "error", "abort"];

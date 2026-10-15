@@ -1,6 +1,6 @@
-import { attachDoubleTap } from "./double_tap";
+import { attachDoubleTap } from "../touch/double_tap";
 import { useFrameDocuments } from "./file_viewer_frames_hook";
-import { attachPinch, createPanFollower, scrollAfterPinch } from "./pinch";
+import { attachPinch, createPanFollower, scrollAfterPinch } from "../touch/pinch";
 
 // How far a text may be zoomed in (a factor). It is not zoomed out: it fits the window as it is.
 const MIN_TEXT_SCALE = 1;
