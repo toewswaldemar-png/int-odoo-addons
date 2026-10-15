@@ -372,6 +372,7 @@ msgstr "Dokumente"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__done
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_document__thumbnail_state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__done
@@ -435,6 +436,7 @@ msgstr "Wegen des Namens ausgeschlossen."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_failed
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_document__thumbnail_state__failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__error
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__failed
@@ -2079,3 +2081,18 @@ msgstr "S. %(page)s"
 #: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "pdfminer %(version)s"
 msgstr ""
+
+#. module: int_filemanager
+#: model:ir.actions.server,name:int_filemanager.int_filemanager_thumbnail_cron_ir_actions_server
+msgid "Filemanager: draw the first page of the PDFs"
+msgstr "Dateimanager: erste Seite der PDFs zeichnen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__thumbnail_state
+msgid "Picture state"
+msgstr "Bildstatus"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__thumbnail
+msgid "Thumbnail"
+msgstr "Vorschaubild"
