@@ -42,7 +42,7 @@ msgstr "(etwa %(time)s Stunden Arbeit)"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_content_hits_field.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
 msgid "+ %(count)s more"
 msgstr "+ %(count)s weitere"
 
@@ -206,7 +206,7 @@ msgstr "Unterhalb des einzulesenden Ordners."
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_content_hits_field.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
 msgid "Block %(page)s"
 msgstr "Block %(page)s"
 
@@ -219,7 +219,7 @@ msgstr "Textblöcke für Dateien ohne Seiten (KiB) und die größte Seite eines 
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/size_field.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/size/size_field.js:0
 msgid "Bytes"
 msgstr "Bytes"
 
@@ -257,8 +257,8 @@ msgstr "Unterordner"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_dropzone.js:0
-#: code:addons/int_filemanager/static/src/int_filemanager/document_list_controller.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/dropzone/document_dropzone.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
 msgid "Choose a folder in the panel on the left first."
 msgstr "Wählen Sie zuerst im Bereich links einen Ordner."
 
@@ -350,13 +350,13 @@ msgstr "Dokument"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_name_field.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/name/document_name_field.js:0
 msgid "Document name"
 msgstr "Dokumentname"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_thumbnail_field.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/thumbnail/document_thumbnail_field.js:0
 msgid "Document picture"
 msgstr "Dokumentbild"
 
@@ -398,7 +398,7 @@ msgstr "Entwurf"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_dropzone.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/dropzone/document_dropzone.js:0
 msgid "Drop the files into %(folder)s"
 msgstr "Dateien in %(folder)s ablegen"
 
@@ -557,7 +557,7 @@ msgstr "Ordner"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_list_controller.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
 msgid "Folders cannot be uploaded, only files."
 msgstr "Ordner können nicht hochgeladen werden, nur Dateien."
 
@@ -602,7 +602,7 @@ msgstr "Hat Nachricht"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_content_hits_field.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
 msgid "Hits in the text"
 msgstr "Fundstellen im Text"
 
@@ -1121,7 +1121,7 @@ msgstr "Offen"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_preview_button.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/file_viewer/document_preview_button.xml:0
 msgid "Preview"
 msgstr "Vorschau"
 
@@ -1980,7 +1980,7 @@ msgstr "Art des neuen PDFs"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_list_controller.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
 msgid "Upload"
 msgstr "Hochladen"
 
@@ -2070,7 +2070,7 @@ msgstr "ocrmypdf ist da, Tesseract nicht"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/document_content_hits_field.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
 msgid "p. %(page)s"
 msgstr "S. %(page)s"
 
