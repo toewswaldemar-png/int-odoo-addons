@@ -48,6 +48,9 @@ export const documentNameField = {
         { name: "ocr_checksum", type: "char" },
         { name: "size", type: "float" },
     ],
+    // The list view gives every column the same minimum (80px), which leaves a few letters of the
+    // name beside the picture on a narrow screen: the name keeps room for its text (no maximum).
+    listViewWidth: [200],
 };
 
 registry.category("fields").add("int_filemanager_document_name", documentNameField);
