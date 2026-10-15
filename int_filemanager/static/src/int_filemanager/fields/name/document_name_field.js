@@ -1,14 +1,14 @@
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
-import { imageUrl } from "@web/core/utils/urls";
 import { CharField, charField } from "@web/views/fields/char/char_field";
-import { documentFileFromRecord, MODEL } from "../../document_file";
+import { documentFileFromRecord, thumbnailUrl } from "../../document_file";
 
 const THUMBNAIL_SIZE = 64;
 
 /**
- * The name of a document with a small picture before it: the picture itself for an image, else
- * the core's symbol of the file type. A char field, so the name stays editable (multi edit).
+ * The name of a document with a small picture before it: the picture itself for an image, the
+ * first page of a PDF, else the core's symbol of the file type. A char field, so the name stays
+ * editable (multi edit).
  */
 export class DocumentNameField extends CharField {
     static template = "int_filemanager.DocumentNameField";
@@ -22,19 +22,10 @@ export class DocumentNameField extends CharField {
         return documentFileFromRecord(this.props.record).isViewable;
     }
 
-    /** The address of the small picture, only for an image (the route answers others with a
-     * placeholder, or with the whole file). `unique` lets the browser keep it for good: the
-     * checksum changes with the content. */
+    /** The address of the small picture, only for an image or a PDF that has one (the route
+     * answers others with a placeholder, or with the whole file). */
     get thumbnailUrl() {
-        const file = documentFileFromRecord(this.props.record);
-        if (!file.isImage || !this.props.record.resId) {
-            return false;
-        }
-        return imageUrl(MODEL, file.id, "content", {
-            width: THUMBNAIL_SIZE,
-            height: THUMBNAIL_SIZE,
-            unique: file.checksum,
-        });
+        return thumbnailUrl(this.props.record, THUMBNAIL_SIZE);
     }
 }
 
@@ -47,6 +38,7 @@ export const documentNameField = {
         { name: "checksum", type: "char" },
         { name: "ocr_checksum", type: "char" },
         { name: "size", type: "float" },
+        { name: "thumbnail_state", type: "selection" },
     ],
     // The list view gives every column the same minimum (80px), which leaves a few letters of the
     // name beside the picture on a narrow screen: the name keeps room for its text (no maximum).

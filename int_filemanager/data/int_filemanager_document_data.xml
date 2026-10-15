@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Draws the first page of the PDFs as a small picture for the list and the kanban. It works
+         in steps (one file each) and asks Odoo to call it again until nothing is left; the
+         interval only picks up the new files. -->
+    <record id="int_filemanager_thumbnail_cron" model="ir.cron">
+        <field name="name">Filemanager: draw the first page of the PDFs</field>
+        <field name="model_id" ref="model_int_filemanager_document" />
+        <field name="state">code</field>
+        <field name="code">model._cron_thumbnails()</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="priority">80</field>
+    </record>
+</odoo>

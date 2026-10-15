@@ -1,11 +1,13 @@
 import { FileModelMixin } from "@web/core/file_viewer/file_model";
-import { url } from "@web/core/utils/urls";
+import { imageUrl, url } from "@web/core/utils/urls";
 
 export const MODEL = "int.filemanager.document";
 // The binary fields that the content route serves: the file as it was uploaded, and the PDF that
 // the text recognition made of a scan (it has a text layer that the PDF viewer can search).
 const CONTENT_FIELD = "content";
 const OCR_FIELD = "ocr_content";
+// The first page of a PDF as a small picture: a field of the core's own image type.
+const THUMBNAIL_FIELD = "thumbnail";
 // What the browser shows in an <img>; the core's list adds svg, tiff and ico, which a document
 // never has (svg is stored as text) or a browser does not show.
 const IMAGE_MIMETYPES = ["image/bmp", "image/gif", "image/jpeg", "image/png", "image/webp"];
@@ -114,6 +116,30 @@ export function documentFileFromRecord(record, hitIndex = 0) {
         ocr_checksum,
         hit,
     });
+}
+
+/**
+ * The address of the small picture of a record of the list or the kanban: a small version of the
+ * image itself, or the first page of a PDF that the server has drawn (`thumbnail_state`).
+ * `unique` lets the browser keep the picture for good: the checksum changes with the content.
+ * @param {Object} record a record of the model `int.filemanager.document`, with `thumbnail_state` loaded
+ * @param {Number} size the width and the height asked for, in pixels
+ * @returns {string|false} `false` for a record without a picture: the symbol of the file type shows
+ */
+export function thumbnailUrl(record, size) {
+    const file = documentFileFromRecord(record);
+    if (!record.resId) {
+        return false;
+    }
+    let field;
+    if (file.isImage) {
+        field = CONTENT_FIELD;
+    } else if (file.isPdf && record.data.thumbnail_state === "done") {
+        field = THUMBNAIL_FIELD;
+    } else {
+        return false;
+    }
+    return imageUrl(MODEL, file.id, field, { width: size, height: size, unique: file.checksum });
 }
 
 /**

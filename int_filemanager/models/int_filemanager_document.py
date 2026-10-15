@@ -1,8 +1,13 @@
+import base64
 import contextlib
 import hashlib
+import importlib.util
 import itertools
+import logging
 import os
 import re
+import subprocess
+import sys
 import time
 import unicodedata
 import uuid
@@ -17,6 +22,8 @@ from odoo.http import Stream
 from odoo.tools import SQL
 
 from .int_filemanager_text_page import folded
+
+_logger = logging.getLogger(__name__)
 
 BLOB_FOLDER = "int_filemanager"
 UPLOAD_FOLDER = ".upload"
@@ -42,8 +49,19 @@ NAME_TRIES = 1000
 CONTENT_WORDS_KEY = "int_filemanager_words"
 CONTENT_WORDS_MAX = 10
 CONTENT_WORD_LENGTH = 200
-# Set by the storage only (see ``write``), like the core does for ``ir.attachment``.
-STORAGE_FIELDS = ("checksum", "size", "mimetype")
+# Set by the storage only (see ``write``), like the core does for ``ir.attachment``. The picture
+# of a PDF and its state are made by the scheduled action alone.
+STORAGE_FIELDS = ("checksum", "size", "mimetype", "thumbnail", "thumbnail_state")
+# The picture of the first page of a PDF (``_cron_thumbnails``): the longer side in pixels, the
+# files drawn per run, the time and the memory one page may take. A child process draws it
+# (``tools/pdf_thumbnail.py``): a broken file may crash the PDF library.
+PDF = "application/pdf"
+THUMBNAIL_CRON_XMLID = "int_filemanager.int_filemanager_thumbnail_cron"
+THUMBNAIL_SIZE = 256
+THUMBNAIL_BATCH = 100
+THUMBNAIL_SECONDS = 60
+THUMBNAIL_MEMORY_MIB = 1024
+PDF_THUMBNAIL = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "pdf_thumbnail.py")
 
 
 def _remove_file(path):
@@ -116,6 +134,24 @@ class IntFilemanagerDocument(models.Model):
         copy=False,
         exportable=False,
     )
+    # The first page of a PDF as a small picture for the list and the kanban. Made by the
+    # scheduled action ``_cron_thumbnails`` on the server: the core's ``thumbnail`` of the
+    # attachments of a message is made by the browser and only when somebody looks at the file.
+    thumbnail = fields.Image(
+        max_width=THUMBNAIL_SIZE,
+        max_height=THUMBNAIL_SIZE,
+        readonly=True,
+        copy=False,
+        exportable=False,
+    )
+    # Empty while a PDF waits for its picture, and for every other type. A PDF that cannot be
+    # drawn is "failed" and is not tried again.
+    thumbnail_state = fields.Selection(
+        [("done", "Done"), ("failed", "Failed")],
+        string="Picture state",
+        readonly=True,
+        copy=False,
+    )
     # The text inside the file, for the search only (the pages are in ``int.filemanager.text``).
     # Not "Content": that is the label of the binary field above, Odoo warns of two alike.
     content_search = fields.Char(
@@ -142,6 +178,10 @@ class IntFilemanagerDocument(models.Model):
     )
     # A hash index only finds an equal path (a btree index fails above about 2.7 KB).
     _origin_path_index = models.Index("USING hash (origin_path)")
+    # The PDFs that wait for their picture: the scheduled action looks only at these.
+    _thumbnail_work_index = models.Index(
+        "(id) WHERE thumbnail_state IS NULL AND mimetype = 'application/pdf'"
+    )
 
     def _compute_content(self):
         self.content = False
@@ -558,6 +598,76 @@ class IntFilemanagerDocument(models.Model):
             else:
                 return document
         raise UserError(self.env._("No free name for %(name)s in this folder.", name=name))
+
+    @api.model
+    def _thumbnail_domain(self):
+        """The PDFs that wait for their picture (one that failed is not tried again)."""
+        return Domain([("mimetype", "=", PDF), ("thumbnail_state", "=", False)])
+
+    @api.model
+    def _cron_thumbnails(self, limit=THUMBNAIL_BATCH):
+        """Draw the first page of the PDFs that have no picture yet, one blob at a time.
+
+        Documents with the same checksum share one drawing. Every blob is committed
+        (``_commit_progress``), so a stop loses no more than the file that was being drawn; when
+        the time is up with PDFs left, the report of what remains makes Odoo call it again.
+
+        :param limit: the documents looked at in one call
+        """
+        assert self.env.context.get("cron_id") == self.env.ref(THUMBNAIL_CRON_XMLID).id, (
+            "Meant for cron usage only"
+        )
+        if not importlib.util.find_spec("pypdfium2"):
+            _logger.warning("pypdfium2 is not installed: the pictures of PDFs are not made.")
+            return
+        cron = self.env["ir.cron"]
+        domain = self._thumbnail_domain()
+        documents = self.with_context(active_test=False).search(domain, limit=limit)
+        for checksum, same in documents.grouped("checksum").items():
+            # Another transaction holds a row (the cleaner, a rename): the next call gets it.
+            same = same.try_lock_for_update(allow_referencing=True).filtered_domain(domain)
+            if same:
+                same._make_thumbnail(checksum)
+            if not cron._commit_progress(len(same)):
+                break
+        cron._commit_progress(0, remaining=self.with_context(active_test=False).search_count(domain))
+
+    def _make_thumbnail(self, checksum):
+        """Draw the blob ``checksum`` and give the picture to these documents, or mark them failed."""
+        picture = self._draw_first_page(checksum)
+        values = {"thumbnail_state": "failed"}
+        if picture:
+            values = {"thumbnail": base64.b64encode(picture), "thumbnail_state": "done"}
+        # The users cannot write these fields (see ``write``); the job runs as superuser anyway.
+        self.sudo().with_context(tracking_disable=True).write(values)
+
+    @api.model
+    def _draw_first_page(self, checksum):
+        """The first page of the PDF blob as a JPEG, or ``None`` if it cannot be drawn.
+
+        The program that cannot be started is no fault of the file: that error goes up (Odoo stops
+        a scheduled action that fails again and again and tells the administrator).
+        """
+        command = [
+            sys.executable,
+            "-I",
+            PDF_THUMBNAIL,
+            self._blob_path(checksum),
+            str(THUMBNAIL_SIZE),
+            str(THUMBNAIL_MEMORY_MIB),
+        ]
+        try:
+            done = subprocess.run(  # noqa: S603 (own script, own interpreter, no shell)
+                command, capture_output=True, check=False, timeout=THUMBNAIL_SECONDS
+            )
+        except subprocess.TimeoutExpired:
+            _logger.warning("No picture of %s: the first page took more than %s s.", checksum, THUMBNAIL_SECONDS)
+            return None
+        if done.returncode or not done.stdout:
+            reason = done.stderr.decode(errors="replace").strip().splitlines()[-1:] or ["no answer"]
+            _logger.warning("No picture of %s: %s", checksum, reason[0][:200])
+            return None
+        return done.stdout
 
     def _to_ocr_http_stream(self):
         """The recognized PDF of the file as a stream, for the viewer.

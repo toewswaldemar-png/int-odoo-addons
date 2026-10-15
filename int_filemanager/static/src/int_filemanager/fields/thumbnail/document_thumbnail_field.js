@@ -1,15 +1,15 @@
 import { Component } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
-import { imageUrl } from "@web/core/utils/urls";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
-import { documentFileFromRecord, MODEL } from "../../document_file";
+import { thumbnailUrl } from "../../document_file";
 
 const THUMBNAIL_SIZE = 256;
 
 /**
- * The picture of a document on its kanban card: a small version of the image itself, else the
- * core's symbol of the file type (as `DocumentNameField` does for the list, only larger).
+ * The picture of a document on its kanban card: a small version of the image itself, the first
+ * page of a PDF, else the core's symbol of the file type (as `DocumentNameField` does for the
+ * list, only larger).
  */
 export class DocumentThumbnailField extends Component {
     static template = "int_filemanager.DocumentThumbnailField";
@@ -19,18 +19,9 @@ export class DocumentThumbnailField extends Component {
         return this.props.record.data.mimetype;
     }
 
-    /** The address of the small picture, only for an image. `unique` lets the browser keep it
-     * for good: the checksum changes with the content. */
+    /** The address of the small picture, only for an image or a PDF that has one. */
     get thumbnailUrl() {
-        const file = documentFileFromRecord(this.props.record);
-        if (!file.isImage || !this.props.record.resId) {
-            return false;
-        }
-        return imageUrl(MODEL, file.id, "content", {
-            width: THUMBNAIL_SIZE,
-            height: THUMBNAIL_SIZE,
-            unique: file.checksum,
-        });
+        return thumbnailUrl(this.props.record, THUMBNAIL_SIZE);
     }
 }
 
@@ -42,6 +33,7 @@ export const documentThumbnailField = {
         { name: "name", type: "char" },
         { name: "checksum", type: "char" },
         { name: "size", type: "float" },
+        { name: "thumbnail_state", type: "selection" },
     ],
 };
 
