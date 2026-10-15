@@ -350,8 +350,10 @@ class TestImport(TransactionCase):
             login="import_line_admin",
             groups="base.group_user,int_filemanager.int_filemanager_group_admin",
         )
+        # An order and its target folder belong to one company (``_check_company_auto``).
+        their_target = self.Folder.create({"name": "Their target", "company_id": other.id})
         mine = self._order(company_id=admin.company_id.id)
-        theirs = self._order(company_id=other.id)
+        theirs = self._order(company_id=other.id, target_folder_id=their_target.id)
         for order in (mine, theirs):
             self.Line.create({"import_id": order.id, "path": "a.txt", "name": "a.txt"})
         lines = self.Line.with_user(admin).search([])
