@@ -5,6 +5,7 @@ import { registry } from "@web/core/registry";
 import { attachDoubleTap } from "./double_tap";
 import { useFileViewerFrameZoom } from "./file_viewer_frame_zoom_hook";
 import { useFileViewerSwipe } from "./file_viewer_swipe_hook";
+import { createVelocityTracker, FLING_EASING, flingPlan } from "./momentum";
 
 // The zoom of the PDF viewer the core ships (`addons/web/static/lib/pdfjs/web/viewer.js`):
 // the same range, the same steps, the zoom around the point under the fingers or the pointer.
@@ -21,6 +22,15 @@ const ROTATE_ANIMATION_TIME = 300;
 let nextViewerId = 1;
 
 /**
+ * @param {Number} value
+ * @param {Number} limit
+ * @returns {Number} `value`, but between `-limit` and `limit`
+ */
+function keep(value, limit) {
+    return Math.min(Math.max(value, -limit), limit);
+}
+
+/**
  * The core's file viewer with the zoom of the PDF viewer, which the core's own image zoom
  * lacks: two fingers (or the wheel, the buttons) zoom around the point they are at, one finger
  * moves the image, and it cannot be moved off the screen. The core's viewer knows the mouse
@@ -28,7 +38,8 @@ let nextViewerId = 1;
  * cannot zoom an image at all; a PDF can, it is shown by the browser. The mouse keeps the
  * core's ways (wheel, buttons, keys, drag); the state is the core's own (`state.scale`,
  * `translate`), the fingers only drive it. Two fingers zoom and take the image along when they
- * move; a finger that is left goes on moving it; a double tap sets the zoom back. One finger
+ * move; a finger that is left goes on moving it, and the image glides on when it lifts; a
+ * double tap sets the zoom back. One finger
  * swipes to the next or the previous file, for every type of file (`useFileViewerSwipe`); a
  * text zooms with two fingers in its frame (`useFileViewerFrameZoom`).
  */
@@ -47,7 +58,16 @@ export class DocumentFileViewer extends FileViewer {
         this.wheelTicks = 0;
         this.animation = useState({ rotating: false });
         this.rotateTimer = null;
-        onWillDestroy(() => browser.clearTimeout(this.rotateTimer));
+        // The picture glides on when the finger that moved it lifts. The browser plays the
+        // gliding (`fling`), on its own thread: moving the picture by code in every frame was
+        // jerky, and the PDF viewer, which is smooth, lets the browser do it as well.
+        this.velocity = createVelocityTracker();
+        /** @type {Animation|null} the gliding the browser is playing */
+        this.glideAnimation = null;
+        onWillDestroy(() => {
+            browser.clearTimeout(this.rotateTimer);
+            this.stopGlide();
+        });
         useEffect(
             (image) => {
                 if (!image) {
@@ -62,6 +82,9 @@ export class DocumentFileViewer extends FileViewer {
                 for (const type of TOUCH_EVENTS) {
                     image.addEventListener(type, handlers[type]);
                 }
+                // Its own layer, so that the browser only moves it (it need not draw the picture
+                // again) when the picture is moved.
+                this.zoomerRef.el.style.willChange = "transform";
                 // A double tap on a picture that is zoomed sets the zoom back.
                 const detachDoubleTap = attachDoubleTap(image, {
                     canDoubleTap: () => this.state.scale !== 1,
@@ -185,6 +208,7 @@ export class DocumentFileViewer extends FileViewer {
      */
     activateFile(index) {
         super.activateFile(index);
+        this.stopGlide();
         this.state.scale = 1;
         Object.assign(this.translate, { x: 0, y: 0, dx: 0, dy: 0 });
         if (this.zoomerRef.el && this.imageRef.el) {
@@ -300,22 +324,34 @@ export class DocumentFileViewer extends FileViewer {
      * PDF viewer scrolls the same way). The size is that of the image turned.
      */
     updateZoomerStyle() {
+        this.stopGlide();
+        const zoomer = this.zoomerRef.el;
+        const limit = this.zoomLimits();
+        const translate = this.translate;
+        translate.x = keep(translate.x, limit.x);
+        translate.y = keep(translate.y, limit.y);
+        // While the image is dragged, `dx` and `dy` are the way of the drag so far.
+        translate.dx = keep(translate.x + translate.dx, limit.x) - translate.x;
+        translate.dy = keep(translate.y + translate.dy, limit.y) - translate.y;
+        this.shift = { x: translate.x + translate.dx, y: translate.y + translate.dy };
+        zoomer.style.transform = `translate(${this.shift.x}px, ${this.shift.y}px)`;
+    }
+
+    /**
+     * How far the image may be moved from the middle (px) along each axis: as far as it is larger
+     * than the zoomer. The size is that of the image turned.
+     * @returns {{x: number, y: number}}
+     */
+    zoomLimits() {
         const image = this.imageRef.el;
         const zoomer = this.zoomerRef.el;
         const turned = this.state.angle % 180 !== 0;
         const width = (turned ? image.offsetHeight : image.offsetWidth) * this.state.scale;
         const height = (turned ? image.offsetWidth : image.offsetHeight) * this.state.scale;
-        const limitX = Math.max((width - zoomer.offsetWidth) / 2, 0);
-        const limitY = Math.max((height - zoomer.offsetHeight) / 2, 0);
-        const keep = (value, limit) => Math.min(Math.max(value, -limit), limit);
-        const translate = this.translate;
-        translate.x = keep(translate.x, limitX);
-        translate.y = keep(translate.y, limitY);
-        // While the image is dragged, `dx` and `dy` are the way of the drag so far.
-        translate.dx = keep(translate.x + translate.dx, limitX) - translate.x;
-        translate.dy = keep(translate.y + translate.dy, limitY) - translate.y;
-        this.shift = { x: translate.x + translate.dx, y: translate.y + translate.dy };
-        zoomer.style.transform = `translate(${this.shift.x}px, ${this.shift.y}px)`;
+        return {
+            x: Math.max((width - zoomer.offsetWidth) / 2, 0),
+            y: Math.max((height - zoomer.offsetHeight) / 2, 0),
+        };
     }
 
     /** @returns {{x: number, y: number, distance: number}} the middle and the distance of two fingers */
@@ -328,11 +364,69 @@ export class DocumentFileViewer extends FileViewer {
         };
     }
 
+    /**
+     * Let the picture glide on after a finger lifted at `speed`. The way is worked out at once
+     * (as far as the picture may go), and the browser moves the zoomer there, with an easing
+     * that slows down like a page that glides: on its own thread, so it is smooth whatever the
+     * code is busy with.
+     * @param {{x: number, y: number}} speed px per ms
+     */
+    fling(speed) {
+        const limit = this.zoomLimits();
+        const { dx, dy, duration } = flingPlan(speed);
+        const { x: fromX, y: fromY } = this.translate;
+        const toX = keep(fromX + dx, limit.x);
+        const toY = keep(fromY + dy, limit.y);
+        if (toX === fromX && toY === fromY) {
+            return;
+        }
+        const place = (x, y) => `translate(${x}px, ${y}px)`;
+        // `forwards`: the end holds until `settleAt` has written it, there is no jump back.
+        const animation = this.zoomerRef.el.animate(
+            [{ transform: place(fromX, fromY) }, { transform: place(toX, toY) }],
+            { duration, easing: FLING_EASING, fill: "forwards" }
+        );
+        this.glideAnimation = animation;
+        animation.onfinish = () => {
+            if (this.glideAnimation === animation) {
+                this.settleAt(toX, toY);
+            }
+        };
+    }
+
+    /** End the gliding where the picture is now (a finger touches it, it is zoomed ...). */
+    stopGlide() {
+        if (!this.glideAnimation) {
+            return;
+        }
+        const zoomer = this.zoomerRef.el;
+        const place = zoomer && new DOMMatrixReadOnly(getComputedStyle(zoomer).transform);
+        this.settleAt(place?.m41 ?? this.translate.x, place?.m42 ?? this.translate.y);
+    }
+
+    /**
+     * Write the place the gliding has (or had) as the place of the picture, and end the gliding.
+     * @param {Number} x
+     * @param {Number} y
+     */
+    settleAt(x, y) {
+        const animation = this.glideAnimation;
+        this.glideAnimation = null;
+        Object.assign(this.translate, { x, y, dx: 0, dy: 0 });
+        this.shift = { x, y };
+        if (this.zoomerRef.el) {
+            this.zoomerRef.el.style.transform = `translate(${x}px, ${y}px)`;
+        }
+        animation?.cancel();
+    }
+
     /** @param {PointerEvent} ev */
     onTouchStart(ev) {
         if (ev.pointerType !== "touch") {
             return;
         }
+        this.stopGlide();
+        this.velocity.reset();
         this.touches.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
         if (this.touches.size === 1) {
             this.onMousedownImage(ev);
@@ -353,6 +447,7 @@ export class DocumentFileViewer extends FileViewer {
         touch.y = ev.clientY;
         if (!this.pinch) {
             this.onMousemoveView(ev);
+            this.velocity.track(ev.clientX, ev.clientY, ev.timeStamp);
         } else if (this.touches.size === 2) {
             // The image grows with the distance of the fingers, about their middle as it was,
             // and then goes along with the middle to where it is now.
@@ -382,6 +477,10 @@ export class DocumentFileViewer extends FileViewer {
             return;
         }
         this.onMouseupImage();
+        const speed = this.velocity.release(ev.timeStamp);
+        if (speed) {
+            this.fling(speed);
+        }
     }
 }
 

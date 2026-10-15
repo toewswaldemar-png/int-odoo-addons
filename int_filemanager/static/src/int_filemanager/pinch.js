@@ -38,26 +38,23 @@ export function scrollAfterPinch(scroll, previous, point, ratio) {
  * Call `onPinch` while two fingers touch `target` and move: each time with the factor by which
  * the distance of the fingers changed since the last call, and with the middle of the fingers
  * before and now. With a third finger, or with one, nothing is called; it goes on when two
- * are left. Like `attachSwipe` it only watches, except where told: with `preventDefault`
- * the browser does not scroll or zoom the page itself while two fingers are down (that
- * listener is not passive then). The browser does not scroll with a finger that is left
- * after two, either (the touch has been taken from it), so `onPan` is called with the way of
- * that finger until it lifts.
+ * are left. Like `attachSwipe` it only watches (passive listeners): the browser keeps the
+ * fingers, so it scrolls with them and glides on when they lift, as it does for any page;
+ * what it must not do (zoom the page itself) `touch-action` on the element says. Some
+ * browsers do not scroll with the one finger that is left after two; `onPan` is called with the
+ * way of that finger, and the caller finds out whether the browser scrolls as well (see
+ * `createPanFollower`).
  *
  * @param {Element|Document} target
  * @param {Object} params
  * @param {function({factor: number, x: number, y: number, previous: {x: number, y: number}}): void} params.onPinch
  *      `x` and `y`: the middle of the fingers now (client coordinates)
- * @param {function({dx: number, dy: number}): void} [params.onPan] the way (px) a finger that is
- *      left after a pinch went since the last call
+ * @param {function({dx: number, dy: number}): void} [params.onPan] the way (px) the finger that
+ *      is left after a pinch went since the last call
  * @param {function(TouchEvent): Boolean} [params.canPinch] asked when two fingers are down
- * @param {Boolean} [params.preventDefault] take the two fingers from the browser
  * @returns {function(): void} removes the listeners
  */
-export function attachPinch(
-    target,
-    { onPinch, onPan, canPinch = () => true, preventDefault = false }
-) {
+export function attachPinch(target, { onPinch, onPan, canPinch = () => true }) {
     /** @type {{x: number, y: number, distance: number}|null} the fingers at the last event */
     let last = null;
     /** @type {{x: number, y: number}|null} the finger that is left after a pinch */
@@ -70,9 +67,6 @@ export function attachPinch(
     const onTouchMove = (ev) => {
         if (rest && ev.touches.length === 1) {
             const [touch] = ev.touches;
-            if (preventDefault && ev.cancelable) {
-                ev.preventDefault();
-            }
             const way = { dx: touch.clientX - rest.x, dy: touch.clientY - rest.y };
             rest = { x: touch.clientX, y: touch.clientY };
             onPan?.(way);
@@ -80,9 +74,6 @@ export function attachPinch(
         }
         if (!last || ev.touches.length !== 2) {
             return;
-        }
-        if (preventDefault && ev.cancelable) {
-            ev.preventDefault();
         }
         const now = fingersOf(ev.touches);
         const previous = { x: last.x, y: last.y };
@@ -94,17 +85,14 @@ export function attachPinch(
         const pinched = last !== null;
         // A finger that lifts from three leaves two: they go on from where they are.
         last = ev.touches.length === 2 && canPinch(ev) ? fingersOf(ev.touches) : null;
-        if (ev.touches.length === 1 && (pinched || rest)) {
-            const [touch] = ev.touches;
-            rest = { x: touch.clientX, y: touch.clientY };
-        } else {
-            rest = null;
-        }
+        const [left] = ev.touches;
+        const keeps = ev.touches.length === 1 && (pinched || rest);
+        rest = keeps ? { x: left.clientX, y: left.clientY } : null;
     };
 
     const listeners = [
         ["touchstart", onTouchStart, { passive: true }],
-        ["touchmove", onTouchMove, { passive: !preventDefault }],
+        ["touchmove", onTouchMove, { passive: true }],
         ["touchend", onTouchEnd, { passive: true }],
         ["touchcancel", onTouchEnd, { passive: true }],
     ];
@@ -116,4 +104,43 @@ export function attachPinch(
             target.removeEventListener(type, listener);
         }
     };
+}
+
+/**
+ * Scroll `scroller` with a finger, unless the browser does it. After two fingers zoomed, some
+ * browsers scroll with the finger that is left and some do not, and nothing in the touch event
+ * tells which (`cancelable` does not). What does tell it is the scroller: if the browser scrolls
+ * it, the place is not where the last move of the finger left it. Then the browser has the
+ * finger, and it is left to it (else the page would go twice as far). The first move is
+ * ours before the browser has moved anything, which is a few pixels at the most.
+ *
+ * @param {{scrollLeft: number, scrollTop: number}} scroller
+ * @returns {{pan: function(number, number): void, reset: function(): void}} `pan` is called
+ *      with the way of the finger (px); `reset` when a new pinch begins
+ */
+export function createPanFollower(scroller) {
+    /** @type {{x: number, y: number}|null} where the last move of the finger left the scroller */
+    let left = null;
+    let browserScrolls = false;
+
+    function reset() {
+        left = null;
+        browserScrolls = false;
+    }
+
+    function pan(dx, dy) {
+        if (browserScrolls) {
+            return;
+        }
+        if (left && (scroller.scrollLeft !== left.x || scroller.scrollTop !== left.y)) {
+            browserScrolls = true;
+            return;
+        }
+        scroller.scrollLeft -= dx;
+        scroller.scrollTop -= dy;
+        // Read back: the scroller rounds and limits what it is given.
+        left = { x: scroller.scrollLeft, y: scroller.scrollTop };
+    }
+
+    return { pan, reset };
 }
