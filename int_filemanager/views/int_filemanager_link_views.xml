@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- The records that a document is linked to, in a page of its form. Choosing the model and
+         the record together: ``record_ref``. -->
+    <record id="int_filemanager_document_view_form_link" model="ir.ui.view">
+        <field name="name">int.filemanager.document.view.form.inherit.link</field>
+        <field name="model">int.filemanager.document</field>
+        <field name="inherit_id" ref="int_filemanager_document_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group" position="after">
+                <notebook>
+                    <page string="Links" name="links">
+                        <field name="link_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="record_ref" required="1" />
+                                <field name="create_uid" />
+                                <field name="create_date" />
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+</odoo>

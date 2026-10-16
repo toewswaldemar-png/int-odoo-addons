@@ -1,0 +1,72 @@
+from odoo import fields, models
+from odoo.fields import Domain
+
+
+class IntFilemanagerLinkable(models.AbstractModel):
+    """Mixin for the models whose records can have documents of the filemanager.
+
+    A model that inherits it gets the links to documents, the number of them, the action that
+    shows them and a search by the words in the files. It also removes the links of a deleted
+    record: the database cannot cascade over (model name, id), as with the messages of
+    ``mail.thread``. Without the mixin the model does not appear in the choice of the links.
+    """
+
+    _name = "int.filemanager.linkable"
+    _description = "Record with documents of the filemanager"
+
+    link_ids = fields.One2many("int.filemanager.link", "res_id", string="Links to documents")
+    document_count = fields.Integer(
+        string="Filemanager documents", compute="_compute_document_count"
+    )
+    document_search = fields.Char(
+        string="Document contains",
+        compute="_compute_document_search",
+        search="_search_document_search",
+    )
+
+    def _compute_document_count(self):
+        # The links the user sees: the rule of the link follows the rules of the document.
+        counts = dict(
+            self.env["int.filemanager.link"]._read_group(
+                [("res_model", "=", self._name), ("res_id", "in", self.ids)],
+                ["res_id"],
+                ["__count"],
+            )
+        )
+        for record in self:
+            record.document_count = counts.get(record.id, 0)
+
+    def _compute_document_search(self):
+        self.document_search = False
+
+    def _search_document_search(self, operator, value):
+        """Records with a document whose file has these words in it (``content_search``).
+
+        Only the documents that the user sees take part: ``any`` applies the rules of the link
+        and of the document.
+        """
+        return Domain(
+            "link_ids", "any", [("document_id", "any", [("content_search", operator, value)])]
+        )
+
+    def action_open_documents(self):
+        """Show the documents of this record in the list of the filemanager."""
+        self.ensure_one()
+        action = self.env["ir.actions.act_window"]._for_xml_id(
+            "int_filemanager.int_filemanager_document_action"
+        )
+        action.update(
+            name=self.env._("Documents of %(record)s", record=self.display_name),
+            domain=[
+                ("link_ids", "any", [("res_model", "=", self._name), ("res_id", "=", self.id)])
+            ],
+        )
+        return action
+
+    def unlink(self):
+        ids = self.ids
+        result = super().unlink()
+        self.env["int.filemanager.link"].sudo().search(
+            [("res_model", "=", self._name), ("res_id", "in", ids)]
+        ).unlink()
+        return result

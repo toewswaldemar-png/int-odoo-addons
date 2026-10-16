@@ -22,6 +22,19 @@
         <field name="groups" eval="[(4, ref('int_filemanager_group_user'))]" />
     </record>
 
+    <!-- A document is also seen through the records it is linked to (``access_via_record``). The
+         rules of one group add up with the rule above, the rule for the companies cuts both.
+         It must stay: with the right to read and no rule that applies, a user sees every document. -->
+    <record id="int_filemanager_document_rule_record" model="ir.rule">
+        <field name="name">Filemanager document: through a linked record</field>
+        <field name="model_id" ref="model_int_filemanager_document" />
+        <field name="domain_force">[('access_via_record', '=', True)]</field>
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="groups" eval="[(4, ref('base.group_user'))]" />
+    </record>
+
     <record id="int_filemanager_document_rule_admin" model="ir.rule">
         <field name="name">Filemanager document: administrators see all</field>
         <field name="model_id" ref="model_int_filemanager_document" />

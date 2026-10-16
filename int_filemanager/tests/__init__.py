@@ -10,6 +10,7 @@ from . import test_document_thumbnail
 from . import test_document_upload
 from . import test_folder_access
 from . import test_folder_archive
+from . import test_link
 from . import test_import
 from . import test_text_reader
 from . import test_text_search

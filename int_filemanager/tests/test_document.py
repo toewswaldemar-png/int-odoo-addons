@@ -238,8 +238,10 @@ class TestFolderAndDocument(TransactionCase):
     def test_without_the_group_nothing_is_readable(self):
         with self.assertRaises(AccessError):
             self.Folder.with_user(self.outsider).search([])
-        with self.assertRaises(AccessError):
-            self.Document.with_user(self.outsider).search([])
+        # Documents are also seen through a record they are linked to (test_link.py): the
+        # search is allowed, and without a link it finds nothing.
+        self._document("hidden.txt")
+        self.assertFalse(self.Document.with_user(self.outsider).search([]))
 
     def test_a_folder_of_another_company_is_not_visible(self):
         other = self.env["res.company"].create({"name": "Other company"})
