@@ -121,7 +121,7 @@ class IntFilemanager(http.Controller):
             raise UserError(
                 request.env._(
                     "No folder is set for the files of this kind of record. Ask the administrator "
-                    "of the filemanager (menu Upload folders)."
+                    "of the filemanager to choose an upload folder."
                 )
             )
         return folder

@@ -10,6 +10,12 @@
                 <field name="name" />
                 <field name="parent_id" />
                 <field name="access_mode" />
+                <field
+                    name="model_folder_ids"
+                    widget="many2many_tags"
+                    groups="int_filemanager.int_filemanager_group_admin"
+                    optional="show"
+                />
                 <field name="company_id" groups="base.group_multi_company" />
             </list>
         </field>
@@ -49,6 +55,19 @@
                         />
                         <field name="company_id" groups="base.group_multi_company" />
                     </group>
+                    <!-- Where the files go that are uploaded at a record (a contact ...): the
+                         administrators choose it, as they choose the images that are read. -->
+                    <group
+                        string="Upload folder for"
+                        groups="int_filemanager.int_filemanager_group_admin"
+                    >
+                        <field name="model_folder_ids" nolabel="1" colspan="2">
+                            <list editable="bottom">
+                                <field name="res_model" />
+                                <field name="company_id" groups="base.group_multi_company" />
+                            </list>
+                        </field>
+                    </group>
                 </sheet>
                 <!-- Followers see the folder as well ("Add followers" in the chatter). -->
                 <chatter />
@@ -63,6 +82,13 @@
             <search>
                 <field name="name" />
                 <field name="parent_id" />
+                <filter
+                    name="filter_upload_folder"
+                    string="Upload folders"
+                    domain="[('model_folder_ids', '!=', False)]"
+                    groups="int_filemanager.int_filemanager_group_admin"
+                />
+                <separator />
                 <filter
                     name="filter_archived"
                     string="Archived"

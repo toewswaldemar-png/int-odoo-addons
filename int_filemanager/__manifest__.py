@@ -19,7 +19,6 @@
         "views/int_filemanager_folder_views.xml",
         "views/int_filemanager_document_views.xml",
         "views/int_filemanager_link_views.xml",
-        "views/int_filemanager_model_folder_views.xml",
         "views/res_partner_views.xml",
         "views/int_filemanager_import_views.xml",
         "views/int_filemanager_import_line_views.xml",

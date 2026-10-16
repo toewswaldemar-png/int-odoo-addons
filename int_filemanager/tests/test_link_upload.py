@@ -3,7 +3,8 @@ import os
 
 from psycopg2 import IntegrityError
 
-from odoo import http
+from odoo import Command, http
+from odoo.exceptions import AccessError
 from odoo.tests.common import HttpCase, TransactionCase, new_test_user, tagged
 from odoo.tools import mute_logger
 
@@ -55,6 +56,33 @@ class TestModelFolder(TransactionCase):
             self.Setting.create(
                 {"res_model": "res.partner", "folder_id": self.all.id, "company_id": False}
             )
+
+    def test_the_folder_lists_its_settings_by_the_name_of_the_model(self):
+        setting = self.Setting.create(
+            {"res_model": "res.partner", "folder_id": self.all.id, "company_id": False}
+        )
+        self.assertEqual(self.all.model_folder_ids, setting)
+        label = dict(self.Setting._selection_res_model())["res.partner"]
+        self.assertEqual(setting.display_name, label)
+
+    def test_a_setting_is_added_in_the_folder(self):
+        self.all.write(
+            {"model_folder_ids": [Command.create({"res_model": "res.partner", "company_id": False})]}
+        )
+        partner = self.env["res.partner"].create({"name": "P"})
+        self.assertEqual(self.Setting._folder_for_record(partner), self.all)
+
+    def test_only_the_administrators_reach_the_settings_through_the_folder(self):
+        folder = self.env["int.filemanager.folder"].create({"name": "Open", "access_mode": "open"})
+        user = new_test_user(self.env, login="fm_user", groups="base.group_user,int_filemanager.int_filemanager_group_user")
+        admin = new_test_user(self.env, login="fm_admin", groups="base.group_user,int_filemanager.int_filemanager_group_admin")
+        create = [Command.create({"res_model": "res.partner", "company_id": False})]
+        with self.assertRaises(AccessError):
+            folder.with_user(user).model_folder_ids  # noqa: B018
+        with self.assertRaises(AccessError):
+            folder.with_user(user).write({"model_folder_ids": create})
+        folder.with_user(admin).write({"model_folder_ids": create})
+        self.assertEqual(folder.model_folder_ids.res_model, "res.partner")
 
     def test_only_models_that_can_be_linked_are_offered(self):
         models = [name for name, __ in self.Setting._selection_res_model()]
@@ -131,7 +159,7 @@ class TestUploadAtRecord(HttpCase):
         self.env["int.filemanager.model.folder"].search([]).unlink()
         response = self._upload("link_worker", **self._at())
         self.assertEqual(response.status_code, 400)
-        self.assertIn("Upload folders", response.json()["error"]["message"])
+        self.assertIn("upload folder", response.json()["error"]["message"])
 
     def test_a_model_that_cannot_be_linked_is_refused(self):
         country = self.env.ref("base.de")
