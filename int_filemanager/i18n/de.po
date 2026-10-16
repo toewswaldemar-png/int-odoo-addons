@@ -339,6 +339,7 @@ msgstr "Erstellt am"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_res_users_settings__display_name
 msgid "Display Name"
 msgstr "Anzeigename"
 
@@ -645,6 +646,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__id
 #: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__id
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__id
+#: model:ir.model.fields,field_description:int_filemanager.field_res_users_settings__id
 msgid "ID"
 msgstr "ID"
 
@@ -709,6 +711,13 @@ msgstr "Sprachen"
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_cut_bytes
 msgid "Largest page (bytes)"
 msgstr "Größte Seite (Bytes)"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/kanban/document_tile_size.js:0
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_tile_size__large
+msgid "Large"
+msgstr "Groß"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__write_uid
@@ -808,7 +817,10 @@ msgid "Lowest: the web pages come first"
 msgstr "Am niedrigsten: Die Webseiten gehen vor"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/kanban/document_tile_size.js:0
 #: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__5
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_tile_size__medium
 msgid "Medium"
 msgstr "Mittel"
 
@@ -1446,6 +1458,17 @@ msgid "Size"
 msgstr "Größe"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/kanban/document_kanban_controller.xml:0
+msgid "Size of the cards"
+msgstr "Größe der Karten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_users_settings__int_filemanager_tile_size
+msgid "Size of the document cards"
+msgstr "Größe der Dokumentkarten"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_skipped
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__skipped
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__skipped
@@ -1463,6 +1486,13 @@ msgstr "Übersprungen"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_line_view_search
 msgid "Skipped or excluded"
 msgstr "Übersprungen oder ausgeschlossen"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/kanban/document_tile_size.js:0
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_tile_size__small
+msgid "Small"
+msgstr "Klein"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__state
@@ -1985,6 +2015,11 @@ msgstr "Art des neuen PDFs"
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
 msgid "Upload"
 msgstr "Hochladen"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_res_users_settings
+msgid "User Settings"
+msgstr "Benutzereinstellungen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_pending
