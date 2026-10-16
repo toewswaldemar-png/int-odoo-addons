@@ -276,6 +276,7 @@ msgstr "Farbe"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__company_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__company_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__company_id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__company_id
 msgid "Company"
 msgstr "Unternehmen"
 
@@ -315,6 +316,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__create_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__create_uid
 msgid "Created by"
@@ -326,6 +328,7 @@ msgstr "Erstellt von"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__create_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__create_date
 msgid "Created on"
@@ -338,6 +341,7 @@ msgstr "Erstellt am"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__display_name
@@ -541,6 +545,7 @@ msgstr "Dateien"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__folder_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__source_path
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__folder_id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__folder_id
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__kind__folder
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Folder"
@@ -650,6 +655,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__id
@@ -729,6 +735,7 @@ msgstr "Groß"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__write_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__write_uid
 msgid "Last Updated by"
@@ -740,6 +747,7 @@ msgstr "Zuletzt aktualisiert von"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__write_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__write_date
 msgid "Last Updated on"
@@ -2181,6 +2189,7 @@ msgstr "Dokument enthält"
 
 #. module: int_filemanager
 #. odoo-python
+#: code:addons/int_filemanager/controllers/int_filemanager.py:0
 #: code:addons/int_filemanager/models/int_filemanager_link.py:0
 msgid "Documents cannot be linked to this kind of record."
 msgstr "Dokumente können mit dieser Art von Datensatz nicht verknüpft werden."
@@ -2224,6 +2233,7 @@ msgstr "Verknüpfungen zu Dokumenten"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__res_model_id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__res_model
 msgid "Model"
 msgstr "Modell"
 
@@ -2270,3 +2280,53 @@ msgid ""
 "You may only link a document that its folder shows to you, to a record that "
 "you may change."
 msgstr "Sie dürfen nur ein Dokument verknüpfen, das Ihnen sein Ordner zeigt, und nur mit einem Datensatz, den Sie ändern dürfen."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/dropzone/document_dropzone.js:0
+msgid "Drop the files to attach them to %(record)s"
+msgstr "Dateien hier ablegen, um sie an %(record)s anzuhängen"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_model_folder
+msgid "Filemanager upload folder of a model"
+msgstr "Dateimanager-Ordner für Uploads einer Modellart"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/controllers/int_filemanager.py:0
+msgid ""
+"No folder is set for the files of this kind of record. Ask the administrator"
+" of the filemanager (menu Upload folders)."
+msgstr "Für die Dateien dieser Art von Datensatz ist kein Ordner eingestellt. Fragen Sie den Administrator des Dateimanagers (Menü Upload-Ordner)."
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_model_folder_action
+msgid "Set where the files go that are uploaded at a record"
+msgstr "Legen Sie fest, wohin Dateien kommen, die an einem Datensatz hochgeladen werden"
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_model_folder_model_per_company
+msgid "There is a folder for this kind of record already."
+msgstr "Für diese Art von Datensatz gibt es schon einen Ordner."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/controllers/int_filemanager.py:0
+msgid "This record does not exist."
+msgstr "Dieser Datensatz existiert nicht."
+
+#. module: int_filemanager
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_model_folder_action
+#: model:ir.ui.menu,name:int_filemanager.int_filemanager_model_folder_menu
+msgid "Upload folders"
+msgstr "Upload-Ordner"
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_model_folder_action
+msgid ""
+"Choose a kind of record, for example a contact, and the folder for its files.\n"
+"                Whoever may change the record can then upload files there, without access to the folder."
+msgstr ""
+"Wählen Sie eine Art von Datensatz, zum Beispiel einen Kontakt, und den Ordner für seine Dateien.\n"
+"                Wer den Datensatz ändern darf, kann dann Dateien hochladen, ohne Zugriff auf den Ordner."
