@@ -25,6 +25,8 @@ export class GuestApp extends Component {
             context: {},
             loadIrFilters: false,
             loadActionMenus: false,
+            // No favorites: they are records of ir.filters, written by the user.
+            searchMenuTypes: ["filter", "groupBy"],
             display: { controlPanel: {} },
         };
     }

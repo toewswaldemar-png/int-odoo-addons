@@ -13,6 +13,7 @@ that builds the arguments itself, so nothing the client sends reaches the ORM un
 * the call runs ``with_user(<creator of the folder>)``, so the record rules still apply.
 """
 
+import json
 import logging
 import re
 
@@ -124,9 +125,11 @@ class Gateway:
         if model_name == FOLDER:
             return Domain("id", "child_of", self.root.id)
         if model_name == TAG:
-            # Only the tags that a document of the scope carries.
-            tag_ids = request.env(su=True)[DOCUMENT].search([("folder_id", "child_of", self.root.id)]).tag_ids.ids
-            return Domain("id", "in", tag_ids)
+            # Only the tags that a document of the scope carries *that the user may see*: with
+            # the record rules of the user, not as superuser (a tag of a hidden document would
+            # leak its name).
+            documents = self.model(DOCUMENT).search(self.scope_domain(DOCUMENT))
+            return Domain("id", "in", documents.tag_ids.ids)
         raise GatewayDenied(model_name)
 
     def field(self, model_name, name):
@@ -160,6 +163,8 @@ class Gateway:
             raw = []
         if not isinstance(raw, (list, tuple)):
             raise GatewayDenied("domain must be a list")
+        if len(json.dumps(raw)) > 20000:
+            raise GatewayDenied("domain too long")
         try:
             client = Domain(list(raw))
         except Exception as error:  # a malformed domain is the client's mistake
@@ -167,11 +172,24 @@ class Gateway:
         client = self._check_conditions(model_name, client, depth)
         return client & self.scope_domain(model_name) if scoped else client
 
+    def _check_value(self, value):
+        """Values of a condition: scalars or flat lists of scalars (no dicts, no records)."""
+        scalar = (str, int, float, bool, type(None))
+        if isinstance(value, scalar):
+            return
+        if isinstance(value, (list, tuple)) and len(value) <= 200 and all(isinstance(v, scalar) for v in value):
+            return
+        raise GatewayDenied("value of a condition is not open")
+
     def _check_conditions(self, model_name, domain, depth):
+        if depth > MAX_DEPTH:
+            raise GatewayDenied("domain too deep")
         for condition in domain.iter_conditions():
             if condition.operator not in OPERATORS:
                 raise GatewayDenied(f"operator {condition.operator!r} is not open")
             self.path(model_name, condition.field_expr)
+            if condition.operator not in ("any", "not any"):
+                self._check_value(condition.value)
             if condition.operator in ("any", "not any"):
                 value = condition.value
                 comodel = self._comodel_of_path(model_name, condition.field_expr)
@@ -296,7 +314,15 @@ class Gateway:
             clean.append([ids[view_type], view_type])
         # No toolbar (action menus), no stored filters, no action: only the arch of three views.
         options = {"action_id": False, "toolbar": False, "load_filters": False}
-        return self.model(model_name).get_views(clean, options=options)
+        result = self.model(model_name).get_views(clean, options=options)
+        # The definitions of all fields of the model come with the views ("Custom Group" lists
+        # them): cut them down to the whitelist, and drop the models that are not open.
+        result["models"] = {
+            name: {**info, "fields": {key: value for key, value in info["fields"].items() if key in FIELDS[name]}}
+            for name, info in result["models"].items()
+            if name in FIELDS
+        }
+        return result
 
     def fields_get(self, model_name, args, kwargs):
         allfields = (args[0] if args else kwargs.get("allfields")) or list(FIELDS[model_name])
@@ -467,7 +493,7 @@ class IntFilemanagerSpike(http.Controller):
         return response
 
     @http.route("/int_filemanager/spike/rpc", type="jsonrpc", auth="public", methods=["POST"], csrf=False)
-    def rpc(self, token, model, method, args=None, kwargs=None, **_ignored):
+    def rpc(self, token=None, model=None, method=None, args=None, kwargs=None, **_ignored):
         folder = _scope(token)
         if not folder:
             raise AccessError(request.env._("This link is not valid."))
