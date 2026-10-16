@@ -1,0 +1,129 @@
+== baseline ==
+web_search_read, no domain                                     -> {"length": 6, "names": ["Foto blau.png", "Foto gruen.png", "Foto rot.png", "Notiz.txt", "Rechnung 2025-001.pdf", "Vertrag Müller.pdf"]}
+== token ==
+no token                                                       -> "ERROR odoo.exceptions.AccessError: This link is not valid."
+garbage token                                                  -> "ERROR odoo.exceptions.AccessError: This link is not valid."
+token of another folder (id swapped)                           -> "ERROR odoo.exceptions.AccessError: This link is not valid."
+token with a negative id                                       -> "ERROR odoo.exceptions.AccessError: This link is not valid."
+== methods and models ==
+int.filemanager.document.unlink                                -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.unlink is not open"
+int.filemanager.document.write                                 -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.write is not open"
+int.filemanager.document.create                                -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.create is not open"
+int.filemanager.document.search_read                           -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.search_read is not open"
+int.filemanager.document.read                                  -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.read is not open"
+int.filemanager.document.action_archive                        -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.action_archive is not open"
+int.filemanager.document.web_save                              -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.web_save is not open"
+int.filemanager.document.copy                                  -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.copy is not open"
+int.filemanager.document.check_access                          -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.check_access is not open"
+int.filemanager.document.with_user                             -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.with_user is not open"
+int.filemanager.document._search                               -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document._search is not open"
+int.filemanager.document.sudo                                  -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.sudo is not open"
+int.filemanager.document.export_data                           -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.export_data is not open"
+int.filemanager.document.name_create                           -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.name_create is not open"
+int.filemanager.document.message_post                          -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.document.message_post is not open"
+res.users.web_search_read                                      -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: res.users.web_search_read is not open"
+ir.config_parameter.web_search_read                            -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: ir.config_parameter.web_search_read is not open"
+ir.attachment.web_search_read                                  -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: ir.attachment.web_search_read is not open"
+int.filemanager.text.page.web_search_read                      -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.text.page.web_search_read is not open"
+int.filemanager.link.web_search_read                           -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: int.filemanager.link.web_search_read is not open"
+res.partner.web_search_read                                    -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: res.partner.web_search_read is not open"
+ir.model.data.web_search_read                                  -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: ir.model.data.web_search_read is not open"
+== domain attacks (the scope must hold) ==
+folder_id = outside folder                                     -> {"length": 0, "names": []}
+folder_id = hidden folder (in scope, hidden by rules)          -> {"length": 0, "names": []}
+['|', ('id','>',0), ('name','=','x')]                          -> {"length": 6, "names": ["Foto blau.png", "Foto gruen.png", "Foto rot.png", "Notiz.txt", "Rechnung 2025-001.pdf", "Vertrag Müller.pdf"]}
+[(1,'=',1)]                                                    -> {"length": 6, "names": ["Foto blau.png", "Foto gruen.png", "Foto rot.png", "Notiz.txt", "Rechnung 2025-001.pdf", "Vertrag Müller.pdf"]}
+[('id','in',[7,8])] (ids outside / hidden)                     -> {"length": 0, "names": []}
+folder_id child_of outside                                     -> {"length": 0, "names": []}
+folder_id parent_of outside                                    -> {"length": 0, "names": []}
+['!', ('id','=',0)]                                            -> {"length": 6, "names": ["Foto blau.png", "Foto gruen.png", "Foto rot.png", "Notiz.txt", "Rechnung 2025-001.pdf", "Vertrag Müller.pdf"]}
+folder_id.access_user_ids.login = admin (path)                 -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.folder.access_user_ids is not open"
+create_uid.login (not in whitelist)                            -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.create_uid is not open"
+folder_id any [access_user_ids.login] (any)                    -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.folder.access_user_ids is not open"
+folder_id any [(create_uid..)] (field of the comodel)          -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.folder.create_uid is not open"
+content_search ilike (full text)                               -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.content_search is not open"
+active = False (archived)                                      -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.active is not open"
+origin_path ilike (field with groups)                          -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.origin_path is not open"
+bad operator '=?'                                              -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: operator '=?' is not open"
+bad operator 'sqli'                                            -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: bad domain: Invalid operator in condition ('name', '; drop table x;--', 'a')"
+domain is a string                                             -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: domain must be a list"
+domain value is a dict                                         -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: value of a condition is not open"
+deep nested any (8 levels)                                     -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: domain too deep"
+nested any (2 levels, legal)                                   -> {"length": 4, "names": ["Foto rot.png", "Notiz.txt", "Rechnung 2025-001.pdf", "Vertrag Müller.pdf"]}
+context active_test=False in kwargs.context                    -> {"length": 6, "names": ["Foto blau.png", "Foto gruen.png", "Foto rot.png", "Notiz.txt", "Rechnung 2025-001.pdf", "Vertrag Müller.pdf"]}
+== read specification attacks ==
+specification create_uid                                       -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.create_uid is not open"
+specification message_ids                                      -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.message_ids is not open"
+specification origin_path                                      -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.origin_path is not open"
+specification content                                          -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.content is not open"
+specification thumbnail                                        -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.thumbnail is not open"
+specification activity_ids                                     -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.activity_ids is not open"
+specification company_id                                       -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.company_id is not open"
+specification access_user_ids                                  -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.access_user_ids is not open"
+specification write_uid                                        -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.write_uid is not open"
+specification message_follower_ids                             -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.message_follower_ids is not open"
+nested spec: folder_id.access_user_ids                         -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.folder.access_user_ids is not open"
+nested spec: tag_ids.create_uid                                -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.tag.create_uid is not open"
+nested spec with context key (dropped)                         -> {"length": 6, "names": ["{'id': 1, 'tag_ids': [{'id': 1, 'name': 'Rechnung'}]}", "{'id': 2, 'tag_ids': [{'id': 1, 'name': 'Rechnung'}]}", "{'id': 3, 'tag_ids': []}", "{'id': 4, 'tag_ids': [{'id': 2, 'name': 'Foto'}]}", "{'id': 5, 
+nested spec with domain key (dropped)                          -> {"length": 6, "names": ["{'id': 1, 'tag_ids': [{'id': 1, 'name': 'Rechnung'}]}", "{'id': 2, 'tag_ids': [{'id': 1, 'name': 'Rechnung'}]}", "{'id': 3, 'tag_ids': []}", "{'id': 4, 'tag_ids': [{'id': 2, 'name': 'Foto'}]}", "{'id': 5, 
+nested spec with unknown key                                   -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: key 'foo' of a sub specification is not open"
+== order / group / aggregate attacks ==
+order 'create_uid'                                             -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.create_uid is not open"
+order 'name; select pg_sleep(5)'                               -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: bad order 'name; select pg_sleep(5)'"
+order '(select 1)'                                             -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: bad order '(select 1)'"
+order 'folder_id.name'                                         -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: order by a path is not open"
+order 'name asc, create_uid desc'                              -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.create_uid is not open"
+order 'name desc nulls last'                                   -> {"length": 6, "names": ["Foto blau.png", "Foto gruen.png", "Foto rot.png", "Notiz.txt", "Rechnung 2025-001.pdf", "Vertrag Müller.pdf"]}
+order 'id desc'                                                -> {"length": 6, "names": ["Foto blau.png", "Foto gruen.png", "Foto rot.png", "Notiz.txt", "Rechnung 2025-001.pdf", "Vertrag Müller.pdf"]}
+formatted_read_group groupby ['create_uid']                    -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.create_uid is not open"
+formatted_read_group groupby ['folder_id.name']                -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.folder_id.name is not open"
+formatted_read_group groupby ['name', 'mimetype', 'folder_id', 'tag_ids'] -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: bad groupby"
+formatted_read_group groupby ['write_date:month']              -> [{"write_date:month": ["2026-10-01 00:00:00", "October 2026"], "__extra_domain": ["&", ["write_date", ">=", "2026-10-01 00:00:00"], ["write_date", "<", "2026-11-01 00:00:00"]], "__count": 6}]
+formatted_read_group groupby ['write_date:evil']               -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: granularity 'evil' is not open"
+formatted_read_group groupby ['checksum']                      -> [{"checksum": "8aaa3ef18f0da9215e51c28074b098cf00e08af65962096ff84ca4e9e5031e19", "__extra_domain": [["checksum", "=", "8aaa3ef18f0da9215e51c28074b098cf00e08af65962096ff84ca4e9e5031e19"]], "__count": 1}, {"checksum": "8bb5ad80f131
+formatted_read_group aggregates ['size:sum']                   -> [{"mimetype": "application/pdf", "__extra_domain": [["mimetype", "=", "application/pdf"]], "size:sum": 1182.0}, {"mimetype": "image/png", "__extra_domain": [["mimetype", "=", "image/png"]], "size:sum": 6907.0}, {"mimetype": "text/
+formatted_read_group aggregates ['create_uid:count']           -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.create_uid is not open"
+formatted_read_group aggregates ['size:evil']                  -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: aggregator 'evil' is not open"
+formatted_read_group aggregates ['id:array_agg']               -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: aggregator 'array_agg' is not open"
+formatted_read_group aggregates ['(select 1):sum']             -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.(select 1) is not open"
+formatted_read_group with having                               -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: having is not open"
+web_read_group groupby folder_id (counts only the scope)       -> {"groups": [{"folder_id": [4, "2025"], "__extra_domain": [["folder_id", "=", 4]], "__count": 2}, {"folder_id": [3, "Bilder"], "__extra_domain": [["folder_id", "=", 3]], "__count": 1}, {"folder_id": [2, "Verträge"], "__extra_domain
+== limit and offset ==
+limit 100000 (clamped to 80)                                   -> 6
+limit -1                                                       -> 6
+limit 'abc'                                                    -> 6
+limit 2 and offset 1                                           -> {"length": 6, "names": ["Foto gruen.png", "Foto rot.png"]}
+offset -5                                                      -> 6
+== ids (web_read) ==
+web_read ids [1] (in scope)                                    -> [{"id": 1, "name": "Vertrag Müller.pdf"}]
+web_read ids [7, 8] (outside, hidden)                          -> []
+web_read ids as strings                                        -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: bad ids"
+web_read 1000 ids                                              -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: bad ids"
+== search panel ==
+folder panel (expand, hierarchize)                             -> ["2025", "Bilder", "Gastbereich", "Verträge"]
+folder panel, comodel_domain id = outside                      -> []
+folder panel, search_domain on the outside folder              -> []
+panel for create_uid (not in whitelist)                        -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.create_uid is not open"
+tag panel (multi, expand)                                      -> ["Foto", "Rechnung"]
+tag panel with group_by create_uid                             -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: group_by of the panel is not open"
+tag panel with counters                                        -> ["Foto", "Rechnung"]
+== other models ==
+folders web_search_read (the rules hide the private one)       -> ["2025", "Bilder", "Gastbereich", "Verträge"]
+folders name_search ''                                         -> [[4, "2025"], [3, "Bilder"], [1, "Gastbereich"], [2, "Verträge"]]
+folders name_search 'Intern'                                   -> []
+folders web_search_read access_user_ids                        -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.folder.access_user_ids is not open"
+tags web_search_read                                           -> ["Foto", "Rechnung"]
+tags name_search 'Geheim'                                      -> []
+fields_get (document)                                          -> ["checksum", "display_name", "folder_id", "id", "mimetype", "name", "ocr_checksum", "size", "tag_ids", "thumbnail_state", "write_date"]
+fields_get allfields create_uid                                -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: field int.filemanager.document.create_uid is not open"
+get_views form                                                 -> "ERROR odoo.addons.int_filemanager.controllers.spike.GatewayDenied: view type 'form' is not open"
+get_views with an own view id, toolbar, filters                -> {"views": ["list"], "toolbar": false, "models": ["int.filemanager.document"]}
+== binary routes (cookie) ==
+doc 1 content, with cookie                                     -> "HTTP 200, application/pdf, 590 bytes"
+doc 1 content, WITHOUT cookie                                  -> "HTTP 404"
+doc 4 image 256x256, with cookie                               -> "HTTP 200, image/png, 567 bytes"
+doc 1 thumbnail, with cookie                                   -> "HTTP 200, image/jpeg, 2343 bytes"
+doc 7 (outside folder), with cookie                            -> "HTTP 404"
+doc 8 (hidden folder), with cookie                             -> "HTTP 404"
+doc 1 field 'checksum', with cookie                            -> "HTTP 404"
+doc 1 field 'write_date', with cookie                          -> "HTTP 404"
