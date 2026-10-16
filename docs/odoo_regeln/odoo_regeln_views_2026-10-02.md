@@ -170,7 +170,8 @@ mit Datensatz-ID und `context`) oder `action` (XML-ID der Aktion, roh oder `%(XM
 - Buttons/Links mit `type`: `action`, `object`, `open`, `delete`, `archive`, `unarchive`, `set_cover`.
 - Layout: Karte ist Flexbox (Spalte); `<footer>` klebt unten; `aside`/`main` + Klasse `flex-row`;
   `o_kanban_aside_full` entfernt Padding. `<widget name=…>` für Owl-Komponenten aus `view_widgets`.
-- `header` (nur Buttons mit `display="always"` – Auswahl in Kanban nicht möglich), `progressbar`
+- `header` (Buttons für ausgewählte Karten; `display="always"` = auch ohne Auswahl sichtbar. Core 19.0: Karten sind auswählbar – Alt+Klick, Shift für Bereiche, Leertaste, langes Drücken am Touchscreen;
+  `kanban_controller.xml` Slot `control-panel-selection-actions`, `kanban_record.js` `onGlobalClick`/`onTouchStart`), `progressbar`
   (`field` Pflicht, `colors` Pflicht als JSON, `sum_field`), `control` wie bei Listen.
 
 ## 9. QWeb-View, Graph, Pivot, Calendar, Activity
