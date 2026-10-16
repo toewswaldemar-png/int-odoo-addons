@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <!-- The menu of the size of the cards, as the core's scale menu of the calendar
+         (web.ViewScaleSelector) is built. -->
+    <t t-name="int_filemanager.DocumentKanbanView.Buttons">
+        <div class="btn-group o_int_filemanager_tile_size">
+            <Dropdown>
+                <button
+                    class="btn btn-secondary o-dropdown-caret"
+                    title="Size of the cards"
+                    aria-label="Size of the cards"
+                >
+                    <i class="fa fa-th-large me-1" role="img" />
+                    <t t-esc="tileSizeLabel" />
+                </button>
+                <t t-set-slot="content">
+                    <t t-foreach="tileSizes" t-as="size" t-key="size.key">
+                        <DropdownItem
+                            class="`o_int_filemanager_tile_${size.key} ${size.key === tile.size ? 'active' : ''}`"
+                            onSelected="() => this.setTileSize(size.key)"
+                        >
+                            <t t-esc="size.label" />
+                        </DropdownItem>
+                    </t>
+                </t>
+            </Dropdown>
+        </div>
+    </t>
+</templates>

@@ -22,3 +22,4 @@ from . import test_text_ocr
 from . import test_document_ocr_download
 from . import test_text_ocr_images
 from . import test_text_ocr_settings
+from . import test_tile_size

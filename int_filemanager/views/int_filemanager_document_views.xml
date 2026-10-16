@@ -55,6 +55,11 @@
                 quick_create="0"
                 group_create="0"
             >
+                <!-- The button for the ticked card (Alt+click, or a long press on a touch
+                     screen). No "Properties": that is in the menu of the card (type="open"). -->
+                <header>
+                    <button name="action_download" type="object" string="Download" icon="fa-download" />
+                </header>
                 <field name="checksum" />
                 <field name="ocr_checksum" />
                 <templates>
@@ -67,11 +72,14 @@
                     <t t-name="card">
                         <field name="mimetype" widget="int_filemanager_document_thumbnail" />
                         <field name="name" class="fw-bold text-truncate d-block mt-2" />
-                        <div class="d-flex justify-content-between text-muted small">
-                            <field name="folder_id" class="text-truncate" />
-                            <field name="size" widget="int_filemanager_size" />
+                        <!-- Hidden by the smallest size of the cards (document_kanban_view.scss). -->
+                        <div class="o_int_filemanager_card_meta">
+                            <div class="d-flex justify-content-between text-muted small">
+                                <field name="folder_id" class="text-truncate" />
+                                <field name="size" widget="int_filemanager_size" />
+                            </div>
+                            <field name="tag_ids" widget="many2many_tags" />
                         </div>
-                        <field name="tag_ids" widget="many2many_tags" />
                     </t>
                 </templates>
             </kanban>

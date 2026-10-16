@@ -9,6 +9,7 @@ DEFINE_REGEX = re.compile(r"odoo\.define\(\s*'([^']+)'\s*,\s*\[([^\]]*)\]")
 
 TEMPLATES = (
     "int_filemanager.DocumentDropzone",
+    "int_filemanager.DocumentKanbanView.Buttons",
     "int_filemanager.DocumentListRenderer",
     "int_filemanager.DocumentListView.Buttons",
     "int_filemanager.DocumentNameField",
@@ -28,6 +29,10 @@ CORE_PARTS = {
     "@mail/chatter/web/form_compiler": ("div.o_attachment_preview", "AttachmentView"),
     # DocumentKanbanRecord: the click on a card (as the core's `product.document` takes it).
     "@web/views/kanban/kanban_record": ("onGlobalClick(", "CANCEL_GLOBAL_CLICK"),
+    # DocumentKanbanController: the class on the root of the kanban, and the setting of the
+    # user that keeps the size of the cards.
+    "@web/views/kanban/kanban_controller": ("get className(", "headerButtons"),
+    "@web/core/user": ("setUserSettings(", "user_settings"),
     # DocumentListRenderer: the click on the picture of a row; the rest of the row keeps the
     # core's click, which ends in `openRecord`.
     "@web/views/list/list_renderer": ("onCellClicked(", "openRecord("),
@@ -75,9 +80,11 @@ class TestAssets(TransactionCase):
             "touch/swipe",
             "views/form/document_form_renderer",
             "views/form/document_form_view",
+            "views/kanban/document_kanban_controller",
             "views/kanban/document_kanban_record",
             "views/kanban/document_kanban_renderer",
             "views/kanban/document_kanban_view",
+            "views/kanban/document_tile_size",
             "views/list/document_list_controller",
             "views/list/document_list_renderer",
             "views/list/document_list_view",

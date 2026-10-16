@@ -5,5 +5,6 @@ from . import int_filemanager_import
 from . import int_filemanager_import_line
 from . import ir_binary
 from . import res_config_settings
+from . import res_users_settings
 from . import int_filemanager_text
 from . import int_filemanager_text_page
