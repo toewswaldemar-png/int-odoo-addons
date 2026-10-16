@@ -702,12 +702,6 @@ msgid "Kind"
 msgstr "Art"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_languages
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Languages"
-msgstr "Sprachen"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_cut_bytes
 msgid "Largest page (bytes)"
 msgstr "Größte Seite (Bytes)"
@@ -1211,6 +1205,12 @@ msgstr "Texterkennung"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
 msgid "Recognition failed"
 msgstr "Texterkennung fehlgeschlagen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_languages
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Recognition languages"
+msgstr "Sprachen der Texterkennung"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_message

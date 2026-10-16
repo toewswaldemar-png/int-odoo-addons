@@ -73,7 +73,7 @@
                         </setting>
                         <setting
                             id="int_filemanager_ocr_languages"
-                            string="Languages"
+                            string="Recognition languages"
                             help="The languages of the text, as Tesseract names them, joined by +."
                             invisible="not int_filemanager_ocr_enabled"
                         >

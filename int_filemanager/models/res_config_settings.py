@@ -61,7 +61,7 @@ class ResConfigSettings(models.TransientModel):
         "themselves are not changed.",
     )
     int_filemanager_ocr_languages = fields.Char(
-        string="Languages",
+        string="Recognition languages",
         config_parameter="int_filemanager.ocr_languages",
         default="deu+eng",
         help="The languages of the text, as Tesseract names them, joined by +: deu+eng.",
