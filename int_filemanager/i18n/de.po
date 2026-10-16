@@ -2297,13 +2297,8 @@ msgstr "Dateimanager-Ordner für Uploads einer Modellart"
 #: code:addons/int_filemanager/controllers/int_filemanager.py:0
 msgid ""
 "No folder is set for the files of this kind of record. Ask the administrator"
-" of the filemanager (menu Upload folders)."
-msgstr "Für die Dateien dieser Art von Datensatz ist kein Ordner eingestellt. Fragen Sie den Administrator des Dateimanagers (Menü Upload-Ordner)."
-
-#. module: int_filemanager
-#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_model_folder_action
-msgid "Set where the files go that are uploaded at a record"
-msgstr "Legen Sie fest, wohin Dateien kommen, die an einem Datensatz hochgeladen werden"
+" of the filemanager to choose an upload folder."
+msgstr "Für die Dateien dieser Art von Datensatz ist kein Ordner eingestellt. Bitten Sie den Administrator des Dateimanagers, einen Upload-Ordner festzulegen."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_model_folder_model_per_company
@@ -2317,19 +2312,26 @@ msgid "This record does not exist."
 msgstr "Dieser Datensatz existiert nicht."
 
 #. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_model_folder_action
-#: model:ir.ui.menu,name:int_filemanager.int_filemanager_model_folder_menu
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_search
 msgid "Upload folders"
 msgstr "Upload-Ordner"
 
 #. module: int_filemanager
-#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_model_folder_action
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__model_folder_ids
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
+msgid "Upload folder for"
+msgstr "Upload-Ordner für"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__model_folder_ids
 msgid ""
-"Choose a kind of record, for example a contact, and the folder for its files.\n"
-"                Whoever may change the record can then upload files there, without access to the folder."
+"The kinds of record whose uploaded files go to this folder, for example "
+"contacts. Whoever may change such a record can upload files there, without "
+"access to the folder."
 msgstr ""
-"Wählen Sie eine Art von Datensatz, zum Beispiel einen Kontakt, und den Ordner für seine Dateien.\n"
-"                Wer den Datensatz ändern darf, kann dann Dateien hochladen, ohne Zugriff auf den Ordner."
+"Die Arten von Datensätzen, deren hochgeladene Dateien in diesen Ordner "
+"kommen, zum Beispiel Kontakte. Wer einen solchen Datensatz ändern darf, kann "
+"dort Dateien hochladen, ohne Zugriff auf den Ordner."
 
 #. module: int_filemanager
 #. odoo-python
