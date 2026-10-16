@@ -2330,3 +2330,9 @@ msgid ""
 msgstr ""
 "Wählen Sie eine Art von Datensatz, zum Beispiel einen Kontakt, und den Ordner für seine Dateien.\n"
 "                Wer den Datensatz ändern darf, kann dann Dateien hochladen, ohne Zugriff auf den Ordner."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_link.py:0
+msgid "Only the record of a link can be changed."
+msgstr "Bei einer Verknüpfung kann nur der Datensatz geändert werden."
