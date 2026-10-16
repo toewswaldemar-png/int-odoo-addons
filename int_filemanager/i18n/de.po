@@ -314,6 +314,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__create_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__create_uid
 msgid "Created by"
@@ -324,6 +325,7 @@ msgstr "Erstellt von"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__create_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__create_date
 msgid "Created on"
@@ -334,11 +336,14 @@ msgstr "Erstellt am"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_res_partner__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_res_users_settings__display_name
 msgid "Display Name"
 msgstr "Anzeigename"
@@ -346,6 +351,7 @@ msgstr "Anzeigename"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__document_ids
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__document_id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__document_id
 msgid "Document"
 msgstr "Dokument"
 
@@ -367,13 +373,14 @@ msgstr "Dokumentbild"
 #: model:ir.ui.menu,name:int_filemanager.int_filemanager_document_menu
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_graph
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_pivot
+#: model_terms:ir.ui.view,arch_db:int_filemanager.view_partner_form
 msgid "Documents"
 msgstr "Dokumente"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_done
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_document__thumbnail_state__done
+#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__done
@@ -641,11 +648,14 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__id
 #: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__id
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__id
+#: model:ir.model.fields,field_description:int_filemanager.field_res_partner__id
 #: model:ir.model.fields,field_description:int_filemanager.field_res_users_settings__id
 msgid "ID"
 msgstr "ID"
@@ -718,6 +728,7 @@ msgstr "Groß"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__write_uid
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__write_uid
 msgid "Last Updated by"
@@ -728,6 +739,7 @@ msgstr "Zuletzt aktualisiert von"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__write_date
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__write_date
 msgid "Last Updated on"
@@ -2131,3 +2143,130 @@ msgstr "Bildstatus"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__thumbnail
 msgid "Thumbnail"
 msgstr "Vorschaubild"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__access_via_record
+msgid "Seen through a linked record"
+msgstr "Über einen verknüpften Datensatz sichtbar"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_link.py:0
+msgid "Choose the record that the document is linked to."
+msgstr "Wählen Sie den Datensatz, mit dem das Dokument verknüpft ist."
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_res_partner
+msgid "Contact"
+msgstr "Kontakt"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_link.py:0
+msgid "Document %(document)s linked."
+msgstr "Dokument %(document)s verknüpft."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_link.py:0
+msgid "Document %(document)s unlinked."
+msgstr "Verknüpfung mit Dokument %(document)s gelöst."
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__document_search
+#: model:ir.model.fields,field_description:int_filemanager.field_res_partner__document_search
+#: model:ir.model.fields,field_description:int_filemanager.field_res_users__document_search
+msgid "Document contains"
+msgstr "Dokument enthält"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_link.py:0
+msgid "Documents cannot be linked to this kind of record."
+msgstr "Dokumente können mit dieser Art von Datensatz nicht verknüpft werden."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_linkable.py:0
+msgid "Documents of %(record)s"
+msgstr "Dokumente von %(record)s"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__document_count
+#: model:ir.model.fields,field_description:int_filemanager.field_res_partner__document_count
+#: model:ir.model.fields,field_description:int_filemanager.field_res_users__document_count
+msgid "Filemanager documents"
+msgstr "Dateimanager-Dokumente"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_link
+msgid "Filemanager link"
+msgstr "Dateimanager-Verknüpfung"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_link.py:0
+msgid "Linked to %(record)s."
+msgstr "Verknüpft mit %(record)s."
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__link_ids
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form_link
+msgid "Links"
+msgstr "Verknüpfungen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__link_ids
+#: model:ir.model.fields,field_description:int_filemanager.field_res_partner__link_ids
+#: model:ir.model.fields,field_description:int_filemanager.field_res_users__link_ids
+msgid "Links to documents"
+msgstr "Verknüpfungen zu Dokumenten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__res_model_id
+msgid "Model"
+msgstr "Modell"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__res_model
+msgid "Model name"
+msgstr "Modellname"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__record_ref
+msgid "Record"
+msgstr "Datensatz"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__res_id
+msgid "Record ID"
+msgstr "Datensatz-ID"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_linkable
+msgid "Record with documents of the filemanager"
+msgstr "Datensatz mit Dokumenten des Dateimanagers"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__scan
+msgid "Scan"
+msgstr "Scan"
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_link_document_record_uniq
+msgid "This document is already linked to this record."
+msgstr "Dieses Dokument ist mit diesem Datensatz bereits verknüpft."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_link.py:0
+msgid "Unlinked from %(record)s."
+msgstr "Verknüpfung mit %(record)s gelöst."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_link.py:0
+msgid ""
+"You may only link a document that its folder shows to you, to a record that "
+"you may change."
+msgstr "Sie dürfen nur ein Dokument verknüpfen, das Ihnen sein Ordner zeigt, und nur mit einem Datensatz, den Sie ändern dürfen."
