@@ -6,6 +6,7 @@ access_int_filemanager_import_admin,int.filemanager.import.admin,model_int_filem
 access_int_filemanager_import_line_admin,int.filemanager.import.line.admin,model_int_filemanager_import_line,int_filemanager.int_filemanager_group_admin,1,0,0,0
 access_int_filemanager_text_admin,int.filemanager.text.admin,model_int_filemanager_text,int_filemanager.int_filemanager_group_admin,1,0,0,0
 access_int_filemanager_text_page_admin,int.filemanager.text.page.admin,model_int_filemanager_text_page,int_filemanager.int_filemanager_group_admin,1,0,0,0
+access_int_filemanager_model_folder_admin,int.filemanager.model.folder.admin,model_int_filemanager_model_folder,int_filemanager.int_filemanager_group_admin,1,1,1,1
 access_int_filemanager_document_internal,int.filemanager.document.internal,model_int_filemanager_document,base.group_user,1,0,0,0
 access_int_filemanager_link_internal,int.filemanager.link.internal,model_int_filemanager_link,base.group_user,1,0,0,0
 access_int_filemanager_link_user,int.filemanager.link.user,model_int_filemanager_link,int_filemanager.int_filemanager_group_user,1,0,1,1

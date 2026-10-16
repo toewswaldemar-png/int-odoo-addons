@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="int_filemanager_model_folder_view_list" model="ir.ui.view">
+        <field name="name">int.filemanager.model.folder.view.list</field>
+        <field name="model">int.filemanager.model.folder</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="res_model" />
+                <field name="folder_id" />
+                <field name="company_id" groups="base.group_multi_company" />
+            </list>
+        </field>
+    </record>
+
+    <record id="int_filemanager_model_folder_action" model="ir.actions.act_window">
+        <field name="name">Upload folders</field>
+        <field name="res_model">int.filemanager.model.folder</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Set where the files go that are uploaded at a record</p>
+            <p>
+                Choose a kind of record, for example a contact, and the folder for its files.
+                Whoever may change the record can then upload files there, without access to the folder.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="int_filemanager_model_folder_menu"
+        name="Upload folders"
+        parent="menu_int_filemanager_root"
+        action="int_filemanager_model_folder_action"
+        groups="int_filemanager.int_filemanager_group_admin"
+        sequence="30"
+    />
+</odoo>

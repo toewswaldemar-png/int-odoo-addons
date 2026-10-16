@@ -22,4 +22,18 @@
             </xpath>
         </field>
     </record>
+
+    <!-- The search of the documents of a record (the action of the button of the record): the
+         same without the panel of the folders and without what needs the right to read them. -->
+    <record id="int_filemanager_document_view_search_record" model="ir.ui.view">
+        <field name="name">int.filemanager.document.view.search.record</field>
+        <field name="model">int.filemanager.document</field>
+        <field name="inherit_id" ref="int_filemanager_document_view_search" />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <searchpanel position="replace" />
+            <field name="folder_id" position="replace" />
+            <filter name="group_by_folder" position="replace" />
+        </field>
+    </record>
 </odoo>

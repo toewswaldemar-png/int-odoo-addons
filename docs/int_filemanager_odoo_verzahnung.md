@@ -1,6 +1,6 @@
 # int_filemanager: Verzahnung mit Odoo (Konzept)
 
-Stand 2026-10-16. **Gebaut (Arbeitsbaum, nicht committet):** der Kern von Funktion 1 (§3.1 bis §3.3 ohne Hochladen am Datensatz, Ablageordner und Dialog zum Verknüpfen) mit `res.partner`, 22 Modultests, volle Suite grün (586 Tests). **Noch offen:** Hochladen am Datensatz mit Ablageordner je Modell, Dialog zum Verknüpfen vom Datensatz aus, Hinweis bei eingeschränktem Ordner, `int_filemanager_repair`, alles aus §5. Maßgeblich ist der Code. Belege zum Odoo-19-Kern stehen in §7; was nur im
+Stand 2026-10-16. **Gebaut:** der Kern von Funktion 1 (§3.1 bis §3.3) mit `res.partner`, dazu das Hochladen am Datensatz mit Ablageordner je Modell (`int.filemanager.model.folder`, Menü „Upload-Ordner“); volle Suite grün (605 Tests). **Noch offen:** Dialog zum Verknüpfen vom Datensatz aus, Hinweis bei eingeschränktem Ordner, `int_filemanager_repair`, alles aus §5. Maßgeblich ist der Code. Belege zum Odoo-19-Kern stehen in §7; was nur im
 Quelltext gelesen und noch nicht in einer Wegwerf-Datenbank getestet ist, steht in §8.
 
 ## 1. Ziel

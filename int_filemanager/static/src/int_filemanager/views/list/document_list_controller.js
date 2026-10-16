@@ -20,7 +20,26 @@ export class DocumentListController extends ListController {
         useCustomDropzone(this.rootRef, DocumentDropzone, {
             onDrop: (ev) => this.onDrop(ev),
             getFolderName: () => this.uploadFolderName,
+            getRecordName: () => this.linkRecord?.name || false,
         });
+    }
+
+    /**
+     * The record whose documents the list shows, when the action comes from the button of a
+     * record (the keys of the context are set by `action_open_documents`). The files go to the
+     * folder that the settings name for its model, and are linked to the record.
+     * @returns {{model: String, id: Number, name: String}|false}
+     */
+    get linkRecord() {
+        const context = this.props.context || {};
+        if (!context.int_filemanager_link_model) {
+            return false;
+        }
+        return {
+            model: context.int_filemanager_link_model,
+            id: context.int_filemanager_link_id,
+            name: context.int_filemanager_link_name,
+        };
     }
 
     /**
@@ -132,8 +151,9 @@ export class DocumentListController extends ListController {
         if (!files.length) {
             return;
         }
+        const record = this.linkRecord;
         const folderId = this.uploadFolderId;
-        if (!folderId) {
+        if (!record && !folderId) {
             this.notification.add(_t("Choose a folder in the panel on the left first."), {
                 type: "warning",
             });
@@ -141,7 +161,14 @@ export class DocumentListController extends ListController {
         }
         for (const file of files) {
             const upload = await this.fileUploadService.upload(UPLOAD_ROUTE, [file], {
-                buildFormData: (formData) => formData.append("folder_id", folderId),
+                buildFormData: (formData) => {
+                    if (record) {
+                        formData.append("link_model", record.model);
+                        formData.append("link_id", record.id);
+                    } else {
+                        formData.append("folder_id", folderId);
+                    }
+                },
             });
             await this.waitForEnd(upload);
         }

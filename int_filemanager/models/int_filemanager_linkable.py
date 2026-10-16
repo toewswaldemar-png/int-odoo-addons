@@ -55,11 +55,22 @@ class IntFilemanagerLinkable(models.AbstractModel):
         action = self.env["ir.actions.act_window"]._for_xml_id(
             "int_filemanager.int_filemanager_document_action"
         )
+        # Without the panel of the folders: the user of the record may not see the folders. The
+        # keys of the context tell the list where an upload goes (the record, not a folder).
+        search_view = self.env.ref(
+            "int_filemanager.int_filemanager_document_view_search_record"
+        ).sudo()
         action.update(
             name=self.env._("Documents of %(record)s", record=self.display_name),
             domain=[
                 ("link_ids", "any", [("res_model", "=", self._name), ("res_id", "=", self.id)])
             ],
+            search_view_id=[search_view.id, search_view.name],
+            context={
+                "int_filemanager_link_model": self._name,
+                "int_filemanager_link_id": self.id,
+                "int_filemanager_link_name": self.display_name,
+            },
         )
         return action
 

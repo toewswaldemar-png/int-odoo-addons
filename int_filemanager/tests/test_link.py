@@ -129,6 +129,42 @@ class TestLink(AccessCase, TransactionCase):
         with self.assertRaises(UserError):
             self.Link.create({"document_id": self.shared_doc.id})
 
+    # --- what the user of the record loads --------------------------------------------------
+
+    def test_the_views_of_the_record_load_without_the_group(self):
+        action = self.p1.with_user(self.outsider).action_open_documents()
+        self.assertEqual(action["context"]["int_filemanager_link_id"], self.p1.id)
+        views = self.Document.with_user(self.outsider).get_views(
+            [(False, "list"), (False, "kanban"), (False, "form"), (action["search_view_id"][0], "search")]
+        )
+        # no panel of the folders: the user cannot read them
+        self.assertNotIn("searchpanel", views["views"]["search"]["arch"])
+        self.assertNotIn("folder_id", views["views"]["search"]["arch"])
+
+    def test_the_list_and_the_form_of_the_record_load_without_the_group(self):
+        documents = self.Document.with_user(self.outsider).search([])
+        self.assertEqual(documents, self.secret_doc)
+        documents.web_read(
+            {
+                "name": {},
+                "folder_id": {"fields": {"display_name": {}}},
+                "size": {},
+                "mimetype": {},
+                "write_date": {},
+                "checksum": {},
+                "ocr_checksum": {},
+                "active": {},
+                "tag_ids": {"fields": {"display_name": {}, "color": {}}},
+                "link_ids": {
+                    "fields": {
+                        "record_ref": {},
+                        "create_uid": {"fields": {"display_name": {}}},
+                        "create_date": {},
+                    }
+                },
+            }
+        )
+
     # --- counts, actions, search ------------------------------------------------------------
 
     def test_the_count_is_what_the_user_sees(self):
