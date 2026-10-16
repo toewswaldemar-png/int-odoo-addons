@@ -116,6 +116,44 @@ class TestLink(AccessCase, TransactionCase):
         self.link.with_user(self.alice).unlink()
         self.assertFalse(self.link.exists())
 
+    def test_the_record_of_a_link_can_be_changed(self):
+        self._invite(self.secret, self.alice)
+        self.link.with_user(self.alice).write({"record_ref": f"res.partner,{self.p2.id}"})
+        self.assertEqual((self.link.res_model, self.link.res_id), ("res.partner", self.p2.id))
+        self.assertEqual(self.link.document_id, self.secret_doc)
+        self.assertIn("unlinked", " ".join(self.p1.message_ids.mapped("body")))
+        self.assertIn("linked", " ".join(self.p2.message_ids.mapped("body")))
+        self.assertEqual(self._docs(self.outsider), self.secret_doc)  # p2 is readable too
+        self.assertEqual(self.p1.with_user(self.outsider).document_count, 0)
+
+    def test_changing_a_link_has_the_same_rules(self):
+        new = {"record_ref": f"res.partner,{self.p2.id}"}
+        # alice sees the document through the contact only
+        with self.assertRaises(AccessError):
+            self.link.with_user(self.alice).write(new)
+        with self.assertRaises(AccessError):
+            self.link.with_user(self.outsider).write(new)
+        self._invite(self.secret, self.alice)
+        foreign = self.Partner.create({"name": "Foreign", "company_id": self.company2.id})
+        with self.assertRaises(AccessError):
+            self.link.with_user(self.alice).write({"record_ref": f"res.partner,{foreign.id}"})
+        self.assertEqual(self.link.res_id, self.p1.id)
+
+    def test_only_the_record_of_a_link_can_be_changed(self):
+        self._invite(self.secret, self.alice)
+        with self.assertRaises(UserError):
+            self.link.with_user(self.alice).write({"document_id": self.shared_doc.id})
+        with self.assertRaises(UserError):
+            self.link.with_user(self.alice).write({"record_ref": f"res.country,{self.env.ref('base.de').id}"})
+
+    def test_the_record_of_a_line_is_changed_in_the_form(self):
+        self._invite(self.secret, self.alice)
+        form = Form(self.secret_doc.with_user(self.alice))
+        with form.link_ids.edit(0) as line:
+            line.record_ref = self.p2
+        form.save()
+        self.assertEqual(self.link.res_id, self.p2.id)
+
     def test_a_document_is_linked_once_to_a_record(self):
         with self.assertRaises(Exception), self.cr.savepoint():  # noqa: B017
             self._link(self.secret_doc, self.p1)

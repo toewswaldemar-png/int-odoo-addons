@@ -136,6 +136,13 @@ class IntFilemanagerLink(models.Model):
 
     def _prepare_vals(self, vals):
         """Turn the choice of the list (``record_ref``) into the model and the id."""
+        vals = self._record_values(vals)
+        if not vals.get("res_model_id") or not vals.get("res_id"):
+            raise UserError(self.env._("Choose the record that the document is linked to."))
+        return vals
+
+    def _record_values(self, vals):
+        """``record_ref`` as the model and the id; the model must be one that can be linked."""
         vals = dict(vals)
         record_ref = vals.pop("record_ref", False)
         if isinstance(record_ref, models.BaseModel):  # from Python (Form), the browser sends text
@@ -144,20 +151,47 @@ class IntFilemanagerLink(models.Model):
             res_model, __, res_id = record_ref.partition(",")
             vals["res_model_id"] = self.env["ir.model"]._get_id(res_model)
             vals["res_id"] = int(res_id)
-        if not vals.get("res_model_id") or not vals.get("res_id"):
-            raise UserError(self.env._("Choose the record that the document is linked to."))
-        res_model = self.env["ir.model"].sudo().browse(vals["res_model_id"]).model
-        if res_model not in self._linkable_models():
-            raise UserError(self.env._("Documents cannot be linked to this kind of record."))
+        if vals.get("res_model_id"):
+            res_model = self.env["ir.model"].sudo().browse(vals["res_model_id"]).model
+            if res_model not in self._linkable_models():
+                raise UserError(self.env._("Documents cannot be linked to this kind of record."))
         return vals
 
+    def write(self, vals):
+        """Only the record of a link can be changed, by whoever may untie and tie again.
+
+        The record is the one thing a user may want to correct in the list; the document stays.
+        The same rights as for a new link, on the old record and on the new one.
+        """
+        vals = self._record_values(vals)
+        if set(vals) - {"res_model_id", "res_id"}:
+            raise UserError(self.env._("Only the record of a link can be changed."))
+        if not vals:
+            return True
+        if len(vals) != 2 or not vals["res_model_id"] or not vals["res_id"]:
+            raise UserError(self.env._("Choose the record that the document is linked to."))
+        res_model = self.env["ir.model"].sudo().browse(vals["res_model_id"]).model
+        triples = {(link.document_id.id, res_model, vals["res_id"]) for link in self.sudo()}
+        if not self.env.su and not triples <= self._manageable(triples):
+            raise AccessError(
+                self.env._(
+                    "You may only link a document that its folder shows to you, to a record "
+                    "that you may change."
+                )
+            )
+        self._post_notes(linked=False)
+        result = super().write(vals)
+        self._post_notes(linked=True)
+        return result
+
     def _check_access(self, operation):
-        """Untying needs the same as tying: the folder shows the document, the record is writable.
+        """Untying and changing need the same as tying: the folder shows the document, the record
+        is writable (the old one, for a change; ``write`` looks at the new one).
 
         As ``ir.attachment`` asks for write access on the record to create or delete one.
         """
         result = super()._check_access(operation)
-        if operation != "unlink" or not self or self.env.su:
+        if operation not in ("unlink", "write") or not self or self.env.su:
             return result
         triples = {link.id: (link.document_id.id, link.res_model, link.res_id) for link in self.sudo()}
         manageable = self._manageable(set(triples.values()))
