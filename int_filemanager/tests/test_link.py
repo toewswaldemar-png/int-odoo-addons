@@ -2,7 +2,7 @@ import time
 from unittest.mock import patch
 
 from odoo.exceptions import AccessError, UserError
-from odoo.tests.common import TransactionCase, tagged
+from odoo.tests.common import Form, TransactionCase, tagged
 
 from .test_folder_access import AccessCase
 
@@ -125,6 +125,36 @@ class TestLink(AccessCase, TransactionCase):
         with self.assertRaises(UserError):
             self._link(self.shared_doc, country)
 
+    def test_the_context_of_another_screen_gives_a_new_line_no_record(self):
+        # The keys of the attachments (a work centre is open, say): the new line of the list
+        # must not take them, and the list must not fail on a record it does not offer.
+        Link = self.Link.with_context(default_res_model="res.country", default_res_id=1)
+        defaults = Link.default_get(["res_model", "res_model_id", "res_id", "record_ref"])
+        self.assertFalse(defaults)
+        line = self.Link.new({"res_model": "res.country", "res_id": 1})
+        self.assertFalse(line.record_ref)
+        line = self.Link.new({"res_model": "res.partner", "res_id": self.p1.id})
+        self.assertEqual(line.record_ref, self.p1)
+
+    def test_the_choice_of_a_new_line_is_computed_with_that_context(self):
+        # Odoo fills what a new line lacks with default_get(): with the keys of another screen
+        # the line got a record that the list does not offer, and its choice failed.
+        Link = self.Link.with_context(default_res_model="res.country", default_res_id=1)
+        self.assertFalse(Link.new({}).record_ref)
+
+    def test_a_line_added_in_the_form_with_that_context_is_linked_to_the_chosen_record(self):
+        # The form of the document as the browser fills it, with the keys of another screen.
+        document = self._document(self.shared, "f.txt", b"form")
+        self._invite(self.shared, self.alice)
+        form = Form(document.with_user(self.alice).with_context(
+            default_res_model="res.country", default_res_id=1
+        ))
+        with form.link_ids.new() as line:
+            line.record_ref = self.p2
+        form.save()
+        link = document.link_ids
+        self.assertEqual((link.res_model, link.res_id), ("res.partner", self.p2.id))
+
     def test_a_link_needs_a_record(self):
         with self.assertRaises(UserError):
             self.Link.create({"document_id": self.shared_doc.id})
@@ -140,6 +170,12 @@ class TestLink(AccessCase, TransactionCase):
         # no panel of the folders: the user cannot read them
         self.assertNotIn("searchpanel", views["views"]["search"]["arch"])
         self.assertNotIn("folder_id", views["views"]["search"]["arch"])
+
+    def test_the_dialog_of_a_link_offers_the_choice_of_the_record_only(self):
+        arch = self.Link.with_user(self.alice).get_views([(False, "form")])["views"]["form"]["arch"]
+        self.assertIn("record_ref", arch)
+        for raw in ("res_model_id", "res_model\"", "res_id"):
+            self.assertNotIn(raw, arch)
 
     def test_the_list_and_the_form_of_the_record_load_without_the_group(self):
         documents = self.Document.with_user(self.outsider).search([])

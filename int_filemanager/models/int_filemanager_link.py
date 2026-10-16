@@ -71,11 +71,26 @@ class IntFilemanagerLink(models.Model):
 
     @api.depends("res_model", "res_id")
     def _compute_record_ref(self):
+        linkable = self._linkable_models()
         for link in self:
-            if link.res_model in self.env and link.res_id:
+            # only what the list offers: a Reference field refuses any other model
+            if link.res_model in linkable and link.res_id:
                 link.record_ref = f"{link.res_model},{link.res_id}"
             else:
                 link.record_ref = False
+
+    @api.model
+    def default_get(self, fields):
+        """No record from the context.
+
+        The keys ``default_res_model`` and ``default_res_id`` are those of the attachments: a
+        screen that is open for another record may carry them into the new line of a list. A
+        link takes its record from the choice in the list only.
+        """
+        values = super().default_get(fields)
+        for name in ("res_model", "res_model_id", "res_id", "record_ref"):
+            values.pop(name, None)
+        return values
 
     @api.model
     def _manageable(self, triples):
@@ -123,6 +138,8 @@ class IntFilemanagerLink(models.Model):
         """Turn the choice of the list (``record_ref``) into the model and the id."""
         vals = dict(vals)
         record_ref = vals.pop("record_ref", False)
+        if isinstance(record_ref, models.BaseModel):  # from Python (Form), the browser sends text
+            record_ref = f"{record_ref._name},{record_ref.id}"
         if record_ref:
             res_model, __, res_id = record_ref.partition(",")
             vals["res_model_id"] = self.env["ir.model"]._get_id(res_model)
