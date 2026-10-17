@@ -2543,12 +2543,6 @@ msgid "Folder or document that can be shared"
 msgstr "Ordner oder Dokument, das freigegeben werden kann"
 
 #. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__can_search_text
-msgid ""
-"Folders only. The guests may search in the text of the files that they see."
-msgstr "Nur für Ordner. Die Gäste dürfen im Text der Dateien suchen, die sie sehen."
-
-#. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__can_upload
 msgid ""
 "Folders only. The guests put files into a folder of their own below the "
@@ -2718,11 +2712,6 @@ msgstr "Anfragen an eine Freigabe pro Minute"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form_dialog
 msgid "Save"
 msgstr "Speichern"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__can_search_text
-msgid "Search in the text"
-msgstr "Im Text suchen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__can_view
@@ -3031,12 +3020,6 @@ msgid "This token is taken."
 msgstr "Dieses Token ist vergeben."
 
 #. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "To search in the text the guests have to see or download."
-msgstr "Um im Text zu suchen, müssen die Gäste ansehen oder herunterladen dürfen."
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__token
 msgid "Token"
 msgstr "Token"
@@ -3095,12 +3078,6 @@ msgstr "Upload-Ordner"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__share_id
 msgid "Uploaded through"
 msgstr "Hochgeladen über"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "Uploading and searching in the text are for folders only."
-msgstr "Hochladen und Suchen im Text gibt es nur für Ordner."
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
@@ -3189,3 +3166,9 @@ msgstr "Falsche Passwörter eines Absenders in 10 Minuten"
 #: code:addons/int_filemanager/models/int_filemanager_share.py:0
 msgid "You may only share a folder or a file that the folders show to you."
 msgstr "Sie dürfen nur einen Ordner oder eine Datei freigeben, die Ihnen die Ordner anzeigen."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_share.py:0
+msgid "Uploading is for folders only."
+msgstr "Hochladen gibt es nur für Ordner."

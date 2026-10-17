@@ -340,11 +340,6 @@ class IntFilemanagerShare(models.Model):
         help="Folders only. The guests put files into a folder of their own below the shared "
         "folder, which only you and the administrators see.",
     )
-    can_search_text = fields.Boolean(
-        string="Search in the text",
-        tracking=True,
-        help="Folders only. The guests may search in the text of the files that they see.",
-    )
     password_hash = fields.Char(groups="base.group_system", copy=False)
     password = fields.Char(
         compute="_compute_password",
@@ -508,19 +503,13 @@ class IntFilemanagerShare(models.Model):
                     self.env._("A share has to allow at least one of: see, download, upload.")
                 )
 
-    @api.constrains("can_upload", "can_search_text", "max_downloads", "document_id", "can_view", "can_download")
+    @api.constrains("can_upload", "max_downloads", "document_id")
     def _check_target_kind(self):
         for share in self:
-            if share.document_id and (share.can_upload or share.can_search_text):
-                raise ValidationError(
-                    self.env._("Uploading and searching in the text are for folders only.")
-                )
+            if share.document_id and share.can_upload:
+                raise ValidationError(self.env._("Uploading is for folders only."))
             if share.folder_id and share.max_downloads:
                 raise ValidationError(self.env._("A limit of downloads is for files only."))
-            if share.can_search_text and not (share.can_view or share.can_download):
-                raise ValidationError(
-                    self.env._("To search in the text the guests have to see or download.")
-                )
 
     @api.constrains("expiration_date")
     def _check_expiration_date(self):

@@ -70,17 +70,13 @@ class TestShare(AccessCase, TransactionCase):
         with self.assertRaises(ValidationError):
             share.can_upload = False
 
-    def test_uploading_and_searching_are_for_folders_and_a_limit_of_downloads_for_files(self):
+    def test_uploading_is_for_folders_and_a_limit_of_downloads_for_files(self):
         with self.assertRaises(ValidationError):
             self._share(self.document, can_upload=True)
         with self.assertRaises(ValidationError):
-            self._share(self.document, can_search_text=True)
-        with self.assertRaises(ValidationError):
             self._share(self.shared, max_downloads=3)
-        with self.assertRaises(ValidationError):
-            self._share(self.shared, can_view=False, can_download=False, can_upload=True, can_search_text=True)
         self._share(self.document, max_downloads=3)
-        self._share(self.shared, can_search_text=True, can_upload=True)
+        self._share(self.shared, can_upload=True)
 
     def test_the_expiration_date_is_in_the_future(self):
         with self.assertRaises(ValidationError):

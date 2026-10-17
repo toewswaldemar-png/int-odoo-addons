@@ -347,7 +347,6 @@ class IntFilemanagerShareController(http.Controller):
                 "can_view": share.can_view,
                 "can_download": share.can_download,
                 "can_upload": share.can_upload,
-                "can_search_text": share.can_search_text,
                 "upload_max_file": share.upload_max_file_mb * MEBIBYTE,
                 "upload_extensions": sorted(share._upload_extensions()),
             },

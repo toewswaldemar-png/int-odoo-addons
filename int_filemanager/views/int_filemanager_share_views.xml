@@ -88,10 +88,6 @@
                             <field name="can_view" />
                             <field name="can_download" />
                             <field name="can_upload" invisible="document_id" />
-                            <field
-                                name="can_search_text"
-                                invisible="document_id or not (can_view or can_download)"
-                            />
                         </group>
                         <group string="Protection">
                             <field name="has_password" invisible="1" />
