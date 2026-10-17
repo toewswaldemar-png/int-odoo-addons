@@ -81,8 +81,9 @@ class IntFilemanagerDocument(models.Model):
 
     _name = "int.filemanager.document"
     _description = "Filemanager document"
-    _inherit = ["mail.thread", "mail.activity.mixin"]
+    _inherit = ["mail.thread", "mail.activity.mixin", "int.filemanager.shareable"]
     _order = "name"
+    _share_target = "document_id"
 
     name = fields.Char(required=True, tracking=True)
     folder_id = fields.Many2one(

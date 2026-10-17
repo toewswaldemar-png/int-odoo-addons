@@ -123,6 +123,40 @@
         </field>
     </record>
 
+    <!-- The dialog of the button "Share" of a folder or a file: the form of the share without the
+         buttons of its head and the chatter. "Create the link" saves and shows the same dialog
+         again, with the address to copy. -->
+    <record id="int_filemanager_share_view_form_dialog" model="ir.ui.view">
+        <field name="name">int.filemanager.share.view.form.dialog</field>
+        <field name="model">int.filemanager.share</field>
+        <field name="mode">primary</field>
+        <field name="inherit_id" ref="int_filemanager_share_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="replace" />
+            <xpath expr="//chatter" position="replace" />
+            <xpath expr="//sheet" position="after">
+                <footer>
+                    <button
+                        name="action_show_address"
+                        type="object"
+                        string="Create the link"
+                        class="btn-primary"
+                        invisible="id"
+                        data-hotkey="q"
+                    />
+                    <button
+                        string="Save"
+                        special="save"
+                        class="btn-primary"
+                        invisible="not id"
+                        data-hotkey="q"
+                    />
+                    <button string="Close" special="cancel" data-hotkey="x" />
+                </footer>
+            </xpath>
+        </field>
+    </record>
+
     <record id="int_filemanager_share_view_search" model="ir.ui.view">
         <field name="name">int.filemanager.share.view.search</field>
         <field name="model">int.filemanager.share</field>

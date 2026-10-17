@@ -126,8 +126,27 @@
                         class="btn-primary"
                         icon="fa-download"
                     />
+                    <button
+                        name="action_share"
+                        type="object"
+                        string="Share"
+                        icon="fa-share-alt"
+                        invisible="not active"
+                        help="Make a link that gives this file to whoever has it, without an account."
+                    />
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button
+                            name="action_open_shares"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-share-alt"
+                            invisible="not share_count"
+                        >
+                            <field name="share_count" widget="statinfo" string="Shares" />
+                        </button>
+                    </div>
                     <widget
                         name="web_ribbon"
                         title="Archived"
@@ -148,6 +167,8 @@
                         <field name="mimetype" />
                         <field name="size" widget="int_filemanager_size" />
                         <field name="tag_ids" widget="many2many_tags" />
+                        <!-- A file that a guest uploaded through a share. -->
+                        <field name="share_id" invisible="not share_id" />
                     </group>
                 </sheet>
                 <!-- Filled by DocumentFormRenderer, in the layout of the core: the form on the

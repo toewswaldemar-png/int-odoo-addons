@@ -14,6 +14,7 @@ from . import test_link
 from . import test_link_upload
 from . import test_share
 from . import test_share_brake
+from . import test_share_buttons
 from . import test_share_files
 from . import test_share_gateway
 from . import test_share_pages

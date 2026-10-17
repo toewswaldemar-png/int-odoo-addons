@@ -602,6 +602,19 @@ class IntFilemanagerShare(models.Model):
         self._ensure_upload_folder()
         return result
 
+    def action_show_address(self):
+        """After the dialog of the button "Share" saved the share: the same dialog again, now of
+        the saved share, with the address to copy."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Share"),
+            "res_model": self._name,
+            "res_id": self.id,
+            "views": [(self.env.ref("int_filemanager.int_filemanager_share_view_form_dialog").id, "form")],
+            "target": "new",
+        }
+
     def action_remove_password(self):
         """Let the link work without a password."""
         self.check_access("write")

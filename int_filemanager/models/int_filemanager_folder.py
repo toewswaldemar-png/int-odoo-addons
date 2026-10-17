@@ -25,9 +25,10 @@ class IntFilemanagerFolder(models.Model):
 
     _name = "int.filemanager.folder"
     _description = "Filemanager folder"
-    _inherit = ["mail.thread"]
+    _inherit = ["mail.thread", "int.filemanager.shareable"]
     _parent_store = True
     _order = "name"
+    _share_target = "folder_id"
 
     name = fields.Char(required=True, tracking=True)
     parent_id = fields.Many2one(
