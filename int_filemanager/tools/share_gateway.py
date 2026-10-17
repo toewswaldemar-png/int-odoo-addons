@@ -21,11 +21,17 @@ a short text, no traceback.
 import json
 import re
 
+import psycopg2.errors
+
 from odoo.fields import Domain
+from odoo.tools import SQL
 
 from ..models.int_filemanager_folder import SHARE_ROOT_KEY
-from ..models.int_filemanager_share import ShareBadRequest, ShareForbidden
+from ..models.int_filemanager_share import ShareBadRequest, ShareForbidden, ShareUnprocessable
 
+# The most that one call of a guest may take in the database. The size of an answer is limited, but a
+# search over a very large tree is work for the database whatever comes back.
+QUERY_SECONDS = 5
 DOCUMENT = "int.filemanager.document"
 FOLDER = "int.filemanager.folder"
 TAG = "int.filemanager.tag"
@@ -85,7 +91,23 @@ class ShareGateway:
             refuse(f"{model}.{method} is not open")
         if not isinstance(args, list) or not isinstance(kwargs, dict):
             bad("arguments")
-        return handler(self, model, args, kwargs)
+        return self.timed(handler, model, args, kwargs)
+
+    def timed(self, handler, model, args, kwargs):
+        """Run the call with a limit of time in the database. A call that takes longer is stopped
+        (``QueryCanceled``, which Odoo does not handle: it would be a 500) and answered with a
+        text; the savepoint gives the transaction back, and the limit is set back."""
+        cr = self.env.cr
+        cr.execute("SHOW statement_timeout")
+        previous = cr.fetchone()[0]
+        try:
+            with cr.savepoint():
+                cr.execute(SQL("SELECT set_config('statement_timeout', %s, true)", f"{int(QUERY_SECONDS * 1000)}ms"))
+                return handler(self, model, args, kwargs)
+        except psycopg2.errors.QueryCanceled:
+            raise ShareUnprocessable(self.env._("This takes too long. Ask for less.")) from None
+        finally:
+            cr.execute(SQL("SELECT set_config('statement_timeout', %s, true)", previous))
 
     # -- the checks ---------------------------------------------------------------------------
 

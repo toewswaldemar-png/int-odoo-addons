@@ -276,6 +276,10 @@ class ShareTooLarge(ShareDenied):
     http_status = 413
 
 
+class ShareUnprocessable(ShareDenied):
+    http_status = 422
+
+
 class ShareUnsupported(ShareDenied):
     http_status = 415
 
@@ -775,34 +779,61 @@ class IntFilemanagerShare(models.Model):
     def _unlock(self, password, ip):
         """The key for the password, or ``False`` if it is wrong.
 
-        A wrong password is kept in the database (``int.filemanager.share.attempt``) and counts
-        toward the brake, per address and for the share as a whole; the hash takes about half a
-        second to check, so the brake comes first. A right password clears the tries of its
-        address. The brake on passwords has no switch.
+        Every try is kept in the database (``int.filemanager.share.attempt``) and counts toward the
+        brake, per address and for the share as a whole; the hash takes about half a second to
+        check, so the brake comes first. A right password clears the tries of its address. The
+        brake on passwords has no switch.
         """
         self.ensure_one()
         if not self.password_hash:
             return False
-        Attempt = self.env["int.filemanager.share.attempt"].sudo()
-        since = fields.Datetime.now() - timedelta(seconds=BRAKE_WINDOW)
-        by_share = Attempt.search_count([("share_id", "=", self.id), ("create_date", ">", since)])
-        by_ip = Attempt.search_count(
-            [("share_id", "=", self.id), ("ip", "=", ip), ("create_date", ">", since)]
-        )
-        if by_ip >= self._setting("share_password_tries_ip") or by_share >= self._setting(
-            "share_password_tries_share"
-        ):
-            raise ShareBusy(self.env._("Too many wrong passwords. Try again later."))
+        self._take_a_try(ip)
         crypt_context = self.env["res.users"]._crypt_context()
         if (
             isinstance(password, str)
             and len(password) <= PASSWORD_MAX_LENGTH
             and crypt_context.verify(password, self.password_hash)
         ):
-            Attempt.search([("share_id", "=", self.id), ("ip", "=", ip)]).unlink()
+            self._clear_tries(ip)
             return self._unlock_key()
-        Attempt.create({"share_id": self.id, "ip": ip})
         return False
+
+    def _take_a_try(self, ip):
+        """Take one of the tries of the address for this share, or turn it away (``ShareBusy``).
+
+        The try is written before the password is looked at, and in a transaction of its own that
+        holds a lock on the table of the tries: the guests that come at the same moment queue up,
+        and each one counts what the ones before it have committed. Without that, any number of
+        them would count the same few tries, all run the hash (half a second of the processor
+        each) and all be let through: under ``REPEATABLE READ`` the request has its view of the
+        table from the first thing it read, so it cannot see the tries that others write meanwhile.
+        The lock is the first statement of the transaction, so its view is taken after the lock is
+        granted. It is held for the count and one ``INSERT`` only, not for the hash.
+        """
+        with self.env.registry.cursor() as cr:
+            Attempt = self.env(cr=cr, su=True)["int.filemanager.share.attempt"]
+            cr.execute(SQL("LOCK TABLE %s IN SHARE ROW EXCLUSIVE MODE", SQL.identifier(Attempt._table)))
+            since = fields.Datetime.now() - timedelta(seconds=BRAKE_WINDOW)
+            by_share = Attempt.search_count([("share_id", "=", self.id), ("create_date", ">", since)])
+            by_ip = Attempt.search_count(
+                [("share_id", "=", self.id), ("ip", "=", ip), ("create_date", ">", since)]
+            )
+            if by_ip >= self._setting("share_password_tries_ip") or by_share >= self._setting(
+                "share_password_tries_share"
+            ):
+                raise ShareBusy(self.env._("Too many wrong passwords. Try again later."))
+            Attempt.create({"share_id": self.id, "ip": ip})
+            Attempt.env.flush_all()
+
+    def _clear_tries(self, ip):
+        """A right password: the tries of its address are forgotten (in a transaction of its own,
+        as the tries were written)."""
+        with self.env.registry.cursor() as cr:
+            env = self.env(cr=cr, su=True)
+            env["int.filemanager.share.attempt"].search(
+                [("share_id", "=", self.id), ("ip", "=", ip)]
+            ).unlink()
+            env.flush_all()
 
     # --- what the guests reach -----------------------------------------------------------------
 
@@ -810,8 +841,9 @@ class IntFilemanagerShare(models.Model):
         """The folders below the shared folder that the guests do not see, and what lies below them.
 
         Those that say "only the users and groups allowed" (also if a folder below them is open
-        again: it lies in a hidden tree), and the folder for the uploads of this share, also if
-        somebody opened it.
+        again: it lies in a hidden tree), and the folders for the uploads of **every** share, also
+        if somebody opened one: what a guest sent through one share is never seen by the guests of
+        another (the folder of this share, and those of shares of folders below this one).
         """
         self.ensure_one()
         folders = self.env["int.filemanager.folder"].sudo().with_context(active_test=False)
@@ -822,7 +854,13 @@ class IntFilemanagerShare(models.Model):
                 ("access_mode", "=", "restricted"),
             ]
         )
-        return hidden | self.sudo().upload_folder_id
+        uploads = (
+            self.sudo()
+            .with_context(active_test=False)
+            .search([("upload_folder_id", "child_of", self.folder_id.id)])
+            .upload_folder_id
+        )
+        return hidden | self.sudo().upload_folder_id | uploads
 
     def _scope_domain(self, model):
         """The domain on ``model`` (folders or documents) of everything that the guests may reach.

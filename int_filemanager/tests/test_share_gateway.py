@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from odoo.tests.common import HttpCase, TransactionCase, tagged
 
-from ..models.int_filemanager_share import ShareBadRequest, ShareForbidden
+from ..models.int_filemanager_share import ShareBadRequest, ShareForbidden, ShareUnprocessable
 from ..tools import share_gateway
 from ..tools.share_gateway import ShareGateway
 from .test_folder_access import AccessCase
@@ -343,6 +343,23 @@ class TestShareGateway(GatewayCase, TransactionCase):
         for view in result["views"].values():
             self.assertNotIn("checksum", view["arch"])
         self.assertIn("int_filemanager_guest_list", result["views"]["list"]["arch"])
+
+    def test_a_call_that_takes_too_long_is_stopped_and_the_limit_is_set_back(self):
+        cr = self.env.cr
+        cr.execute("SHOW statement_timeout")
+        before = cr.fetchone()[0]
+
+        def slow(*args, **kwargs):
+            cr.execute("SELECT pg_sleep(3)")
+
+        with patch.object(share_gateway, "QUERY_SECONDS", 0.2), patch.object(ShareGateway, "domain", slow):
+            with self.assertRaises(ShareUnprocessable):
+                self.gateway.call(DOCUMENT, "web_search_read", [], {"domain": [], "specification": {"name": {}}})
+        cr.execute("SHOW statement_timeout")
+        self.assertEqual(cr.fetchone()[0], before)
+        # the transaction is still good
+        answer = self.gateway.call(DOCUMENT, "web_search_read", [], {"domain": [], "specification": {"name": {}}})
+        self.assertTrue(answer["records"])
 
     def test_the_call_must_have_the_shape_of_a_call(self):
         with self.assertRaises(ShareBadRequest):

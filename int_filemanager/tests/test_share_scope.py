@@ -95,9 +95,27 @@ class TestShareScope(AccessCase, TransactionCase):
         upload = uploading.upload_folder_id
         self.assertEqual(self._scope(uploading, FOLDER), mid)
         self.assertEqual(self._scope(above, FOLDER), top + mid)
-        upload.access_mode = "open"  # somebody decides so: it is a folder like the others
+        upload.access_mode = "open"  # somebody opens it for his colleagues: still no guest sees it
         self.assertEqual(self._scope(uploading, FOLDER), mid)
-        self.assertEqual(self._scope(above, FOLDER), top + mid + upload)
+        self.assertEqual(self._scope(above, FOLDER), top + mid)
+        self.assertEqual(above._hidden_folders(), upload)
+
+    def test_the_folder_for_the_uploads_of_a_blocked_share_stays_hidden(self):
+        top = self.Folder.create({"name": "top", "access_mode": "open"})
+        uploading = self.Share.create({"folder_id": self._folder("mid", top).id, "can_upload": True})
+        upload = uploading.upload_folder_id
+        upload.access_mode = "open"
+        uploading.action_archive()
+        above = self.Share.create({"folder_id": top.id})
+        self.assertNotIn(upload, self._scope(above, FOLDER))
+
+    def test_the_documents_of_the_uploads_are_hidden_too(self):
+        top = self.Folder.create({"name": "top", "access_mode": "open"})
+        uploading = self.Share.create({"folder_id": self._folder("mid", top).id, "can_upload": True})
+        uploading.upload_folder_id.access_mode = "open"
+        uploaded = self._document(uploading.upload_folder_id, "g.txt", b"from a guest")
+        above = self.Share.create({"folder_id": top.id})
+        self.assertNotIn(uploaded, self.Document.search(above._scope_domain(DOCUMENT)))
 
     # --- a file ---------------------------------------------------------------------------------
 
