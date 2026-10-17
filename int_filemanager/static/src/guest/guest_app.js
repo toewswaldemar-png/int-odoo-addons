@@ -3,10 +3,11 @@
 import { Component, useState } from "@odoo/owl";
 import { useOwnDebugContext } from "@web/core/debug/debug_context";
 import { View } from "@web/views/view";
+import { GuestUploads } from "./guest_uploads";
 
 export class GuestApp extends Component {
     static template = "int_filemanager.GuestApp";
-    static components = { View };
+    static components = { View, GuestUploads };
     static props = {};
 
     setup() {

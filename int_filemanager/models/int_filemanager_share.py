@@ -1,3 +1,7 @@
+import calendar
+import re
+import time
+import unicodedata
 import uuid
 from datetime import timedelta
 
@@ -5,7 +9,13 @@ from odoo import Command, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.fields import Domain
 from odoo.tools import SQL
-from odoo.tools.misc import hash_sign, verify_hash_signed
+from odoo.tools.mimetypes import guess_mimetype
+from odoo.tools.misc import (
+    hash_sign,
+    limited_field_access_token,
+    verify_hash_signed,
+    verify_limited_field_access_token,
+)
 
 from ..tools.request_brake import RequestBrake
 from .int_filemanager_link import FOLDER_ONLY_KEY
@@ -32,7 +42,182 @@ SHARE_DEFAULTS = {
     "share_password_tries_ip": 5,
     "share_password_tries_share": 30,
     "share_requests_per_minute": 120,
+    "share_uploads_per_minute": 10,
 }
+# What a request that uploads may be bigger than the largest file: the form around the file. A
+# request to a share that takes no file (any more) may be no bigger than this.
+UPLOAD_FRAME = 64 * 1024
+MEBIBYTE = 1024 * 1024
+# How much of the start of a file is looked at to see what it is.
+UPLOAD_HEAD_SIZE = 2048
+# The receipt a guest gets for a file he uploaded: the proof, kept in his browser, that the file
+# is his (``ir.attachment`` of ``mail`` does the same with its ownership token). It ends with the
+# share, at the latest after 90 days. The pattern is checked before the token is verified, which
+# does not look at what it is given.
+RECEIPT_SCOPE = "int_filemanager.share_receipt"
+RECEIPT_DAYS = 90
+RECEIPT_PATTERN = re.compile(r"[0-9a-f]{64}o0x[0-9a-f]{1,12}")
+RECEIPT_MAX_LENGTH = 128
+RECEIPTS_MAX = 100
+# Endings that a guest never uploads, whatever the maker of the share allows: what runs as a
+# program or a script, what a browser or an office program runs by itself (pages, scripts, macros,
+# shortcuts, installers, images of disks). The list is in the code, not in the settings: a slip
+# there must not open a hole.
+BLOCKED_EXTENSIONS = frozenset(
+    [
+        "exe",
+        "com",
+        "scr",
+        "bat",
+        "cmd",
+        "msi",
+        "msp",
+        "mst",
+        "dll",
+        "sys",
+        "drv",
+        "ocx",
+        "cpl",
+        "lnk",
+        "url",
+        "pif",
+        "scf",
+        "inf",
+        "reg",
+        "gadget",
+        "application",
+        "appx",
+        "appxbundle",
+        "msix",
+        "msixbundle",
+        "vb",
+        "vbs",
+        "vbe",
+        "js",
+        "jse",
+        "mjs",
+        "cjs",
+        "wsf",
+        "wsh",
+        "ps1",
+        "psm1",
+        "psd1",
+        "ps1xml",
+        "hta",
+        "jar",
+        "jnlp",
+        "sh",
+        "bash",
+        "zsh",
+        "csh",
+        "ksh",
+        "fish",
+        "run",
+        "bin",
+        "elf",
+        "out",
+        "command",
+        "py",
+        "pyc",
+        "pyw",
+        "pyz",
+        "pl",
+        "pm",
+        "rb",
+        "php",
+        "php3",
+        "php4",
+        "php5",
+        "php7",
+        "phtml",
+        "phar",
+        "asp",
+        "aspx",
+        "ashx",
+        "asmx",
+        "jsp",
+        "jspx",
+        "cgi",
+        "htm",
+        "html",
+        "xhtml",
+        "shtml",
+        "mht",
+        "mhtml",
+        "svg",
+        "svgz",
+        "xml",
+        "xsl",
+        "xslt",
+        "xsd",
+        "swf",
+        "chm",
+        "hlp",
+        "apk",
+        "ipa",
+        "dmg",
+        "pkg",
+        "app",
+        "iso",
+        "img",
+        "vhd",
+        "vhdx",
+        "vmdk",
+        "docm",
+        "dotm",
+        "xlsm",
+        "xltm",
+        "xlam",
+        "pptm",
+        "potm",
+        "ppam",
+        "ppsm",
+        "sldm",
+        "library-ms",
+        "searchconnector-ms",
+    ]
+)
+# Endings whose files have a known start: the start has to say the same (a ``.pdf`` that is a page
+# or a program is refused). The values are what ``guess_mimetype`` answers for them. Other
+# endings are not checked this way (the answer is not reliable for them: ``guess_mimetype``
+# takes noise for a picture).
+CONTENT_TYPES_OF = {
+    "pdf": {"application/pdf"},
+    "png": {"image/png"},
+    "jpg": {"image/jpeg"},
+    "jpeg": {"image/jpeg"},
+    "gif": {"image/gif"},
+    "webp": {"image/webp"},
+    "zip": {"application/zip"},
+    "docx": {
+        "application/zip",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    },
+    "xlsx": {
+        "application/zip",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+    "pptx": {
+        "application/zip",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    },
+    "odt": {"application/zip", "application/vnd.oasis.opendocument.text"},
+    "ods": {"application/zip", "application/vnd.oasis.opendocument.spreadsheet"},
+    "odp": {"application/zip", "application/vnd.oasis.opendocument.presentation"},
+}
+# Text endings: a file with these that holds binary data is something else.
+TEXT_EXTENSIONS = frozenset(["txt", "csv", "tsv", "md", "log", "rtf", "json"])
+# What ``guess_mimetype`` says of a program, under any ending.
+EXECUTABLE_TYPES = frozenset(
+    [
+        "application/x-dosexec",
+        "application/x-msdownload",
+        "application/x-executable",
+        "application/x-sharedlib",
+        "application/x-pie-executable",
+        "application/x-mach-binary",
+    ]
+)
 # The longest password: the hash is made of all of it.
 PASSWORD_MAX_LENGTH = 128
 # What the guests of a folder share reach, per model: the field that names the folder.
@@ -85,6 +270,18 @@ class ShareGone(ShareDenied):
 
 class ShareBusy(ShareDenied):
     http_status = 429
+
+
+class ShareTooLarge(ShareDenied):
+    http_status = 413
+
+
+class ShareUnsupported(ShareDenied):
+    http_status = 415
+
+
+class ShareNoSpace(ShareDenied):
+    http_status = 507
 
 
 class IntFilemanagerShare(models.Model):
@@ -470,6 +667,15 @@ class IntFilemanagerShare(models.Model):
     def _brake_is_on(self):
         return self._setting("share_brake") == "1"
 
+    def _check_upload_brake(self, ip):
+        """Turn the address away that sends more files to this share in a minute than the
+        settings allow (the limits of the share itself are kept by ``_reserve_upload``)."""
+        self.ensure_one()
+        if self._brake_is_on():
+            limit = self._setting("share_uploads_per_minute")
+            if self._brake().hit(("uploads", self.id, ip), REQUEST_WINDOW) > limit:
+                raise ShareBusy(self.env._("Too many files at once. Try again in a minute."))
+
     @api.model
     def _resolve(self, token, ip, right=None, key=None, needs_key=True, braked=True):
         """The share (as superuser) that a guest comes to with the token, or why not.
@@ -509,19 +715,24 @@ class IntFilemanagerShare(models.Model):
         return share
 
     @api.model
+    def _lookup(self, token):
+        """The share of the token (as superuser), also a blocked one, or nothing. Nothing is
+        counted and nothing is raised: for the places that must not have a side effect."""
+        # A token is a uuid: 36 characters. Anything else is not looked up.
+        if not (isinstance(token, str) and len(token) == 36):
+            return self.browse()
+        share = self.sudo().with_context(active_test=False).search([("token", "=", token)], limit=1)
+        # active_test=False was for the search; what the share leads to is looked up as usual
+        return share.with_context(active_test=True)
+
+    @api.model
     def _find_by_token(self, token, ip):
         """The share of the token, also a blocked one (``active_test=False``): the guest is told
         that it is blocked, which is not what "not found" says. Any token that does not lead to
         a share counts toward the brake of the address; one that does is let through."""
-        share = self.browse()
-        # A token is a uuid: 36 characters. Anything else is not looked up.
-        if isinstance(token, str) and len(token) == 36:
-            share = (
-                self.sudo().with_context(active_test=False).search([("token", "=", token)], limit=1)
-            )
+        share = self._lookup(token)
         if share:
-            # active_test=False was for the search; what the share leads to is looked up as usual
-            return share.with_context(active_test=True)
+            return share
         if self._brake_is_on():
             limit = self._setting("share_invalid_tokens")
             if self._brake().hit(("tokens", ip), BRAKE_WINDOW) > limit:
@@ -694,3 +905,196 @@ class IntFilemanagerShare(models.Model):
         that depends on the download count."""
         self.invalidate_recordset(names)
         self.modified(names)
+
+    # --- the uploads ---------------------------------------------------------------------------
+
+    @api.model
+    def _upload_body_limit(self, token, key):
+        """The most that a request to the upload route of this token may carry, in bytes.
+
+        Odoo asks for it (the ``max_content_length`` of the route) before it reads the body, so a
+        body that is too big is turned away with a 413 before a byte of it is kept. It looks at the
+        whole state of the share, without a side effect and without an error: a share that is
+        blocked, over, full, locked by a password the request does not have the key of, or that
+        does not take files may be sent no more than the frame of a form. What a valid share takes
+        is the largest file it allows, or what is left of its total if that is less.
+        """
+        share = self._lookup(token)
+        if not share or share.state != "valid" or not share.can_upload:
+            return UPLOAD_FRAME
+        if share.has_password and not share._key_is_valid(key):
+            return UPLOAD_FRAME
+        if not share._upload_folder_usable():
+            return UPLOAD_FRAME
+        room = share.upload_max_total_mb * MEBIBYTE - share.upload_size
+        if share.upload_count >= share.upload_max_files or room <= 0:
+            return UPLOAD_FRAME
+        return min(share.upload_max_file_mb * MEBIBYTE, room) + UPLOAD_FRAME
+
+    def _upload_extensions(self):
+        """The endings that the maker of the share allows (lower case, no dot); empty: all."""
+        self.ensure_one()
+        return {
+            part.strip().lstrip(".").lower()
+            for part in (self.upload_extensions or "").split(",")
+            if part.strip().lstrip(".")
+        }
+
+    @api.model
+    def _upload_name(self, name):
+        """The name a guest's file gets: as ``_clean_name`` of the documents makes it, and without
+        the format characters (a right-to-left mark turns ``cod<mark>gpj.exe`` into what looks like
+        a picture) and without the dots and spaces at the end (Windows does not see them, so
+        ``a.exe.`` is a program there)."""
+        name = "".join(char for char in (name or "") if unicodedata.category(char) != "Cf")
+        return self.env["int.filemanager.document"]._clean_name(name.rstrip(". "))
+
+    def _check_upload(self, name, head):
+        """Refuse the file if its ending or its start do not fit. Nothing is stored yet.
+
+        ``name`` is the clean name, ``head`` the first bytes of the file. The endings of the block
+        list are never taken; of the others only those that the maker of the share named (all, if
+        none). A file that is a program is refused whatever its name says. For the endings whose
+        start is known the start has to say the same, and a text file has no binary data.
+        """
+        self.ensure_one()
+        extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        allowed = self._upload_extensions()
+        if extension in BLOCKED_EXTENSIONS or (allowed and extension not in allowed):
+            raise ShareUnsupported(self.env._("This kind of file cannot be uploaded here."))
+        if not head:  # an empty file is refused by its size
+            return
+        guessed = guess_mimetype(head)
+        expected = CONTENT_TYPES_OF.get(extension)
+        if (
+            guessed in EXECUTABLE_TYPES
+            or head.startswith(b"\x7fELF")
+            or (expected is not None and guessed not in expected)
+            or (extension in TEXT_EXTENSIONS and b"\x00" in head)
+        ):
+            raise ShareUnsupported(self.env._("This file is not what its name says it is."))
+
+    def _reserve_upload(self, size):
+        """Take one file of ``size`` bytes from the limits of the share, or refuse the upload.
+
+        One ``UPDATE`` with the limits in its condition: two guests that upload at once cannot
+        both take the last place (the second one is run again after the first and sees the new
+        count, see ``_count_download``). Called by the storage after the file is measured and
+        before it is kept (the ``check`` of ``_create_from_stream``): a refused file leaves no blob
+        behind, which a rollback could not take back.
+        """
+        self.ensure_one()
+        if size <= 0:
+            raise ShareBadRequest(self.env._("This file is empty."))
+        if size > self.upload_max_file_mb * MEBIBYTE:
+            raise ShareTooLarge(self.env._("This file is too large for this link."))
+        self.flush_recordset(
+            ["upload_max_files", "upload_max_total_mb", "upload_count", "upload_size"]
+        )
+        updated = self.env.execute_query(
+            SQL(
+                """
+                UPDATE int_filemanager_share
+                   SET upload_count = upload_count + 1, upload_size = upload_size + %(size)s
+                 WHERE id = %(id)s
+                   AND upload_count < upload_max_files
+                   AND upload_size + %(size)s <= upload_max_total_mb * %(mebibyte)s
+             RETURNING id
+                """,
+                size=size,
+                id=self.id,
+                mebibyte=MEBIBYTE,
+            )
+        )
+        if not updated:
+            raise ShareTooLarge(self.env._("This link takes no more files."))
+        self._after_counting(["upload_count", "upload_size"])
+
+    def _release_upload(self, size):
+        """Give back what ``_reserve_upload`` took, for a file that the guest took away again."""
+        self.ensure_one()
+        self.flush_recordset(["upload_count", "upload_size"])
+        self.env.execute_query(
+            SQL(
+                """
+                UPDATE int_filemanager_share
+                   SET upload_count = GREATEST(upload_count - 1, 0),
+                       upload_size = GREATEST(upload_size - %(size)s, 0)
+                 WHERE id = %(id)s
+                """,
+                size=size,
+                id=self.id,
+            )
+        )
+        self._after_counting(["upload_count", "upload_size"])
+
+    def _receipt(self, document):
+        """The receipt of a file that was uploaded through this share: it proves, to the share,
+        that the guest who holds it uploaded the file. Valid for the file only, until the share
+        ends or 90 days have passed."""
+        self.ensure_one()
+        end = time.time() + RECEIPT_DAYS * 86400
+        if self.expiration_date:
+            end = min(end, calendar.timegm(self.expiration_date.timetuple()))
+        return limited_field_access_token(
+            document, "id", timestamp=hex(int(end)), scope=RECEIPT_SCOPE
+        )
+
+    def _own_uploads(self, entries):
+        """The files of this share that the receipts in ``entries`` belong to.
+
+        ``entries`` is whatever the guest sent: a list of ``{"id", "receipt"}``. What is not in
+        that form is left out, and so is every receipt that is not right (not for this file,
+        not for this share, not valid any more), without a word: the guest learns nothing about
+        other files. The form is checked first because the check of the token does not look at
+        what it gets.
+        """
+        self.ensure_one()
+        receipts = {}
+        for entry in entries[:RECEIPTS_MAX]:
+            if not isinstance(entry, dict):
+                continue
+            document_id, receipt = entry.get("id"), entry.get("receipt")
+            if (
+                isinstance(document_id, int)
+                and not isinstance(document_id, bool)
+                and 0 < document_id <= 2147483647
+                and isinstance(receipt, str)
+                and len(receipt) <= RECEIPT_MAX_LENGTH
+                and RECEIPT_PATTERN.fullmatch(receipt)
+            ):
+                receipts[document_id] = receipt
+        documents = (
+            self.env["int.filemanager.document"]
+            .sudo()
+            .with_context(active_test=False)
+            .search([("id", "in", list(receipts)), ("share_id", "=", self.id)])
+        )
+        own = documents.browse()
+        for document in documents:
+            try:
+                valid = verify_limited_field_access_token(
+                    document, "id", receipts[document.id], scope=RECEIPT_SCOPE
+                )
+            except (ValueError, OverflowError, OSError):  # a time that is not one
+                continue
+            if valid:
+                own |= document
+        return own
+
+    def _removable_uploads(self, documents):
+        """Of these files, those that the guest may still take away: they lie in the folder of the
+        uploads, are not archived, and no user has linked them to a record (so, no user took them
+        over)."""
+        self.ensure_one()
+        linked = (
+            self.env["int.filemanager.link"]
+            .sudo()
+            .search([("document_id", "in", documents.ids)])
+            .document_id
+        )
+        return documents.filtered(
+            lambda document: document.active
+            and document.folder_id == self.sudo().upload_folder_id
+            and document not in linked
+        )

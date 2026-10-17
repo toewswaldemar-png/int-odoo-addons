@@ -191,6 +191,13 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="int_filemanager.share_requests_per_minute",
         default=SHARE_DEFAULTS["share_requests_per_minute"],
     )
+    int_filemanager_share_uploads_per_minute = fields.Integer(
+        string="Uploads to a share in a minute",
+        config_parameter="int_filemanager.share_uploads_per_minute",
+        default=SHARE_DEFAULTS["share_uploads_per_minute"],
+        help="Files that one address may send to a share in a minute. The limits of the share "
+        "itself (size, number, total) do not depend on it.",
+    )
     int_filemanager_share_password_tries_ip = fields.Integer(
         string="Wrong passwords of an address in 10 minutes",
         config_parameter="int_filemanager.share_password_tries_ip",

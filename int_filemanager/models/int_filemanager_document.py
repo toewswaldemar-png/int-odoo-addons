@@ -515,7 +515,7 @@ class IntFilemanagerDocument(models.Model):
                 _remove_file(entry.path)
 
     @api.model
-    def _create_from_stream(self, stream, name, folder, mimetype=None, **values):
+    def _create_from_stream(self, stream, name, folder, mimetype=None, check=None, **values):
         """Store a file and create its document: the one way a document comes to be.
 
         Runs as superuser (the users cannot create documents), so the caller has to check
@@ -525,12 +525,18 @@ class IntFilemanagerDocument(models.Model):
         :param name: name of the document, also used to guess the type
         :param folder: ``int.filemanager.folder`` record
         :param mimetype: type given by the client, if any
+        :param check: called with the result of ``_store_stream`` (the size, the checksum, the
+            type) after the file is measured and before the document is made and the blob is
+            kept. It refuses the file by raising. Then only the temporary file is there, and it is
+            removed: a blob that was kept cannot be taken back by a rollback.
         :param values: more field values, e.g. ``tag_ids``
         :return: the document, with the environment of the caller
         """
         name = self._clean_name(name)
         stored = self._store_stream(stream, name, mimetype)
         try:
+            if check:
+                check(stored)
             document = self._create_numbered(stored, name, folder, **values)
             self._publish_blob(stored["tmp_path"], stored["checksum"])
         finally:

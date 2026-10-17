@@ -20,6 +20,7 @@ from . import test_share_pages
 from . import test_share_scope
 from . import test_share_settings
 from . import test_share_unlock
+from . import test_share_upload
 from . import test_import
 from . import test_text_reader
 from . import test_text_search

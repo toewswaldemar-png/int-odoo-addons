@@ -1,9 +1,10 @@
+import errno
 from urllib.parse import urlencode
 
 from werkzeug.exceptions import MethodNotAllowed
 
 import odoo.service.common
-from odoo import http
+from odoo import fields, http
 from odoo.exceptions import MissingError, UserError
 from odoo.fields import Domain
 from odoo.http import request
@@ -13,6 +14,8 @@ from odoo.tools.misc import human_size
 
 from ..models.int_filemanager_share import (
     SHARE_PATH,
+    MEBIBYTE,
+    UPLOAD_HEAD_SIZE,
     ShareBadRequest,
     ShareForbidden,
     ShareGone,
@@ -34,6 +37,16 @@ IMAGE_SIZES = (64, 128, 256, 512, 1024)
 IMAGE_SOURCE_MAX = 25 * 1024 * 1024
 ETAG_SCOPE = "int_filemanager.share_etag"
 DOCUMENT = "int.filemanager.document"
+
+
+def upload_limit(controller):
+    """The most that the body of an upload to a share may be (the ``max_content_length`` of the
+    route). Odoo calls it before it reads the body, so a body that is too big is turned away with
+    a 413 at once, and what the share allows decides, not a limit for all. The address of the
+    request names the share (``.../share/<token>/upload``) and may carry the key of its password.
+    """
+    token = request.httprequest.path.removeprefix(f"{SHARE_PATH}/").split("/", 1)[0]
+    return request.env["int.filemanager.share"]._upload_body_limit(token, request.httprequest.args.get("k"))
 
 
 class IntFilemanagerShareController(http.Controller):
@@ -103,12 +116,7 @@ class IntFilemanagerShareController(http.Controller):
         and kwargs of the call. Not a JSON-RPC route: that kind answers every error with the
         traceback, and with the status 200.
         """
-        try:
-            data = request.get_json_data()
-        except ValueError:
-            raise ShareBadRequest(request.env._("This is not a call.")) from None
-        if not isinstance(data, dict):
-            raise ShareBadRequest(request.env._("This is not a call."))
+        data = self._json_body()
         share = self._resolve(token, right=("view", "download"), key=data.get("k"))
         if share.document_id:
             raise ShareForbidden(request.env._("This link does not allow that."))
@@ -325,7 +333,8 @@ class IntFilemanagerShareController(http.Controller):
                 "server_version_info": version_info.get("server_version_info"),
                 "user_context": {"lang": request.env.lang, "tz": request.env.context.get("tz") or "UTC"},
                 "view_info": request.env["ir.ui.view"].get_view_info(),
-                "max_file_upload_size": 0,
+                # the size that ``checkFileSize`` of the core tests a file against (0: its own limit)
+                "max_file_upload_size": share.upload_max_file_mb * MEBIBYTE if share.can_upload else 0,
                 "active_ids_limit": 0,
                 "groups": {},
             }
@@ -339,5 +348,156 @@ class IntFilemanagerShareController(http.Controller):
                 "can_download": share.can_download,
                 "can_upload": share.can_upload,
                 "can_search_text": share.can_search_text,
+                "upload_max_file": share.upload_max_file_mb * MEBIBYTE,
+                "upload_extensions": sorted(share._upload_extensions()),
             },
         }
+
+    # --- the uploads --------------------------------------------------------------------------
+
+    @staticmethod
+    def _json_body():
+        """The body of a call as the dictionary that it has to be."""
+        try:
+            data = request.get_json_data()
+        except ValueError:
+            raise ShareBadRequest(request.env._("This is not a call.")) from None
+        if not isinstance(data, dict):
+            raise ShareBadRequest(request.env._("This is not a call."))
+        return data
+
+    def _upload_error(self, status, message):
+        """What the ``file_upload`` service of the core shows to the guest: it reads the text from
+        ``{"error": {"message": ...}}`` (the uploads of the users answer the same way)."""
+        return self._guest_headers(request.make_json_response({"error": {"message": message}}, status=status))
+
+    @http.route(
+        f"{SHARE_PATH}/<string:token>/upload",
+        type="http",
+        auth="public",
+        methods=["POST"],
+        csrf=False,
+        save_session=False,
+        max_content_length=upload_limit,
+    )
+    def upload(self, token, k=None, **kwargs):
+        """Keep one file that a guest sends, in the folder for the uploads of the share.
+
+        The key of the password is in the address (``k``), not in the body: the size of the body
+        is limited before the body is read (``upload_limit``), and that needs to know whether the
+        request may carry a file at all. The answer is the JSON of the file and its receipt, or
+        ``{"error": {"message": ...}}`` with a status.
+        """
+        try:
+            return self._upload(token, k)
+        except UserError as error:  # also the refusals of the share, which carry their status
+            return self._upload_error(getattr(error, "http_status", 400), error.args[0])
+        except OSError as error:
+            if error.errno != errno.ENOSPC:
+                raise
+            return self._upload_error(507, request.env._("There is no space left to store the file."))
+
+    def _upload(self, token, key):
+        share = self._resolve(token, right="upload", key=key)
+        share._check_upload_brake(request.httprequest.remote_addr)
+        if not share._upload_folder_usable():
+            raise ShareGone(request.env._("This link does not take files."))
+        files = request.httprequest.files.getlist("ufile")
+        if len(files) != 1:
+            raise ShareBadRequest(request.env._("Send exactly one file per request."))
+        upload = files[0]
+        name = share._upload_name(upload.filename)
+        head = upload.stream.read(UPLOAD_HEAD_SIZE)
+        upload.stream.seek(0)
+        share._check_upload(name, head)
+        # The type is not the one the browser says (``None``): it is made from the name and the
+        # start of the file, so a guest cannot give his file a harmless one. A savepoint holds
+        # what the request writes together: the limits are taken before the file is kept, and a
+        # failure later must give them back.
+        with request.env.cr.savepoint():
+            document = (
+                share.env["int.filemanager.document"]
+                .with_context(mail_create_nosubscribe=True)
+                ._create_from_stream(
+                    upload.stream,
+                    name,
+                    share.upload_folder_id,
+                    None,
+                    check=lambda stored: share._reserve_upload(stored["size"]),
+                    share_id=share.id,
+                )
+            )
+        return self._guest_headers(
+            request.make_json_response(
+                {
+                    "id": document.id,
+                    "name": document.name,
+                    "size": document.size,
+                    "receipt": share._receipt(document),
+                }
+            )
+        )
+
+    @http.route(
+        f"{SHARE_PATH}/<string:token>/uploads",
+        type="http",
+        auth="public",
+        methods=["POST"],
+        csrf=False,
+        save_session=False,
+        max_content_length=SMALL_REQUEST,
+    )
+    def uploads(self, token, **kwargs):
+        """The files that the guest uploaded, from the receipts that his browser kept.
+
+        The body is ``{"k": key, "receipts": [{"id": ..., "receipt": ...}, ...]}``. What the
+        receipts do not prove is left out without a word.
+        """
+        data = self._json_body()
+        share = self._resolve(token, right="upload", key=data.get("k"))
+        entries = data.get("receipts")
+        if not isinstance(entries, list):
+            raise ShareBadRequest(request.env._("This is not a call."))
+        own = share._own_uploads(entries)
+        removable = share._removable_uploads(own)
+        return self._guest_headers(
+            request.make_json_response(
+                [
+                    {
+                        "id": document.id,
+                        "name": document.name,
+                        "size": document.size,
+                        "time": fields.Datetime.to_string(document.create_date),
+                        "removable": document in removable,
+                    }
+                    for document in own
+                ]
+            )
+        )
+
+    @http.route(
+        f"{SHARE_PATH}/<string:token>/uploads/delete",
+        type="http",
+        auth="public",
+        methods=["POST"],
+        csrf=False,
+        save_session=False,
+        max_content_length=SMALL_REQUEST,
+    )
+    def uploads_delete(self, token, **kwargs):
+        """Take away a file that the guest uploaded, if the receipt is his and no user has taken
+        the file over. The limits of the share get it back.
+
+        The body is ``{"k": key, "id": ..., "receipt": ...}``.
+        """
+        data = self._json_body()
+        share = self._resolve(token, right="upload", key=data.get("k"))
+        own = share._own_uploads([{"id": data.get("id"), "receipt": data.get("receipt")}])
+        if not own:
+            raise ShareNotFound(request.env._("This file does not exist."))
+        if not share._removable_uploads(own):
+            raise ShareForbidden(request.env._("This file has been taken over. It cannot be removed any more."))
+        size = own.size
+        own.unlink()
+        share._release_upload(size)
+        return self._guest_headers(request.make_json_response({"removed": True}))

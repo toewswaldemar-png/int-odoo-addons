@@ -30,6 +30,7 @@ class TestShareSettings(TransactionCase):
             "unlock_hours",
             "invalid_tokens",
             "requests_per_minute",
+            "uploads_per_minute",
             "password_tries_ip",
             "password_tries_share",
         ):

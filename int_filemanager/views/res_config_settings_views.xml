@@ -318,6 +318,10 @@
                                     <field name="int_filemanager_share_requests_per_minute" />
                                 </div>
                                 <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_share_uploads_per_minute" />
+                                    <field name="int_filemanager_share_uploads_per_minute" />
+                                </div>
+                                <div class="row">
                                     <label class="col-lg-4" for="int_filemanager_share_password_tries_ip" />
                                     <field name="int_filemanager_share_password_tries_ip" />
                                 </div>

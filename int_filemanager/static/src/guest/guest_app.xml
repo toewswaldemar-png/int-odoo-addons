@@ -21,9 +21,11 @@
                     </button>
                 </div>
             </nav>
-            <div class="o_action_manager flex-grow-1">
-                <View t-if="canRead" t-key="state.type" t-props="viewProps" />
-            </div>
+            <GuestUploads enabled="rights.can_upload">
+                <div class="o_action_manager flex-grow-1">
+                    <View t-if="canRead" t-key="state.type" t-props="viewProps" />
+                </div>
+            </GuestUploads>
         </div>
     </t>
 </templates>
