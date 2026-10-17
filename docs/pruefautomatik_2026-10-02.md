@@ -8,15 +8,15 @@ Maschinelle Prüfung des Codes mit Werkzeugen und Konfigurationen aus dem Odoo-1
 |---|---|---|---|---|
 | **Ruff** | `ruff.toml` (unverändert aus dem Odoo-Repository) | Odoo-Repository, Datei `ruff.toml` (von der Runbot nächtlich erzeugt, verlangt Ruff ≥ 0.16.1) | Arbeitsrechner über pre-commit bei `git commit` | Lint nach Odoos Regelliste; E501 und C901 sind dort ignoriert; kein Formatierer |
 | **ESLint + Prettier** | `.eslintrc.json` (unverändert aus `addons/web/tooling/_eslintrc.json`) | Odoo-Repository, Entwickler-Werkzeug `addons/web/tooling` (ESLint 8, Prettier 2: `printWidth` 100, `tabWidth` 4) | Arbeitsrechner über pre-commit | `eslint:recommended`, Odoo-Regeln (u. a. `curly`, `prefer-const`, `no-unused-vars`) und Prettier-Format |
-| **`test_lint`** | `scripts/lint/run_test_lint.sh` | Odoo-Modul `test_lint` | Tower, Wegwerf-Container aus `odoo:19.0-hm-test` | Odoos eigene Lint-Tests (Abschnitt 3) |
-| **odoo-ls** | `scripts/lint/run_odoo_ls.sh`, `scripts/lint/odoo_ls_check.py` | Offizielles Projekt `odoo/odoo-ls`; laut Projektseite in Entwicklung, nicht als stabil freigegeben | Tower (Docker) oder lokal | Registry-Wissen: unbekanntes Modell, unbekanntes Feld, Modell nicht in `depends`, falsche Aufrufargumente (Nachweis: Abschnitt 4) |
+| **`test_lint`** | `tools/check/check.sh`, `tools/check/check_filter.py` | Odoo-Modul `test_lint` | Tower, Wegwerf-Container aus `odoo:19.0-hm-test` | Odoos eigene Lint-Tests (Abschnitt 3) |
+| **odoo-ls** | `tools/check/check.sh`, `tools/check/check_filter.py` | Offizielles Projekt `odoo/odoo-ls`; laut Projektseite in Entwicklung, nicht als stabil freigegeben | Tower (Docker) | Registry-Wissen: unbekanntes Modell, unbekanntes Feld, Modell nicht in `depends`, falsche Aufrufargumente (Nachweis: Abschnitt 4) |
 
 pre-commit ist nur der Läufer (`.pre-commit-config.yaml`); es gehören keine weiteren Hooks dazu. Beide Hooks schreiben **keine** Dateien um (Ruff `--no-fix`, ESLint ohne `--fix`). Das ist eine bewusste
 Projektentscheidung: Ein Prüfkommando soll keine unerwarteten Änderungen erzeugen. Die Odoo-Regel dazu steht in den Coding Guidelines: In stabilen Versionen sollen bestehende Dateien nicht allein zur Anpassung
 an die Guidelines umformatiert werden (Diff minimal halten); in `master` gelten die Guidelines für neu geschriebenen und geänderten Code. Das Ruff-Hook ignoriert die Regeln, die Odoo in der Kopfzeile der `ruff.toml` als „empfohlen, aber nicht erzwungen“
 nennt (B904, COM812, E741, EM101, I001, RET, RUF021, RUF102, TID252, TRY002, UP006, UP007).
-`docs/`, `scripts/`, `tools/`, `CLAUDE.md`, `README.md`, `Dockerfile`, `/vendor/`, `static/lib/` und `.svg`-Dateien werden von pre-commit nicht geprüft.
-`tools/check/check.sh` ist der gebündelte Aufruf für `int_filemanager` auf Tower (odoo-ls und `test_lint`); er läuft unabhängig von `scripts/lint/`. `tools/check/tests.sh` führt die Modultests in einer Wegwerf-Datenbank aus.
+`docs/`, `tools/`, `CLAUDE.md`, `README.md`, `Dockerfile`, `/vendor/`, `static/lib/` und `.svg`-Dateien werden von pre-commit nicht geprüft.
+`tools/check/check.sh` ist der gebündelte Aufruf für `int_filemanager` auf Tower (odoo-ls und `test_lint`). `tools/check/tests.sh` führt die Modultests in einer Wegwerf-Datenbank aus.
 
 **Regelquelle und lokale Entscheidung.** Die Regeln von Ruff und ESLint/Prettier, die Tests von `test_lint` und die Meldungen von odoo-ls stammen aus dem Odoo-Projekt. Folgendes ist dagegen lokal festgelegt und keine Odoo-Vorgabe:
 
@@ -32,16 +32,15 @@ nennt (B904, COM812, E741, EM101, I001, RET, RUF021, RUF102, TID252, TRY002, UP0
 pip install pre-commit && pre-commit install
 pre-commit run --files <Datei> ...                # oder bei jedem Commit automatisch (nur geänderte Dateien)
 
-# Tower (ssh unraid), im Repo-Checkout
-scripts/lint/run_test_lint.sh                    # braucht pylint in $PYLIB (Hinweis im Skript beim ersten Lauf)
-MODE=docker scripts/lint/run_odoo_ls.sh          # braucht /tmp/odoo-ls (odoo_ls_server + typeshed/)
+# Arbeitsrechner, Git Bash im Repo (läuft über ssh auf dem Tower, SSH-Alias unraid)
+tools/check/check.sh --quick                    # odoo-ls (ca. 30 s); braucht odoo-ls und typeshed unter /mnt/user/appdata/fmtest/odoo-ls
+tools/check/check.sh                            # odoo-ls und test_lint (ca. 8 Minuten); braucht pylint unter /mnt/user/appdata/fmtest/lintlib
 ```
 
 Rückgabe: Fehlgeschlagene Tests erzeugen einen Fehlerstatus; einige Odoo-Prüfungen protokollieren lediglich Warnungen (z. B. `test_routes`) und lassen den Lauf nicht scheitern. odoo-ls: Fehler und Warnungen (Stufe 1–2) zählen, Stufe 3 (Information, z. B. `OLS03024`) nicht.
 `tools/check/check.sh` meldet nur dann „OK“, wenn der Filter nichts findet (siehe Abschnitt 1).
 
-Der lokale Modus von `scripts/lint/odoo_ls_check.py` verarbeitet Windows-URIs (`file:///C:/…`) seit 2026-10-17 richtig (Test: `python scripts/lint/test_odoo_ls_check.py`, mit dem Windows-Python;
-das Python aus MSYS2 rechnet Pfade nach POSIX-Art und taugt für diesen Test nicht). Die Auswertung des `test_lint`-Logs hat eigene Tests: `python tools/check/test_check_filter.py`.
+Die Auswertung des `test_lint`-Logs und der odoo-ls-Ausgabe hat eigene Tests: `python tools/check/test_check_filter.py`.
 
 ## 3. Was Odoos `test_lint` prüft (Nachschlagewerk)
 
@@ -67,7 +66,7 @@ Läuft mit `--test-tags /test_lint`. Quelle: `odoo/addons/test_lint/tests/`.
 im Repo von `odoo/odoo-ls` nicht geprüft). Es kennt die Odoo-Registry und findet damit, was Pylint nicht sehen kann.
 
 **Festgelegter Stand** (Tower, `/mnt/user/appdata/fmtest/odoo-ls/`): `odoo_ls_server 1.6.0`, SHA-256 `bdbb18d519462e77a2d5b1d59af079f0c02d024213428b5cd31bc338f2530023`, Datei vom 2026-09-22;
-Ausgabeformat `{"events": [{"type": "diagnostic", "uri": …, "diagnostics": [LSP-Diagnose]}]}` (siehe Kopf von `scripts/lint/odoo_ls_check.py`). Die Version des mitgelieferten `typeshed` ist nicht vermerkt:
+Ausgabeformat `{"events": [{"type": "diagnostic", "uri": …, "diagnostics": [LSP-Diagnose]}]}` (ausgewertet in `tools/check/check_filter.py`). Die Version des mitgelieferten `typeshed` ist nicht vermerkt:
 der Release enthält keine Commit-Angabe. Bei einem neuen Release gelten die Nachweise unten nicht mehr und müssen wiederholt werden.
 
 **Nachgewiesen** (2026-10-17, `tools/check/check.sh --quick` mit absichtlich fehlerhaftem Code in `int_filemanager`; jeder Fehler wurde als Stufe 1 gemeldet und ließ den Lauf rot werden):
@@ -84,7 +83,7 @@ der Release enthält keine Commit-Angabe. Bei einem neuen Release gelten die Nac
 **Nicht ausprobiert:** Compute-Methode, die das Feld nicht setzt, und Related-Feld mit falschem Typ. Die Doku von odoo-ls nennt beides; ein Nachweis fehlt hier.
 JavaScript prüft dieser Lauf nicht nachweislich; die Frage, welche JS-Diagnosen odoo-ls liefert, hängt von seinen Abhängigkeiten ab und ist hier nicht untersucht. Fallstricke: (1) `typeshed.zip` aus dem Release gehört dazu, sonst bricht der Lauf ab;
 (2) Bibliotheken außerhalb des Images per `PYTHONPATH` sichtbar machen, sonst Fehlalarme; (3) die Ausgabe enthält auch Befunde aus dem Odoo-Kern, nach eigenen Pfaden filtern;
-(4) Hinweise mit Stufe 3 (z. B. `OLS03024`) sind Information, kein Fehler. Das Programm beendet sich unabhängig von den Befunden normal, deshalb wertet `scripts/lint/odoo_ls_check.py` das JSON aus.
+(4) Hinweise mit Stufe 3 (z. B. `OLS03024`) sind Information, kein Fehler. Das Programm beendet sich unabhängig von den Befunden normal, deshalb wertet `tools/check/check_filter.py` das JSON aus.
 
 ## 5. Grenzen
 
