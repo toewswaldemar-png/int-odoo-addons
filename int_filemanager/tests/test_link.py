@@ -2,7 +2,7 @@ import time
 from unittest.mock import patch
 
 from odoo.exceptions import AccessError, UserError
-from odoo.tests.common import Form, TransactionCase, tagged
+from odoo.tests import Form, TransactionCase, tagged
 
 from .test_folder_access import AccessCase
 
