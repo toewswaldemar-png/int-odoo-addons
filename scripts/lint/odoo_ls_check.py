@@ -21,6 +21,7 @@ import argparse
 import collections
 import json
 import pathlib
+import re
 import sys
 from urllib.parse import unquote, urlparse
 
@@ -29,7 +30,12 @@ SEVERITY = {1: "error", 2: "warning", 3: "info", 4: "hint"}
 
 
 def uri_to_path(uri):
-    return pathlib.Path(unquote(urlparse(uri).path))
+    path = unquote(urlparse(uri).path)
+    # Windows: file:///C:/Users/x.py has the path /C:/Users/x.py. Without dropping the slash the path
+    # has no drive and every finding looks like it lies outside the repository.
+    if re.match(r"/[A-Za-z]:/", path):
+        path = path[1:]
+    return pathlib.Path(path)
 
 
 def is_module_file(rel, root):

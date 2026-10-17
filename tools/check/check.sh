@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Odoo test_lint and odoo-ls for int_filemanager on the Tower test instance
-# (both must report nothing in int_filemanager).
+# (both must report nothing in int_filemanager; test_lint also fails on any failed test that is
+# neither explained by a finding in int_filemanager nor a known core finding, see check_filter.py).
 #
 # Usage (from the repo, Git Bash):  tools/check/check.sh [--quick]
 #   --quick  odoo-ls only (~30 s); without it test_lint also runs (~8 min, pylint over the core)
@@ -48,7 +49,10 @@ if [[ $quick == 1 ]]; then
 else
   echo "== test_lint (takes about 8 minutes)"
   # Fresh DB each run: -i on an already installed test_lint would not run the tests again.
-  ssh "$HOST" "docker exec fmtest_pg dropdb -U odoo --if-exists $DB && \
+  # Remove old results first, so a stale log can never be mistaken for this run. Odoo's exit status
+  # is kept in test_lint.exit (it is non-zero for the known core findings too, so the filter
+  # judges the summary line and the failed tests, not the status alone).
+  ssh "$HOST" "rm -f $WORK/test_lint.log $WORK/test_lint.exit; docker exec fmtest_pg dropdb -U odoo --if-exists $DB && \
     docker run --rm --network fmtest-net \
       -v $BASE/config_v2:/etc/odoo:ro -v $BASE/v2src:/mnt/v2src:ro \
       -v $BASE/lintlib:/mnt/lintlib:ro -v $WORK/data:/var/lib/odoo \
@@ -57,7 +61,7 @@ else
       $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB --db-filter=^$DB\$ \
       --addons-path=/mnt/v2src,/usr/lib/python3/dist-packages/odoo/addons --data-dir=/var/lib/odoo \
       -i test_lint --test-tags /test_lint --stop-after-init --workers=0 --max-cron-threads=0 --no-http \
-      >$WORK/test_lint.log 2>&1 || true"
+      >$WORK/test_lint.log 2>&1; echo \$? >$WORK/test_lint.exit"
 fi
 
 echo "== filter"
