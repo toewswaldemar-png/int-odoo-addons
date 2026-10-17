@@ -25,9 +25,23 @@ const MEDIA_MIMETYPES = [
 // A text file is read whole into the viewer: above this size it is offered as a download.
 export const TEXT_MAX_SIZE = 2 * 1024 * 1024;
 
-/** @returns {string} the route of the core that serves a binary field of a document */
+/**
+ * Where the addresses of the files come from. The user's web client serves them from the routes
+ * of the core; the page of the guests of a share replaces these functions (`guest_addresses.js`)
+ * with ones that build the addresses of the share, which carry its token. Nothing else in the
+ * components knows the difference.
+ */
+export const addresses = {
+    /** @returns {string} the route that serves a binary field of a document */
+    content: (id, field) => `/web/content/${MODEL}/${id}/${field}`,
+    /** @returns {string|false} the address of a smaller version of a picture of a document */
+    image: (id, field, params) => imageUrl(MODEL, id, field, params),
+    /** @returns {Object} query parameters that every address of a file carries */
+    params: () => ({}),
+};
+
 function contentRoute(id, field) {
-    return `/web/content/${MODEL}/${id}/${field}`;
+    return addresses.content(id, field);
 }
 
 /**
@@ -56,7 +70,7 @@ export class DocumentFile extends FileModelMixin(Object) {
 
     /** @override The browser keeps a file for good: its checksum changes with the content. */
     get urlQueryParams() {
-        const params = super.urlQueryParams;
+        const params = { ...super.urlQueryParams, ...addresses.params() };
         if (this.isPdf && this.ocr_checksum) {
             params.unique = this.ocr_checksum;
         }
@@ -67,6 +81,7 @@ export class DocumentFile extends FileModelMixin(Object) {
     get downloadUrl() {
         return url(contentRoute(this.id, CONTENT_FIELD), {
             ...super.urlQueryParams,
+            ...addresses.params(),
             download: true,
         });
     }
@@ -139,7 +154,9 @@ export function thumbnailUrl(record, size) {
     } else {
         return false;
     }
-    return imageUrl(MODEL, file.id, field, { width: size, height: size, unique: file.checksum });
+    // A guest does not get the checksum: the time of the last change tells the browser as well.
+    const unique = file.checksum || String(record.data.write_date || "");
+    return addresses.image(file.id, field, { width: size, height: size, unique });
 }
 
 /**

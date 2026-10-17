@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- The pages of a share, for guests with no account. Nothing of the backend is on them: the
+         page of a file is plain HTML (no script), the page of a folder starts an Owl app with its
+         own bundle, the page that asks for the password has a small script of its own. Everything
+         a guest or the data brings in goes through t-out (escaped). -->
+    <template id="share_layout" name="Filemanager share: the head of a page">
+        <t t-call="web.layout">
+            <t t-set="head">
+                <t t-call-assets="web.assets_frontend" t-js="false" />
+                <t t-out="head_extra" />
+            </t>
+            <t t-out="0" />
+        </t>
+    </template>
+
+    <template id="share_file_page" name="Filemanager share: a file">
+        <t t-call="int_filemanager.share_layout">
+            <t t-set="title" t-value="name" />
+            <div class="container py-5" style="max-width: 40rem">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <img
+                            t-if="picture_url"
+                            t-att-src="picture_url"
+                            alt=""
+                            class="img-fluid mb-3"
+                            style="max-height: 20rem"
+                        />
+                        <h1 class="h4 text-break" t-out="name" />
+                        <p class="text-muted">
+                            <span t-out="mimetype" />
+                            ·
+                            <span t-out="size_text" />
+                        </p>
+                        <p t-if="downloads_left is not None" class="text-muted small">
+                            Downloads left: <span t-out="downloads_left" />
+                        </p>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a
+                                t-if="show_url"
+                                t-att-href="show_url"
+                                class="btn btn-secondary"
+                                target="_blank"
+                                rel="noopener"
+                            >Show</a>
+                            <form t-if="download_url" t-att-action="download_url" method="post">
+                                <input t-if="key" type="hidden" name="k" t-att-value="key" />
+                                <button type="submit" class="btn btn-primary">Download</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="share_folder_page" name="Filemanager share: a folder">
+        <t t-call="web.layout">
+            <t t-set="title" t-value="name" />
+            <t t-set="body_classname" t-value="'o_web_client'" />
+            <t t-set="head">
+                <script>
+                    odoo.__session_info__ = <t t-out="json.dumps(session_info)" />;
+                    odoo.int_filemanager_token = <t t-out="json.dumps(token)" />;
+                    odoo.int_filemanager_folder_name = <t t-out="json.dumps(name)" />;
+                    odoo.int_filemanager_rights = <t t-out="json.dumps(rights)" />;
+                </script>
+                <t t-call-assets="int_filemanager.assets_guest" />
+            </t>
+        </t>
+    </template>
+
+    <!-- Asks for the password, and shows nothing of the share: not its name, not a number. -->
+    <template id="share_password_page" name="Filemanager share: the password">
+        <t t-call="int_filemanager.share_layout">
+            <t t-set="title">Password</t>
+            <t t-set="head_extra">
+                <t t-call-assets="int_filemanager.assets_guest_password" t-css="false" />
+            </t>
+            <div class="container py-5" style="max-width: 24rem">
+                <form id="o_share_password" class="card card-body" t-att-data-token="token">
+                    <h1 class="h5">This link needs a password</h1>
+                    <input
+                        type="password"
+                        name="password"
+                        class="form-control my-3"
+                        autocomplete="off"
+                        aria-label="Password"
+                        required="required"
+                    />
+                    <button type="submit" class="btn btn-primary">Open</button>
+                    <p class="o_share_message text-danger mt-3 mb-0" role="alert" />
+                </form>
+            </div>
+        </t>
+    </template>
+</odoo>

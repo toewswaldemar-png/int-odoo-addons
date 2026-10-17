@@ -1,9 +1,16 @@
+from psycopg2 import IntegrityError
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import SQL
 
 # Names shown when a restore is refused because they are taken.
 CLASH_NAMES_SHOWN = 5
+# Names tried for one new folder ("a", "a (2)", ...) before giving up.
+NAME_TRIES = 1000
+# The context key that the reading for the guests of a share sets (never the browser): the id of
+# the folder that the share gives. Its parent is not shown, see ``_read_format``.
+SHARE_ROOT_KEY = "int_filemanager_share_root"
 
 
 class IntFilemanagerFolder(models.Model):
@@ -127,6 +134,59 @@ class IntFilemanagerFolder(models.Model):
                 folder.ocr_images_active = folder.parent_id.ocr_images_active
             else:
                 folder.ocr_images_active = folder.ocr_images == "on"
+
+    @api.model
+    def _create_numbered(self, name, parent, **values):
+        """Create the folder under ``name`` below ``parent``, or under the first free ``name (2)``.
+
+        Two active folders of a parent cannot share a name (case aside). The names that are taken
+        are looked up in one go; one that slips through (another case, a parallel request) is
+        caught by the unique index of the database. Odoo does not retry on that error.
+        """
+
+        def numbered(number):
+            return name if number == 1 else f"{name} ({number})"
+
+        taken = {
+            folder.name.lower()
+            for folder in self.search_fetch(
+                [
+                    ("parent_id", "=", parent.id),
+                    ("name", "in", [numbered(number) for number in range(1, 101)]),
+                ],
+                ["name"],
+            )
+        }
+        constraint = self._name_per_parent.full_name(self)
+        for number in range(1, NAME_TRIES + 1):
+            candidate = numbered(number)
+            if candidate.lower() in taken:
+                continue
+            try:
+                with self.env.cr.savepoint():
+                    return self.create({**values, "name": candidate, "parent_id": parent.id})
+            except IntegrityError as error:
+                if error.diag.constraint_name != constraint:
+                    raise
+                taken.add(candidate.lower())
+        raise UserError(self.env._("No free name for %(name)s in this folder.", name=name))
+
+    def _read_format(self, fnames, load="_classic_read"):
+        """The shared folder has no parent for the guests of its share.
+
+        Its parent lies outside what they may reach, and its name must not be given away. The
+        search panel of the guests needs it as well: it keeps a folder only if the chain of its
+        parents lies in the result completely (``_search_panel_sanitized_parent_hierarchy``),
+        so a root with a parent outside would leave the panel empty. Here, where every reading
+        passes (``read``, ``search_read``, ``web_read``), the root has none.
+        """
+        result = super()._read_format(fnames, load)
+        root_id = self.env.context.get(SHARE_ROOT_KEY)
+        if root_id:
+            for values in result:
+                if values["id"] == root_id and "parent_id" in values:
+                    values["parent_id"] = False
+        return result
 
     def write(self, vals):
         # Archiving or restoring a folder does it on everything below, like a project does it on

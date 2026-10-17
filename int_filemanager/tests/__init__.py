@@ -12,6 +12,14 @@ from . import test_folder_access
 from . import test_folder_archive
 from . import test_link
 from . import test_link_upload
+from . import test_share
+from . import test_share_brake
+from . import test_share_files
+from . import test_share_gateway
+from . import test_share_pages
+from . import test_share_scope
+from . import test_share_settings
+from . import test_share_unlock
 from . import test_import
 from . import test_text_reader
 from . import test_text_search

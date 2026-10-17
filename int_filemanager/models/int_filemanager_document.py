@@ -50,8 +50,9 @@ CONTENT_WORDS_KEY = "int_filemanager_words"
 CONTENT_WORDS_MAX = 10
 CONTENT_WORD_LENGTH = 200
 # Set by the storage only (see ``write``), like the core does for ``ir.attachment``. The picture
-# of a PDF and its state are made by the scheduled action alone.
-STORAGE_FIELDS = ("checksum", "size", "mimetype", "thumbnail", "thumbnail_state")
+# of a PDF and its state are made by the scheduled action alone; the share a file came in
+# through, by the upload of the share.
+STORAGE_FIELDS = ("checksum", "size", "mimetype", "thumbnail", "thumbnail_state", "share_id")
 # The picture of the first page of a PDF (``_cron_thumbnails``): the longer side in pixels, the
 # files drawn per run, the time and the memory one page may take. A child process draws it
 # (``tools/pdf_thumbnail.py``): a broken file may crash the PDF library.
@@ -107,6 +108,15 @@ class IntFilemanagerDocument(models.Model):
         related="folder_id.company_id", store=True, index=True
     )
     origin_path = fields.Char(groups="base.group_system", copy=False)
+    # The share (link for guests) that a guest uploaded the file through; empty for all others.
+    share_id = fields.Many2one(
+        "int.filemanager.share",
+        string="Uploaded through",
+        readonly=True,
+        copy=False,
+        index="btree_not_null",
+        ondelete="set null",
+    )
     # A binary field that holds nothing: ``ir.binary`` only streams a record's *binary field*
     # (``/web/content/<model>/<id>/content``). The bytes come from the blob, see
     # ``_to_http_stream``; reading the field yields False, it is not in the views.
