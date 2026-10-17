@@ -1,6 +1,6 @@
 # int-odoo-addons
 
-Eigene Odoo-19-Module, dazu die Werkzeuge, Regeln und Unterlagen für ihre Entwicklung. Alles unter LGPL-3.
+Eigene Odoo-19-Module, dazu Werkzeuge und Unterlagen für ihre Entwicklung. Alles unter LGPL-3.
 
 ## Module
 
@@ -23,23 +23,11 @@ Ebene tief, deshalb liegen alle Module flach im Wurzelordner.
 | `int_*/`, `onlyoffice_odoo/` | die Module (jedes mit eigenem `__manifest__.py`) |
 | [`Dockerfile`](Dockerfile) | Odoo-19-Image (Test und Betrieb); enthält noch Bibliotheken aus der früheren Fassung von `int_filemanager` (Audio-Metadaten, Tesseract/OCRmyPDF, pdfplumber, pyjwt) |
 | [`docs/`](docs/) | Dokumentation |
-| `docs/odoo_regeln/` | Odoo-19-Regeln: Coding und Git Guidelines, Developer Reference (nur Odoo-Doku und Odoo-Code) |
 | `docs/odoo19_reference/`, `docs/owl2_reference/` | Volltext-Referenzen zum Nachschlagen (Odoo 19, Owl 2.8.4) |
 | `docs/odoo/` | Odoo-19-Quellcode als lokale Kopie (nicht Teil des Repos) |
+| `docs/odoo19_abweichungen.md` | bestätigte Abweichungen zwischen offizieller Odoo-19-Dokumentation und Core, jeweils mit Fundstelle, Core-Commit und Test |
 | `docs/pruefautomatik_2026-10-02.md` | Prüfwerkzeuge, Aufruf und was sie prüfen |
 | `tools/check/` | Prüf- und Testskripte für `int_filemanager` (Modultests, odoo-ls und `test_lint`, Test-Instanz, Übersetzungsexport) |
 | `scripts/lint/` | Läufe für `test_lint` und odoo-ls |
 | `.pre-commit-config.yaml`, `ruff.toml`, `.eslintrc.json` | Prüfautomatik (Odoos eigene Konfiguration) |
-| [`CLAUDE.md`](CLAUDE.md) | verbindliche Arbeitsregeln für die Arbeit mit Claude Code |
-
-## Branches
-
-- `master`: Hauptlinie und einziger Branch; gearbeitet wird direkt darauf.
-
-## Entwickeln
-
-- **Regeln:** vor Code in einem Bereich die zugehörige Datei in [`docs/odoo_regeln/`](docs/odoo_regeln/) lesen; vor jeder Aussage "das gibt es in Odoo nicht" den
-  Odoo-19-Core durchsuchen (`docs/odoo/`).
-- **Prüfen:** pre-commit (Ruff, ESLint nach Odoos Konfiguration) bei jedem Commit; `test_lint` und odoo-ls als eigene Läufe. Aufruf und Umfang: [`docs/pruefautomatik_2026-10-02.md`](docs/pruefautomatik_2026-10-02.md).
-  Für `int_filemanager`: `tools/check/tests.sh` (Modultests) und `tools/check/check.sh`.
-- **Commits:** `[TAG] modul: kurzer Satz` (Odoo-Git-Guidelines), Commit nur auf Ansage.
+| [`CLAUDE.md`](CLAUDE.md) | kurzer Prüfablauf für offizielle Odoo-19-Dokumentation, Core und reproduzierbare Tests |

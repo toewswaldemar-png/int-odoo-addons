@@ -87,12 +87,12 @@ Gezielte Läufe vor Schritt 4: 77 Tests grün. Volle Suite und `check.sh --quick
 ## Erster Schritt der neuen Sitzung
 
 1. Den Stand oben („Stand am Abend des 16.10.“) und `git status` lesen; der Nutzer entscheidet, ob und wie die Schritte 1 bis 3 committet werden (Skill `pruefen-und-committen`).
-2. Vor Code alle Dateien in `docs/odoo_regeln/` lesen (Pflicht laut `CLAUDE.md`; die JS-Dateien erst vor dem ersten JS, Schritt 6).
+2. Vor Code den Prüfablauf aus `CLAUDE.md` anwenden: passende Originaldokumentation lesen, dann Signaturen und Verhalten im passenden Odoo-19-Core prüfen.
 3. **(Erledigt in Sitzung 3: Schritte 4 bis 6.)** Weiter mit **Schritt 7 (Upload-Weg, §6, §8)**; vorher die Abnahme von Schritt 6 durch den Nutzer abwarten oder Befunde einarbeiten. Alter Text zu Schritt 4: erst `origin/spike/gast-ui` lesen (`controllers/spike.py`, `docs/spike_gast_ui/spike_attacks_final.txt`, Wiederholungs-Rezept in `docs/spike_gast_ui/spike_gast_ui_notizen.md`), dann die Angriffsfälle als Tests (`test_share_gateway.py`), dann das Gateway mit `type="http"`, `GatewayDenied` als `ShareDenied`-Unterklasse (Vorlage: die Klassen im Share-Modell), Bereich aus `Share._scope_domain`, Kontextschlüssel `SHARE_ROOT_KEY` im Gateway setzen, `parent_of` sperren, `child_of` nur mit sichtbaren IDs. Der Controller `controllers/int_filemanager_share.py` hat schon `_guest`, `_resolve` und `_guest_headers`.
 
 Vorschlag für den ersten Satz der neuen Sitzung:
 
-> Lies docs/int_filemanager_gast_freigabe_uebergabe_2026-10-16.md (Abschnitt „Stand am Abend“) und die Regeln in docs/odoo_regeln/. Dann Schritt 4 des Bauplans (§14), erst die Angriffsfälle als Tests, dann das Gateway.
+> Lies docs/int_filemanager_gast_freigabe_uebergabe_2026-10-16.md (Abschnitt „Stand am Abend“) und wende den Prüfablauf aus CLAUDE.md an. Dann Schritt 4 des Bauplans (§14), erst die Angriffsfälle als Tests, dann das Gateway.
 
 ## Stolpersteine
 

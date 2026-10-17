@@ -7,7 +7,7 @@
 #
 # Runs on the Tower host (needs docker, the PostgreSQL test container and a pylint directory).
 # NOT yet run on Tower; the same Odoo command was verified in a cloud session with a venv
-# (docs/odoo_regeln/odoo_regeln_index_2026-10-02.md, "Prüfautomatik").
+# (docs/pruefautomatik_2026-10-02.md).
 #
 # Usage (from the repo root):  scripts/lint/run_test_lint.sh
 # Environment (defaults for the fmtest setup):

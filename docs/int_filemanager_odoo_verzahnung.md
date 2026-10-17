@@ -93,7 +93,7 @@ Das Rechtemodell ersetzt die bisherige reine Ordnerregel (`int_filemanager_docum
   - **Vorbilder im Core:** `ir.attachment` (`_check_access`/`_search`) und `mail.activity` (Regel plus `_check_access`/`_search` über den verknüpften
     Datensatz), dazu `mail.message` (`_search`). Alle drei überschreiben `_search`/`_check_access`. Hier genügt das Feld, weil die Regelmaschine den
     Rest erledigt. Die Dokumentation nennt genau diesen Weg: Gruppenregeln vereinigen sich und „können Zugriff erweitern“
-    (`odoo_regeln_security_2026-10-02.md`, Record Rules).
+    (`docs/odoo19_reference/backend/security.md`, Abschnitt „Record Rules“).
   - **Der Core-Weg als Alternative** (nicht gebaut, nicht getestet): `_check_access` überschreiben und die von der Regel abgelehnten Dokumente
     nachträglich über den verknüpften Datensatz freigeben (so macht es `mail.activity` bei `write`/`unlink`; die Regel muss dafür **nicht**
     nachgebaut werden). Für `_search` gibt es im Core keine Vorlage für „Regel ODER Datensatz“: `mail.activity` und `mail.message` lassen großzügige
@@ -137,8 +137,8 @@ Modultests in der Wegwerf-Datenbank (`tools/check/tests.sh`):
 - Sichtbarkeit sofort nach Änderung am Datensatz (Zwischenspeicher-Falle, §3.3).
 - Geschwindigkeit des Dokumentverzeichnisses mit der zusätzlichen Prüfung bei vielen Dokumenten und wenigen/vielen Verweisen.
 
-Dazu `check.sh` (odoo-ls, `test_lint`) und pre-commit. Vor dem Bauen gelten die Regeldateien ORM, Sicherheit, Mixins, Views, Daten/Manifest und Tests
-aus `docs/odoo_regeln/` sowie die beiden `INDEX.md` der Referenzen.
+Dazu `check.sh` (odoo-ls, `test_lint`) und pre-commit. Vor dem Bauen die passenden Originalseiten für ORM, Sicherheit, Mixins, Views, Daten/Manifest und Tests
+über `docs/odoo19_reference/INDEX.md` sowie die Owl-Referenz öffnen und das Verhalten im passenden Odoo-19-Core prüfen.
 
 ## 4. Reihenfolge
 
@@ -179,7 +179,7 @@ aus `docs/odoo_regeln/` sowie die beiden `INDEX.md` der Referenzen.
 | One2many über ein `Many2oneReference` ergänzt den Filter auf das Modell | `odoo/orm/fields_relational.py`: `_additional_domain` |
 | Kaskade über (`res_model`, `res_id`) nicht möglich, Aufräumen von Hand im `unlink` | `addons/mail/models/mail_thread.py`: `unlink` (Kommentar) |
 | `any` wendet die Regeln des Comodells an, `any!` umgeht sie | `fields_relational.py`: `bypass_search_access`, `any!`; `any` in Regeln: `addons/project/security/project_security.xml` |
-| Verbindungsmodule mit `auto_install` | `addons/account_fleet`, `hr_fleet`, `sale_project`: `__manifest__.py`; Handbuch: `odoo_regeln_data_manifest_2026-10-02.md` |
+| Verbindungsmodule mit `auto_install` | `addons/account_fleet`, `hr_fleet`, `sale_project`: `__manifest__.py`; Referenz: `docs/odoo19_reference/backend/module.md` |
 | Eingangsrechnung aus Anhängen | `addons/account/models/account_journal.py`: `_create_document_from_attachment`; `account_document_import_mixin.py`: `_create_records_from_attachments` |
 | Standard-`message_new` speichert keine Anhänge als Dokument | `addons/mail/models/mail_thread.py`: `message_new` |
 | Alias für beliebige Modelle | `addons/mail/models/mail_alias_mixin_optional.py` |
