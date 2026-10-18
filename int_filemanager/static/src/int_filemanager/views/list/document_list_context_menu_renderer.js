@@ -1,7 +1,7 @@
+import { useRef, useState } from "@odoo/owl";
+import { useDropdownState } from "@web/core/dropdown/dropdown_hooks";
 import { evaluateBooleanExpr } from "@web/core/py_js/py";
-import { usePopover } from "@web/core/popover/popover_hook";
 import { documentFilesFromRecords } from "../../document_file";
-import { DocumentListContextMenu } from "./document_list_context_menu";
 import { DocumentListRenderer } from "./document_list_renderer";
 
 // What keeps the menu of the browser: a link, a field, a text that can be edited.
@@ -9,25 +9,22 @@ const BROWSER_MENU = "a, input, textarea, select, [contenteditable]";
 
 /**
  * The list of the documents with a menu for the right click on a row (the guests keep
- * `DocumentListRenderer`). The menu opens at the element that was clicked, as the popovers of
- * the core do; it holds the buttons of the head of the list and "View". Like in a file
- * manager, the row of the click is ticked when it is not (the ticked rows are what the buttons
- * act on).
+ * `DocumentListRenderer`). The menu is the core's `Dropdown`, opened by hand (`manual`); it
+ * holds the buttons of the head of the list, as items like those of the action menu of the core
+ * (`action_menus.xml`), and "View" for the viewer, which is no button. Like in a file manager,
+ * the row of the click is ticked when it is not (the ticked rows are what the buttons act on).
+ *
+ * A dropdown opens at its toggler, an element. Here the toggler is a point without size that
+ * is moved to the pointer before the menu opens.
  */
 export class DocumentListContextMenuRenderer extends DocumentListRenderer {
     static template = "int_filemanager.DocumentListContextMenuRenderer";
 
     setup() {
         super.setup();
-        this.contextMenu = usePopover(DocumentListContextMenu, {
-            // The menu uses the buttons of the view (`onClickViewButton` of the controller).
-            env: this.env,
-            animation: false,
-            arrow: false,
-            position: "bottom-start",
-            popoverClass: "o-dropdown--menu dropdown-menu mx-0",
-            role: "menu",
-        });
+        this.anchorRef = useRef("contextMenuAnchor");
+        this.dropdownState = useDropdownState();
+        this.contextMenu = useState({ buttons: [], onView: undefined });
     }
 
     /**
@@ -49,23 +46,58 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
             return;
         }
         ev.preventDefault();
-        const target = ev.target;
+        const { clientX, clientY } = ev;
         if (!record.selected) {
             for (const other of list.selection) {
                 other.toggleSelection(false);
             }
             await record.toggleSelection(true);
         }
-        this.contextMenu.open(target, {
-            list,
+        this.dropdownState.close();
+        Object.assign(this.anchorRef.el.style, { left: `${clientX}px`, top: `${clientY}px` });
+        Object.assign(this.contextMenu, {
             buttons: this.props.archInfo.headerButtons.filter(
                 (button) =>
                     button.display !== "always" &&
                     !evaluateBooleanExpr(button.invisible, list.evalContext)
             ),
-            domain: list.domain,
             onView: this.getViewAction(record),
         });
+        this.dropdownState.open();
+    }
+
+    /**
+     * The button of the head of the list for the ticked rows: the same call as the core's
+     * `MultiRecordViewButton` makes.
+     * @param {Object} button the button of the arch
+     */
+    async onButtonSelected(button) {
+        const { list } = this.props;
+        const resIds = await list.getResIds(true);
+        this.env.onClickViewButton({
+            clickParams: {
+                ...button.clickParams,
+                buttonContext: {
+                    active_domain: list.domain,
+                    active_ids: resIds,
+                    active_model: list.resModel,
+                },
+            },
+            getResParams: () => ({
+                context: list.context,
+                evalContext: list.evalContext,
+                resModel: list.resModel,
+                resIds,
+            }),
+        });
+    }
+
+    /**
+     * @param {String} icon the icon of a button of the arch: a class of FontAwesome or of Odoo
+     * @returns {String} its classes
+     */
+    getIconClass(icon) {
+        return icon.startsWith("oi-") ? `oi oi-fw ${icon}` : `fa fa-fw ${icon}`;
     }
 
     /**

@@ -2732,6 +2732,7 @@ msgstr "Durch Kommas getrennt: pdf, jpg. Leer: jede Endung, außer denen, die al
 #: code:addons/int_filemanager/models/int_filemanager_shareable.py:0
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_attempt__share_id
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
 msgid "Share"
 msgstr "Teilen"
@@ -3175,6 +3176,6 @@ msgstr "Hochladen gibt es nur für Ordner."
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.xml:0
 msgid "View"
 msgstr "Ansehen"

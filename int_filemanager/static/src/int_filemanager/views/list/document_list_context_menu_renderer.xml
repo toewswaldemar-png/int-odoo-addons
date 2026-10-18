@@ -9,5 +9,35 @@
         <xpath expr="//table[@t-ref='table']" position="attributes">
             <attribute name="t-on-contextmenu">(ev) => this.onContextMenu(ev)</attribute>
         </xpath>
+        <xpath expr="//table[@t-ref='table']" position="after">
+            <Dropdown
+                manual="true"
+                noClasses="true"
+                bottomSheet="false"
+                focusToggleOnClosed="false"
+                position="'bottom-start'"
+                state="dropdownState"
+            >
+                <span class="o_int_filemanager_context_menu_anchor" t-ref="contextMenuAnchor" />
+                <t t-set-slot="content">
+                    <DropdownItem
+                        t-if="contextMenu.onView"
+                        class="'o_menu_item'"
+                        onSelected="contextMenu.onView"
+                    >
+                        <i class="fa fa-fw fa-eye me-1" />View
+                    </DropdownItem>
+                    <t t-foreach="contextMenu.buttons" t-as="button" t-key="button.id">
+                        <DropdownItem
+                            class="'o_menu_item'"
+                            onSelected="() => this.onButtonSelected(button)"
+                        >
+                            <i t-if="button.icon" t-att-class="getIconClass(button.icon) + ' me-1'" />
+                            <t t-out="button.string" />
+                        </DropdownItem>
+                    </t>
+                </t>
+            </Dropdown>
+        </xpath>
     </t>
 </templates>

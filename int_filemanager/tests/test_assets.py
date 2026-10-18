@@ -10,7 +10,6 @@ DEFINE_REGEX = re.compile(r"odoo\.define\(\s*'([^']+)'\s*,\s*\[([^\]]*)\]")
 TEMPLATES = (
     "int_filemanager.DocumentDropzone",
     "int_filemanager.DocumentKanbanView.Buttons",
-    "int_filemanager.DocumentListContextMenu",
     "int_filemanager.DocumentListContextMenuRenderer",
     "int_filemanager.DocumentListRenderer",
     "int_filemanager.DocumentListView.Buttons",
@@ -38,9 +37,10 @@ CORE_PARTS = {
     # DocumentListRenderer: the click on the picture of a row; the rest of the row keeps the
     # core's click, which ends in `openRecord`.
     "@web/views/list/list_renderer": ("onCellClicked(", "openRecord("),
-    # DocumentListContextMenu: the buttons of the head of the list run as the core's button of
-    # the ticked rows does.
+    # DocumentListContextMenuRenderer: the buttons of the head of the list run as the core's
+    # `MultiRecordViewButton` runs them (the ticked rows, the call of the controller).
     "@web/views/view_button/multi_record_view_button": ("onClickViewButton(", "getResIds("),
+    "@web/views/view_button/view_button_hook": ("onClickViewButton(", "beforeExecuteAction"),
     # DocumentListController: the button "Properties" opens the form as a click on a row does.
     "@web/views/list/list_controller": ("beforeExecuteActionButton(", "selectRecord("),
 }
@@ -90,7 +90,6 @@ class TestAssets(TransactionCase):
             "views/kanban/document_kanban_renderer",
             "views/kanban/document_kanban_view",
             "views/kanban/document_tile_size",
-            "views/list/document_list_context_menu",
             "views/list/document_list_context_menu_renderer",
             "views/list/document_list_controller",
             "views/list/document_list_renderer",
