@@ -3172,3 +3172,9 @@ msgstr "Sie dürfen nur einen Ordner oder eine Datei freigeben, die Ihnen die Or
 #: code:addons/int_filemanager/models/int_filemanager_share.py:0
 msgid "Uploading is for folders only."
 msgstr "Hochladen gibt es nur für Ordner."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu.xml:0
+msgid "View"
+msgstr "Ansehen"

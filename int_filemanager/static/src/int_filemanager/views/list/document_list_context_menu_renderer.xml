@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t
+        t-name="int_filemanager.DocumentListContextMenuRenderer"
+        t-inherit="int_filemanager.DocumentListRenderer"
+        t-inherit-mode="primary"
+    >
+        <!-- On the table, not on each row: the rows of the core's template are shared by the groups. -->
+        <xpath expr="//table[@t-ref='table']" position="attributes">
+            <attribute name="t-on-contextmenu">(ev) => this.onContextMenu(ev)</attribute>
+        </xpath>
+    </t>
+</templates>

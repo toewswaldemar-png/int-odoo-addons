@@ -18,6 +18,13 @@
                 <header>
                     <button name="action_open_form" type="object" string="Properties" icon="fa-pencil" />
                     <button name="action_download" type="object" string="Download" icon="fa-download" />
+                    <button
+                        name="action_share"
+                        type="object"
+                        string="Share"
+                        icon="fa-share-alt"
+                        groups="int_filemanager.int_filemanager_group_user"
+                    />
                 </header>
                 <field name="name" widget="int_filemanager_document_name" />
                 <field name="folder_id" />

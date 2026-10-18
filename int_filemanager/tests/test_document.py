@@ -307,16 +307,30 @@ class TestFolderAndDocument(TransactionCase):
             self.Document.browse().action_open_form()
 
     def test_the_list_has_the_upload_and_the_buttons_for_the_ticked_rows(self):
-        views = self.Document.get_views([(False, "list"), (False, "form")])
+        views = self.Document.with_user(self.user).get_views([(False, "list"), (False, "form")])
         arch = views["views"]["list"]["arch"]
         self.assertIn('js_class="int_filemanager_document_list"', arch)
         # The buttons are in the head of the list, none is in a row.
         head = arch[arch.index("<header>") : arch.index("</header>")]
-        for name in ("action_open_form", "action_download"):
+        for name in ("action_open_form", "action_download", "action_share"):
             self.assertIn(f'name="{name}"', head)
             self.assertEqual(arch.count(f'name="{name}"'), 1)
         self.assertIn('widget="int_filemanager_document_name"', arch)
         self.assertIn('name="action_download"', views["views"]["form"]["arch"])
+
+    def test_the_share_button_of_the_list_is_for_the_group_that_may_share(self):
+        # The same arch makes the buttons of the ticked rows and the menu of the right click.
+        for user, has_button in ((self.user, True), (self.outsider, False)):
+            with self.subTest(user=user.login):
+                views = self.Document.with_user(user).get_views([(False, "list")])
+                self.assertEqual('name="action_share"' in views["views"]["list"]["arch"], has_button)
+
+    def test_the_share_action_of_the_list_wants_one_document(self):
+        document = self._document()
+        action = document.with_user(self.user).action_share()
+        self.assertEqual(action["context"], {"default_document_id": document.id})
+        with self.assertRaises(UserError):
+            (document + self._document("b.txt")).action_share()
 
     def test_the_lists_move_by_multi_edit_and_nothing_is_duplicated_or_created_by_hand(self):
         views = self.Document.get_views([(False, "list"), (False, "form")])

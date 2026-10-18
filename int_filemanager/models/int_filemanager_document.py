@@ -332,6 +332,11 @@ class IntFilemanagerDocument(models.Model):
             "views": [(False, "form")],
         }
 
+    def action_share(self):
+        """The share dialog of one file: the list has the button for the ticked rows too."""
+        self._check_one_selected()
+        return super().action_share()
+
     def _check_one_selected(self):
         # The buttons in the head of the list act on every ticked row; these act on one.
         if len(self) != 1:
