@@ -32,7 +32,7 @@ class TestShareScope(AccessCase, TransactionCase):
         self.hidden1 = self._folder("hidden1", self.hidden)
         self.reopened = self._folder("reopened", self.hidden1, access_mode="open")
         self.archived = self._folder("archived", self.shared)
-        self.foreign = self._folder("foreign", self.shared, company_id=self.company2.id)
+        self.foreign = self._folder("foreign", self.shared)
         self.other = self.Folder.create({"name": "other", "access_mode": "open"})
         self.documents = {
             folder: self._document(folder, f"{folder.name}.txt", folder.name.encode())
@@ -41,10 +41,19 @@ class TestShareScope(AccessCase, TransactionCase):
                 self.reopened, self.archived, self.foreign, self.other,
             )
         }
+        self._legacy_company(self.foreign, self.company2)
         self.gone = self._document(self.a, "gone.txt", b"gone")
         self.gone.active = False
         self.archived.active = False  # with its file, as the archiving of a folder does
         self.share = self.Share.create({"folder_id": self.shared.id})
+
+    def _legacy_company(self, folder, company):
+        """A subfolder of another company: the folders have the company of their parent now, data
+        from before may still hold one, and the share must not reach it."""
+        self.env.flush_all()
+        self.env.cr.execute("UPDATE int_filemanager_folder SET company_id = %s WHERE id = %s", (company.id, folder.id))
+        self.env.cr.execute("UPDATE int_filemanager_document SET company_id = %s WHERE folder_id = %s", (company.id, folder.id))
+        self.env.invalidate_all()
 
     def _scope(self, share, model):
         return self.env[model].with_context(active_test=True).search(share._scope_domain(model))

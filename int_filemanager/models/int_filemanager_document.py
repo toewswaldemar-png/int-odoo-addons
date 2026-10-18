@@ -21,6 +21,7 @@ from odoo.fields import Domain
 from odoo.http import Stream
 from odoo.tools import SQL
 
+from ..tools.clash import clash_summary, clashing_names
 from .int_filemanager_text_page import folded
 
 _logger = logging.getLogger(__name__)
@@ -285,6 +286,8 @@ class IntFilemanagerDocument(models.Model):
         # the storage runs as superuser. Creating is closed by the missing access right.
         if not self.env.su:
             vals = {key: value for key, value in vals.items() if key not in STORAGE_FIELDS}
+        if "folder_id" in vals:
+            self._check_move(vals["folder_id"])
         if vals.get("active") and not self.env.context.get("int_filemanager_cascade"):
             for document in self.filtered(lambda document: not document.active):
                 if not document.folder_id.active:
@@ -296,12 +299,42 @@ class IntFilemanagerDocument(models.Model):
                         )
                     )
         old_checksums = set(self.mapped("checksum")) if "checksum" in vals else set()
-        result = super().write(vals)
+        # The name that the tracking keeps of a folder is the plain one, whatever the context.
+        plain = self.with_context(hierarchical_naming=False)
+        result = super(IntFilemanagerDocument, plain).write(vals)
         if old_checksums:
             # Another file: the blob it had may be free now (the cleaner looks).
             for checksum in old_checksums - {vals["checksum"]}:
                 self._mark_blob_for_gc(checksum)
         return result
+
+    def _check_move(self, folder_id):
+        """Check the folder that the documents are put into.
+
+        The rights of the user (not asked of the superuser, whose acts the storage and the
+        cascades are): the folder is one the user may write into, as for an upload. And the rules
+        of the tree, which hold for the superuser too: the folder is in use and no name is taken
+        twice there, naming the names. The unique index remains for two moves at once.
+        """
+        folder = self.env["int.filemanager.folder"].browse(folder_id).exists()
+        moved = self.filtered(lambda document: document.folder_id != folder)
+        if not (folder and moved):
+            return
+        if not self.env.su:
+            folder.check_access("write")
+        folder.sudo()._check_active_target()
+        active = moved.filtered("active")
+        clash = clashing_names(
+            self.env, self._table, "folder_id", folder.id, active.mapped("name"), active.ids
+        )
+        if clash:
+            raise UserError(
+                self.env._(
+                    "These names are taken in %(folder)s: %(names)s",
+                    folder=folder.name,
+                    names=clash_summary(clash),
+                )
+            )
 
     def unlink(self):
         # First delete the rows, then mark the blobs, like ir.attachment.unlink. A blob that

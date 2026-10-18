@@ -4,13 +4,20 @@ from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import SQL
 
-# Names shown when a restore is refused because they are taken.
-CLASH_NAMES_SHOWN = 5
+from ..tools.clash import CLASH_NAMES_SHOWN, clash_summary, clashing_names
+
 # Names tried for one new folder ("a", "a (2)", ...) before giving up.
 NAME_TRIES = 1000
 # The context key that the reading for the guests of a share sets (never the browser): the id of
 # the folder that the share gives. Its parent is not shown, see ``_read_format``.
 SHARE_ROOT_KEY = "int_filemanager_share_root"
+# The context key that makes the name of a folder its path ("Club / 2026 / Invoices"), like
+# ``product.category``. It is off unless a view asks for it (the field that picks a folder): the
+# chatter, the messages and the guests keep the plain name.
+PATH_KEY = "hierarchical_naming"
+# The separator of the path, and what stands for the folders above that the user may not read.
+PATH_SEPARATOR = " / "
+PATH_HIDDEN = "…"
 
 
 class IntFilemanagerFolder(models.Model):
@@ -189,6 +196,50 @@ class IntFilemanagerFolder(models.Model):
                     values["parent_id"] = False
         return result
 
+    @api.depends("name", "parent_path")
+    @api.depends_context(PATH_KEY, "uid", "allowed_company_ids")
+    def _compute_display_name(self):
+        """The name, or with ``hierarchical_naming`` the path, as far as the user may read it.
+
+        Which folders above are named is the user's to see (the record rules): the path stops at
+        the first one the user may not read and starts with "…", so a name is never given away.
+        A folder can be seen though its parent is not (the rules look at ``access_folder_id``).
+        """
+        if not self.env.context.get(PATH_KEY):
+            return super()._compute_display_name()
+        chains = {
+            folder: [int(folder_id) for folder_id in (folder.parent_path or "").split("/") if folder_id]
+            for folder in self
+        }
+        above = {folder_id for chain in chains.values() for folder_id in chain[:-1]}
+        readable = {
+            folder.id: folder.name
+            for folder in self.with_context(active_test=False).search_fetch(
+                [("id", "in", list(above))], ["name"]
+            )
+        }
+        for folder, chain in chains.items():
+            parts = [folder.name]
+            for folder_id in reversed(chain[:-1]):
+                if folder_id not in readable:
+                    parts.append(PATH_HIDDEN)
+                    break
+                parts.append(readable[folder_id])
+            folder.display_name = PATH_SEPARATOR.join(reversed(parts))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """A subfolder has the company of its parent, and the parent has to be in use."""
+        vals_list = [dict(vals) for vals in vals_list]
+        for vals in vals_list:
+            # The default of the parent (the list puts the folder of its panel there) counts too.
+            parent_id = vals.get("parent_id") if "parent_id" in vals else self.env.context.get("default_parent_id")
+            if parent_id:
+                parent = self.browse(parent_id).sudo()
+                parent._check_active_target()
+                vals["company_id"] = parent.company_id.id
+        return super().create(vals_list)
+
     def write(self, vals):
         # Archiving or restoring a folder does it on everything below, like a project does it on
         # its tasks (project.project.write). The core's docstring of action_archive says to
@@ -196,10 +247,77 @@ class IntFilemanagerFolder(models.Model):
         cascade = "active" in vals and not self.env.context.get("int_filemanager_cascade")
         if cascade and vals["active"]:
             self._check_restorable()
-        result = super().write(vals)
+        moving = not self.env.context.get("int_filemanager_cascade") and (
+            "parent_id" in vals or "company_id" in vals
+        )
+        if moving:
+            vals = self._check_move(vals)
+        # The name that the tracking keeps of a folder is the plain one, whatever the context.
+        plain = self.with_context(**{PATH_KEY: False})
+        result = super(IntFilemanagerFolder, plain).write(vals)
         if cascade:
             self._cascade_active(vals["active"])
+        if moving and "company_id" in vals:
+            self._cascade_company()
         return result
+
+    def _check_active_target(self):
+        """Refuse a folder that is archived as the place for something."""
+        for folder in self:
+            if not folder.active:
+                raise UserError(
+                    self.env._(
+                        "The folder %(name)s is archived. Restore it first.", name=folder.name
+                    )
+                )
+
+    def _check_move(self, vals):
+        """Check where the folders go, and give back the values with the company of the target.
+
+        Two layers. The rights of the user (not asked of the superuser, whose acts the storage
+        and the cascades are): the target has to be one the user may write into, as for an
+        upload. The rules of the tree, which hold for the superuser too: the target is in use,
+        no name is taken twice, and a subfolder has the company of its parent. Where the folders
+        are put below a parent, the company of the whole tree below comes along
+        (``_cascade_company``); a subfolder cannot have another company on its own.
+        """
+        if "parent_id" in vals:
+            moved = self.filtered(lambda folder: folder.parent_id.id != (vals["parent_id"] or False))
+            target = self.browse(vals["parent_id"]).exists()
+            if moved and target:
+                if not self.env.su:
+                    target.check_access("write")
+                target.sudo()._check_active_target()
+                vals = {**vals, "company_id": target.sudo().company_id.id}
+            if moved:
+                active = moved.filtered("active")
+                clash = clashing_names(
+                    self.env, self._table, "parent_id", target.id, active.mapped("name"), active.ids
+                )
+                if clash:
+                    raise UserError(
+                        self.env._(
+                            "These names are taken here: %(names)s", names=clash_summary(clash)
+                        )
+                    )
+        elif "company_id" in vals and self.filtered(
+            lambda folder: folder.parent_id and folder.company_id.id != (vals["company_id"] or False)
+        ):
+            raise UserError(
+                self.env._("The company of a subfolder is the one of its parent. Change the top folder.")
+            )
+        return vals
+
+    def _cascade_company(self):
+        """Give what lies below these folders their company (the documents follow their folder)."""
+        folders = self.sudo().with_context(active_test=False)
+        for folder in folders:
+            tree = folders.search([("id", "child_of", folder.id)]) - folder
+            tree = tree.filtered(lambda child: child.company_id != folder.company_id)
+            # mail_notrack: the change is logged once, on the folder the user moved.
+            tree.with_context(int_filemanager_cascade=True, mail_notrack=True).write(
+                {"company_id": folder.company_id.id}
+            )
 
     def _below(self, active):
         """The folders and documents below these folders (they included) that are not yet ``active``.

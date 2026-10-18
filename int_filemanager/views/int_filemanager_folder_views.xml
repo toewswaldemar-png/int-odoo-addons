@@ -8,7 +8,7 @@
                  No duplicating: the copy would only have the name that is taken. -->
             <list multi_edit="1" duplicate="0">
                 <field name="name" />
-                <field name="parent_id" />
+                <field name="parent_id" context="{'hierarchical_naming': True}" />
                 <field name="access_mode" />
                 <field
                     name="model_folder_ids"
@@ -58,7 +58,7 @@
                     <group>
                         <field name="active" invisible="1" />
                         <field name="name" />
-                        <field name="parent_id" />
+                        <field name="parent_id" context="{'hierarchical_naming': True}" />
                         <field name="access_mode" />
                         <field
                             name="access_user_ids"
@@ -75,7 +75,7 @@
                             name="ocr_images"
                             groups="int_filemanager.int_filemanager_group_admin"
                         />
-                        <field name="company_id" groups="base.group_multi_company" />
+                        <field name="company_id" groups="base.group_multi_company" readonly="parent_id" />
                     </group>
                     <!-- Where the files go that are uploaded at a record (a contact ...): the
                          administrators choose it, as they choose the images that are read. -->
@@ -103,7 +103,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name" />
-                <field name="parent_id" />
+                <field name="parent_id" context="{'hierarchical_naming': True}" />
                 <filter
                     name="filter_upload_folder"
                     string="Upload folders"

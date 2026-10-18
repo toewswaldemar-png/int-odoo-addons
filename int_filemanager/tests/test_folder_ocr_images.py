@@ -85,7 +85,8 @@ class TestFolderOcrImagesRights(TransactionCase):
         self.assertEqual(child.sudo().ocr_images, "inherit")
 
     def test_a_user_moving_a_folder_gets_the_new_surroundings(self):
-        on = self.Folder.with_user(self.boss).create({"name": "On", "ocr_images": "on"})
+        # An open folder: a user moves a folder only into one the user may write into.
+        on = self.Folder.with_user(self.boss).create({"name": "On", "ocr_images": "on", "access_mode": "open"})
         folder = self.Folder.with_user(self.alice).create({"name": "Moves"})
         folder.write({"parent_id": on.id})
         self.assertTrue(folder.sudo().ocr_images_active)
