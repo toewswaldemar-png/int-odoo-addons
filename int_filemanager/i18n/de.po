@@ -1648,6 +1648,12 @@ msgid "The checksum must be a SHA-256 in lowercase hexadecimal."
 msgstr "Die Prüfsumme muss ein SHA-256 in Kleinbuchstaben-Hexadezimal sein."
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "The company of a subfolder is the one of its parent. Change the top folder."
+msgstr "Die Firma eines Unterordners ist die seines übergeordneten Ordners. Ändern Sie den obersten Ordner."
+
+#. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_text_ocr_checksum_is_sha256
 msgid ""
 "The checksum of the recognized PDF must be a SHA-256 in lowercase "
@@ -1741,6 +1747,12 @@ msgstr "Die Dateien des Ordners werden in den Filemanager kopiert. Die Dateien a
 #: code:addons/int_filemanager/models/int_filemanager_import.py:0
 msgid "The folder %(folder)s is not a folder below the root folder."
 msgstr "Der Ordner %(folder)s ist kein Ordner unterhalb des Wurzelordners."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "The folder %(name)s is archived. Restore it first."
+msgstr "Der Ordner %(name)s ist archiviert. Stellen Sie ihn zuerst wieder her."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1959,6 +1971,18 @@ msgstr "Die Texterkennung ist mehrmals mit einem Fehler abgebrochen."
 #: code:addons/int_filemanager/controllers/int_filemanager.py:0
 msgid "There is no space left to store the file."
 msgstr "Es ist kein Speicherplatz mehr für die Datei vorhanden."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "These names are taken here: %(names)s"
+msgstr "Diese Namen sind hier schon vergeben: %(names)s"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "These names are taken in %(folder)s: %(names)s"
+msgstr "Diese Namen sind im Ordner %(folder)s schon vergeben: %(names)s"
 
 #. module: int_filemanager
 #. odoo-python
