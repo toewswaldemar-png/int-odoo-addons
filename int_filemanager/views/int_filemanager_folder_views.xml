@@ -7,6 +7,14 @@
             <!-- multi_edit: select folders and edit the parent of one of them to move them all.
                  No duplicating: the copy would only have the name that is taken. -->
             <list multi_edit="1" duplicate="0">
+                <header>
+                    <button
+                        name="%(int_filemanager.int_filemanager_move_folder_action)d"
+                        type="action"
+                        string="Move to..."
+                        icon="fa-folder-open"
+                    />
+                </header>
                 <field name="name" />
                 <field name="parent_id" context="{'hierarchical_naming': True}" />
                 <field name="access_mode" />

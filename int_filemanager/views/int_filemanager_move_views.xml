@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- The dialog "Move to...", like the one of Odoo's "Mark Lost" (crm.lead.lost). -->
+    <record id="int_filemanager_move_view_form" model="ir.ui.view">
+        <field name="name">int.filemanager.move.view.form</field>
+        <field name="model">int.filemanager.move</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="document_ids" invisible="1" />
+                <field name="folder_ids" invisible="1" />
+                <group>
+                    <field name="summary" string="Moving" />
+                    <field
+                        name="target_folder_id"
+                        context="{'hierarchical_naming': True}"
+                        options="{'no_create': True, 'no_open': True}"
+                        required="document_ids"
+                        placeholder="Choose a folder..."
+                    />
+                </group>
+                <footer>
+                    <button
+                        name="action_move"
+                        string="Move"
+                        type="object"
+                        class="btn-primary"
+                        data-hotkey="q"
+                    />
+                    <button string="Discard" class="btn-secondary" special="cancel" data-hotkey="x" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_filemanager_move_document_action" model="ir.actions.act_window">
+        <field name="name">Move to...</field>
+        <field name="res_model">int.filemanager.move</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="int_filemanager_move_view_form" />
+        <field name="target">new</field>
+        <field name="context">{'dialog_size': 'medium', 'default_document_ids': active_ids}</field>
+    </record>
+
+    <record id="int_filemanager_move_folder_action" model="ir.actions.act_window">
+        <field name="name">Move to...</field>
+        <field name="res_model">int.filemanager.move</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="int_filemanager_move_view_form" />
+        <field name="target">new</field>
+        <field name="context">{'dialog_size': 'medium', 'default_folder_ids': active_ids}</field>
+    </record>
+</odoo>

@@ -17,6 +17,7 @@
         "security/int_filemanager_import_security.xml",
         "security/int_filemanager_import_line_security.xml",
         "views/int_filemanager_menus.xml",
+        "views/int_filemanager_move_views.xml",
         "views/int_filemanager_folder_views.xml",
         "views/int_filemanager_document_views.xml",
         "views/int_filemanager_link_views.xml",
