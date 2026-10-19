@@ -580,6 +580,64 @@ msgstr "Ordner"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
+msgid "Upload a folder"
+msgstr "Ordner hochladen"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+msgid "%(files)s files in %(folders)s folders go into %(target)s. A folder that is there already is filled up, a file whose name is taken gets a number (2); nothing is overwritten. If you stop and start again, what was saved is saved a second time."
+msgstr "%(files)s Dateien in %(folders)s Ordnern kommen nach %(target)s. Ein Ordner, den es schon gibt, wird aufgefüllt, eine Datei mit vergebenem Namen bekommt eine Nummer (2); nichts wird überschrieben. Wenn Sie anhalten und neu starten, wird das schon Gespeicherte ein zweites Mal gespeichert."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+msgid "Uploading a folder."
+msgstr "Ein Ordner wird hochgeladen."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+msgid "%(done)s of %(total)s files: %(name)s"
+msgstr "%(done)s von %(total)s Dateien: %(name)s"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+msgid "%(stored)s of %(total)s files saved."
+msgstr "%(stored)s von %(total)s Dateien gespeichert."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+msgid "The upload was stopped."
+msgstr "Das Hochladen wurde angehalten."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+msgid "Not saved: %(names)s"
+msgstr "Nicht gespeichert: %(names)s"
+
+#. module: int_filemanager
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "Too many folders at once."
+msgstr "Zu viele Ordner auf einmal."
+
+#. module: int_filemanager
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "This is not a valid folder path: %(path)s"
+msgstr "Das ist kein gültiger Ordnerpfad: %(path)s"
+
+#. module: int_filemanager
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "The name %(name)s is not available here."
+msgstr "Der Name %(name)s ist hier nicht verfügbar."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
 msgid "Folders cannot be uploaded, only files."
 msgstr "Ordner können nicht hochgeladen werden, nur Dateien."
 
