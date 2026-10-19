@@ -6,16 +6,34 @@
         t-inherit-mode="primary"
     >
         <xpath expr="." position="inside">
-            <!-- A label opens the file dialog of the hidden input without any script. -->
-            <label class="btn btn-primary o_int_filemanager_upload">
-                <input
-                    type="file"
-                    multiple="multiple"
-                    class="d-none"
-                    t-on-change.stop="onFilesSelected"
-                />
-                Upload
-            </label>
+            <!-- The input is beside the menu, not in it: the menu is gone before the files are
+                 chosen. "Upload" clicks it. -->
+            <input
+                type="file"
+                multiple="multiple"
+                class="d-none"
+                t-ref="fileInput"
+                t-on-change.stop="onFilesSelected"
+            />
+            <!-- As the "New" menu of the core's project: the text and the caret of the toggler (no
+                 icon), the hotkey of the create button, and the bounce of the sample data. -->
+            <Dropdown>
+                <button class="btn btn-primary o-dropdown-caret" data-hotkey="c" data-bounce-button="">
+                    New
+                </button>
+                <t t-set-slot="content">
+                    <DropdownItem class="'o_menu_item'" onSelected="() => this.onUploadSelected()">
+                        <i class="fa fa-fw fa-upload me-1" />Upload
+                    </DropdownItem>
+                    <DropdownItem
+                        t-if="foldersSection"
+                        class="'o_menu_item'"
+                        onSelected="() => this.onNewFolder()"
+                    >
+                        <i class="fa fa-fw fa-folder me-1" />New folder
+                    </DropdownItem>
+                </t>
+            </Dropdown>
         </xpath>
     </t>
 </templates>

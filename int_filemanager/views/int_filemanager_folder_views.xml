@@ -120,6 +120,33 @@
         </field>
     </record>
 
+    <!-- The dialog of "New folder" in the menu "New" of the list of documents: the name, and the
+         folder it lies in (the list puts the folder of its panel in `default_parent_id`). -->
+    <record id="int_filemanager_folder_view_form_dialog" model="ir.ui.view">
+        <field name="name">int.filemanager.folder.view.form.dialog</field>
+        <field name="model">int.filemanager.folder</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="name" />
+                    <field name="parent_id" context="{'hierarchical_naming': True}" />
+                </group>
+                <footer>
+                    <button string="Save" special="save" class="btn-primary" data-hotkey="q" />
+                    <button string="Discard" special="cancel" data-hotkey="x" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_filemanager_folder_action_new" model="ir.actions.act_window">
+        <field name="name">New folder</field>
+        <field name="res_model">int.filemanager.folder</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="int_filemanager_folder_view_form_dialog" />
+        <field name="target">new</field>
+    </record>
+
     <record id="int_filemanager_folder_action" model="ir.actions.act_window">
         <field name="name">Folders</field>
         <field name="res_model">int.filemanager.folder</field>

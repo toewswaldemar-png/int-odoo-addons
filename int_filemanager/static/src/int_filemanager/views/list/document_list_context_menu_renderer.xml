@@ -36,6 +36,12 @@
                             <t t-out="button.string" />
                         </DropdownItem>
                     </t>
+                    <t t-if="contextMenu.newFolder">
+                        <div t-if="contextMenu.onView or contextMenu.buttons.length" role="separator" class="dropdown-divider" />
+                        <DropdownItem class="'o_menu_item'" onSelected="contextMenu.newFolder">
+                            <i class="fa fa-fw fa-folder me-1" />New folder
+                        </DropdownItem>
+                    </t>
                 </t>
             </Dropdown>
         </xpath>

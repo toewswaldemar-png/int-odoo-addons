@@ -41,6 +41,9 @@ CORE_PARTS = {
     # `MultiRecordViewButton` runs them (the ticked rows, the call of the controller).
     "@web/views/view_button/multi_record_view_button": ("onClickViewButton(", "getResIds("),
     "@web/views/view_button/view_button_hook": ("onClickViewButton(", "beforeExecuteAction"),
+    # DocumentListController: the menu "New" restores the view after the dialog of the new
+    # folder (the client action of the core; the panel does not reload its tree).
+    "@web/webclient/actions/client_actions": ("soft_reload",),
     # DocumentListController: the button "Properties" opens the form as a click on a row does.
     "@web/views/list/list_controller": ("beforeExecuteActionButton(", "selectRecord("),
 }
@@ -94,6 +97,7 @@ class TestAssets(TransactionCase):
             "views/list/document_list_controller",
             "views/list/document_list_renderer",
             "views/list/document_list_view",
+            "views/list/document_new_folder",
         ):
             self.assertIn(f"{MODULE_PREFIX}int_filemanager/{name}", ours)
 

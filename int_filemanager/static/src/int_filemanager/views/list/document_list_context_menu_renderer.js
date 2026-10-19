@@ -2,6 +2,7 @@ import { useRef, useState } from "@odoo/owl";
 import { useDropdownState } from "@web/core/dropdown/dropdown_hooks";
 import { evaluateBooleanExpr } from "@web/core/py_js/py";
 import { documentFilesFromRecords } from "../../document_file";
+import { getFoldersSection, useNewFolder } from "./document_new_folder";
 import { DocumentListRenderer } from "./document_list_renderer";
 
 // What keeps the menu of the browser: a link, a field, a text that can be edited.
@@ -11,7 +12,8 @@ const BROWSER_MENU = "a, input, textarea, select, [contenteditable]";
  * The list of the documents with a menu for the right click on a row (the guests keep
  * `DocumentListRenderer`). The menu is the core's `Dropdown`, opened by hand (`manual`); it
  * holds the buttons of the head of the list, as items like those of the action menu of the core
- * (`action_menus.xml`), and "View" for the viewer, which is no button. Like in a file manager,
+ * (`action_menus.xml`), "View" for the viewer, which is no button, and "New folder", set off by
+ * a divider as the core's menus set off a group. Like in a file manager,
  * the row of the click is ticked when it is not (the ticked rows are what the buttons act on).
  *
  * A dropdown opens at its toggler, an element. Here the toggler is a point without size that
@@ -24,7 +26,8 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
         super.setup();
         this.anchorRef = useRef("contextMenuAnchor");
         this.dropdownState = useDropdownState();
-        this.contextMenu = useState({ buttons: [], onView: undefined });
+        this.contextMenu = useState({ buttons: [], onView: undefined, newFolder: undefined });
+        this.newFolder = useNewFolder();
     }
 
     /**
@@ -62,6 +65,11 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
                     !evaluateBooleanExpr(button.invisible, list.evalContext)
             ),
             onView: this.getViewAction(record),
+            // The folder of the file is the default parent, as in a file manager; a list
+            // without the folders of the panel (the documents of a record) has no such item.
+            newFolder: getFoldersSection(this.env.searchModel)
+                ? () => this.newFolder(record.data.folder_id?.id)
+                : undefined,
         });
         this.dropdownState.open();
     }

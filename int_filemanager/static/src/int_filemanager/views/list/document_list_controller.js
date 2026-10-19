@@ -1,20 +1,28 @@
+import { useRef } from "@odoo/owl";
+import { Dropdown } from "@web/core/dropdown/dropdown";
 import { useCustomDropzone } from "@web/core/dropzone/dropzone_hook";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { ListController } from "@web/views/list/list_controller";
 import { DocumentDropzone } from "../../dropzone/document_dropzone";
+import { getFoldersSection, useNewFolder } from "./document_new_folder";
 
 export const UPLOAD_ROUTE = "/int_filemanager/upload";
 const FINISHED_STATES = ["loaded", "error", "abort"];
 
 /**
- * The list of documents with an "Upload" button, and files that are dropped on the list.
+ * The list of documents with the menu "New" (upload, new folder), and files that are dropped on
+ * the list.
  * One request carries one file (the route wants it so); the files go one after the other,
  * the core's `file_upload` service shows their progress and reports the errors of the route.
  */
 export class DocumentListController extends ListController {
+    static components = { ...ListController.components, Dropdown };
+
     setup() {
         super.setup();
+        this.fileInputRef = useRef("fileInput");
+        this.newFolder = useNewFolder();
         this.fileUploadService = useService("file_upload");
         this.notification = useService("notification");
         useCustomDropzone(this.rootRef, DocumentDropzone, {
@@ -47,10 +55,7 @@ export class DocumentListController extends ListController {
      * @returns {Object|undefined}
      */
     get foldersSection() {
-        const [folders] = this.env.searchModel.getSections(
-            (section) => section.type === "category" && section.fieldName === "folder_id"
-        );
-        return folders;
+        return getFoldersSection(this.env.searchModel);
     }
 
     /**
@@ -108,6 +113,21 @@ export class DocumentListController extends ListController {
             bus.addEventListener("FILE_UPLOAD_LOADED", onEnd);
             bus.addEventListener("FILE_UPLOAD_ERROR", onEnd);
         });
+    }
+
+    /**
+     * "Upload" of the menu "New": the file dialog of the input beside the menu (the input
+     * cannot be in the menu: it is gone with it before the files are chosen).
+     */
+    onUploadSelected() {
+        this.fileInputRef.el.click();
+    }
+
+    /**
+     * "New folder" of the menu "New": the folder of the panel is the default of the parent.
+     */
+    onNewFolder() {
+        return this.newFolder(this.uploadFolderId);
     }
 
     async onFilesSelected(ev) {

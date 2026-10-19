@@ -4,6 +4,7 @@ import os
 from psycopg2 import IntegrityError
 
 from odoo.exceptions import AccessError, UserError
+from odoo.tests import Form
 from odoo.tests.common import TransactionCase, new_test_user, tagged
 from odoo.tools import mute_logger
 
@@ -49,6 +50,32 @@ class TestFolderAndDocument(TransactionCase):
     def test_a_name_is_unique_per_folder_without_regard_to_case(self):
         with self.assertRaises(IntegrityError), mute_logger("odoo.sql_db"):
             self.Folder.create({"name": "SUB", "parent_id": self.top.id})
+
+    def test_the_dialog_of_new_folder_has_the_name_and_the_parent(self):
+        action = self.env.ref("int_filemanager.int_filemanager_folder_action_new")
+        self.assertEqual((action.res_model, action.target, action.view_mode), (self.Folder._name, "new", "form"))
+        arch = self.Folder.with_user(self.user).get_view(action.view_id.id, "form")["arch"]
+        for name in ("name", "parent_id"):
+            self.assertIn(f'name="{name}"', arch)
+
+    def test_the_dialog_of_new_folder_puts_the_folder_of_the_panel_in_the_parent(self):
+        # The list passes the folder of its panel as `default_parent_id` (`additionalContext`).
+        view = self.env.ref("int_filemanager.int_filemanager_folder_view_form_dialog")
+        folders = self.Folder.with_user(self.user)
+        form = Form(folders.with_context(default_parent_id=self.top.id), view=view)
+        self.assertEqual(form.parent_id, self.top)
+        form.name = "From the dialog"
+        self.assertEqual(form.save().parent_id, self.top)
+        # No folder chosen in the panel: a folder of the top level, which every user may make.
+        form = Form(folders, view=view)
+        self.assertFalse(form.parent_id)
+        form.name = "At the top"
+        self.assertFalse(form.save().parent_id)
+        # The name that is taken in that folder is refused (the unique index).
+        with self.assertRaises(IntegrityError), mute_logger("odoo.sql_db"):
+            form = Form(folders.with_context(default_parent_id=self.top.id), view=view)
+            form.name = "FROM THE DIALOG"
+            form.save()
 
     def test_two_top_folders_cannot_share_a_name(self):
         with self.assertRaises(IntegrityError), mute_logger("odoo.sql_db"):
