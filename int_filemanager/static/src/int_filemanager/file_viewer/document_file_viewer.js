@@ -64,9 +64,12 @@ export class DocumentFileViewer extends FileViewer {
         this.velocity = createVelocityTracker();
         /** @type {Animation|null} the gliding the browser is playing */
         this.glideAnimation = null;
+        /** @type {Map<string, HTMLImageElement>} the pictures loaded ahead, by their source */
+        this.preloads = new Map();
         onWillDestroy(() => {
             browser.clearTimeout(this.rotateTimer);
             this.stopGlide();
+            this.dropPreloads(new Set());
         });
         useEffect(
             (image) => {
@@ -110,6 +113,60 @@ export class DocumentFileViewer extends FileViewer {
             },
             () => [this.iframeViewerPdfRef.el]
         );
+    }
+
+    /**
+     * @override
+     * The picture on show has loaded: the ones the arrow keys lead to are loaded ahead. The
+     * core's template calls this at every load of the picture, so it runs after each change of
+     * the file.
+     */
+    onImageLoaded() {
+        super.onImageLoaded();
+        this.preloadNeighbours();
+    }
+
+    /**
+     * Load the next and the previous picture in the background, so that the browser has them
+     * when the viewer shows them. The core has no preloading; this is the way the survey module
+     * preloads a picture (`preloadBackground`): an `Image` that is given the source, which the
+     * `<img>` of the template uses again (the address carries the checksum, the route answers
+     * with a cache of a year). The neighbours are those of `next` and `previous` of the core,
+     * which go round at the ends of the list. Only pictures: a PDF or a text is not loaded.
+     * What is loaded for a picture that is no neighbour any more is stopped, so at most two
+     * pictures are loaded ahead at a time.
+     */
+    preloadNeighbours() {
+        const { files } = this.props;
+        const { index, file } = this.state;
+        const last = files.length - 1;
+        const sources = new Set(
+            [files[index === last ? 0 : index + 1], files[index === 0 ? last : index - 1]]
+                .filter((neighbour) => neighbour !== file && neighbour.isImage)
+                .map((neighbour) => neighbour.defaultSource)
+        );
+        this.dropPreloads(new Set([...sources, file.defaultSource]));
+        for (const source of sources) {
+            if (!this.preloads.has(source)) {
+                const image = new Image();
+                image.src = source;
+                this.preloads.set(source, image);
+            }
+        }
+    }
+
+    /**
+     * Stop the pictures loaded ahead that are not wanted any more (one that has loaded stays in
+     * the cache of the browser, one that is still loading is cancelled).
+     * @param {Set<string>} keep the sources to leave alone
+     */
+    dropPreloads(keep) {
+        for (const [source, image] of this.preloads) {
+            if (!keep.has(source)) {
+                image.removeAttribute("src");
+                this.preloads.delete(source);
+            }
+        }
     }
 
     /**
