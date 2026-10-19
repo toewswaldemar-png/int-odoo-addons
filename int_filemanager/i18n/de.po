@@ -631,6 +631,22 @@ msgid "Move to"
 msgstr "Verschieben nach"
 
 #. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_move
+msgid "Filemanager: move to a folder"
+msgstr "Dateimanager: In einen Ordner verschieben"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_move__summary
+msgid "Summary"
+msgstr "Zusammenfassung"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/tools/share_gateway.py:0
+msgid "This takes too long. Ask for less."
+msgstr "Das dauert zu lange. Fragen Sie weniger an."
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
