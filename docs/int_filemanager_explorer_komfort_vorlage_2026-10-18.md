@@ -238,14 +238,14 @@ Nicht gemessen: Zeitfenster zwischen Odoo-Antwort und Öffnen der Datei durch ng
 
 **Fertig und gepusht (`master`):** Schritt 0 (Messungen, Abschnitt 7b), Schritt 1 `b927593` + `786d15f` (Zielprüfung, Firma des Teilbaums, Pfadname über `hierarchical_naming`), Schritt 2 `5cebcc0` + `b3da027` (Mehrfach-Download als ZIP, Route `/int_filemanager/zip/<ids>`, Baustein `tools/zip_stream.py`, Parameter `int_filemanager.zip_max_size` 10 GB), dazu das Menü „New“ mit „New folder“ `040d05f` + `57ec8b5`. Volle Suite (785 Tests) und Lint waren zuletzt grün. Die Abnahme der Schritte 1 und 2 und des Menüs im Browser (Test-Instanz `http://192.168.188.67:8085`) steht noch aus.
 
-**Nächster Schritt: Schritt 3, Ordner-ZIP** (Plan mit dir abgestimmt, Entscheidung „New folder zuerst committen“ umgesetzt, Bau nicht begonnen):
+**Schritt 3, Ordner-ZIP** (Plan mit dir abgestimmt; gebaut am 2026-10-19, siehe 7d; der Plan hier bleibt als Vorgabe stehen):
 - `tools/zip_stream.py`: Einträge für leere Verzeichnisse (Name endet auf `/`, `ZipFile.mkdir`-Weg, Länge ohne Datendeskriptor), Länge gegen den echten Writer prüfen.
 - `int.filemanager.folder._zip_entries()`: Unterordner mit den Rechten des Nutzers, nur Ketten, die **vom gewählten Ordner abwärts** vollständig lesbar sind (Menge b, nicht das Panel von oben), Dokumente dieser Ordner (aktiv), Namen pro Verzeichnis gemeinsam für Ordner und Dateien (Ordner behalten ihren Namen, Dateien werden nummeriert), vorab `os.stat` aller Blobs.
 - Ordner-`action_download`: nur günstige Vorprüfung (lesbar, aktiv, Größe per SQL gegen `zip_max_size`), keine volle Liste.
 - Route `GET /int_filemanager/folder_zip/<id>`: `cids`-Cookie und Rechte wie beim Mehrfach-Download, 403/404/409, Strom mit `Content-Length`; Dateiname `<Ordner>-JJJJ-MM-TT.zip`.
 - Knöpfe: Ordnerformular (Header) und Eintrag „Download folder“ im Menü „New“ der Liste (`document_list_controller.xml/js`, Ordner aus `getFoldersSection(...).activeValueId`).
 - Tests: Rechte (E6: restricted, inherit, offen unter restricted, `access_via_record` mit versteckter Kette, archiviert, fremde Firma, manipuliertes `cids`, versteckte Namen nirgends im ZIP), Struktur (leere Ordner, Ordner und Datei gleichen Namens, Unicode, tiefe Bäume), Fehlerfälle.
-- **Messung E2 vor der Freigabe:** Wegwerf-Umgebung auf dem Tower (Muster `zp.sh` aus Schritt 0: eigener Postgres, `odoo:19.0-hm`, Namen `zipprobe_*`, danach aufräumen) mit dem echten Modul und 400.000 künstlichen Dokumenten in 29.000 Ordnern (wenige Blobs, Checksummen reihum, per SQL angelegt). Messen: Zeit bis zum ersten Byte (Proxy bricht nach 90 s ab), Speicher-Spitze gegen `limit_memory_soft` (2 GiB), Dauer der `os.stat`-Runde über den Filestore. Wird es zu langsam oder zu groß, die Liste sparsamer bauen (Checksumme statt Pfad, nur Tupel) oder die Anzahl begrenzen.
+- **Messung E2 vor der Freigabe (gemessen, 7d):** Wegwerf-Umgebung auf dem Tower (Muster `zp.sh` aus Schritt 0: eigener Postgres, `odoo:19.0-hm`, Namen `zipprobe_*`, danach aufräumen) mit dem echten Modul und 400.000 künstlichen Dokumenten in 29.000 Ordnern (wenige Blobs, Checksummen reihum, per SQL angelegt). Messen: Zeit bis zum ersten Byte (Proxy bricht nach 90 s ab), Speicher-Spitze gegen `limit_memory_soft` (2 GiB), Dauer der `os.stat`-Runde über den Filestore. Wird es zu langsam oder zu groß, die Liste sparsamer bauen (Checksumme statt Pfad, nur Tupel) oder die Anzahl begrenzen.
 
 **Danach:** Schritt 4 (Ordner-Upload mit Sicherheits- und Fehlerkonzept, Abschnitt 2C), Schritt 5 (Assistent „Verschieben nach…“, im Umfang), Schritt 6 (Doku, `de.po`-Abgleich).
 
@@ -256,6 +256,34 @@ Nicht gemessen: Zeitfenster zwischen Odoo-Antwort und Öffnen der Datei durch ng
 - `http.Stream.from_path` nimmt nur Addon-Pfade; für Filestore-Pfade `http.Stream(type="path", …)` von Hand.
 - Teil-Staging einer Datei, die auch fremde Änderungen enthält: HEAD-Fassung plus eigene Änderung mit `git hash-object -w` und `git update-index --cacheinfo` vormerken.
 - `tools/check/tests.sh --test-tags "/int_filemanager:Klasse"` wählt nur Klassen, die in `tests/__init__.py` stehen.
+
+## 7d. Schritt 3 gebaut, Messung E2 (2026-10-19, nicht committet)
+
+**Gebaut:** `int.filemanager.folder.action_download` (Vorprüfung: Ordner aktiv, Größe per Datenbank gegen `zip_max_size`), `_zip_tree()` (Unterordner von oben nach unten, nur Ketten ohne unsichtbares Zwischenglied; kein `child_of`), `_zip_entries()`; Route `GET /int_filemanager/folder_zip/<id>` (Cookie `cids`, 403/404/409 wie beim Mehrfach-Download, Name `<Ordner>-JJJJ-MM-TT.zip`); `zip_stream.py` kennt Einträge für leere Ordner (`folder_entry`, Länge geprüft gegen den echten Writer, auch ZIP64 und über 65.535 Einträge) und `export_names(..., taken, folders)`; Knöpfe: Kopf des Ordnerformulars und „Download folder“ im Menü „New“ der Liste (nur bei gewähltem Ordner). Tests: `test_folder_zip.py` (30), erweitert `test_zip_stream.py`; `de.po` ergänzt.
+
+**Festlegungen beim Bau:**
+- Der gewählte Ordner ist die oberste Ebene im ZIP (`Club/…`), damit das Entpacken nichts in den Zielordner streut.
+- Nur **leere** Ordner (ohne sichtbare Unterordner und Dokumente) bekommen einen eigenen Eintrag; alle anderen ergeben sich aus den Dateipfaden.
+- Ein Ordner behält seinen Namen, eine Datei mit gleichem Namen (ohne Beachtung der Groß-/Kleinschreibung) wird nummeriert. Bei Ordnernamen zählt kein Punkt als Endung (`v1.2 (2)`).
+- Ein Dokument, das nur über `access_via_record` lesbar ist, kommt nicht ins Ordner-ZIP, wenn seine Ordnerkette nicht sichtbar ist; Namen versteckter Ordner stehen nirgends im Archiv (getestet auf den Bytes der Antwort).
+
+**Messung E2** (Wegwerf-Umgebung auf dem Tower, Image `odoo:19.0-hm-test`, 28.830 Ordner, 390.600 Dokumente, 390.600 verschiedene 1-Byte-Blobs, Dateisystem wie im Betrieb: `/mnt/user` = FUSE `shfs`; Nutzer ohne Einladung, 312.480 Einträge sichtbar):
+
+| Schritt | Zeit | Befund |
+|---|---|---|
+| Ordnerbaum (`_zip_tree`) | 0,22 s | eine Abfrage mit Regeln |
+| Größe per Datenbank | 0,25 s | Vorprüfung der Aktion gesamt 0,42 s |
+| Dokumente lesen (`search_fetch`) | 1,4 s | |
+| `os.stat` je Datei (erste Fassung) | **87 s** von 101 s | 0,28 ms je Aufruf auf FUSE: über dem 90-s-Limit des Proxys |
+| Verzeichnislisten statt `stat`, Größe aus der Datenbank (jetzige Fassung) | **9,7 s** gesamt | 256 Listen; Größe nur dann per `stat`, wenn sie in der Datenbank fehlt (0) |
+| Speicher | Spitze ca. 580 bis 700 MB bei 115 MB Grundlast | ca. 1 bis 1,5 KB je Datei während des Baus; vor dem Senden wird der Cache der Anfrage geleert |
+| Senden vieler kleiner Dateien | 20.000 Einträge in 9 s | 0,45 ms je Datei auf FUSE: die Übertragung von 300.000 winzigen Dateien dauert Minuten, bleibt aber unter dem Zeitlimit (1800 s); bei normalen Dateigrößen bestimmt die Leitung |
+
+**Abweichung vom Plan 7c („vorab `os.stat` aller Blobs“):** Das Fehlen einer Datei wird weiter **vor dem ersten Byte** erkannt (Verzeichnisliste), die Größe kommt aus der Datenbank (gemessen beim Speichern; der Blob heißt nach seiner Prüfsumme und ändert sich nicht). Eine beschädigte Datei anderer Länge bricht den Strom ab (`Content-Length` stimmt dann nicht, der Browser meldet den Fehler), sie wird aber erst beim Senden entdeckt. Gilt auch für den Mehrfach-Download (gleiche Funktion `_zip_files`).
+
+**Offen:** Browser-Abnahme (Schritte 1 bis 3, Test-Instanz); Entpackpfade über 260 Zeichen unter Windows (nicht behandelt); Obergrenze für die Anzahl der Dateien gibt es nicht (Speicher ca. 1,5 KB je Datei im Betrieb, bei mehreren gleichzeitigen Riesen-Downloads gegen `limit_memory_soft`).
+
+**Danach:** Schritt 4 (Ordner-Upload, Abschnitt 2C), Schritt 5 (Assistent „Verschieben nach…“), Schritt 6 (Doku, `de.po`-Abgleich über `tools/check/i18n_export.sh`).
 
 ## 8. Kritische Selbstprüfung
 - **Zweitmeinung (unabhängiger Prüfer, nur Quelltext):** bestätigte N1 (mit der Präzisierung „120-240 s“), N2, kein Core-Streaming-ZIP, kein Core-Baum-Auswähler, Kanban-Ziehen; widerlegte meinen Pfadnamen-Vorschlag (Muster `hierarchical_naming` statt Eingriff in das Suchpanel); ergänzte `any!`-Umgehung, Mehrfirma-GET-Falle, Ordnernamen-Bereinigung. Ihre Prüfung ergänzte K1 bis K6; die Pfadnamen-Vertraulichkeit (Abschnitt 3) und die Datei/Verzeichnis-Kollision (N3) kamen aus der Nachprüfung dieser Revision.
