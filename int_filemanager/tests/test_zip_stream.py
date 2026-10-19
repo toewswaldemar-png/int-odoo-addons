@@ -6,9 +6,10 @@ import zipfile
 
 from odoo.tests.common import BaseCase, tagged
 
-from ..tools.zip_stream import ZipEntry, date_time, export_name, export_names, zip_chunks, zip_length
+from ..tools.zip_stream import ZipEntry, date_time, export_name, export_names, folder_entry, zip_chunks, zip_length
 
 LONG_FILE = 2 * 1024**3 + 200 * 1024**2
+DATE = datetime.datetime(2026, 1, 2, 3, 4, 6)
 
 
 @tagged("post_install", "-at_install")
@@ -139,6 +140,47 @@ class TestZipStream(BaseCase):
         for chunk in zip_chunks(entries):
             length += len(chunk)
         self.assertEqual(zip_length(entries), length)
+
+    def test_a_name_that_is_taken_in_the_folder_is_skipped(self):
+        names = export_names([(1, "a"), (2, "b")], taken={"a"})
+        self.assertEqual(names, {1: "a (2)", 2: "b"})
+
+    def test_a_folder_name_has_no_extension_to_keep(self):
+        names = export_names([(1, "v1.2"), (2, "V1.2")], folders=True)
+        self.assertEqual(names, {1: "v1.2", 2: "V1.2 (2)"})
+
+    # --- folders ---------------------------------------------------------------------------
+
+    def test_an_empty_folder_is_an_entry_with_a_slash(self):
+        entries = [self._entry("a.txt", b"hello"), folder_entry("top/ö/empty", DATE)]
+        archive = zipfile.ZipFile(io.BytesIO(self._written(entries)))
+        self.assertIsNone(archive.testzip())
+        self.assertEqual(archive.namelist(), ["a.txt", "top/ö/empty/"])
+        info = archive.getinfo("top/ö/empty/")
+        self.assertTrue(info.is_dir())
+        self.assertEqual((info.file_size, info.date_time), (0, (2026, 1, 2, 3, 4, 6)))
+
+    def test_the_length_holds_with_folders_between_the_files(self):
+        entries = [
+            folder_entry("e1", DATE),
+            self._entry("a/b.txt", b"hello"),
+            folder_entry("ü/日本", DATE),
+            self._entry("z.bin", b"x" * 70000),
+            folder_entry("e3", DATE),
+        ]
+        self.assertEqual(zip_length(entries), len(self._written(entries)))
+
+    def test_the_length_holds_for_folders_behind_a_file_above_2_gib(self):
+        path = os.path.join(self.folder.name, "sparse")
+        with open(path, "wb") as handle:
+            handle.truncate(LONG_FILE)
+        entries = [ZipEntry("long", path, LONG_FILE, DATE), folder_entry("after", DATE), self._entry("small", b"abc")]
+        length = sum(len(chunk) for chunk in zip_chunks(entries))
+        self.assertEqual(zip_length(entries), length)
+
+    def test_the_length_holds_for_more_than_65535_folders(self):
+        entries = [folder_entry(f"d{index}", DATE) for index in range(70000)]
+        self.assertEqual(zip_length(entries), len(self._written(entries)))
 
     def test_a_file_that_is_shorter_than_its_entry_breaks_the_stream(self):
         entry = self._entry("a.txt", b"hello")._replace(size=50)

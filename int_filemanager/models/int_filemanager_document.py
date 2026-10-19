@@ -81,6 +81,15 @@ def _remove_file(path):
         os.unlink(path)
 
 
+def _files_in(directory):
+    """The names of the files in a directory, none if it is not there."""
+    try:
+        with os.scandir(directory) as listing:
+            return {entry.name for entry in listing}
+    except FileNotFoundError:
+        return set()
+
+
 class IntFilemanagerDocument(models.Model):
     """A file: an ordinary record that points to a blob in the filestore.
 
@@ -392,14 +401,34 @@ class IntFilemanagerDocument(models.Model):
         without them would look complete), or more bytes than the system parameter allows.
         """
         names = export_names((document.id, document.name) for document in self)
+        entries = self._zip_files(names)
+        self._check_zip_size(sum(entry.size for entry in entries))
+        return entries
+
+    def _zip_files(self, names):
+        """The entries of these documents, each under its name in the archive (``{id: name}``).
+
+        Which blobs are there is read from their directories, one listing for each (the filestore
+        is a network file system on our server: a ``stat`` for each of 300,000 files took 90
+        seconds, the proxy gives up after that). The size is the one that was measured when the
+        file was stored; the blob is named by its checksum, so it does not change. A file that is
+        not as big as that breaks the stream (see ``zip_chunks``), it cannot look complete.
+        """
         entries, missing = [], []
+        listings = {}
         for document in self.sorted("id"):
-            path = self._blob_path(document.checksum)
-            try:
-                size = os.stat(path).st_size
-            except FileNotFoundError:
+            checksum = document.checksum
+            if not CHECKSUM_REGEX.fullmatch(checksum or ""):
+                raise ValueError("A checksum is 64 lowercase hexadecimal characters.")
+            if checksum[:2] not in listings:
+                directory = os.path.dirname(self._blob_path(checksum))
+                listings[checksum[:2]] = (directory, _files_in(directory))
+            directory, present = listings[checksum[:2]]
+            if checksum not in present:
                 missing.append(document.name)
                 continue
+            path = os.path.join(directory, checksum)
+            size = int(document.size) or os.stat(path).st_size
             entries.append(ZipEntry(names[document.id], path, size, document.write_date))
         if missing:
             raise UserError(
@@ -408,7 +437,11 @@ class IntFilemanagerDocument(models.Model):
                     names=", ".join(missing[:MISSING_NAMES_SHOWN]) + (" …" if len(missing) > MISSING_NAMES_SHOWN else ""),
                 )
             )
-        total = sum(entry.size for entry in entries)
+        return entries
+
+    @api.model
+    def _check_zip_size(self, total):
+        """Refuse more bytes than one ZIP may hold (the system parameter)."""
         limit = self._zip_max_size()
         if total > limit:
             raise UserError(
@@ -419,7 +452,6 @@ class IntFilemanagerDocument(models.Model):
                     limit=limit / 1024**3,
                 )
             )
-        return entries
 
     @api.model
     def _zip_max_size(self):

@@ -130,6 +130,18 @@ export class DocumentListController extends ListController {
         return this.newFolder(this.uploadFolderId);
     }
 
+    /**
+     * "Download folder" of the menu "New": the folder of the panel with what is below it, as one
+     * ZIP. The method of the folder tells at once what cannot work (an archived folder, too many
+     * bytes) and gives the address of the route.
+     */
+    async onDownloadFolder() {
+        const action = await this.orm.call("int.filemanager.folder", "action_download", [
+            [this.uploadFolderId],
+        ]);
+        return this.actionService.doAction(action);
+    }
+
     async onFilesSelected(ev) {
         const files = [...ev.target.files];
         // Reset the input, so that the same file can be chosen again.

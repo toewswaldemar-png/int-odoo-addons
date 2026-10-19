@@ -32,6 +32,13 @@
                     >
                         <i class="fa fa-fw fa-folder me-1" />New folder
                     </DropdownItem>
+                    <DropdownItem
+                        t-if="uploadFolderId"
+                        class="'o_menu_item'"
+                        onSelected="() => this.onDownloadFolder()"
+                    >
+                        <i class="fa fa-fw fa-download me-1" />Download folder
+                    </DropdownItem>
                 </t>
             </Dropdown>
         </xpath>

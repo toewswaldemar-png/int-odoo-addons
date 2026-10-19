@@ -1,3 +1,5 @@
+import collections
+
 from psycopg2 import IntegrityError
 
 from odoo import api, fields, models
@@ -5,6 +7,7 @@ from odoo.exceptions import UserError
 from odoo.tools import SQL
 
 from ..tools.clash import CLASH_NAMES_SHOWN, clash_summary, clashing_names
+from ..tools.zip_stream import export_name, export_names, folder_entry
 
 # Names tried for one new folder ("a", "a (2)", ...) before giving up.
 NAME_TRIES = 1000
@@ -18,6 +21,8 @@ PATH_KEY = "hierarchical_naming"
 # The separator of the path, and what stands for the folders above that the user may not read.
 PATH_SEPARATOR = " / "
 PATH_HIDDEN = "…"
+# The route that sends the ZIP of a folder.
+ZIP_PATH = "/int_filemanager/folder_zip/"
 
 
 class IntFilemanagerFolder(models.Model):
@@ -318,6 +323,80 @@ class IntFilemanagerFolder(models.Model):
             tree.with_context(int_filemanager_cascade=True, mail_notrack=True).write(
                 {"company_id": folder.company_id.id}
             )
+
+    def action_download(self):
+        """Let the browser download the folder, with what is below it, as one ZIP.
+
+        The route makes the list again when the browser asks. Here the user is told at once what
+        cannot work, instead of getting an error page in a new tab: a folder that is archived,
+        or more bytes than one ZIP may hold. The list of the files is not made here, the size
+        is added up by the database.
+        """
+        self.ensure_one()
+        self._check_active_target()
+        Document = self.env["int.filemanager.document"]
+        [[total]] = Document._read_group([("folder_id", "in", list(self._zip_tree()))], [], ["size:sum"])
+        Document._check_zip_size(total or 0)
+        return {"type": "ir.actions.act_url", "url": f"{ZIP_PATH}{self.id}", "target": "download"}
+
+    def _zip_tree(self):
+        """The folders of the ZIP of this folder: ``{id: [subfolders]}``, this one and what lies below.
+
+        A subfolder is in it if the user sees it and every folder between it and this one: the
+        chain is walked from here downwards, so a hidden folder takes everything below it with
+        it, whatever the rules say of that. (``child_of`` would not do: it ignores the rules of
+        the folders.) A folder that is archived is not in it.
+        """
+        self.ensure_one()
+        below = self.search_fetch(
+            [("parent_path", "=like", f"{self.parent_path}%"), ("id", "!=", self.id)],
+            ["name", "parent_id", "write_date"],
+        )
+        children = collections.defaultdict(list)
+        for folder in below:
+            children[folder.parent_id.id].append(folder)
+        tree, stack = {}, [self]
+        while stack:
+            folder = stack.pop()
+            tree[folder.id] = sorted(children[folder.id], key=lambda child: child.id)
+            stack.extend(tree[folder.id])
+        return tree
+
+    def _zip_entries(self):
+        """The entries of the ZIP of this folder, with its structure.
+
+        The files of the documents that the user reads in the folders of ``_zip_tree``, each
+        in its folder; a folder with nothing in it is an entry of its own. The folder itself is
+        the top of the archive. Folders keep their names, a file that has the name of a folder
+        or of another file is numbered (``_zip_files`` refuses a file that is gone, and
+        ``_check_zip_size`` too many bytes).
+        """
+        self.ensure_one()
+        self._check_active_target()
+        tree = self._zip_tree()
+        documents = self.env["int.filemanager.document"].search_fetch(
+            [("folder_id", "in", list(tree))], ["name", "checksum", "size", "write_date", "folder_id"]
+        )
+        files = collections.defaultdict(list)
+        for document in documents:
+            files[document.folder_id.id].append(document)
+        names, empty = {}, []
+        stack = [(self, export_name(self.name))]
+        while stack:
+            folder, path = stack.pop()
+            subfolders = tree[folder.id]
+            folder_names = export_names(((child.id, child.name) for child in subfolders), folders=True)
+            file_names = export_names(
+                ((document.id, document.name) for document in files[folder.id]),
+                taken={name.lower() for name in folder_names.values()},
+            )
+            names.update({document.id: f"{path}/{file_names[document.id]}" for document in files[folder.id]})
+            if not subfolders and not files[folder.id]:
+                empty.append(folder_entry(path, folder.write_date))
+            stack.extend((child, f"{path}/{folder_names[child.id]}") for child in subfolders)
+        entries = documents._zip_files(names)
+        self.env["int.filemanager.document"]._check_zip_size(sum(entry.size for entry in entries))
+        return sorted(entries + empty, key=lambda entry: entry.name.lower())
 
     def _below(self, active):
         """The folders and documents below these folders (they included) that are not yet ``active``.

@@ -1,7 +1,9 @@
 """A ZIP of files, written as a stream.
 
 Pure Python, no Odoo: it knows files and names, not records or rights. The caller makes the list
-of entries (name in the archive, path of the file, size, date) and passes it on.
+of entries (name in the archive, path of the file, size, date) and passes it on. An entry whose
+name ends with a slash is a folder: it has no file (``path`` is ``None``) and no bytes, and shows
+a folder that has nothing in it.
 
 The archive is stored (``ZIP_STORED``): the files of the filemanager are mostly PDF, pictures and
 Office files, which do not shrink. So its length is known before the first byte: ``zip_length``
@@ -35,12 +37,20 @@ EMPTY_NAME = "file"
 
 
 class ZipEntry(NamedTuple):
-    """A file in the archive: its name there, where it is, how big, and its date."""
+    """A file in the archive: its name there, where it is, how big, and its date.
+
+    A folder is an entry with a name that ends with ``/``, no path and the size 0.
+    """
 
     name: str
-    path: str
+    path: str | None
     size: int
     date: datetime.date
+
+
+def folder_entry(name, date):
+    """The entry of a folder with nothing in it (``name`` is the path in the archive)."""
+    return ZipEntry(f"{name}/", None, 0, date)
 
 
 def export_name(name):
@@ -70,18 +80,20 @@ def _shortened(name, length):
     return stem[: length - len(extension)] + extension
 
 
-def export_names(items):
+def export_names(items, taken=(), folders=False):
     """``{key: name in the archive}`` for ``(key, name)`` pairs, all names different.
 
     Names that are equal after the cleaning (case aside, as Windows and macOS see them) get a
     number: ``a.txt``, ``a (2).txt``. The pairs are taken in the order of their keys, so the
-    same files always give the same names.
+    same files always give the same names. ``taken`` are names (in lower case) that are in use
+    already, in the same folder of the archive. The name of a folder has no extension to keep:
+    ``v1.2`` becomes ``v1.2 (2)``, not ``v1 (2).2``.
     """
-    taken = set()
+    taken = set(taken)
     result = {}
     for key, name in sorted(items, key=lambda item: item[0]):
         clean = export_name(name)
-        stem, extension = os.path.splitext(clean)
+        stem, extension = (clean, "") if folders else os.path.splitext(clean)
         candidate, number = clean, 1
         while candidate.lower() in taken:
             number += 1
@@ -104,6 +116,11 @@ def zip_length(entries):
     total = central = 0
     for name, _path, size, _date in entries:
         name_length = len(name.encode())
+        if name.endswith("/"):  # a folder: the header and nothing else
+            extra = [total] if total > ZIP64_LIMIT else []
+            central += 46 + name_length + (4 + 8 * len(extra) if extra else 0)
+            total += 30 + name_length
+            continue
         # The writer cannot go back in a stream: the sizes follow the data (a data descriptor).
         zip64_file = size * 1.05 > ZIP64_LIMIT
         record = 30 + name_length + (20 if zip64_file else 0) + size + (24 if zip64_file else 16)
@@ -148,6 +165,12 @@ def zip_chunks(entries):
     archive = zipfile.ZipFile(sink, "w", zipfile.ZIP_STORED, allowZip64=True)
     for name, path, size, date in entries:
         info = zipfile.ZipInfo(name, date_time(date))
+        if path is None:
+            info.CRC = info.compress_size = info.file_size = 0
+            info.external_attr = (0o40755 << 16) | 0x10  # a folder, for Unix and for DOS
+            archive.mkdir(info)
+            yield from sink.take()
+            continue
         info.compress_type = zipfile.ZIP_STORED
         info.file_size = size  # the writer decides on ZIP64 from it, in a stream it cannot wait
         done = 0

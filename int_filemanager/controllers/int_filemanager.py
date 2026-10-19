@@ -8,7 +8,7 @@ from odoo import fields, http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import Response, request
 
-from ..tools.zip_stream import zip_chunks, zip_length
+from ..tools.zip_stream import export_name, zip_chunks, zip_length
 
 _logger = logging.getLogger(__name__)
 
@@ -167,12 +167,9 @@ class IntFilemanager(http.Controller):
         """
         try:
             document_ids = {int(document_id) for document_id in ids.split(",")}
-            companies = [
-                int(company_id)
-                for company_id in request.cookies.get("cids", str(request.env.user.company_id.id)).split("-")
-            ]
         except ValueError:
             raise BadRequest() from None
+        companies = self._list_companies()
         documents = request.env["int.filemanager.document"].with_context(allowed_company_ids=companies)
         documents = documents.browse(sorted(document_ids))
         if len(documents.exists()) != len(document_ids):
@@ -181,10 +178,46 @@ class IntFilemanager(http.Controller):
         try:
             entries = documents._zip_entries()
         except UserError as error:
-            return request.make_response(
-                error.args[0], headers=[("Content-Type", "text/plain; charset=utf-8")], status=409
-            )
-        name = f"documents-{fields.Date.context_today(documents)}.zip"
+            return self._zip_refused(error)
+        return self._zip_response(entries, f"documents-{fields.Date.context_today(documents)}.zip")
+
+    @http.route("/int_filemanager/folder_zip/<int:folder_id>", type="http", auth="user", methods=["GET"])
+    def folder_zip(self, folder_id):
+        """A folder with everything below it that the user sees, as one ZIP.
+
+        The checks are those of ``zip``: the companies of the list from the cookie, the folder read
+        as the user, now. What lies below is what the user sees on the way down from this folder
+        (``_zip_tree``): the name of a folder that is hidden is nowhere in the archive.
+        """
+        companies = self._list_companies()
+        folder = request.env["int.filemanager.folder"].with_context(allowed_company_ids=companies).browse(folder_id)
+        if not folder.exists():
+            raise request.not_found()
+        folder.check_access("read")
+        try:
+            entries = folder._zip_entries()
+        except UserError as error:
+            return self._zip_refused(error)
+        return self._zip_response(entries, f"{export_name(folder.name)}-{fields.Date.context_today(folder)}.zip")
+
+    def _list_companies(self):
+        """The companies that the list of the web client shows (its cookie), as ids; 400 if broken."""
+        try:
+            return [
+                int(company_id)
+                for company_id in request.cookies.get("cids", str(request.env.user.company_id.id)).split("-")
+            ]
+        except ValueError:
+            raise BadRequest() from None
+
+    def _zip_refused(self, error):
+        """The answer to what cannot be a ZIP: 409 with the reason, which the user reads in the tab."""
+        return request.make_response(error.args[0], headers=[("Content-Type", "text/plain; charset=utf-8")], status=409)
+
+    def _zip_response(self, entries, name):
+        # The request lives as long as the stream does. The records of a big folder (hundreds of
+        # thousands of documents) have done their work, the entries are all that the stream needs.
+        request.env.invalidate_all()
         headers = [
             ("Content-Type", "application/zip"),
             ("Content-Length", str(zip_length(entries))),

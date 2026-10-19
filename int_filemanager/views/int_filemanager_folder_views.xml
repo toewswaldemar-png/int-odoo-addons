@@ -36,6 +36,14 @@
                         invisible="not id or not active"
                         help="Make a link that gives this folder to whoever has it, without an account."
                     />
+                    <button
+                        name="action_download"
+                        type="object"
+                        string="Download"
+                        icon="fa-download"
+                        invisible="not id or not active"
+                        help="The folder with everything in it that you see, as one ZIP."
+                    />
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
