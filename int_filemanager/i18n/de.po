@@ -578,6 +578,59 @@ msgid "Folders"
 msgstr "Ordner"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_list
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_move_document_action
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_move_folder_action
+msgid "Move to..."
+msgstr "Verschieben nach ..."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_move_view_form
+msgid "Move"
+msgstr "Verschieben"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_move_view_form
+msgid "Moving"
+msgstr "Es wird verschoben"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_move_view_form
+msgid "Choose a folder..."
+msgstr "Ordner wählen ..."
+
+#. module: int_filemanager
+#: code:addons/int_filemanager/models/int_filemanager_move.py:0
+msgid "Documents (%(count)s): %(names)s"
+msgstr "Dokumente (%(count)s): %(names)s"
+
+#. module: int_filemanager
+#: code:addons/int_filemanager/models/int_filemanager_move.py:0
+msgid "Folders (%(count)s): %(names)s"
+msgstr "Ordner (%(count)s): %(names)s"
+
+#. module: int_filemanager
+#: code:addons/int_filemanager/models/int_filemanager_move.py:0
+msgid "Select at least one document or folder."
+msgstr "Wählen Sie mindestens ein Dokument oder einen Ordner."
+
+#. module: int_filemanager
+#: code:addons/int_filemanager/models/int_filemanager_move.py:0
+msgid "Choose the folder to move the documents to."
+msgstr "Wählen Sie den Ordner, in den die Dokumente kommen."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_move__target_folder_id
+msgid "The folder that takes them. For folders, none is the top level."
+msgstr "Der Ordner, der sie aufnimmt. Bei Ordnern ist keiner die oberste Ebene."
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_move__target_folder_id
+msgid "Move to"
+msgstr "Verschieben nach"
+
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
@@ -3314,6 +3367,7 @@ msgid "New folder"
 msgstr "Neuer Ordner"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_move_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form_dialog
 msgid "Discard"
 msgstr "Verwerfen"
