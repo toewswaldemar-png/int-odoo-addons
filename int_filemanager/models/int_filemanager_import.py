@@ -169,10 +169,9 @@ class IntFilemanagerImport(models.Model):
 
     def action_retry_errors(self):
         """Read in again the files that failed."""
-        for record in self:
-            self.env["int.filemanager.import.line"].sudo().search(
-                [("import_id", "=", record.id), ("state", "=", "error")]
-            ).write({"state": "pending", "message": False})
+        self.env["int.filemanager.import.line"].sudo().search(
+            [("import_id", "in", self.ids), ("state", "=", "error")]
+        ).write({"state": "pending", "message": False})
         self.filtered(lambda record: record.state == "done").write({"state": "running"})
         self._trigger_cron()
 

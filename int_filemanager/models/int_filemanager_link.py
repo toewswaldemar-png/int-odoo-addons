@@ -64,11 +64,6 @@ class IntFilemanagerLink(models.Model):
             if not self.env[name]._abstract
         ]
 
-    @api.model
-    def _selection_record_ref(self):
-        models = self.env["ir.model"].sudo().search([("model", "in", self._linkable_models())])
-        return [(model.model, model.name) for model in models]
-
     @api.depends("res_model", "res_id")
     def _compute_record_ref(self):
         linkable = self._linkable_models()
@@ -78,6 +73,11 @@ class IntFilemanagerLink(models.Model):
                 link.record_ref = f"{link.res_model},{link.res_id}"
             else:
                 link.record_ref = False
+
+    @api.model
+    def _selection_record_ref(self):
+        models = self.env["ir.model"].sudo().search([("model", "in", self._linkable_models())])
+        return [(model.model, model.name) for model in models]
 
     @api.model
     def default_get(self, fields):

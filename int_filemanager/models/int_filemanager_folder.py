@@ -191,37 +191,6 @@ class IntFilemanagerFolder(models.Model):
                 taken.add(candidate.lower())
         raise UserError(self.env._("No free name for %(name)s in this folder.", name=name))
 
-    def action_make_paths(self, paths):
-        """Make the folders of these paths below this folder, as far as they are not there.
-
-        What the browser does before it uploads a folder of the disk: the folders come first, in
-        a package, and the files follow one by one to the folder that each path gives. A folder
-        that is there (the case of the name aside, as the unique index sees it) is used, so the
-        folders of an upload grow into the ones that exist. Everything runs as the user: the
-        folders are made by ``create`` under the rules for a new folder, and a folder is found
-        only if the user sees it.
-
-        :param paths: ``["Photos/2025/June", "Photos/empty"]``, relative to this folder
-        :return: ``{path: id of its last folder}``
-        """
-        self.ensure_one()
-        self.check_access("write")
-        self._check_active_target()
-        if len(paths) > MAKE_PATHS_MAX:
-            raise UserError(self.env._("Too many folders at once."))
-        # Nobody needs a message in the chatter for each of the folders of an upload.
-        folders = self.with_context(mail_create_nolog=True)
-        made = {(): folders}
-        result = {}
-        for path in paths:
-            names = self._path_names(path)
-            for depth in range(1, len(names) + 1):
-                key = tuple(name.lower() for name in names[:depth])
-                if key not in made:
-                    made[key] = folders._find_or_make(made[key[:-1]], names[depth - 1])
-            result[path] = made[tuple(name.lower() for name in names)].id
-        return result
-
     @api.model
     def _path_names(self, path):
         """The names of the folders of a path of the browser, cleaned; refuses a path that is none.
@@ -406,6 +375,53 @@ class IntFilemanagerFolder(models.Model):
                 {"company_id": folder.company_id.id}
             )
 
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_not_empty(self):
+        # active_test=False: an archived folder or document still keeps its place.
+        Document = self.env["int.filemanager.document"].with_context(active_test=False)
+        with_documents = {
+            folder.id for [folder] in Document._read_group([("folder_id", "in", self.ids)], ["folder_id"])
+        }
+        for folder in self.with_context(active_test=False):
+            if folder.child_ids or folder.id in with_documents:
+                raise UserError(
+                    self.env._(
+                        "The folder %(name)s is not empty. Move or delete what is in it first.",
+                        name=folder.name,
+                    )
+                )
+
+    def action_make_paths(self, paths):
+        """Make the folders of these paths below this folder, as far as they are not there.
+
+        What the browser does before it uploads a folder of the disk: the folders come first, in
+        a package, and the files follow one by one to the folder that each path gives. A folder
+        that is there (the case of the name aside, as the unique index sees it) is used, so the
+        folders of an upload grow into the ones that exist. Everything runs as the user: the
+        folders are made by ``create`` under the rules for a new folder, and a folder is found
+        only if the user sees it.
+
+        :param paths: ``["Photos/2025/June", "Photos/empty"]``, relative to this folder
+        :return: ``{path: id of its last folder}``
+        """
+        self.ensure_one()
+        self.check_access("write")
+        self._check_active_target()
+        if len(paths) > MAKE_PATHS_MAX:
+            raise UserError(self.env._("Too many folders at once."))
+        # Nobody needs a message in the chatter for each of the folders of an upload.
+        folders = self.with_context(mail_create_nolog=True)
+        made = {(): folders}
+        result = {}
+        for path in paths:
+            names = self._path_names(path)
+            for depth in range(1, len(names) + 1):
+                key = tuple(name.lower() for name in names[:depth])
+                if key not in made:
+                    made[key] = folders._find_or_make(made[key[:-1]], names[depth - 1])
+            result[path] = made[tuple(name.lower() for name in names)].id
+        return result
+
     def action_download(self):
         """Let the browser download the folder, with what is below it, as one ZIP.
 
@@ -546,16 +562,3 @@ class IntFilemanagerFolder(models.Model):
             raise UserError(
                 self.env._("Restoring is not possible, these names are taken: %(names)s", names=names)
             )
-
-    @api.ondelete(at_uninstall=False)
-    def _unlink_except_not_empty(self):
-        # active_test=False: an archived folder or document still keeps its place.
-        Document = self.env["int.filemanager.document"].with_context(active_test=False)
-        for folder in self.with_context(active_test=False):
-            if folder.child_ids or Document.search_count([("folder_id", "=", folder.id)]):
-                raise UserError(
-                    self.env._(
-                        "The folder %(name)s is not empty. Move or delete what is in it first.",
-                        name=folder.name,
-                    )
-                )

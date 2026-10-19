@@ -271,32 +271,6 @@ class ResConfigSettings(models.TransientModel):
         string="Last run", compute="_compute_int_filemanager_text_status"
     )
 
-    @api.constrains(*SHARE_NUMBERS)
-    def _check_int_filemanager_share_numbers(self):
-        """At least 1, and a new share must not start above what a share may be."""
-        pairs = (
-            ("int_filemanager_share_default_file_mb", "int_filemanager_share_max_file_mb"),
-            ("int_filemanager_share_default_total_mb", "int_filemanager_share_max_total_mb"),
-            ("int_filemanager_share_default_files", "int_filemanager_share_max_files"),
-        )
-        for settings in self:
-            for name in SHARE_NUMBERS:
-                if settings[name] < 1:
-                    raise ValidationError(
-                        self.env._(
-                            "%(field)s: at least 1.",
-                            field=settings._fields[name]._description_string(self.env),
-                        )
-                    )
-            for default, maximum in pairs:
-                if settings[default] > settings[maximum]:
-                    raise ValidationError(
-                        self.env._(
-                            "%(field)s: the start value is above the limit.",
-                            field=settings._fields[default]._description_string(self.env),
-                        )
-                    )
-
     @api.depends_context("uid")
     def _compute_int_filemanager_ocr_status(self):
         status = self.env["int.filemanager.text"]._ocr_status()
@@ -394,3 +368,29 @@ class ResConfigSettings(models.TransientModel):
             settings.int_filemanager_text_budget = budget
             settings.int_filemanager_text_reader = reader
             settings.int_filemanager_text_lastcall = cron.sudo().lastcall if cron else False
+
+    @api.constrains(*SHARE_NUMBERS)
+    def _check_int_filemanager_share_numbers(self):
+        """At least 1, and a new share must not start above what a share may be."""
+        pairs = (
+            ("int_filemanager_share_default_file_mb", "int_filemanager_share_max_file_mb"),
+            ("int_filemanager_share_default_total_mb", "int_filemanager_share_max_total_mb"),
+            ("int_filemanager_share_default_files", "int_filemanager_share_max_files"),
+        )
+        for settings in self:
+            for name in SHARE_NUMBERS:
+                if settings[name] < 1:
+                    raise ValidationError(
+                        self.env._(
+                            "%(field)s: at least 1.",
+                            field=settings._fields[name]._description_string(self.env),
+                        )
+                    )
+            for default, maximum in pairs:
+                if settings[default] > settings[maximum]:
+                    raise ValidationError(
+                        self.env._(
+                            "%(field)s: the start value is above the limit.",
+                            field=settings._fields[default]._description_string(self.env),
+                        )
+                    )
