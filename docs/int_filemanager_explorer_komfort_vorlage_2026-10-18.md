@@ -283,7 +283,7 @@ Nicht gemessen: Zeitfenster zwischen Odoo-Antwort und Öffnen der Datei durch ng
 
 **Offen:** Browser-Abnahme (Schritte 1 bis 3, Test-Instanz); Entpackpfade über 260 Zeichen unter Windows (nicht behandelt); Obergrenze für die Anzahl der Dateien gibt es nicht (Speicher ca. 1,5 KB je Datei im Betrieb, bei mehreren gleichzeitigen Riesen-Downloads gegen `limit_memory_soft`).
 
-**Danach:** Schritt 4 (Ordner-Upload, gebaut in 7e), Schritt 5 (Assistent „Verschieben nach…“), Schritt 6 (Doku, `de.po`-Abgleich über `tools/check/i18n_export.sh`).
+**Danach:** Schritt 4 (Ordner-Upload, gebaut in 7e), Schritt 5 (Assistent, gebaut in 7f), Schritt 6 (Doku, `de.po`-Abgleich über `tools/check/i18n_export.sh`).
 
 ## 7e. Schritt 4 gebaut: Ordner-Upload (2026-10-19, nicht committet)
 
@@ -292,6 +292,16 @@ Nicht gemessen: Zeitfenster zwischen Odoo-Antwort und Öffnen der Datei durch ng
 **Gebaut:** `int.filemanager.folder.action_make_paths(paths)` (ORM-RPC mit den Rechten des Nutzers, höchstens 500 Pfade je Aufruf; Rückgabe `{Pfad: id}`): Pfade werden geprüft (leer, absolut, `.`/`..`, `\`, Teil über 255 Zeichen, mehr als 50 Ebenen) und bereinigt (NFC, Steuerzeichen), vorhandene sichtbare Ordner werden wiederverwendet (Groß-/Kleinschreibung egal), sonst per `create` angelegt (Firma des Elternordners, Create-Regel, keine Chatter-Nachricht je Ordner). Ein gleichnamiger Ordner, den der Nutzer nicht sieht, ergibt „Der Name … ist hier nicht verfügbar“ ohne Details; ein gerade von anderen angelegter Ordner löst `ConcurrencyError` aus. Browser: Eintrag „Upload a folder“ im Menü „New“ (`webkitdirectory`) und Drop von Ordnern (`webkitGetAsEntry`, auch leere Ordner), Bestätigungsdialog mit Zahlen und Dubletten-Hinweis, Fortschritt in der Core-Zeile („12 von 5000 Dateien: name“), Meldung mit „Anhalten“, Abschlussbericht mit den ersten fünf Fehlern, Abbruch nach fünf Fehlern in Folge. In der Liste der Dokumente eines Datensatzes bleibt die Abweisung von Ordnern. Tests: `test_folder_make_paths.py` (17).
 
 **Offen:** Browser-Abnahme (E5: Chrome/Edge, 5.000 Dateien, tiefer Baum, leere Ordner, mehr als 100 Einträge je Verzeichnis, Abbruch); bei Abbruch bleiben angelegte Ordner (auch leere) stehen; die Wiederaufnahme („überspringen bei gleichem Namen und Größe“) und parallele Uploads sind bewusst nicht gebaut.
+
+## 7f. Schritt 5 gebaut: Assistent „Move to...“ (2026-10-19, nicht committet)
+
+**Gebaut nach dem Muster von `crm.lead.lost`:** `int.filemanager.move` (`TransientModel`, `models/int_filemanager_move.py`) mit `document_ids`, `folder_ids`, `target_folder_id` (Pfadanzeige über `hierarchical_naming`) und einer Zusammenfassung („Dokumente (2): a.txt, b.txt“). `action_move()` schreibt mit **einem** `write` je Art (alles oder nichts); die Prüfung steckt in `_check_move` von Dokument und Ordner (Schritt 1): Rechte am Ziel, Ziel aktiv, Namenskonflikte mit Namen, Firma des Teilbaums, Zyklus. Dokumente brauchen ein Ziel, Ordner ohne Ziel gehen auf die oberste Ebene. Danach `soft_reload`, damit das Suchpanel neu zählt. Zwei Aktionen (Dokumente, Ordner) mit `default_*_ids: active_ids`; der Knopf „Move to...“ steht als `type="action"` im Kopf der Dokumentliste (und damit im Rechtsklickmenü) und im Kopf der Ordnerliste. Kein JavaScript. Die Mehrfachbearbeitung bleibt. Tests: `test_move_wizard.py` (16).
+
+**Messung E7** (Wegwerf-Datenbank, mit Nachverfolgung): 1.000 Dokumente in 2,5 s, dabei 1.000 Chatter-Nachrichten (eine je Dokument, wie entschieden); 300 Ordner in 1,2 s.
+
+**Korrektur zum Plan:** Ein Transient-Modell ist in Odoo 19 nicht auf den Ersteller beschränkt, ein anderer Nutzer der Gruppe könnte den Dialog lesen, wenn er die Nummer kennt. Er enthält nur Nummern und die Zusammenfassung; der Zugriff auf die Datensätze selbst richtet sich weiter nach den Regeln. Es gibt dafür eine Zugriffszeile für die Gruppe „Filemanager user“.
+
+**Offen:** Browser-Abnahme; Kanban-Karten und das Dokumentformular haben den Knopf nicht (Liste und Rechtsklick genügen laut Plan).
 
 ## 8. Kritische Selbstprüfung
 - **Zweitmeinung (unabhängiger Prüfer, nur Quelltext):** bestätigte N1 (mit der Präzisierung „120-240 s“), N2, kein Core-Streaming-ZIP, kein Core-Baum-Auswähler, Kanban-Ziehen; widerlegte meinen Pfadnamen-Vorschlag (Muster `hierarchical_naming` statt Eingriff in das Suchpanel); ergänzte `any!`-Umgehung, Mehrfirma-GET-Falle, Ordnernamen-Bereinigung. Ihre Prüfung ergänzte K1 bis K6; die Pfadnamen-Vertraulichkeit (Abschnitt 3) und die Datei/Verzeichnis-Kollision (N3) kamen aus der Nachprüfung dieser Revision.
