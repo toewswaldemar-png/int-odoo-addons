@@ -234,6 +234,29 @@ Nicht gemessen: Zeitfenster zwischen Odoo-Antwort und Öffnen der Datei durch ng
 
 **Abnahme von Schritt 0:** Sie lesen Rechtekonzept, Messbericht und Empfehlung; erst danach legen Sie fest, ob und womit Schritt 1 beginnt.
 
+## 7c. Stand und Übergabe (Sitzungsende 2026-10-19)
+
+**Fertig und gepusht (`master`):** Schritt 0 (Messungen, Abschnitt 7b), Schritt 1 `b927593` + `786d15f` (Zielprüfung, Firma des Teilbaums, Pfadname über `hierarchical_naming`), Schritt 2 `5cebcc0` + `b3da027` (Mehrfach-Download als ZIP, Route `/int_filemanager/zip/<ids>`, Baustein `tools/zip_stream.py`, Parameter `int_filemanager.zip_max_size` 10 GB), dazu das Menü „New“ mit „New folder“ `040d05f` + `57ec8b5`. Volle Suite (785 Tests) und Lint waren zuletzt grün. Die Abnahme der Schritte 1 und 2 und des Menüs im Browser (Test-Instanz `http://192.168.188.67:8085`) steht noch aus.
+
+**Nächster Schritt: Schritt 3, Ordner-ZIP** (Plan mit dir abgestimmt, Entscheidung „New folder zuerst committen“ umgesetzt, Bau nicht begonnen):
+- `tools/zip_stream.py`: Einträge für leere Verzeichnisse (Name endet auf `/`, `ZipFile.mkdir`-Weg, Länge ohne Datendeskriptor), Länge gegen den echten Writer prüfen.
+- `int.filemanager.folder._zip_entries()`: Unterordner mit den Rechten des Nutzers, nur Ketten, die **vom gewählten Ordner abwärts** vollständig lesbar sind (Menge b, nicht das Panel von oben), Dokumente dieser Ordner (aktiv), Namen pro Verzeichnis gemeinsam für Ordner und Dateien (Ordner behalten ihren Namen, Dateien werden nummeriert), vorab `os.stat` aller Blobs.
+- Ordner-`action_download`: nur günstige Vorprüfung (lesbar, aktiv, Größe per SQL gegen `zip_max_size`), keine volle Liste.
+- Route `GET /int_filemanager/folder_zip/<id>`: `cids`-Cookie und Rechte wie beim Mehrfach-Download, 403/404/409, Strom mit `Content-Length`; Dateiname `<Ordner>-JJJJ-MM-TT.zip`.
+- Knöpfe: Ordnerformular (Header) und Eintrag „Download folder“ im Menü „New“ der Liste (`document_list_controller.xml/js`, Ordner aus `getFoldersSection(...).activeValueId`).
+- Tests: Rechte (E6: restricted, inherit, offen unter restricted, `access_via_record` mit versteckter Kette, archiviert, fremde Firma, manipuliertes `cids`, versteckte Namen nirgends im ZIP), Struktur (leere Ordner, Ordner und Datei gleichen Namens, Unicode, tiefe Bäume), Fehlerfälle.
+- **Messung E2 vor der Freigabe:** Wegwerf-Umgebung auf dem Tower (Muster `zp.sh` aus Schritt 0: eigener Postgres, `odoo:19.0-hm`, Namen `zipprobe_*`, danach aufräumen) mit dem echten Modul und 400.000 künstlichen Dokumenten in 29.000 Ordnern (wenige Blobs, Checksummen reihum, per SQL angelegt). Messen: Zeit bis zum ersten Byte (Proxy bricht nach 90 s ab), Speicher-Spitze gegen `limit_memory_soft` (2 GiB), Dauer der `os.stat`-Runde über den Filestore. Wird es zu langsam oder zu groß, die Liste sparsamer bauen (Checksumme statt Pfad, nur Tupel) oder die Anzahl begrenzen.
+
+**Danach:** Schritt 4 (Ordner-Upload mit Sicherheits- und Fehlerkonzept, Abschnitt 2C), Schritt 5 (Assistent „Verschieben nach…“, im Umfang), Schritt 6 (Doku, `de.po`-Abgleich).
+
+**Stolpersteine, die schon aufgetreten sind:**
+- `tests/__init__.py` muss jede neue Testdatei importieren, sonst laufen null Tests.
+- Ruff (`py -3.13 -m pre_commit run --files …`) verbietet `self = self.with_context(...)` in Methoden und `collections.namedtuple`.
+- Ein HttpCase-Test mit eigenem Cookie: `self.opener.cookies.set("cids", …, domain="127.0.0.1", path="/")`.
+- `http.Stream.from_path` nimmt nur Addon-Pfade; für Filestore-Pfade `http.Stream(type="path", …)` von Hand.
+- Teil-Staging einer Datei, die auch fremde Änderungen enthält: HEAD-Fassung plus eigene Änderung mit `git hash-object -w` und `git update-index --cacheinfo` vormerken.
+- `tools/check/tests.sh --test-tags "/int_filemanager:Klasse"` wählt nur Klassen, die in `tests/__init__.py` stehen.
+
 ## 8. Kritische Selbstprüfung
 - **Zweitmeinung (unabhängiger Prüfer, nur Quelltext):** bestätigte N1 (mit der Präzisierung „120-240 s“), N2, kein Core-Streaming-ZIP, kein Core-Baum-Auswähler, Kanban-Ziehen; widerlegte meinen Pfadnamen-Vorschlag (Muster `hierarchical_naming` statt Eingriff in das Suchpanel); ergänzte `any!`-Umgehung, Mehrfirma-GET-Falle, Ordnernamen-Bereinigung. Ihre Prüfung ergänzte K1 bis K6; die Pfadnamen-Vertraulichkeit (Abschnitt 3) und die Datei/Verzeichnis-Kollision (N3) kamen aus der Nachprüfung dieser Revision.
 - **Zweites Gutachten:** bestätigte im Quelltext den nicht vorhandenen Mehrfach-Download, die fehlende Zielprüfung in `write()`, die `any!`-Umformung von `child_of`, die wirkungslose Create-Regel beim Verschieben (`perm_write=False`) und den X-Accel-Redirect im Core. Als **nicht belegt** gelten weiterhin eine garantierte vollständige ZIP-Auslieferung, die Zeitgrenzen, die Browserunterstützung und die Entlastung durch nginx (Experimente E1, E3, E9, E11). Neu daraus: I1 bis I4, N5 bis N7, E11, E12, Commit-Angabe bei Messungen. Die Vorlage behandelt Teilbaum-Firma (N5) und ZIP-Lebensdauer (N6) damit als Voraussetzungen, nicht als Nachträge.
