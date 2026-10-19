@@ -1,8 +1,16 @@
 import errno
+import logging
+import time
 
-from odoo import http
+from werkzeug.exceptions import BadRequest
+
+from odoo import fields, http
 from odoo.exceptions import AccessError, UserError
-from odoo.http import request
+from odoo.http import Response, request
+
+from ..tools.zip_stream import zip_chunks, zip_length
+
+_logger = logging.getLogger(__name__)
 
 MAX_UPLOAD_SIZE_PARAMETER = "int_filemanager.max_upload_size"
 DEFAULT_MAX_UPLOAD_SIZE = 20 * 1024**3
@@ -23,6 +31,24 @@ def max_upload_size(controller):
         return int(value)
     except ValueError:
         return DEFAULT_MAX_UPLOAD_SIZE
+
+
+def logged_chunks(entries, tag):
+    """The bytes of the ZIP, with a line in the log of how the stream ended.
+
+    The answer is sent after Odoo has closed its cursor: nothing here may touch the database or
+    the request, only the plain entries.
+    """
+    started = time.monotonic()
+    try:
+        yield from zip_chunks(entries)
+    except GeneratorExit:
+        _logger.warning("ZIP %s: the client went away after %.1f s", tag, time.monotonic() - started)
+        raise
+    except Exception:
+        _logger.exception("ZIP %s: the stream broke after %.1f s", tag, time.monotonic() - started)
+        raise
+    _logger.info("ZIP %s: sent in %.1f s", tag, time.monotonic() - started)
 
 
 class _NotFound(UserError):
@@ -128,3 +154,42 @@ class IntFilemanager(http.Controller):
 
     def _error(self, status, message):
         return request.make_json_response({"error": {"message": message}}, status=status)
+
+    @http.route("/int_filemanager/zip/<string:ids>", type="http", auth="user", methods=["GET"])
+    def zip(self, ids):
+        """The files of these documents as one ZIP, flat, sent as it is written.
+
+        The address comes from ``action_download``, but nothing there counts: the companies of the
+        list (the cookie of the web client) are checked against the user, and every document is
+        read as the user, now. A document that is missing or that the user may not read refuses
+        the whole request, no ZIP without it is made. The ZIP is stored, so its length is known:
+        a stream that breaks off is an error to the browser, not a file that looks complete.
+        """
+        try:
+            document_ids = {int(document_id) for document_id in ids.split(",")}
+            companies = [
+                int(company_id)
+                for company_id in request.cookies.get("cids", str(request.env.user.company_id.id)).split("-")
+            ]
+        except ValueError:
+            raise BadRequest() from None
+        documents = request.env["int.filemanager.document"].with_context(allowed_company_ids=companies)
+        documents = documents.browse(sorted(document_ids))
+        if len(documents.exists()) != len(document_ids):
+            raise request.not_found()
+        documents.check_access("read")
+        try:
+            entries = documents._zip_entries()
+        except UserError as error:
+            return request.make_response(
+                error.args[0], headers=[("Content-Type", "text/plain; charset=utf-8")], status=409
+            )
+        name = f"documents-{fields.Date.context_today(documents)}.zip"
+        headers = [
+            ("Content-Type", "application/zip"),
+            ("Content-Length", str(zip_length(entries))),
+            ("Content-Disposition", http.content_disposition(name)),
+            ("X-Content-Type-Options", "nosniff"),
+        ]
+        tag = f"{name} of {len(entries)} files for user {request.env.uid}"
+        return Response(logged_chunks(entries, tag), headers=headers, direct_passthrough=True)

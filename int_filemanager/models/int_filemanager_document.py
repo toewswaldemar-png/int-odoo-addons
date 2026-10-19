@@ -22,6 +22,7 @@ from odoo.http import Stream
 from odoo.tools import SQL
 
 from ..tools.clash import clash_summary, clashing_names
+from ..tools.zip_stream import ZipEntry, export_names
 from .int_filemanager_text_page import folded
 
 _logger = logging.getLogger(__name__)
@@ -36,6 +37,15 @@ GC_BATCH = 1000
 GC_LOCK_TIMEOUT = "10s"
 # First key of the advisory lock that publishers of one checksum take (see _publish_blob).
 BLOB_LOCK_NAME = "int_filemanager.blob"
+# The most bytes of the files in one ZIP. The server stops a request after 30 minutes in our setup
+# (limit_time_real), and a slow line keeps it that long: see the paper of the ZIP download.
+ZIP_MAX_SIZE_PARAMETER = "int_filemanager.zip_max_size"
+DEFAULT_ZIP_MAX_SIZE = 10 * 1024**3
+# The ids of a ZIP go into the address, and the proxy takes 8 KB of the request line.
+ZIP_PATH_MAX_LENGTH = 7000
+ZIP_PATH = "/int_filemanager/zip/"
+# Names of missing files shown in a message.
+MISSING_NAMES_SHOWN = 5
 UPLOAD_AGE_PARAMETER = "int_filemanager.upload_max_age_hours"
 DEFAULT_UPLOAD_MAX_AGE_HOURS = 24
 CHECKSUM_REGEX = re.compile(r"[0-9a-f]{64}")
@@ -346,13 +356,78 @@ class IntFilemanagerDocument(models.Model):
         return result
 
     def action_download(self):
-        """Let the browser download the file (the route is the core's, see ``_to_http_stream``)."""
-        self._check_one_selected()
+        """Let the browser download the file (the route is the core's, see ``_to_http_stream``).
+
+        Several documents come as one ZIP from the route of the filemanager (``_zip_url``).
+        """
+        if not self:
+            raise UserError(self.env._("Select at least one document."))
+        if len(self) > 1:
+            return {"type": "ir.actions.act_url", "url": self._zip_url(), "target": "download"}
         return {
             "type": "ir.actions.act_url",
             "url": f"/web/content/{self._name}/{self.id}/content?download=true",
             "target": "download",
         }
+
+    def _zip_url(self):
+        """The address of the ZIP of these documents, after the checks that tell the user why not.
+
+        The route checks everything again when the browser asks: the rights and the companies
+        count at that moment, not at this one. Here the user gets a message at once instead of
+        an error page in a new tab.
+        """
+        path = ZIP_PATH + ",".join(str(document_id) for document_id in self.ids)
+        if len(path) > ZIP_PATH_MAX_LENGTH:
+            raise UserError(
+                self.env._("Too many documents are selected for one download. Select fewer and download in parts.")
+            )
+        self._zip_entries()
+        return path
+
+    def _zip_entries(self):
+        """The entries of the ZIP of these documents, flat, in the order of their ids.
+
+        Refuses what cannot be a ZIP: a file whose blob is missing (the message names them, a ZIP
+        without them would look complete), or more bytes than the system parameter allows.
+        """
+        names = export_names((document.id, document.name) for document in self)
+        entries, missing = [], []
+        for document in self.sorted("id"):
+            path = self._blob_path(document.checksum)
+            try:
+                size = os.stat(path).st_size
+            except FileNotFoundError:
+                missing.append(document.name)
+                continue
+            entries.append(ZipEntry(names[document.id], path, size, document.write_date))
+        if missing:
+            raise UserError(
+                self.env._(
+                    "The file of these documents is missing: %(names)s",
+                    names=", ".join(missing[:MISSING_NAMES_SHOWN]) + (" …" if len(missing) > MISSING_NAMES_SHOWN else ""),
+                )
+            )
+        total = sum(entry.size for entry in entries)
+        limit = self._zip_max_size()
+        if total > limit:
+            raise UserError(
+                self.env._(
+                    "The files are %(size).1f GB together, more than the %(limit).1f GB that one ZIP may hold. "
+                    "Download them in parts.",
+                    size=total / 1024**3,
+                    limit=limit / 1024**3,
+                )
+            )
+        return entries
+
+    @api.model
+    def _zip_max_size(self):
+        value = self.env["ir.config_parameter"].sudo().get_param(ZIP_MAX_SIZE_PARAMETER, DEFAULT_ZIP_MAX_SIZE)
+        try:
+            return int(value)
+        except ValueError:
+            return DEFAULT_ZIP_MAX_SIZE
 
     def action_open_form(self):
         """Open the form of the document: the list has no button for it in each row."""

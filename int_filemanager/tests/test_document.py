@@ -292,8 +292,11 @@ class TestFolderAndDocument(TransactionCase):
             action["url"],
             f"/web/content/int.filemanager.document/{document.id}/content?download=true",
         )
+        # Several documents come as one ZIP (see test_document_zip), none is an error.
+        both = document + self._document("b.txt")
+        self.assertEqual(both.action_download()["url"], f"/int_filemanager/zip/{document.id},{both[1].id}")
         with self.assertRaises(UserError):
-            (document + self._document("b.txt")).action_download()
+            self.Document.browse().action_download()
 
     def test_the_properties_action_opens_the_form_of_the_one_document(self):
         document = self._document()
