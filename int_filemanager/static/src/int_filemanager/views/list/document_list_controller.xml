@@ -15,6 +15,14 @@
                 t-ref="fileInput"
                 t-on-change.stop="onFilesSelected"
             />
+            <input
+                type="file"
+                webkitdirectory=""
+                multiple="multiple"
+                class="d-none"
+                t-ref="folderInput"
+                t-on-change.stop="onFolderSelected"
+            />
             <!-- As the "New" menu of the core's project: the text and the caret of the toggler (no
                  icon), the hotkey of the create button, and the bounce of the sample data. -->
             <Dropdown>
@@ -24,6 +32,13 @@
                 <t t-set-slot="content">
                     <DropdownItem class="'o_menu_item'" onSelected="() => this.onUploadSelected()">
                         <i class="fa fa-fw fa-upload me-1" />Upload
+                    </DropdownItem>
+                    <DropdownItem
+                        t-if="uploadFolderId"
+                        class="'o_menu_item'"
+                        onSelected="() => this.onUploadFolderSelected()"
+                    >
+                        <i class="fa fa-fw fa-folder-open me-1" />Upload a folder
                     </DropdownItem>
                     <DropdownItem
                         t-if="foldersSection"

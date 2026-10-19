@@ -1,10 +1,12 @@
 import collections
+import unicodedata
 
 from psycopg2 import IntegrityError
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import ConcurrencyError, UserError
 from odoo.tools import SQL
+from odoo.tools.sql import escape_psql
 
 from ..tools.clash import CLASH_NAMES_SHOWN, clash_summary, clashing_names
 from ..tools.zip_stream import export_name, export_names, folder_entry
@@ -23,6 +25,11 @@ PATH_SEPARATOR = " / "
 PATH_HIDDEN = "…"
 # The route that sends the ZIP of a folder.
 ZIP_PATH = "/int_filemanager/folder_zip/"
+# The most paths of one call of ``action_make_paths`` (the browser sends its folders in packages),
+# how many folders one path may have, and how long the name of one may be.
+MAKE_PATHS_MAX = 500
+PATH_DEPTH_MAX = 50
+FOLDER_NAME_MAX_LENGTH = 255
 
 
 class IntFilemanagerFolder(models.Model):
@@ -183,6 +190,81 @@ class IntFilemanagerFolder(models.Model):
                     raise
                 taken.add(candidate.lower())
         raise UserError(self.env._("No free name for %(name)s in this folder.", name=name))
+
+    def action_make_paths(self, paths):
+        """Make the folders of these paths below this folder, as far as they are not there.
+
+        What the browser does before it uploads a folder of the disk: the folders come first, in
+        a package, and the files follow one by one to the folder that each path gives. A folder
+        that is there (the case of the name aside, as the unique index sees it) is used, so the
+        folders of an upload grow into the ones that exist. Everything runs as the user: the
+        folders are made by ``create`` under the rules for a new folder, and a folder is found
+        only if the user sees it.
+
+        :param paths: ``["Photos/2025/June", "Photos/empty"]``, relative to this folder
+        :return: ``{path: id of its last folder}``
+        """
+        self.ensure_one()
+        self.check_access("write")
+        self._check_active_target()
+        if len(paths) > MAKE_PATHS_MAX:
+            raise UserError(self.env._("Too many folders at once."))
+        # Nobody needs a message in the chatter for each of the folders of an upload.
+        folders = self.with_context(mail_create_nolog=True)
+        made = {(): folders}
+        result = {}
+        for path in paths:
+            names = self._path_names(path)
+            for depth in range(1, len(names) + 1):
+                key = tuple(name.lower() for name in names[:depth])
+                if key not in made:
+                    made[key] = folders._find_or_make(made[key[:-1]], names[depth - 1])
+            result[path] = made[tuple(name.lower() for name in names)].id
+        return result
+
+    @api.model
+    def _path_names(self, path):
+        """The names of the folders of a path of the browser, cleaned; refuses a path that is none.
+
+        A path leads down from a folder: no slash at the start, no ``.`` or ``..``, no empty part.
+        The names are composed (NFC) and lose their control characters, like a name of a document.
+        """
+        names = []
+        if isinstance(path, str) and path and "\\" not in path and not path.startswith("/"):
+            for part in path.split("/"):
+                part = unicodedata.normalize("NFC", part)
+                part = "".join(char for char in part if unicodedata.category(char) != "Cc").strip()
+                names.append(part)
+        if (
+            not names
+            or len(names) > PATH_DEPTH_MAX
+            or any(name in ("", ".", "..") or len(name) > FOLDER_NAME_MAX_LENGTH for name in names)
+        ):
+            raise UserError(self.env._("This is not a valid folder path: %(path)s", path=str(path)[:100]))
+        return names
+
+    def _find_or_make(self, parent, name):
+        """The folder ``name`` of ``parent`` that the user sees, made if there is none.
+
+        Two uploads that make the same folder at once: the second one runs into the unique index
+        when the first has committed. Odoo's transactions see the data as of their start, so a
+        new search here would not find the folder. ``ConcurrencyError`` makes Odoo roll back, take
+        a new view of the data and call ``action_make_paths`` again (``service.model.retrying``).
+        """
+        domain = [("parent_id", "=", parent.id), ("name", "=ilike", escape_psql(name))]
+        found = self.search(domain, limit=1)
+        if found:
+            return found
+        try:
+            with self.env.cr.savepoint():
+                return self.create({"name": name, "parent_id": parent.id})
+        except IntegrityError as error:
+            if error.diag.constraint_name != self._name_per_parent.full_name(self):
+                raise
+        if self.sudo().search_count(domain):
+            # A folder of that name is there that the user does not see: no word of what it is.
+            raise UserError(self.env._("The name %(name)s is not available here.", name=name))
+        raise ConcurrencyError(f"The folder {name} was made by another transaction")
 
     def _read_format(self, fnames, load="_classic_read"):
         """The shared folder has no parent for the guests of its share.
