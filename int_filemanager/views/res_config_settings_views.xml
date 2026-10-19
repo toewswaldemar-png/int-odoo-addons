@@ -337,8 +337,8 @@
         </field>
     </record>
 
-    <!-- The settings of the module in the menu, as the core modules do it (the context "module"
-         opens the page at the section of the module). -->
+    <!-- The settings in the menu, as the core modules do it (the context "module" opens the section
+         of the module). -->
     <record id="res_config_settings_action" model="ir.actions.act_window">
         <field name="name">Settings</field>
         <field name="res_model">res.config.settings</field>

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <!-- A link is seen like its document (``any`` applies the rules of the document). Untying and
-         tying are checked in the model: the folder must show the document, the record must be
-         writable. -->
+    <!-- A link is seen like its document (``any`` applies the rules of the document). -->
     <record id="int_filemanager_link_rule_user" model="ir.rule">
         <field name="name">Filemanager link: of a document the user sees</field>
         <field name="model_id" ref="model_int_filemanager_link" />

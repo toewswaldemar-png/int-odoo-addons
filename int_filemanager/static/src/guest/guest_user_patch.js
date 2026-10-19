@@ -1,5 +1,4 @@
-// `user` is a module, not a service; its group and access checks call /web/dataset/call_kw, which
-// needs a login. A guest has no groups and may only read.
+// `user` is a module, not a service: its checks call /web/dataset/call_kw, which needs a login.
 import { user } from "@web/core/user";
 import { patch } from "@web/core/utils/patch";
 

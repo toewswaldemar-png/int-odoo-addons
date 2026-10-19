@@ -64,6 +64,33 @@ Gebaut: Mehrfach-Download und Ordner-Download als ZIP, Ordner-Upload, Verschiebe
 - Wegwerf-Umgebungen auf dem Tower: eigene Datenbank auf `fmtest_pg`, Container immer mit eigenem Namen und nur per Namen stoppen (nie per Image-Filter: das beendete einmal den Produktiv-Container).
 - Dokumente mit echtem Blob im Test: `_create_from_stream` und `addCleanup(remove, …_blob_path)`.
 
-## 8. Nicht gebaut / offen
+## 8. Browser und Oberfläche (Gründe, die nicht mehr im Code stehen)
+
+**Datei-Viewer und Touch**
+- Der Bild-Zoom des Core-`FileViewer` kennt nur die Maus und zoomt um die Bildschirmmitte; ein PDF kann der Browser selbst zoomen. Unser `DocumentFileViewer` behält `state.scale` und `translate` des Core und steuert sie nur mit den Fingern.
+- Das Gleiten nach dem Loslassen spielt der Browser ab (`Element.animate`, eigener Thread); Verschieben per Code in jedem Bild ruckelt. `transition-base` ist im Core-Template `!important`, nur `transition: none !important` im gebundenen Stil überstimmt es, und der gebundene `style` ersetzt das ganze Attribut bei jeder Änderung. Eine 0,2-s-Verschiebung bei jedem Touch-Ereignis lässt das Bild den Fingern nachhängen: sie ist nur beim Drehen erlaubt.
+- Zoom-Konstanten stammen vom PDF-Viewer des Core (`pdfjs/web/viewer.js`): 0,1 bis 10, Schritt 1,1, ein Rad-Tick je 30 Pixel; Trackpad-Zoom kommt als Rad mit Strg und kleinen Pixelschritten.
+- Die Nachbarn werden vorgeladen wie im Modul `survey` (`Image` mit der Quelle, das `<img>` nutzt es wieder; die Adresse trägt die Prüfsumme, die Route antwortet mit einem Jahr Cache); höchstens zwei vorab, nicht mehr gebrauchte werden abgebrochen.
+- PDFs und Texte stecken in einem iframe, der seine Touch-Ereignisse nicht nach außen gibt; ein Frame gleicher Herkunft ist erreichbar (`contentDocument` ist sonst `null`), und jede Datei ist ein neues Dokument, also nach jedem `load` neu anbinden. Text wird per `transform: scale` vergrößert, nicht per Schrift (sonst brechen die Zeilen neu um); `touch-action: pan-x pan-y` stoppt das Seiten-Zoomen des Browsers.
+- Treffer im PDF: Der PDF-Viewer nimmt die Seite aus dem Hash (`setHash`), die Wörter markiert der Viewer nach dem Laden (die Hash-Suche beginnt zur falschen Zeit und legt das Wort an den oberen Rand); `entireWord: true` entspricht der Ganzwort-Suche des Servers; der erste Treffer wird einmal mittig gerückt (`scrollMatchIntoView` scrollt nur beim ersten Zeichnen).
+- Wischen: 60 Pixel (der Core nimmt 100 zum Schließen des Menüs, Bootstrap 40); ein Wisch, der mit Textauswahl endet oder auf etwas beginnt, das seitlich scrollt, gehört nicht dem Viewer; das Video-Bedienfeld (64 Pixel) bleibt dem Video. Nach einem Zoom scrollt je nach Browser der verbliebene Finger selbst oder nicht, das Ereignis verrät es nicht: `createPanFollower` erkennt es an der Scroll-Position. Doppeltipp: unter 250 ms und 10 Pixel je Tipp, der zweite innerhalb 300 ms und 40 Pixel; `touch-action: manipulation` schaltet den Seitenzoom des Browsers ab.
+
+**Listen, Felder, Kanban**
+- `humanNumber` klebt Zahl und Vorsatz zusammen („2M“), darum die Größe als `Float` mit eigenem Formatter (die Größe überschreitet bei 2 GiB int4); Pivot und Graph nehmen das Widget einer Messgröße aus der Registry `formatters`. Die Namensspalte bekommt mit `listViewWidth: [200]` Platz, sonst setzt die Liste 80 Pixel Mindestbreite je Spalte.
+- Bilder liefert der Server nur in 64/128/256/512/1024; ein Gast darf Bilder nur mit `can_view`. Ein Gast bekommt die Prüfsumme nicht, `write_date` dient dem Browser-Cache.
+- Die Kartengröße (klein, mittel, groß) steht in `res.users.settings`, wie der Core Wahlen des Nutzers hält; `DocumentThumbnailField` liest `env.documentTile`.
+- Ein Klick auf Karte, Vorschaubild oder Treffer öffnet den Viewer (die Pfeiltasten laufen über die Dateien der Seite); „Properties“ öffnet das Formular mit Pager über die Seite und der Liste im Breadcrumb (die Modell-Methode öffnet eine eigene Aktion ohne Liste).
+- Das Menü „New“: der Input liegt neben dem Menü, nicht darin (das Menü ist weg, bevor die Dateien gewählt sind); der Dropdown öffnet an seinem Toggler, im Kontextmenü rückt ein Anker ohne Größe an den Mauszeiger. Das Suchpanel lädt seinen Baum nicht von selbst neu: nach Änderungen `soft_reload`.
+- Ordner-Upload: Die Route nimmt eine Datei je Anfrage, `action_make_paths` höchstens 500 Pfade (200 werden gesendet), fünf Fehler in Folge stoppen. `file_upload` wartet nicht auf das Ende und gibt die Antwort nicht zurück (daher das Lauschen auf `FILE_UPLOAD_LOADED`/`ERROR`).
+
+**Seite eines Dokuments**
+- Die Seite besteht aus einem eigenen Form-Controller (`js_class`) und seiner Vorlage; der Renderer ist der Standard. Die Vorlage erbt `web.FormView` (wie `mrp_subcontracting`), setzt die Knöpfe in den Slot `control-panel-navigation-additional` neben den Pager und ersetzt den Aufruf des Renderers durch das Layout mit Vorschau und `ResizablePanel`; `$0` setzt den Renderer ins Seitenfeld zurück (wie `account` es in seinem Listen-Renderer tut).
+- Die Ansicht hat kein `<chatter/>`, sonst legt mail es neben die Seite. Das Seitenfeld baut den Chatter selbst mit Modell, Id und Record. Er liest `env.chatter`, das mail dem Form-Controller gibt (der Chatter muss also unter dem Controller stehen), und `has_activities` aus der Arch, die der Parser von mail für jedes Formular ergänzt. Mindestbreiten: Formular 320, Chatter 530 (`$o-mail-Chatter-minWidth`, darunter braucht die Knopfreihe einen Scrollbalken).
+- CSS-Klassen heißen `o_<Modul>_…` (Richtlinie), SCSS-Zeilen höchstens 80 Zeichen.
+
+**Gäste**
+- Das Gateway antwortet mit Status und kurzem Text, nicht mit JSON-RPC (`guestRpc` macht daraus einen `RPCError`). Eine Antwort von Odoo selbst (zu großer Body, 413) kommt vor der Freigabe und ist kein JSON. `user` ist ein Modul, kein Dienst, und seine Aufrufe brauchen einen Login, darum für Gäste gepatcht. Der Freigabe-Schlüssel liegt nur im `sessionStorage` des Tabs, Quittungen im `localStorage` je Freigabe (Token im Schlüssel).
+
+## 9. Nicht gebaut / offen
 - Browser-Abnahme (Chrome/Edge) der Ordner-Upload-Oberfläche mit mehreren tausend Dateien, tiefem Baum, leeren Ordnern und „Anhalten“: Server und Lint sind geprüft, das Browser-Skript nur durch Lint.
 - ZIP für Freigabe-Gäste (eigener Bereichsnachweis, Download-Zähler, Gateway-Whitelist), Ziehen auf den Ordnerbaum, Wiederaufnahme beim Upload (überspringen bei gleichem Namen und gleicher Größe; bis dahin Dubletten bei Wiederholung), parallele Uploads, Knopf „Move to...“ auf Kanban-Karten und im Dokumentformular, Entpackpfade über 260 Zeichen unter Windows, Obergrenze für die Dateianzahl eines ZIPs, Versionen.

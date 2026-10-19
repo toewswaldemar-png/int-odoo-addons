@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo noupdate="1">
-    <!-- Reads the text of the files so they can be searched. It does the work in steps (one file
-         each) and asks Odoo to call it again until nothing is left; the interval only picks up
-         new files. Last in the run (high priority number): the other actions come first. -->
+    <!-- One file per run; the high priority number puts it after the other actions. -->
     <record id="int_filemanager_text_cron" model="ir.cron">
         <field name="name">Filemanager: read the text of the files</field>
         <field name="model_id" ref="model_int_filemanager_text" />

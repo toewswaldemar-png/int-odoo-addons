@@ -4,8 +4,8 @@
         <field name="name">int.filemanager.text.view.list</field>
         <field name="model">int.filemanager.text</field>
         <field name="arch" type="xml">
-            <!-- The rows are made and filled by the scheduled action: nothing is made or changed
-                 by hand. Only "Read again" acts on the ticked rows. -->
+            <!-- The rows are made by the scheduled action; only "Read again" acts on the ticked
+                 rows. -->
             <list
                 create="0"
                 edit="0"
@@ -164,7 +164,6 @@
         <field name="context">{'search_default_filter_failed': 1}</field>
     </record>
 
-    <!-- The scans: what the text recognition has or will do (from the settings). -->
     <record id="int_filemanager_text_ocr_action" model="ir.actions.act_window">
         <field name="name">Scans</field>
         <field name="res_model">int.filemanager.text</field>

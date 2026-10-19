@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <!-- A line has no company of its own: it belongs to the company of its order. A join, not a
-         stored field: an order has a line for every folder and file of the disk. -->
+    <!-- A line follows the company of its order (a join, not a stored field: there are very many
+         lines). -->
     <record id="int_filemanager_import_line_rule_company" model="ir.rule">
         <field name="name">Filemanager import line: multi-company</field>
         <field name="model_id" ref="model_int_filemanager_import_line" />

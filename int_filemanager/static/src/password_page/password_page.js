@@ -1,9 +1,7 @@
 /** @odoo-module ignore **/
-// The page that asks for the password of a share (a plain script: the page has no Odoo
-// framework). The key that the server gives for the right password stays in the
-// ``sessionStorage`` of the tab, never in a cookie or an address; a reload of the page finds it
-// there and opens the share again without asking. The page of the share comes as a whole
-// document from ``POST .../page`` (it needs the key) and replaces this one.
+// The password page of a share, a plain script (the page has no Odoo framework). The key is kept
+// in the `sessionStorage` of the tab only; the share page comes as a whole document from
+// `POST .../page` and replaces this one.
 (function () {
     "use strict";
     const form = document.getElementById("o_share_password");

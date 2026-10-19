@@ -1,6 +1,5 @@
-// The `orm` service of the page of the guests. The class and its methods are the core's; only
-// the transport differs: the gateway of the share instead of /web/dataset/call_kw. The gateway
-// answers with a status and a short text (not JSON-RPC), and that becomes an error here.
+// The `orm` service of the guest page: the core's ORM over the gateway of the share instead of
+// /web/dataset/call_kw. The gateway answers with a status, not JSON-RPC.
 import { browser } from "@web/core/browser/browser";
 import { _t } from "@web/core/l10n/translation";
 import { RPCError } from "@web/core/network/rpc";
@@ -22,9 +21,8 @@ function messageOf(status) {
 }
 
 /**
- * The core's `ORM.call` builds `/web/dataset/call_kw/<model>/<method>` and the parameters
- * `{model, method, args, kwargs}`; the address is dropped and the gateway of the share is called
- * with the parameters and the key.
+ * Replaces the core's `rpc`: the address `ORM.call` builds is dropped, the share gateway is
+ * called with its `{model, method, args, kwargs}` and the key.
  */
 export function guestRpc(url, params) {
     const controller = new AbortController();

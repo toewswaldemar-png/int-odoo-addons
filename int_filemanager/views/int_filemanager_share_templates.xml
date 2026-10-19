@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <!-- The pages of a share, for guests with no account. Nothing of the backend is on them: the
-         page of a file is plain HTML (no script), the page of a folder starts an Owl app with its
-         own bundle, the page that asks for the password has a small script of its own. Everything
-         a guest or the data brings in goes through t-out (escaped). -->
+    <!-- The pages of a share, for guests with no account: no backend. A file is plain HTML, a
+         folder starts an Owl app with its own bundle, the password page has a small script. All
+         that a guest or the data brings in goes through t-out. -->
     <template id="share_layout" name="Filemanager share: the head of a page">
         <t t-call="web.layout">
             <t t-set="head">
@@ -71,7 +70,6 @@
         </t>
     </template>
 
-    <!-- Asks for the password, and shows nothing of the share: not its name, not a number. -->
     <template id="share_password_page" name="Filemanager share: the password">
         <t t-call="int_filemanager.share_layout">
             <t t-set="title">Password</t>

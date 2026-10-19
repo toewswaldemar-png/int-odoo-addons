@@ -3,10 +3,8 @@ import { Dropzone } from "@web/core/dropzone/dropzone";
 import { _t } from "@web/core/l10n/translation";
 
 /**
- * The core's dropzone with a text that says where the files go, as the chatter of the mail
- * module does with its own text (`MailAttachmentDropzone`). The files go to the folder chosen
- * in the search panel; with none chosen the text says so before the user lets go. In the list
- * of the documents of a record they go to the record.
+ * The core's dropzone with a text that says where the files go: the record, the folder chosen in
+ * the search panel, or that none is chosen yet.
  */
 export class DocumentDropzone extends Component {
     static template = "int_filemanager.DocumentDropzone";

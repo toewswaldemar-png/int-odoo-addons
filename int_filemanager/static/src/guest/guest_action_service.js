@@ -1,5 +1,4 @@
-// A stand-in for the `action` service of the webclient. The views, the control panel and the
-// search menus ask for it (`useService("action")`); a guest has no actions.
+// Stand-in for the `action` service: views and search menus need it, a guest has no actions.
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 

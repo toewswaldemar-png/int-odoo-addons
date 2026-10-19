@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <!-- The form of a link: what the dialog of the list of a document shows. Only the choice of
-         the record (model and record together, the models that can be linked): without this
-         view Odoo makes one of every field, with the raw model and id. -->
+    <!-- The form of a link in the dialog of a document: only the choice of the record (model and
+         record together); without it Odoo makes a field of each. -->
     <record id="int_filemanager_link_view_form" model="ir.ui.view">
         <field name="name">int.filemanager.link.view.form</field>
         <field name="model">int.filemanager.link</field>
@@ -16,8 +15,6 @@
         </field>
     </record>
 
-    <!-- The records that a document is linked to, in a page of its form. Choosing the model and
-         the record together: ``record_ref``. -->
     <record id="int_filemanager_document_view_form_link" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.form.inherit.link</field>
         <field name="model">int.filemanager.document</field>
@@ -39,8 +36,7 @@
         </field>
     </record>
 
-    <!-- The search of the documents of a record (the action of the button of the record): the
-         same without the panel of the folders and without what needs the right to read them. -->
+    <!-- The search above without the panel of the folders and what needs the right to read them. -->
     <record id="int_filemanager_document_view_search_record" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.search.record</field>
         <field name="model">int.filemanager.document</field>

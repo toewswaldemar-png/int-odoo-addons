@@ -1,5 +1,4 @@
-// Starts the Owl app of the page of the guests: the environment, the services and the container
-// of the main components (as `mail/.../public/boot.js` does for the public discuss page).
+// Starts the Owl app of the guest page (like `mail/.../public/boot.js`).
 import "./guest_action_service";
 import "./guest_addresses";
 import "./guest_orm";

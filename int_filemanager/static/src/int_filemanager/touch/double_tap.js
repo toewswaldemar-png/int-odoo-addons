@@ -1,28 +1,19 @@
-// A finger that lifts after this long (ms) did not tap: it pressed.
+// A touch longer (ms) or wider (px) than this is a press or a drag, not a tap.
 const MAX_TAP_TIME = 250;
-// A finger that moves this far (px) while it touches did not tap: it dragged.
 const MAX_TAP_MOVE = 10;
-// The second tap comes within this time (ms) of the first, and within this distance (px).
+// The second tap must come within this time (ms) and distance (px) of the first.
 const MAX_GAP_TIME = 300;
 const MAX_GAP_DISTANCE = 40;
 
 /**
- * Call `onDoubleTap` when one finger taps twice on `target`, quickly and at the same place.
- * Like `attachSwipe` it only watches (passive listeners): a browser that zooms the page by a
- * double tap on its own has to be told not to, with `touch-action` (`manipulation`) on the
- * element. Not a tap: two fingers, a finger that moves or stays down, and a tap where
- * `canDoubleTap` says no.
+ * Call `onDoubleTap` when one finger taps twice at the same place on `target`. The listeners
+ * are passive: to stop the browser's own double-tap zoom, set `touch-action: manipulation`.
  *
- * @param {Element|Document} target
- * @param {Object} params
- * @param {function(TouchEvent): void} params.onDoubleTap the event of the second tap's lift
  * @param {function(TouchEvent): Boolean} [params.canDoubleTap] asked when a finger touches down
  * @returns {function(): void} removes the listeners
  */
 export function attachDoubleTap(target, { onDoubleTap, canDoubleTap = () => true }) {
-    /** @type {{x: number, y: number, time: number}|null} the finger that is down, if it may tap */
     let down = null;
-    /** @type {{x: number, y: number, time: number}|null} the last tap */
     let tap = null;
 
     const onTouchStart = (ev) => {
@@ -79,12 +70,6 @@ export function attachDoubleTap(target, { onDoubleTap, canDoubleTap = () => true
     };
 }
 
-/**
- * @param {{clientX?: number, x?: number, clientY?: number, y?: number}} point
- * @param {{x: number, y: number}} from
- * @param {Number} distance
- * @returns {Boolean} whether `point` is farther than `distance` from `from`
- */
 function far(point, from, distance) {
     const x = point.clientX ?? point.x;
     const y = point.clientY ?? point.y;

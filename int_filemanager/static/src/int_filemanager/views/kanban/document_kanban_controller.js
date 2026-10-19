@@ -5,11 +5,8 @@ import { KanbanController } from "@web/views/kanban/kanban_controller";
 import { TILE_SIZE_SETTING, TILE_SIZES, tileSizeOf } from "./document_tile_size";
 
 /**
- * The kanban of documents with a menu for the size of the cards (small, medium, large) in the
- * control panel. The choice is a setting of the user (`res.users.settings`, as the core keeps
- * what a user picks in its views), so it holds on every device. The cards read it from
- * `env.documentTile` (`DocumentThumbnailField`: the picture of the large card is bigger); the
- * style follows the class on the root (see `document_kanban_view.scss`).
+ * The kanban of documents with a menu for the card size, kept in `res.users.settings`. The cards
+ * read it from `env.documentTile`; the style follows the class on the root (see the SCSS).
  */
 export class DocumentKanbanController extends KanbanController {
     static components = { ...KanbanController.components, Dropdown };

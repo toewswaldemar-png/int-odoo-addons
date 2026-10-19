@@ -7,41 +7,26 @@ import { useFileViewerFrameZoom } from "./file_viewer_frame_zoom_hook";
 import { useFileViewerSwipe } from "./file_viewer_swipe_hook";
 import { createVelocityTracker, FLING_EASING, flingPlan } from "../touch/momentum";
 
-// The zoom of the PDF viewer the core ships (`addons/web/static/lib/pdfjs/web/viewer.js`):
-// the same range, the same steps, the zoom around the point under the fingers or the pointer.
+// Zoom range and steps of the core's PDF viewer (`pdfjs/web/viewer.js`: `DEFAULT_SCALE_DELTA`,
+// `PIXELS_PER_LINE_SCALE`).
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 10;
-// `DEFAULT_SCALE_DELTA`: one step of the buttons and keys, and one tick of the wheel.
 const SCALE_DELTA = 1.1;
-// `PIXELS_PER_LINE_SCALE`: a wheel that reports pixels makes one tick per this many.
 const PIXELS_PER_TICK = 30;
 const TOUCH_EVENTS = ["pointerdown", "pointermove", "pointerup", "pointercancel"];
-// How long the image may slide while it turns (ms): a little more than its transition (0.2 s).
+// A little more than the image transition (0.2 s), in ms.
 const ROTATE_ANIMATION_TIME = 300;
 
 let nextViewerId = 1;
 
-/**
- * @param {Number} value
- * @param {Number} limit
- * @returns {Number} `value`, but between `-limit` and `limit`
- */
+/** @returns {Number} `value`, but between `-limit` and `limit` */
 function keep(value, limit) {
     return Math.min(Math.max(value, -limit), limit);
 }
 
 /**
- * The core's file viewer with the zoom of the PDF viewer, which the core's own image zoom
- * lacks: two fingers (or the wheel, the buttons) zoom around the point they are at, one finger
- * moves the image, and it cannot be moved off the screen. The core's viewer knows the mouse
- * only (wheel, buttons, drag) and zooms about the middle of the screen, so a touch screen
- * cannot zoom an image at all; a PDF can, it is shown by the browser. The mouse keeps the
- * core's ways (wheel, buttons, keys, drag); the state is the core's own (`state.scale`,
- * `translate`), the fingers only drive it. Two fingers zoom and take the image along when they
- * move; a finger that is left goes on moving it, and the image glides on when it lifts; a
- * double tap sets the zoom back. One finger
- * swipes to the next or the previous file, for every type of file (`useFileViewerSwipe`); a
- * text zooms with two fingers in its frame (`useFileViewerFrameZoom`).
+ * The core's file viewer with touch zoom and move for images (the core has the mouse only).
+ * `state.scale` and `translate` stay the core's own, the fingers only drive them.
  */
 export class DocumentFileViewer extends FileViewer {
     setup() {
@@ -49,22 +34,16 @@ export class DocumentFileViewer extends FileViewer {
         this.minScale = MIN_SCALE;
         useFileViewerSwipe(this);
         useFileViewerFrameZoom(this);
-        /** @type {Map<number, {x: number, y: number}>} the fingers on the image */
         this.touches = new Map();
-        /** @type {{x: number, y: number, distance: number}|null} the two fingers that zoom, at the last event */
+        /** @type {{x: number, y: number, distance: number}|null} the two zooming fingers */
         this.pinch = null;
         // Where the zoomer lies now, in px from its place in the middle (see `updateZoomerStyle`).
         this.shift = { x: 0, y: 0 };
         this.wheelTicks = 0;
         this.animation = useState({ rotating: false });
         this.rotateTimer = null;
-        // The picture glides on when the finger that moved it lifts. The browser plays the
-        // gliding (`fling`), on its own thread: moving the picture by code in every frame was
-        // jerky, and the PDF viewer, which is smooth, lets the browser do it as well.
         this.velocity = createVelocityTracker();
-        /** @type {Animation|null} the gliding the browser is playing */
         this.glideAnimation = null;
-        /** @type {Map<string, HTMLImageElement>} the pictures loaded ahead, by their source */
         this.preloads = new Map();
         onWillDestroy(() => {
             browser.clearTimeout(this.rotateTimer);
@@ -85,10 +64,8 @@ export class DocumentFileViewer extends FileViewer {
                 for (const type of TOUCH_EVENTS) {
                     image.addEventListener(type, handlers[type]);
                 }
-                // Its own layer, so that the browser only moves it (it need not draw the picture
-                // again) when the picture is moved.
+                // Own layer: moving the picture does not draw it again.
                 this.zoomerRef.el.style.willChange = "transform";
-                // A double tap on a picture that is zoomed sets the zoom back.
                 const detachDoubleTap = attachDoubleTap(image, {
                     canDoubleTap: () => this.state.scale !== 1,
                     onDoubleTap: () => this.resetZoom(),
@@ -115,27 +92,12 @@ export class DocumentFileViewer extends FileViewer {
         );
     }
 
-    /**
-     * @override
-     * The picture on show has loaded: the ones the arrow keys lead to are loaded ahead. The
-     * core's template calls this at every load of the picture, so it runs after each change of
-     * the file.
-     */
+    /** @override Called by the core's template at every load of the picture. */
     onImageLoaded() {
         super.onImageLoaded();
         this.preloadNeighbours();
     }
 
-    /**
-     * Load the next and the previous picture in the background, so that the browser has them
-     * when the viewer shows them. The core has no preloading; this is the way the survey module
-     * preloads a picture (`preloadBackground`): an `Image` that is given the source, which the
-     * `<img>` of the template uses again (the address carries the checksum, the route answers
-     * with a cache of a year). The neighbours are those of `next` and `previous` of the core,
-     * which go round at the ends of the list. Only pictures: a PDF or a text is not loaded.
-     * What is loaded for a picture that is no neighbour any more is stopped, so at most two
-     * pictures are loaded ahead at a time.
-     */
     preloadNeighbours() {
         const { files } = this.props;
         const { index, file } = this.state;
@@ -155,11 +117,6 @@ export class DocumentFileViewer extends FileViewer {
         }
     }
 
-    /**
-     * Stop the pictures loaded ahead that are not wanted any more (one that has loaded stays in
-     * the cache of the browser, one that is still loading is cancelled).
-     * @param {Set<string>} keep the sources to leave alone
-     */
     dropPreloads(keep) {
         for (const [source, image] of this.preloads) {
             if (!keep.has(source)) {
@@ -170,11 +127,7 @@ export class DocumentFileViewer extends FileViewer {
     }
 
     /**
-     * Mark the words of the hit in the PDF viewer of the iframe and show the first one in the
-     * middle of the screen. The viewer (`PDFViewerApplication`, the same origin) is told after
-     * its pages are there and it stands on the page of the hit, so its search begins on that
-     * page. The viewer scrolls the first word to 50 px below the upper edge; see
-     * `centerSelectedMatch` for how it is put in the middle.
+     * Mark the words of the hit in the PDF viewer of the iframe and center the first one.
      * @param {HTMLIFrameElement} iframe
      */
     async showHit(iframe) {
@@ -188,6 +141,7 @@ export class DocumentFileViewer extends FileViewer {
             if (!iframe.isConnected) {
                 return;
             }
+            // The search begins on the current page.
             app.pdfViewer.currentPageNumber = hit.page;
             this.centerSelectedMatch(app);
             app.eventBus.dispatch("find", {
@@ -195,7 +149,6 @@ export class DocumentFileViewer extends FileViewer {
                 type: "",
                 query: hit.terms,
                 caseSensitive: false,
-                // Whole words, as the search of the server finds them: not `pegel` in `Kanalausspielpegel`.
                 entireWord: true,
                 highlightAll: true,
                 findPrevious: false,
@@ -210,18 +163,14 @@ export class DocumentFileViewer extends FileViewer {
     }
 
     /**
-     * Put the word that the search selects in the middle of the screen. The viewer scrolls to
-     * it once, when it draws the text of the page (`scrollMatchIntoView` of its find
-     * controller, called for the selected word at every draw, but scrolling only the first
-     * time); the word is then centered in the same call, whenever the viewer has moved. No
-     * waiting: it happens at the moment the viewer scrolls, and not at all when it only draws
-     * the page again (zoom).
+     * Center the selected word when the PDF viewer scrolls to it.
      * @param {Object} app the `PDFViewerApplication` of the iframe
      */
     centerSelectedMatch(app) {
         const finder = app.findController;
         const container = app.appConfig.viewerContainer;
         const scrollMatchIntoView = finder.scrollMatchIntoView.bind(finder);
+        // Called at every draw of the page, but only the first call scrolls.
         finder.scrollMatchIntoView = (params) => {
             const { scrollTop, scrollLeft } = container;
             scrollMatchIntoView(params);
@@ -235,13 +184,7 @@ export class DocumentFileViewer extends FileViewer {
 
     /**
      * @override
-     * `touch-action: none`: the browser leaves the fingers to us (no scrolling, no zoom of the
-     * page). Set in the style the template binds, which replaces the whole attribute at every
-     * change. The image does not slide into its new size, as it does in the PDF viewer: the
-     * zoomer moves at once, and a slide of 0.2 s that starts anew at every touch event makes the
-     * image lag behind the fingers. The class `transition-base` of the template is
-     * `!important` (a Bootstrap utility), so only `!important` overrules it. While the image
-     * turns it may slide.
+     * `transition-base` of the template is `!important`, so it takes `!important` to turn it off.
      */
     get imageStyle() {
         const transition = this.animation.rotating ? "" : "transition: none !important;";
@@ -258,11 +201,7 @@ export class DocumentFileViewer extends FileViewer {
         }, ROTATE_ANIMATION_TIME);
     }
 
-    /**
-     * @override
-     * The next file shows at its size: the zoom and the move of the last one are gone, as the
-     * PDF viewer opens every file at its own size.
-     */
+    /** @override */
     activateFile(index) {
         super.activateFile(index);
         this.stopGlide();
@@ -274,8 +213,7 @@ export class DocumentFileViewer extends FileViewer {
     }
 
     /**
-     * The first step up or down from `scale`, rounded to a tenth like the PDF viewer does it
-     * (1, 1.1, 1.3, 1.5, ...).
+     * The first step from `scale`, rounded to a tenth like the PDF viewer (1, 1.1, 1.3, ...).
      * @param {Number} scale
      * @param {Number} steps more than 0: in, less than 0: out
      * @returns {Number}
@@ -289,10 +227,7 @@ export class DocumentFileViewer extends FileViewer {
         return scale;
     }
 
-    /**
-     * @override
-     * The buttons and keys: a step of the PDF viewer, about the middle of the screen.
-     */
+    /** @override */
     zoomIn() {
         this.zoomAt(this.stepScale(this.state.scale, 1));
     }
@@ -302,16 +237,12 @@ export class DocumentFileViewer extends FileViewer {
         this.zoomAt(this.stepScale(this.state.scale, -1));
     }
 
-    /**
-     * @override
-     * The wheel zooms about the pointer. A trackpad pinch arrives as a wheel with the Ctrl key
-     * and small steps (a factor); a wheel turns in ticks (`onWheel` of the PDF viewer).
-     * @param {WheelEvent} ev
-     */
+    /** @override */
     onWheelImage(ev) {
         if (ev.ctrlKey) {
             ev.preventDefault(); // else the browser zooms the page
         }
+        // A trackpad pinch arrives as a wheel event with Ctrl and a small `deltaY`.
         const factor = Math.exp(-ev.deltaY / 100);
         const isPinch =
             ev.ctrlKey &&
@@ -333,12 +264,7 @@ export class DocumentFileViewer extends FileViewer {
         }
     }
 
-    /**
-     * A wheel may turn less than a tick at once: the rest is kept for the next turn, but
-     * dropped when the wheel turns the other way.
-     * @param {Number} ticks
-     * @returns {Number} the whole ticks, with the sign
-     */
+    /** @returns {Number} the whole ticks, with the sign; the rest is kept for the next turn */
     takeWholeTicks(ticks) {
         if ((this.wheelTicks > 0 && ticks < 0) || (this.wheelTicks < 0 && ticks > 0)) {
             this.wheelTicks = 0;
@@ -350,8 +276,7 @@ export class DocumentFileViewer extends FileViewer {
     }
 
     /**
-     * Zoom to `scale` (kept between 0.1 and 10) so that the point `x`, `y` of the screen stays
-     * where it is on the image.
+     * Zoom to `scale` so that the point `x`, `y` of the screen stays where it is on the image.
      * @param {Number} scale
      * @param {Number} [x] client coordinates, default: the middle of the screen
      * @param {Number} [y]
@@ -359,8 +284,7 @@ export class DocumentFileViewer extends FileViewer {
     zoomAt(scale, x, y) {
         const next = Math.min(Math.max(scale, MIN_SCALE), MAX_SCALE);
         const ratio = next / this.state.scale;
-        // The zoomer lies in the middle of the screen, moved by `shift`; the point is
-        // measured from that middle.
+        // The point is measured from the middle of the zoomer, which `shift` moved.
         const rect = this.zoomerRef.el.getBoundingClientRect();
         const middleX = rect.left + rect.width / 2 - this.shift.x;
         const middleY = rect.top + rect.height / 2 - this.shift.y;
@@ -374,12 +298,7 @@ export class DocumentFileViewer extends FileViewer {
         this.updateZoomerStyle();
     }
 
-    /**
-     * @override
-     * As the core's, but the image cannot be moved off the screen: it stays within the
-     * zoomer as far as it is larger than it, and lies in the middle when it is smaller (the
-     * PDF viewer scrolls the same way). The size is that of the image turned.
-     */
+    /** @override Clamps the move, so that the image cannot leave the screen. */
     updateZoomerStyle() {
         this.stopGlide();
         const zoomer = this.zoomerRef.el;
@@ -394,11 +313,7 @@ export class DocumentFileViewer extends FileViewer {
         zoomer.style.transform = `translate(${this.shift.x}px, ${this.shift.y}px)`;
     }
 
-    /**
-     * How far the image may be moved from the middle (px) along each axis: as far as it is larger
-     * than the zoomer. The size is that of the image turned.
-     * @returns {{x: number, y: number}}
-     */
+    /** @returns {{x: number, y: number}} how far (px) the image may be moved from the middle */
     zoomLimits() {
         const image = this.imageRef.el;
         const zoomer = this.zoomerRef.el;
@@ -422,10 +337,7 @@ export class DocumentFileViewer extends FileViewer {
     }
 
     /**
-     * Let the picture glide on after a finger lifted at `speed`. The way is worked out at once
-     * (as far as the picture may go), and the browser moves the zoomer there, with an easing
-     * that slows down like a page that glides: on its own thread, so it is smooth whatever the
-     * code is busy with.
+     * Let the picture glide on after a finger lifted, played by the browser.
      * @param {{x: number, y: number}} speed px per ms
      */
     fling(speed) {
@@ -438,7 +350,7 @@ export class DocumentFileViewer extends FileViewer {
             return;
         }
         const place = (x, y) => `translate(${x}px, ${y}px)`;
-        // `forwards`: the end holds until `settleAt` has written it, there is no jump back.
+        // `forwards`: the end holds until `settleAt` has written it, so there is no jump back.
         const animation = this.zoomerRef.el.animate(
             [{ transform: place(fromX, fromY) }, { transform: place(toX, toY) }],
             { duration, easing: FLING_EASING, fill: "forwards" }
@@ -451,7 +363,6 @@ export class DocumentFileViewer extends FileViewer {
         };
     }
 
-    /** End the gliding where the picture is now (a finger touches it, it is zoomed ...). */
     stopGlide() {
         if (!this.glideAnimation) {
             return;
@@ -461,11 +372,6 @@ export class DocumentFileViewer extends FileViewer {
         this.settleAt(place?.m41 ?? this.translate.x, place?.m42 ?? this.translate.y);
     }
 
-    /**
-     * Write the place the gliding has (or had) as the place of the picture, and end the gliding.
-     * @param {Number} x
-     * @param {Number} y
-     */
     settleAt(x, y) {
         const animation = this.glideAnimation;
         this.glideAnimation = null;
@@ -477,7 +383,6 @@ export class DocumentFileViewer extends FileViewer {
         animation?.cancel();
     }
 
-    /** @param {PointerEvent} ev */
     onTouchStart(ev) {
         if (ev.pointerType !== "touch") {
             return;
@@ -488,13 +393,11 @@ export class DocumentFileViewer extends FileViewer {
         if (this.touches.size === 1) {
             this.onMousedownImage(ev);
         } else if (this.touches.size === 2) {
-            // The second finger ends the move of the first and starts the zoom.
             this.onMouseupImage();
             this.pinch = this.fingers;
         }
     }
 
-    /** @param {PointerEvent} ev */
     onTouchMove(ev) {
         const touch = this.touches.get(ev.pointerId);
         if (!touch) {
@@ -506,8 +409,7 @@ export class DocumentFileViewer extends FileViewer {
             this.onMousemoveView(ev);
             this.velocity.track(ev.clientX, ev.clientY, ev.timeStamp);
         } else if (this.touches.size === 2) {
-            // The image grows with the distance of the fingers, about their middle as it was,
-            // and then goes along with the middle to where it is now.
+            // Zoom about the middle of the fingers as it was, then follow it to where it is now.
             const { x, y, distance } = this.fingers;
             const { x: fromX, y: fromY } = this.pinch;
             this.zoomAt((this.state.scale * distance) / this.pinch.distance, fromX, fromY);
@@ -518,7 +420,6 @@ export class DocumentFileViewer extends FileViewer {
         }
     }
 
-    /** @param {PointerEvent} ev */
     onTouchEnd(ev) {
         if (!this.touches.delete(ev.pointerId)) {
             return;
@@ -526,7 +427,6 @@ export class DocumentFileViewer extends FileViewer {
         if (this.pinch) {
             if (this.touches.size < 2) {
                 this.pinch = null;
-                // The finger that is left goes on moving the image from where it is.
                 for (const { x, y } of this.touches.values()) {
                     this.onMousedownImage({ button: 0, clientX: x, clientY: y });
                 }
@@ -541,11 +441,7 @@ export class DocumentFileViewer extends FileViewer {
     }
 }
 
-/**
- * Like the core's `useFileViewer`, which opens the core's viewer only: this one opens
- * `DocumentFileViewer`.
- * @returns {{open: function(Object, Object[]): void, close: function(): void}}
- */
+/** @returns {{open: function(Object, Object[]): void, close: function(): void}} */
 export function useDocumentFileViewer() {
     const id = `int_filemanager.file_viewer${nextViewerId++}`;
     const mainComponents = registry.category("main_components");

@@ -5,19 +5,13 @@ import { documentFilesFromRecords } from "../../document_file";
 import { getFoldersSection, useNewFolder } from "./document_new_folder";
 import { DocumentListRenderer } from "./document_list_renderer";
 
-// What keeps the menu of the browser: a link, a field, a text that can be edited.
+// Elements that keep the menu of the browser.
 const BROWSER_MENU = "a, input, textarea, select, [contenteditable]";
 
 /**
- * The list of the documents with a menu for the right click on a row (the guests keep
- * `DocumentListRenderer`). The menu is the core's `Dropdown`, opened by hand (`manual`); it
- * holds the buttons of the head of the list, as items like those of the action menu of the core
- * (`action_menus.xml`), "View" for the viewer, which is no button, and "New folder", set off by
- * a divider as the core's menus set off a group. Like in a file manager,
- * the row of the click is ticked when it is not (the ticked rows are what the buttons act on).
- *
- * A dropdown opens at its toggler, an element. Here the toggler is a point without size that
- * is moved to the pointer before the menu opens.
+ * The list of documents with a menu for the right click on a row. The menu is the core's
+ * `Dropdown`, opened by hand; its toggler is a point without size moved to the pointer first.
+ * The row of the click is ticked when it is not (the buttons act on the ticked rows).
  */
 export class DocumentListContextMenuRenderer extends DocumentListRenderer {
     static template = "int_filemanager.DocumentListContextMenuRenderer";
@@ -30,9 +24,6 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
         this.newFolder = useNewFolder();
     }
 
-    /**
-     * @param {MouseEvent} ev
-     */
     async onContextMenu(ev) {
         const { list } = this.props;
         const row = ev.target.closest?.("tr.o_data_row");
@@ -75,8 +66,7 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
     }
 
     /**
-     * The button of the head of the list for the ticked rows: the same call as the core's
-     * `MultiRecordViewButton` makes.
+     * Runs a button of the head of the list for the ticked rows, as `MultiRecordViewButton` does.
      * @param {Object} button the button of the arch
      */
     async onButtonSelected(button) {
@@ -101,7 +91,7 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
     }
 
     /**
-     * @param {String} icon the icon of a button of the arch: a class of FontAwesome or of Odoo
+     * @param {String} icon icon of a button of the arch (FontAwesome or Odoo)
      * @returns {String} its classes
      */
     getIconClass(icon) {
@@ -110,8 +100,8 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
 
     /**
      * @param {Object} record the row of the click
-     * @returns {Function|undefined} shows the file of the row in the viewer, when the row is
-     *      the only one ticked and a browser can show the file
+     * @returns {Function|undefined} opens the viewer, when the row is the only one ticked and
+     *      a browser can show the file
      */
     getViewAction(record) {
         const { list } = this.props;

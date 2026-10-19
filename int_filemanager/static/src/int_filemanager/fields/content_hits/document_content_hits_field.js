@@ -5,9 +5,8 @@ import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { documentFileFromRecord } from "../../document_file";
 
 /**
- * Where the words of the full text search are in a file: up to three hits, each with the page
- * and an excerpt in which the words are bold. It only shows; a click on a hit is taken by the
- * list (`DocumentListRenderer`), which opens the file in the file viewer on that page.
+ * The hits of the full text search in a file: page and excerpt. A click is taken by the list
+ * (`DocumentListRenderer`).
  */
 export class DocumentContentHitsField extends Component {
     static template = "int_filemanager.DocumentContentHitsField";
@@ -23,8 +22,7 @@ export class DocumentContentHitsField extends Component {
     }
 
     /**
-     * A PDF has pages; the text of a picture is one piece (no label); the text of any other
-     * file lies in blocks that no viewer shows as such.
+     * A PDF has pages, the text of a picture is one piece, other files have blocks.
      * @param {{page: number}} hit
      * @returns {string}
      */

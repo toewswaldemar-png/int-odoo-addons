@@ -13,10 +13,8 @@ export function getFoldersSection(searchModel) {
 }
 
 /**
- * "New folder": the dialog of the action (name and parent folder), as the core's kanban opens
- * the action of its `on_create`. The panel does not reload its tree by itself, so the view is
- * restored afterwards (`soft_reload`, as the core's modules do after a change of the data they
- * show).
+ * "New folder": opens the dialog of the action (name and parent folder). The panel does not
+ * reload its tree by itself, so the view is restored afterwards.
  * @returns {(parentId: Number|false) => Promise} opens the dialog; the folder `parentId` is the
  *      default of the parent, none makes a folder of the top level
  */

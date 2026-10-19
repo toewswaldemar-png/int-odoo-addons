@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <!-- The dialog "Move to...", like the one of Odoo's "Mark Lost" (crm.lead.lost). -->
+    <!-- The dialog "Move to...", like the "Mark Lost" of crm (crm.lead.lost). -->
     <record id="int_filemanager_move_view_form" model="ir.ui.view">
         <field name="name">int.filemanager.move.view.form</field>
         <field name="model">int.filemanager.move</field>

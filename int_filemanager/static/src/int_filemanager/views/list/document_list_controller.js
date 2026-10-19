@@ -17,17 +17,15 @@ import { getFoldersSection, useNewFolder } from "./document_new_folder";
 
 export const UPLOAD_ROUTE = "/int_filemanager/upload";
 const FINISHED_STATES = ["loaded", "error", "abort"];
-// Folders made in one call (the server takes 500), and how many files in a row may fail before the
-// upload of a folder stops: a session that is over or a disk that is full fails them all.
+// The server takes 500 folders per call. An expired session or a full disk fails every file, so
+// the upload of a folder stops after a few failures in a row.
 const FOLDERS_PER_CALL = 200;
 const FAILURES_IN_A_ROW = 5;
 const FAILURES_SHOWN = 5;
 
 /**
- * The list of documents with the menu "New" (upload, new folder), and files that are dropped on
- * the list.
- * One request carries one file (the route wants it so); the files go one after the other,
- * the core's `file_upload` service shows their progress and reports the errors of the route.
+ * The list of documents with the menu "New" (upload, new folder) and files dropped on the list.
+ * One request carries one file (the route wants it so), the files go one after the other.
  */
 export class DocumentListController extends ListController {
     static components = { ...ListController.components, Dropdown };
@@ -47,9 +45,8 @@ export class DocumentListController extends ListController {
     }
 
     /**
-     * The record whose documents the list shows, when the action comes from the button of a
-     * record (the keys of the context are set by `action_open_documents`). The files go to the
-     * folder that the settings name for its model, and are linked to the record.
+     * The record whose documents the list shows, when the action comes from its button (the keys
+     * of the context are set by `action_open_documents`); the files are linked to it.
      * @returns {{model: String, id: Number, name: String}|false}
      */
     get linkRecord() {
@@ -64,25 +61,14 @@ export class DocumentListController extends ListController {
         };
     }
 
-    /**
-     * The folders of the search panel.
-     * @returns {Object|undefined}
-     */
     get foldersSection() {
         return getFoldersSection(this.env.searchModel);
     }
 
-    /**
-     * The folder chosen in the search panel, where the files go.
-     * @returns {Number|false}
-     */
     get uploadFolderId() {
         return this.foldersSection?.activeValueId || false;
     }
 
-    /**
-     * @returns {String|false} the name of the folder where the files go
-     */
     get uploadFolderName() {
         const folders = this.foldersSection;
         const folder = folders?.activeValueId && folders.values.get(folders.activeValueId);
@@ -91,10 +77,9 @@ export class DocumentListController extends ListController {
 
     /**
      * @override
-     * "Properties" (a button for the ticked row): the form opens as a click on a row of a core
-     * list opens it, with the pager over the rows of the page. The method of the model would
-     * open an action of its own: one record, and no list in the breadcrumb. With more rows
-     * ticked the method stays, it tells the user to choose one.
+     * "Properties" opens the form like a click on a row does (pager over the rows of the page);
+     * the model's method opens an action of its own, with one record and no list in the
+     * breadcrumb. With more rows ticked that method stays: it tells the user to choose one.
      */
     async beforeExecuteActionButton(clickParams) {
         const { selection } = this.model.root;
@@ -129,32 +114,22 @@ export class DocumentListController extends ListController {
         });
     }
 
-    /**
-     * "Upload" of the menu "New": the file dialog of the input beside the menu (the input
-     * cannot be in the menu: it is gone with it before the files are chosen).
-     */
     onUploadSelected() {
+        // The input is beside the menu: inside it, it is gone before the files are chosen.
         this.fileInputRef.el.click();
     }
 
-    /**
-     * "Upload folder" of the menu "New": the folder dialog of the input beside the menu.
-     */
     onUploadFolderSelected() {
         this.folderInputRef.el.click();
     }
 
-    /**
-     * "New folder" of the menu "New": the folder of the panel is the default of the parent.
-     */
     onNewFolder() {
         return this.newFolder(this.uploadFolderId);
     }
 
     /**
-     * "Download folder" of the menu "New": the folder of the panel with what is below it, as one
-     * ZIP. The method of the folder tells at once what cannot work (an archived folder, too many
-     * bytes) and gives the address of the route.
+     * Downloads the folder of the panel with everything below it as one ZIP. The server method
+     * refuses at once what cannot work (an archived folder, too many bytes).
      */
     async onDownloadFolder() {
         const action = await this.orm.call("int.filemanager.folder", "action_download", [
@@ -177,9 +152,8 @@ export class DocumentListController extends ListController {
     }
 
     /**
-     * Files and folders dropped on the list. A folder of the disk is read with everything in it
-     * and goes as a tree, to the folder of the panel. In the list of the documents of a record
-     * there is no folder to make: it is told and left out, the files beside it go.
+     * Files and folders dropped on the list. Folders go as a tree, except in the documents of a
+     * record: there they are refused and the files beside them go.
      * @param {DragEvent} ev
      */
     async onDrop(ev) {
@@ -212,10 +186,8 @@ export class DocumentListController extends ListController {
     }
 
     /**
-     * Upload folders of the disk: the folders are made first, in packages, then the files go one
-     * after the other to their folders through the route of the single upload. The user is told
-     * what happens before it starts, and what came of it when it is over; a file that fails is
-     * left out and named in the end.
+     * Uploads folders of the disk: the folders are made first, in packages, then the files go one
+     * by one. A file that fails is left out and named in the end.
      * @param {Object} tree see `document_folder_upload.js`
      */
     async uploadTree(tree) {
@@ -353,9 +325,6 @@ export class DocumentListController extends ListController {
         });
     }
 
-    /**
-     * @param {File[]} files
-     */
     async uploadFiles(files) {
         if (!files.length) {
             return;

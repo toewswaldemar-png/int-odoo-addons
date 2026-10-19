@@ -23,8 +23,8 @@
                 t-ref="folderInput"
                 t-on-change.stop="onFolderSelected"
             />
-            <!-- As the "New" menu of the core's project: the text and the caret of the toggler (no
-                 icon), the hotkey of the create button, and the bounce of the sample data. -->
+            <!-- Like the "New" menu of the core's project: text and caret on the toggler, the
+                 hotkey of create, the bounce. -->
             <Dropdown>
                 <button class="btn btn-primary o-dropdown-caret" data-hotkey="c" data-bounce-button="">
                     New

@@ -4,8 +4,8 @@
         <field name="name">int.filemanager.folder.view.list</field>
         <field name="model">int.filemanager.folder</field>
         <field name="arch" type="xml">
-            <!-- multi_edit: select folders and edit the parent of one of them to move them all.
-                 No duplicating: the copy would only have the name that is taken. -->
+            <!-- multi_edit: edit the parent of one row to move all ticked ones. No duplicating: the
+                 copy would only have the name that is taken. -->
             <list multi_edit="1" duplicate="0">
                 <header>
                     <button
@@ -86,15 +86,12 @@
                             widget="many2many_tags"
                             invisible="access_mode != 'restricted'"
                         />
-                        <!-- Only the administrators choose which folders have their images read. -->
                         <field
                             name="ocr_images"
                             groups="int_filemanager.int_filemanager_group_admin"
                         />
                         <field name="company_id" groups="base.group_multi_company" readonly="parent_id" />
                     </group>
-                    <!-- Where the files go that are uploaded at a record (a contact ...): the
-                         administrators choose it, as they choose the images that are read. -->
                     <group
                         string="Upload folder for"
                         groups="int_filemanager.int_filemanager_group_admin"
@@ -107,7 +104,6 @@
                         </field>
                     </group>
                 </sheet>
-                <!-- Followers see the folder as well ("Add followers" in the chatter). -->
                 <chatter />
             </form>
         </field>
@@ -136,8 +132,7 @@
         </field>
     </record>
 
-    <!-- The dialog of "New folder" in the menu "New" of the list of documents: the name, and the
-         folder it lies in (the list puts the folder of its panel in `default_parent_id`). -->
+    <!-- The dialog of "New folder": the list puts the folder of its panel in `default_parent_id`. -->
     <record id="int_filemanager_folder_view_form_dialog" model="ir.ui.view">
         <field name="name">int.filemanager.folder.view.form.dialog</field>
         <field name="model">int.filemanager.folder</field>
@@ -169,8 +164,8 @@
         <field name="view_mode">list,form</field>
     </record>
 
-    <!-- Managing the folders is configuration, like Odoo's product categories: the folder
-         tree itself is the search panel of the documents. -->
+    <!-- Configuration, like Odoo's product categories: the folder tree is the search panel of the
+         documents. -->
     <menuitem
         id="menu_int_filemanager_configuration"
         name="Configuration"

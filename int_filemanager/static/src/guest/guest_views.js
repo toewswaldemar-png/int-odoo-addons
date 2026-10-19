@@ -1,6 +1,4 @@
-// The views of the page of the guests: the core's list and kanban with the components of the
-// module (renderers, card, fields). Only the controllers differ: no upload, no dropzone, and the
-// size of the cards is not written to the server.
+// The core's list and kanban with the module's renderers; the controller writes no tile size.
 import { registry } from "@web/core/registry";
 import { kanbanView } from "@web/views/kanban/kanban_view";
 import { listView } from "@web/views/list/list_view";

@@ -119,9 +119,8 @@
         </field>
     </record>
 
-    <!-- The dialog of the button "Share" of a folder or a file: the form of the share without the
-         buttons of its head and the chatter. "Create the link" saves and shows the same dialog
-         again, with the address to copy. -->
+    <!-- The dialog of the button "Share": the form of the share without the buttons of its head and
+         the chatter; "Create the link" saves and shows it again with the address. -->
     <record id="int_filemanager_share_view_form_dialog" model="ir.ui.view">
         <field name="name">int.filemanager.share.view.form.dialog</field>
         <field name="model">int.filemanager.share</field>

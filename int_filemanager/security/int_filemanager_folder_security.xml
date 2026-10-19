@@ -8,9 +8,6 @@
         >['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
     </record>
 
-    <!-- Who sees a folder: open to all, or the user, one of the user's groups or a follower of the
-         folder that decides (access_folder_id). The administrators see all; the rules of the two
-         groups add up. -->
     <record id="int_filemanager_folder_rule_user" model="ir.rule">
         <field name="name">Filemanager folder: open or allowed</field>
         <field name="model_id" ref="model_int_filemanager_folder" />

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
-    <!-- The menu of the size of the cards, as the core's scale menu of the calendar
-         (web.ViewScaleSelector) is built. -->
+    <!-- Like the scale menu of the core's calendar (web.ViewScaleSelector). -->
     <t t-name="int_filemanager.DocumentKanbanView.Buttons">
         <div class="btn-group o_int_filemanager_tile_size">
             <Dropdown>

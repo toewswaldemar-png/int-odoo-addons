@@ -1,10 +1,8 @@
-// The size of the cards of the kanban of documents (DocumentKanbanController puts one of the
-// classes on the root). The core's card is 320 px wide and grows to fill the row: here the width
-// is the size chosen. As the core's `hr` sets the width of its kanban (`--KanbanRecord-width`).
+// The size of the cards (DocumentKanbanController puts one of the classes on the root). The core's
+// card is 320 px and grows to fill the row: here the width is the size chosen (`--KanbanRecord-width`).
 .o_int_filemanager_tiles {
     --DocumentTile-width: 15rem;
     --DocumentTile-picture-height: 8rem;
-    // On a small screen the cards share the row (the core shows one card per row there).
     --DocumentTile-columns: 2;
 
     &.o_int_filemanager_tiles_small {
@@ -12,7 +10,6 @@
         --DocumentTile-picture-height: 5rem;
         --DocumentTile-columns: 3;
 
-        // Only the picture and the name.
         .o_int_filemanager_card_meta {
             display: none;
         }

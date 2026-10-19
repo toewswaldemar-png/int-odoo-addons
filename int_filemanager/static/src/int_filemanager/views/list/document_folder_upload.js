@@ -1,16 +1,12 @@
 /**
- * Folders of the disk for the upload: reading what the browser hands over, and sorting out the
- * folders that have to be made first.
- *
- * A tree is a list of files, each with the path of the folder it lies in relative to the folder
- * of the upload (`dir`, "" for a file at the top), and the paths of the folders that have nothing
- * in them. Nothing here talks to the server.
+ * Folders of the disk for the upload. A tree is a list of files, each with the path of its folder
+ * relative to the folder of the upload (`dir`, "" at the top), and the paths of empty folders.
  *
  * @typedef {{file: File, dir: String}} TreeFile
  * @typedef {{files: TreeFile[], folders: String[], unreadable: String[]}} Tree
  */
 
-// The browser gives at most a hundred entries of a folder per call (Chrome): read until none come.
+// Chrome gives at most a hundred entries per call: `readEntries` reads until none come.
 function readBatch(reader) {
     return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
 }
@@ -57,9 +53,7 @@ async function walk(entry, dir, tree) {
 }
 
 /**
- * The folders that were dropped, with everything in them. The entries come from
- * `item.webkitGetAsEntry()`, which has to be called while the drop is going on: the items are
- * gone after the first `await`.
+ * The folders that were dropped, with everything in them.
  * @param {FileSystemEntry[]} entries
  * @returns {Promise<Tree>}
  */
@@ -72,8 +66,8 @@ export async function readDroppedFolders(entries) {
 }
 
 /**
- * The files that an input with `webkitdirectory` gives: each knows its path from the chosen
- * folder (`webkitRelativePath`, "Photos/2025/a.jpg"). An empty folder is not in the list.
+ * The files of an input with `webkitdirectory` (`webkitRelativePath`: "Photos/2025/a.jpg"); an
+ * empty folder is not in the list.
  * @param {File[]} files
  * @returns {Tree}
  */
@@ -89,7 +83,7 @@ export function readChosenFolder(files) {
 }
 
 /**
- * Every folder that the tree needs, parents included, for the number the user is told.
+ * Every folder that the tree needs, parents included.
  * @param {Tree} tree
  * @returns {Set<String>}
  */
@@ -105,7 +99,7 @@ export function allFolders(tree) {
 }
 
 /**
- * The paths to make on the server: the deepest ones suffice, the server makes the folders above.
+ * The paths to make on the server: the deepest suffice, it makes the folders above.
  * @param {Tree} tree
  * @returns {String[]}
  */
@@ -115,11 +109,6 @@ export function foldersToMake(tree) {
     return [...all].filter((path) => !parents.has(path));
 }
 
-/**
- * The reason that the route of the upload gave for a failure, as the text it sent.
- * @param {XMLHttpRequest} xhr
- * @returns {String}
- */
 export function uploadError(xhr) {
     try {
         return JSON.parse(xhr.responseText).error.message || "";

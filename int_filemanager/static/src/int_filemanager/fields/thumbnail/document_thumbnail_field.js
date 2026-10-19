@@ -5,12 +5,7 @@ import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { thumbnailUrl } from "../../document_file";
 import { DEFAULT_TILE_SIZE, tileSizeOf } from "../../views/kanban/document_tile_size";
 
-/**
- * The picture of a document on its kanban card: a small version of the image itself, the first
- * page of a PDF, else the core's symbol of the file type (as `DocumentNameField` does for the
- * list, only larger). The kanban sets the size of its cards in `env.documentTile`; the picture
- * of a large card is asked for in a larger version.
- */
+/** The picture on a kanban card, like `DocumentNameField` but sized by `env.documentTile`. */
 export class DocumentThumbnailField extends Component {
     static template = "int_filemanager.DocumentThumbnailField";
     static props = { ...standardFieldProps };

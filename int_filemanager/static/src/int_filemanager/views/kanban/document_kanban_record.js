@@ -3,12 +3,8 @@ import { documentFilesFromRecords } from "../../document_file";
 import { useDocumentFileViewer } from "../../file_viewer/document_file_viewer";
 
 /**
- * A card of the kanban of documents: a click on it shows the file in the file viewer, as a click
- * on a row of the list does (the arrow keys go through the cards of the page); a file a browser
- * cannot show opens the form. The core's own kanban of documents (`product.document`) takes the
- * click in its record as well. `openRecord` of the controller stays the core's: the entry
- * "Properties" of the menu of the card (`type="open"`) opens the form with the pager over the
- * cards of the page.
+ * A card of the kanban of documents: a click shows the file in the file viewer, as in the list;
+ * a file the browser cannot show opens the form.
  */
 export class DocumentKanbanRecord extends KanbanRecord {
     setup() {
@@ -16,11 +12,7 @@ export class DocumentKanbanRecord extends KanbanRecord {
         this.fileViewer = useDocumentFileViewer();
     }
 
-    /**
-     * @override
-     * What the core does with a click stays: ticking cards, a link or the menu of the card,
-     * a click for a new window (Ctrl, middle button).
-     */
+    /** @override */
     onGlobalClick(ev, newWindow) {
         const isPlainClick =
             !newWindow &&

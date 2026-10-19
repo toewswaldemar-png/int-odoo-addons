@@ -1,11 +1,8 @@
-// The upload area of the page of the guests of a share that takes files: a button, a dropzone over
-// the whole page, the progress of the running uploads, and "My uploads" (the files that this
-// browser has a receipt for, with a button to take them away again).
+// The upload area of the guest page: a button, a dropzone, the running uploads and "My uploads"
+// (the files this browser has a receipt for).
 //
-// The core's `file_upload` service does the sending. It does not wait for an upload to end and does
-// not hand back the answer of the server (it only looks at it for errors), so the page listens for
-// its events and reads the receipt from `upload.xhr.responseText`. One request carries one file; the
-// files go one after the other.
+// The core's `file_upload` service neither waits for an upload nor returns the server's answer,
+// so the page listens for its events and reads the receipt from `upload.xhr.responseText`.
 import { Component, onMounted, useRef, useState } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { useCustomDropzone } from "@web/core/dropzone/dropzone_hook";
@@ -24,9 +21,9 @@ import { shareKey, shareToken, shareUrl } from "./guest_share";
 const FINISHED_STATES = ["loaded", "error", "abort"];
 
 /**
- * What to tell the guest when an upload failed: the text that the share sent (its answer is
- * `{"error": {"message": ...}}`), or, for an answer of Odoo itself (the body was too big for the
- * share: Odoo turns it away before the share is asked), one for the status.
+ * The text of a failed upload: the message of the share (`{"error": {"message": ...}}`) or, for an
+ * answer of Odoo itself (a body too big for the share is turned away before it is asked), one for
+ * the status.
  */
 export function failureMessage(xhr) {
     try {
@@ -51,8 +48,7 @@ export function failureMessage(xhr) {
 }
 
 /**
- * The area above the page of the guests, with the page itself as its content: the dropzone covers
- * both. Without the right to upload it shows only the content.
+ * The area above the guest page with the page itself as its content (the dropzone covers both).
  */
 export class GuestUploads extends Component {
     static template = "int_filemanager.GuestUploads";
@@ -113,12 +109,9 @@ export class GuestUploads extends Component {
         await this.uploadFiles(files);
     }
 
-    /**
-     * Files dropped on the page. A folder of the disk comes as an entry that is no file to read:
-     * it is told and left out, the files beside it go.
-     */
+    /** A dropped folder is no file to read: it is told and left out, the files beside it go. */
     async onDrop(ev) {
-        // The items of a drop are gone after the first await: sort them out first.
+        // The items of a drop are gone after the first await.
         const files = [];
         let hasDirectory = false;
         for (const item of Array.from(ev.dataTransfer.items)) {
@@ -205,9 +198,8 @@ export class GuestUploads extends Component {
     }
 
     /**
-     * "My uploads" from the share: it answers for the receipts it can prove, and says which of the
-     * files can still be taken away. What it does not answer for is gone (taken away by a user, or
-     * not valid) and leaves the list. An answer that is an error leaves the list as it was.
+     * Asks the share for "My uploads": files it does not answer for are gone and leave the list; an
+     * error leaves the list as it was.
      */
     async refresh() {
         const entries = loadReceipts(this.token);

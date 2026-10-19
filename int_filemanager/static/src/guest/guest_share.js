@@ -1,5 +1,4 @@
-// The share that the page of the guests shows: its token (from the page), the key that the
-// password gave (from the tab), and the addresses of its routes.
+// The share of the guest page: its token, the key from the password, and its routes.
 import { browser } from "@web/core/browser/browser";
 
 export const SHARE_PATH = "/int_filemanager/share";
@@ -8,7 +7,7 @@ export function shareToken() {
     return odoo.int_filemanager_token;
 }
 
-/** The key is where the page that asked for the password put it: in the tab, nowhere else. */
+/** The key is in the `sessionStorage` of the tab, where the password page put it. */
 export function shareKey() {
     return browser.sessionStorage.getItem(`int_filemanager.share_key.${shareToken()}`) || undefined;
 }

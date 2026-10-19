@@ -1,5 +1,4 @@
-// The picture on the card: the width of the card, the height of the size chosen for the cards
-// (document_kanban_view.scss), the whole picture shown.
+// The picture on the card: its width, the height of the chosen card size (document_kanban_view.scss).
 .o_int_filemanager_card_picture {
     display: block;
     width: 100%;
@@ -8,6 +7,5 @@
 }
 
 span.o_image.o_int_filemanager_card_picture {
-    // The core's symbol of the file type (mimetypes.scss), larger than in the list.
     background-size: calc(var(--DocumentTile-picture-height, 8rem) / 2);
 }
