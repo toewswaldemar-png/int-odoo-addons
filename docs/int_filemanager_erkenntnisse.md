@@ -1,0 +1,69 @@
+# int_filemanager: Erkenntnisse (Betrieb, Messungen, Odoo-Eigenheiten)
+
+Gebaut: Mehrfach-Download und Ordner-Download als ZIP, Ordner-Upload, Verschieben über die Mehrfachbearbeitung und den Dialog „Move to...“, Zielprüfung in `write()`, Pfadname im Ordnerfeld. Diese Datei hält nur, was nicht aus dem Code ersichtlich ist: gemessene Werte, Odoo-Eigenheiten und Entscheidungen mit Grund. Messwerte gelten für das Betriebs-Image `odoo:19.0-hm` (sha256:4ea41539…), Core 19.0-20260817, Python 3.12.3, Werkzeug 3.0.1; bei einem anderen Stand prüfen, ob sie noch stimmen.
+
+## 1. Betrieb am Tower (aus der Konfiguration gelesen)
+- `workers=0` (Threaded, ein Prozess), `limit_time_real=1800`, `limit_time_cpu=1500`, `limit_memory_soft` 2 GiB (zählt `vms`, nicht RSS), `proxy_mode=True`, `x_sendfile` aus.
+- Proxy: Nginx Proxy Manager, `proxy_read_timeout`/`proxy_send_timeout` 90 s, `client_max_body_size` 2000m, Puffer Standard, keine Location `/web/filestore`, Request-Zeile 8 KB (etwa 1.000 IDs in der URL; 1.300 gaben 414).
+- Daten liegen unter `/mnt/user/...` = FUSE (`shfs`): `stat` kostet 0,28 ms je Datei, Anlegen vieler Dateien 7 ms. Für Messungen mit vielen Dateien direkt auf `/mnt/cache/appdata/...` schreiben, gelesen wird über den Betriebspfad.
+
+## 2. Gemessene Befunde zur Übertragung
+- Odoo prüft `limit_time_real` nur im 60-s-Takt, wartet danach bis zu 60 s auf andere Anfragen, dann Reload des ganzen Prozesses (etwa 1 s, alle Anfragen weg). Wirksam also 1800 s plus 0 bis 120 s. Gilt auch für lange Einzel-Downloads.
+- Der Proxy nimmt etwa 1 GB der Antwort schnell auf; darüber bremst er Odoo auf das Tempo des Clients (Thread bleibt belegt). Rechenregel: Belegung ≈ (Größe − 1 GB) / Client-Tempo. Darum Obergrenze 10 GB (Systemparameter `int_filemanager.zip_max_size`) für alle ZIPs.
+- Stille vor dem ersten Byte: der Proxy antwortet nach 90 s mit 504. Ein ZIP erst vollständig zu bauen und dann zu senden trägt nicht; deshalb Strom (V1) mit vorab berechneter `Content-Length`.
+- Ohne `Content-Length` kürzt der Prefork-Betrieb (HTTP/1.0, 2-s-Socket-Timeout) den Strom **still**: der Client meldet Erfolg bei Teil-Datei. Threaded antwortet chunked, ein Abbruch ist dort erkennbar. Mit `Content-Length` ist jeder Abbruch ein Fehler im Browser.
+- Die Länge eines `ZIP_STORED`-Archivs ist vorab auf das Byte berechenbar (auch ZIP64 über 2 GiB und mit mehr als 65.535 Einträgen; Länge gegen den echten Writer geprüft, Tests in `test_zip_stream.py`). `zipfile` schreibt auf einen nicht rückspulbaren Ausgang mit Datendeskriptoren. Leere Ordner: Eintrag mit `/` am Ende; `CRC`, `compress_size`, `file_size` auf 0 setzen, sonst fehlt `CRC`.
+- Der Cursor ist beim Senden geschlossen: der Generator darf weder ORM noch `request` benutzen, nur fertige Einträge. Der Cache der Anfrage lebt so lange wie der Strom, darum vor dem Senden `request.env.invalidate_all()`.
+- Mit `x_sendfile` und interner nginx-Location ist der Odoo-Thread nach 4 ms frei (nginx liefert mit Länge und Range, Direktaufruf der internen Location: 404). Betriebsänderung für spätere Ausbaustufen (Zwischendatei), für das jetzige Verfahren nicht nötig.
+- Zwischendatei im Filestore: `_gc_blobs` räumt nur die Checkliste und fasst fremde Dateien nie an; `_gc_blob_uploads` löscht unter `.upload` nach 24 h, auch mitten in einer Übertragung. Eine Altersgrenze muss länger sein als die längste Übertragung.
+- `http.Stream.from_path` nimmt nur Addon-Pfade; für Pfade im Filestore `http.Stream(type="path", …)` von Hand wie `ir.binary`.
+- Quelldatei verschwindet mitten im Strom: der Client sieht einen Fehler. Client bricht ab: Thread nach 3 s frei, keine offenen Dateien.
+
+## 3. Messung vieler Dateien (E2: 390.600 Dokumente, 28.830 Ordner, 312.480 sichtbar)
+- `os.stat` je Datei: 87 s von 101 s Gesamtzeit, über dem 90-s-Limit des Proxys. Jetzt: Verzeichnislisten (`os.scandir`, eine je Prüfsummen-Präfix) plus Größe aus der Datenbank (Fallback `stat`, wenn die Größe 0 ist): 9,7 s gesamt. Fehlen einer Datei wird vor dem ersten Byte erkannt, eine Datei anderer Länge bricht den Strom ab.
+- Ein nicht mitgelesenes Feld (`size`) kostete beim späteren Zugriff 313 Einzelabfragen und über 50 s: Felder, die die Schleife braucht, in `search_fetch` nennen.
+- Speicher: Spitze 580 bis 700 MB bei 115 MB Grundlast, etwa 1 bis 1,5 KB je Datei während Bau und Senden. Eine Obergrenze für die Dateianzahl gibt es nicht; mehrere gleichzeitige Riesen-Downloads könnten `limit_memory_soft` erreichen.
+- Senden sehr vieler kleiner Dateien: 0,45 ms je Datei auf FUSE (20.000 Dateien in 9 s); bei normalen Größen bestimmt die Leitung.
+- Ordnerbaum (`parent_path =like`, Regeln als Nutzer): 0,22 s; Größensumme per Datenbank 0,25 s.
+- Verschieben (E7): 1.000 Dokumente 2,5 s mit 1.000 Chatter-Nachrichten (eine je Dokument, so entschieden), 300 Ordner 1,2 s.
+
+## 4. Odoo-Eigenheiten, die Fehler verursachen
+- **`REPEATABLE READ`** (`odoo/sql_db.py:373`): Nach einer Eindeutigkeitsverletzung durch eine parallele Transaktion findet eine neue Suche in derselben Transaktion den fremden Datensatz **nicht** (mit zwei Verbindungen gemessen: `23505`, danach 0 Treffer). „Bei `IntegrityError` erneut suchen“ funktioniert nicht. Weg von Odoo: `ConcurrencyError` auslösen, `service.model.retrying` rollt zurück, nimmt einen neuen Schnappschuss und wiederholt (bis 5 Mal, auch für RPC und hochgeladene Dateien). `IntegrityError` allein wird nicht wiederholt.
+- `child_of` auf `folder_id` wird zu `any!` und umgeht die Ordnerregel (Sudo-Comodel, schließt archivierte Nachfahren ein). Für Sichtbarkeit nach unten: `parent_path =like` als Nutzer suchen und die Kette vom gewählten Ordner abwärts im Speicher prüfen (ein versteckter Ordner nimmt alles darunter mit, auch offene Unterordner).
+- Die Create-Regel des Ordners gilt nur bei `create`; `write` prüft das Schreibrecht nur am Datensatz, nicht das neue Ziel (`parent_id`/`folder_id`) und nicht die Firma. Darum steht die Zielprüfung im `write()` des Modells (Rechte nur für Nutzer, Invarianten auch unter `sudo()`).
+- `Many2one.convert_to_read` gibt den Namen des direkten Ordners frei, auch wenn der Nutzer das Dokument nur über `access_via_record` lesen darf. Der Ordnername bleibt dort vertraulich; im ZIP und im Pfadnamen erscheint er nur, wenn die Kette sichtbar ist.
+- GET-Routen kennen den Firmenkontext der Liste nicht: Cookie `cids` lesen, gegen den Nutzer prüfen (fremde Firma gibt `AccessError`, unter `sudo()` entfällt die Prüfung) und als `allowed_company_ids` setzen, bevor etwas gelesen wird. Jeder Download prüft neu, Firmen-IDs aus einer RPC-Aktion sind kein Nachweis.
+- Der Konverter `models` in Routen prüft nichts; `_pre_dispatch` gibt für eingeloggte Nutzer bei existierendem, nicht lesbarem Datensatz 403, nur bei fehlendem 404.
+- Transient-Modelle sind in Odoo 19 **nicht** auf ihren Ersteller beschränkt; ein Nutzer der Gruppe kann einen Dialog lesen, wenn er die Nummer kennt (er enthält nur Nummern und die Zusammenfassung). Eine ACL-Zeile ist nötig.
+- Tracking-Nachrichten entstehen erst in `cr.precommit`; in `TransactionCase` vor dem Zählen `env.cr.precommit.run()` aufrufen.
+- Ordnernamen werden außer im Server-Import nirgends bereinigt (NFC, Steuerzeichen, Länge); Dokument- und Ordnername dürfen im selben Ordner gleich sein (getrennte Indizes). Das ZIP normalisiert nur den **Exportnamen** (Windows-Zeichen, reservierte Namen, Länge, Groß-/Kleinschreibung bei Kollisionen); gespeicherte Namen bleiben.
+- Core-ZIP-Funktionen (`mail`, `account`, `web`) bauen im Speicher (`BytesIO`), es gibt kein Streaming-ZIP; der JS-Helfer `download()` lädt als Blob; `act_url` mit `target=download` öffnet einen neuen Tab (Popup-Blocker nach asynchronem RPC möglich).
+- Kein Baum-Auswähler und kein Drop-Ziel im Core-Suchpanel; Kanban-Ziehen schreibt `folder_id`, aber nur für vorhandene Spalten und ohne Ordnerbaum.
+- Chrome liefert `readEntries` höchstens 100 Einträge je Aufruf: bis zur leeren Antwort lesen; die Einträge von `webkitGetAsEntry()` müssen synchron im Drop-Ereignis eingesammelt werden.
+
+## 5. Entscheidungen mit Grund
+- **ZIP als Strom mit `Content-Length`, nicht Zwischendatei:** 504 nach 90 s ohne Byte, Aufräumen und Lebensdauer einer Datei wären zusätzliche Fehlerquellen.
+- **Verzeichnislisten statt `stat`:** FUSE (siehe 3).
+- **Ordner-ZIP:** der gewählte Ordner ist die oberste Ebene; nur leere Ordner bekommen einen eigenen Eintrag; Ordner behalten ihren Namen, gleichnamige Dateien werden nummeriert; Ziel „wählbar“ wie beim Upload (nach Regeln sichtbar und schreibbar).
+- **Firma:** Ein Unterordner hat immer die Firma seines Elternordners und ist nur am obersten Ordner änderbar; der Teilbaum zieht mit.
+- **Ordner-Upload:** Ordner zuerst als Paket (`action_make_paths`, höchstens 500 Pfade, als Nutzer, vorhandene sichtbare Ordner werden ohne Beachtung der Schreibweise wiederverwendet), Dateien danach einzeln über die unveränderte Upload-Route. Gleichnamige Ordner werden zusammengeführt, gleichnamige Dateien nummeriert. Bei Abbruch bleibt das Hochgeladene und bleiben angelegte Ordner stehen; nach fünf Fehlern in Folge stoppt der Upload.
+- **Verschieben:** Mehrfachbearbeitung bleibt, dazu der Dialog „Move to...“ (Muster `crm.lead.lost`, ein `write` je Art, alles oder nichts); Auswahlfeld mit Pfadanzeige (Kontext `hierarchical_naming`, an der ersten unlesbaren Stufe „…“) statt Baum; ein Chatter-Eintrag je Dokument.
+- **Pfadname** nicht gespeichert (kein `complete_name`), sondern mit den Rechten des Nutzers berechnet; für Gäste und Tracking bleibt der schlichte Name.
+
+## 6. Invarianten (gelten für jede künftige Änderung)
+1. Lesen ist nicht Pfad sehen: die Menge der lesbaren Dokumente, die Menge der Ordner mit vollständig sichtbarer Vorfahrenkette und die Menge der für ein Ordner-ZIP zulässigen Dokumente sind getrennt.
+2. Verschieben prüft den Zielzustand samt Teilbaum (Firma, Archiv, Namen, Zyklus) auch unter `sudo()`; die Rechteprüfung gilt nur für Nutzer.
+3. Jeder Download autorisiert in der GET-Route neu.
+4. Eine ZIP-Auslieferung hält keine Datei länger als ihre Übertragung.
+
+## 7. Stolpersteine beim Arbeiten am Modul
+- `tests/__init__.py` muss jede neue Testdatei importieren, sonst laufen null Tests; `tools/check/tests.sh --test-tags "/int_filemanager:Klasse"` wählt nur Klassen daraus.
+- Ruff (`py -3.13 -m pre_commit run --files …`) verbietet `self = self.with_context(...)` in Methoden und `collections.namedtuple`.
+- HttpCase mit eigenem Cookie: `self.opener.cookies.set("cids", …, domain="127.0.0.1", path="/")`.
+- Übersetzungsschlüssel sind global: „Upload folder“ ist schon das Feld des Freigabe-Upload-Ordners; neue Texte erst gegen `de.po` prüfen. Abgleich mit `tools/check/i18n_export.sh`.
+- Wegwerf-Umgebungen auf dem Tower: eigene Datenbank auf `fmtest_pg`, Container immer mit eigenem Namen und nur per Namen stoppen (nie per Image-Filter: das beendete einmal den Produktiv-Container).
+- Dokumente mit echtem Blob im Test: `_create_from_stream` und `addCleanup(remove, …_blob_path)`.
+
+## 8. Nicht gebaut / offen
+- Browser-Abnahme (Chrome/Edge) der Ordner-Upload-Oberfläche mit mehreren tausend Dateien, tiefem Baum, leeren Ordnern und „Anhalten“: Server und Lint sind geprüft, das Browser-Skript nur durch Lint.
+- ZIP für Freigabe-Gäste (eigener Bereichsnachweis, Download-Zähler, Gateway-Whitelist), Ziehen auf den Ordnerbaum, Wiederaufnahme beim Upload (überspringen bei gleichem Namen und gleicher Größe; bis dahin Dubletten bei Wiederholung), parallele Uploads, Knopf „Move to...“ auf Kanban-Karten und im Dokumentformular, Entpackpfade über 260 Zeichen unter Windows, Obergrenze für die Dateianzahl eines ZIPs, Versionen.
