@@ -223,6 +223,7 @@ class IntFilemanagerDocument(models.Model):
     def _compute_ocr_content(self):
         self.ocr_content = False
 
+    @api.depends("checksum")
     def _compute_ocr_checksum(self):
         # The text rows are for the administrators; the checksum of the PDF is no secret to
         # whoever may read the document it belongs to.

@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 from odoo.fields import Domain
 
 
@@ -24,6 +24,8 @@ class IntFilemanagerLinkable(models.AbstractModel):
         search="_search_document_search",
     )
 
+    @api.depends("link_ids")
+    @api.depends_context("uid")
     def _compute_document_count(self):
         # The links the user sees: the rule of the link follows the rules of the document.
         counts = dict(
@@ -49,6 +51,14 @@ class IntFilemanagerLinkable(models.AbstractModel):
             "link_ids", "any", [("document_id", "any", [("content_search", operator, value)])]
         )
 
+    def unlink(self):
+        ids = self.ids
+        result = super().unlink()
+        self.env["int.filemanager.link"].sudo().search(
+            [("res_model", "=", self._name), ("res_id", "in", ids)]
+        ).unlink()
+        return result
+
     def action_open_documents(self):
         """Show the documents of this record in the list of the filemanager."""
         self.ensure_one()
@@ -73,11 +83,3 @@ class IntFilemanagerLinkable(models.AbstractModel):
             },
         )
         return action
-
-    def unlink(self):
-        ids = self.ids
-        result = super().unlink()
-        self.env["int.filemanager.link"].sudo().search(
-            [("res_model", "=", self._name), ("res_id", "in", ids)]
-        ).unlink()
-        return result

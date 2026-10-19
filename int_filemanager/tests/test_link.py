@@ -1,8 +1,10 @@
 import time
 from unittest.mock import patch
 
+from odoo import Command
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import Form, TransactionCase, tagged
+from odoo.tests.common import new_test_user
 
 from .test_folder_access import AccessCase
 
@@ -84,6 +86,21 @@ class TestLink(AccessCase, TransactionCase):
         self.secret_doc.folder_id = self.shared
         self.assertTrue(self.link.exists())
         self.assertEqual(self._docs(self.outsider), self.secret_doc)
+
+    def test_the_answer_for_one_user_is_not_given_to_another(self):
+        # Both read the field in one transaction: the cache must tell the users apart.
+        hidden = self._document(self.secret, "h.txt", b"hidden")
+        foreign = self.Partner.create({"name": "Foreign", "company_id": self.company2.id})
+        self._link(hidden, foreign)
+        seer = new_test_user(
+            self.env,
+            login="access_seer",
+            groups="base.group_user",
+            company_id=self.company2.id,
+            company_ids=[Command.set(self.company2.ids)],
+        )
+        self.assertTrue(hidden.with_user(seer).sudo().access_via_record)
+        self.assertFalse(hidden.with_user(self.outsider).sudo().access_via_record)
 
     def test_a_new_link_is_seen_at_once(self):
         # A rule with the ids of the readable records inside would be remembered by the

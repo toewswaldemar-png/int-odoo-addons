@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from odoo import fields, models
+from odoo import api, fields, models
 from odoo.fields import Domain
 
 from .int_filemanager_link import FOLDER_ONLY_KEY
@@ -25,6 +25,8 @@ class IntFilemanagerDocument(models.Model):
         exportable=False,
     )
 
+    @api.depends("link_ids.res_model", "link_ids.res_id")
+    @api.depends_context("uid", FOLDER_ONLY_KEY)
     def _compute_access_via_record(self):
         """The Python side of the rule.
 
