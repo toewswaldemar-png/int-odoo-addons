@@ -1435,6 +1435,12 @@ msgstr "Größe der Abschnittsdatei"
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "Select at least one document."
+msgstr "Wählen Sie mindestens ein Dokument aus."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "Select exactly one document."
 msgstr "Wählen Sie genau ein Dokument aus."
 
@@ -1732,6 +1738,12 @@ msgstr "Die Datei eines Dokuments wird nur durch das Hochladen gesetzt."
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "The file of these documents is missing: %(names)s"
+msgstr "Die Dateien dieser Dokumente fehlen: %(names)s"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "The file of this document is missing."
 msgstr "Die Datei dieses Dokuments fehlt."
 
@@ -1741,6 +1753,12 @@ msgid ""
 "The files of the folder are copied into the filemanager. The files on the "
 "disk stay as they are."
 msgstr "Die Dateien des Ordners werden in den Filemanager kopiert. Die Dateien auf der Platte bleiben unverändert."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "The files are %(size).1f GB together, more than the %(limit).1f GB that one ZIP may hold. Download them in parts."
+msgstr "Die Dateien sind zusammen %(size).1f GB groß, mehr als die %(limit).1f GB, die ein ZIP enthalten darf. Laden Sie sie in Teilen herunter."
 
 #. module: int_filemanager
 #. odoo-python
@@ -3048,6 +3066,12 @@ msgstr "Dieses Token ist vergeben."
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__token
 msgid "Token"
 msgstr "Token"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "Too many documents are selected for one download. Select fewer and download in parts."
+msgstr "Es sind zu viele Dokumente für einen Download ausgewählt. Wählen Sie weniger aus und laden Sie in Teilen herunter."
 
 #. module: int_filemanager
 #. odoo-javascript
