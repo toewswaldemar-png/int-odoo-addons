@@ -24,6 +24,8 @@ TEMPLATES = (
 # module and a piece of its source that the module's own code relies on). The bundle is
 # minified: no spaces around the signs.
 CORE_PARTS = {
+    # DocumentPreview: the viewer of the core without its modal frame, with one file.
+    "@web/core/file_viewer/file_viewer": ("modal", "startIndex", "files"),
     # DocumentFormController: the panel at the side of the file can be pulled to another width.
     "@web/core/resizable_panel/resizable_panel": (
         "handleSide",
@@ -153,6 +155,7 @@ class TestAssets(TransactionCase):
         # the slot next to the pager (the list does the same) in front of the slot of the cog menu,
         # and wraps the renderer in the layout of the page; a new Odoo may change them.
         for template, pieces in (
+            ("web.FileViewer", ("o-FileViewer-headerButton", "fa-times", "props.modal")),
             ("web.FormView", ("control-panel-additional-actions", "props.Renderer", "<Layout")),
             ("web.ControlPanel", ("control-panel-navigation-additional", "o_cp_pager")),
         ):

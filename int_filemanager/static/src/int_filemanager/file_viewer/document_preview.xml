@@ -1,37 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
     <t t-name="int_filemanager.DocumentPreview">
-        <div class="o_int_filemanager_preview h-100 bg-body">
-            <div class="o_int_filemanager_preview_view h-100 position-relative">
-                <div
-                    t-if="props.file.isImage"
-                    class="d-flex align-items-center justify-content-center h-100 p-3"
-                >
-                    <img
-                        class="mw-100 mh-100 object-fit-contain"
-                        t-att-src="props.file.defaultSource"
-                        t-att-alt="props.file.name"
-                    />
-                </div>
-                <iframe
-                    t-elif="props.file.isPdf or props.file.isText"
-                    class="o_int_filemanager_preview_frame w-100 h-100 border-0"
-                    t-att-src="props.file.defaultSource"
-                    t-att-title="props.file.name"
-                />
-                <video
-                    t-elif="props.file.isVideo"
-                    class="w-100 h-100"
-                    controls="controls"
-                    t-att-src="props.file.defaultSource"
-                />
-                <div
-                    t-else=""
-                    class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"
-                >
-                    <i class="fa fa-file-o fa-4x mb-3" role="img" aria-hidden="true" />
-                    <span>There is no preview for this type of file.</span>
-                </div>
+        <div class="o_int_filemanager_preview position-relative h-100 bg-dark">
+            <DocumentFileViewer
+                t-if="props.file.isViewable"
+                t-key="props.file.id"
+                files="[props.file]"
+                startIndex="0"
+                modal="false"
+            />
+            <div
+                t-else=""
+                class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"
+            >
+                <i class="fa fa-file-o fa-4x mb-3" role="img" aria-hidden="true" />
+                <span>There is no preview for this type of file.</span>
             </div>
         </div>
     </t>

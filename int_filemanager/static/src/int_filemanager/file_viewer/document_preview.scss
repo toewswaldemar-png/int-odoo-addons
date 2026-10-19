@@ -1,4 +1,13 @@
-// Lets a frame or a picture shrink instead of pushing the page out.
-.o_int_filemanager_preview_view {
-    min-height: 0;
+.o_int_filemanager_preview {
+    // The viewer places its parts against the edges and under it (z-index: -1).
+    isolation: isolate;
+
+    .o-FileViewer-headerButton:has(.fa-times) {
+        display: none;
+    }
+
+    // A PDF or a text takes the whole width, not three quarters of it.
+    iframe.o-FileViewer-view {
+        width: 100% !important;
+    }
 }

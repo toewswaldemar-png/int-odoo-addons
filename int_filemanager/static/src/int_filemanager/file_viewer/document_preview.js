@@ -1,10 +1,9 @@
 import { Component } from "@odoo/owl";
+import { DocumentFileViewer } from "./document_file_viewer";
 
-/**
- * The preview of the file on the page of a document, as large as the page allows. PDFs and
- * texts are shown by the browser in a frame, with the browser's own zoom and search.
- */
+/** The preview on the page of a document: the file viewer without its full screen frame. */
 export class DocumentPreview extends Component {
     static template = "int_filemanager.DocumentPreview";
+    static components = { DocumentFileViewer };
     static props = { file: Object };
 }
