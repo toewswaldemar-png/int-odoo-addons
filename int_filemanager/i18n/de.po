@@ -401,8 +401,15 @@ msgstr "Erledigt"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
 msgid "Download"
 msgstr "Herunterladen"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
+msgid "Download folder"
+msgstr "Ordner herunterladen"
 
 #. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__draft
@@ -1759,6 +1766,11 @@ msgstr "Die Dateien des Ordners werden in den Filemanager kopiert. Die Dateien a
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "The files are %(size).1f GB together, more than the %(limit).1f GB that one ZIP may hold. Download them in parts."
 msgstr "Die Dateien sind zusammen %(size).1f GB groß, mehr als die %(limit).1f GB, die ein ZIP enthalten darf. Laden Sie sie in Teilen herunter."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
+msgid "The folder with everything in it that you see, as one ZIP."
+msgstr "Der Ordner mit allem, was Sie darin sehen, als ein ZIP."
 
 #. module: int_filemanager
 #. odoo-python
