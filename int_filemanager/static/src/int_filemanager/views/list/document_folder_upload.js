@@ -1,7 +1,6 @@
 /**
- * Folders of the disk for the upload. A tree is a list of files, each with the path of its folder
- * relative to the folder of the upload (`dir`, "" at the top), and the paths of empty folders.
- *
+ * Folders of the disk for the upload: a tree is the files, each with the path of its folder
+ * relative to the upload (`dir`, "" at the top), and the paths of empty folders.
  * @typedef {{file: File, dir: String}} TreeFile
  * @typedef {{files: TreeFile[], folders: String[], unreadable: String[]}} Tree
  */
@@ -52,11 +51,7 @@ async function walk(entry, dir, tree) {
     }
 }
 
-/**
- * The folders that were dropped, with everything in them.
- * @param {FileSystemEntry[]} entries
- * @returns {Promise<Tree>}
- */
+/** The folders that were dropped, with everything in them. */
 export async function readDroppedFolders(entries) {
     const tree = { files: [], folders: [], unreadable: [] };
     for (const entry of entries) {
@@ -65,12 +60,7 @@ export async function readDroppedFolders(entries) {
     return tree;
 }
 
-/**
- * The files of an input with `webkitdirectory` (`webkitRelativePath`: "Photos/2025/a.jpg"); an
- * empty folder is not in the list.
- * @param {File[]} files
- * @returns {Tree}
- */
+/** The files of an input with `webkitdirectory`; an empty folder is not in the list. */
 export function readChosenFolder(files) {
     return {
         files: files.map((file) => {
@@ -82,11 +72,7 @@ export function readChosenFolder(files) {
     };
 }
 
-/**
- * Every folder that the tree needs, parents included.
- * @param {Tree} tree
- * @returns {Set<String>}
- */
+/** Every folder that the tree needs, parents included. */
 export function allFolders(tree) {
     const folders = new Set();
     for (const path of [...tree.files.map((item) => item.dir), ...tree.folders]) {
@@ -98,11 +84,7 @@ export function allFolders(tree) {
     return folders;
 }
 
-/**
- * The paths to make on the server: the deepest suffice, it makes the folders above.
- * @param {Tree} tree
- * @returns {String[]}
- */
+/** The paths to make on the server: the deepest suffice, it makes the folders above. */
 export function foldersToMake(tree) {
     const all = allFolders(tree);
     const parents = new Set([...all].map((path) => path.split("/").slice(0, -1).join("/")));

@@ -7,13 +7,10 @@ const TIME_CONSTANT = 325;
 const MIN_SPEED = 0.02;
 const MAX_SPEED = 6;
 
-/** Easing for `element.animate` with the way and time of `flingPlan`. */
+/** Easing for `element.animate` with `flingPlan`. */
 export const FLING_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
-/**
- * Speed of a finger at the lift (px per ms): `release` returns `null` if there is none worth a
- * gliding (rested, slow, one point).
- */
+/** Speed of a finger at the lift (px per ms); `release` gives `null` if it is not worth a glide. */
 export function createVelocityTracker() {
     let samples = [];
 
@@ -49,10 +46,7 @@ export function createVelocityTracker() {
     return { track, release, reset };
 }
 
-/**
- * The way (px) and time (ms) of the gliding after a finger lifted at `speed` (px per ms), slowed
- * down as a browser slows a page. Play it with `element.animate` and `FLING_EASING`.
- */
+/** The way (px) and time (ms) of the glide after a lift at `speed` (px per ms). */
 export function flingPlan(speed) {
     const fast = Math.hypot(speed.x, speed.y);
     // The speed integrated until it falls to `MIN_SPEED`.

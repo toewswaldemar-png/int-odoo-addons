@@ -6,7 +6,7 @@
             <Dropdown>
                 <button
                     class="btn btn-secondary o-dropdown-caret"
-                    title="Size of the cards"
+                    data-tooltip="Size of the cards"
                     aria-label="Size of the cards"
                 >
                     <i class="fa fa-th-large me-1" role="img" />

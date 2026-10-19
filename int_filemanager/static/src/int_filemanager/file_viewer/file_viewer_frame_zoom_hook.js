@@ -7,10 +7,8 @@ const MIN_TEXT_SCALE = 1;
 const MAX_TEXT_SCALE = 5;
 
 /**
- * Zoom the text of a text file with two fingers by scaling it as laid out, so the lines do not
- * break anew. The browser scrolls with the fingers (scrolling by code was jerky); the code only
- * keeps the point under the fingers in place.
- * @param {Document} doc
+ * Zooms the text of a text file with two fingers by scaling it as laid out, so the lines do not
+ * break anew; the browser scrolls with the fingers, the code keeps the point under them in place.
  * @returns {function(): void} removes the listeners
  */
 function attachTextZoom(doc) {
@@ -59,13 +57,7 @@ function attachTextZoom(doc) {
     };
 }
 
-/**
- * A double tap on a zoomed PDF resets the zoom (`zoomReset` of the core's PDF viewer). At the
- * opening size it is left alone: it selects a word.
- * @param {HTMLIFrameElement} frame
- * @param {Document} doc
- * @returns {function(): void} removes the listeners
- */
+/** A double tap on a zoomed PDF resets the zoom; at the opening size it selects a word. */
 function attachPdfZoomReset(frame, doc) {
     const viewer = () => frame.contentWindow?.PDFViewerApplication?.pdfViewer;
     return attachDoubleTap(doc, {
@@ -77,11 +69,7 @@ function attachPdfZoomReset(frame, doc) {
     });
 }
 
-/**
- * Zoom in the frames of the file viewer: two fingers zoom a text, a double tap resets the zoom
- * of a text and of a PDF.
- * @param {import("@web/core/file_viewer/file_viewer").FileViewer} viewer
- */
+/** Zoom in the frames of the viewer: two fingers on a text, a double tap resets text and PDF. */
 export function useFileViewerFrameZoom(viewer) {
     useFrameDocuments(viewer, (frame, doc) => {
         const { file } = viewer.state;

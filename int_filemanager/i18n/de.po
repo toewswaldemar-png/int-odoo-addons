@@ -602,22 +602,22 @@ msgid "Choose a folder..."
 msgstr "Ordner wählen ..."
 
 #. module: int_filemanager
-#: code:addons/int_filemanager/models/int_filemanager_move.py:0
+#: code:addons/int_filemanager/wizard/int_filemanager_move.py:0
 msgid "Documents (%(count)s): %(names)s"
 msgstr "Dokumente (%(count)s): %(names)s"
 
 #. module: int_filemanager
-#: code:addons/int_filemanager/models/int_filemanager_move.py:0
+#: code:addons/int_filemanager/wizard/int_filemanager_move.py:0
 msgid "Folders (%(count)s): %(names)s"
 msgstr "Ordner (%(count)s): %(names)s"
 
 #. module: int_filemanager
-#: code:addons/int_filemanager/models/int_filemanager_move.py:0
+#: code:addons/int_filemanager/wizard/int_filemanager_move.py:0
 msgid "Select at least one document or folder."
 msgstr "Wählen Sie mindestens ein Dokument oder einen Ordner."
 
 #. module: int_filemanager
-#: code:addons/int_filemanager/models/int_filemanager_move.py:0
+#: code:addons/int_filemanager/wizard/int_filemanager_move.py:0
 msgid "Choose the folder to move the documents to."
 msgstr "Wählen Sie den Ordner, in den die Dokumente kommen."
 

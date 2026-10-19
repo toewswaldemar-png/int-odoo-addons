@@ -36,11 +36,7 @@ function contentRoute(id, field) {
 
 /** A document as the core's file viewer wants a file: its bytes are served by the content route. */
 export class DocumentFile extends FileModelMixin(Object) {
-    /**
-     * @param {{id: number, name: string, mimetype: string, checksum: string, size: number,
-     *      ocr_checksum?: string|false, hit?: {page: number, terms: string[]}}} values
-     *      `hit`: the place a full text search found
-     */
+    /** @param {Object} values the fields of a document; `hit`: the place a text search found */
     constructor(values) {
         super();
         Object.assign(this, values);
@@ -71,9 +67,8 @@ export class DocumentFile extends FileModelMixin(Object) {
 
     /**
      * @override
-     * The PDF viewer takes the page from the hash (`viewer.js`, `setHash`). The words are marked by
-     * `DocumentFileViewer` after the load: the hash `search` starts too early and the word lands
-     * on the top edge.
+     * The page comes from the hash; `DocumentFileViewer` marks the words after the load (the hash
+     * `search` starts too early and the word lands on the top edge).
      */
     get defaultSource() {
         const source = super.defaultSource;
@@ -96,11 +91,7 @@ export class DocumentFile extends FileModelMixin(Object) {
     }
 }
 
-/**
- * @param {Object} record a document with name, mimetype, checksum, ocr_checksum and size loaded
- * @param {Number} [hitIndex] which of the `content_hits` of the record the file shows
- * @returns {DocumentFile}
- */
+/** @param {Number} [hitIndex] which of the `content_hits` of the record the file shows */
 export function documentFileFromRecord(record, hitIndex = 0) {
     const { name, mimetype, checksum, size, ocr_checksum, content_hits } = record.data;
     const hit = content_hits?.hits?.[hitIndex];
@@ -115,12 +106,7 @@ export function documentFileFromRecord(record, hitIndex = 0) {
     });
 }
 
-/**
- * The address of the small picture of a record: the image itself or the drawn first page of a PDF.
- * @param {Object} record a document with `thumbnail_state` loaded
- * @param {Number} size width and height in pixels
- * @returns {string|false} `false` without a picture: the symbol of the file type shows
- */
+/** The address of the small picture of a record; `false` shows the symbol of the file type. */
 export function thumbnailUrl(record, size) {
     const file = documentFileFromRecord(record);
     if (!record.resId) {
@@ -148,13 +134,7 @@ export async function readDocumentFile(orm, id) {
     return new DocumentFile(values);
 }
 
-/**
- * The files a viewer goes through for a click on a record of the list or the kanban.
- * @param {Object[]} records the records of the page
- * @param {Object} record the record that was clicked; it may be missing among `records`
- * @param {Number} [hitIndex] the hit of `record` that was clicked
- * @returns {{file: DocumentFile, files: DocumentFile[]}} `file` is one of `files` (by identity)
- */
+/** The files a viewer goes through for a click on `record`; `file` is one of `files`. */
 export function documentFilesFromRecords(records, record, hitIndex = 0) {
     const inPage = records.includes(record) ? records : [record];
     const files = inPage.map((each) =>

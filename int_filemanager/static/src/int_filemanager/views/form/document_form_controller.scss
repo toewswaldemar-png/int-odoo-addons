@@ -7,7 +7,8 @@
     .o_int_filemanager_document_panel {
         flex-shrink: 0;
 
-        // Below the file the panel takes the whole width, whatever it was pulled to.
+        // Below the file the panel takes the whole width, whatever it was
+        // pulled to.
         @include media-breakpoint-down(lg) {
             width: 100% !important;
 

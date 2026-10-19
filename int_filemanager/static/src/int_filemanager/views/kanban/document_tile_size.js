@@ -8,10 +8,7 @@ export const TILE_SIZES = [
     { key: "large", label: _t("Large"), pictureWidth: 512 },
 ];
 
-/**
- * @param {string} key a value of the setting, maybe missing or unknown
- * @returns {{key: string, label: string, pictureWidth: number}} the size, or the default one
- */
+/** @returns {{key: string, label: string, pictureWidth: number}} size of `key`, or the default */
 export function tileSizeOf(key) {
     return TILE_SIZES.find((size) => size.key === key) || tileSizeOf(DEFAULT_TILE_SIZE);
 }

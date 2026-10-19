@@ -3,9 +3,7 @@ from . import int_filemanager_tag
 from . import int_filemanager_folder
 from . import int_filemanager_document
 from . import int_filemanager_link
-from . import int_filemanager_move
 from . import int_filemanager_share
-from . import int_filemanager_share_attempt
 from . import int_filemanager_document_link
 from . import int_filemanager_linkable
 from . import int_filemanager_model_folder

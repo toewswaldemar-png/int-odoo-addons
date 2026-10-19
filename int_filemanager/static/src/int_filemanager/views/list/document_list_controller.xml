@@ -6,8 +6,7 @@
         t-inherit-mode="primary"
     >
         <xpath expr="." position="inside">
-            <!-- The input is beside the menu, not in it: the menu is gone before the files are
-                 chosen. "Upload" clicks it. -->
+            <!-- The input is beside the menu: the menu is gone before the files are chosen. -->
             <input
                 type="file"
                 multiple="multiple"
@@ -23,8 +22,6 @@
                 t-ref="folderInput"
                 t-on-change.stop="onFolderSelected"
             />
-            <!-- Like the "New" menu of the core's project: text and caret on the toggler, the
-                 hotkey of create, the bounce. -->
             <Dropdown>
                 <button class="btn btn-primary o-dropdown-caret" data-hotkey="c" data-bounce-button="">
                     New

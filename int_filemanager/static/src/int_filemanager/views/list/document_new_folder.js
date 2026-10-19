@@ -1,10 +1,6 @@
 import { useService } from "@web/core/utils/hooks";
 
-/**
- * The folders of the search panel of the list.
- * @param {Object} searchModel
- * @returns {Object|undefined} undefined where the list has no panel (the documents of a record)
- */
+/** @returns {Object|undefined} the folders of the search panel; none where the list has no panel */
 export function getFoldersSection(searchModel) {
     const [folders] = searchModel.getSections(
         (section) => section.type === "category" && section.fieldName === "folder_id"
@@ -12,12 +8,7 @@ export function getFoldersSection(searchModel) {
     return folders;
 }
 
-/**
- * "New folder": opens the dialog of the action (name and parent folder). The panel does not
- * reload its tree by itself, so the view is restored afterwards.
- * @returns {(parentId: Number|false) => Promise} opens the dialog; the folder `parentId` is the
- *      default of the parent, none makes a folder of the top level
- */
+/** Opens the "New folder" dialog; the panel does not reload its tree, so the view is restored. */
 export function useNewFolder() {
     const actionService = useService("action");
     return (parentId) =>

@@ -1,12 +1,8 @@
 import { useEffect, useRef } from "@odoo/owl";
 
 /**
- * Call `attach` with each iframe of the file viewer and its document, and undo it when the file
- * changes or the viewer closes. A frame gets a new document at every load, so `attach` is
- * called again after each one.
- * @param {import("@web/core/file_viewer/file_viewer").FileViewer} viewer
- * @param {function(HTMLIFrameElement, Document): (function(): void)|void} attach what it returns
- *      is called to undo it
+ * Calls `attach(frame, document)` for each iframe of the viewer, again after each load; what it
+ * returns undoes it when the file changes or the viewer closes.
  */
 export function useFrameDocuments(viewer, attach) {
     const root = useRef("autofocus");

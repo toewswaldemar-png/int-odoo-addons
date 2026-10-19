@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <!-- The form of a link in the dialog of a document: only the choice of the record (model and
-         record together); without it Odoo makes a field of each. -->
+    <!-- Only the choice of the record (model and record together); else Odoo makes a field of each. -->
     <record id="int_filemanager_link_view_form" model="ir.ui.view">
         <field name="name">int.filemanager.link.view.form</field>
         <field name="model">int.filemanager.link</field>
@@ -36,7 +35,6 @@
         </field>
     </record>
 
-    <!-- The search above without the panel of the folders and what needs the right to read them. -->
     <record id="int_filemanager_document_view_search_record" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.search.record</field>
         <field name="model">int.filemanager.document</field>

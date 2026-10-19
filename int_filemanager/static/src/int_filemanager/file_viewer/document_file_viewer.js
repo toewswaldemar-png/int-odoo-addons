@@ -326,7 +326,7 @@ export class DocumentFileViewer extends FileViewer {
         };
     }
 
-    /** @returns {{x: number, y: number, distance: number}} the middle and the distance of two fingers */
+    /** @returns {{x: number, y: number, distance: number}} middle and distance of two fingers */
     get fingers() {
         const [first, second] = [...this.touches.values()];
         return {

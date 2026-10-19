@@ -13,25 +13,16 @@ export function fingersOf(touches) {
     };
 }
 
-/**
- * Where to scroll after content is zoomed by `ratio` so that the content point that was under
- * the fingers (`scroll + previous`, now at `(scroll + previous) * ratio`) is under them at
- * `point`.
- * @param {Number} previous the middle of the fingers before, in the scroller
- * @param {Number} point the middle of the fingers now, in the scroller
- */
+/** Where to scroll after zooming by `ratio` so that the point under the fingers stays there. */
 export function scrollAfterPinch(scroll, previous, point, ratio) {
     return (scroll + previous) * ratio - point;
 }
 
 /**
- * Call `onPinch` while two fingers move on `target`, with the factor by which their distance
- * changed since the last call and the middle of the fingers before (`previous`) and now (`x`,
- * `y`, client coordinates). The listeners are passive, so the browser still scrolls; set
- * `touch-action` on the element to stop it from zooming the page. Some browsers do not scroll
- * with the finger left after a pinch: `onPan` gets its way (see `createPanFollower`).
- *
- * @param {function(TouchEvent): Boolean} [params.canPinch] asked when two fingers are down
+ * Calls `onPinch({factor, x, y, previous})` while two fingers move on `target`: the change of
+ * their distance and the middle of the fingers now and before (client coordinates). The
+ * listeners are passive; set `touch-action` on the element so the browser does not zoom the page.
+ * `onPan` gets the finger left after a pinch (see `createPanFollower`).
  * @returns {function(): void} removes the listeners
  */
 export function attachPinch(target, { onPinch, onPan, canPinch = () => true }) {
@@ -85,11 +76,9 @@ export function attachPinch(target, { onPinch, onPan, canPinch = () => true }) {
 }
 
 /**
- * Scroll `scroller` with the finger left after a pinch, unless the browser does it. Browsers
- * differ and the touch event does not tell (`cancelable` does not); the scroller does: if it is
- * not where the last move left it, the browser scrolls and the page would go twice as far.
- * The first move is ours, a few pixels at most. Call `pan` with the way of the finger (px) and
- * `reset` when a new pinch begins.
+ * Scrolls `scroller` with the finger left after a pinch, unless the browser does it (it differs,
+ * and the touch event does not tell): a scroller that is not where the last move left it is
+ * scrolled by the browser. Call `pan` with the way of the finger (px), `reset` on a new pinch.
  */
 export function createPanFollower(scroller) {
     let left = null;
