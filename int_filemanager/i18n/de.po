@@ -2751,6 +2751,7 @@ msgid "Requests to a share in a minute"
 msgstr "Anfragen an eine Freigabe pro Minute"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form_dialog
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form_dialog
 msgid "Save"
 msgstr "Speichern"
@@ -3227,3 +3228,22 @@ msgstr "Hochladen gibt es nur für Ordner."
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.xml:0
 msgid "View"
 msgstr "Ansehen"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
+msgid "New"
+msgstr "Neu"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action_new
+msgid "New folder"
+msgstr "Neuer Ordner"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form_dialog
+msgid "Discard"
+msgstr "Verwerfen"
