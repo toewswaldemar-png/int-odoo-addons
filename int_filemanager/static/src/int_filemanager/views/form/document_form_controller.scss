@@ -1,0 +1,19 @@
+.o_int_filemanager_document {
+    .o_int_filemanager_document_file {
+        min-width: 0;
+        min-height: 60vh;
+    }
+
+    .o_int_filemanager_document_panel {
+        flex-shrink: 0;
+
+        // Below the file the panel takes the whole width, whatever it was pulled to.
+        @include media-breakpoint-down(lg) {
+            width: 100% !important;
+
+            .o_resizable_panel_handle {
+                display: none;
+            }
+        }
+    }
+}

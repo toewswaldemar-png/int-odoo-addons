@@ -14,8 +14,8 @@ TEMPLATES = (
     "int_filemanager.DocumentListRenderer",
     "int_filemanager.DocumentListView.Buttons",
     "int_filemanager.DocumentNameField",
+    "int_filemanager.DocumentFormController",
     "int_filemanager.DocumentPreview",
-    "int_filemanager.DocumentPreviewButton",
     "int_filemanager.DocumentThumbnailField",
     "int_filemanager.SizeField",
 )
@@ -24,10 +24,19 @@ TEMPLATES = (
 # module and a piece of its source that the module's own code relies on). The bundle is
 # minified: no spaces around the signs.
 CORE_PARTS = {
-    # DocumentFormRenderer: the preview beside the form is the mail module's layout with its
-    # own component and `hasFile`.
-    "@mail/chatter/web/form_renderer": ("mailComponents", "hasFile(", "mailLayout("),
-    "@mail/chatter/web/form_compiler": ("div.o_attachment_preview", "AttachmentView"),
+    # DocumentFormController: the panel at the side of the file can be pulled to another width.
+    "@web/core/resizable_panel/resizable_panel": (
+        "handleSide",
+        "initialWidth",
+        "minWidth",
+        "onResize",
+    ),
+    # DocumentFormController: the chatter of the mail module as a component of its own, given
+    # the record it belongs to by model and id; it reads `env.chatter` that mail puts into the
+    # form controller and takes `has_activities` from the arch that mail's parser extends.
+    "@mail/chatter/web_portal/chatter": ("threadModel", "threadId", "changeThread("),
+    "@mail/chatter/web/form_controller": ("fetchThreadData", "MAIL:RELOAD-THREAD"),
+    "@mail/chatter/web/form_arch_parser": ("has_activities",),
     # DocumentKanbanRecord: the click on a card (as the core's `product.document` takes it).
     "@web/views/kanban/kanban_record": ("onGlobalClick(", "CANCEL_GLOBAL_CLICK"),
     # DocumentKanbanController: the class on the root of the kanban, and the setting of the
@@ -78,7 +87,6 @@ class TestAssets(TransactionCase):
             "fields/thumbnail/document_thumbnail_field",
             "file_viewer/document_file_viewer",
             "file_viewer/document_preview",
-            "file_viewer/document_preview_button",
             "file_viewer/file_viewer_frame_zoom_hook",
             "file_viewer/file_viewer_frames_hook",
             "file_viewer/file_viewer_swipe_hook",
@@ -86,7 +94,7 @@ class TestAssets(TransactionCase):
             "touch/momentum",
             "touch/pinch",
             "touch/swipe",
-            "views/form/document_form_renderer",
+            "views/form/document_form_controller",
             "views/form/document_form_view",
             "views/kanban/document_kanban_controller",
             "views/kanban/document_kanban_record",
@@ -131,3 +139,24 @@ class TestAssets(TransactionCase):
         # The name is also in the class that uses the template: look for the registration.
         for template in TEMPLATES:
             self.assertIn(f'registerTemplate("{template}"', self.script)
+
+    def test_the_styles_of_the_module_compile(self):
+        # A style that does not compile (a `min()` with % and rem, say) breaks the whole bundle of
+        # the web client: the user sees an error at every load. The build only logs it.
+        for name in ("web.assets_backend", "web.assets_web"):
+            bundle = self.env["ir.qweb"]._get_asset_bundle(name, css=True, js=False)
+            bundle.css()
+            self.assertEqual(bundle.css_errors, [], name)
+
+    def test_the_templates_of_the_core_have_the_places_the_page_of_a_document_uses(self):
+        # DocumentFormController inherits the template of the form view: it puts its buttons into
+        # the slot next to the pager (the list does the same) in front of the slot of the cog menu,
+        # and wraps the renderer in the layout of the page; a new Odoo may change them.
+        for template, pieces in (
+            ("web.FormView", ("control-panel-additional-actions", "props.Renderer", "<Layout")),
+            ("web.ControlPanel", ("control-panel-navigation-additional", "o_cp_pager")),
+        ):
+            start = self.script.index(f'registerTemplate("{template}"')
+            end = self.script.find("registerTemplate(", start + 1)
+            for piece in pieces:
+                self.assertIn(piece, self.script[start:end], f"{piece} is gone from {template}")

@@ -4,9 +4,8 @@
         <field name="name">int.filemanager.document.view.list</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- multi_edit: select documents and edit the folder of one of them to move them all.
-                 No new, import or duplicate: documents come from the upload and the reading in
-                 only (the users have no right to create them). -->
+            <!-- multi_edit: edit the folder of one row to move all ticked ones. No create:
+                 documents come from the upload and the reading in only. -->
             <list
                 js_class="int_filemanager_document_list"
                 multi_edit="1"
@@ -14,7 +13,6 @@
                 import="0"
                 duplicate="0"
             >
-                <!-- The buttons for the ticked rows: a row has none, a click on it shows the file. -->
                 <header>
                     <button name="action_open_form" type="object" string="Properties" icon="fa-pencil" />
                     <button name="action_download" type="object" string="Download" icon="fa-download" />
@@ -38,8 +36,6 @@
                 <field name="size" widget="int_filemanager_size" />
                 <field name="write_date" string="Modified" />
                 <field name="tag_ids" widget="many2many_tags" optional="show" />
-                <!-- Where the words of the full text search are: only while that field is searched
-                     (its context sets the words, see the search view). -->
                 <field
                     name="content_hits"
                     widget="int_filemanager_content_hits"
@@ -59,18 +55,14 @@
         <field name="name">int.filemanager.document.view.kanban</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- A click on a card shows the file (see DocumentKanbanRecord), as a click on a
-                 row of the list does; the form is in the menu of the card (type="open": the
-                 form with the pager over the cards). No new: documents come from the upload
-                 and the reading in only. -->
+            <!-- A click on a card shows the file (DocumentKanbanRecord); the form is in the menu of
+                 the card (type="open"). -->
             <kanban
                 js_class="int_filemanager_document_kanban"
                 create="0"
                 quick_create="0"
                 group_create="0"
             >
-                <!-- The button for the ticked card (Alt+click, or a long press on a touch
-                     screen). No "Properties": that is in the menu of the card (type="open"). -->
                 <header>
                     <button name="action_download" type="object" string="Download" icon="fa-download" />
                 </header>
@@ -104,10 +96,8 @@
         <field name="name">int.filemanager.document.view.pivot</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- Where the space goes. The rows are the file types: there are few of them, a
-                 row for each folder would be thousands. Another grouping: click "Total" in
-                 the head of the rows; the search panel narrows to a folder first. The size is
-                 a sum of many files, so its formatter shows a decimal (see size_field.js). -->
+            <!-- Where the space goes: the rows are the file types (a row for each folder would be
+                 thousands). -->
             <pivot string="Documents" default_order="size desc">
                 <field name="mimetype" type="row" />
                 <field name="size" type="measure" widget="int_filemanager_size" />
@@ -130,7 +120,8 @@
         <field name="name">int.filemanager.document.view.form</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- js_class: the preview of the file beside the form (see DocumentFormRenderer). -->
+            <!-- js_class: the file with this form in a panel at its side (DocumentFormRenderer); no
+                 chatter here, the renderer shows it on request. -->
             <form js_class="int_filemanager_document_form" create="0" duplicate="0">
                 <header>
                     <button
@@ -167,11 +158,6 @@
                         bg_color="text-bg-danger"
                         invisible="active"
                     />
-                    <!-- The core docks the preview beside the form from the width XXL on; below
-                         it this button shows the file. -->
-                    <div class="d-xxl-none mb-3">
-                        <widget name="int_filemanager_preview_button" />
-                    </div>
                     <group>
                         <field name="active" invisible="1" />
                         <field name="checksum" invisible="1" />
@@ -181,14 +167,9 @@
                         <field name="mimetype" />
                         <field name="size" widget="int_filemanager_size" />
                         <field name="tag_ids" widget="many2many_tags" />
-                        <!-- A file that a guest uploaded through a share. -->
                         <field name="share_id" invisible="not share_id" />
                     </group>
                 </sheet>
-                <!-- Filled by DocumentFormRenderer, in the layout of the core: the form on the
-                     left, the preview on the right, the chatter below. -->
-                <div class="o_attachment_preview" />
-                <chatter />
             </form>
         </field>
     </record>
@@ -201,7 +182,6 @@
                 <field name="name" />
                 <field name="folder_id" context="{'hierarchical_naming': True}" />
                 <field name="tag_ids" />
-                <!-- The words typed here go to the context: the list shows where they are. -->
                 <field
                     name="content_search"
                     string="Full text"
@@ -212,9 +192,8 @@
                     string="Archived"
                     domain="[('active', '=', False)]"
                 />
-                <!-- The filters the activity menu of the top bar sets (search_default_<name>,
-                     see the activity menu of the mail module): without them it would show every
-                     document. Not offered in the filter menu, as in the core's views. -->
+                <!-- The filters the activity menu of the top bar sets (search_default_<name>); not
+                     offered in the filter menu. -->
                 <separator invisible="1" />
                 <filter
                     name="filter_activities_my"
@@ -241,7 +220,6 @@
                     invisible="1"
                     domain="[('my_activity_date_deadline', '&gt;', 'today')]"
                 />
-                <!-- The groups of the "Group By" menu, also the ones of the graph. -->
                 <group>
                     <filter
                         name="group_by_folder"
@@ -255,12 +233,9 @@
                     />
                     <filter name="group_by_tag" string="Tags" context="{'group_by': 'tag_ids'}" />
                 </group>
-                <!-- Odoo's own search panel. expand="1": all folders in one call, not looked
-                     up again at every search; limit="0": the default 200 would end in an
-                     error message with more folders. No counters (they count all documents
-                     at every search). view_types: the core shows the panel in the list and
-                     the kanban only; here also in the pivot and the graph, to narrow them to
-                     a folder. -->
+                <!-- expand="1": all folders in one call; limit="0": the default 200 ends in an
+                     error with more folders; no counters (they count all documents at every
+                     search); view_types adds the pivot and the graph. -->
                 <searchpanel view_types="list,kanban,pivot,graph">
                     <field
                         name="folder_id"
@@ -295,10 +270,9 @@
         sequence="0"
     />
 
-    <!-- The views of the guests of a share (the gateway names them itself; the guest never
-         chooses a view; the high priority keeps them from being the default of a type). Lean copies of the views above: no widget of another module, no button
-         of type object, no checksum (it would show which files are the same), no search in the
-         name of a folder or a tag (the panel does that). -->
+    <!-- The views of the guests of a share (the gateway names them): lean copies of the views
+         above, with a high priority so that they are never a default; no widget of another module,
+         no object button, no checksum. -->
     <record id="int_filemanager_document_view_guest_list" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.guest.list</field>
         <field name="model">int.filemanager.document</field>

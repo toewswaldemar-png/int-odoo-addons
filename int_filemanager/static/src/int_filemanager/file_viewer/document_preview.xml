@@ -1,25 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
     <t t-name="int_filemanager.DocumentPreview">
-        <!-- The classes of mail.AttachmentView: the style of o_attachment_preview is for them. -->
-        <div t-if="state.file and state.file.isViewable" class="o-mail-Attachment">
-            <!-- No title with the name, as the core's has: the form beside shows it, and the
-                 title would push the picture down out of the height the style gives it. -->
-            <div t-if="state.file.isImage" class="o-mail-Attachment-imgContainer">
-                <img class="img img-fluid d-block" t-att-src="state.file.defaultSource" alt="" />
-            </div>
-            <iframe
-                t-elif="state.file.isPdf or state.file.isText"
-                class="border-0"
-                t-att-src="state.file.defaultSource"
-                t-att-title="state.file.name"
-            />
-            <video t-elif="state.file.isVideo" class="w-100 mw-100" controls="controls">
-                <source
-                    t-att-data-type="state.file.mimetype"
-                    t-att-src="state.file.defaultSource"
+        <div class="o_int_filemanager_preview h-100 bg-body">
+            <div class="o_int_filemanager_preview_view h-100 position-relative">
+                <div
+                    t-if="props.file.isImage"
+                    class="d-flex align-items-center justify-content-center h-100 p-3"
+                >
+                    <img
+                        class="mw-100 mh-100 object-fit-contain"
+                        t-att-src="props.file.defaultSource"
+                        t-att-alt="props.file.name"
+                    />
+                </div>
+                <iframe
+                    t-elif="props.file.isPdf or props.file.isText"
+                    class="o_int_filemanager_preview_frame w-100 h-100 border-0"
+                    t-att-src="props.file.defaultSource"
+                    t-att-title="props.file.name"
                 />
-            </video>
+                <video
+                    t-elif="props.file.isVideo"
+                    class="w-100 h-100"
+                    controls="controls"
+                    t-att-src="props.file.defaultSource"
+                />
+                <div
+                    t-else=""
+                    class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"
+                >
+                    <i class="fa fa-file-o fa-4x mb-3" role="img" aria-hidden="true" />
+                    <span>There is no preview for this type of file.</span>
+                </div>
+            </div>
         </div>
     </t>
 </templates>

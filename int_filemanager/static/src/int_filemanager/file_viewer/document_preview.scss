@@ -1,6 +1,4 @@
-// The preview beside the form shows the whole picture. The core's `img-fluid` limits only the
-// width, so a tall picture needs a scrollbar (attachment_view.scss of the mail module).
-.o_attachment_preview .o-mail-Attachment-imgContainer > img {
-    max-height: 100%;
-    object-fit: contain;
+// Lets a frame or a picture shrink instead of pushing the page out.
+.o_int_filemanager_preview_view {
+    min-height: 0;
 }

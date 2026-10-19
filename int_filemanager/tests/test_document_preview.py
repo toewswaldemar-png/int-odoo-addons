@@ -3,7 +3,7 @@ from odoo.tests.common import TransactionCase, new_test_user, tagged
 
 @tagged("post_install", "-at_install")
 class TestDocumentPreview(TransactionCase):
-    """The preview of the file: beside the form, and by a click on a card of the kanban."""
+    """The preview of the file: on the page of the document, and by a click on a card of the kanban."""
 
     @classmethod
     def setUpClass(cls):
@@ -19,23 +19,18 @@ class TestDocumentPreview(TransactionCase):
         views = self.Document.with_user(self.user).get_views([(False, t) for t in view_types])
         return views["views"]
 
-    def test_the_form_has_the_preview_beside_it_and_the_button_below_the_width_xxl(self):
+    def test_the_form_is_the_page_with_the_file_and_has_no_preview_of_the_mail_module(self):
         arch = self._views("form")["form"]["arch"]
-        # The class that makes the core's form compiler build the layout with a preview, and the
-        # view class that puts the component of the module in the place of the core's one.
+        # The view class whose renderer puts the file beside the form.
         self.assertIn('js_class="int_filemanager_document_form"', arch)
-        self.assertIn('<div class="o_attachment_preview"/>', arch)
-        # The core docks the preview from the width XXL on; below it the button shows the file.
-        self.assertIn('widget name="int_filemanager_preview_button"', arch)
-        self.assertIn("d-xxl-none", arch)
-        # The renderer works out whether there is a file from these.
+        # The mail module's own preview and the button that stood for it are gone.
+        self.assertNotIn("o_attachment_preview", arch)
+        self.assertNotIn("int_filemanager_preview_button", arch)
+        # The chatter is the renderer's to show, when the user asks for it.
+        self.assertNotIn("<chatter", arch)
+        # The renderer works out the file from these.
         for name in ("name", "mimetype", "checksum", "size"):
             self.assertIn(f'name="{name}"', arch)
-
-    def test_the_preview_comes_after_the_sheet_and_before_the_chatter(self):
-        arch = self._views("form")["form"]["arch"]
-        self.assertLess(arch.index("</sheet>"), arch.index("o_attachment_preview"))
-        self.assertLess(arch.index("o_attachment_preview"), arch.index("<chatter"))
 
     def test_the_kanban_shows_a_picture_and_has_the_form_in_the_menu_of_the_card(self):
         arch = self._views("kanban")["kanban"]["arch"]

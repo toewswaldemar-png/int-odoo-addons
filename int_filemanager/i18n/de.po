@@ -401,6 +401,7 @@ msgstr "Erledigt"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+#: code:addons/int_filemanager/static/src/int_filemanager/views/form/document_form_controller.xml:0
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
 msgid "Download"
 msgstr "Herunterladen"
@@ -1283,9 +1284,27 @@ msgstr "Offen"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/file_viewer/document_preview_button.xml:0
-msgid "Preview"
-msgstr "Vorschau"
+#: code:addons/int_filemanager/static/src/int_filemanager/views/form/document_form_controller.xml:0
+msgid "Details"
+msgstr "Details"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/form/document_form_controller.xml:0
+msgid "Chatter"
+msgstr "Chatter"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/form/document_form_controller.xml:0
+msgid "Full screen"
+msgstr "Vollbild"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/file_viewer/document_preview.xml:0
+msgid "There is no preview for this type of file."
+msgstr "Für diesen Dateityp gibt es keine Vorschau."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_nice
