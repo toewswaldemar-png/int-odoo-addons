@@ -4,8 +4,7 @@
         <field name="name">int.filemanager.document.view.list</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- multi_edit: edit the folder of one row to move all ticked ones. No create:
-                 documents come from the upload and the reading in only. -->
+            <!-- multi_edit: editing the folder of one row moves all ticked ones. -->
             <list
                 js_class="int_filemanager_document_list"
                 multi_edit="1"
@@ -55,8 +54,6 @@
         <field name="name">int.filemanager.document.view.kanban</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- A click on a card shows the file (DocumentKanbanRecord); the form is in the menu of
-                 the card (type="open"). -->
             <kanban
                 js_class="int_filemanager_document_kanban"
                 create="0"
@@ -78,7 +75,6 @@
                     <t t-name="card">
                         <field name="mimetype" widget="int_filemanager_document_thumbnail" />
                         <field name="name" class="fw-bold text-truncate d-block mt-2" />
-                        <!-- Hidden by the smallest size of the cards (document_kanban_view.scss). -->
                         <div class="o_int_filemanager_card_meta">
                             <div class="d-flex justify-content-between text-muted small">
                                 <field name="folder_id" class="text-truncate" />
@@ -96,8 +92,6 @@
         <field name="name">int.filemanager.document.view.pivot</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- Where the space goes: the rows are the file types (a row for each folder would be
-                 thousands). -->
             <pivot string="Documents" default_order="size desc">
                 <field name="mimetype" type="row" />
                 <field name="size" type="measure" widget="int_filemanager_size" />
@@ -120,8 +114,7 @@
         <field name="name">int.filemanager.document.view.form</field>
         <field name="model">int.filemanager.document</field>
         <field name="arch" type="xml">
-            <!-- js_class: the file with this form in a panel at its side (DocumentFormRenderer); no
-                 chatter here, the renderer shows it on request. -->
+            <!-- No chatter here: the js_class renderer shows it on request. -->
             <form js_class="int_filemanager_document_form" create="0" duplicate="0">
                 <header>
                     <button
@@ -192,8 +185,7 @@
                     string="Archived"
                     domain="[('active', '=', False)]"
                 />
-                <!-- The filters the activity menu of the top bar sets (search_default_<name>); not
-                     offered in the filter menu. -->
+                <!-- Set by the activity menu (search_default_<name>), not offered in the filter menu. -->
                 <separator invisible="1" />
                 <filter
                     name="filter_activities_my"
@@ -270,9 +262,7 @@
         sequence="0"
     />
 
-    <!-- The views of the guests of a share (the gateway names them): lean copies of the views
-         above, with a high priority so that they are never a default; no widget of another module,
-         no object button, no checksum. -->
+    <!-- Guest views of a share: high priority so they are never a default. -->
     <record id="int_filemanager_document_view_guest_list" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.guest.list</field>
         <field name="model">int.filemanager.document</field>

@@ -5,11 +5,7 @@ import { ListRenderer } from "@web/views/list/list_renderer";
 import { documentFilesFromRecords } from "../../document_file";
 import { useDocumentFileViewer } from "../../file_viewer/document_file_viewer";
 
-/**
- * The list with the progress of the running uploads above it. A click on the picture of a row
- * or on a hit of the full text search shows the file in the viewer; the rest of the row opens
- * the form, as in every list of the core.
- */
+/** The list with the progress of the running uploads above it. */
 export class DocumentListRenderer extends ListRenderer {
     static template = "int_filemanager.DocumentListRenderer";
     static components = {
@@ -24,10 +20,7 @@ export class DocumentListRenderer extends ListRenderer {
         this.fileViewer = useDocumentFileViewer();
     }
 
-    /**
-     * @override
-     * Rows that are ticked and clicks for a new window keep the core's behavior.
-     */
+    /** @override Ticked rows and clicks for a new window keep the core's behavior. */
     async onCellClicked(record, column, ev, newWindow) {
         const hit = ev.target.closest?.(".o_int_filemanager_hit");
         const isPicture = Boolean(ev.target.closest?.(".o_int_filemanager_thumbnail"));

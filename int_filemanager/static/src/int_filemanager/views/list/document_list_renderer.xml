@@ -5,7 +5,6 @@
         t-inherit="web.ListRenderer"
         t-inherit-mode="primary"
     >
-        <!-- Inside the list, above the table: next to the list the progress takes a column. -->
         <xpath expr="//table[@t-ref='table']" position="before">
             <FileUploadProgressContainer
                 fileUploads="fileUploadService.uploads"

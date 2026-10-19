@@ -5,31 +5,20 @@ from itertools import accumulate
 from odoo import api, fields, models
 from odoo.tools import SQL
 
-# The most hits shown for one file; the rest is only counted.
 HITS_PER_FILE = 3
-# Characters of text shown before and after the first word of a hit.
 SNIPPET_RADIUS = 70
 # Words of a page handed to the PDF viewer to mark, and the longest one.
 TERMS_PER_PAGE = 8
 TERM_LENGTH = 60
-# Around a hit word in ``ts_headline``. Control characters: a text rarely has them, and a page
-# that has them gets no excerpt (the marks could not be told from the text).
+# Around a hit word in ``ts_headline``: control characters, so a page with them gets no excerpt.
 MARK_START, MARK_END = "\x02", "\x03"
 MARKED = re.compile(f"{MARK_START}(.*?){MARK_END}", re.DOTALL)
-# What ``folded`` turns into two characters (a capital umlaut becomes "ae" as well).
 FOLDED_CAPITALS = {"Ä": "Ae", "Ö": "Oe", "Ü": "Ue"}
 FOLDED_SMALL = (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss"))
 
 
 def folded(expression):
-    """SQL text that makes ``expression`` ready for the full text search: umlauts folded.
-
-    ``Müller`` and ``Mueller`` become one word (the ``german`` configuration alone makes
-    ``mull`` and ``muell``). The one place of the folding: the index and the search use it, so
-    they cannot drift apart (the index would not be found). It must not depend on the locale of
-    the database: ``lower`` follows ``LC_CTYPE`` and leaves ``Ü`` as it is in a database with
-    ``LC_CTYPE C``, so the capitals are named. Only ``replace`` and ``lower`` (immutable).
-    """
+    """Fold umlauts in SQL for index and search alike; capitals first as ``lower`` follows ``LC_CTYPE``."""
     capitals = f"replace(replace(replace({expression}, 'Ä', 'Ae'), 'Ö', 'Oe'), 'Ü', 'Ue')"
     return (
         f"replace(replace(replace(replace(lower({capitals}), 'ä', 'ae'), 'ö', 'oe'), 'ü', 'ue'),"
@@ -38,7 +27,7 @@ def folded(expression):
 
 
 def _folded_length(char):
-    """How many characters ``folded`` makes of one character: the same steps, in Python."""
+    """How many characters ``folded`` makes of one character, in Python."""
     text = FOLDED_CAPITALS.get(char, char).lower()
     for small, plain in FOLDED_SMALL:
         text = text.replace(small, plain)
@@ -46,10 +35,7 @@ def _folded_length(char):
 
 
 def _strip_marks(headline):
-    """The text of a headline without the marks, and the places of the marked words in it.
-
-    :return: ``(text, [(start, end)])``
-    """
+    """The text of a headline without the marks, and ``[(start, end)]`` of the marked words in it."""
     pieces, spans, length, last = [], [], 0, 0
     for match in MARKED.finditer(headline):
         before, word = headline[last : match.start()], match.group(1)
@@ -62,15 +48,10 @@ def _strip_marks(headline):
 
 
 def _excerpt(content, headline):
-    """The text of a page and the places of the words that were found in it.
+    """The page text and the places of the found words in it (the headline's are of the folded text).
 
-    The headline is made from the folded text (that is what the index and the search read),
-    so its places are those of the folded text. They are moved to the text of the page, where
-    ``Müller`` is still ``Müller``. If the two do not fit (the folding of the database does
-    not match the one of Python), the folded text is given: the words are right, the case and
-    the umlauts are gone.
-
-    :return: ``(text, [(start, end)])``; no spans if the marks cannot be told from the text
+    :return: ``(text, [(start, end)])``; the folded text if the foldings of database and Python
+        differ, no spans if the marks cannot be told from the text
     """
     if MARK_START in content or MARK_END in content:
         return "", []
@@ -83,12 +64,7 @@ def _excerpt(content, headline):
 
 
 def _snippet(text, spans):
-    """The part of ``text`` around its first marked word, as runs of text.
-
-    :param spans: ``[(start, end)]``, the marked words of ``text``
-    :return: ``[[string, is_match], ...]``: white space collapsed, ``…`` where the text goes on,
-        words cut off at neither end; empty if there is no marked word
-    """
+    """The part of ``text`` around its first marked word, as ``[[string, is_match], ...]``."""
     if not spans:
         return []
     first_start, first_end = spans[0]
@@ -127,26 +103,20 @@ def _terms(text, spans):
 
 
 class IntFilemanagerTextPage(models.Model):
-    """The text of one page of a file (a block of at most some KB for files without pages).
-
-    Read by the search and by the administrator only: the users have no access right, the
-    documents that point to the text by checksum carry the rules of their folders.
-    """
+    """The text of one page of a file; users have no access right, documents reach it by checksum."""
 
     _name = "int.filemanager.text.page"
     _description = "Filemanager text of a page"
     _order = "text_id, page"
-    # Millions of rows; nobody asks who made or changed a page.
+    # Millions of rows.
     _log_access = False
 
     text_id = fields.Many2one("int.filemanager.text", required=True, ondelete="cascade")
     page = fields.Integer(required=True)
-    # Not read along with the other fields: it is large.
     content = fields.Text(prefetch=False)
-    # A scan: the page has a picture and (almost) no text. The recognition reads these pages only.
+    # A picture and (almost) no text; only the recognition reads these pages.
     scan = fields.Boolean()
 
-    # Also the index of ``text_id`` (its first column) for the cascade and the lookups.
     _page_per_text = models.UniqueIndex(
         "(text_id, page)", "A text has one entry per page."
     )
@@ -155,18 +125,12 @@ class IntFilemanagerTextPage(models.Model):
 
     @api.model
     def _content_hits(self, checksums, words):
-        """Where in the files the words are: the pages with a hit, with an excerpt of each.
+        """Pages with a hit, with an excerpt of each, for the words (as the document search finds them).
 
-        Meant for the field of the documents the user may read (``content_hits``): nothing here
-        asks who may see a file, the caller gives the checksums of the files it may show. The
-        words are searched as the search of the documents searches them (same folding and
-        stemming, any of the words), so a hit is shown for exactly the files that were found.
+        Does not check access: the caller passes the checksums of the files the user may read.
 
-        :param checksums: the files (blobs) to look in
         :param words: what the user typed; each is a ``websearch`` expression
-        :return: ``{checksum: {"hits": [{"page", "parts", "terms"}], "more": n}}`` for the
-            files that have a hit; ``hits`` are the first pages, ``more`` the pages left out;
-            ``parts`` is the excerpt (see ``_snippet``), ``terms`` the words as written there
+        :return: ``{checksum: {"hits": [{"page", "parts", "terms"}], "more": n}}``, ``more`` = pages left out
         """
         checksums = tuple(set(checksums))
         if not checksums or not words:
@@ -183,10 +147,8 @@ class IntFilemanagerTextPage(models.Model):
                 for word in words
             ),
         )
-        # The index finds the hits at once (it is exact), but for a word that is on nearly every
-        # page PostgreSQL counts the cost of reading the table, not the cost of working out the
-        # entry of every page, and reads the table: 20 seconds for 50,000 pages instead of 0.3.
-        # Only this query is kept from reading the table that way.
+        # For a word on nearly every page PostgreSQL prefers a table scan to the index (20 s for
+        # 50,000 pages instead of 0.3 s); keep this query off it.
         cr = self.env.cr
         cr.execute(SQL("SELECT current_setting('enable_seqscan')"))
         [[seqscan]] = cr.fetchall()

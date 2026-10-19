@@ -1,5 +1,4 @@
-// The least sideways way (px) of a swipe, and how many times it must exceed the vertical way:
-// a finger that scrolls a page drifts a little to the side.
+// A finger that scrolls a page drifts sideways: a swipe needs this much more than that.
 const SWIPE_DISTANCE = 60;
 const SWIPE_RATIO = 2;
 // Rounding: a scroller this much wider than it shows does not count as scrolling.
@@ -12,10 +11,7 @@ export function swipeDirection(dx, dy) {
     return dx < 0 ? "left" : "right";
 }
 
-/**
- * Whether `element` or a parent scrolls sideways (a zoomed PDF page, a long line of text); the
- * swipe then belongs to that scrolling, as in the core's `ActionSwiper`.
- */
+/** Whether `element` or a parent scrolls sideways: the swipe then belongs to that. */
 export function scrollsSideways(element) {
     const doc = element.ownerDocument;
     const page = doc.scrollingElement;
@@ -35,10 +31,8 @@ export function scrollsSideways(element) {
 }
 
 /**
- * Call `onSwipe` when one finger swipes over `target`. The listeners are passive, so scrolling,
- * pinching and clicks are unaffected. A swipe that ends with text selected is ignored: a finger
- * that selects text moves sideways too.
- *
+ * Call `onSwipe` when one finger swipes over `target`; a swipe that ends with text selected is
+ * ignored.
  * @param {function(TouchEvent): Boolean} [params.canSwipe] asked when a finger touches down
  * @returns {function(): void} removes the listeners
  */

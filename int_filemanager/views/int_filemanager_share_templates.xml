@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <!-- The pages of a share, for guests with no account: no backend. A file is plain HTML, a
-         folder starts an Owl app with its own bundle, the password page has a small script. All
-         that a guest or the data brings in goes through t-out. -->
+    <!-- Guest pages: everything a guest or the data brings in must go through t-out. -->
     <template id="share_layout" name="Filemanager share: the head of a page">
         <t t-call="web.layout">
             <t t-set="head">

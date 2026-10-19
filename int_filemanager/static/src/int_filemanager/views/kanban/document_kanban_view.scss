@@ -1,6 +1,5 @@
-// The size of the cards (DocumentKanbanController puts one of the classes on
-// the root). The core's card is 320 px and grows to fill the row: here the
-// width is the size chosen (`--KanbanRecord-width`).
+// The core's card is 320 px and fills the row; here the width is chosen
+// (`--KanbanRecord-width`).
 .o_int_filemanager_tiles {
     --DocumentTile-width: 15rem;
     --DocumentTile-picture-height: 8rem;
@@ -29,8 +28,7 @@
             flex-grow: 0;
 
             @include media-breakpoint-down(md) {
-                // Beats the core's rule of one card per row
-                // (kanban_controller.scss).
+                // Beats the core's rule of one card per row.
                 --KanbanRecord-border-width: #{$border-width};
 
                 flex: 0 0 calc(100% / var(--DocumentTile-columns));

@@ -7,7 +7,6 @@
     >
         <xpath expr="//span[@t-esc='formattedValue']" position="replace">
             <span class="d-inline-flex align-items-center gap-2">
-                <!-- Not draggable: a picture dragged onto the list would be dropped as a file. -->
                 <img
                     t-if="thumbnailUrl"
                     class="o_int_filemanager_thumbnail"

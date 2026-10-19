@@ -9,9 +9,8 @@ import { DocumentListRenderer } from "./document_list_renderer";
 const BROWSER_MENU = "a, input, textarea, select, [contenteditable]";
 
 /**
- * The list of documents with a menu for the right click on a row. The menu is the core's
- * `Dropdown`, opened by hand; its toggler is a point without size moved to the pointer first.
- * The row of the click is ticked when it is not (the buttons act on the ticked rows).
+ * The list of documents with a menu for the right click on a row. The core's `Dropdown` is opened
+ * by hand, its toggler a point without size moved to the pointer.
  */
 export class DocumentListContextMenuRenderer extends DocumentListRenderer {
     static template = "int_filemanager.DocumentListContextMenuRenderer";
@@ -27,8 +26,7 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
     async onContextMenu(ev) {
         const { list } = this.props;
         const row = ev.target.closest?.("tr.o_data_row");
-        // A small screen keeps the touch gestures of the core; the rows of the groups of a
-        // grouped list are not in `list.records` and keep the menu of the browser.
+        // A small screen keeps the core's touch gestures; group rows keep the browser menu.
         const record =
             !this.uiService.isSmall && row && list.records.find((r) => r.id === row.dataset.id);
         if (
@@ -56,8 +54,7 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
                     !evaluateBooleanExpr(button.invisible, list.evalContext)
             ),
             onView: this.getViewAction(record),
-            // The folder of the file is the default parent, as in a file manager; a list
-            // without the folders of the panel (the documents of a record) has no such item.
+            // A list without the folders of the panel has no such item.
             newFolder: getFoldersSection(this.env.searchModel)
                 ? () => this.newFolder(record.data.folder_id?.id)
                 : undefined,
@@ -65,10 +62,7 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
         this.dropdownState.open();
     }
 
-    /**
-     * Runs a button of the head of the list for the ticked rows, as `MultiRecordViewButton` does.
-     * @param {Object} button the button of the arch
-     */
+    /** Runs a button of the list head for the ticked rows, as `MultiRecordViewButton` does. */
     async onButtonSelected(button) {
         const { list } = this.props;
         const resIds = await list.getResIds(true);
@@ -90,19 +84,12 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
         });
     }
 
-    /**
-     * @param {String} icon icon of a button of the arch (FontAwesome or Odoo)
-     * @returns {String} its classes
-     */
+    /** @param {String} icon FontAwesome or Odoo icon of a button of the arch */
     getIconClass(icon) {
         return icon.startsWith("oi-") ? `oi oi-fw ${icon}` : `fa fa-fw ${icon}`;
     }
 
-    /**
-     * @param {Object} record the row of the click
-     * @returns {Function|undefined} opens the viewer, when the row is the only one ticked and
-     *      a browser can show the file
-     */
+    /** @returns {Function|undefined} opens the viewer, if the row is the only one ticked */
     getViewAction(record) {
         const { list } = this.props;
         if (list.selection.length !== 1 || list.selection[0] !== record) {

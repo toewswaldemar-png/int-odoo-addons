@@ -4,15 +4,10 @@ import { useFrameDocuments } from "./file_viewer_frames_hook";
 import { attachSwipe } from "../touch/swipe";
 
 const BUTTONS = ".o-FileViewer-header, .o-FileViewer-toolbarButton, .o-FileViewer-navigation";
-// The height of the bar a browser draws on a video (px): a finger that starts there sets the
-// position of the video and does not turn the page.
+// Height of the bar a browser draws on a video (px): a swipe starting there seeks the video.
 const VIDEO_CONTROLS_HEIGHT = 64;
 
-/**
- * Swipe to the next or the previous file in the file viewer, also inside the frames of PDFs
- * and texts, which do not give their touches to the page around them.
- * @param {import("@web/core/file_viewer/file_viewer").FileViewer} viewer
- */
+/** Swipe to the next or previous file, also inside frames, which keep their touches. */
 export function useFileViewerSwipe(viewer) {
     const root = useRef("autofocus");
 

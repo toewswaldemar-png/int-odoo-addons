@@ -2,10 +2,7 @@ import { Component } from "@odoo/owl";
 import { Dropzone } from "@web/core/dropzone/dropzone";
 import { _t } from "@web/core/l10n/translation";
 
-/**
- * The core's dropzone with a text that says where the files go: the record, the folder chosen in
- * the search panel, or that none is chosen yet.
- */
+/** The core's dropzone with a text that says where the files go. */
 export class DocumentDropzone extends Component {
     static template = "int_filemanager.DocumentDropzone";
     static components = { Dropzone };

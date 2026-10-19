@@ -1,8 +1,5 @@
-// The upload area of the guest page: a button, a dropzone, the running uploads and "My uploads"
-// (the files this browser has a receipt for).
-//
-// The core's `file_upload` service neither waits for an upload nor returns the server's answer,
-// so the page listens for its events and reads the receipt from `upload.xhr.responseText`.
+// The upload area of the guest page. The core's `file_upload` service does not return the
+// server's answer, so the receipt is read from `upload.xhr.responseText` on its events.
 import { Component, onMounted, useRef, useState } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { useCustomDropzone } from "@web/core/dropzone/dropzone_hook";

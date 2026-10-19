@@ -8,7 +8,7 @@ const OCR_FIELD = "ocr_content";
 const THUMBNAIL_FIELD = "thumbnail";
 // The core's list without svg (stored as text here), tiff and ico (not shown by a browser).
 const IMAGE_MIMETYPES = ["image/bmp", "image/gif", "image/jpeg", "image/png", "image/webp"];
-// Played by the browser's player: the core's audio/video list plus what it lacks.
+// The core's audio/video list plus what it lacks.
 const MEDIA_MIMETYPES = [
     "audio/aac",
     "audio/flac",
@@ -19,7 +19,7 @@ const MEDIA_MIMETYPES = [
     "audio/x-wav",
     "video/ogg",
 ];
-// A text file is read whole into the viewer: above this size it is only a download.
+// A text file is read whole into the viewer.
 export const TEXT_MAX_SIZE = 2 * 1024 * 1024;
 
 /** The routes of the core; the guest page replaces them with those of the share. */
@@ -34,7 +34,7 @@ function contentRoute(id, field) {
     return addresses.content(id, field);
 }
 
-/** A document as the core's file viewer wants a file: its bytes are served by the content route. */
+/** A document as the core's file viewer wants a file. */
 export class DocumentFile extends FileModelMixin(Object) {
     /** @param {Object} values the fields of a document; `hit`: the place a text search found */
     constructor(values) {
@@ -56,7 +56,7 @@ export class DocumentFile extends FileModelMixin(Object) {
         return params;
     }
 
-    /** @override The download is the upload, never the recognized PDF. */
+    /** @override The download is never the recognized PDF. */
     get downloadUrl() {
         return url(contentRoute(this.id, CONTENT_FIELD), {
             ...super.urlQueryParams,
@@ -65,11 +65,7 @@ export class DocumentFile extends FileModelMixin(Object) {
         });
     }
 
-    /**
-     * @override
-     * The page comes from the hash; `DocumentFileViewer` marks the words after the load (the hash
-     * `search` starts too early and the word lands on the top edge).
-     */
+    /** @override The hash `search` starts too early: `DocumentFileViewer` marks the words. */
     get defaultSource() {
         const source = super.defaultSource;
         if (!this.isPdf || !this.hit) {
@@ -134,7 +130,6 @@ export async function readDocumentFile(orm, id) {
     return new DocumentFile(values);
 }
 
-/** The files a viewer goes through for a click on `record`; `file` is one of `files`. */
 export function documentFilesFromRecords(records, record, hitIndex = 0) {
     const inPage = records.includes(record) ? records : [record];
     const files = inPage.map((each) =>

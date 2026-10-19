@@ -13,16 +13,13 @@ export function fingersOf(touches) {
     };
 }
 
-/** Where to scroll after zooming by `ratio` so that the point under the fingers stays there. */
 export function scrollAfterPinch(scroll, previous, point, ratio) {
     return (scroll + previous) * ratio - point;
 }
 
 /**
- * Calls `onPinch({factor, x, y, previous})` while two fingers move on `target`: the change of
- * their distance and the middle of the fingers now and before (client coordinates). The
- * listeners are passive; set `touch-action` on the element so the browser does not zoom the page.
- * `onPan` gets the finger left after a pinch (see `createPanFollower`).
+ * Calls `onPinch({factor, x, y, previous})` while two fingers move on `target`; x, y are client
+ * coordinates. Set `touch-action` on the element so the browser does not zoom the page.
  * @returns {function(): void} removes the listeners
  */
 export function attachPinch(target, { onPinch, onPan, canPinch = () => true }) {
@@ -76,9 +73,8 @@ export function attachPinch(target, { onPinch, onPan, canPinch = () => true }) {
 }
 
 /**
- * Scrolls `scroller` with the finger left after a pinch, unless the browser does it (it differs,
- * and the touch event does not tell): a scroller that is not where the last move left it is
- * scrolled by the browser. Call `pan` with the way of the finger (px), `reset` on a new pinch.
+ * Scrolls `scroller` with the finger left after a pinch, unless the browser does it (it differs
+ * and the event does not tell): then the scroller is not where the last pan left it.
  */
 export function createPanFollower(scroller) {
     let left = null;

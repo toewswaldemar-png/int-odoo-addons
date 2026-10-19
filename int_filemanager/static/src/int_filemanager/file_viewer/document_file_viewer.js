@@ -7,8 +7,7 @@ import { useFileViewerFrameZoom } from "./file_viewer_frame_zoom_hook";
 import { useFileViewerSwipe } from "./file_viewer_swipe_hook";
 import { createVelocityTracker, FLING_EASING, flingPlan } from "../touch/momentum";
 
-// Zoom range and steps of the core's PDF viewer (`pdfjs/web/viewer.js`: `DEFAULT_SCALE_DELTA`,
-// `PIXELS_PER_LINE_SCALE`).
+// As in the core's PDF viewer (`pdfjs/web/viewer.js`).
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 10;
 const SCALE_DELTA = 1.1;
@@ -37,7 +36,7 @@ export class DocumentFileViewer extends FileViewer {
         this.touches = new Map();
         /** @type {{x: number, y: number, distance: number}|null} the two zooming fingers */
         this.pinch = null;
-        // Where the zoomer lies now, in px from its place in the middle (see `updateZoomerStyle`).
+        // Offset of the zoomer from its place in the middle, in px.
         this.shift = { x: 0, y: 0 };
         this.wheelTicks = 0;
         this.animation = useState({ rotating: false });
@@ -126,10 +125,7 @@ export class DocumentFileViewer extends FileViewer {
         }
     }
 
-    /**
-     * Mark the words of the hit in the PDF viewer of the iframe and center the first one.
-     * @param {HTMLIFrameElement} iframe
-     */
+    /** Mark the words of the hit in the PDF viewer of the iframe and center the first one. */
     async showHit(iframe) {
         const hit = this.state.file.hit;
         const app = iframe.contentWindow?.PDFViewerApplication;
@@ -162,10 +158,7 @@ export class DocumentFileViewer extends FileViewer {
         }
     }
 
-    /**
-     * Center the selected word when the PDF viewer scrolls to it.
-     * @param {Object} app the `PDFViewerApplication` of the iframe
-     */
+    /** Center the selected word when the PDF viewer scrolls to it. */
     centerSelectedMatch(app) {
         const finder = app.findController;
         const container = app.appConfig.viewerContainer;
@@ -182,10 +175,7 @@ export class DocumentFileViewer extends FileViewer {
         };
     }
 
-    /**
-     * @override
-     * `transition-base` of the template is `!important`, so it takes `!important` to turn it off.
-     */
+    /** @override `transition-base` of the template is `!important`, so is the reset. */
     get imageStyle() {
         const transition = this.animation.rotating ? "" : "transition: none !important;";
         return `${super.imageStyle}touch-action: none;${transition}`;
@@ -213,10 +203,8 @@ export class DocumentFileViewer extends FileViewer {
     }
 
     /**
-     * The first step from `scale`, rounded to a tenth like the PDF viewer (1, 1.1, 1.3, ...).
-     * @param {Number} scale
+     * The step from `scale`, rounded to a tenth like the PDF viewer (1, 1.1, 1.3, ...).
      * @param {Number} steps more than 0: in, less than 0: out
-     * @returns {Number}
      */
     stepScale(scale, steps) {
         const delta = steps > 0 ? SCALE_DELTA : 1 / SCALE_DELTA;
@@ -276,10 +264,8 @@ export class DocumentFileViewer extends FileViewer {
     }
 
     /**
-     * Zoom to `scale` so that the point `x`, `y` of the screen stays where it is on the image.
-     * @param {Number} scale
+     * Zoom to `scale` so that the point `x`, `y` stays where it is on the image.
      * @param {Number} [x] client coordinates, default: the middle of the screen
-     * @param {Number} [y]
      */
     zoomAt(scale, x, y) {
         const next = Math.min(Math.max(scale, MIN_SCALE), MAX_SCALE);
@@ -450,10 +436,7 @@ export function useDocumentFileViewer() {
         mainComponents.remove(id);
     }
 
-    /**
-     * @param {Object} file the file to start with
-     * @param {Object[]} files the files the arrow keys go through
-     */
+    /** @param {Object[]} files the files the arrow keys go through */
     function open(file, files = [file]) {
         close();
         if (!file.isViewable) {

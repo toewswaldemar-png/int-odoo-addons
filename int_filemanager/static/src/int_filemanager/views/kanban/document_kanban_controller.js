@@ -4,10 +4,7 @@ import { user } from "@web/core/user";
 import { KanbanController } from "@web/views/kanban/kanban_controller";
 import { TILE_SIZE_SETTING, TILE_SIZES, tileSizeOf } from "./document_tile_size";
 
-/**
- * The kanban of documents with a menu for the card size, kept in `res.users.settings`. The cards
- * read it from `env.documentTile`; the style follows the class on the root (see the SCSS).
- */
+/** The kanban of documents with a menu for the card size, kept in `res.users.settings`. */
 export class DocumentKanbanController extends KanbanController {
     static components = { ...KanbanController.components, Dropdown };
 

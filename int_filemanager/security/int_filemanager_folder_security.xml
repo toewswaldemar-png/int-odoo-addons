@@ -22,8 +22,7 @@
         <field name="groups" eval="[(4, ref('int_filemanager_group_user'))]" />
     </record>
 
-    <!-- A new folder is checked before its creator is made a follower, so the rule above cannot
-         hold for it: a top folder is anyone's to make, a subfolder needs a parent the user sees. -->
+    <!-- Creation is checked before the creator becomes a follower, so the rule above cannot apply. -->
     <record id="int_filemanager_folder_rule_user_create" model="ir.rule">
         <field name="name">Filemanager folder: create below a folder the user sees</field>
         <field name="model_id" ref="model_int_filemanager_folder" />

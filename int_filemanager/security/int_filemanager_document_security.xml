@@ -21,8 +21,7 @@
         <field name="groups" eval="[(4, ref('int_filemanager_group_user'))]" />
     </record>
 
-    <!-- Group rules add up: this one widens the rule above. It must stay: with the right to read
-         and no rule that applies, a user sees every document. -->
+    <!-- Widens the rule above; without a matching rule a reader would see every document. -->
     <record id="int_filemanager_document_rule_record" model="ir.rule">
         <field name="name">Filemanager document: through a linked record</field>
         <field name="model_id" ref="model_int_filemanager_document" />

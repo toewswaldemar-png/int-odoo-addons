@@ -2,7 +2,6 @@
 <templates xml:space="preserve">
     <t t-name="int_filemanager.DocumentContentHitsField">
         <div class="o_int_filemanager_hits">
-            <!-- The list takes the click (see DocumentListRenderer); the index tells which hit. -->
             <div
                 t-foreach="hits"
                 t-as="hit"
