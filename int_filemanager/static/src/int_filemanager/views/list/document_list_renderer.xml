@@ -5,6 +5,10 @@
         t-inherit="web.ListRenderer"
         t-inherit-mode="primary"
     >
+        <!-- The thumbnail makes the name cell taller; the other cells follow its middle. -->
+        <xpath expr="//table[@t-ref='table']" position="attributes">
+            <attribute name="t-attf-class" separator=" " add="align-middle" />
+        </xpath>
         <xpath expr="//table[@t-ref='table']" position="before">
             <FileUploadProgressContainer
                 fileUploads="fileUploadService.uploads"
