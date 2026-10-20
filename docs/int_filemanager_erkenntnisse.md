@@ -48,6 +48,7 @@ Gebaut: Mehrfach-Download und Ordner-Download als ZIP, Ordner-Upload, Verschiebe
 - **Firma:** Ein Unterordner hat immer die Firma seines Elternordners und ist nur am obersten Ordner änderbar; der Teilbaum zieht mit.
 - **Ordner-Upload:** Ordner zuerst als Paket (`action_make_paths`, höchstens 500 Pfade, als Nutzer, vorhandene sichtbare Ordner werden ohne Beachtung der Schreibweise wiederverwendet), Dateien danach einzeln über die unveränderte Upload-Route. Gleichnamige Ordner werden zusammengeführt, gleichnamige Dateien nummeriert. Bei Abbruch bleibt das Hochgeladene und bleiben angelegte Ordner stehen; nach fünf Fehlern in Folge stoppt der Upload.
 - **Verschieben:** Mehrfachbearbeitung bleibt, dazu der Dialog „Move to...“ (Muster `crm.lead.lost`, ein `write` je Art, alles oder nichts); Auswahlfeld mit Pfadanzeige (Kontext `hierarchical_naming`, an der ersten unlesbaren Stufe „…“) statt Baum; ein Chatter-Eintrag je Dokument.
+- **Notiz am verknüpften Datensatz neutral:** „A document was linked.“ ohne Dateiname und Link. Die Follower eines Kontakts sehen die Datei womöglich nicht; Name und Link stehen nur im Verlauf der Datei (kein Vorbild im Core, bewusste Entscheidung).
 - **Pfadname** nicht gespeichert (kein `complete_name`), sondern mit den Rechten des Nutzers berechnet; für Gäste und Tracking bleibt der schlichte Name.
 
 ## 6. Invarianten (gelten für jede künftige Änderung)

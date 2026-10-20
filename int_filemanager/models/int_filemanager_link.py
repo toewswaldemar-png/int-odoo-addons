@@ -216,16 +216,13 @@ class IntFilemanagerLink(models.Model):
             record_link = Markup(
                 '<a href="#" data-oe-model="%s" data-oe-id="%s">%s</a>'
             ) % (record._name, record.id, record.display_name)
-            document_link = Markup(
-                '<a href="#" data-oe-model="%s" data-oe-id="%s">%s</a>'
-            ) % (document._name, document.id, document.name)
             author = self.env.user.partner_id.id
             if hasattr(record, "message_post"):
                 record.message_post(
                     body=(
-                        self.env._("Document %(document)s linked.", document=document_link)
+                        self.env._("A document was linked.")
                         if linked
-                        else self.env._("Document %(document)s unlinked.", document=document_link)
+                        else self.env._("A document was unlinked.")
                     ),
                     author_id=author,
                     subtype_xmlid="mail.mt_note",

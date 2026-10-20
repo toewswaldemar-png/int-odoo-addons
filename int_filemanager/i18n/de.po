@@ -2371,14 +2371,14 @@ msgstr "Kontakt"
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_link.py:0
-msgid "Document %(document)s linked."
-msgstr "Dokument %(document)s verknüpft."
+msgid "A document was linked."
+msgstr "Ein Dokument wurde verknüpft."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_link.py:0
-msgid "Document %(document)s unlinked."
-msgstr "Verknüpfung mit Dokument %(document)s gelöst."
+msgid "A document was unlinked."
+msgstr "Die Verknüpfung mit einem Dokument wurde gelöst."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__document_search

@@ -148,7 +148,9 @@ class TestUploadAtRecord(HttpCase):
 
     def test_the_note_is_in_the_chatter_of_the_record(self):
         self._upload("link_worker", name="plan.txt", **self._at())
-        self.assertIn("plan.txt", " ".join(self.partner.message_ids.mapped("body")))
+        notes = " ".join(self.partner.message_ids.mapped("body"))
+        self.assertIn("A document was linked.", notes)
+        self.assertNotIn("plan.txt", notes)
 
     def test_whoever_may_not_change_the_record_cannot_upload(self):
         response = self._upload("link_reader", **self._at())

@@ -292,12 +292,17 @@ class TestLink(AccessCase, TransactionCase):
 
     def test_linking_and_unlinking_leave_a_note_on_both_sides(self):
         notes = lambda record: " ".join(record.message_ids.mapped("body"))  # noqa: E731
-        self.assertIn("s.txt", notes(self.p1))
-        self.assertIn("linked", notes(self.p1))
+        self.assertIn("A document was linked.", notes(self.p1))
         self.assertIn("P1", notes(self.secret_doc))
         self.link.unlink()
-        self.assertIn("unlinked", notes(self.p1))
+        self.assertIn("A document was unlinked.", notes(self.p1))
         self.assertIn("Unlinked from", notes(self.secret_doc))
+
+    def test_the_note_of_the_record_names_neither_the_document_nor_the_folder(self):
+        # The followers of a contact may not see the document: name and link stay in its own history.
+        notes = " ".join(self.p1.message_ids.mapped("body"))
+        for secret in ("s.txt", "Secret", f"data-oe-id=\"{self.secret_doc.id}\""):
+            self.assertNotIn(secret, notes)
 
     # --- clean-up ---------------------------------------------------------------------------
 
