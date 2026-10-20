@@ -3,7 +3,10 @@ from odoo.tests.common import TransactionCase, tagged
 
 from .test_folder_access import AccessCase
 
-RULE = "int_filemanager.int_filemanager_document_rule_record"
+RULES = (
+    "int_filemanager.int_filemanager_document_rule_record",
+    "int_filemanager.int_filemanager_link_rule_record",
+)
 ACCESSES = (
     "int_filemanager.access_int_filemanager_document_internal",
     "int_filemanager.access_int_filemanager_link_internal",
@@ -33,10 +36,10 @@ class TestLinkSetting(AccessCase, TransactionCase):
         settings.set_values()
 
     def _switches(self):
-        return [self.env.ref(RULE).active] + [self.env.ref(name).active for name in ACCESSES]
+        return [self.env.ref(name).active for name in RULES + ACCESSES]
 
     def test_the_way_is_off_at_first(self):
-        self.assertEqual(self._switches(), [False] * 3)
+        self.assertEqual(self._switches(), [False] * 4)
         self.assertFalse(self.Settings.create({}).int_filemanager_access_via_record)
 
     def test_while_it_is_off_a_user_of_the_record_sees_no_document(self):
@@ -52,18 +55,24 @@ class TestLinkSetting(AccessCase, TransactionCase):
     def test_while_it_is_off_the_contact_loads_for_a_user_without_the_group(self):
         self.assertEqual(self.partner.with_user(self.outsider).document_count, 0)
 
+    def test_while_it_is_off_the_count_of_a_contact_is_what_the_folders_show(self):
+        self.assertEqual(self.partner.with_user(self.alice).document_count, 0)
+        self._invite(self.secret, self.alice)
+        self.env.invalidate_all()
+        self.assertEqual(self.partner.with_user(self.alice).document_count, 1)
+
     def test_the_setting_switches_the_rule_and_both_accesses_together(self):
         self._set(True)
-        self.assertEqual(self._switches(), [True] * 3)
+        self.assertEqual(self._switches(), [True] * 4)
         self.assertTrue(self.Settings.create({}).get_values()["int_filemanager_access_via_record"])
         self.assertEqual(self.Document.with_user(self.outsider).search([]), self.document)
         self.assertEqual(self.partner.with_user(self.outsider).document_count, 1)
         self._set(False)
-        self.assertEqual(self._switches(), [False] * 3)
+        self.assertEqual(self._switches(), [False] * 4)
         with self.assertRaises(AccessError):
             self.Document.with_user(self.outsider).search([])
 
     def test_switching_on_twice_changes_nothing(self):
         self._set(True)
         self._set(True)
-        self.assertEqual(self._switches(), [True] * 3)
+        self.assertEqual(self._switches(), [True] * 4)

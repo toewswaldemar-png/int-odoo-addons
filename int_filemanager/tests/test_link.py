@@ -72,6 +72,20 @@ class TestLink(AccessCase, TransactionCase):
         self.assertNotIn(hidden, self._docs(self.alice))
         self.assertIn(hidden, self._docs(self.boss))
 
+    def test_a_link_is_seen_like_its_document(self):
+        # The rule of a link is read as superuser: it must not ask for the rules of the document.
+        hidden = self._document(self.secret, "h.txt", b"hidden")
+        foreign = self.Partner.create({"name": "Foreign", "company_id": self.company2.id})
+        link = self._link(hidden, foreign)
+        for user in (self.outsider, self.alice):
+            self.assertNotIn(link, self.Link.with_user(user).search([]))
+            with self.assertRaises(AccessError):
+                link.with_user(user).check_access("read")
+        self.assertIn(link, self.Link.with_user(self.boss).search([]))
+        self.assertEqual(self.Link.with_user(self.alice).search([]), self.link)
+        self._invite(self.secret, self.alice)
+        self.assertEqual(self.Link.with_user(self.alice).search([]), self.link + link)
+
     def test_the_company_rule_cuts_the_record_path_too(self):
         other = self.Folder.create(
             {"name": "Other", "company_id": self.company2.id, "access_mode": "open"}
