@@ -3430,3 +3430,31 @@ msgstr ""
 "verknüpften Dokumente lesen, ohne ein Recht auf deren Ordner. Aus: nur die "
 "Ordner entscheiden, und eine Datei, die zu einem Datensatz hochgeladen wird, "
 "sehen alle, die den Upload-Ordner sehen."
+
+#. module: int_filemanager
+#: model:res.groups,name:int_filemanager.int_filemanager_group_reader
+msgid "Filemanager Reader"
+msgstr "Dateimanager Leser"
+
+#. module: int_filemanager
+#: model:res.groups,comment:int_filemanager.int_filemanager_group_reader
+msgid "Reader: Can read the folders and documents they see."
+msgstr "Leser: Darf die Ordner und Dokumente lesen, die er sieht."
+
+#. module: int_filemanager
+#: model:res.groups,comment:int_filemanager.int_filemanager_group_user
+msgid ""
+"User: Can also upload, change and delete in the folders they see, and share "
+"them."
+msgstr ""
+"Nutzer: Darf zusätzlich in den Ordnern, die er sieht, hochladen, ändern und "
+"löschen und sie freigeben."
+
+#. module: int_filemanager
+#: model:res.groups,comment:int_filemanager.int_filemanager_group_admin
+msgid ""
+"Administrator: Can see all folders, decide who sees them and configure the "
+"filemanager."
+msgstr ""
+"Administrator: Darf alle Ordner sehen, festlegen, wer sie sieht, und den "
+"Dateimanager einrichten."

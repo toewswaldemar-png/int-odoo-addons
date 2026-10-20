@@ -9,13 +9,29 @@
         <field name="category_id" ref="module_category_int_filemanager" />
     </record>
 
+    <record id="int_filemanager_group_reader" model="res.groups">
+        <field name="name">Filemanager Reader</field>
+        <field name="comment">Reader: Can read the folders and documents they see.</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="privilege_int_filemanager" />
+    </record>
+
     <record id="int_filemanager_group_user" model="res.groups">
         <field name="name">Filemanager User</field>
+        <field
+            name="comment"
+        >User: Can also upload, change and delete in the folders they see, and share them.</field>
+        <field name="sequence">20</field>
         <field name="privilege_id" ref="privilege_int_filemanager" />
+        <field name="implied_ids" eval="[(4, ref('int_filemanager_group_reader'))]" />
     </record>
 
     <record id="int_filemanager_group_admin" model="res.groups">
         <field name="name">Filemanager Administrator</field>
+        <field
+            name="comment"
+        >Administrator: Can see all folders, decide who sees them and configure the filemanager.</field>
+        <field name="sequence">30</field>
         <field name="privilege_id" ref="privilege_int_filemanager" />
         <field name="implied_ids" eval="[(4, ref('int_filemanager_group_user'))]" />
     </record>

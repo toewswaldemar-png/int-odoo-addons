@@ -1,16 +1,20 @@
-from odoo import Command
+import io
+
+from odoo import Command, http
 from odoo.exceptions import AccessError
-from odoo.tests.common import TransactionCase, tagged
+from odoo.tests.common import HttpCase, TransactionCase, new_test_user, tagged
 
 from .test_folder_access import AccessCase
+
+READER_GROUPS = "base.group_user,int_filemanager.int_filemanager_group_reader"
 
 
 @tagged("post_install", "-at_install")
 class TestRightsMatrix(AccessCase, TransactionCase):
     """What the groups may do with what they see: read, change, delete, create.
 
-    A row marked "today" is a gap of the first rights model: seeing is changing. Whoever
-    builds the group that only reads turns those rows around.
+    The reader sees what the user sees and only reads; the user changes it; the administrator
+    also says who sees a folder.
     """
 
     @classmethod
@@ -18,6 +22,7 @@ class TestRightsMatrix(AccessCase, TransactionCase):
         super().setUpClass()
         cls._set_up_access()
         cls.Tag = cls.env["int.filemanager.tag"]
+        cls.reader = new_test_user(cls.env, login="access_reader", groups=READER_GROUPS)
 
     def setUp(self):
         super().setUp()
@@ -26,7 +31,6 @@ class TestRightsMatrix(AccessCase, TransactionCase):
     # --- folders ----------------------------------------------------------------------------
 
     def test_a_folder_user_reads_changes_and_deletes_what_the_user_sees(self):
-        # today: no group that only reads
         as_alice = self.shared.with_user(self.alice)
         self.assertEqual(as_alice.name, "Shared")
         as_alice.write({"name": "Renamed"})
@@ -34,6 +38,30 @@ class TestRightsMatrix(AccessCase, TransactionCase):
         mine = self.Folder.create({"name": "Mine", "access_mode": "open"})
         mine.with_user(self.alice).unlink()
         self.assertFalse(mine.exists())
+
+    def test_a_reader_sees_what_a_user_sees_and_only_reads(self):
+        self.assertEqual(self._seen_by(self.reader), self._seen_by(self.alice))
+        self._invite(self.secret, self.reader)
+        self.assertEqual(self._seen_by(self.reader), self._seen_by(self.alice) + self.secret + self.inner)
+        as_reader = self.shared.with_user(self.reader)
+        self.assertEqual(as_reader.name, "Shared")
+        for operation in ("write", "unlink", "create"):
+            with self.assertRaises(AccessError):
+                as_reader.check_access(operation)
+        with self.assertRaises(AccessError):
+            as_reader.write({"name": "Renamed"})
+        with self.assertRaises(AccessError):
+            self.Folder.with_user(self.reader).create({"name": "Mine", "parent_id": self.shared.id})
+
+    def test_the_groups_imply_each_other_from_the_administrator_down_to_the_reader(self):
+        reader = self.env.ref("int_filemanager.int_filemanager_group_reader")
+        user = self.env.ref("int_filemanager.int_filemanager_group_user")
+        admin = self.env.ref("int_filemanager.int_filemanager_group_admin")
+        self.assertEqual(user.implied_ids, reader)
+        self.assertEqual(admin.implied_ids, user)
+        self.assertLessEqual(reader + user, self.alice.all_group_ids)
+        self.assertLessEqual(reader + user + admin, self.boss.all_group_ids)
+        self.assertNotIn(user, self.reader.all_group_ids)
 
     def test_a_folder_user_makes_a_top_folder(self):
         folder = self.Folder.with_user(self.alice).create({"name": "Mine"})
@@ -64,22 +92,41 @@ class TestRightsMatrix(AccessCase, TransactionCase):
             as_boss.check_access(operation)
         self.Folder.with_user(self.boss).check_access("create")
 
-    # --- the lists of who may see (today: for everyone who sees the folder) -----------------
+    # --- the lists of who may see: for the administrators -----------------------------------
 
-    def test_a_folder_user_reads_and_changes_who_may_see_the_folder(self):
-        # today: the fields are for every user, not for the administrators only
+    def test_a_folder_user_neither_reads_nor_changes_who_may_see_the_folder(self):
         self.secret.access_user_ids = self.alice
         as_alice = self.secret.with_user(self.alice)
-        self.assertEqual(as_alice.access_user_ids, self.alice)
-        as_alice.write(
+        for name in ("access_mode", "access_user_ids", "access_group_ids"):
+            with self.assertRaises(AccessError):
+                as_alice[name]  # noqa: B018
+            with self.assertRaises(AccessError):
+                as_alice.write({name: False})
+        self.assertNotIn(self.secret, self._seen_by(self.bob))
+
+    def test_the_administrators_read_and_change_who_may_see_the_folder(self):
+        as_boss = self.secret.with_user(self.boss)
+        as_boss.write(
             {
-                "access_mode": "open",
+                "access_mode": "restricted",
                 "access_user_ids": [Command.link(self.bob.id)],
                 "access_group_ids": [Command.link(self.env.ref("base.group_user").id)],
             }
         )
-        self.assertEqual(self.secret.access_mode, "open")
+        self.assertEqual(as_boss.access_user_ids, self.bob)
         self.assertIn(self.secret, self._seen_by(self.bob))
+
+    def test_a_folder_made_by_a_user_has_the_default_access(self):
+        folder = self.Folder.with_user(self.alice).create({"name": "Mine"})
+        self.assertEqual(folder.sudo().access_mode, "inherit")
+        sub = self.Folder.with_user(self.alice).create({"name": "Sub", "parent_id": folder.id})
+        self.assertEqual(sub.access_folder_id, folder)
+
+    def test_a_reader_may_not_invite_others(self):
+        self._invite(self.secret, self.reader)
+        with self.assertRaises(AccessError):
+            self.secret.with_user(self.reader).message_subscribe(partner_ids=[self.bob.partner_id.id])
+        self.assertNotIn(self.secret, self._seen_by(self.bob))
 
     def test_a_follower_invites_others(self):
         self._invite(self.secret, self.alice)
@@ -97,13 +144,24 @@ class TestRightsMatrix(AccessCase, TransactionCase):
     # --- documents --------------------------------------------------------------------------
 
     def test_a_folder_user_reads_changes_and_deletes_the_documents_of_what_the_user_sees(self):
-        # today: no group that only reads
         as_alice = self.document.with_user(self.alice)
         self.assertEqual(as_alice.name, "a.txt")
         as_alice.write({"name": "b.txt"})
         self.assertEqual(self.document.name, "b.txt")
         as_alice.unlink()
         self.assertFalse(self.document.exists())
+
+    def test_a_reader_reads_the_documents_and_changes_nothing(self):
+        as_reader = self.document.with_user(self.reader)
+        self.assertEqual(as_reader.name, "a.txt")
+        for operation in ("write", "unlink", "create"):
+            with self.assertRaises(AccessError):
+                as_reader.check_access(operation)
+        with self.assertRaises(AccessError):
+            as_reader.write({"name": "b.txt"})
+        hidden = self._document(self.inner, "hidden.txt")
+        with self.assertRaises(AccessError):
+            hidden.with_user(self.reader).check_access("read")
 
     def test_a_document_is_made_by_the_upload_not_by_the_orm(self):
         values = {"name": "c.txt", "folder_id": self.shared.id}
@@ -134,8 +192,16 @@ class TestRightsMatrix(AccessCase, TransactionCase):
 
     # --- tags -------------------------------------------------------------------------------
 
+    def test_a_reader_reads_the_tags_and_changes_none(self):
+        tag = self.Tag.create({"name": "Invoices"})
+        self.assertEqual(self.Tag.with_user(self.reader).search([("name", "=", "Invoices")]), tag)
+        with self.assertRaises(AccessError):
+            tag.with_user(self.reader).write({"name": "Bills"})
+        with self.assertRaises(AccessError):
+            self.Tag.with_user(self.reader).create({"name": "New"})
+
     def test_the_tags_are_for_every_folder_user_to_make_change_and_delete(self):
-        # today: global, not tied to a folder
+        # global, not tied to a folder
         tag = self.Tag.with_user(self.alice).create({"name": "Invoices"})
         self.assertEqual(self.Tag.with_user(self.bob).search([("name", "=", "Invoices")]), tag)
         tag.with_user(self.bob).write({"name": "Bills"})
@@ -158,6 +224,63 @@ class TestRightsMatrix(AccessCase, TransactionCase):
             "int.filemanager.model.folder",
         ):
             self.env[model].with_user(self.boss).check_access("read")
-            for user in (self.alice, self.outsider):
+            for user in (self.reader, self.alice, self.outsider):
                 with self.assertRaises(AccessError):
                     self.env[model].with_user(user).check_access("read")
+
+    # --- shares and moves are the user's ----------------------------------------------------
+
+    def test_a_reader_makes_no_share_and_moves_nothing(self):
+        for model in ("int.filemanager.share", "int.filemanager.move"):
+            with self.assertRaises(AccessError):
+                self.env[model].with_user(self.reader).check_access("create")
+            self.env[model].with_user(self.alice).check_access("create")
+
+    # --- what the screens offer -------------------------------------------------------------
+
+    def test_the_screens_of_a_reader_are_for_reading(self):
+        for model, view_type in (
+            ("int.filemanager.document", "list"),
+            ("int.filemanager.document", "form"),
+            ("int.filemanager.folder", "list"),
+            ("int.filemanager.folder", "form"),
+        ):
+            with self.subTest(model=model, view_type=view_type):
+                as_reader = self.env[model].with_user(self.reader)
+                arch = as_reader.get_views([(False, view_type)])["views"][view_type]["arch"]
+                self.assertIn('edit="False"', arch)
+                self.assertNotIn("action_share", arch)
+                self.assertNotIn("Move to", arch)
+                as_alice = self.env[model].with_user(self.alice)
+                arch = as_alice.get_views([(False, view_type)])["views"][view_type]["arch"]
+                self.assertNotIn('edit="False"', arch)
+
+    def test_the_fields_of_who_sees_are_on_the_screens_of_the_administrators_only(self):
+        for user, shown in ((self.alice, False), (self.boss, True)):
+            views = self.Folder.with_user(user).get_views([(False, "list"), (False, "form")])["views"]
+            for view_type in ("list", "form"):
+                self.assertEqual('name="access_mode"' in views[view_type]["arch"], shown)
+
+    def test_the_menu_is_for_the_readers_and_up(self):
+        menu = self.env.ref("int_filemanager.menu_int_filemanager_root")
+        self.assertEqual(menu.group_ids, self.env.ref("int_filemanager.int_filemanager_group_reader"))
+
+
+@tagged("post_install", "-at_install")
+class TestRightsMatrixOverHttp(AccessCase, HttpCase):
+    """The reader downloads and does not upload."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._set_up_access()
+        cls.reader = new_test_user(cls.env, login="access_reader", groups=READER_GROUPS)
+
+    def test_a_reader_downloads_and_cannot_upload(self):
+        document = self._document(self.deep, "shown.txt")
+        self.authenticate("access_reader", "access_reader")
+        response = self.url_open(f"/web/content/int.filemanager.document/{document.id}/content?download=true")
+        self.assertEqual(response.status_code, 200)
+        data = {"csrf_token": http.Request.csrf_token(self), "folder_id": self.deep.id}
+        files = {"ufile": ("a.txt", io.BytesIO(b"x"))}
+        self.assertEqual(self.url_open("/int_filemanager/upload", data=data, files=files).status_code, 403)

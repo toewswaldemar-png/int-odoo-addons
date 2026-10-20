@@ -8,7 +8,7 @@
         >['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
     </record>
 
-    <record id="int_filemanager_folder_rule_user" model="ir.rule">
+    <record id="int_filemanager_folder_rule_reader" model="ir.rule">
         <field name="name">Filemanager folder: open or allowed</field>
         <field name="model_id" ref="model_int_filemanager_folder" />
         <field name="domain_force">[
@@ -19,7 +19,7 @@
             ('access_folder_id.message_partner_ids', 'in', [user.partner_id.id]),
         ]</field>
         <field name="perm_create" eval="False" />
-        <field name="groups" eval="[(4, ref('int_filemanager_group_user'))]" />
+        <field name="groups" eval="[(4, ref('int_filemanager_group_reader'))]" />
     </record>
 
     <!-- Creation is checked before the creator becomes a follower, so the rule above cannot apply. -->

@@ -13,11 +13,12 @@
                         type="action"
                         string="Move to..."
                         icon="fa-folder-open"
+                        groups="int_filemanager.int_filemanager_group_user"
                     />
                 </header>
                 <field name="name" />
                 <field name="parent_id" context="{'hierarchical_naming': True}" />
-                <field name="access_mode" />
+                <field name="access_mode" groups="int_filemanager.int_filemanager_group_admin" />
                 <field
                     name="model_folder_ids"
                     widget="many2many_tags"
@@ -42,6 +43,7 @@
                         icon="fa-share-alt"
                         class="btn-primary"
                         invisible="not id or not active"
+                        groups="int_filemanager.int_filemanager_group_user"
                         help="Make a link that gives this folder to whoever has it, without an account."
                     />
                     <button
@@ -75,16 +77,18 @@
                         <field name="active" invisible="1" />
                         <field name="name" />
                         <field name="parent_id" context="{'hierarchical_naming': True}" />
-                        <field name="access_mode" />
+                        <field name="access_mode" groups="int_filemanager.int_filemanager_group_admin" />
                         <field
                             name="access_user_ids"
                             widget="many2many_tags"
                             invisible="access_mode != 'restricted'"
+                            groups="int_filemanager.int_filemanager_group_admin"
                         />
                         <field
                             name="access_group_ids"
                             widget="many2many_tags"
                             invisible="access_mode != 'restricted'"
+                            groups="int_filemanager.int_filemanager_group_admin"
                         />
                         <field
                             name="ocr_images"

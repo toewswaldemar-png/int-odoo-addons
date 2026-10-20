@@ -318,8 +318,8 @@ class TestShare(AccessCase, TransactionCase):
         upload = share.upload_folder_id
         self.assertEqual(upload.name, "Uploads - Shared")
         self.assertEqual(upload.parent_id, self.shared)
-        self.assertEqual(upload.access_mode, "restricted")
-        self.assertEqual(upload.access_user_ids, self.alice)
+        self.assertEqual(upload.sudo().access_mode, "restricted")
+        self.assertEqual(upload.sudo().access_user_ids, self.alice)
         self.assertEqual(upload.company_id, self.shared.company_id)
         self.assertNotIn(upload, self._seen_by(self.bob))
         self.assertIn(upload, self._seen_by(self.alice))

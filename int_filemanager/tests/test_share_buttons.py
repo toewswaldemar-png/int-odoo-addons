@@ -89,8 +89,8 @@ class TestShareButtons(AccessCase, TransactionCase):
         self.assertEqual(action["context"], {"default_folder_id": self.shared.id})
 
     def test_the_forms_show_the_button_the_count_and_the_origin_of_an_upload(self):
-        folder_form = self.Folder.get_view(view_type="form")["arch"]
-        document_form = self.Document.get_view(view_type="form")["arch"]
+        folder_form = self.Folder.with_user(self.alice).get_view(view_type="form")["arch"]
+        document_form = self.Document.with_user(self.alice).get_view(view_type="form")["arch"]
         for arch in (folder_form, document_form):
             self.assertIn('name="action_share"', arch)
             self.assertIn('name="action_open_shares"', arch)

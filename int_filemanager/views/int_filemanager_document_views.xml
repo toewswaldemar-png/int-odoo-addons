@@ -130,6 +130,7 @@
                         string="Share"
                         icon="fa-share-alt"
                         invisible="not active"
+                        groups="int_filemanager.int_filemanager_group_user"
                         help="Make a link that gives this file to whoever has it, without an account."
                     />
                 </header>

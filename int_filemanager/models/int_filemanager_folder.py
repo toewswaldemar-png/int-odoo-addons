@@ -69,6 +69,7 @@ class IntFilemanagerFolder(models.Model):
         required=True,
         default="inherit",
         tracking=True,
+        groups="int_filemanager.int_filemanager_group_admin",
         help="Who sees this folder and its documents. A top folder that is not open to all is "
         "seen by the users and groups listed on it and by its followers (and by the "
         "administrators).",
@@ -80,6 +81,7 @@ class IntFilemanagerFolder(models.Model):
         "user_id",
         string="Allowed users",
         tracking=True,
+        groups="int_filemanager.int_filemanager_group_admin",
     )
     access_group_ids = fields.Many2many(
         "res.groups",
@@ -88,6 +90,7 @@ class IntFilemanagerFolder(models.Model):
         "group_id",
         string="Allowed groups",
         tracking=True,
+        groups="int_filemanager.int_filemanager_group_admin",
     )
     # The folder whose ``access_mode`` and followers decide for this one: itself, or the
     # nearest parent that does not say "like the parent". The record rules look at it.
