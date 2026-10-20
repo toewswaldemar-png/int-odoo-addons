@@ -78,6 +78,11 @@ export class DocumentFile extends FileModelMixin(Object) {
         return IMAGE_MIMETYPES.includes(this.mimetype);
     }
 
+    /** A picture the editor can store anew: not a GIF (it would lose its frames). */
+    get isEditable() {
+        return this.isImage && this.mimetype !== "image/gif" && Boolean(this.folder_id);
+    }
+
     get isText() {
         return super.isText && !(this.size > TEXT_MAX_SIZE);
     }
@@ -89,7 +94,7 @@ export class DocumentFile extends FileModelMixin(Object) {
 
 /** @param {Number} [hitIndex] which of the `content_hits` of the record the file shows */
 export function documentFileFromRecord(record, hitIndex = 0) {
-    const { name, mimetype, checksum, size, ocr_checksum, content_hits } = record.data;
+    const { name, mimetype, checksum, size, ocr_checksum, content_hits, folder_id } = record.data;
     const hit = content_hits?.hits?.[hitIndex];
     return new DocumentFile({
         id: record.resId,
@@ -99,6 +104,7 @@ export function documentFileFromRecord(record, hitIndex = 0) {
         size,
         ocr_checksum,
         hit,
+        folder_id: folder_id?.id,
     });
 }
 

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t
+        t-name="int_filemanager.DocumentFileViewer"
+        t-inherit="web.FileViewer"
+        t-inherit-mode="primary"
+    >
+        <!-- The whole ground of the viewer is the surface of a picture: the wheel zooms, a press
+             moves it, wherever the pointer is (the core binds these to the image only). -->
+        <xpath expr="//div[hasclass('o-FileViewer-main')]" position="attributes">
+            <attribute name="t-ref">main</attribute>
+            <attribute name="t-on-click.stop">onClickMain</attribute>
+            <attribute name="t-on-wheel">onWheelImage</attribute>
+            <attribute name="t-on-mousedown.stop">onMousedownImage</attribute>
+            <attribute name="t-on-mouseup.stop">onMouseupImage</attribute>
+        </xpath>
+        <xpath expr="//img[hasclass('o-FileViewer-viewImage')]" position="attributes">
+            <attribute name="t-on-wheel" />
+            <attribute name="t-on-mousedown.stop" />
+            <attribute name="t-on-mouseup.stop" />
+        </xpath>
+        <xpath expr="//div[@role='toolbar']/div[@title='Print']" position="after">
+            <div
+                t-if="props.onEdit and state.file.isEditable"
+                class="o-FileViewer-toolbarButton p-3 rounded-0"
+                t-on-click.stop="onClickEdit"
+                title="Edit"
+                role="button"
+            >
+                <i class="fa fa-fw fa-pencil" role="img" />
+            </div>
+        </xpath>
+    </t>
+</templates>

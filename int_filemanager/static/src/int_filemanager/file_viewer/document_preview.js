@@ -5,5 +5,5 @@ import { DocumentFileViewer } from "./document_file_viewer";
 export class DocumentPreview extends Component {
     static template = "int_filemanager.DocumentPreview";
     static components = { DocumentFileViewer };
-    static props = { file: Object };
+    static props = { file: Object, onEdit: { type: Function, optional: true } };
 }

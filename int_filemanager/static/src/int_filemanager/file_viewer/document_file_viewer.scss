@@ -1,0 +1,5 @@
+// The ground of the viewer is the surface of a picture (see the template): the touches on it pinch
+// and move the picture, the browser must not scroll or zoom the page with them.
+.o-FileViewer-main.o_with_img {
+    touch-action: none;
+}

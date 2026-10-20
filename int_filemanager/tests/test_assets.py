@@ -14,6 +14,7 @@ TEMPLATES = (
     "int_filemanager.DocumentListRenderer",
     "int_filemanager.DocumentListView.Buttons",
     "int_filemanager.DocumentNameField",
+    "int_filemanager.DocumentFileViewer",
     "int_filemanager.DocumentFormController",
     "int_filemanager.DocumentPreview",
     "int_filemanager.DocumentThumbnailField",
@@ -25,7 +26,32 @@ TEMPLATES = (
 # minified: no spaces around the signs.
 CORE_PARTS = {
     # DocumentPreview: the viewer of the core without its modal frame, with one file.
-    "@web/core/file_viewer/file_viewer": ("modal", "startIndex", "files"),
+    "@web/core/file_viewer/file_viewer": (
+        "modal",
+        "startIndex",
+        "files",
+        # DocumentFileViewer: the ground of the viewer is the surface of a picture; it drives
+        # the core's own drag of the picture from there (and the click that closes it).
+        "onMousedownImage(",
+        "onMouseupImage(",
+        "onMousemoveView(",
+        "isDragging",
+        "dragStartX",
+    ),
+    # DocumentImageEditor (the bundle of the editor): the loader of the bundles that the hook
+    # starts, and the events of the upload that the editor waits for.
+    "@web/core/assets": ("lazy_components", "bundle"),
+    "@web/core/file_upload/file_upload_service": (
+        "FILE_UPLOAD_LOADED",
+        "FILE_UPLOAD_ERROR",
+        "buildFormData",
+    ),
+    # The picture editor: the palette of the colours, the state of a dropdown, the dialog of the
+    # choices before the picture is stored, and the bus of the router that takes the editor away.
+    "@web/core/color_picker/color_picker": ("DEFAULT_COLORS",),
+    "@web/core/dropdown/dropdown_hooks": ("useDropdownState",),
+    "@web/core/dialog/dialog": ("contentClass", "modalRef"),
+    "@web/core/browser/router": ("routerBus", "ROUTE_CHANGE"),
     # DocumentFormController: the panel at the side of the file can be pulled to another width.
     "@web/core/resizable_panel/resizable_panel": (
         "handleSide",
@@ -88,6 +114,7 @@ class TestAssets(TransactionCase):
             "fields/size/size_field",
             "fields/thumbnail/document_thumbnail_field",
             "file_viewer/document_file_viewer",
+            "file_viewer/document_image_editor_service",
             "file_viewer/document_preview",
             "file_viewer/file_viewer_frame_zoom_hook",
             "file_viewer/file_viewer_frames_hook",
@@ -155,7 +182,24 @@ class TestAssets(TransactionCase):
         # the slot next to the pager (the list does the same) in front of the slot of the cog menu,
         # and wraps the renderer in the layout of the page; a new Odoo may change them.
         for template, pieces in (
-            ("web.FileViewer", ("o-FileViewer-headerButton", "fa-times", "props.modal")),
+            (
+                "web.FileViewer",
+                (
+                    "o-FileViewer-headerButton",
+                    "fa-times",
+                    "props.modal",
+                    # DocumentFileViewer moves the handlers of the wheel and of the mouse from the
+                    # picture to the ground (`o-FileViewer-main`).
+                    "o-FileViewer-main",
+                    "o-FileViewer-viewImage",
+                    't-on-wheel="onWheelImage"',
+                    't-on-mousedown.stop="onMousedownImage"',
+                    't-on-mouseup.stop="onMouseupImage"',
+                    # DocumentFileViewer puts the button "Edit" after the one of the printer.
+                    'role="toolbar"',
+                    'title="Print"',
+                ),
+            ),
             ("web.FormView", ("control-panel-additional-actions", "props.Renderer", "<Layout")),
             ("web.ControlPanel", ("control-panel-navigation-additional", "o_cp_pager")),
         ):
@@ -163,3 +207,163 @@ class TestAssets(TransactionCase):
             end = self.script.find("registerTemplate(", start + 1)
             for piece in pieces:
                 self.assertIn(piece, self.script[start:end], f"{piece} is gone from {template}")
+
+
+# What the editor takes from Fabric (the library of the bundle of the editor): the version it was
+# written for, and the names of what it calls. The bundle is minified, but the names of methods and
+# of the exports stay.
+FABRIC_VERSION = "7.4.0"
+FABRIC_PARTS = (
+    # the canvas
+    "getScenePoint",
+    "getViewportPoint",
+    "setViewportTransform",
+    "toCanvasElement",
+    "toSVG",
+    "enlivenObjects",
+    "classRegistry",
+    "freeDrawingBrush",
+    "text:editing:exited",
+    "path:created",
+    "after:render",
+    # objects and what the marks are made of
+    "setPositionByOrigin",
+    "triggerLayout",
+    "removeAll",
+    "bringObjectToFront",
+    "applyTransformToObject",
+    "multiplyTransformMatrices",
+    "groupSVGElements",
+    "loadSVGFromString",
+    "Textbox",
+    "Polyline",
+    "Gradient",
+    "Pattern",
+    "SprayBrush",
+    "CircleBrush",
+    "PatternBrush",
+    # the filters
+    "Convolute",
+    "BlendColor",
+    "RemoveColor",
+    "HueRotation",
+    "Vibrance",
+    "Pixelate",
+    "Kodachrome",
+    "Technicolor",
+)
+EDITOR_MODULES = (
+    "arrange",
+    "color_field",
+    "constants",
+    "controls",
+    "crop_tool",
+    "document_image_editor",
+    "drawing",
+    "edit_state",
+    "export",
+    "filters",
+    "geometry",
+    "history",
+    "import_image",
+    "marks",
+    "overlay",
+    "picture",
+    "redact_mark",
+    "save_dialog",
+    "scene_ops",
+    "snapping",
+    "viewport",
+)
+EDITOR_TEMPLATES = (
+    "int_filemanager.DocumentImageEditor",
+    "int_filemanager.ImageEditorTools",
+    "int_filemanager.ImageEditorPanel",
+    "int_filemanager.ImageEditorPanelStyle",
+    "int_filemanager.ImageEditorPanelEdit",
+    "int_filemanager.ImageEditorPanelAdjust",
+    "int_filemanager.ImageEditorPanelCrop",
+    "int_filemanager.ImageEditorPanelView",
+    "int_filemanager.ImageEditorColorField",
+    "int_filemanager.ImageEditorSaveDialog",
+)
+
+
+@tagged("post_install", "-at_install")
+class TestImageEditorAssets(TransactionCase):
+    """The editor for pictures is a bundle of its own, loaded at the first click on "Edit"."""
+
+    BUNDLE = "int_filemanager.assets_image_editor"
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.script = (
+            cls.env["ir.qweb"]._get_asset_bundle(cls.BUNDLE, css=False, js=True).js().raw.decode()
+        )
+        backend = (
+            cls.env["ir.qweb"]
+            ._get_asset_bundle("web.assets_backend", css=False, js=True)
+            .js()
+            .raw.decode()
+        )
+        cls.modules = {
+            name: re.findall(r"'([^']+)'", dependencies)
+            for name, dependencies in DEFINE_REGEX.findall(cls.script)
+        }
+        cls.backend_script = backend
+        cls.backend_modules = {name for name, _ in DEFINE_REGEX.findall(backend)}
+
+    def test_the_editor_and_fabric_are_in_the_bundle(self):
+        for name in EDITOR_MODULES:
+            self.assertIn(f"{MODULE_PREFIX}image_editor/{name}", self.modules)
+            # The editor is no part of the backend bundle: it would be loaded with every page.
+            self.assertNotIn(f"{MODULE_PREFIX}image_editor/{name}", self.backend_modules)
+        for template in EDITOR_TEMPLATES:
+            self.assertIn(f'registerTemplate("{template}"', self.script)
+        self.assertIn("fabric", self.script)
+
+    def test_the_editor_is_not_in_the_bundle_of_the_guests(self):
+        guest = self.env["ir.qweb"]._get_asset_bundle(
+            "int_filemanager.assets_guest", css=False, js=True
+        )
+        script = guest.js().raw.decode()
+        # Neither the editor nor the service that opens it: without the service the viewer of a
+        # guest has no button "Edit".
+        self.assertNotIn("document_image_editor", script)
+
+    def test_the_service_that_opens_the_editor_is_a_service_of_the_backend(self):
+        self.assertIn(
+            f"{MODULE_PREFIX}int_filemanager/file_viewer/document_image_editor_service",
+            self.backend_modules,
+        )
+        self.assertIn("int_filemanager.image_editor", self.backend_script)
+
+    def test_every_import_of_the_editor_exists(self):
+        known = set(self.modules) | self.backend_modules
+        missing = {
+            name: sorted(
+                dependency
+                for dependency in dependencies
+                if not dependency.startswith(LIBRARY_PREFIX) and dependency not in known
+            )
+            for name, dependencies in self.modules.items()
+            if name.startswith(MODULE_PREFIX)
+        }
+        self.assertEqual({name: deps for name, deps in missing.items() if deps}, {})
+
+    def test_the_version_of_fabric_is_the_one_the_editor_was_written_for(self):
+        # A newer Fabric may change what the editor calls; replacing the file is a decision to
+        # check the editor against it (and to change this number).
+        self.assertIn(f"`{FABRIC_VERSION}`", self.script)
+
+    def test_the_parts_of_fabric_that_the_editor_relies_on_are_there(self):
+        for piece in FABRIC_PARTS:
+            self.assertIn(piece, self.script, f"{piece} is gone from Fabric")
+
+    def test_the_styles_of_the_editor_compile(self):
+        bundle = self.env["ir.qweb"]._get_asset_bundle(self.BUNDLE, css=True, js=False)
+        css = bundle.css().raw.decode()
+        self.assertEqual(bundle.css_errors, [])
+        # The dialogs of Odoo (a `.modal` at 1055) must stay in front of the editor.
+        self.assertRegex(css, r"\.o_int_filemanager_image_editor\.modal\s*\{\s*z-index:\s*1054")

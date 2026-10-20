@@ -54,7 +54,7 @@
         <xpath expr="//Layout/t[@t-component='props.Renderer']" position="replace">
             <div class="o_int_filemanager_document d-flex flex-column flex-lg-row h-100">
                 <div class="o_int_filemanager_document_file flex-grow-1">
-                    <DocumentPreview file="file" />
+                    <DocumentPreview file="file" onEdit="onEdit" />
                 </div>
                 <ResizablePanel
                     t-if="panel.part"

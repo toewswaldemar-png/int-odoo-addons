@@ -6,6 +6,7 @@ import { ResizablePanel } from "@web/core/resizable_panel/resizable_panel";
 import { SIZES } from "@web/core/ui/ui_service";
 import { useDebounced } from "@web/core/utils/timing";
 import { FormController } from "@web/views/form/form_controller";
+import { useService } from "@web/core/utils/hooks";
 import { documentFileFromRecord } from "../../document_file";
 import { DocumentPreview } from "../../file_viewer/document_preview";
 import { useDocumentFileViewer } from "../../file_viewer/document_file_viewer";
@@ -53,6 +54,8 @@ export class DocumentFormController extends FormController {
     setup() {
         super.setup();
         this.fileViewer = useDocumentFileViewer();
+        const imageEditor = useService("int_filemanager.image_editor");
+        this.onEdit = (file) => imageEditor.open(file);
         const kept = readSetting(PANEL_KEY);
         // The details are open where there is room for them, the chatter only on request.
         this.panel = useState({

@@ -1,0 +1,257 @@
+// The editor sits where the viewer of the core does: its bar is the bar of the file viewer (dark,
+// white icons). Below it the look is that of Odoo's own panels and not a dark theme of its own:
+// the colours are Odoo's variables (with the values of Odoo 19 as the fallback), so that the editor
+// follows the theme of the database. The tools are on the left, the stage in the middle, the
+// settings of the mark on the right in sections that fold; on a small screen the tools lie in a row
+// over the stage and the settings under it.
+$o-int-editor-tool: 40px;
+$o-int-editor-panel: 280px;
+
+.o_int_filemanager_image_editor {
+    // `.modal:not([data-bs-backdrop="false"])` of the core paints half black over the page; the
+    // template sets the attribute, this paints the ground of the editor.
+    background-color: var(--body-bg, #f8f9fa);
+    color: var(--body-color, #212529);
+
+    // The dialogs of Odoo (the question "Discard the changes?", the choices of the file to store) are
+    // a `.modal` at 1055 as well, and the one that comes later in the page is on top: the editor is
+    // later, so it covered them and kept the keys for itself. One step below, they are in front.
+    &.modal {
+        z-index: 1054;
+    }
+
+    .o-FileViewer-header {
+        // The bar wraps on a small screen; the core's fixed height would cut it.
+        height: auto;
+        min-height: 46px;
+    }
+
+    // The buttons of the bar (white on dark, as the core's) and of the column of tools (dark on light).
+    .o_int_filemanager_image_editor_button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        align-self: stretch;
+        min-height: 46px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+
+        &.active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    }
+
+    .o_int_filemanager_image_editor_separator {
+        align-self: stretch;
+        margin: 0.5rem 0.25rem;
+        border-left: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .o_int_filemanager_image_editor_body {
+        min-height: 0;
+    }
+
+    // The tools: a column of buttons that scrolls when the window is low.
+    .o_int_filemanager_image_editor_tools {
+        flex: 0 0 $o-int-editor-tool;
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        // Odoo's scroll bars are wide and have arrows: in a column of 40 pixels they would eat the
+        // symbols. The column still scrolls with the wheel and the finger.
+        scrollbar-width: none;
+        background-color: var(--white, #fff);
+        border-right: 1px solid var(--border-color, #dee2e6);
+        color: var(--gray-700, #495057);
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        .o_int_filemanager_image_editor_button {
+            min-height: $o-int-editor-tool;
+
+            &:hover:not(:disabled) {
+                background-color: var(--gray-100, #f8f9fa);
+            }
+
+            &.active {
+                background-color: var(--gray-200, #e9ecef);
+                box-shadow: inset 3px 0 0 var(--primary, #71639e);
+                color: var(--gray-900, #212529);
+            }
+        }
+    }
+
+    .o_int_filemanager_image_editor_tool {
+        position: relative;
+        flex: 0 0 $o-int-editor-tool;
+        width: $o-int-editor-tool;
+    }
+
+    // The mark on a button that opens a dropdown of tools.
+    .o_int_filemanager_image_editor_tool_more {
+        position: absolute;
+        right: 5px;
+        bottom: 4px;
+        font-size: 9px;
+        color: var(--gray-500, #adb5bd);
+    }
+
+    .o_int_filemanager_image_editor_tools_separator {
+        flex: 0 0 auto;
+        margin: 0.25rem 0.5rem;
+        border-top: 1px solid var(--border-color, #dee2e6);
+    }
+
+    // Fabric draws the marks and their handles on the canvas, and the canvas fills the stage: the
+    // stage takes the touches itself (they pinch and move the view, the browser must not scroll).
+    .o_int_filemanager_image_editor_stage {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        touch-action: none;
+        background-color: var(--gray-200, #e9ecef);
+
+        .canvas-container {
+            position: absolute !important;
+            inset: 0;
+        }
+    }
+
+    .o_int_filemanager_image_editor_panel {
+        flex: 0 0 $o-int-editor-panel;
+        width: $o-int-editor-panel;
+        overflow-y: auto;
+        padding: 0;
+        background-color: var(--white, #fff);
+        border-left: 1px solid var(--border-color, #dee2e6);
+        color: var(--body-color, #212529);
+        // The sections draw their own lines.
+        gap: 0 !important;
+        scrollbar-width: thin;
+
+        .form-range {
+            margin: 0;
+        }
+    }
+
+    .o_int_filemanager_image_editor_hint {
+        padding: 0.5rem 0.75rem;
+        background-color: var(--gray-100, #f8f9fa);
+        border-bottom: 1px solid var(--border-color, #dee2e6);
+        color: var(--gray-700, #495057);
+    }
+
+    // A section of the settings: a line to fold it, and what is in it.
+    .o_int_filemanager_image_editor_section {
+        border-bottom: 1px solid var(--border-color, #dee2e6);
+
+        > summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.45rem 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            list-style: none;
+            user-select: none;
+
+            &::-webkit-details-marker {
+                display: none;
+            }
+
+            &::after {
+                content: "\f107"; // the caret of FontAwesome, down
+                font-family: FontAwesome;
+                font-weight: normal;
+                color: var(--gray-600, #6c757d);
+            }
+
+            &:hover {
+                background-color: var(--gray-100, #f8f9fa);
+            }
+        }
+
+        &[open] > summary::after {
+            content: "\f106"; // up
+        }
+    }
+
+    .o_int_filemanager_image_editor_section_body {
+        padding: 0.25rem 0.75rem 0.75rem;
+    }
+
+    .o_int_filemanager_image_editor_section_plain {
+        padding-top: 0.75rem;
+        border-bottom: 1px solid var(--border-color, #dee2e6);
+    }
+
+    // As Bootstrap's `md` breakpoint: this bundle has no Bootstrap mixins of its own.
+    @media (max-width: 767.98px) {
+        .o_int_filemanager_image_editor_body {
+            flex-direction: column;
+        }
+
+        .o_int_filemanager_image_editor_tools {
+            flex: 0 0 auto;
+            flex-direction: row;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border-right: 0;
+            border-bottom: 1px solid var(--border-color, #dee2e6);
+
+            .o_int_filemanager_image_editor_button.active {
+                box-shadow: inset 0 -3px 0 var(--primary, #71639e);
+            }
+        }
+
+        .o_int_filemanager_image_editor_tools_separator {
+            margin: 0.5rem 0.25rem;
+            border-top: 0;
+            border-left: 1px solid var(--border-color, #dee2e6);
+        }
+
+        .o_int_filemanager_image_editor_panel {
+            flex: 0 0 auto;
+            width: 100%;
+            max-height: 42vh;
+            border-left: 0;
+            border-top: 1px solid var(--border-color, #dee2e6);
+        }
+    }
+}
+
+// The popups are not inside the editor (the popover service puts them elsewhere).
+.o_int_filemanager_image_editor_swatch {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+}
+
+.o_int_filemanager_image_editor_swatch_choice {
+    margin: 1px;
+    padding: 0;
+
+    &.active {
+        outline: 2px solid var(--primary, #71639e);
+        outline-offset: 1px;
+    }
+}
+
+.o_int_filemanager_image_editor_color_input {
+    width: 2rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}

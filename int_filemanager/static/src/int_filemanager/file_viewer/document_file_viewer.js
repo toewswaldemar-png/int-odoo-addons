@@ -1,4 +1,4 @@
-import { onWillDestroy, useEffect, useState } from "@odoo/owl";
+import { onWillDestroy, useEffect, useEnv, useRef, useState } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { FileViewer } from "@web/core/file_viewer/file_viewer";
 import { registry } from "@web/core/registry";
@@ -13,6 +13,8 @@ const MAX_SCALE = 10;
 const SCALE_DELTA = 1.1;
 const PIXELS_PER_TICK = 30;
 const TOUCH_EVENTS = ["pointerdown", "pointermove", "pointerup", "pointercancel"];
+// A press that moved less than this (px) is a click, not the drag of the picture.
+const DRAG_SLOP = 4;
 // A little more than the image transition (0.2 s), in ms.
 const ROTATE_ANIMATION_TIME = 300;
 
@@ -28,9 +30,16 @@ function keep(value, limit) {
  * `state.scale` and `translate` stay the core's own, the fingers only drive them.
  */
 export class DocumentFileViewer extends FileViewer {
+    static template = "int_filemanager.DocumentFileViewer";
+    // `onEdit(file)`: the button "Edit" in the toolbar of a picture; without it there is none.
+    static props = [...FileViewer.props, "onEdit?"];
+
     setup() {
         super.setup();
         this.minScale = MIN_SCALE;
+        // The ground of the viewer (`t-ref="main"` in the template): the surface of a picture.
+        this.mainRef = useRef("main");
+        this.dragMoved = false;
         useFileViewerSwipe(this);
         useFileViewerFrameZoom(this);
         this.touches = new Map();
@@ -50,8 +59,9 @@ export class DocumentFileViewer extends FileViewer {
             this.dropPreloads(new Set());
         });
         useEffect(
-            (image) => {
-                if (!image) {
+            (main, zoomer) => {
+                // The zoomer is there for a picture only.
+                if (!main || !zoomer) {
                     return;
                 }
                 const handlers = {
@@ -61,22 +71,22 @@ export class DocumentFileViewer extends FileViewer {
                     pointercancel: this.onTouchEnd.bind(this),
                 };
                 for (const type of TOUCH_EVENTS) {
-                    image.addEventListener(type, handlers[type]);
+                    main.addEventListener(type, handlers[type]);
                 }
                 // Own layer: moving the picture does not draw it again.
-                this.zoomerRef.el.style.willChange = "transform";
-                const detachDoubleTap = attachDoubleTap(image, {
+                zoomer.style.willChange = "transform";
+                const detachDoubleTap = attachDoubleTap(main, {
                     canDoubleTap: () => this.state.scale !== 1,
                     onDoubleTap: () => this.resetZoom(),
                 });
                 return () => {
                     detachDoubleTap();
                     for (const type of TOUCH_EVENTS) {
-                        image.removeEventListener(type, handlers[type]);
+                        main.removeEventListener(type, handlers[type]);
                     }
                 };
             },
-            () => [this.imageRef.el]
+            () => [this.mainRef.el, this.zoomerRef.el]
         );
         useEffect(
             (iframe) => {
@@ -89,6 +99,10 @@ export class DocumentFileViewer extends FileViewer {
             },
             () => [this.iframeViewerPdfRef.el]
         );
+    }
+
+    onClickEdit() {
+        this.props.onEdit(this.state.file);
     }
 
     /** @override Called by the core's template at every load of the picture. */
@@ -178,7 +192,7 @@ export class DocumentFileViewer extends FileViewer {
     /** @override `transition-base` of the template is `!important`, so is the reset. */
     get imageStyle() {
         const transition = this.animation.rotating ? "" : "transition: none !important;";
-        return `${super.imageStyle}touch-action: none;${transition}`;
+        return `${super.imageStyle}${transition}`;
     }
 
     /** @override */
@@ -225,8 +239,42 @@ export class DocumentFileViewer extends FileViewer {
         this.zoomAt(this.stepScale(this.state.scale, -1));
     }
 
+    /**
+     * @override A click on the ground of the viewer closes it (the core's), unless it is the end of
+     * the drag of a picture: that press began and ended on the ground, so the browser sends the click
+     * there.
+     */
+    onClickMain() {
+        if (this.dragMoved) {
+            this.dragMoved = false;
+            return;
+        }
+        this.close();
+    }
+
+    /** @override A press anywhere on the ground takes the picture; only a picture can be taken. */
+    onMousedownImage(ev) {
+        if (!this.state.file.isImage) {
+            return;
+        }
+        this.dragMoved = false;
+        super.onMousedownImage(ev);
+    }
+
     /** @override */
+    onMousemoveView(ev) {
+        const way = Math.hypot(ev.clientX - this.dragStartX, ev.clientY - this.dragStartY);
+        if (this.isDragging && way > DRAG_SLOP) {
+            this.dragMoved = true;
+        }
+        super.onMousemoveView(ev);
+    }
+
+    /** @override Anywhere on the ground, for a picture. */
     onWheelImage(ev) {
+        if (!this.state.file.isImage) {
+            return;
+        }
         if (ev.ctrlKey) {
             ev.preventDefault(); // else the browser zooms the page
         }
@@ -427,8 +475,9 @@ export class DocumentFileViewer extends FileViewer {
     }
 }
 
-/** @returns {{open: function(Object, Object[]): void, close: function(): void}} */
+/** @returns {{open: function(Object, Object[], Object): void, close: function(): void}} */
 export function useDocumentFileViewer() {
+    const env = useEnv();
     const id = `int_filemanager.file_viewer${nextViewerId++}`;
     const mainComponents = registry.category("main_components");
 
@@ -436,17 +485,35 @@ export function useDocumentFileViewer() {
         mainComponents.remove(id);
     }
 
-    /** @param {Object[]} files the files the arrow keys go through */
-    function open(file, files = [file]) {
+    /**
+     * @param {Object[]} files the files the arrow keys go through
+     * @param {Object} props more props of the viewer, e.g. `onEdit`; where the service of the
+     *      picture editor is (not on the page of the guests), the viewer offers it for pictures
+     */
+    function open(file, files = [file], props = {}) {
         close();
         if (!file.isViewable) {
             return;
         }
         // The viewer finds the file to start with among the files by identity.
         const viewableFiles = files.filter((candidate) => candidate.isViewable);
+        const editor = env.services["int_filemanager.image_editor"];
         mainComponents.add(id, {
             Component: DocumentFileViewer,
-            props: { files: viewableFiles, startIndex: viewableFiles.indexOf(file), close },
+            props: {
+                files: viewableFiles,
+                startIndex: viewableFiles.indexOf(file),
+                close,
+                // The editor takes the place of the viewer: its parts lie above the editor's, so the
+                // viewer is closed when the editor opens.
+                ...(editor && {
+                    onEdit: (picture) => {
+                        close();
+                        editor.open(picture);
+                    },
+                }),
+                ...props,
+            },
         });
     }
 

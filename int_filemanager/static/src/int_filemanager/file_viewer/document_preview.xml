@@ -8,6 +8,7 @@
                 files="[props.file]"
                 startIndex="0"
                 modal="false"
+                onEdit="props.onEdit"
             />
             <div
                 t-else=""

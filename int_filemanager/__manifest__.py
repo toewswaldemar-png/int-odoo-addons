@@ -37,6 +37,16 @@
         "web.assets_backend": [
             "int_filemanager/static/src/int_filemanager/**/*",
         ],
+        # The editor for pictures and Fabric, the library it draws with: loaded at the first
+        # click on "Edit" (the registry `lazy_components`), not with every page.
+        "int_filemanager.assets_image_editor": [
+            "int_filemanager/static/lib/fabric/fabric.min.js",
+            "int_filemanager/static/src/image_editor/**/*",
+        ],
+        # The tests of the picture editor (Hoot); they load the bundle of the editor themselves.
+        "web.assets_unit_tests": [
+            "int_filemanager/static/tests/**/*",
+        ],
         # The page that asks for the password of a share: one plain script.
         "int_filemanager.assets_guest_password": [
             "int_filemanager/static/src/password_page/password_page.js",
@@ -94,6 +104,10 @@
             "int_filemanager/static/src/int_filemanager/**/*",
             ("remove", "int_filemanager/static/src/int_filemanager/views/form/**/*"),
             ("remove", "int_filemanager/static/src/int_filemanager/file_viewer/document_preview*"),
+            (
+                "remove",
+                "int_filemanager/static/src/int_filemanager/file_viewer/document_image_editor_service.js",
+            ),
             "int_filemanager/static/src/guest/**/*",
         ],
     },

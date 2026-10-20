@@ -2,8 +2,12 @@
     // The viewer places its parts against the edges and under it (z-index: -1).
     isolation: isolate;
 
-    .o-FileViewer-headerButton:has(.fa-times) {
-        display: none;
+    // The bar of the viewer says nothing that the page does not: the name is the title above, the
+    // download is in the control panel (and in the bar below the picture), and its close button does
+    // nothing here. It also lies over the top of the picture. (`!important`: the parts of the bar
+    // carry `d-flex`, which is `!important` as well.)
+    .o-FileViewer-header {
+        display: none !important;
     }
 
     // A PDF or a text takes the whole width, not three quarters of it.
