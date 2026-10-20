@@ -20,41 +20,14 @@
             >
                 <span class="o_int_filemanager_context_menu_anchor" t-ref="contextMenuAnchor" />
                 <t t-set-slot="content">
-                    <DropdownItem
-                        t-if="contextMenu.onView"
-                        class="'o_menu_item'"
-                        onSelected="contextMenu.onView"
-                    >
-                        <i class="fa fa-fw fa-eye me-1" />View
-                    </DropdownItem>
-                    <DropdownItem
-                        t-if="contextMenu.onProperties"
-                        class="'o_menu_item'"
-                        onSelected="contextMenu.onProperties"
-                    >
-                        <i class="fa fa-fw fa-pencil me-1" />Properties
-                    </DropdownItem>
-                    <div t-if="(contextMenu.onView or contextMenu.onProperties) and (contextMenu.buttons.length or props.contextMenuItems.length or contextMenu.newFolder)" role="separator" class="dropdown-divider" />
-                    <t t-foreach="contextMenu.buttons" t-as="button" t-key="button.id">
-                        <DropdownItem
-                            class="'o_menu_item'"
-                            onSelected="() => this.onButtonSelected(button)"
-                        >
-                            <i t-if="button.icon" t-att-class="getIconClass(button.icon) + ' me-1'" />
-                            <t t-out="button.string" />
-                        </DropdownItem>
-                    </t>
-                    <div t-if="contextMenu.buttons.length and (props.contextMenuItems.length or contextMenu.newFolder)" role="separator" class="dropdown-divider" />
-                    <t t-foreach="props.contextMenuItems" t-as="item" t-key="item.key">
-                        <DropdownItem class="'o_menu_item'" onSelected="() => item.callback()">
-                            <i t-if="item.icon" t-att-class="item.icon + ' me-1 fa-fw oi-fw'" />
-                            <t t-out="item.description" />
-                        </DropdownItem>
-                    </t>
-                    <t t-if="contextMenu.newFolder">
-                        <DropdownItem class="'o_menu_item'" onSelected="contextMenu.newFolder">
-                            <i class="fa fa-fw fa-folder me-1" />New folder
-                        </DropdownItem>
+                    <t t-foreach="contextMenu.sections" t-as="section" t-key="section_index">
+                        <div t-if="section_index" role="separator" class="dropdown-divider" />
+                        <t t-foreach="section" t-as="item" t-key="item.key">
+                            <DropdownItem class="'o_menu_item'" onSelected="item.onSelected">
+                                <i t-if="item.icon" t-att-class="item.icon + ' me-1 fa-fw oi-fw'" />
+                                <t t-out="item.description" />
+                            </DropdownItem>
+                        </t>
                     </t>
                 </t>
             </Dropdown>

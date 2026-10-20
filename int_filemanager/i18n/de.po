@@ -1331,7 +1331,7 @@ msgstr "Fortschritt"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.js:0
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
 msgid "Properties"
 msgstr "Eigenschaften"
@@ -3396,7 +3396,7 @@ msgstr "Hochladen gibt es nur für Ordner."
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.js:0
 msgid "View"
 msgstr "Ansehen"
 
@@ -3408,7 +3408,7 @@ msgstr "Neu"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.js:0
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action_new
 msgid "New folder"
