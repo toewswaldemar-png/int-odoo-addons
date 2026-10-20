@@ -1,4 +1,5 @@
 import errno
+import json
 import logging
 import time
 
@@ -8,6 +9,7 @@ from odoo import fields, http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import Response, request
 
+from ..models.int_filemanager_document import EDIT_STATE_MAX_SIZE
 from ..tools.zip_stream import export_name, zip_chunks, zip_length
 
 _logger = logging.getLogger(__name__)
@@ -63,12 +65,25 @@ class IntFilemanager(http.Controller):
         methods=["POST"],
         max_content_length=max_upload_size,
     )
-    def upload(self, folder_id=None, link_model=None, link_id=None, **kwargs):
+    def upload(
+        self,
+        folder_id=None,
+        link_model=None,
+        link_id=None,
+        edit_state=None,
+        edit_source_id=None,
+        **kwargs,
+    ):
         """Store one file as a document of the folder, or of the record it is uploaded at.
 
         With ``link_model`` and ``link_id`` the file goes to the folder that the settings name
         for the model of the record and is linked to the record; whoever may change the record
         may do that, the folders are not looked at. Without them the file goes to ``folder_id``.
+
+        The picture editor sends ``edit_state`` (its state as JSON) and ``edit_source_id`` (the
+        picture it started from) with the picture it stored: they are kept with the document so
+        that the next edit finds the marks again. A source that the user may not read is
+        dropped, the picture is then stored flat.
 
         The answer is JSON; an error carries ``{"error": {"message": ...}}`` and a status that
         Odoo's ``file_upload`` service shows to the user.
@@ -84,8 +99,9 @@ class IntFilemanager(http.Controller):
                 record = None
                 folder = self._folder_to_write(folder_id)
             upload = files[0]
+            values = {} if record else self._edit_values(edit_state, edit_source_id)
             document = request.env["int.filemanager.document"]._create_from_stream(
-                upload.stream, upload.filename, folder, upload.mimetype
+                upload.stream, upload.filename, folder, upload.mimetype, **values
             )
             if record:
                 # The storage and the link run as superuser: the right to change the record was
@@ -115,6 +131,25 @@ class IntFilemanager(http.Controller):
                 "mimetype": document.mimetype,
             }
         )
+
+    def _edit_values(self, edit_state, edit_source_id):
+        """The field values for the state of the picture editor, none if there is nothing to keep."""
+        if not edit_state:
+            return {}
+        if len(edit_state.encode()) > EDIT_STATE_MAX_SIZE:
+            raise UserError(request.env._("The state of the editor is too large to be kept."))
+        try:
+            state = json.loads(edit_state)
+            source_id = int(edit_source_id)
+        except (TypeError, ValueError):
+            raise UserError(request.env._("The state of the editor is not valid.")) from None
+        if not isinstance(state, dict):
+            raise UserError(request.env._("The state of the editor is not valid."))
+        # The rules of the user decide: the marks are kept only with a picture they could start from.
+        source = request.env["int.filemanager.document"].search([("id", "=", source_id)])
+        if not source:
+            return {}
+        return {"edit_state": state, "edit_source_id": source.id}
 
     def _folder_to_write(self, folder_id):
         """The folder, if the user may write into it (the storage runs as superuser)."""

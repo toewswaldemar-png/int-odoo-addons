@@ -64,7 +64,19 @@ CONTENT_WORD_LENGTH = 200
 # Set by the storage only (see ``write``), like the core does for ``ir.attachment``. The picture
 # of a PDF and its state are made by the scheduled action alone; the share a file came in
 # through, by the upload of the share.
-STORAGE_FIELDS = ("checksum", "size", "mimetype", "thumbnail", "thumbnail_state", "share_id")
+STORAGE_FIELDS = (
+    "checksum",
+    "size",
+    "mimetype",
+    "thumbnail",
+    "thumbnail_state",
+    "share_id",
+    "edit_source_id",
+    "edit_state",
+)
+# The most bytes of the state that the picture editor stores with a picture (the marks, the
+# filters, the crop, and the small pictures that were put into the editor).
+EDIT_STATE_MAX_SIZE = 8 * 1024**2
 # The picture of the first page of a PDF (``_cron_thumbnails``): the longer side in pixels, the
 # files drawn per run, the time and the memory one page may take. A child process draws it
 # (``tools/pdf_thumbnail.py``): a broken file may crash the PDF library.
@@ -138,6 +150,26 @@ class IntFilemanagerDocument(models.Model):
         copy=False,
         index="btree_not_null",
         ondelete="set null",
+    )
+    # What the picture editor leaves with a picture it stored: the picture it started from and the
+    # state of the editor (marks, filters, crop) on that picture, so that the next edit finds the
+    # marks as objects again. Both are set by the storage only; the editor reads them through
+    # ``get_edit_session``, which hands out the source only to someone who may read it.
+    edit_source_id = fields.Many2one(
+        "int.filemanager.document",
+        string="Edited from",
+        readonly=True,
+        copy=False,
+        index="btree_not_null",
+        ondelete="set null",
+        groups="base.group_system",
+    )
+    edit_state = fields.Json(
+        string="Editor state",
+        readonly=True,
+        copy=False,
+        exportable=False,
+        groups="base.group_system",
     )
     # A binary field that holds nothing: ``ir.binary`` only streams a record's *binary field*
     # (``/web/content/<model>/<id>/content``). The bytes come from the blob, see
@@ -485,6 +517,36 @@ class IntFilemanagerDocument(models.Model):
         """The share dialog of one file: the list has the button for the ticked rows too."""
         self._check_one_selected()
         return super().action_share()
+
+    def get_edit_session(self):
+        """What the picture editor needs to go on with a picture that it stored before.
+
+        The state of the editor and the picture that it was made on. The picture is handed out
+        only if the user may read it (their rules, and not archived): the one who may read the
+        edited picture need not see where it came from. The editor then starts with the flat
+        picture.
+
+        :return: ``{"state": dict, "source": {"id", "name", "mimetype", "checksum", "size"}}``,
+            or ``{}`` if there is nothing to go on with
+        """
+        self.ensure_one()
+        self.check_access("read")
+        stored = self.sudo()
+        if not stored.edit_state or not stored.edit_source_id:
+            return {}
+        source = self.search([("id", "=", stored.edit_source_id.id)])
+        if not source:
+            return {}
+        return {
+            "state": stored.edit_state,
+            "source": {
+                "id": source.id,
+                "name": source.name,
+                "mimetype": source.mimetype,
+                "checksum": source.checksum,
+                "size": source.size,
+            },
+        }
 
     def _check_one_selected(self):
         # The buttons in the head of the list act on every ticked row; these act on one.
