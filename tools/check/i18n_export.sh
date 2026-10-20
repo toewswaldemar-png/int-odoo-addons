@@ -24,11 +24,13 @@ if [[ "$LANGUAGE" != pot ]]; then
 fi
 
 cd "$(git rev-parse --show-toplevel)"
+source tools/check/lock.sh
+take_lock i18n
 cleanup() {
   [[ "${I18N_KEEP:-0}" == 1 ]] && return
   ssh "$HOST" "docker exec fmtest_pg dropdb -U odoo --if-exists $DB; rm -rf $R" || true
 }
-trap cleanup EXIT
+trap 'cleanup; release_lock' EXIT
 
 ssh "$HOST" "rm -rf $R && mkdir -p $R/addons $R/config $R/data $R/out && chmod 777 $R/data $R/out"
 tar -c --exclude=__pycache__ int_filemanager | ssh "$HOST" "tar -x -C $R/addons"
