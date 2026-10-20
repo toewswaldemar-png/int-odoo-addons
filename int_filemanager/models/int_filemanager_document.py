@@ -502,17 +502,6 @@ class IntFilemanagerDocument(models.Model):
         except ValueError:
             return DEFAULT_ZIP_MAX_SIZE
 
-    def action_open_form(self):
-        """Open the form of the document: the list has no button for it in each row."""
-        self._check_one_selected()
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": self._name,
-            "res_id": self.id,
-            "view_mode": "form",
-            "views": [(False, "form")],
-        }
-
     def action_share(self):
         """The share dialog of one file: the list has the button for the ticked rows too."""
         self._check_one_selected()

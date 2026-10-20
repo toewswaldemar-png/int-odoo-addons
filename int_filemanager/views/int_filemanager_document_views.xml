@@ -13,15 +13,7 @@
                 duplicate="0"
             >
                 <header>
-                    <button name="action_open_form" type="object" string="Properties" icon="fa-pencil" />
                     <button name="action_download" type="object" string="Download" icon="fa-download" />
-                    <button
-                        name="%(int_filemanager.int_filemanager_move_document_action)d"
-                        type="action"
-                        string="Move to..."
-                        icon="fa-folder-open"
-                        groups="int_filemanager.int_filemanager_group_user"
-                    />
                     <button
                         name="action_share"
                         type="object"

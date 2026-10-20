@@ -24,3 +24,14 @@ class TestTranslationFiles(TransactionCase):
                 rows = list(PoFileReader(path))
                 self.assertTrue(rows)
                 self.assertEqual({row["module"] for row in rows}, {"int_filemanager"})
+
+    def test_the_terms_of_the_scripts_are_marked_for_the_web_client(self):
+        # The web client takes only the entries with a ``code:`` reference (the terms of `_t` and of
+        # the Owl templates); an entry that has the term for a view only leaves it in English.
+        folder = os.path.join(get_module_path("int_filemanager"), "i18n")
+        rows = list(PoFileReader(os.path.join(folder, "de.po")))
+        for term in ("Move to...", "Properties", "View", "New folder"):
+            with self.subTest(term=term):
+                self.assertTrue(
+                    any(row["src"] == term and row["type"] == "code" for row in rows),
+                )

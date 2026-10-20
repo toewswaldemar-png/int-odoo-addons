@@ -1,9 +1,12 @@
-import { useRef } from "@odoo/owl";
+import { onWillStart, useRef } from "@odoo/owl";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { makeContext } from "@web/core/context";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { useCustomDropzone } from "@web/core/dropzone/dropzone_hook";
 import { _t } from "@web/core/l10n/translation";
+import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
+import { STATIC_ACTIONS_GROUP_NUMBER } from "@web/search/action_menus/action_menus";
 import { ListController } from "@web/views/list/list_controller";
 import { DocumentDropzone } from "../../dropzone/document_dropzone";
 import {
@@ -22,12 +25,21 @@ const FINISHED_STATES = ["loaded", "error", "abort"];
 const FOLDERS_PER_CALL = 200;
 const FAILURES_IN_A_ROW = 5;
 const FAILURES_SHOWN = 5;
+const MOVE_MODEL = "int.filemanager.move";
+const MOVE_ACTION = "int_filemanager.int_filemanager_move_document_action";
+// Groups of the "Actions" menu (a divider lies between two groups), in the order of the `sequence`
+// of the static items: what leaves the list (print, export; the group of the core), what puts
+// records elsewhere (move), what ends a record (archive, delete). The actions that other modules
+// bind to the model stay in the last group of the core.
+const ACTIONS_MOVE_GROUP = STATIC_ACTIONS_GROUP_NUMBER + 1;
+const ACTIONS_LIFECYCLE_GROUP = ACTIONS_MOVE_GROUP + 1;
 
 /**
  * The list of documents with the menu "New" (upload, new folder) and files dropped on the list.
  * One request carries one file (the route wants it so), the files go one after the other.
  */
 export class DocumentListController extends ListController {
+    static template = "int_filemanager.DocumentListView";
     static components = { ...ListController.components, Dropdown };
 
     setup() {
@@ -38,6 +50,9 @@ export class DocumentListController extends ListController {
         this.folderRights = useFolderRights();
         this.fileUploadService = useService("file_upload");
         this.notification = useService("notification");
+        onWillStart(async () => {
+            this.canMove = await user.checkAccessRight(MOVE_MODEL, "create");
+        });
         useCustomDropzone(
             this.rootRef,
             DocumentDropzone,
@@ -72,6 +87,48 @@ export class DocumentListController extends ListController {
         };
     }
 
+    /** @override "Move to..." is an item of the menu like "Export", so that it has an icon. */
+    getStaticActionMenuItems() {
+        const items = super.getStaticActionMenuItems();
+        items.move = {
+            isAvailable: () => this.canMove,
+            sequence: 20,
+            icon: "fa fa-folder-open",
+            description: _t("Move to..."),
+            groupNumber: ACTIONS_MOVE_GROUP,
+            callback: () => this.onMoveSelected(),
+        };
+        // Archive and delete are a group of their own, below the others.
+        for (const key of ["archive", "unarchive", "delete"]) {
+            items[key].groupNumber = ACTIONS_LIFECYCLE_GROUP;
+        }
+        return items;
+    }
+
+    /** @returns {Object[]} the items of the menu that the right click on a row shows as well */
+    get contextMenuItems() {
+        return this.actionMenuItems.action.filter(
+            (item) => item.groupNumber === ACTIONS_MOVE_GROUP
+        );
+    }
+
+    /** Opens the dialog for the ticked rows, as the `ActionMenus` of the core runs an action. */
+    async onMoveSelected() {
+        const resIds = await this.model.root.getResIds(true);
+        return this.actionService.doAction(MOVE_ACTION, {
+            additionalContext: makeContext([
+                this.model.root.context,
+                {
+                    active_id: resIds[0],
+                    active_ids: resIds,
+                    active_model: this.props.resModel,
+                    active_domain: this.props.domain,
+                },
+            ]),
+            onClose: () => this.model.load(),
+        });
+    }
+
     get foldersSection() {
         return getFoldersSection(this.env.searchModel);
     }
@@ -84,21 +141,6 @@ export class DocumentListController extends ListController {
         const folders = this.foldersSection;
         const folder = folders?.activeValueId && folders.values.get(folders.activeValueId);
         return folder?.display_name || false;
-    }
-
-    /**
-     * @override
-     * "Properties" opens the form like a click on a row does (pager over the rows of the page);
-     * the model's method opens an action of its own, with one record and no list in the
-     * breadcrumb. With more rows ticked that method stays: it tells the user to choose one.
-     */
-    async beforeExecuteActionButton(clickParams) {
-        const { selection } = this.model.root;
-        if (clickParams.name === "action_open_form" && selection.length === 1) {
-            await this.openRecord(selection[0]);
-            return false;
-        }
-        return super.beforeExecuteActionButton(...arguments);
     }
 
     /**

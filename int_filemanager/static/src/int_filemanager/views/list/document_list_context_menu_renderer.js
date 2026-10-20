@@ -14,12 +14,19 @@ const BROWSER_MENU = "a, input, textarea, select, [contenteditable]";
  */
 export class DocumentListContextMenuRenderer extends DocumentListRenderer {
     static template = "int_filemanager.DocumentListContextMenuRenderer";
+    static props = [...DocumentListRenderer.props, "contextMenuItems?"];
+    static defaultProps = { contextMenuItems: [] };
 
     setup() {
         super.setup();
         this.anchorRef = useRef("contextMenuAnchor");
         this.dropdownState = useDropdownState();
-        this.contextMenu = useState({ buttons: [], onView: undefined, newFolder: undefined });
+        this.contextMenu = useState({
+            buttons: [],
+            onView: undefined,
+            onProperties: undefined,
+            newFolder: undefined,
+        });
         this.newFolder = useNewFolder();
         this.folderRights = useFolderRights();
     }
@@ -55,6 +62,7 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
                     !evaluateBooleanExpr(button.invisible, list.evalContext)
             ),
             onView: this.getViewAction(record),
+            onProperties: this.getPropertiesAction(record),
             // A list without the folders of the panel has no such item, nor for a reader.
             newFolder:
                 this.folderRights.create && getFoldersSection(this.env.searchModel)
@@ -89,6 +97,17 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
     /** @param {String} icon FontAwesome or Odoo icon of a button of the arch */
     getIconClass(icon) {
         return icon.startsWith("oi-") ? `oi oi-fw ${icon}` : `fa fa-fw ${icon}`;
+    }
+
+    /**
+     * @returns {Function|undefined} opens the form as a click on a row does (the pager runs over
+     * the rows of the page), if the row is the only one ticked
+     */
+    getPropertiesAction(record) {
+        const { list } = this.props;
+        if (list.selection.length === 1 && list.selection[0] === record) {
+            return () => this.props.openRecord(record);
+        }
     }
 
     /** @returns {Function|undefined} opens the viewer, if the row is the only one ticked */

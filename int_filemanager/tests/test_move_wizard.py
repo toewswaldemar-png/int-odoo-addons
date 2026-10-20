@@ -124,12 +124,25 @@ class TestMoveWizard(AccessCase, TransactionCase):
         with self.assertRaises(AccessError):
             self._wizard(user=self.outsider)
 
-    def test_the_buttons_open_the_dialog_for_the_ticked_records(self):
-        for view, action in (
-            ("int_filemanager_document_view_list", "int_filemanager_move_document_action"),
-            ("int_filemanager_folder_view_list", "int_filemanager_move_folder_action"),
-        ):
-            arch = self.env.ref(f"int_filemanager.{view}").arch_db
-            self.assertIn(f'name="{self.env.ref("int_filemanager." + action).id}"', arch)
+    def test_the_documents_list_has_the_dialog_as_an_item_of_its_menu_not_as_a_button(self):
+        # The controller of the list adds the item (it has an icon there): no button in the head
+        # of the list and no binding that would show it a second time in the "Actions" menu.
+        action = self.env.ref("int_filemanager.int_filemanager_move_document_action")
+        self.assertFalse(action.binding_model_id)
+        arch = self.env.ref("int_filemanager.int_filemanager_document_view_list").arch_db
+        self.assertNotIn(f'name="{action.id}"', arch)
+
+    def test_the_item_of_the_menu_shows_for_those_who_may_open_the_dialog(self):
+        # The controller asks for the right to create the dialog, the same right as the model.
+        Access = self.env["ir.model.access"]
+        self.assertTrue(Access.with_user(self.alice).check("int.filemanager.move", "create", False))
+        self.assertFalse(Access.with_user(self.outsider).check("int.filemanager.move", "create", False))
+
+    def test_the_folders_list_has_the_button_for_the_dialog(self):
+        arch = self.env.ref("int_filemanager.int_filemanager_folder_view_list").arch_db
+        action = self.env.ref("int_filemanager.int_filemanager_move_folder_action")
+        self.assertIn(f'name="{action.id}"', arch)
+
+    def test_the_actions_get_the_ticked_records_from_the_active_ids(self):
         self.assertIn("default_document_ids", self.env.ref("int_filemanager.int_filemanager_move_document_action").context)
         self.assertIn("default_folder_ids", self.env.ref("int_filemanager.int_filemanager_move_folder_action").context)

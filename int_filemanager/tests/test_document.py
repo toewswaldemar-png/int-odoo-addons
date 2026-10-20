@@ -325,24 +325,13 @@ class TestFolderAndDocument(TransactionCase):
         with self.assertRaises(UserError):
             self.Document.browse().action_download()
 
-    def test_the_properties_action_opens_the_form_of_the_one_document(self):
-        document = self._document()
-        action = document.with_user(self.user).action_open_form()
-        self.assertEqual(action["type"], "ir.actions.act_window")
-        self.assertEqual((action["res_model"], action["res_id"]), (document._name, document.id))
-        self.assertEqual(action["view_mode"], "form")
-        with self.assertRaises(UserError):
-            (document + self._document("b.txt")).action_open_form()
-        with self.assertRaises(UserError):
-            self.Document.browse().action_open_form()
-
     def test_the_list_has_the_upload_and_the_buttons_for_the_ticked_rows(self):
         views = self.Document.with_user(self.user).get_views([(False, "list"), (False, "form")])
         arch = views["views"]["list"]["arch"]
         self.assertIn('js_class="int_filemanager_document_list"', arch)
         # The buttons are in the head of the list, none is in a row.
         head = arch[arch.index("<header>") : arch.index("</header>")]
-        for name in ("action_open_form", "action_download", "action_share"):
+        for name in ("action_download", "action_share"):
             self.assertIn(f'name="{name}"', head)
             self.assertEqual(arch.count(f'name="{name}"'), 1)
         self.assertIn('widget="int_filemanager_document_name"', arch)

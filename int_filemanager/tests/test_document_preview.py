@@ -45,8 +45,7 @@ class TestDocumentPreview(TransactionCase):
         self.assertIn('name="action_download"', arch)
         self.assertTrue(hasattr(self.Document, "action_download"))
 
-    def test_the_list_keeps_the_button_that_the_controller_turns_into_a_click_on_a_row(self):
-        # DocumentListController.beforeExecuteActionButton looks for the name of this method.
+    def test_the_list_has_no_button_for_the_form_as_the_click_on_a_row_opens_it(self):
+        # The context menu has the item "Properties", the head of the list does not repeat it.
         arch = self._views("list")["list"]["arch"]
-        self.assertIn('name="action_open_form"', arch)
-        self.assertTrue(hasattr(self.Document, "action_open_form"))
+        self.assertNotIn('name="action_open_form"', arch)

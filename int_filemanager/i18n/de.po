@@ -585,7 +585,8 @@ msgid "Folders"
 msgstr "Ordner"
 
 #. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_list
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_move_document_action
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_move_folder_action
@@ -1329,8 +1330,9 @@ msgid "Progress"
 msgstr "Fortschritt"
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.xml:0
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
 msgid "Properties"
 msgstr "Eigenschaften"
 

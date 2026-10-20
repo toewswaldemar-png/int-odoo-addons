@@ -74,15 +74,23 @@ CORE_PARTS = {
     # DocumentListRenderer: the click on the picture of a row; the rest of the row keeps the
     # core's click, which ends in `openRecord`.
     "@web/views/list/list_renderer": ("onCellClicked(", "openRecord("),
-    # DocumentListContextMenuRenderer: the buttons of the head of the list run as the core's
-    # `MultiRecordViewButton` runs them (the ticked rows, the call of the controller).
+    # DocumentListController: the item "Move to..." runs as the `ActionMenus` of the core runs an
+    # action (the ticked rows and the keys `active_*` in the context), in a group of the menu.
+    "@web/search/action_menus/action_menus": (
+        "executeAction(",
+        "additionalContext",
+        "active_ids",
+        "STATIC_ACTIONS_GROUP_NUMBER",
+    ),
+    # The static items bring their own `groupNumber` into the items of the menu.
+    "@web/views/list/list_controller": ("getStaticActionMenuItems(", "get actionMenuItems("),
+    # The buttons of the head of the list run as the core's `MultiRecordViewButton` runs them
+    # (the ticked rows, the call of the controller).
     "@web/views/view_button/multi_record_view_button": ("onClickViewButton(", "getResIds("),
     "@web/views/view_button/view_button_hook": ("onClickViewButton(", "beforeExecuteAction"),
     # DocumentListController: the menu "New" restores the view after the dialog of the new
     # folder (the client action of the core; the panel does not reload its tree).
     "@web/webclient/actions/client_actions": ("soft_reload",),
-    # DocumentListController: the button "Properties" opens the form as a click on a row does.
-    "@web/views/list/list_controller": ("beforeExecuteActionButton(", "selectRecord("),
 }
 
 
