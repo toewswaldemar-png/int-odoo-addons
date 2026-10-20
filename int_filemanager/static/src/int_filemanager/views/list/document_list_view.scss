@@ -1,0 +1,9 @@
+.o_int_filemanager_document_list_view {
+    @include media-breakpoint-up(lg) {
+        .o_control_panel_main {
+            // The search bar is taller than the selection box that replaces
+            // it; without this the list jumps when a row is ticked.
+            min-height: 34.6px;
+        }
+    }
+}
