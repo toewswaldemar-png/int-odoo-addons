@@ -23,7 +23,7 @@
                     />
                 </header>
                 <field name="name" widget="int_filemanager_document_name" />
-                <field name="folder_id" context="{'hierarchical_naming': True}" />
+                <field name="folder_id" string="Location" context="{'hierarchical_naming': True}" />
                 <field name="size" widget="int_filemanager_size" />
                 <field name="write_date" string="Modified" />
                 <field name="tag_ids" widget="many2many_tags" optional="show" />
@@ -149,7 +149,7 @@
                         <field name="checksum" invisible="1" />
                         <field name="ocr_checksum" invisible="1" />
                         <field name="name" />
-                        <field name="folder_id" context="{'hierarchical_naming': True}" />
+                        <field name="folder_id" string="Location" context="{'hierarchical_naming': True}" />
                         <field name="tag_ids" widget="many2many_tags" />
                         <field name="share_id" invisible="not share_id" />
                     </group>

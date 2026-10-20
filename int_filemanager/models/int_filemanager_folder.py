@@ -46,10 +46,16 @@ class IntFilemanagerFolder(models.Model):
     _description = "Filemanager folder"
     _inherit = ["mail.thread", "int.filemanager.shareable"]
     _parent_store = True
-    _order = "name"
+    # The full path, like ``product.category`` and ``stock.location``: a folder stands right below
+    # its parent in every list and every picker (by ``name`` alone "Root / Hallo" would come before
+    # "Root").
+    _order = "complete_name, id"
     _share_target = "folder_id"
 
     name = fields.Char(required=True, tracking=True)
+    # Only there to sort: it names every folder above, also the ones the user may not read, so
+    # ``_read_format`` does not give it out (the path that is shown is ``display_name``).
+    complete_name = fields.Char(compute="_compute_complete_name", recursive=True, store=True)
     parent_id = fields.Many2one(
         "int.filemanager.folder", index=True, ondelete="restrict", tracking=True
     )
@@ -142,6 +148,14 @@ class IntFilemanagerFolder(models.Model):
         '(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active',
         "A folder with this name already exists here.",
     )
+
+    @api.depends("name", "parent_id.complete_name")
+    def _compute_complete_name(self):
+        for folder in self:
+            if folder.parent_id:
+                folder.complete_name = f"{folder.parent_id.complete_name} / {folder.name}"
+            else:
+                folder.complete_name = folder.name
 
     @api.depends("access_mode", "parent_id.access_folder_id")
     def _compute_access_folder_id(self):
@@ -245,9 +259,13 @@ class IntFilemanagerFolder(models.Model):
         search panel of the guests needs it as well: it keeps a folder only if the chain of its
         parents lies in the result completely (``_search_panel_sanitized_parent_hierarchy``),
         so a root with a parent outside would leave the panel empty. Here, where every reading
-        passes (``read``, ``search_read``, ``web_read``), the root has none.
+        passes (``read``, ``search_read``, ``web_read``), the root has none. The same place keeps
+        ``complete_name`` (the sort key, with the names of all folders above) from the users.
         """
         result = super()._read_format(fnames, load)
+        if not self.env.su:
+            for values in result:
+                values.pop("complete_name", None)
         root_id = self.env.context.get(SHARE_ROOT_KEY)
         if root_id:
             for values in result:

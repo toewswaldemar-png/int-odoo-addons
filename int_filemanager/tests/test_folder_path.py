@@ -53,6 +53,29 @@ class TestFolderPath(AccessCase, TransactionCase):
     def test_the_path_of_a_folder_that_is_not_saved_is_its_name(self):
         self.assertEqual(self._path(self.Folder.new({"name": "Draft"})), "Draft")
 
+    def test_a_folder_stands_right_below_its_parent_in_the_order(self):
+        # By the last name alone it would be Hallo, Test, Top.
+        top = self.Folder.create({"name": "Top", "access_mode": "open"})
+        hallo = self.Folder.create({"name": "Hallo", "parent_id": top.id})
+        test = self.Folder.create({"name": "Test", "parent_id": top.id})
+        folders = top | hallo | test
+        self.assertEqual(self.Folder.search([("id", "in", folders.ids)]).mapped("name"), ["Top", "Hallo", "Test"])
+        top.name = "Alpha"
+        self.assertEqual(hallo.complete_name, "Alpha / Hallo")
+        self.assertEqual(self.Folder.search([("id", "in", folders.ids)]).mapped("name"), ["Alpha", "Hallo", "Test"])
+        test.parent_id = False
+        self.assertEqual(test.complete_name, "Test")
+        self.assertEqual(self.Folder.search([("id", "in", folders.ids)]).mapped("name"), ["Alpha", "Hallo", "Test"])
+
+    def test_the_sort_key_does_not_give_away_a_hidden_folder(self):
+        opened = self.Folder.create(
+            {"name": "Opened", "parent_id": self.secret.id, "access_mode": "open"}
+        )
+        self.assertEqual(opened.complete_name, "Secret / Opened")
+        values = opened.with_user(self.alice).read(["name", "complete_name"])[0]
+        self.assertEqual(values["name"], "Opened")
+        self.assertNotIn("complete_name", values)
+
     def test_the_search_for_a_folder_shows_the_paths(self):
         result = self.Folder.with_user(self.alice).with_context(**PATH).name_search("Deep")
         self.assertEqual([name for __, name in result], ["Shared / Deep"])

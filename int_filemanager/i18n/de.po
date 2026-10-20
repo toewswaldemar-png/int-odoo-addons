@@ -963,6 +963,12 @@ msgid "Load on the server"
 msgstr "Last auf dem Server"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+msgid "Location"
+msgstr "Ablageort"
+
+#. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__10
 msgid "Low"
 msgstr "Niedrig"
@@ -1267,7 +1273,7 @@ msgstr "Seiten ohne Text"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__parent_id
 msgid "Parent"
-msgstr "Übergeordneter Ordner"
+msgstr "Oberordner"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_path
