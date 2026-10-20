@@ -15,6 +15,9 @@ NAME=fmv2_ui
 PORT=8085
 
 cd "$(git rev-parse --show-toplevel)"
+source tools/check/lock.sh
+take_lock ui
+trap release_lock EXIT
 if [[ "${1:-}" == reset ]]; then
   ssh "$HOST" "docker rm -f $NAME >/dev/null 2>&1; docker exec fmtest_pg dropdb -U odoo --if-exists $DB; rm -rf $R"
 fi
@@ -58,6 +61,11 @@ echo "== upgrade + start"
 ssh "$HOST" "docker run --rm --network fmtest-net $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB -u int_filemanager --i18n-overwrite \
   --stop-after-init --workers=0 --no-http --log-level=warn >$R/upgrade.log 2>&1"
 ssh "$HOST" "docker run -d --name $NAME --network fmtest-net -p $PORT:8069 $MOUNTS -v /mnt/user/Daten:/mnt/hm-daten:ro $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB --log-level=info >/dev/null"
+
+# Who put which state here last: whoever looks at the port can read it ($BASE/INSTANCE_STATE).
+state="$(git rev-parse --short HEAD)$([[ -n "$(git status --porcelain)" ]] && echo ' + uncommitted changes') from $(hostname) at $(date '+%d.%m.%Y %H:%M')"
+ssh "$HOST" "echo '$state' > $BASE/INSTANCE_STATE"
+echo "state: $state"
 
 ip="$(ssh "$HOST" "hostname -I | awk '{print \$1}'")"
 echo "http://$ip:$PORT/odoo/action-int_filemanager.int_filemanager_document_action   (login: cat $R/LOGIN.txt on Tower)"

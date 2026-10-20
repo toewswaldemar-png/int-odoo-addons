@@ -21,6 +21,15 @@ quick=0
 [[ "${1:-}" == "--quick" ]] && quick=1
 
 cd "$(git rev-parse --show-toplevel)"
+source tools/check/lock.sh
+take_lock check
+
+# Nothing stays on Tower but the tools (odoo-ls, lintlib); CHECK_KEEP=1 keeps the rest to look at.
+cleanup() {
+  [[ "${CHECK_KEEP:-0}" == 1 ]] || ssh "$HOST" "docker exec fmtest_pg dropdb -U odoo --if-exists $DB; rm -rf $BASE/v2src $WORK" || true
+  release_lock
+}
+trap cleanup EXIT
 
 ssh "$HOST" "rm -rf $BASE/v2src && mkdir -p $BASE/v2src $WORK/data && chmod 777 $WORK/data"
 tar -c --exclude=__pycache__ int_filemanager | ssh "$HOST" "tar -x -C $BASE/v2src"

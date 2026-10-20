@@ -22,11 +22,13 @@ NAME=fmv2_live
 WORKERS="${SHARE_LIVE_WORKERS:-4}"
 
 cd "$(git rev-parse --show-toplevel)"
+source tools/check/lock.sh
+take_lock sharelive
 cleanup() {
   [[ "${SHARE_LIVE_KEEP:-0}" == 1 ]] && return
   ssh "$HOST" "docker rm -f $NAME >/dev/null 2>&1; docker exec fmtest_pg dropdb -U odoo --if-exists $DB; rm -rf $R" || true
 }
-trap cleanup EXIT
+trap 'cleanup; release_lock' EXIT
 
 ssh "$HOST" "docker rm -f $NAME >/dev/null 2>&1 || true; docker exec fmtest_pg dropdb -U odoo --if-exists $DB; rm -rf $R; \
   mkdir -p $R/addons $R/config $R/data $R/scripts $R/out && chmod 777 $R/data $R/out"

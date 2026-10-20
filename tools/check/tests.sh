@@ -20,12 +20,14 @@ if [[ "${1:-}" == "--test-tags" ]]; then
 fi
 
 cd "$(git rev-parse --show-toplevel)"
+source tools/check/lock.sh
+take_lock tests
 
 cleanup() {
   [[ "${TESTS_KEEP:-0}" == 1 ]] && return
   ssh "$HOST" "docker exec fmtest_pg dropdb -U odoo --if-exists $DB; rm -rf $R" || true
 }
-trap cleanup EXIT
+trap 'cleanup; release_lock' EXIT
 
 ssh "$HOST" "rm -rf $R && mkdir -p $R/addons $R/config $R/data && chmod 777 $R/data"
 tar -c --exclude=__pycache__ int_filemanager | ssh "$HOST" "tar -x -C $R/addons"
