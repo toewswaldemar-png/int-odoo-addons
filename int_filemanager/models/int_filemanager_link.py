@@ -256,3 +256,22 @@ class IntFilemanagerLink(models.Model):
                 self.sudo().search(
                     [("res_model", "=", res_model), ("res_id", "in", list(missing))]
                 ).unlink()
+
+    @api.model
+    def _toggle_access_via_record(self, active):
+        """Switch the way over the linked records on or off (the setting).
+
+        Three records belong together: the rule that shows a document through a record, and the
+        right of the internal users to read documents and links. A right without the rule would
+        show every document to every internal user.
+
+        :param active: True to switch on, False to switch off
+        """
+        rule = self.env.ref("int_filemanager.int_filemanager_document_rule_record").sudo()
+        accesses = (
+            self.env.ref("int_filemanager.access_int_filemanager_document_internal")
+            + self.env.ref("int_filemanager.access_int_filemanager_link_internal")
+        ).sudo()
+        if rule.active != active:
+            rule.write({"active": active})
+        accesses.filtered(lambda access: access.active != active).write({"active": active})

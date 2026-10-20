@@ -192,6 +192,7 @@ class TestFolderZip(HttpCase):
         secret, __ = self._hide_below()
         document = self._document(secret, "linked.txt", b"classified")
         partner = self.env["res.partner"].create({"name": "Linked to"})
+        self.env["int.filemanager.link"]._toggle_access_via_record(True)
         self.env["int.filemanager.link"].create(
             {"document_id": document.id, "record_ref": f"res.partner,{partner.id}"}
         )

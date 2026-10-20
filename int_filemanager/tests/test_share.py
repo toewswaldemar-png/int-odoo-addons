@@ -164,6 +164,7 @@ class TestShare(AccessCase, TransactionCase):
         self.env["int.filemanager.link"].create(
             {"document_id": hidden.id, "record_ref": f"res.partner,{partner.id}"}
         )
+        self.env["int.filemanager.link"]._toggle_access_via_record(True)
         self.assertIn(hidden, self.Document.with_user(self.alice).search([]))
         with self.assertRaises(AccessError):
             self._share(hidden)

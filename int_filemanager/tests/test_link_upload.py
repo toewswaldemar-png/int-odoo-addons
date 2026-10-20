@@ -139,6 +139,7 @@ class TestUploadAtRecord(HttpCase):
         document = self.Document.browse(
             self._upload("link_worker", **self._at()).json()["id"]
         )
+        self.env["int.filemanager.link"]._toggle_access_via_record(True)
         found = self.Document.with_user(self.worker).search([])
         self.assertEqual(found, document)
         self.assertFalse(self.env["int.filemanager.folder"].with_user(self.worker).has_access("read"))

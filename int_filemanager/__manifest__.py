@@ -9,6 +9,7 @@
     "data": [
         "security/int_filemanager_groups.xml",
         "security/ir.model.access.csv",
+        "security/ir.model.access.xml",
         "security/int_filemanager_folder_security.xml",
         "security/int_filemanager_document_security.xml",
         "security/int_filemanager_link_security.xml",

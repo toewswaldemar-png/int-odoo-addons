@@ -21,16 +21,19 @@
         <field name="groups" eval="[(4, ref('int_filemanager_group_user'))]" />
     </record>
 
-    <!-- Widens the rule above; without a matching rule a reader would see every document. -->
-    <record id="int_filemanager_document_rule_record" model="ir.rule">
-        <field name="name">Filemanager document: through a linked record</field>
-        <field name="model_id" ref="model_int_filemanager_document" />
-        <field name="domain_force">[('access_via_record', '=', True)]</field>
-        <field name="perm_write" eval="False" />
-        <field name="perm_create" eval="False" />
-        <field name="perm_unlink" eval="False" />
-        <field name="groups" eval="[(4, ref('base.group_user'))]" />
-    </record>
+    <!-- Switched on with the setting, together with the access rows of the internal users. -->
+    <data noupdate="1">
+        <record id="int_filemanager_document_rule_record" model="ir.rule">
+            <field name="name">Filemanager document: through a linked record</field>
+            <field name="model_id" ref="model_int_filemanager_document" />
+            <field name="active" eval="False" />
+            <field name="domain_force">[('access_via_record', '=', True)]</field>
+            <field name="perm_write" eval="False" />
+            <field name="perm_create" eval="False" />
+            <field name="perm_unlink" eval="False" />
+            <field name="groups" eval="[(4, ref('base.group_user'))]" />
+        </record>
+    </data>
 
     <record id="int_filemanager_document_rule_admin" model="ir.rule">
         <field name="name">Filemanager document: administrators see all</field>

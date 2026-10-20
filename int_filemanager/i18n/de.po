@@ -3406,3 +3406,27 @@ msgstr "Neuer Ordner"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form_dialog
 msgid "Discard"
 msgstr "Verwerfen"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Access"
+msgstr "Zugriff"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_access_via_record
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Access through linked records"
+msgstr "Zugriff über verknüpfte Datensätze"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_access_via_record
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"Whoever may read a record (a contact, say) may also read the documents linked "
+"to it, without a right on their folder. Off: only the folders decide, and a "
+"file uploaded to a record is seen by those who see its upload folder."
+msgstr ""
+"Wer einen Datensatz (etwa einen Kontakt) lesen darf, darf auch die mit ihm "
+"verknüpften Dokumente lesen, ohne ein Recht auf deren Ordner. Aus: nur die "
+"Ordner entscheiden, und eine Datei, die zu einem Datensatz hochgeladen wird, "
+"sehen alle, die den Upload-Ordner sehen."

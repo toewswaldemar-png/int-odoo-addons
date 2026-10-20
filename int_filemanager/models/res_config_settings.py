@@ -110,6 +110,13 @@ class ResConfigSettings(models.TransientModel):
         help="PDF/A takes longer and makes the file bigger.",
     )
 
+    int_filemanager_access_via_record = fields.Boolean(
+        string="Access through linked records",
+        help="Whoever may read a record (a contact, say) may also read the documents linked to "
+        "it, without a right on their folder. Off: only the folders decide, and a file uploaded "
+        "to a record is seen by those who see its upload folder.",
+    )
+
     # The shares (links for guests). The numbers are at least 1: Odoo does not save a 0 of a
     # number field, and the field would show its default again.
     int_filemanager_share_creators = fields.Selection(
@@ -394,3 +401,16 @@ class ResConfigSettings(models.TransientModel):
                             field=settings._fields[default]._description_string(self.env),
                         )
                     )
+
+    @api.model
+    def get_values(self):
+        res = super().get_values()
+        rule = self.env.ref("int_filemanager.int_filemanager_document_rule_record")
+        res["int_filemanager_access_via_record"] = rule.sudo().active
+        return res
+
+    def set_values(self):
+        super().set_values()
+        self.env["int.filemanager.link"]._toggle_access_via_record(
+            self.int_filemanager_access_via_record
+        )

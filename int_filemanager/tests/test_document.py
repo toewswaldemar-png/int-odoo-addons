@@ -265,10 +265,10 @@ class TestFolderAndDocument(TransactionCase):
     def test_without_the_group_nothing_is_readable(self):
         with self.assertRaises(AccessError):
             self.Folder.with_user(self.outsider).search([])
-        # Documents are also seen through a record they are linked to (test_link.py): the
-        # search is allowed, and without a link it finds nothing.
+        # The way over a linked record is a setting, off at first (test_link.py switches it on).
         self._document("hidden.txt")
-        self.assertFalse(self.Document.with_user(self.outsider).search([]))
+        with self.assertRaises(AccessError):
+            self.Document.with_user(self.outsider).search([])
 
     def test_a_folder_of_another_company_is_not_visible(self):
         other = self.env["res.company"].create({"name": "Other company"})
@@ -350,6 +350,8 @@ class TestFolderAndDocument(TransactionCase):
 
     def test_the_share_button_of_the_list_is_for_the_group_that_may_share(self):
         # The same arch makes the buttons of the ticked rows and the menu of the right click.
+        # The user without the group loads the list through the way over a linked record.
+        self.env["int.filemanager.link"]._toggle_access_via_record(True)
         for user, has_button in ((self.user, True), (self.outsider, False)):
             with self.subTest(user=user.login):
                 views = self.Document.with_user(user).get_views([(False, "list")])

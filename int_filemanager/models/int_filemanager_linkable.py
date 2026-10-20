@@ -28,13 +28,16 @@ class IntFilemanagerLinkable(models.AbstractModel):
     @api.depends_context("uid")
     def _compute_document_count(self):
         # The links the user sees: the rule of the link follows the rules of the document.
-        counts = dict(
-            self.env["int.filemanager.link"]._read_group(
-                [("res_model", "=", self._name), ("res_id", "in", self.ids)],
-                ["res_id"],
-                ["__count"],
+        Link = self.env["int.filemanager.link"]
+        counts = {}
+        if Link.has_access("read"):
+            counts = dict(
+                Link._read_group(
+                    [("res_model", "=", self._name), ("res_id", "in", self.ids)],
+                    ["res_id"],
+                    ["__count"],
+                )
             )
-        )
         for record in self:
             record.document_count = counts.get(record.id, 0)
 

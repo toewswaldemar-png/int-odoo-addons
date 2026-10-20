@@ -19,6 +19,7 @@ class TestLink(AccessCase, TransactionCase):
         cls._set_up_access()
         cls.Link = cls.env["int.filemanager.link"]
         cls.Partner = cls.env["res.partner"]
+        cls.Link._toggle_access_via_record(True)
         # alice may change contacts: she is the one who ties documents to them
         cls.alice.write({"group_ids": [(4, cls.env.ref("base.group_partner_manager").id)]})
         cls.company2 = cls.env["res.company"].create({"name": "Other company"})

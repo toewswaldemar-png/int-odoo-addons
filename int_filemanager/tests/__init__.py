@@ -15,6 +15,7 @@ from . import test_folder_make_paths
 from . import test_folder_path
 from . import test_folder_zip
 from . import test_link
+from . import test_link_setting
 from . import test_move_target
 from . import test_move_wizard
 from . import test_rights_matrix
