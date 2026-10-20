@@ -158,10 +158,16 @@
                         <field name="ocr_checksum" invisible="1" />
                         <field name="name" />
                         <field name="folder_id" context="{'hierarchical_naming': True}" />
-                        <field name="mimetype" />
-                        <field name="size" widget="int_filemanager_size" />
                         <field name="tag_ids" widget="many2many_tags" />
                         <field name="share_id" invisible="not share_id" />
+                    </group>
+                    <group string="File" name="file">
+                        <field name="extension" class="text-uppercase" />
+                        <field name="mimetype" />
+                        <field name="size" widget="int_filemanager_size" />
+                        <field name="write_date" string="Modified" />
+                        <field name="create_uid" widget="many2one_avatar_user" />
+                        <field name="create_date" />
                     </group>
                 </sheet>
             </form>

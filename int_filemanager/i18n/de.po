@@ -455,6 +455,11 @@ msgid "Excluded by its name."
 msgstr "Wegen des Namens ausgeschlossen."
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__extension
+msgid "Extension"
+msgstr "Dateiendung"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_document__thumbnail_state__failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__error
@@ -468,6 +473,7 @@ msgstr "Fehlgeschlagen"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__document_id
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__kind__file
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 msgid "File"
 msgstr "Datei"
 
@@ -1026,6 +1032,7 @@ msgid "Mimetype"
 msgstr "Dateityp"
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
 msgid "Modified"
 msgstr "Geändert"
@@ -2369,6 +2376,11 @@ msgid "Contact"
 msgstr "Kontakt"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__partner_ids
+msgid "Contacts"
+msgstr "Kontakte"
+
+#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_link.py:0
 msgid "A document was linked."
@@ -2420,7 +2432,6 @@ msgstr "Verknüpft mit %(record)s."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__link_ids
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form_link
 msgid "Links"
 msgstr "Verknüpfungen"
 

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Collection
 
 from odoo import api, fields, models
 from odoo.fields import Domain
@@ -23,6 +24,14 @@ class IntFilemanagerDocument(models.Model):
         compute="_compute_access_via_record",
         search="_search_access_via_record",
         exportable=False,
+    )
+    # The links to contacts as one field, as ``message_partner_ids`` shows the followers.
+    partner_ids = fields.Many2many(
+        "res.partner",
+        string="Contacts",
+        compute="_compute_partner_ids",
+        inverse="_inverse_partner_ids",
+        search="_search_partner_ids",
     )
 
     @api.depends("link_ids.res_model", "link_ids.res_id")
@@ -78,3 +87,73 @@ class IntFilemanagerDocument(models.Model):
                 )
         domain = Domain.OR(parts)
         return domain if (operator == "=") == value else ~domain
+
+    @api.depends("link_ids.res_model", "link_ids.res_id")
+    @api.depends_context("uid", "allowed_company_ids")
+    def _compute_partner_ids(self):
+        linked = self._linked_partners()
+        for document in self:
+            document.partner_ids = linked[document.id]
+
+    def _inverse_partner_ids(self):
+        """Tie the documents to the contacts that were added, untie those that were taken away.
+
+        The links do the rest: the rights, the notes. Links to other models stay as they are.
+        Archived contacts are compared like the field reads them (the core hides them in every
+        many2many), so that the links to those the user does not see stay.
+        """
+        linked = self._linked_partners()
+        active_test = self.env.context.get("active_test", True)
+        to_create, to_unlink = [], self.env["int.filemanager.link"]
+        for document in self:
+            previous = linked[document.id]
+            if active_test:
+                previous = previous.filtered("active")
+            to_create += [
+                {"document_id": document.id, "record_ref": f"res.partner,{partner.id}"}
+                for partner in document.partner_ids - previous
+            ]
+            removed = (previous - document.partner_ids).ids
+            to_unlink += document.link_ids.filtered(
+                lambda link: link.res_model == "res.partner" and link.res_id in removed
+            )
+        to_unlink.unlink()
+        self.env["int.filemanager.link"].create(to_create)
+
+    def _search_partner_ids(self, operator, value):
+        """The documents linked to a contact, or to none (``False`` among the ids).
+
+        The ORM turns a typed name into ``any`` and ``= False`` into ``in {False}`` before it gets
+        here, and answers the negative operators from these. As in the core, ``False`` among
+        other ids means "one of them, or no contact at all".
+        """
+        if operator in Domain.NEGATIVE_OPERATORS:
+            return NotImplemented
+        without = operator == "in" and isinstance(value, Collection) and False in value
+        if without:
+            value = [res_id for res_id in value if res_id]
+        domain = Domain.FALSE
+        if value:
+            partners = self.env["res.partner"].with_context(active_test=False)
+            found = partners._search(value if operator == "any" else Domain("id", operator, value))
+            domain = Domain(
+                "link_ids", "any", [("res_model", "=", "res.partner"), ("res_id", "in", found)]
+            )
+        if without:
+            domain |= Domain("link_ids", "not any", [("res_model", "=", "res.partner")])
+        return domain
+
+    def _linked_partners(self):
+        """The contacts that the user reads and the document is linked to.
+
+        :return: the contacts by id of the document
+        :rtype: dict
+        """
+        res_ids = {
+            document.id: [link.res_id for link in document.link_ids if link.res_model == "res.partner"]
+            for document in self
+        }
+        Partner = self.env["res.partner"]
+        readable = Partner.browse({res_id for ids in res_ids.values() for res_id in ids}).exists()
+        readable = readable._filtered_access("read")
+        return {document_id: Partner.browse(ids) & readable for document_id, ids in res_ids.items()}

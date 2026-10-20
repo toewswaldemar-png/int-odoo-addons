@@ -20,6 +20,7 @@ from odoo.exceptions import MissingError, UserError
 from odoo.fields import Domain
 from odoo.http import Stream
 from odoo.tools import SQL
+from odoo.tools.mimetypes import get_extension
 
 from ..tools.clash import clash_summary, clashing_names
 from ..tools.zip_stream import ZipEntry, export_names
@@ -198,6 +199,8 @@ class IntFilemanagerDocument(models.Model):
         compute="_compute_content_hits",
         exportable=False,
     )
+    # "mp3" for "song.MP3": the kind of file as the user knows it; the mimetype says "audio/mpeg".
+    extension = fields.Char(compute="_compute_extension", exportable=False)
 
     _name_per_folder = models.UniqueIndex(
         '(folder_id, lower(name COLLATE "und-x-icu")) WHERE active',
@@ -260,6 +263,11 @@ class IntFilemanagerDocument(models.Model):
         )
         for document in self:
             document.content_hits = found.get(document.checksum, False)
+
+    @api.depends("name")
+    def _compute_extension(self):
+        for document in self:
+            document.extension = get_extension(document.name or "").lstrip(".")
 
     def _search_content_search(self, operator, value):
         """Documents whose file has these words in it (``websearch`` syntax: quotes, ``-``, ``or``).

@@ -1,6 +1,8 @@
 import time
 from unittest.mock import patch
 
+from lxml import etree
+
 from odoo import Command
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import Form, TransactionCase, tagged
@@ -178,13 +180,14 @@ class TestLink(AccessCase, TransactionCase):
         with self.assertRaises(UserError):
             self.link.with_user(self.alice).write({"record_ref": f"res.country,{self.env.ref('base.de').id}"})
 
-    def test_the_record_of_a_line_is_changed_in_the_form(self):
+    def test_the_contacts_are_changed_in_the_form(self):
         self._invite(self.secret, self.alice)
         form = Form(self.secret_doc.with_user(self.alice))
-        with form.link_ids.edit(0) as line:
-            line.record_ref = self.p2
+        form.partner_ids.remove(id=self.p1.id)
+        form.partner_ids.add(self.p2)
         form.save()
-        self.assertEqual(self.link.res_id, self.p2.id)
+        self.assertEqual(self.secret_doc.link_ids.mapped("res_id"), [self.p2.id])
+        self.assertFalse(self.link.exists())
 
     def test_a_document_is_linked_once_to_a_record(self):
         with self.assertRaises(Exception), self.cr.savepoint():  # noqa: B017
@@ -212,18 +215,142 @@ class TestLink(AccessCase, TransactionCase):
         Link = self.Link.with_context(default_res_model="res.country", default_res_id=1)
         self.assertFalse(Link.new({}).record_ref)
 
-    def test_a_line_added_in_the_form_with_that_context_is_linked_to_the_chosen_record(self):
+    def test_a_contact_added_in_the_form_with_that_context_is_linked(self):
         # The form of the document as the browser fills it, with the keys of another screen.
         document = self._document(self.shared, "f.txt", b"form")
         self._invite(self.shared, self.alice)
         form = Form(document.with_user(self.alice).with_context(
             default_res_model="res.country", default_res_id=1
         ))
-        with form.link_ids.new() as line:
-            line.record_ref = self.p2
+        form.partner_ids.add(self.p2)
         form.save()
         link = document.link_ids
         self.assertEqual((link.res_model, link.res_id), ("res.partner", self.p2.id))
+
+    # --- the contacts of a document ---------------------------------------------------------
+
+    def test_the_contacts_are_the_linked_partners(self):
+        self.assertEqual(self.secret_doc.partner_ids, self.p1)
+        self.assertFalse(self.shared_doc.partner_ids)
+
+    def test_the_contacts_that_the_user_cannot_read_are_not_shown(self):
+        hidden = self._document(self.secret, "h.txt", b"hidden")
+        foreign = self.Partner.create({"name": "Foreign", "company_id": self.company2.id})
+        self._link(hidden, foreign)
+        self._invite(self.secret, self.alice)
+        self.assertEqual(hidden.with_user(self.alice).partner_ids, self.Partner)
+        self.assertEqual(hidden.sudo().partner_ids, foreign)
+
+    def test_setting_the_contacts_ties_and_unties(self):
+        self._invite(self.secret, self.alice)
+        document = self.secret_doc.with_user(self.alice)
+        document.partner_ids = self.p1 + self.p2
+        self.assertEqual(self.secret_doc.partner_ids, self.p1 + self.p2)
+        self.assertTrue(self.link.exists())  # the link that was there stays
+        document.partner_ids = self.p2
+        self.assertEqual(self.secret_doc.link_ids.mapped("res_id"), [self.p2.id])
+        self.assertIn("linked", " ".join(self.p2.message_ids.mapped("body")))
+
+    def test_a_contact_that_the_user_cannot_read_stays_when_the_others_change(self):
+        hidden = self._document(self.secret, "h.txt", b"hidden")
+        foreign = self.Partner.create({"name": "Foreign", "company_id": self.company2.id})
+        self._link(hidden, foreign)
+        self._invite(self.secret, self.alice)
+        hidden.with_user(self.alice).partner_ids = self.p2
+        self.assertEqual(hidden.sudo().partner_ids, foreign + self.p2)
+
+    def test_the_contacts_have_the_rights_of_the_links(self):
+        # alice sees the document through the contact only; the record must be one she changes
+        with self.assertRaises(AccessError):
+            self.secret_doc.with_user(self.alice).partner_ids = self.p1 + self.p2
+        self._invite(self.secret, self.alice)
+        foreign = self.Partner.create({"name": "Foreign", "company_id": self.company2.id})
+        with self.assertRaises(AccessError):
+            self.secret_doc.with_user(self.alice).partner_ids = self.p1 + foreign
+        with self.assertRaises(AccessError):
+            self.secret_doc.with_user(self.outsider).partner_ids = self.Partner
+
+    def test_the_list_shows_the_contacts(self):
+        views = self.Document.with_user(self.outsider).get_views([(False, "list")])
+        self.assertIn("partner_ids", views["views"]["list"]["arch"])
+        result = self.Document.with_user(self.outsider).web_search_read(
+            [], {"name": {}, "partner_ids": {"fields": {"display_name": {}}}}
+        )
+        self.assertEqual(result["records"][0]["partner_ids"][0]["display_name"], "P1")
+
+    def test_the_form_keeps_the_data_of_the_file_apart(self):
+        Document = self.Document.with_user(self.outsider)
+        arch = etree.fromstring(Document.get_views([(False, "form")])["views"]["form"]["arch"])
+        file_fields = arch.xpath("//group[@name='file']//field/@name")
+        self.assertEqual(
+            file_fields, ["extension", "mimetype", "size", "write_date", "create_uid", "create_date"]
+        )
+        self.assertEqual(arch.xpath("//field[@name='create_uid']/@widget"), ["many2one_avatar_user"])
+        edited = arch.xpath("//sheet/group[not(@name='file')]//field/@name")
+        for field in ("name", "folder_id", "tag_ids", "partner_ids"):
+            self.assertIn(field, edited)
+        document = Document.search([])
+        document.web_read(
+            {
+                "extension": {},
+                "mimetype": {},
+                "size": {},
+                "write_date": {},
+                "create_uid": {"fields": {"display_name": {}, "avatar_128": {}}},
+                "create_date": {},
+            }
+        )
+
+    def test_the_extension_is_the_kind_of_file_as_the_user_knows_it(self):
+        for name, extension in (
+            ("song.MP3", "mp3"),
+            ("a.tar.gz", "gz"),
+            ("README", ""),
+            ("Mr. Doe", ""),
+        ):
+            with self.subTest(name=name):
+                self.assertEqual(self._document(self.shared, name).extension, extension)
+        document = self._document(self.shared, "plain.txt")
+        document.name = "plain.pdf"
+        self.assertEqual(document.extension, "pdf")
+
+    def test_the_search_view_offers_the_contacts(self):
+        Document = self.Document.with_user(self.outsider)
+        views = Document.get_views([(False, "search")])
+        self.assertIn("partner_ids", views["views"]["search"]["arch"])
+        # what the search field sends for a typed name
+        self.assertEqual(Document.search([("partner_ids", "ilike", "p1")]), self.secret_doc)
+        self.assertFalse(Document.search([("partner_ids", "ilike", "nobody")]))
+
+    def test_an_archived_contact_is_hidden_as_in_every_many2many_but_stays_linked(self):
+        self.p1.active = False
+        self.assertFalse(self.secret_doc.partner_ids)
+        self.assertEqual(self.secret_doc.with_context(active_test=False).partner_ids, self.p1)
+        self._invite(self.secret, self.alice)
+        # changing the contacts must not untie what the field does not show
+        self.secret_doc.with_user(self.alice).partner_ids = self.p2
+        self.assertCountEqual(self.secret_doc.link_ids.mapped("res_id"), [self.p1.id, self.p2.id])
+        self.assertEqual(self.Document.search([("partner_ids", "in", self.p1.ids)]), self.secret_doc)
+        self.assertFalse(self.Document.search([("partner_ids", "ilike", "P1")]))
+
+    def test_no_contact_among_the_searched_ones(self):
+        # "one of these or none at all", as the core splits ``in (False, 1)``
+        Document = self.Document.with_user(self.boss)
+        self.assertEqual(
+            Document.search([("partner_ids", "in", [False, self.p1.id])]),
+            self.secret_doc + self.shared_doc,
+        )
+        self.assertEqual(
+            Document.search([("partner_ids", "in", [False, self.p2.id])]), self.shared_doc
+        )
+
+    def test_the_contacts_are_searched(self):
+        Document = self.Document.with_user(self.boss)
+        self.assertEqual(Document.search([("partner_ids", "in", self.p1.ids)]), self.secret_doc)
+        self.assertEqual(Document.search([("partner_ids", "=", self.p1.id)]), self.secret_doc)
+        self.assertEqual(Document.search([("partner_ids", "ilike", "P1")]), self.secret_doc)
+        self.assertEqual(Document.search([("partner_ids", "=", False)]), self.shared_doc)
+        self.assertEqual(Document.search([("partner_ids", "not in", self.p1.ids)]), self.shared_doc)
 
     def test_a_link_needs_a_record(self):
         with self.assertRaises(UserError):
@@ -261,13 +388,7 @@ class TestLink(AccessCase, TransactionCase):
                 "ocr_checksum": {},
                 "active": {},
                 "tag_ids": {"fields": {"display_name": {}, "color": {}}},
-                "link_ids": {
-                    "fields": {
-                        "record_ref": {},
-                        "create_uid": {"fields": {"display_name": {}}},
-                        "create_date": {},
-                    }
-                },
+                "partner_ids": {"fields": {"display_name": {}}},
             }
         )
 
