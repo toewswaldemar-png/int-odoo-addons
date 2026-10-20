@@ -3472,6 +3472,7 @@ msgstr ""
 "Administrator: Darf alle Ordner sehen, festlegen, wer sie sieht, und den "
 "Dateimanager einrichten."
 
+#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/file_viewer/document_file_viewer.xml:0
 msgid "Edit"

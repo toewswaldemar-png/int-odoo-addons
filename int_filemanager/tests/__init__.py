@@ -44,3 +44,4 @@ from . import test_text_ocr_images
 from . import test_text_ocr_settings
 from . import test_tile_size
 from . import test_zip_stream
+from . import test_translations
