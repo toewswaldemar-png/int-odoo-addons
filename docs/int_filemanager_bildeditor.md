@@ -1,0 +1,65 @@
+# int_filemanager: Bildeditor (Erkenntnisse)
+
+Der Bildeditor ist umgesetzt. **Der Code ist maßgeblich** (`static/src/image_editor/`, dazu `models/int_filemanager_document.py` und `controllers/int_filemanager.py` für den gespeicherten Zustand). Diese Datei hält nur fest, was der Code nicht zeigt: Entscheidungen, Sicherheitsgründe, Grenzen und die Stolpersteine, auf die wir gestoßen sind.
+
+**Ziel:** Ein Bild eines Dokuments bearbeiten (zeichnen, beschriften, Filter, zuschneiden, Teile verdecken) und als **neues Dokument** im selben Ordner speichern. Das Original bleibt. Die Markierungen bleiben beim nächsten Öffnen als Objekte verschiebbar.
+
+## 1. Entscheidungen
+
+1. **Fabric.js 7.4.0** (`static/lib/fabric/fabric.min.js`, MIT), nur in einem eigenen Bundle `int_filemanager.assets_image_editor`. Es wird beim ersten Klick auf „Bearbeiten“ geladen (`lazy_components`), nicht mit jeder Seite. Gäste laden es nie. Ein Test hält die Version fest; wer Fabric tauscht, prüft den Editor dagegen und ändert die Zahl in `tests/test_assets.py`.
+2. **Der Editor ist ein Dienst** (`int_filemanager.image_editor`), den der Viewer von selbst findet. So haben Liste, Kanban, Kontextmenü und Formular denselben Knopf „Bearbeiten“; die Gäste-Seite hat den Dienst nicht und damit keinen Knopf.
+3. **Die Szene hat die Größe des Bildes.** Alle Marken liegen in Bildpunkten. Die Größen (Strichstärke, Schrift) richten sich nach dem Bild (`UNIT_PER_PIXEL`), damit sie auf einem Foto und auf einem Symbol gleich aussehen.
+4. **Große Bilder:** Gezeigt und gefiltert wird eine Arbeitskopie (längste Seite höchstens 2048 Pixel). Das Bild in voller Größe kommt nur beim Speichern an die Stelle der Kopie (`Picture.show(true)`); die Filter laufen dann noch einmal darauf. Ob der Browser ein Canvas dieser Größe machen kann, wird ausprobiert (`canvasFits`); sonst bietet der Speichern-Dialog nur die Größen an, die gehen.
+5. **Zuschnitt, Drehen und Spiegeln ändern das Bild nicht.** Der Zuschnitt ist ein Ausschnitt (`crop`), gespeichert wird nur er. Drehen und Spiegeln drehen das Bild und alle Marken mit (`scene_ops.js`); ein Text bleibt beim Spiegeln lesbar.
+6. **Verdecken ist eine Marke** (`RedactMark`): Sie speichert Ort, Art (Pixel, Weichzeichnen, schwarz) und Stärke, nicht die Pixel; der verdeckte Teil wird aus dem Bild gezeichnet. In der gespeicherten Datei ist er endgültig weg, im **Ausgangsbild** nicht (siehe 3.).
+7. **Der Zustand wird mit dem Bild gespeichert** (`edit_state`, JSON, höchstens 8 MiB) samt dem Ausgangsbild (`edit_source_id`). Öffnet man ein so gespeichertes Bild, lädt der Editor das **Ausgangsbild** mit den Marken darauf. Ein weiteres Speichern zeigt wieder auf dasselbe Ausgangsbild, die Kette wird nicht länger.
+8. **Rückgängig** hält 50 Zustände als JSON-Text. Ein Zustand ist: Lage des Bildes, Filter, Zuschnitt und alle Marken.
+
+## 2. Sicherheit
+
+- `edit_state` und `edit_source_id` sind nur dem Speicher zu setzen (`STORAGE_FIELDS`) und nur für Systemverwalter lesbar (`groups`). Der Editor liest sie über `get_edit_session`.
+- **Das Ausgangsbild bekommt nur, wer es lesen darf** (seine Regeln, nicht archiviert). Sonst startet der Editor mit dem flachen Bild; was jemand mit Zugriff auf das bearbeitete Bild sehen darf, hängt so nicht vom Ausgangsbild ab.
+- Beim Hochladen prüft der Server: JSON-Objekt, höchstens 8 MiB, Ausgangsbild lesbar für den Nutzer. Sonst wird das Bild flach gespeichert (oder mit Fehler 400, wenn der Zustand kaputt ist).
+- **Ein gespeicherter Zustand ist keine vertrauenswürdige Eingabe** (ein Nutzer hat ihn geschrieben, ein anderer öffnet ihn). `edit_state.js` lässt nur die Marken zu, die der Editor selbst macht, wirft `clipPath` und Filter weg, und ein Bild oder Muster darin muss seine Daten mitbringen (`data:image/...`). Sonst würde der Browser beim Öffnen eine fremde Adresse laden.
+- Eingefügte Bilder werden vorher auf höchstens 1024 Pixel verkleinert.
+- **Eingefügte SVG-Dateien werden vor dem Lesen bereinigt** (`sanitizeSvg`): Fabric lädt jedes Bild, das eine Zeichnung nennt, schon beim Lesen des Textes nach. Eine fremde Zeichnung könnte den Browser so zu Anfragen an einen Server ihres Urhebers bringen. Bilder und Verweise ohne eingebettete Daten, `url(...)` nach außen, `@import`, Skripte und Ereignis-Attribute fallen weg; danach läuft die Zeichnung durch denselben Filter wie ein gespeicherter Zustand.
+
+## 3. Grenzen
+
+- GIF wird nicht bearbeitet (die Bilder der Animation gingen verloren). SVG als Ausgangsbild gibt es nicht (ist Text im Modul).
+- Ein Bild, das größer ist als der Browser zeichnen kann (auf dem Handy früh), wird kleiner gespeichert. Der Dialog sagt es.
+- Der Zustand wächst mit eingefügten Bildern. Ist er größer als 8 MiB, wird das Bild ohne ihn gespeichert; der Dialog sagt es vorher.
+- Kein Radierer (Fabric 7 bringt ihn nicht mit). Marken löscht man, Teile des Bildes verdeckt man.
+- Zwei Finger zoomen und verschieben (wie im Viewer). Zeichnet gerade ein Finger, wird das abgebrochen, sobald der zweite aufliegt.
+- Die Ansicht des Editors ist nicht in einem Browser durchgeklickt worden (siehe 5.).
+
+## 4. Stolpersteine (Fabric 7.4.0, Owl)
+
+Die ersten fünf sind in Prüfungen aufgefallen, die letzten acht an der laufenden Instanz:
+
+1. `toCanvasElement` und `toSVG` lesen den Ausschnitt **im Raum der Ansicht**. Bei Zoom 0,77 steckte die Bildschirmansicht in der Datei. Vor dem Erzeugen wird die Ansicht auf die Einheitsmatrix gesetzt (`withPlainView`).
+2. `getBoundingRect()` liest zwischengespeicherte Koordinaten. Eine frisch gezogene Marke ohne Rand hatte darin Größe 0 und wäre als „zu klein“ verworfen worden. Der Zugweg des Zeigers entscheidet jetzt, nicht die Box.
+3. `Group.removeAll()` lässt bei Teilen, deren Ursprung nicht die Mitte ist, falsche `left`/`top`-Werte zurück. `arrange.ungroup` rechnet die Lage aus den Matrizen aus.
+4. Fabric 7 wendet die Standardwerte (`ownDefaults`) einer **eigenen Unterklasse** nicht an. `RedactMark` gibt sie im Konstruktor als Optionen mit.
+5. **Owl-Templates kennen `Number`, `String` und `Boolean` nicht** (`ctx.Boolean is not a function`); `Math` geht. Die Handler lesen die Werte in der Komponente.
+
+6. **Odoo malt jedes `.modal` halb schwarz** (`.modal:not([data-bs-backdrop="false"])`, spezifischer als eine einzelne Klasse): Die Seite schien durch den Editor. Der Editor setzt `data-bs-backdrop="false"` und malt seinen Grund selbst.
+7. **Odoo 19 kennt das Dark-Theme von Bootstrap nicht** (`data-bs-theme="dark"` ändert dort nichts; Odoo nutzt `--body-color`, `--body-bg`, `--border-color`, `--primary` usw.). Der Editor nutzt diese Variablen mit den Werten von Odoo 19 als Rückfall, sonst sind Symbole und Auswahlfelder dunkel auf dunkel.
+8. **Die Dialoge von Odoo lagen hinter dem Editor.** Ein Dialog ist ein `.modal` mit `z-index` 1055, genau wie der Editor; was später im DOM steht, liegt oben, und der Editor kommt später. „Abbrechen“ nach einer Änderung (Frage „Änderungen verwerfen?“) und „Als neues Dokument speichern“ (Auswahl-Dialog) blieben unsichtbar und fingen die Tasten ab, der Editor reagierte nicht mehr. Der Editor liegt jetzt bei 1054, einen Schritt unter den Dialogen; ein Test prüft die Regel. Dafür liegen die Teile des Dateiviewers (Kopfleiste, Pfeile, Leiste unten) über dem Editor, wenn er aus dem Viewer geöffnet wird: Der Viewer schließt sich deshalb, wenn der Editor sich öffnet (`useDocumentFileViewer`).
+9. **`after:render` kommt auch für die obere Fläche** (Auswahl, Pinsel). Was der Editor dort zeichnet (Rahmen um das Bild, Raster, Führungslinien, Schatten beim Zuschnitt), wird beim Zoomen nicht gelöscht und blieb als Geister-Rahmen an der alten Stelle stehen. Das Overlay wird nur auf die untere Fläche gemalt (`paintOverlay`).
+10. **Außerhalb des Bildes wird nicht gezeichnet:** Eine Marke beginnt nur auf dem Bild und endet beim Ziehen über den Rand am Rand, ein Pinselstrich ganz außerhalb fällt weg, und alles jenseits des gespeicherten Teils wird auf dem Schirm abgeschnitten (`clipPath` immer, nicht nur beim Zuschnitt), wie in der Datei. **Marken lassen sich nicht aus dem Bild schieben** (`keepMarkInside`, beim Ziehen, nach dem Ändern und mit den Pfeiltasten); eine Marke, die größer ist als das Bild, bleibt so verschiebbar, dass sie es noch bedeckt. Eine Marke ganz außerhalb wäre sonst nicht mehr zu greifen.
+11. **`object:moving` kommt, bevor Fabric die Koordinaten des neuen Ortes ausrechnet** (`setCoords()` läuft erst nach den Handlern). Wer dort `getBoundingRect()` liest, bekommt den Stand des vorigen Schritts; eine Korrektur daraus springt am Rand hin und her und flackert. Die Handler rufen `setCoords()` selbst vorher auf (`freshBox`, `constrainMoving`). Das ist Fabrics eigenes Rezept für begrenzte Bewegung, kein Umweg. Ein Test belegt es (rot ohne, grün mit der Korrektur).
+12. **Fabrics Mauszeiger für die Eckgriffe hängen vom Seitenverhältnis ab.** Fabric nimmt den Winkel von der Mitte des Objekts zur Ecke auf dem Schirm; bei einem breiten Rechteck, einer Linie oder einem Pfeil liegt die Ecke fast waagerecht zur Mitte, und die Ecke bekommt ein ↔ oder ↕ statt des Diagonalpfeils. Der Drehgriff hat bei Fabric nur ein Fadenkreuz. `controls.js` leitet den Zeiger aus der Ecke selbst und dem Drehwinkel des Objekts ab (Fabrics „nicht erlaubt“ bleibt) und gibt dem Drehgriff einen Kreispfeil als Zeiger. Die Griffe folgen dem Spiegeln nicht (Fabric positioniert sie ohne Spiegelung), der Zeiger deshalb auch nicht.
+13. **Fabrics Objekt-Cache macht vergrößerte Marken unscharf.** Fabric zeichnet jedes Objekt in ein Bitmap (den Cache) und zeigt dieses. Zwei Folgen: (a) Beim Ziehen an einem Griff aktualisiert Fabric den Cache nicht (`noScaleCache`, bei `IText` an), ein klein eingefügter Text ist also ein kleines Bitmap, das groß gezogen wird, bis man loslässt. (b) Der Cache ist auf etwa zwei Millionen Pixel begrenzt (`perfLimitSizeTotal`); eine große Marke wird aus einem kleineren Bitmap gezeichnet, bei Skalierung 8 und Ansicht 100 % mit 77 %, bei 200 % mit 39 % der nötigen Auflösung. Dieselbe Grenze gilt beim Speichern: eine große Marke in voller Größe hatte 4,1 % Randpixel gegenüber 1,5 % bei direktem Zeichnen. Alle Marken werden deshalb ohne Cache gezeichnet (`drawDirectly`, `objectCaching: false`, auch die Teile einer Gruppe); sie sind wenige, und das Bild ist bei jeder Größe, Ansicht und Datei scharf. Das gilt für gezeichnete, eingefügte und durch Rückgängig oder einen gespeicherten Zustand zurückgeholte Marken.
+14. **Fabrics Griffe strecken Text.** Gemessen mit echten Mausereignissen an allen acht Griffen: Beim Textfeld (`Textbox`) ändern links und rechts die Breite (die Schrift bleibt), oben und unten setzen nur `scaleY` und ziehen die Buchstaben schmal und hoch; beim einzelnen Text (`IText`) strecken alle vier Seitengriffe, und eine gedrückte Umschalt-Taste verzerrt auch beim Skalieren an der Ecke (Fabrics `uniScaleKey` schaltet das gleichmäßige Skalieren ab). Der Editor blendet bei Text die Griffe aus, die verzerren (Textfeld: oben und unten, Text: alle Seiten; `setTextHandles`), setzt `uniScaleKey: null` (keine Taste macht aus dem Skalieren an der Ecke ein Strecken) und rechnet die Skalierung beim Loslassen in die Schriftgröße ein (`bakeTextScale`; beim Textfeld auch in die Breite), sodass das Panel die wirkliche Größe zeigt. Formen und Bilder behalten alle Griffe; an den Ecken skalieren sie nun immer gleichmäßig, frei strecken sie über die Seitengriffe.
+
+Aussehen: Die Kopfleiste ist die des Dateiviewers (dunkel), darunter ist alles hell wie Odoos eigene Panels. Die Werkzeuge links sind fünf einzelne Knöpfe und drei Dropdowns von Odoo (Zeichnen, Text, Formen; der Knopf zeigt das zuletzt benutzte Werkzeug), damit die Spalte kurz bleibt. Die Abschnitte rechts klappen (`<details>`), die Griffe der Marken haben Fabrics hellblauen Standardlook (`CONTROL_LOOK`).
+
+Die Teile des Editors, die nur Zahlen und Fabric brauchen (`geometry`, `filters`, `history`, `snapping`, `edit_state`, `marks`, `scene_ops`, `arrange`, `export`), kann man ohne Browser mit jsdom und `@napi-rs/canvas` laufen lassen; so sind die Stolpersteine 1 bis 5 gefunden worden (6 und 7 zeigen sich nur im echten Odoo-CSS).
+
+## 5. Prüfung
+
+- `tests/test_assets.py`: Bundle, Importe, Version und benutzte Namen von Fabric, Stile des Bundles, Gäste-Bundle ohne Editor.
+- `tests/test_document_upload.py` (Klasse `TestDocumentUpload`, Abschnitt Editor-Zustand): Zustand und Ausgangsbild werden gespeichert, ein nicht lesbares Ausgangsbild fällt weg, kaputter oder zu großer Zustand gibt 400, Nutzer können die Felder nicht selbst schreiben.
+- `static/tests/image_editor/image_editor.test.js` (Hoot): Geometrie, Verlauf, Filter, Einrasten, Zustand, Marken, Drehen, Gruppieren, Export in der richtigen Größe.
+- **Offen:** Weder die Hoot-Tests noch die Python-Tests sind auf einem Odoo-Server gelaufen, und der Editor ist nicht im Browser durchgeklickt. Geprüft ist die Logik außerhalb von Odoo (Fabric echt, Owl echt, Odoo-Dienste und Core-Komponenten gestellt). Vor dem Ausrollen steht der Testlauf auf HM-SRV aus; der Handtest des Editors ist offen.
