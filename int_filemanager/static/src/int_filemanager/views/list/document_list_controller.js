@@ -13,7 +13,7 @@ import {
     readDroppedFolders,
     uploadError,
 } from "./document_folder_upload";
-import { getFoldersSection, useNewFolder } from "./document_new_folder";
+import { getFoldersSection, useFolderRights, useNewFolder } from "./document_new_folder";
 
 export const UPLOAD_ROUTE = "/int_filemanager/upload";
 const FINISHED_STATES = ["loaded", "error", "abort"];
@@ -35,13 +35,24 @@ export class DocumentListController extends ListController {
         this.fileInputRef = useRef("fileInput");
         this.folderInputRef = useRef("folderInput");
         this.newFolder = useNewFolder();
+        this.folderRights = useFolderRights();
         this.fileUploadService = useService("file_upload");
         this.notification = useService("notification");
-        useCustomDropzone(this.rootRef, DocumentDropzone, {
-            onDrop: (ev) => this.onDrop(ev),
-            getFolderName: () => this.uploadFolderName,
-            getRecordName: () => this.linkRecord?.name || false,
-        });
+        useCustomDropzone(
+            this.rootRef,
+            DocumentDropzone,
+            {
+                onDrop: (ev) => this.onDrop(ev),
+                getFolderName: () => this.uploadFolderName,
+                getRecordName: () => this.linkRecord?.name || false,
+            },
+            () => this.canUpload
+        );
+    }
+
+    /** A reader may not upload; the files of a record go by the right to change the record. */
+    get canUpload() {
+        return Boolean(this.linkRecord) || this.folderRights.write;
     }
 
     /**

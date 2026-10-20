@@ -22,23 +22,27 @@
                 t-ref="folderInput"
                 t-on-change.stop="onFolderSelected"
             />
-            <Dropdown>
+            <Dropdown t-if="canUpload or folderRights.create">
                 <button class="btn btn-primary o-dropdown-caret" data-hotkey="c" data-bounce-button="">
                     New
                 </button>
                 <t t-set-slot="content">
-                    <DropdownItem class="'o_menu_item'" onSelected="() => this.onUploadSelected()">
+                    <DropdownItem
+                        t-if="canUpload"
+                        class="'o_menu_item'"
+                        onSelected="() => this.onUploadSelected()"
+                    >
                         <i class="fa fa-fw fa-upload me-1" />Upload
                     </DropdownItem>
                     <DropdownItem
-                        t-if="uploadFolderId"
+                        t-if="uploadFolderId and canUpload"
                         class="'o_menu_item'"
                         onSelected="() => this.onUploadFolderSelected()"
                     >
                         <i class="fa fa-fw fa-folder-open me-1" />Upload a folder
                     </DropdownItem>
                     <DropdownItem
-                        t-if="foldersSection"
+                        t-if="foldersSection and folderRights.create"
                         class="'o_menu_item'"
                         onSelected="() => this.onNewFolder()"
                     >
@@ -53,6 +57,13 @@
                     </DropdownItem>
                 </t>
             </Dropdown>
+            <button
+                t-elif="uploadFolderId"
+                class="btn btn-secondary"
+                t-on-click="() => this.onDownloadFolder()"
+            >
+                Download folder
+            </button>
         </xpath>
     </t>
 </templates>

@@ -2,7 +2,7 @@ import { useRef, useState } from "@odoo/owl";
 import { useDropdownState } from "@web/core/dropdown/dropdown_hooks";
 import { evaluateBooleanExpr } from "@web/core/py_js/py";
 import { documentFilesFromRecords } from "../../document_file";
-import { getFoldersSection, useNewFolder } from "./document_new_folder";
+import { getFoldersSection, useFolderRights, useNewFolder } from "./document_new_folder";
 import { DocumentListRenderer } from "./document_list_renderer";
 
 // Elements that keep the menu of the browser.
@@ -21,6 +21,7 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
         this.dropdownState = useDropdownState();
         this.contextMenu = useState({ buttons: [], onView: undefined, newFolder: undefined });
         this.newFolder = useNewFolder();
+        this.folderRights = useFolderRights();
     }
 
     async onContextMenu(ev) {
@@ -54,10 +55,11 @@ export class DocumentListContextMenuRenderer extends DocumentListRenderer {
                     !evaluateBooleanExpr(button.invisible, list.evalContext)
             ),
             onView: this.getViewAction(record),
-            // A list without the folders of the panel has no such item.
-            newFolder: getFoldersSection(this.env.searchModel)
-                ? () => this.newFolder(record.data.folder_id?.id)
-                : undefined,
+            // A list without the folders of the panel has no such item, nor for a reader.
+            newFolder:
+                this.folderRights.create && getFoldersSection(this.env.searchModel)
+                    ? () => this.newFolder(record.data.folder_id?.id)
+                    : undefined,
         });
         this.dropdownState.open();
     }
