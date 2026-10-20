@@ -1,0 +1,13 @@
+{
+    "name": "image-editor-check",
+    "private": true,
+    "type": "module",
+    "description": "Checks of the picture editor of int_filemanager without a browser: the real Fabric and Owl in jsdom",
+    "scripts": {
+        "test": "node run.mjs"
+    },
+    "devDependencies": {
+        "@napi-rs/canvas": "^0.1.100",
+        "jsdom": "^29.1.1"
+    }
+}

@@ -28,5 +28,6 @@ Ebene tief, deshalb liegen alle Module flach im Wurzelordner.
 | `docs/odoo19_abweichungen.md` | bestätigte Abweichungen zwischen offizieller Odoo-19-Dokumentation und Core, jeweils mit Fundstelle, Core-Commit und Test |
 | `docs/pruefautomatik_2026-10-02.md` | Prüfwerkzeuge, Aufruf und was sie prüfen |
 | `tools/check/` | Prüf- und Testskripte für `int_filemanager` (Modultests, odoo-ls und `test_lint`, Test-Instanz, Übersetzungsexport) |
+| `tools/image_editor_check/` | Prüfungen des Bildeditors ohne Browser (Node: echtes Fabric und Owl in jsdom, Viewer gegen den Core-Viewer) |
 | `.pre-commit-config.yaml`, `ruff.toml`, `.eslintrc.json` | Prüfautomatik (Odoos eigene Konfiguration) |
 | [`CLAUDE.md`](CLAUDE.md) | kurzer Prüfablauf für offizielle Odoo-19-Dokumentation, Core und reproduzierbare Tests |
