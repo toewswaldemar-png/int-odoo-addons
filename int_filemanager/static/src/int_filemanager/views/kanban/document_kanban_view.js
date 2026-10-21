@@ -1,10 +1,12 @@
 import { registry } from "@web/core/registry";
 import { kanbanView } from "@web/views/kanban/kanban_view";
+import { DocumentSearchModel } from "../document_search_model";
 import { DocumentKanbanController } from "./document_kanban_controller";
 import { DocumentKanbanRenderer } from "./document_kanban_renderer";
 
 export const documentKanbanView = {
     ...kanbanView,
+    SearchModel: DocumentSearchModel,
     Controller: DocumentKanbanController,
     Renderer: DocumentKanbanRenderer,
     buttonTemplate: "int_filemanager.DocumentKanbanView.Buttons",

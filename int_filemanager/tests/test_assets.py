@@ -88,6 +88,10 @@ CORE_PARTS = {
     # (the ticked rows, the call of the controller).
     "@web/views/view_button/multi_record_view_button": ("onClickViewButton(", "getResIds("),
     "@web/views/view_button/view_button_hook": ("onClickViewButton(", "beforeExecuteAction"),
+    # DocumentSearchModel: the method that turns the folder of the panel into a condition (the
+    # core takes ``child_of`` there; the module takes ``=``). If it is renamed, the override is
+    # never called and a folder shows the documents of the folders below it again.
+    "@web/search/search_model": ("_getCategoryDomain(", "child_of", "parentField"),
     # DocumentListController: the menu "New" restores the view after the dialog of the new
     # folder (the client action of the core; the panel does not reload its tree).
     "@web/webclient/actions/client_actions": ("soft_reload",),
@@ -133,6 +137,7 @@ class TestAssets(TransactionCase):
             "touch/momentum",
             "touch/pinch",
             "touch/swipe",
+            "views/document_search_model",
             "views/form/document_form_controller",
             "views/form/document_form_view",
             "views/kanban/document_kanban_controller",
