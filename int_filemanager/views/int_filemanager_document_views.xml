@@ -23,7 +23,12 @@
                     />
                 </header>
                 <field name="name" widget="int_filemanager_document_name" />
-                <field name="folder_id" string="Location" context="{'hierarchical_naming': True}" />
+                <field
+                    name="folder_id"
+                    string="Location"
+                    context="{'hierarchical_naming': True}"
+                    optional="show"
+                />
                 <field name="size" widget="int_filemanager_size" optional="show" />
                 <field name="write_date" string="Modified" optional="show" />
                 <field name="tag_ids" widget="many2many_tags" optional="show" />
