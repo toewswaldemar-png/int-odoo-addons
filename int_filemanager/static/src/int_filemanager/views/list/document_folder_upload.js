@@ -84,11 +84,18 @@ export function allFolders(tree) {
     return folders;
 }
 
-/** The paths to make on the server: the deepest suffice, it makes the folders above. */
+/**
+ * The paths to ask the server for: the folder of every file and every empty folder (the top, "",
+ * is the folder of the upload itself). The server makes the folders above them. Its answer has the
+ * id of the paths asked for only, and a file goes to the folder of its `dir`: a path that is no
+ * `dir` of a file and no empty folder is not needed, one that is must be there.
+ * @param {Tree} tree
+ * @returns {String[]}
+ */
 export function foldersToMake(tree) {
-    const all = allFolders(tree);
-    const parents = new Set([...all].map((path) => path.split("/").slice(0, -1).join("/")));
-    return [...all].filter((path) => !parents.has(path));
+    const paths = new Set([...tree.files.map((item) => item.dir), ...tree.folders]);
+    paths.delete("");
+    return [...paths];
 }
 
 export function uploadError(xhr) {

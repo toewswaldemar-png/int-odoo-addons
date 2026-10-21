@@ -34,6 +34,17 @@ class TestFolderMakePaths(AccessCase, TransactionCase):
         self.assertEqual(empty.parent_id, june.parent_id.parent_id)
         self.assertEqual(len(self._below()), 1 + 1 + 1 + 1 + 1 + 1 + 1)  # shared, deep, Photos, 2025, June, July, empty
 
+    def test_a_path_and_a_path_below_it_each_get_their_folder(self):
+        # A folder of the disk that holds files and has subfolders: the browser asks for both.
+        result = self._make(["Article", "Article/Archive", "Article/Control"])
+        article, archive, control = (
+            self.Folder.browse(result[path]) for path in ("Article", "Article/Archive", "Article/Control")
+        )
+        self.assertEqual((article.name, archive.name, control.name), ("Article", "Archive", "Control"))
+        self.assertEqual(archive.parent_id, article)
+        self.assertEqual(control.parent_id, article)
+        self.assertEqual(len(self._below()), 1 + 1 + 1 + 1 + 1)  # shared, deep, Article, Archive, Control
+
     def test_a_second_call_makes_nothing_and_gives_the_same_folders(self):
         first = self._make(["Photos/2025", "Photos/2026"])
         count = len(self._below())
