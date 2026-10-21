@@ -4,8 +4,9 @@ import { FileUploadProgressDataRow } from "@web/core/file_upload/file_upload_pro
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { documentFilesFromRecords } from "../../document_file";
 import { useDocumentFileViewer } from "../../file_viewer/document_file_viewer";
+import { useDocumentDragSource } from "../drag/document_drag_source_hook";
 
-/** The list with the progress of the running uploads above it. */
+/** The list with the progress of the running uploads above it; its rows can be dragged to a folder. */
 export class DocumentListRenderer extends ListRenderer {
     static template = "int_filemanager.DocumentListRenderer";
     static components = {
@@ -18,6 +19,11 @@ export class DocumentListRenderer extends ListRenderer {
         super.setup();
         this.fileUploadService = useService("file_upload");
         this.fileViewer = useDocumentFileViewer();
+        useDocumentDragSource({
+            ref: this.rootRef,
+            elements: "tr.o_data_row",
+            getList: () => this.props.list,
+        });
     }
 
     /** @override Ticked rows and clicks for a new window keep the core's behavior. */

@@ -1,0 +1,15 @@
+.o_int_filemanager_drag_ghost {
+    // It follows the pointer (a `transform` set by the drag), above the dialogs and the tooltips.
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: $zindex-tooltip + 10;
+    max-width: 20rem;
+    pointer-events: none;
+
+    .o_image {
+        flex: none;
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+}

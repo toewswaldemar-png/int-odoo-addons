@@ -9,6 +9,7 @@ import { useService } from "@web/core/utils/hooks";
 import { STATIC_ACTIONS_GROUP_NUMBER } from "@web/search/action_menus/action_menus";
 import { ListController } from "@web/views/list/list_controller";
 import { DocumentDropzone } from "../../dropzone/document_dropzone";
+import { MOVE_MODEL } from "../drag/document_move";
 import {
     allFolders,
     foldersToMake,
@@ -25,7 +26,6 @@ const FINISHED_STATES = ["loaded", "error", "abort"];
 const FOLDERS_PER_CALL = 200;
 const FAILURES_IN_A_ROW = 5;
 const FAILURES_SHOWN = 5;
-const MOVE_MODEL = "int.filemanager.move";
 const MOVE_ACTION = "int_filemanager.int_filemanager_move_document_action";
 // Groups of the "Actions" menu (a divider lies between two groups), in the order of the `sequence`
 // of the static items: what leaves the list (print, export; the group of the core), what puts

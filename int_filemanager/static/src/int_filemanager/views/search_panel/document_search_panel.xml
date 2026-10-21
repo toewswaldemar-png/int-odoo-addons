@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t
+        t-name="int_filemanager.SearchPanel.Category"
+        t-inherit="web.SearchPanel.Category"
+        t-inherit-mode="primary"
+    >
+        <xpath expr="//header" position="attributes">
+            <attribute name="t-att-data-drop-folder">section.fieldName === 'folder_id' ? value.id : false</attribute>
+            <attribute name="t-attf-class">{{ drag.over === value.id and section.fieldName === 'folder_id' ? 'o_int_filemanager_drop_target' : '' }}</attribute>
+        </xpath>
+    </t>
+</templates>

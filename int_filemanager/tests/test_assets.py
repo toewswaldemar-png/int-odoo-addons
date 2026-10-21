@@ -18,6 +18,7 @@ TEMPLATES = (
     "int_filemanager.DocumentFormController",
     "int_filemanager.DocumentPreview",
     "int_filemanager.DocumentThumbnailField",
+    "int_filemanager.SearchPanel.Category",
     "int_filemanager.SizeField",
 )
 
@@ -72,8 +73,26 @@ CORE_PARTS = {
     "@web/views/kanban/kanban_controller": ("get className(", "headerButtons"),
     "@web/core/user": ("setUserSettings(", "user_settings"),
     # DocumentListRenderer: the click on the picture of a row; the rest of the row keeps the
-    # core's click, which ends in `openRecord`.
-    "@web/views/list/list_renderer": ("onCellClicked(", "openRecord("),
+    # core's click, which ends in `openRecord`. The rows are dragged to a folder from the root of
+    # the renderer (`rootRef`).
+    "@web/views/list/list_renderer": ("onCellClicked(", "openRecord(", "rootRef"),
+    "@web/views/kanban/kanban_renderer": ("rootRef",),
+    # The ticked rows go together when one of them is dragged to a folder.
+    "@web/model/relational_model/dynamic_list": ("get selection(",),
+    # The drag to a folder: the drag of the core, that does not move the dragged element
+    # (`followCursor`, as the block selection of the calendar sets it in `onComputeParams`), whose
+    # `preventDrag` and `ignore` keep it off the buttons and the rows that cannot move.
+    "@web/core/utils/draggable_hook_builder": (
+        "followCursor",
+        "onComputeParams",
+        "preventDrag",
+        "ignoreSelector",
+        "pe-none",
+    ),
+    # DocumentSearchPanel: the view names the panel as it names the control panel, and the panel
+    # names the template of the folders (and keeps which of them are open).
+    "@web/search/layout": ("params.SearchPanel",),
+    "@web/search/search_panel/search_panel": ("subTemplates", "expanded"),
     # DocumentListController: the item "Move to..." runs as the `ActionMenus` of the core runs an
     # action (the ticked rows and the keys `active_*` in the context), in a group of the menu.
     "@web/search/action_menus/action_menus": (
@@ -138,6 +157,10 @@ class TestAssets(TransactionCase):
             "touch/pinch",
             "touch/swipe",
             "views/document_search_model",
+            "views/drag/document_drag_ghost",
+            "views/drag/document_drag_source_hook",
+            "views/drag/document_drag_state",
+            "views/drag/document_move",
             "views/form/document_form_controller",
             "views/form/document_form_view",
             "views/kanban/document_kanban_controller",
@@ -150,6 +173,7 @@ class TestAssets(TransactionCase):
             "views/list/document_list_renderer",
             "views/list/document_list_view",
             "views/list/document_new_folder",
+            "views/search_panel/document_search_panel",
         ):
             self.assertIn(f"{MODULE_PREFIX}int_filemanager/{name}", ours)
 
@@ -215,6 +239,11 @@ class TestAssets(TransactionCase):
                     'title="Print"',
                 ),
             ),
+            # The folders of the search panel get the mark of a drop (the place of the xpath); the
+            # rows of the list and the cards of the kanban carry `data-id` (the drag finds them).
+            ("web.SearchPanel.Category", ("<header", "t-on-click")),
+            ("web.ListRenderer.RecordRow", ("o_data_row", "t-att-data-id")),
+            ("web.KanbanRecord", ("t-att-data-id",)),
             ("web.FormView", ("control-panel-additional-actions", "props.Renderer", "<Layout")),
             ("web.ControlPanel", ("control-panel-navigation-additional", "o_cp_pager")),
         ):

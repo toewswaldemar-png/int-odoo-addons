@@ -1,0 +1,6 @@
+// The folder under a drag is in the colour of the chosen one and of the picture of the drag
+// (`list-group-item.active`, the box "N selected"); the chosen one is bold. No frame, as the
+// column of a kanban under a card (`o_kanban_hover`).
+.o_search_panel .o_int_filemanager_drop_target {
+    background-color: var(--list-group-active-bg);
+}

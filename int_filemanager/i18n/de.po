@@ -263,6 +263,18 @@ msgid "Choose a folder in the panel on the left first."
 msgstr "Wählen Sie zuerst im Bereich links einen Ordner."
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/drag/document_move.js:0
+msgid "Moved to %(folder)s"
+msgstr "Verschoben nach %(folder)s"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/drag/document_drag_ghost.js:0
+msgid "documents"
+msgstr "Dokumente"
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__clash_count
 msgid "Clash Count"
 msgstr "Namen vergeben"

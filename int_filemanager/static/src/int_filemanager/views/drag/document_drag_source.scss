@@ -1,0 +1,6 @@
+// The drag of the core marks the dragged element with `o_dragged`. The list lays such a row out as a
+// flex box (the sortable takes the row out of the table with `position: fixed`); here the row stays
+// where it is, so that it must stay a row of the table.
+.o_list_renderer .o_data_row.o_dragged {
+    display: table-row;
+}
