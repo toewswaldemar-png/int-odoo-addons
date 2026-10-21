@@ -7,15 +7,24 @@
                 t-as="hit"
                 t-key="hit.page"
                 role="button"
-                class="o_int_filemanager_hit d-block text-reset text-decoration-none text-truncate"
+                class="o_int_filemanager_hit d-flex text-reset text-decoration-none"
             >
-                <span class="text-muted me-1" t-out="label(hit)" />
-                <t t-foreach="hit.parts" t-as="part" t-key="part_index">
-                    <span
-                        t-att-class="{ 'bg-warning bg-opacity-50 rounded-1': part[1] }"
-                        t-out="part[0]"
-                    />
-                </t>
+                <t t-set="pieces" t-value="split(hit)" />
+                <span class="text-muted me-1 flex-shrink-0" t-out="label(hit)" />
+                <span class="o_int_filemanager_hit_before" t-out="pieces.before" />
+                <span
+                    t-if="pieces.match"
+                    class="flex-shrink-0 bg-warning bg-opacity-50 rounded-1"
+                    t-out="pieces.match"
+                />
+                <span class="o_int_filemanager_hit_after">
+                    <t t-foreach="pieces.after" t-as="part" t-key="part_index">
+                        <span
+                            t-att-class="{ 'bg-warning bg-opacity-50 rounded-1': part[1] }"
+                            t-out="part[0]"
+                        />
+                    </t>
+                </span>
             </a>
         </div>
     </t>

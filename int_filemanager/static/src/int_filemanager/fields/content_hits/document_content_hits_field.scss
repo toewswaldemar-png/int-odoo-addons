@@ -9,3 +9,24 @@
         );
     }
 }
+
+// In a narrow column the text around the first word is cut, the word stays.
+.o_int_filemanager_hits .o_int_filemanager_hit {
+    overflow: hidden;
+    white-space: pre;
+}
+
+.o_int_filemanager_hit_before {
+    display: flex;
+    flex: 0 1 auto;
+    justify-content: flex-end;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.o_int_filemanager_hit_after {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

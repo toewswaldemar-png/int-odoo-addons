@@ -26,6 +26,25 @@ export class DocumentContentHitsField extends Component {
     label(hit) {
         return hitLabel(documentFileFromRecord(this.props.record), hit);
     }
+
+    /**
+     * The excerpt in three: the text before the first marked word, that word, and the rest. A
+     * narrow column cuts the text around the word, never the word.
+     */
+    split(hit) {
+        const index = hit.parts.findIndex(([, isMatch]) => isMatch);
+        if (index < 0) {
+            return { before: "", match: "", after: hit.parts };
+        }
+        return {
+            before: hit.parts
+                .slice(0, index)
+                .map(([text]) => text)
+                .join(""),
+            match: hit.parts[index][0],
+            after: hit.parts.slice(index + 1),
+        };
+    }
 }
 
 export const documentContentHitsField = {
