@@ -117,7 +117,9 @@ class TestAssets(TransactionCase):
         ours = {name for name in self.modules if name.startswith(MODULE_PREFIX)}
         for name in (
             "dropzone/document_dropzone",
+            "fields/content_hits/document_content_hit_count_field",
             "fields/content_hits/document_content_hits_field",
+            "fields/content_hits/document_content_hits_popover",
             "fields/name/document_name_field",
             "fields/size/size_field",
             "fields/thumbnail/document_thumbnail_field",

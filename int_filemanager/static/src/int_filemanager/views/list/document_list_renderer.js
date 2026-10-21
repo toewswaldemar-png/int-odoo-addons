@@ -30,11 +30,7 @@ export class DocumentListRenderer extends ListRenderer {
             !ev.target.special_click &&
             !this.props.list.selection.length
         ) {
-            const { file, files } = documentFilesFromRecords(
-                this.props.list.records,
-                record,
-                Number(hit?.dataset.hitIndex || 0)
-            );
+            const { file, files } = documentFilesFromRecords(this.props.list.records, record);
             if (file.isViewable) {
                 this.fileViewer.open(file, files);
                 return;

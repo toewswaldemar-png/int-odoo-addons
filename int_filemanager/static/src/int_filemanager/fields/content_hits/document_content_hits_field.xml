@@ -2,19 +2,21 @@
 <templates xml:space="preserve">
     <t t-name="int_filemanager.DocumentContentHitsField">
         <div class="o_int_filemanager_hits">
-            <div
+            <a
                 t-foreach="hits"
                 t-as="hit"
-                t-key="hit_index"
-                class="o_int_filemanager_hit text-truncate"
-                t-att-data-hit-index="hit_index"
+                t-key="hit.page"
+                role="button"
+                class="o_int_filemanager_hit d-block text-reset text-decoration-none text-truncate"
             >
                 <span class="text-muted me-1" t-out="label(hit)" />
                 <t t-foreach="hit.parts" t-as="part" t-key="part_index">
-                    <span t-att-class="{ 'fw-bold': part[1] }" t-out="part[0]" />
+                    <span
+                        t-att-class="{ 'bg-warning bg-opacity-50 rounded-1': part[1] }"
+                        t-out="part[0]"
+                    />
                 </t>
-            </div>
-            <div t-if="more" class="text-muted small" t-out="moreLabel" />
+            </a>
         </div>
     </t>
 </templates>

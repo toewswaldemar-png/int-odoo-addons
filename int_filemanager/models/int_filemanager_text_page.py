@@ -5,7 +5,8 @@ from itertools import accumulate
 from odoo import api, fields, models
 from odoo.tools import SQL
 
-HITS_PER_FILE = 3
+# The hit that the list shows in the row of a file; the others are loaded in blocks (see the document).
+HITS_PER_FILE = 1
 SNIPPET_RADIUS = 70
 # Words of a page handed to the PDF viewer to mark, and the longest one.
 TERMS_PER_PAGE = 8
@@ -124,13 +125,16 @@ class IntFilemanagerTextPage(models.Model):
     _content_index = models.Index(f"USING gin (to_tsvector('german', {folded('content')}))")
 
     @api.model
-    def _content_hits(self, checksums, words):
+    def _content_hits(self, checksums, words, offset=0, limit=HITS_PER_FILE):
         """Pages with a hit, with an excerpt of each, for the words (as the document search finds them).
 
         Does not check access: the caller passes the checksums of the files the user may read.
 
         :param words: what the user typed; each is a ``websearch`` expression
-        :return: ``{checksum: {"hits": [{"page", "parts", "terms"}], "more": n}}``, ``more`` = pages left out
+        :param offset: how many of the pages with a hit (by page number) are skipped
+        :param limit: how many pages are given, per file
+        :return: ``{checksum: {"hits": [{"page", "parts", "terms"}], "total": n}}``, ``total`` = all
+            pages of the file with a hit
         """
         checksums = tuple(set(checksums))
         if not checksums or not words:
@@ -154,20 +158,20 @@ class IntFilemanagerTextPage(models.Model):
         [[seqscan]] = cr.fetchall()
         cr.execute(SQL("SELECT set_config('enable_seqscan', 'off', true)"))
         try:
-            rows = self._execute_hits(checksums, query)
+            rows = self._execute_hits(checksums, query, offset, limit)
         finally:
             cr.execute(SQL("SELECT set_config('enable_seqscan', %s, true)", seqscan))
         found = {}
         for checksum, page, total, content, headline in rows:
             text, spans = _excerpt(content, headline)
-            entry = found.setdefault(checksum, {"hits": [], "more": max(total - HITS_PER_FILE, 0)})
+            entry = found.setdefault(checksum, {"hits": [], "total": total})
             entry["hits"].append(
                 {"page": page, "parts": _snippet(text, spans), "terms": _terms(text, spans)}
             )
         return found
 
     @api.model
-    def _execute_hits(self, checksums, query):
+    def _execute_hits(self, checksums, query, offset, limit):
         """The rows of ``_content_hits``: ``(checksum, page, pages with a hit, text, headline)``."""
         return self.env.execute_query(
             SQL(
@@ -184,13 +188,14 @@ class IntFilemanagerTextPage(models.Model):
                            AND to_tsvector('german', %(folded)s) @@ %(query)s
                        ) hit
                   JOIN int_filemanager_text_page page ON page.id = hit.id
-                 WHERE hit.rank <= %(per_file)s
+                 WHERE hit.rank > %(offset)s AND hit.rank <= %(until)s
                  ORDER BY hit.checksum, hit.page
                 """,
                 folded=SQL(folded("page.content")),
                 query=query,
                 options=f"HighlightAll=true, StartSel={MARK_START}, StopSel={MARK_END}",
                 checksums=checksums,
-                per_file=HITS_PER_FILE,
+                offset=offset,
+                until=offset + limit,
             )
         )

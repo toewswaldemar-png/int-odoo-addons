@@ -24,9 +24,14 @@
                 </header>
                 <field name="name" widget="int_filemanager_document_name" />
                 <field name="folder_id" string="Location" context="{'hierarchical_naming': True}" />
-                <field name="size" widget="int_filemanager_size" />
-                <field name="write_date" string="Modified" />
+                <field name="size" widget="int_filemanager_size" optional="show" />
+                <field name="write_date" string="Modified" optional="show" />
                 <field name="tag_ids" widget="many2many_tags" optional="show" />
+                <field
+                    name="content_hit_count"
+                    widget="int_filemanager_content_hit_count"
+                    column_invisible="not context.get('int_filemanager_words')"
+                />
                 <field
                     name="content_hits"
                     widget="int_filemanager_content_hits"

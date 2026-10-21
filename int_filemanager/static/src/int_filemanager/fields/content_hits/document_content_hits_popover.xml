@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="int_filemanager.DocumentContentHitsPopover">
+        <div class="o_int_filemanager_hits_list">
+            <div class="px-3 py-2 fw-bold border-bottom text-truncate" t-out="title" />
+            <a
+                t-foreach="state.hits"
+                t-as="hit"
+                t-key="hit.page"
+                role="button"
+                class="o_int_filemanager_hit d-block px-3 py-1 text-reset text-decoration-none"
+                t-on-click="() => this.select(hit)"
+            >
+                <span class="text-muted me-1" t-out="label(hit)" />
+                <t t-foreach="hit.parts" t-as="part" t-key="part_index">
+                    <span
+                        t-att-class="{ 'bg-warning bg-opacity-50 rounded-1': part[1] }"
+                        t-out="part[0]"
+                    />
+                </t>
+            </a>
+            <button
+                t-if="canLoadMore"
+                class="btn btn-link"
+                t-att-disabled="state.loading"
+                t-on-click="loadBlock"
+            >
+                Load more
+            </button>
+        </div>
+    </t>
+</templates>

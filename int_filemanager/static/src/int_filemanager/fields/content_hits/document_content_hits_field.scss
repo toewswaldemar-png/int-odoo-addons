@@ -1,8 +1,11 @@
-// A hit is a link in all but name: a click opens the file on that page.
+// A hit is a link: a click opens the file on that page.
 .o_int_filemanager_hit {
     cursor: pointer;
 
     &:hover {
-        background-color: var(--table-hover-bg, rgba(0, 0, 0, 0.05));
+        background-color: rgba(
+            var(--#{$variable-prefix}emphasis-color-rgb),
+            #{$table-hover-bg-factor}
+        );
     }
 }

@@ -1,8 +1,14 @@
 from unittest.mock import patch
 
+from odoo.exceptions import AccessError
 from odoo.tests.common import new_test_user, tagged
 
 from odoo.addons.int_filemanager.models import int_filemanager_text_page as page_module
+from odoo.addons.int_filemanager.models.int_filemanager_document import (
+    CONTENT_BLOCK,
+    CONTENT_WORD_LENGTH,
+    CONTENT_WORDS_MAX,
+)
 from odoo.addons.int_filemanager.models.int_filemanager_text_page import (
     HITS_PER_FILE,
     SNIPPET_RADIUS,
@@ -29,18 +35,18 @@ def excerpt(hit):
 class TestTextHits(TextCase):
     """Where the words of a search are: pages, excerpts, the words as they are written."""
 
-    def _hits(self, document, *words):
+    def _hits(self, document, *words, limit=HITS_PER_FILE):
         self._read_all()
-        found = self.Page._content_hits([document.checksum], list(words))
+        found = self.Page._content_hits([document.checksum], list(words), 0, limit)
         return found.get(document.checksum)
 
     def test_the_pages_with_a_hit_are_named(self):
         document = self._document(
             "a.pdf", text_files.pdf(["The invoice of the plumber", "Second page", "The plumber again"])
         )
-        found = self._hits(document, "plumber")
+        found = self._hits(document, "plumber", limit=10)
         self.assertEqual([hit["page"] for hit in found["hits"]], [1, 3])
-        self.assertEqual(found["more"], 0)
+        self.assertEqual(found["total"], 2)
 
     def test_a_file_without_a_hit_is_not_named(self):
         document = self._document("a.txt", b"nothing to see")
@@ -60,7 +66,21 @@ class TestTextHits(TextCase):
         document = self._document("a.pdf", text_files.pdf(pages))
         found = self._hits(document, "plumber")
         self.assertEqual([hit["page"] for hit in found["hits"]], list(range(1, HITS_PER_FILE + 1)))
-        self.assertEqual(found["more"], 2)
+        self.assertEqual(found["total"], HITS_PER_FILE + 2)
+
+    def test_a_block_of_pages_starts_after_the_offset(self):
+        document = self._document("a.pdf", text_files.pdf([f"The plumber on page {n}" for n in range(1, 6)]))
+        self._read_all()
+        pages = lambda offset, limit: [  # noqa: E731
+            hit["page"]
+            for hit in self.Page._content_hits([document.checksum], ["plumber"], offset, limit)[
+                document.checksum
+            ]["hits"]
+        ]
+        self.assertEqual(pages(0, 2), [1, 2])
+        self.assertEqual(pages(2, 2), [3, 4])
+        self.assertEqual(pages(4, 2), [5])
+        self.assertEqual(self.Page._content_hits([document.checksum], ["plumber"], 5, 2), {})
 
     def test_the_excerpt_keeps_the_umlauts_and_the_case_of_the_file(self):
         document = self._document("a.docx", text_files.docx(["Herr Müller wohnt in der Straße"]))
@@ -157,3 +177,54 @@ class TestTextHits(TextCase):
         self.assertEqual(matched(hits["hits"][0]), ["confidential"])
         # The hidden one stays hidden, whatever the context says.
         self.assertFalse(self.Document.with_user(alice).search([("id", "=", hidden.id)]))
+
+    # --- the count and the other hits of a file -----------------------------------
+
+    def test_the_count_is_the_pages_with_a_hit_and_the_words_go_with_the_hits(self):
+        document = self._document("a.pdf", text_files.pdf([f"The plumber on page {n}" for n in range(1, 5)]))
+        self._read_all()
+        self.assertEqual(document.content_hit_count, 0)
+        found = self._with_words(document, "plumber")
+        self.assertEqual(found.content_hit_count, 4)
+        self.assertEqual(found.content_hits["total"], 4)
+        self.assertEqual(found.content_hits["words"], ["plumber"])
+        self.assertEqual(len(found.content_hits["hits"]), HITS_PER_FILE)
+        self.assertEqual(self._with_words(document, "nothing").content_hit_count, 0)
+
+    def test_the_other_hits_come_in_blocks(self):
+        document = self._document("a.pdf", text_files.pdf([f"The plumber on page {n}" for n in range(1, 6)]))
+        self._read_all()
+        first = document.get_content_hits(["plumber"], 0, 2)
+        self.assertEqual(([hit["page"] for hit in first["hits"]], first["total"]), ([1, 2], 5))
+        rest = document.get_content_hits(["plumber"], 2, 10)
+        self.assertEqual([hit["page"] for hit in rest["hits"]], [3, 4, 5])
+        self.assertEqual(document.get_content_hits(["plumber"], 9, 2), {"hits": [], "total": 0})
+        self.assertEqual(document.get_content_hits(["nothing"]), {"hits": [], "total": 0})
+
+    def test_a_wrong_offset_or_limit_falls_back(self):
+        pages = [f"The plumber on page {n}" for n in range(1, CONTENT_BLOCK + 4)]
+        document = self._document("a.pdf", text_files.pdf(pages))
+        self._read_all()
+        for offset, limit in ((-3, -1), ("x", None), (1.5, 0.5)):
+            with self.subTest(offset=offset, limit=limit):
+                found = document.get_content_hits(["plumber"], offset, limit)
+                self.assertEqual(len(found["hits"]), CONTENT_BLOCK)
+                self.assertEqual(found["hits"][0]["page"], 1)
+
+    def test_the_words_are_cut_in_number_and_length(self):
+        words = self.Document._content_words([f"w{n}" for n in range(30)] + [5, "  "])
+        self.assertEqual(len(words), CONTENT_WORDS_MAX)
+        self.assertEqual(self.Document._content_words("x" * 500), ["x" * CONTENT_WORD_LENGTH])
+        self.assertEqual(self.Document._content_words(5), [])
+
+    def test_a_user_asks_for_the_hits_of_the_documents_that_he_reads_only(self):
+        bob = new_test_user(self.env, login="hits_bob", groups=USER_GROUPS)
+        secret = self.env["int.filemanager.folder"].create({"name": "Secret", "access_mode": "restricted"})
+        shared = self.env["int.filemanager.folder"].create({"name": "Shared", "access_mode": "open"})
+        hidden = self._document("secret.txt", b"the confidential plan", secret)
+        open_one = self._document("open.txt", b"the confidential plan", shared)
+        self._read_all()
+        found = open_one.with_user(bob).get_content_hits(["confidential"])
+        self.assertEqual(found["total"], 1)
+        with self.assertRaises(AccessError):
+            hidden.with_user(bob).get_content_hits(["confidential"])

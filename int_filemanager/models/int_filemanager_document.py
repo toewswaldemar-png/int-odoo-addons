@@ -61,6 +61,9 @@ NAME_TRIES = 1000
 CONTENT_WORDS_KEY = "int_filemanager_words"
 CONTENT_WORDS_MAX = 10
 CONTENT_WORD_LENGTH = 200
+# The hits that the list loads at a time for one file (``get_content_hits``), and the most a call may ask for.
+CONTENT_BLOCK = 20
+CONTENT_BLOCK_MAX = 50
 # Set by the storage only (see ``write``), like the core does for ``ir.attachment``. The picture
 # of a PDF and its state are made by the scheduled action alone; the share a file came in
 # through, by the upload of the share.
@@ -231,6 +234,12 @@ class IntFilemanagerDocument(models.Model):
         compute="_compute_content_hits",
         exportable=False,
     )
+    # How many pages of the file have the words (the badge of the list).
+    content_hit_count = fields.Integer(
+        string="Hits",
+        compute="_compute_content_hits",
+        exportable=False,
+    )
     # "mp3" for "song.MP3": the kind of file as the user knows it; the mimetype says "audio/mpeg".
     extension = fields.Char(compute="_compute_extension", exportable=False)
 
@@ -276,25 +285,51 @@ class IntFilemanagerDocument(models.Model):
     def _compute_content_search(self):
         self.content_search = False
 
-    @api.depends_context(CONTENT_WORDS_KEY)
-    def _compute_content_hits(self):
-        """The pages of the files that have the words of the search, with an excerpt each.
-
-        The words come from the context: the search view sets them from what was typed in the
-        field "Full text". Whoever sets them by hand only gets excerpts of files they can read
-        anyway (the field is read for readable documents), and no more than they could search.
-        """
-        words = self.env.context.get(CONTENT_WORDS_KEY) or []
+    @api.model
+    def _content_words(self, words):
+        """The words of a search as the search takes them: texts only, cut in length and in number."""
         if isinstance(words, str):
             words = [words]
         elif not isinstance(words, (list, tuple)):
             words = []
         words = [word[:CONTENT_WORD_LENGTH] for word in words if isinstance(word, str) and word.strip()]
-        found = self.env["int.filemanager.text.page"]._content_hits(
-            self.mapped("checksum"), words[:CONTENT_WORDS_MAX]
-        )
+        return words[:CONTENT_WORDS_MAX]
+
+    @api.depends_context(CONTENT_WORDS_KEY)
+    def _compute_content_hits(self):
+        """The first page of the files that have the words of the search, with an excerpt, and the count.
+
+        The words come from the context: the search view sets them from what was typed in the
+        field "Full text". Whoever sets them by hand only gets excerpts of files they can read
+        anyway (the field is read for readable documents), and no more than they could search.
+        The words go with the hits: the list asks for the other hits with them.
+        """
+        words = self._content_words(self.env.context.get(CONTENT_WORDS_KEY) or [])
+        found = self.env["int.filemanager.text.page"]._content_hits(self.mapped("checksum"), words)
         for document in self:
-            document.content_hits = found.get(document.checksum, False)
+            entry = found.get(document.checksum)
+            document.content_hits = {**entry, "words": words} if entry else False
+            document.content_hit_count = entry["total"] if entry else 0
+
+    def get_content_hits(self, words, offset=0, limit=CONTENT_BLOCK):
+        """A block of the pages of this file that have the words, for the list that shows all of them.
+
+        Public (the list calls it), so it checks the right itself: only a file that the user may
+        read gives hits, and no more than the search would find.
+
+        :param words: the words of the search (see ``_content_words``)
+        :param offset: how many of the pages with a hit (by page number) are skipped
+        :param limit: how many are given, at most ``CONTENT_BLOCK_MAX``
+        :return: ``{"hits": [{"page", "parts", "terms"}], "total": n}``
+        """
+        self.ensure_one()
+        self.check_access("read")
+        offset = offset if isinstance(offset, int) and offset > 0 else 0
+        limit = min(limit, CONTENT_BLOCK_MAX) if isinstance(limit, int) and limit > 0 else CONTENT_BLOCK
+        found = self.env["int.filemanager.text.page"]._content_hits(
+            [self.checksum], self._content_words(words), offset, limit
+        )
+        return found.get(self.checksum, {"hits": [], "total": 0})
 
     @api.depends("name")
     def _compute_extension(self):

@@ -4,7 +4,17 @@ import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { documentFileFromRecord } from "../../document_file";
 
-/** The hits of the full text search in a file: page and excerpt. */
+/** @returns {String} what an excerpt is headed with: the page of a PDF, the block of a text */
+export function hitLabel(file, hit) {
+    if (file.isImage) {
+        return "";
+    }
+    return file.isPdf
+        ? _t("p. %(page)s", { page: hit.page })
+        : _t("Block %(page)s", { page: hit.page });
+}
+
+/** The hit of the full text search in a file: page and excerpt. */
 export class DocumentContentHitsField extends Component {
     static template = "int_filemanager.DocumentContentHitsField";
     static props = { ...standardFieldProps };
@@ -13,22 +23,8 @@ export class DocumentContentHitsField extends Component {
         return this.props.record.data[this.props.name]?.hits || [];
     }
 
-    get more() {
-        return this.props.record.data[this.props.name]?.more || 0;
-    }
-
     label(hit) {
-        const { isPdf, isImage } = documentFileFromRecord(this.props.record);
-        if (isImage) {
-            return "";
-        }
-        return isPdf
-            ? _t("p. %(page)s", { page: hit.page })
-            : _t("Block %(page)s", { page: hit.page });
-    }
-
-    get moreLabel() {
-        return _t("+ %(count)s more", { count: this.more });
+        return hitLabel(documentFileFromRecord(this.props.record), hit);
     }
 }
 

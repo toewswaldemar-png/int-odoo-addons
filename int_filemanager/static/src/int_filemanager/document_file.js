@@ -92,10 +92,9 @@ export class DocumentFile extends FileModelMixin(Object) {
     }
 }
 
-/** @param {Number} [hitIndex] which of the `content_hits` of the record the file shows */
-export function documentFileFromRecord(record, hitIndex = 0) {
+/** @param {Object} [hit] the place the file shows, default: the first of the `content_hits` */
+export function documentFileFromRecord(record, hit) {
     const { name, mimetype, checksum, size, ocr_checksum, content_hits, folder_id } = record.data;
-    const hit = content_hits?.hits?.[hitIndex];
     return new DocumentFile({
         id: record.resId,
         name,
@@ -103,7 +102,7 @@ export function documentFileFromRecord(record, hitIndex = 0) {
         checksum,
         size,
         ocr_checksum,
-        hit,
+        hit: hit || content_hits?.hits?.[0],
         folder_id: folder_id?.id,
     });
 }
@@ -136,10 +135,10 @@ export async function readDocumentFile(orm, id) {
     return new DocumentFile(values);
 }
 
-export function documentFilesFromRecords(records, record, hitIndex = 0) {
+export function documentFilesFromRecords(records, record, hit) {
     const inPage = records.includes(record) ? records : [record];
     const files = inPage.map((each) =>
-        documentFileFromRecord(each, each === record ? hitIndex : 0)
+        documentFileFromRecord(each, each === record ? hit : undefined)
     );
     return { file: files[inPage.indexOf(record)], files };
 }
