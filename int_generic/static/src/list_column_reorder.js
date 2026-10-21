@@ -71,13 +71,15 @@ patch(ListRenderer.prototype, {
         // real element - Nutzerreport 2026-09-17, Screenshot zeigte den haesslichen
         // Standard-Browser-Ghost), and it reuses Odoo's own .o_dragged base styling
         // (draggable_hook_builder.scss) instead of a hand-rolled visual. th[data-name] is
-        // already set natively by list_renderer.xml itself (t-att-data-name="column.name"),
-        // no own attribute needed - only the scoping class below to select field-column
-        // headers specifically (buttons/handle columns have no data-name and are excluded by
-        // the selector automatically).
+        // set natively by list_renderer.xml itself (t-att-data-name="column.name") on
+        // field-column headers only (buttons/handle columns have no data-name), so the
+        // selector alone picks exactly the reorderable headers. No template extension on
+        // purpose: a renderer that inherits web.ListRenderer with t-inherit-mode="primary"
+        // only sees extensions registered before it, so an own marker class would be
+        // missing there depending on the bundle order of the modules.
         useSortable({
             ref: this.rootRef,
-            elements: ".o_int_generic_column_draggable",
+            elements: "thead th[data-name]",
             cursor: "grabbing",
             // Placeholder must be a real <th> clone (not useSortable's default plain <div>) -
             // a <div> as a direct child of <tr> would be invalid table markup and break the

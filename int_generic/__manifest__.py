@@ -12,7 +12,6 @@
     "assets": {
         "web.assets_backend": [
             "int_generic/static/src/list_column_reorder.js",
-            "int_generic/static/src/list_column_reorder.xml",
             "int_generic/static/src/list_column_reorder.scss",
         ],
     },
