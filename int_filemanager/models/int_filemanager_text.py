@@ -654,7 +654,9 @@ class IntFilemanagerText(models.Model):
     def _reset(self):
         """Throw the text away and put the row back to the start.
 
-        A picture is read by the recognition: it starts again from there.
+        A picture is read by the recognition: it starts again from there. Its state stays
+        ``empty``, so it gets the engine version here, like a new row, or ``_requeue`` would take
+        it again at every step.
         """
         self.env["int.filemanager.text.page"].search([("text_id", "in", self.ids)]).unlink()
         pictures = self.filtered(lambda row: row.mimetype in IMAGE_TYPES)
@@ -664,6 +666,7 @@ class IntFilemanagerText(models.Model):
             {
                 **self._ocr_restart_values(),
                 "state": "empty",
+                "engine_version": ENGINE_VERSION,
                 "message": False,
                 "page_count": 0,
                 "next_page": 1,

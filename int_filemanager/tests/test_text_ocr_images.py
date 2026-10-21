@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from odoo.tests.common import tagged
 
-from odoo.addons.int_filemanager.models.int_filemanager_text import OCR_PROGRESS, _image_info
+from odoo.addons.int_filemanager.models.int_filemanager_text import ENGINE_VERSION, OCR_PROGRESS, _image_info
 from odoo.addons.int_filemanager.tools import ocr_plan
 
 from .test_text_ocr import OcrCase
@@ -126,6 +126,15 @@ class TestPictureRows(PicturesCase, OcrCase):
         self.assertEqual((row.state, row.ocr_state, row.page_count, row.ocr_attempts), ("empty", "wait", 0, 0))
         self.assertFalse(self.Page.search([("text_id", "=", row.id)]))
         self.assertTrue(document)
+
+    def test_a_picture_of_an_older_engine_version_is_requeued_once(self):
+        self._document("a.png", picture([["Hello"]], width=400), folder=self._folder("On", "on"))
+        [row] = self._rows()
+        row.engine_version = ENGINE_VERSION - 1
+        self.assertEqual(self.Text._requeue(100), 1)
+        self.assertEqual((row.state, row.ocr_state, row.engine_version), ("empty", "wait", ENGINE_VERSION))
+        # The scheduled action repeats the step while it returns a number: it has to end.
+        self.assertEqual(self.Text._requeue(100), 0)
 
 
 @tagged("post_install", "-at_install")
