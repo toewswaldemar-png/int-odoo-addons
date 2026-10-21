@@ -7,3 +7,12 @@
         }
     }
 }
+
+// The drag of the rows (`useDocumentDragSource`) is the hook of the core, and that calls `focus()` on
+// what the pointer pressed. A click beside the name presses the cell itself (`tabindex="-1"`), and
+// the browser draws its ring for a focus that a script sets. The core hides it for the cells in the
+// keyboard navigation (`o_keyboard_navigation`) and a card of the kanban has a frame of its own
+// for the focus: a cell of this list has none, the core marks the row of the focus.
+.o_int_filemanager_list .o_data_row > td:focus-visible {
+    outline: none;
+}

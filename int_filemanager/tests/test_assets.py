@@ -156,6 +156,7 @@ class TestAssets(TransactionCase):
             "touch/momentum",
             "touch/pinch",
             "touch/swipe",
+            "views/document_open_mode",
             "views/document_search_model",
             "views/drag/document_drag_ghost",
             "views/drag/document_drag_source_hook",

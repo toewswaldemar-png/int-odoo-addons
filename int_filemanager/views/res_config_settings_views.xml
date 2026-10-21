@@ -16,6 +16,15 @@
                             <field name="int_filemanager_access_via_record" />
                         </setting>
                     </block>
+                    <block title="Display" name="int_filemanager_display_block">
+                        <setting
+                            id="int_filemanager_default_open_mode"
+                            string="Open documents with"
+                            help="What opens a document in the list and the kanban. Every user can choose otherwise in their preferences."
+                        >
+                            <field name="int_filemanager_default_open_mode" />
+                        </setting>
+                    </block>
                     <block title="Import" name="int_filemanager_import_block">
                         <setting
                             id="int_filemanager_import_root"

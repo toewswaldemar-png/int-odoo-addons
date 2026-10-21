@@ -3,6 +3,7 @@ from odoo.exceptions import ValidationError
 from odoo.tools.misc import format_duration, human_size
 
 from .int_filemanager_share import SHARE_DEFAULTS
+from .res_users_settings import OPEN_MODE_PARAMETER, OPEN_MODES
 
 # The settings of the shares that are numbers (at least 1, see the constraint).
 SHARE_NUMBERS = tuple(
@@ -108,6 +109,15 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="int_filemanager.ocr_output_type",
         default="pdf",
         help="PDF/A takes longer and makes the file bigger.",
+    )
+
+    int_filemanager_default_open_mode = fields.Selection(
+        OPEN_MODES,
+        string="Open documents with",
+        config_parameter=OPEN_MODE_PARAMETER,
+        default=OPEN_MODES[0][0],
+        help="What opens a document in the list and the kanban. Every user can choose otherwise "
+        "in their preferences.",
     )
 
     int_filemanager_access_via_record = fields.Boolean(

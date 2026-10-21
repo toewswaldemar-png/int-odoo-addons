@@ -5,6 +5,9 @@
         t-inherit="web.ListRenderer"
         t-inherit-mode="primary"
     >
+        <xpath expr="//div[@t-ref='root']" position="attributes">
+            <attribute name="class" separator=" " add="o_int_filemanager_list" />
+        </xpath>
         <!-- The thumbnail makes the name cell taller; the other cells follow its middle. -->
         <xpath expr="//table[@t-ref='table']" position="attributes">
             <attribute name="t-attf-class" separator=" " add="align-middle" />

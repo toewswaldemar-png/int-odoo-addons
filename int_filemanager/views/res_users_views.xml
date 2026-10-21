@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- The preferences of the user ("My Preferences"). -->
+    <record id="res_users_view_form_preferences" model="ir.ui.view">
+        <field name="name">res.users.preferences.form.inherit.int_filemanager</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form_simple_modif" />
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='other_preferences']" position="inside">
+                <field
+                    name="int_filemanager_open_mode"
+                    string="Open documents with"
+                    readonly="0"
+                    invisible="share"
+                />
+            </xpath>
+        </field>
+    </record>
+</odoo>

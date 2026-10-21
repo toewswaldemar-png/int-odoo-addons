@@ -4550,3 +4550,50 @@ msgstr "Zeichnen"
 #: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
 msgid "Shapes"
 msgstr "Formen"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_default_open_mode__single
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users__int_filemanager_open_mode__single
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_open_mode__single
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_open_mode_resolved__single
+msgid "Single click"
+msgstr "Einfachklick"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_default_open_mode__double
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users__int_filemanager_open_mode__double
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_open_mode__double
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_open_mode_resolved__double
+msgid "Double click"
+msgstr "Doppelklick"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users__int_filemanager_open_mode__default
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_open_mode__default
+msgid "Default"
+msgstr "Vorgabe"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_default_open_mode
+#: model:ir.model.fields,field_description:int_filemanager.field_res_users__int_filemanager_open_mode
+#: model:ir.model.fields,field_description:int_filemanager.field_res_users_settings__int_filemanager_open_mode
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_users_view_form_preferences
+msgid "Open documents with"
+msgstr "Dokumente öffnen mit"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_users_settings__int_filemanager_open_mode_resolved
+msgid "Open documents with (resolved)"
+msgstr "Dokumente öffnen mit (wirksam)"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Display"
+msgstr "Anzeige"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_default_open_mode
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "What opens a document in the list and the kanban. Every user can choose otherwise in their preferences."
+msgstr "Was ein Dokument in der Liste und im Kanban öffnet. Jeder Benutzer kann es in den eigenen Einstellungen anders wählen."
