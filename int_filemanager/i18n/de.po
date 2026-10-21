@@ -42,9 +42,9 @@ msgstr "(etwa %(time)s Stunden Arbeit)"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
-msgid "+ %(count)s more"
-msgstr "+ %(count)s weitere"
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_popover.js:0
+msgid "%(name)s: %(count)s hits"
+msgstr "%(name)s: %(count)s Treffer"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
@@ -759,6 +759,17 @@ msgstr "Hat Nachricht"
 
 #. module: int_filemanager
 #. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hit_count_field.js:0
+msgid "Hit count"
+msgstr "Anzahl der Treffer"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__content_hit_count
+msgid "Hits"
+msgstr "Treffer"
+
+#. module: int_filemanager
+#. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
 msgid "Hits in the text"
 msgstr "Fundstellen im Text"
@@ -956,6 +967,12 @@ msgstr "Aufgelistet"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
 msgid "Lists the folder and shows what would be read in. Nothing is copied."
 msgstr "Listet den Ordner auf und zeigt, was eingelesen würde. Es wird nichts kopiert."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_popover.xml:0
+msgid "Load more"
+msgstr "Mehr laden"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
@@ -1639,6 +1656,12 @@ msgstr "Einstellungen"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
 msgid "Show the files"
 msgstr "Dateien anzeigen"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hit_count_field.js:0
+msgid "Show the hits"
+msgstr "Treffer anzeigen"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
