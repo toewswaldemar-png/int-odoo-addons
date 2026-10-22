@@ -7,12 +7,12 @@ import logging
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import threading
 import time
 
-import psutil
 import psycopg2.errors
 
 from odoo import api, fields, models
@@ -54,8 +54,6 @@ IMAGE_TYPES = (
 # would stay "a document without a row" for ever.
 TEXT_PREFIX = "text/%"
 READER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "extract_text.py")
-# Starts ``ocrmypdf`` with the limits and the environment that suit it (see the script).
-START_OCR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "start_ocr.py")
 # Says how many pictures an image file has and how wide it is (Pillow knows few formats here).
 IMAGE_INFO = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "image_info.py")
 # The folder of the sections of the files that are being recognized, next to the blobs.
@@ -121,26 +119,6 @@ def _probe(command):
     except (OSError, subprocess.TimeoutExpired):
         return ""
     return done.stdout + done.stderr
-
-
-def _kill_tree(process):
-    """Stop a process and all it started (Tesseract, Ghostscript ...): asked first, then killed."""
-    try:
-        parent = psutil.Process(process.pid)
-        family = [*parent.children(recursive=True), parent]
-    except psutil.NoSuchProcess:
-        family = []
-    for member in family:
-        with contextlib.suppress(psutil.NoSuchProcess):
-            member.terminate()
-    _gone, alive = psutil.wait_procs(family, timeout=KILL_GRACE_SECONDS)
-    for member in alive:
-        with contextlib.suppress(psutil.NoSuchProcess):
-            member.kill()
-    psutil.wait_procs(alive, timeout=KILL_GRACE_SECONDS)
-    with contextlib.suppress(ProcessLookupError):
-        process.kill()
-    process.wait()
 
 
 def _image_info(path):
@@ -1225,31 +1203,46 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_run(self, command, nice, job, seconds):
-        """Run the recognition for at most ``seconds``; its whole process tree is stopped after that.
+        """Run the recognition for at most ``seconds``; ``timeout`` stops everything it started after that.
+
+        ``nice`` is the absolute priority of the settings; a lower number than the one of this
+        process needs a right we do not have, so the priority stays as it is then.
 
         :return: ``(exit code, what it wrote as errors, was stopped)``
         """
         if seconds <= 0:
             return None, "", True
         errors_path = os.path.join(job, "stderr.txt")
-        with open(errors_path, "wb") as errors:
-            process = subprocess.Popen(  # noqa: S603 (own script, own interpreter, no shell)
-                [sys.executable, "-I", START_OCR, str(nice), job, *command],
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=errors,
-            )
-            try:
-                process.wait(timeout=seconds)
-                timed_out = False
-            except subprocess.TimeoutExpired:
-                _kill_tree(process)
-                timed_out = True
+        environment = {**os.environ, "OMP_THREAD_LIMIT": "1", "TMPDIR": job}
+        started = time.monotonic()
+        try:
+            with open(errors_path, "wb") as errors:
+                done = subprocess.run(  # noqa: S603 (fixed program names, list arguments, no shell)
+                    [
+                        "nice",
+                        "-n",
+                        str(max(nice - os.nice(0), 0)),
+                        "timeout",
+                        f"--kill-after={KILL_GRACE_SECONDS}",
+                        f"{seconds:.3f}",
+                        *command,
+                    ],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=errors,
+                    env=environment,
+                    check=False,
+                )
+        except FileNotFoundError:
+            return ocr_plan.NOT_FOUND, "", False
         with open(errors_path, "rb") as errors:
             errors.seek(0, os.SEEK_END)
             errors.seek(max(errors.tell() - STDERR_BYTES, 0))
             text = errors.read().decode(errors="replace")
-        return process.returncode, text, timed_out
+        # 124: the time was up. -9: ``timeout`` had to kill it, or the machine did (its memory):
+        # only the time tells.
+        code = done.returncode
+        return code, text, code == 124 or (code == -signal.SIGKILL and time.monotonic() - started >= seconds)
 
     def _ocr_timed_out(self, pages, used, fair):
         """A section was stopped by the time: the next one is smaller; a lone page may count."""

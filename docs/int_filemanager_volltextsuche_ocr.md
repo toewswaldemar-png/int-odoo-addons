@@ -85,12 +85,12 @@ Text danach gleich bis auf eine Seite (1.452 gegen 1.451 Seiten mit neuem Text):
 
 **Ablauf je Schritt (ein Abschnitt):**
 1. Zeile auf `running`, Commit (ein Absturz wird beim nächsten Lauf als Versuch gezählt).
-2. Die Abschnittsseiten sind die nächsten Scanseiten ab `ocr_next_page` (Zeilen mit `scan`, bei Bildern die Seiten des Bildes). `tools/start_ocr.py`
-   startet `ocrmypdf --skip-text --pages 3,7,12-14` (nur diese Seiten, die übrigen übernimmt `ocrmypdf` unverändert) im Jobordner `<Filestore>/int_filemanager/.ocr/<Zeilen-ID>/`: Adressraum-Grenze auf
-   den Hard-Wert, absolute Priorität (`nice`), `OMP_THREAD_LIMIT=1`, `TMPDIR` im Jobordner, dann `execvp`. Ausgabe `upto-<letzte Seite>.pdf.tmp`, `fsync`,
-   atomar umbenannt. Windows: direkter Start, Beenden per `psutil`.
-3. Frist gerissen: der ganze Prozessbaum wird beendet (`SIGTERM`, nach 5 s `SIGKILL`), die Zeit je Seite verdoppelt sich (der nächste Abschnitt wird
-   kleiner). Ein Versuch gegen die Datei zählt nur, wenn eine einzelne Seite eine faire Zeit hatte (60 s, in kurzen Läufen 80 % des Budgets) und trotzdem nicht fertig wurde. Ist
+2. Die Abschnittsseiten sind die nächsten Scanseiten ab `ocr_next_page` (Zeilen mit `scan`, bei Bildern die Seiten des Bildes). `subprocess.run`
+   startet `nice -n <Differenz> timeout --kill-after=5 <Sekunden> ocrmypdf --skip-text --pages 3,7,12-14` (nur diese Seiten, die übrigen übernimmt `ocrmypdf` unverändert) im Jobordner `<Filestore>/int_filemanager/.ocr/<Zeilen-ID>/`: absolute Priorität (`nice`, soweit die
+   eigene Priorität es zulässt), `OMP_THREAD_LIMIT=1` und `TMPDIR` im Jobordner über `env=`; die Speichergrenze des Workers gilt für das Programm wie bei
+   `wkhtmltopdf` im Core. Ausgabe `upto-<letzte Seite>.pdf.tmp`, `fsync`, atomar umbenannt. Nur Linux (`nice`, `timeout`).
+3. Frist gerissen: `timeout` beendet die ganze Prozessgruppe (`SIGTERM`, nach 5 s `SIGKILL`), die Zeit je Seite verdoppelt sich (der nächste Abschnitt wird
+   kleiner). Ein Versuch gegen die Datei zählt nur, wenn eine einzelne Seite eine faire Zeit hatte (60 s, in kurzen Läufen 80 % des Fensters, das der Lauf dem Programm gibt: Budget minus 10 s Lesezeit) und trotzdem nicht fertig wurde. Ist
    die Zeit je Seite so groß geworden, dass keine Seite mehr passt, wird trotzdem eine einzelne Seite versucht, wenn die Restzeit fair ist (sonst käme
    die Datei nie mehr dran).
 4. Erfolg: der Text genau der Abschnittsseiten wird aus der neuen Datei gelesen (der Reader bekommt die Seitenliste) und ersetzt die Seitenzeilen, im selben Commit wie `ocr_next_page` (letzte Abschnittsseite + 1), `ocr_file`
@@ -175,14 +175,14 @@ der Datenbank, `limit_time_real_cron`). Die Liste „Texte der Dateien“ (Admin
 
 - Der Core hält Prefork-Worker per Watchdog an (`SIGKILL`) und lädt im Threaded-Betrieb den Server neu, wenn ein Lauf das Limit reißt; nach drei Läufen ohne
   Fortschritt führt er den Cron nicht mehr aus. Darum eigene Frist und Abschnitte.
-- `RLIMIT_AS` setzt Odoo in beiden Betriebsarten und der Kindprozess erbt es (wird in `start_ocr.py` angehoben); `RLIMIT_CPU` erbt er zwar, `SIGXCPU` ist aber im
+- `RLIMIT_AS` setzt Odoo in beiden Betriebsarten und der Kindprozess erbt es. Eine einzelne Seite von mehr als etwa 450 Megapixel scheitert dann still in Tesseract (Meldung „found no text“); Abhilfe wie bei `wkhtmltopdf`: `limit_memory_hard` erhöhen; `RLIMIT_CPU` erbt er zwar, `SIGXCPU` ist aber im
   Cron-Thread blockiert.
 - `nice` ist relativ; der Prefork-Cron-Worker startet mit 10: die Einstellung wird absolut gesetzt.
 - `Zombies`: Enkelprozesse (Tesseract, Ghostscript) übernimmt der erste Prozess des Containers; reapt er nicht, bleiben sie als Zombies. Container mit `--init`.
 - `tsvector` bricht bei 1 MB; ein Fehler im `INSERT` bricht den ganzen Stapel: der Seitenzeilen-`INSERT` läuft im Savepoint, zu lange Seiten werden gekürzt.
 - Zwei gleichzeitige Veröffentlichungen derselben Prüfsumme: Advisory-Lock auf den Hash, der Blob wird nie ersetzt (ein Ersetzen über einen vorhandenen Namen lässt
   Leser auf Netzwerkfreigaben kurz ENOENT sehen).
-- `pdfminer` ist keine Odoo-Requirement (das offizielle Image bringt es mit); `psutil` ist garantiert.
+- `pdfminer` ist keine Odoo-Requirement (das offizielle Image bringt es mit).
 - Dateinamen und Aufruf von `ocrmypdf`: nur Listenargumente, keine Shell; die Sprachen werden gegen ein festes Muster geprüft.
 - Der Exit-Code 2 von `ocrmypdf` heißt auch „falsche Option“, und dessen Hilfetext nennt `--image-dpi`: die Zuordnung darf nicht am Wort allein hängen.
 

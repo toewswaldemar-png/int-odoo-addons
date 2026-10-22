@@ -1,7 +1,7 @@
 """The rules of the text recognition, as plain functions: no Odoo, no files, no processes.
 
 The scheduled action cuts the pages of a file that are scans into sections and runs ``ocrmypdf``
-on one section at a time (see ``start_ocr.py``). What decides how it goes lives here, so each rule can be tried
+on one section at a time. What decides how it goes lives here, so each rule can be tried
 with numbers alone:
 
 - ``section_pages``, ``measured_seconds_per_page``, ``smoothed``, ``after_timeout``,
@@ -45,7 +45,7 @@ FAIL = "fail"  # the file is given up for good
 BLOCK = "block"  # the recognition as a whole stops: the setup is wrong
 PAUSE = "pause"  # not now: the disk is full
 
-# What ``start_ocr.py`` says when the program is not there.
+# What the shell commands say when the program is not there.
 NOT_FOUND = 127
 
 # What can be added to a section that failed, once each.

@@ -36,7 +36,6 @@ from . import test_text_search
 from . import test_text_hits
 from . import test_text_admin
 from . import test_folder_ocr_images
-from . import test_text_start_ocr
 from . import test_text_ocr_plan
 from . import test_text_ocr
 from . import test_document_ocr_download
