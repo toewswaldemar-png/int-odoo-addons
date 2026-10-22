@@ -25,5 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # live bestaetigt: Odoos "web"-Modul (importiert OpenSSL fuer ir_mail_server) scheiterte danach
 # mit "AttributeError: module 'lib' has no attribute 'GEN_EMAIL'", die komplette Oberflaeche war
 # nicht mehr erreichbar. pyopenssl>=24 ist mit cryptography 50.x kompatibel.
-RUN pip3 install --break-system-packages --ignore-installed --no-cache-dir pyjwt mutagen==1.47.0 "pyopenssl>=24" pdfplumber ocrmypdf
+# pykeepass: liest die .kdbx-Datei fuer int_keepass (reines Python plus argon2/pycryptodomex).
+RUN pip3 install --break-system-packages --ignore-installed --no-cache-dir pyjwt mutagen==1.47.0 "pyopenssl>=24" pdfplumber ocrmypdf pykeepass
 USER odoo

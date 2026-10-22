@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="int_keepass.Unlock">
+        <div class="o_action d-flex justify-content-center align-items-start p-5">
+            <form class="card shadow-sm p-4 w-100" style="max-width: 24rem" t-on-submit.prevent="onSubmit">
+                <h4 class="mb-3"><i class="fa fa-lock me-2" />KeePass</h4>
+                <t t-if="state.withEmail">
+                    <label for="int_keepass_email" class="form-label">E-mail address</label>
+                    <input
+                        id="int_keepass_email"
+                        type="email"
+                        class="form-control mb-3"
+                        autocomplete="off"
+                        t-model="state.email"
+                        t-att-disabled="state.busy"
+                    />
+                </t>
+                <label for="int_keepass_password" class="form-label">Master password</label>
+                <input
+                    id="int_keepass_password"
+                    type="password"
+                    class="form-control mb-3"
+                    autocomplete="off"
+                    t-ref="password"
+                    t-model="state.password"
+                    t-att-disabled="state.busy"
+                />
+                <div t-if="state.error" class="alert alert-danger py-2" role="alert" t-esc="state.error" />
+                <button type="submit" class="btn btn-primary" t-att-disabled="state.busy or !state.password">Open</button>
+            </form>
+        </div>
+    </t>
+</templates>
