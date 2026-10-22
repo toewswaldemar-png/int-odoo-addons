@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="int_liedanzeige.Display">
+    <div class="o_int_liedanzeige_display">
+      <div t-if="state.blackout" class="o_int_liedanzeige_blackout"/>
+      <div t-if="state.overlay" class="o_int_liedanzeige_overlay">
+        <div class="o_int_liedanzeige_spinner"/>
+        <span class="o_int_liedanzeige_overlay_label" t-out="connectingLabel"/>
+      </div>
+      <div class="o_int_liedanzeige_stack">
+        <t t-if="!isInputMode">
+          <IntLiedanzeigeScaledText
+            text="state.time"
+            scale="state.settings.time_size"
+            fontKey="state.settings.font"
+            maxHeightPx="budget.clockMode"
+            onHeight="(height) => this.onLineHeight('time', height)"
+          />
+          <IntLiedanzeigeScaledText
+            text="state.date"
+            scale="state.settings.time_size"
+            fontKey="state.settings.font"
+            maxHeightPx="budget.clockMode"
+            onHeight="(height) => this.onLineHeight('date', height)"
+          />
+        </t>
+        <t t-else="">
+          <IntLiedanzeigeScaledText
+            text="state.number"
+            refText="'00:00'"
+            scale="state.settings.time_size"
+            fontKey="state.settings.font"
+            maxHeightPx="budget.number"
+            onHeight="(height) => this.onLineHeight('number', height)"
+          />
+          <IntLiedanzeigeScaledText
+            text="state.time"
+            scale="state.settings.sub_clock_size"
+            fontKey="state.settings.font"
+            maxHeightPx="budget.subClock"
+            onHeight="(height) => this.onLineHeight('subClock', height)"
+          />
+        </t>
+      </div>
+    </div>
+  </t>
+</templates>

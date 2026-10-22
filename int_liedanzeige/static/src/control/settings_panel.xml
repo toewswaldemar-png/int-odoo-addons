@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="int_liedanzeige.SettingsPanel">
+    <div class="o_int_liedanzeige_backdrop" t-on-click="props.onClose"/>
+    <aside class="o_int_liedanzeige_panel">
+      <div class="o_int_liedanzeige_panel_head">
+        <span class="o_int_liedanzeige_panel_title">Settings</span>
+        <button type="button" class="o_int_liedanzeige_panel_close" aria-label="Close" t-on-click="props.onClose">×</button>
+      </div>
+      <div class="o_int_liedanzeige_panel_body">
+        <section class="o_int_liedanzeige_section">
+          <p class="o_int_liedanzeige_section_title">Appearance</p>
+          <t t-foreach="sliders" t-as="slider" t-key="slider.key">
+            <label class="o_int_liedanzeige_slider">
+              <span class="o_int_liedanzeige_slider_head">
+                <span t-out="slider.label"/>
+                <span class="o_int_liedanzeige_slider_value" t-out="slider.text"/>
+              </span>
+              <input type="range" t-att-min="slider.min" t-att-max="slider.max" t-att-step="slider.step" t-att-value="slider.value" t-on-input="(ev) => this.onSlider(slider, ev)"/>
+            </label>
+          </t>
+        </section>
+        <section class="o_int_liedanzeige_section">
+          <p class="o_int_liedanzeige_section_title">Font</p>
+          <select class="o_int_liedanzeige_font" t-att-style="'font-family: ' + fontStyle" t-on-change="onFont">
+            <t t-foreach="fonts" t-as="font" t-key="font.key">
+              <option t-att-value="font.key" t-att-selected="font.key === props.settings.font" t-att-style="'font-family: ' + font.css" t-out="font.label"/>
+            </t>
+          </select>
+        </section>
+        <section class="o_int_liedanzeige_section">
+          <p class="o_int_liedanzeige_section_title">Display windows</p>
+          <div class="o_int_liedanzeige_buttons">
+            <button type="button" class="o_int_liedanzeige_button o_int_liedanzeige_fullscreen" t-on-click="onToggleFullscreen" t-out="fullscreenLabel"/>
+            <button type="button" class="o_int_liedanzeige_button o_int_liedanzeige_reload" t-on-click="() => props.onKioskCommand('reload')">Reload</button>
+            <button type="button" class="o_int_liedanzeige_button o_int_liedanzeige_swap" t-on-click="() => props.onKioskCommand('swap_monitors')">Monitor</button>
+            <button type="button" class="o_int_liedanzeige_button o_int_liedanzeige_quit" t-att-class="{'o_int_liedanzeige_button_danger_on': state.confirmQuit}" t-on-click="onQuit" t-out="quitLabel"/>
+          </div>
+        </section>
+        <section class="o_int_liedanzeige_section">
+          <p class="o_int_liedanzeige_section_title">In the browser</p>
+          <div class="o_int_liedanzeige_buttons">
+            <a class="o_int_liedanzeige_button" href="/lied" target="_blank">Hymn display</a>
+            <a class="o_int_liedanzeige_button" href="/chor" target="_blank">Choir display</a>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </t>
+</templates>

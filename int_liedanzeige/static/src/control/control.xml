@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="int_liedanzeige.Control">
+    <div class="o_int_liedanzeige_control">
+      <header class="o_int_liedanzeige_header">
+        <nav class="o_int_liedanzeige_nav">
+          <button type="button" class="o_int_liedanzeige_switch" t-on-click="switchTarget" t-out="title"/>
+          <span class="o_int_liedanzeige_sep">·</span>
+          <span class="o_int_liedanzeige_status">
+            <span class="o_int_liedanzeige_dot" t-att-class="{'o_int_liedanzeige_dot_on': connected}"/>
+            <t t-out="statusLabel"/>
+          </span>
+        </nav>
+        <button t-if="isHymn" type="button" class="o_int_liedanzeige_gear" t-att-class="{'o_int_liedanzeige_gear_on': state.settingsOpen}" aria-label="Settings" t-on-click="toggleSettings">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h10M18 7h2M4 17h2M10 17h10"/>
+            <circle cx="16" cy="7" r="2"/>
+            <circle cx="8" cy="17" r="2"/>
+          </svg>
+        </button>
+      </header>
+      <div class="o_int_liedanzeige_body">
+        <div class="o_int_liedanzeige_column">
+          <div class="o_int_liedanzeige_readout" t-att-class="{'o_int_liedanzeige_readout_filled': state.control.length > 0}">
+            <div class="o_int_liedanzeige_digits">
+              <t t-foreach="digitSlots" t-as="slot" t-key="slot">
+                <div class="o_int_liedanzeige_slot">
+                  <span t-if="digitAt(slot)" class="o_int_liedanzeige_digit" t-out="digitAt(slot)"/>
+                  <span t-else="" class="o_int_liedanzeige_dash"/>
+                </div>
+              </t>
+            </div>
+            <div t-if="isHymn" class="o_int_liedanzeige_progress">
+              <div class="o_int_liedanzeige_progress_bar" t-att-style="'width: ' + state.resetProgress + '%'"/>
+            </div>
+          </div>
+          <div t-if="state.error" class="o_int_liedanzeige_error" role="alert" t-out="state.error"/>
+          <div class="o_int_liedanzeige_pad">
+            <t t-foreach="numpadKeys" t-as="key" t-key="key">
+              <button type="button" class="o_int_liedanzeige_key" t-att-disabled="locked" t-on-click="() => this.onKey(key)" t-out="key"/>
+            </t>
+            <button type="button" class="o_int_liedanzeige_key" t-att-disabled="locked" t-on-click="() => this.onKey('0')">0</button>
+            <button type="button" class="o_int_liedanzeige_key o_int_liedanzeige_key_backspace" aria-label="Backspace" t-on-click="onBackspace">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+                <path d="m18 9-6 6M12 9l6 6"/>
+              </svg>
+            </button>
+            <button type="button" class="o_int_liedanzeige_key o_int_liedanzeige_key_clear" aria-label="Clear" t-on-click="onClear">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v6M14 11v6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <IntLiedanzeigeSettingsPanel
+        t-if="isHymn and state.settingsOpen"
+        settings="state.settings"
+        ranges="state.ranges"
+        kioskFullscreen="state.kioskFullscreen"
+        onKioskCommand.bind="onKioskCommand"
+        onChange.bind="onSettingChange"
+        onClose.bind="closeSettings"
+      />
+    </div>
+  </t>
+</templates>

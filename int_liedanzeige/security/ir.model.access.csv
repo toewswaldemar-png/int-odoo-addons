@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_int_liedanzeige_state_operator,int_liedanzeige.state.operator,model_int_liedanzeige_state,group_liedanzeige_operator,1,1,0,0
+access_int_liedanzeige_song_operator,int_liedanzeige.song.operator,model_int_liedanzeige_song,group_liedanzeige_operator,1,1,1,1
+access_int_liedanzeige_song_conductor,int_liedanzeige.song.conductor,model_int_liedanzeige_song,group_liedanzeige_conductor,1,0,0,0

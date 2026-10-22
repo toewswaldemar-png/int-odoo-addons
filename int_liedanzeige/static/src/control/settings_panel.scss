@@ -1,0 +1,148 @@
+.o_int_liedanzeige_backdrop {
+    position: fixed;
+    inset: 3.5rem 0 0 0;
+    z-index: 40;
+}
+
+.o_int_liedanzeige_panel {
+    position: fixed;
+    top: 3.5rem;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    width: 20rem;
+    max-width: 100vw;
+    border-left: 1px solid #e4e4e7;
+    background-color: #fafafa;
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.15);
+
+    .o_int_liedanzeige_panel_head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        height: 3rem;
+        padding: 0 1rem;
+        border-bottom: 1px solid #e4e4e7;
+        background-color: white;
+    }
+
+    .o_int_liedanzeige_panel_title {
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .o_int_liedanzeige_panel_close {
+        width: 1.75rem;
+        height: 1.75rem;
+        border: 0;
+        border-radius: 0.375rem;
+        background: none;
+        font-size: 1.25rem;
+        line-height: 1;
+        color: #71717a;
+
+        &:hover {
+            background-color: #f4f4f5;
+            color: #3f3f46;
+        }
+    }
+
+    .o_int_liedanzeige_panel_body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        overflow-y: auto;
+    }
+
+    .o_int_liedanzeige_section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0.75rem 1rem 1rem;
+        border: 1px solid #e4e4e7;
+        border-radius: 0.75rem;
+        background-color: white;
+    }
+
+    .o_int_liedanzeige_section_title {
+        margin: 0;
+        font-size: 0.625rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #a1a1aa;
+    }
+
+    .o_int_liedanzeige_slider {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #71717a;
+
+        input[type="range"] {
+            width: 100%;
+        }
+    }
+
+    .o_int_liedanzeige_slider_head {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .o_int_liedanzeige_slider_value {
+        font-family: monospace;
+        font-variant-numeric: tabular-nums;
+        color: #a1a1aa;
+    }
+
+    .o_int_liedanzeige_font {
+        width: 12rem;
+        height: 2.25rem;
+        border: 1px solid #e4e4e7;
+        border-radius: 0.375rem;
+        background-color: white;
+        color: #27272a;
+    }
+
+    .o_int_liedanzeige_buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .o_int_liedanzeige_button {
+        padding: 0.75rem 0.5rem;
+        border: 1px solid #e4e4e7;
+        border-radius: 0.5rem;
+        background-color: white;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-align: center;
+        text-decoration: none;
+        color: #3f3f46;
+
+        &:hover {
+            border-color: #d4d4d8;
+            background-color: #fafafa;
+        }
+    }
+
+    .o_int_liedanzeige_quit {
+        border-color: #fecaca;
+        background-color: #fef2f2;
+        color: #dc2626;
+
+        &.o_int_liedanzeige_button_danger_on {
+            border-color: #f87171;
+            background-color: #ef4444;
+            color: white;
+        }
+    }
+}

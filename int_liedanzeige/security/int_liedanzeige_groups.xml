@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_int_liedanzeige" model="ir.module.category">
+        <field name="name">Hymn Display</field>
+    </record>
+
+    <record id="privilege_int_liedanzeige" model="res.groups.privilege">
+        <field name="name">Hymn Display</field>
+        <field name="category_id" ref="module_category_int_liedanzeige"/>
+    </record>
+
+    <record id="group_liedanzeige_operator" model="res.groups">
+        <field name="name">Operator</field>
+        <field name="privilege_id" ref="privilege_int_liedanzeige"/>
+        <field name="comment">Controls the displays, changes their settings and edits the songs.</field>
+    </record>
+
+    <record id="group_liedanzeige_conductor" model="res.groups">
+        <field name="name">Conductor</field>
+        <field name="privilege_id" ref="privilege_int_liedanzeige"/>
+        <field name="comment">Opens the conductor view and reads the song texts.</field>
+    </record>
+</odoo>

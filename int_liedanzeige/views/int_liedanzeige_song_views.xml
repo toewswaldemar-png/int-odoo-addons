@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="int_liedanzeige_song_view_list" model="ir.ui.view">
+        <field name="name">int_liedanzeige.song.list</field>
+        <field name="model">int_liedanzeige.song</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="number"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_liedanzeige_song_view_form" model="ir.ui.view">
+        <field name="name">int_liedanzeige.song.form</field>
+        <field name="model">int_liedanzeige.song</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="number"/>
+                        <field name="name"/>
+                    </group>
+                    <field name="text" placeholder="Song text"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_liedanzeige_song_view_search" model="ir.ui.view">
+        <field name="name">int_liedanzeige.song.search</field>
+        <field name="model">int_liedanzeige.song</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="number"/>
+                <field name="name"/>
+                <field name="text"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_liedanzeige_song_action" model="ir.actions.act_window">
+        <field name="name">Songs</field>
+        <field name="res_model">int_liedanzeige.song</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="int_liedanzeige_control_action" model="ir.actions.act_url">
+        <field name="name">Control</field>
+        <field name="url">/steuerung</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="int_liedanzeige_conductor_action" model="ir.actions.act_url">
+        <field name="name">Conductor view</field>
+        <field name="url">/dirigent</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="int_liedanzeige_menu_root" name="Hymn Display" sequence="30"
+              groups="group_liedanzeige_operator,group_liedanzeige_conductor"/>
+    <menuitem id="int_liedanzeige_song_menu" name="Songs" parent="int_liedanzeige_menu_root"
+              action="int_liedanzeige_song_action" sequence="10"/>
+    <menuitem id="int_liedanzeige_control_menu" name="Control" parent="int_liedanzeige_menu_root"
+              action="int_liedanzeige_control_action" sequence="20" groups="group_liedanzeige_operator"/>
+    <menuitem id="int_liedanzeige_conductor_menu" name="Conductor view" parent="int_liedanzeige_menu_root"
+              action="int_liedanzeige_conductor_action" sequence="30" groups="group_liedanzeige_conductor"/>
+</odoo>

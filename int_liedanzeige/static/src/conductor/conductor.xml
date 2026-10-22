@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="int_liedanzeige.Conductor">
+    <div class="o_int_liedanzeige_conductor">
+      <header class="o_int_liedanzeige_conductor_header">
+        <span class="o_int_liedanzeige_status">
+          <span class="o_int_liedanzeige_dot" t-att-class="{'o_int_liedanzeige_dot_on': connected}"/>
+          <t t-out="statusLabel"/>
+        </span>
+        <button type="button" class="o_int_liedanzeige_hymn_toggle" t-att-class="{'o_int_liedanzeige_hymn_toggle_on': state.showHymn}" t-on-click="toggleHymn">
+          <t t-if="hasHymn" t-out="hymnLabel"/>
+          <t t-else="">Hymn number</t>
+        </button>
+      </header>
+      <main class="o_int_liedanzeige_conductor_main">
+        <div t-if="state.choir_number" class="o_int_liedanzeige_conductor_number" t-out="state.choir_number"/>
+        <div t-else="" class="o_int_liedanzeige_conductor_empty">—</div>
+        <h1 t-if="state.song_name" class="o_int_liedanzeige_conductor_title" t-out="state.song_name"/>
+        <div t-if="state.song_text" class="o_int_liedanzeige_conductor_text" t-out="state.song_text"/>
+      </main>
+    </div>
+  </t>
+</templates>

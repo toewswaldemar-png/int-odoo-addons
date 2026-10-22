@@ -1,0 +1,237 @@
+.o_int_liedanzeige_control {
+    display: flex;
+    flex-direction: column;
+    height: 100svh;
+    background-color: white;
+    color: #18181b;
+    user-select: none;
+
+    .o_int_liedanzeige_header {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        justify-content: space-between;
+        height: 3.5rem;
+        padding: 0 1rem;
+        border-bottom: 1px solid #e4e4e7;
+    }
+
+    .o_int_liedanzeige_gear {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border: 1px solid #d4d4d8;
+        border-radius: 0.5rem;
+        background-color: white;
+        color: inherit;
+
+        &:hover {
+            background-color: #f4f4f5;
+        }
+
+        &.o_int_liedanzeige_gear_on {
+            border-color: #3f3f46;
+            background-color: #18181b;
+            color: white;
+        }
+    }
+
+    .o_int_liedanzeige_nav {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        color: #71717a;
+    }
+
+    .o_int_liedanzeige_switch {
+        padding: 0;
+        border: 0;
+        background: none;
+        font: inherit;
+        letter-spacing: inherit;
+        color: inherit;
+        cursor: pointer;
+
+        &:active {
+            color: #18181b;
+        }
+    }
+
+    .o_int_liedanzeige_status {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: normal;
+    }
+
+    .o_int_liedanzeige_dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background-color: #ef4444;
+
+        &.o_int_liedanzeige_dot_on {
+            background-color: #22c55e;
+        }
+    }
+
+    .o_int_liedanzeige_body {
+        display: flex;
+        flex: 1;
+        justify-content: center;
+        padding: 1rem;
+        overflow: hidden;
+    }
+
+    .o_int_liedanzeige_column {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+        max-width: 28rem;
+    }
+
+    .o_int_liedanzeige_readout {
+        position: relative;
+        flex-shrink: 0;
+        overflow: hidden;
+        padding: 1rem 1.5rem;
+        border: 2px solid #d4d4d8;
+        border-radius: 0.75rem;
+        transition: border-color 0.2s, background-color 0.2s;
+
+        &.o_int_liedanzeige_readout_filled {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    }
+
+    .o_int_liedanzeige_digits {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+    }
+
+    .o_int_liedanzeige_slot {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.5rem;
+        height: 5rem;
+    }
+
+    .o_int_liedanzeige_digit {
+        font-size: 4.5rem;
+        font-weight: 600;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .o_int_liedanzeige_dash {
+        width: 2.5rem;
+        height: 2px;
+        border-radius: 1px;
+        background-color: #d4d4d8;
+    }
+
+    .o_int_liedanzeige_progress {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 0.375rem;
+        background-color: #f4f4f5;
+    }
+
+    .o_int_liedanzeige_progress_bar {
+        height: 100%;
+        background-color: #60a5fa;
+        transition: width 0.2s linear;
+    }
+
+    .o_int_liedanzeige_error {
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        background-color: #fee2e2;
+        color: #991b1b;
+        font-size: 0.875rem;
+    }
+
+    .o_int_liedanzeige_pad {
+        display: grid;
+        flex: 1;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        gap: 0.5rem;
+    }
+
+    .o_int_liedanzeige_key {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #d4d4d8;
+        border-radius: 0.375rem;
+        background-color: white;
+        font-size: 2.25rem;
+        color: inherit;
+        touch-action: manipulation;
+        transition: background-color 0.075s, border-color 0.075s, color 0.075s, transform 0.075s;
+
+        &:hover:not(:disabled) {
+            border-color: #bfdbfe;
+            background-color: #eff6ff;
+        }
+
+        &:active:not(:disabled) {
+            transform: scale(0.95);
+            border-color: #2563eb;
+            background-color: #2563eb;
+            color: white;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+        }
+    }
+
+    .o_int_liedanzeige_key_backspace {
+        border-color: #fcd34d;
+        background-color: #fffbeb;
+        color: #d97706;
+
+        &:hover {
+            border-color: #fbbf24;
+            background-color: #fef3c7;
+        }
+
+        &:active {
+            transform: scale(0.95);
+            border-color: #f59e0b;
+            background-color: #f59e0b;
+            color: white;
+        }
+    }
+
+    .o_int_liedanzeige_key_clear {
+        border-color: #fca5a5;
+        background-color: #fef2f2;
+        color: #dc2626;
+
+        &:hover {
+            border-color: #f87171;
+            background-color: #fee2e2;
+        }
+
+        &:active {
+            transform: scale(0.95);
+            border-color: #dc2626;
+            background-color: #dc2626;
+            color: white;
+        }
+    }
+}

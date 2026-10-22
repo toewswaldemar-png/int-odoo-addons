@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="int_liedanzeige.ScaledText">
+    <div class="o_int_liedanzeige_scaled" t-ref="wrap">
+      <div class="o_int_liedanzeige_text" t-ref="text"><t t-out="props.text"/></div>
+      <div t-if="props.refText" class="o_int_liedanzeige_text o_int_liedanzeige_measure" aria-hidden="true" t-ref="measure"><t t-out="props.refText"/></div>
+    </div>
+  </t>
+</templates>
