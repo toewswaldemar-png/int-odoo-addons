@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_int_keepass_group_system,int.keepass.group.system,model_int_keepass_group,base.group_system,1,0,0,0
+access_int_keepass_entry_system,int.keepass.entry.system,model_int_keepass_entry,base.group_system,1,0,0,0
+access_int_keepass_aida_user_system,int.keepass.aida.user.system,model_int_keepass_aida_user,base.group_system,1,1,1,1

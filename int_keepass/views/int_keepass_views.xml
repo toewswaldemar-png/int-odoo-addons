@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="int_keepass_entry_view_list" model="ir.ui.view">
+        <field name="name">int.keepass.entry.list</field>
+        <field name="model">int.keepass.entry</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="title" />
+                <field name="username" />
+                <field name="url" />
+                <field name="group_id" />
+            </list>
+        </field>
+    </record>
+
+    <record id="int_keepass_entry_view_form" model="ir.ui.view">
+        <field name="name">int.keepass.entry.form</field>
+        <field name="model">int.keepass.entry</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <field name="title" />
+                        <field name="username" />
+                        <field name="url" />
+                        <field name="group_id" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_keepass_entry_view_search" model="ir.ui.view">
+        <field name="name">int.keepass.entry.search</field>
+        <field name="model">int.keepass.entry</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title" />
+                <field name="username" />
+                <field name="url" />
+                <!-- expand: the panel must not group the entries by group, they have no column -->
+                <searchpanel>
+                    <field name="group_id" string="Groups" icon="fa-folder" expand="1" limit="0" />
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_keepass_entry_action" model="ir.actions.act_window">
+        <field name="name">KeePass</field>
+        <field name="res_model">int.keepass.entry</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- the screen that asks for the master password; the list opens after it -->
+    <record id="int_keepass_unlock_action" model="ir.actions.client">
+        <field name="name">KeePass</field>
+        <field name="tag">int_keepass.unlock</field>
+    </record>
+
+    <record id="int_keepass_aida_user_view_list" model="ir.ui.view">
+        <field name="name">int.keepass.aida.user.list</field>
+        <field name="model">int.keepass.aida.user</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name" />
+                <field name="active" widget="boolean_toggle" />
+            </list>
+        </field>
+    </record>
+
+    <record id="int_keepass_aida_user_action" model="ir.actions.act_window">
+        <field name="name">AIDA names</field>
+        <field name="res_model">int.keepass.aida.user</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- takes the names over from the entries that belong to AIDA; needs the unlocked password manager -->
+    <record id="int_keepass_sync_aida_action" model="ir.actions.client">
+        <field name="name">Take over AIDA names</field>
+        <field name="tag">int_keepass.sync_aida</field>
+    </record>
+
+    <record id="int_keepass_refresh_action" model="ir.actions.client">
+        <field name="name">Refresh KeePass</field>
+        <field name="tag">int_keepass.refresh</field>
+    </record>
+
+    <record id="int_keepass_lock_action" model="ir.actions.client">
+        <field name="name">Lock KeePass</field>
+        <field name="tag">int_keepass.lock</field>
+    </record>
+
+    <menuitem id="int_keepass_menu_root" name="KeePass" groups="base.group_system" sequence="90" />
+    <menuitem
+        id="int_keepass_menu_open"
+        name="Open"
+        parent="int_keepass_menu_root"
+        action="int_keepass_unlock_action"
+        sequence="10"
+    />
+    <menuitem
+        id="int_keepass_menu_refresh"
+        name="Refresh"
+        parent="int_keepass_menu_root"
+        action="int_keepass_refresh_action"
+        sequence="15"
+    />
+    <menuitem
+        id="int_keepass_menu_sync_aida"
+        name="Take over AIDA names"
+        parent="int_keepass_menu_root"
+        action="int_keepass_sync_aida_action"
+        sequence="30"
+    />
+    <menuitem
+        id="int_keepass_menu_aida_users"
+        name="AIDA names"
+        parent="int_keepass_menu_root"
+        action="int_keepass_aida_user_action"
+        sequence="40"
+    />
+    <menuitem
+        id="int_keepass_menu_lock"
+        name="Lock"
+        parent="int_keepass_menu_root"
+        action="int_keepass_lock_action"
+        sequence="50"
+    />
+</odoo>
