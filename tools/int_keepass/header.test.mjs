@@ -1,8 +1,8 @@
-// node --test int_keepass/tools/header.test.mjs
+// node --test tools/int_keepass/header.test.mjs
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { HEADER, HEADER_EMAIL, encodePassword, wrapRpc } from "../static/src/keepass_header.js";
+import { HEADER, HEADER_EMAIL, encodePassword, wrapRpc } from "../../int_keepass/static/src/keepass_header.js";
 
 const calls = [];
 const original = function (url, params, settings) {

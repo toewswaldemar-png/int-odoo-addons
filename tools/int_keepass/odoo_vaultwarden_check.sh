@@ -2,7 +2,7 @@
 # Runs the int_keepass tests on HM-SRV against a throwaway Vaultwarden with TLS and a test account,
 # so that Odoo reads a real server: certificate pinned by its fingerprint, PBKDF2 account.
 #
-# Usage (Git Bash, from the repo):  int_keepass/tools/odoo_vaultwarden_check.sh
+# Usage (Git Bash, from the repo):  tools/int_keepass/odoo_vaultwarden_check.sh
 #
 # Nothing of the live instances is touched; containers, network and files are removed again.
 set -euo pipefail
@@ -18,7 +18,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-ssh "$HOST" "set -e; rm -rf $R; mkdir -p $R/addons $R/data $R/pylib $R/ssl; chmod 777 $R/data $R/pylib
+ssh "$HOST" "set -e; rm -rf $R; mkdir -p $R/addons $R/tools $R/data $R/pylib $R/ssl; chmod 777 $R/data $R/pylib
   docker rm -f kp_pg kp_vw >/dev/null 2>&1 || true; docker network rm kp_net >/dev/null 2>&1 || true
   docker network create kp_net >/dev/null
   docker run -d --name kp_pg --network kp_net -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo -e POSTGRES_DB=postgres --tmpfs /var/lib/postgresql/data postgres:17 >/dev/null
@@ -30,10 +30,11 @@ ssh "$HOST" "set -e; rm -rf $R; mkdir -p $R/addons $R/data $R/pylib $R/ssl; chmo
   docker run --rm --user root --entrypoint python3 -v $R/pylib:/pylib $IMAGE -m pip install --quiet --target /pylib --break-system-packages pykeepass >/dev/null 2>&1
   for i in \$(seq 1 30); do docker logs kp_vw 2>&1 | grep -q 'Rocket has launched' && break; sleep 1; done"
 tar -c --exclude=__pycache__ int_keepass | ssh "$HOST" "tar -x -C $R/addons"
+tar -c --exclude=__pycache__ -C tools/int_keepass . | ssh "$HOST" "tar -x -C $R/tools"
 
 # the account: made like a Bitwarden client does, with the script of the experiment
-ssh "$HOST" "docker run --rm --network kp_net -e REQUESTS_CA_BUNDLE=/ssl/cert.pem -v $R/ssl:/ssl:ro -v $R/addons/int_keepass:/m:ro \
-  --entrypoint python3 $IMAGE /m/tools/vaultwarden_experiment.py https://kp_vw /m $TAG 2>&1 | grep -E 'checks passed|FAIL'"
+ssh "$HOST" "docker run --rm --network kp_net -e REQUESTS_CA_BUNDLE=/ssl/cert.pem -v $R/ssl:/ssl:ro -v $R/addons/int_keepass:/m:ro -v $R/tools:/t:ro \
+  --entrypoint python3 $IMAGE /t/vaultwarden_experiment.py https://kp_vw /m $TAG 2>&1 | grep -E 'checks passed|FAIL'"
 PIN=$(ssh "$HOST" "openssl x509 -in $R/ssl/cert.pem -noout -fingerprint -sha256" | sed 's/.*=//; s/://g')
 
 ssh "$HOST" "docker run --rm --name kp_odoo --entrypoint /entrypoint.sh --network kp_net \

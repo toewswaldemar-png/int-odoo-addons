@@ -1,6 +1,6 @@
 """Check the reader against a real .kdbx file, without Odoo.
 
-    python int_keepass/tools/read_check.py PATH [--keyfile FILE]
+    python tools/int_keepass/read_check.py PATH [--keyfile FILE]
 
 The master password is asked for on the terminal. Only counts and group names
 are printed, no entry titles, user names, URLs or passwords.
@@ -12,7 +12,7 @@ import importlib.util
 import pathlib
 from collections import Counter
 
-spec = importlib.util.spec_from_file_location("kdbx", pathlib.Path(__file__).parent.parent / "kdbx.py")
+spec = importlib.util.spec_from_file_location("kdbx", pathlib.Path(__file__).resolve().parents[2] / "int_keepass" / "kdbx.py")
 kdbx = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(kdbx)
 

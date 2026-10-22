@@ -30,5 +30,6 @@ Ebene tief, deshalb liegen alle Module flach im Wurzelordner.
 | `docs/pruefautomatik_2026-10-02.md` | Prüfwerkzeuge, Aufruf und was sie prüfen |
 | `tools/check/` | Prüf- und Testskripte für `int_filemanager` (Modultests, odoo-ls und `test_lint`, Test-Instanz, Übersetzungsexport) |
 | `tools/image_editor_check/` | Prüfungen des Bildeditors ohne Browser (Node: echtes Fabric und Owl in jsdom, Viewer gegen den Core-Viewer) |
+| `tools/int_keepass/` | Prüfskripte für `int_keepass`: Tests auf dem Testserver gegen einen Wegwerf-Vaultwarden, Lesen einer echten Quelle ohne Odoo, Gegenprobe mit der Bitwarden-CLI (Beschreibung: [`docs/int_keepass.md`](docs/int_keepass.md)) |
 | `.pre-commit-config.yaml`, `ruff.toml`, `.eslintrc.json` | Prüfautomatik (Odoos eigene Konfiguration) |
 | [`CLAUDE.md`](CLAUDE.md) | kurzer Prüfablauf für offizielle Odoo-19-Dokumentation, Core und reproduzierbare Tests |

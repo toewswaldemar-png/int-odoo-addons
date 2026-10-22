@@ -1,6 +1,6 @@
 """Check the reader against a real Vaultwarden account, without Odoo. It only reads.
 
-    python int_keepass/tools/vaultwarden_check.py BASE_URL [--insecure]
+    python tools/int_keepass/vaultwarden_check.py BASE_URL [--insecure]
 
 E-mail address and master password are asked for on the terminal. Only counts and folder names
 are printed, no item names, user names, addresses or passwords. With --insecure the certificate
@@ -17,7 +17,7 @@ import ssl
 import urllib.parse
 from collections import Counter
 
-spec = importlib.util.spec_from_file_location("vaultwarden", pathlib.Path(__file__).parent.parent / "vaultwarden.py")
+spec = importlib.util.spec_from_file_location("vaultwarden", pathlib.Path(__file__).resolve().parents[2] / "int_keepass" / "vaultwarden.py")
 vw = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(vw)
 

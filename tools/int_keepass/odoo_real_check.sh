@@ -2,8 +2,8 @@
 # Runs the int_keepass tests in a throwaway Odoo on HM-SRV.
 #
 # Usage (Git Bash, from the repo):
-#   int_keepass/tools/odoo_real_check.sh                   all tests, the real-database tests are skipped
-#   int_keepass/tools/odoo_real_check.sh PATH_TO_KDBX      and the real-database tests against that file
+#   tools/int_keepass/odoo_real_check.sh                   all tests, the real-database tests are skipped
+#   tools/int_keepass/odoo_real_check.sh PATH_TO_KDBX      and the real-database tests against that file
 #
 # With a file, the master password is typed here and travels to the server on stdin only: it is
 # never part of a command line, the chat or a stored Odoo setting. The encrypted file is copied
