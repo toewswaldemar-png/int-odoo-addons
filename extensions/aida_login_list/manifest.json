@@ -1,0 +1,22 @@
+{
+    "manifest_version": 3,
+    "name": "AIDA login list",
+    "version": "0.1.0",
+    "description": "Offers the user names of AIDA-Web as a list in the login field. Only the password is typed.",
+    "permissions": ["storage"],
+    "storage": {
+        "managed_schema": "schema.json"
+    },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true
+    },
+    "content_scripts": [
+        {
+            "matches": ["http://*/*", "https://*/*"],
+            "include_globs": ["*/de.aidaorga.aida.ewas.central/*"],
+            "js": ["content.js"],
+            "run_at": "document_idle"
+        }
+    ]
+}

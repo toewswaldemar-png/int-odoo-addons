@@ -1,0 +1,11 @@
+{
+    "name": "aida-login-list",
+    "private": true,
+    "description": "Checks of the extension without a browser: its script in jsdom, with the AngularJS of AIDA-Web",
+    "scripts": {
+        "test": "node --test test/*.test.mjs"
+    },
+    "devDependencies": {
+        "jsdom": "^29.1.1"
+    }
+}
