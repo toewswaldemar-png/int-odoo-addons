@@ -2101,8 +2101,8 @@ msgstr ""
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
-msgid "The recognized PDF of this document is missing."
-msgstr "Das erkannte PDF dieses Dokuments fehlt."
+msgid "The PDF version of this document is missing."
+msgstr "Die PDF-Fassung dieses Dokuments fehlt."
 
 #. module: int_filemanager
 #. odoo-python
@@ -2177,8 +2177,8 @@ msgstr "Die Texterkennung hat keine Datei geliefert."
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
-msgid "The text recognition made no PDF of this document."
-msgstr "Die Texterkennung hat von diesem Dokument kein PDF gemacht."
+msgid "There is no PDF version of this document."
+msgstr "Es gibt keine PDF-Fassung dieses Dokuments."
 
 #. module: int_filemanager
 #. odoo-python
@@ -4597,3 +4597,121 @@ msgstr "Anzeige"
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
 msgid "What opens a document in the list and the kanban. Every user can choose otherwise in their preferences."
 msgstr "Was ein Dokument in der Liste und im Kanban öffnet. Jeder Benutzer kann es in den eigenen Einstellungen anders wählen."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_preview_max_size_mib
+msgid "A bigger file gets no preview."
+msgstr "Eine größere Datei bekommt keine Vorschau."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_preview_seconds
+msgid "A file that takes longer gets no preview. A run of the scheduled action is as long as the limit of Odoo for it (limit_time_real_cron); a file never gets more than that."
+msgstr "Eine Datei, die länger braucht, bekommt keine Vorschau. Ein Lauf der geplanten Aktion ist höchstens so lang wie das Limit von Odoo dafür (limit_time_real_cron); eine Datei bekommt nie mehr als das."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "A file that takes longer or is bigger gets no preview and is not tried again."
+msgstr "Eine Datei, die länger braucht oder größer ist, bekommt keine Vorschau und wird nicht noch einmal versucht."
+
+#. module: int_filemanager
+#: model:ir.actions.server,name:int_filemanager.int_filemanager_preview_cron_ir_actions_server
+msgid "Filemanager: make the PDF preview of the office files"
+msgstr "Dateimanager: PDF-Vorschau der Office-Dateien erstellen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_failed
+msgid "Files failed"
+msgstr "Dateien fehlgeschlagen"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_waiting
+msgid "Files waiting"
+msgstr "Dateien wartend"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_done
+msgid "Files with preview"
+msgstr "Dateien mit Vorschau"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_max_size_mib
+msgid "Largest file (MiB)"
+msgstr "Größte Datei (MiB)"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "LibreOffice makes a PDF of each Word, Excel, PowerPoint and OpenDocument file in the background, and the preview shows it. The files themselves are not changed; the download is the original."
+msgstr "LibreOffice erstellt im Hintergrund von jeder Word-, Excel-, PowerPoint- und OpenDocument-Datei ein PDF, und die Vorschau zeigt es. Die Dateien selbst werden nicht verändert; der Download ist das Original."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_preview_enabled
+msgid "LibreOffice makes a PDF of each file in the background, and the preview shows it. The files themselves are not changed; the download is the original."
+msgstr "LibreOffice erstellt im Hintergrund von jeder Datei ein PDF, und die Vorschau zeigt es. Die Dateien selbst werden nicht verändert; der Download ist das Original."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Limits"
+msgstr "Grenzen"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Nothing is converted while LibreOffice is not installed."
+msgstr "Solange LibreOffice nicht installiert ist, wird nichts umgewandelt."
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_preview_enabled__0
+msgid "Offer them for download only"
+msgstr "Nur zum Herunterladen anbieten"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Office files"
+msgstr "Office-Dateien"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_state
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Preview"
+msgstr "Vorschau"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__preview_checksum
+msgid "Preview PDF"
+msgstr "Vorschau-PDF"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__preview_state
+msgid "Preview state"
+msgstr "Vorschaustatus"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Ready. %(version)s"
+msgstr "Bereit. %(version)s"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_preview_enabled__1
+msgid "Show them as PDF"
+msgstr "Als PDF anzeigen"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Stopped: LibreOffice is not installed on the server."
+msgstr "Angehalten: LibreOffice ist auf dem Server nicht installiert."
+
+#. module: int_filemanager
+#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_document_preview_checksum_is_sha256
+msgid "The checksum of the preview must be a SHA-256 in lowercase hexadecimal."
+msgstr "Die Prüfsumme der Vorschau muss ein SHA-256 in Kleinbuchstaben-Hexadezimal sein."
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_seconds
+msgid "Time per file (seconds)"
+msgstr "Zeit je Datei (Sekunden)"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_enabled
+msgid "Word, Excel and PowerPoint files"
+msgstr "Word-, Excel- und PowerPoint-Dateien"

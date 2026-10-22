@@ -2,7 +2,8 @@ import { FileModelMixin } from "@web/core/file_viewer/file_model";
 import { imageUrl, url } from "@web/core/utils/urls";
 
 export const MODEL = "int.filemanager.document";
-// Binary fields of the content route: the upload, and the PDF made by the text recognition.
+// Binary fields of the content route: the upload, and the PDF made by the text recognition or
+// the preview of an office file.
 const CONTENT_FIELD = "content";
 const OCR_FIELD = "ocr_content";
 const THUMBNAIL_FIELD = "thumbnail";
@@ -18,6 +19,13 @@ const MEDIA_MIMETYPES = [
     "audio/x-flac",
     "audio/x-wav",
     "video/ogg",
+];
+// The old office formats: their text is read from the PDF of the preview, page by page.
+const PAGED_MIMETYPES = [
+    "application/msword",
+    "application/rtf",
+    "application/vnd.ms-excel",
+    "application/vnd.ms-powerpoint",
 ];
 // A text file is read whole into the viewer.
 export const TEXT_MAX_SIZE = 2 * 1024 * 1024;
@@ -42,18 +50,28 @@ export class DocumentFile extends FileModelMixin(Object) {
         Object.assign(this, values);
     }
 
-    /** The recognized PDF if there is one, else the file. */
+    /** The recognized PDF or the preview if there is one, else the file. */
     get urlRoute() {
-        return contentRoute(this.id, this.isPdf && this.ocr_checksum ? OCR_FIELD : CONTENT_FIELD);
+        return contentRoute(this.id, this.ocr_checksum ? OCR_FIELD : CONTENT_FIELD);
     }
 
     /** @override */
     get urlQueryParams() {
         const params = { ...super.urlQueryParams, ...addresses.params() };
-        if (this.isPdf && this.ocr_checksum) {
+        if (this.ocr_checksum) {
             params.unique = this.ocr_checksum;
         }
         return params;
+    }
+
+    /** @override An office file with a preview is shown as a PDF. */
+    get isPdf() {
+        return Boolean(super.isPdf || this.ocr_checksum);
+    }
+
+    /** Whether the pages of the text are the pages of the PDF shown: not the blocks of an office file. */
+    get hasTextPages() {
+        return Boolean(super.isPdf || PAGED_MIMETYPES.includes(this.mimetype));
     }
 
     /** @override The download is never the recognized PDF. */
@@ -68,7 +86,7 @@ export class DocumentFile extends FileModelMixin(Object) {
     /** @override The hash `search` starts too early: `DocumentFileViewer` marks the words. */
     get defaultSource() {
         const source = super.defaultSource;
-        if (!this.isPdf || !this.hit) {
+        if (!this.hasTextPages || !this.hit) {
             return source;
         }
         return `${source}&${new URLSearchParams({ page: this.hit.page })}`;

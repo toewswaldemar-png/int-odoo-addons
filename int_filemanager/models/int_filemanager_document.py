@@ -6,11 +6,14 @@ import itertools
 import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import unicodedata
 import uuid
+from pathlib import Path
 
 import psycopg2.errors
 from psycopg2 import IntegrityError
@@ -73,6 +76,8 @@ STORAGE_FIELDS = (
     "mimetype",
     "thumbnail",
     "thumbnail_state",
+    "preview_checksum",
+    "preview_state",
     "share_id",
     "edit_source_id",
     "edit_state",
@@ -85,11 +90,31 @@ EDIT_STATE_MAX_SIZE = 8 * 1024**2
 # (``tools/pdf_thumbnail.py``): a broken file may crash the PDF library.
 PDF = "application/pdf"
 THUMBNAIL_CRON_XMLID = "int_filemanager.int_filemanager_thumbnail_cron"
+TEXT_CRON_XMLID = "int_filemanager.int_filemanager_text_cron"
 THUMBNAIL_SIZE = 256
 THUMBNAIL_BATCH = 100
 THUMBNAIL_SECONDS = 60
 THUMBNAIL_MEMORY_MIB = 1024
 PDF_THUMBNAIL = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "pdf_thumbnail.py")
+# The office files that LibreOffice turns into a PDF for the viewer (``_cron_previews``), with the
+# ending it needs to know the format (a blob has none).
+PREVIEW_CRON_XMLID = "int_filemanager.int_filemanager_preview_cron"
+PREVIEW_EXTENSIONS = {
+    "application/msword": "doc",
+    "application/rtf": "rtf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.oasis.opendocument.text": "odt",
+    "application/vnd.ms-excel": "xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.oasis.opendocument.spreadsheet": "ods",
+    "application/vnd.ms-powerpoint": "ppt",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+    "application/vnd.oasis.opendocument.presentation": "odp",
+}
+PREVIEW_BATCH = 20
+PREVIEW_NICE = 19
+# A process that was told to stop gets this long before it is killed.
+PREVIEW_KILL_SECONDS = 5
 
 
 def _remove_file(path):
@@ -219,6 +244,23 @@ class IntFilemanagerDocument(models.Model):
         readonly=True,
         copy=False,
     )
+    # The PDF that LibreOffice made of an office file for the viewer (a blob of the storage that
+    # no other record has): ``_cron_previews`` sets it, ``ocr_checksum`` hands it on. Empty while
+    # the file waits for it, and for every other type; a file that cannot be turned is "failed"
+    # and is not tried again.
+    preview_checksum = fields.Char(
+        string="Preview PDF",
+        readonly=True,
+        copy=False,
+        exportable=False,
+        index="btree_not_null",
+    )
+    preview_state = fields.Selection(
+        [("done", "Done"), ("failed", "Failed")],
+        string="Preview state",
+        readonly=True,
+        copy=False,
+    )
     # The text inside the file, for the search only (the pages are in ``int.filemanager.text``).
     # Not "Content": that is the label of the binary field above, Odoo warns of two alike.
     content_search = fields.Char(
@@ -257,6 +299,19 @@ class IntFilemanagerDocument(models.Model):
     _thumbnail_work_index = models.Index(
         "(id) WHERE thumbnail_state IS NULL AND mimetype = 'application/pdf'"
     )
+    # The same for the office files that wait for their preview.
+    _preview_work_index = models.Index(
+        "(id) WHERE preview_state IS NULL AND mimetype IN ("
+        + ", ".join(f"'{mimetype}'" for mimetype in PREVIEW_EXTENSIONS)
+        + ")"
+    )
+    _preview_thumbnail_work_index = models.Index(
+        "(id) WHERE thumbnail_state IS NULL AND preview_checksum IS NOT NULL"
+    )
+    _preview_checksum_is_sha256 = models.Constraint(
+        "CHECK (preview_checksum IS NULL OR preview_checksum ~ '^[0-9a-f]{64}$')",
+        "The checksum of the preview must be a SHA-256 in lowercase hexadecimal.",
+    )
 
     def _compute_content(self):
         self.content = False
@@ -267,10 +322,10 @@ class IntFilemanagerDocument(models.Model):
     def _compute_ocr_content(self):
         self.ocr_content = False
 
-    @api.depends("checksum")
+    @api.depends("checksum", "preview_checksum")
     def _compute_ocr_checksum(self):
         # The text rows are for the administrators; the checksum of the PDF is no secret to
-        # whoever may read the document it belongs to.
+        # whoever may read the document it belongs to. An office file has the preview instead.
         Text = self.env["int.filemanager.text"].sudo()
         found = {
             row.checksum: row.ocr_checksum
@@ -280,7 +335,7 @@ class IntFilemanagerDocument(models.Model):
             )
         }
         for document in self:
-            document.ocr_checksum = found.get(document.checksum, False)
+            document.ocr_checksum = found.get(document.checksum) or document.preview_checksum
 
     def _compute_content_search(self):
         self.content_search = False
@@ -394,12 +449,23 @@ class IntFilemanagerDocument(models.Model):
                         )
                     )
         old_checksums = set(self.mapped("checksum")) if "checksum" in vals else set()
+        old_previews = set()
+        if old_checksums - {vals.get("checksum")}:
+            # Another file: its preview is not the preview of the new one.
+            old_previews = set(self.mapped("preview_checksum"))
+            vals = {
+                **vals,
+                "preview_checksum": False,
+                "preview_state": False,
+                "thumbnail": False,
+                "thumbnail_state": False,
+            }
         # The name that the tracking keeps of a folder is the plain one, whatever the context.
         plain = self.with_context(hierarchical_naming=False)
         result = super(IntFilemanagerDocument, plain).write(vals)
         if old_checksums:
             # Another file: the blob it had may be free now (the cleaner looks).
-            for checksum in old_checksums - {vals["checksum"]}:
+            for checksum in old_checksums - {vals["checksum"]} | old_previews - {False}:
                 self._mark_blob_for_gc(checksum)
         return result
 
@@ -434,7 +500,7 @@ class IntFilemanagerDocument(models.Model):
     def unlink(self):
         # First delete the rows, then mark the blobs, like ir.attachment.unlink. A blob that
         # another document uses (or an archived one) is kept by the cleaner.
-        checksums = set(self.mapped("checksum"))
+        checksums = set(self.mapped("checksum")) | set(self.mapped("preview_checksum")) - {False}
         result = super().unlink()
         for checksum in checksums:
             self._mark_blob_for_gc(checksum)
@@ -703,8 +769,8 @@ class IntFilemanagerDocument(models.Model):
         core, one run takes a batch only: the lock must not be held for a long time, and
         ``(done, remaining)`` makes Odoo call it again.
 
-        A blob counts as used if a *document* has its checksum, or a text row has it as its
-        recognized PDF (``used`` below). Whoever lets another model keep blobs of this storage
+        A blob counts as used if a *document* has its checksum or its preview, or a text row has
+        it as its recognized PDF (``used`` below). Whoever lets another model keep blobs of this storage
         must add that model's checksums there and lock its table with the others, or the
         cleaner deletes them. The tables are locked in a fixed order (documents, then texts).
         """
@@ -725,11 +791,12 @@ class IntFilemanagerDocument(models.Model):
             return 0, 0
         entries = list(itertools.islice(self._checklist_entries(), GC_BATCH))
         names = [name for name, _path in entries]
+        documents = self.sudo().with_context(active_test=False)
         used = {
+            checksum for [checksum] in documents._read_group([("checksum", "in", names)], ["checksum"])
+        } | {
             checksum
-            for [checksum] in self.sudo()
-            .with_context(active_test=False)
-            ._read_group([("checksum", "in", names)], ["checksum"])
+            for [checksum] in documents._read_group([("preview_checksum", "in", names)], ["preview_checksum"])
         } | Text._used_ocr_checksums(names)
         for checksum, marker in entries:
             if checksum not in used:
@@ -783,6 +850,8 @@ class IntFilemanagerDocument(models.Model):
         finally:
             # Nothing is left of a failed attempt.
             _remove_file(stored["tmp_path"])
+        if stored["mimetype"] in PREVIEW_EXTENSIONS:
+            self.env.ref(PREVIEW_CRON_XMLID).sudo()._trigger()
         return document
 
     @api.model
@@ -858,14 +927,16 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _thumbnail_domain(self):
-        """The PDFs that wait for their picture (one that failed is not tried again)."""
-        return Domain([("mimetype", "=", PDF), ("thumbnail_state", "=", False)])
+        """The PDFs, and the office files with a preview, that wait for their picture (one that failed is not tried again)."""
+        return Domain("thumbnail_state", "=", False) & (
+            Domain("mimetype", "=", PDF) | Domain("preview_checksum", "!=", False)
+        )
 
     @api.model
     def _cron_thumbnails(self, limit=THUMBNAIL_BATCH):
         """Draw the first page of the PDFs that have no picture yet, one blob at a time.
 
-        Documents with the same checksum share one drawing. Every blob is committed
+        An office file is drawn from its preview. Documents with the same PDF share one drawing. Every blob is committed
         (``_commit_progress``), so a stop loses no more than the file that was being drawn; when
         the time is up with PDFs left, the report of what remains makes Odoo call it again.
 
@@ -880,7 +951,7 @@ class IntFilemanagerDocument(models.Model):
         cron = self.env["ir.cron"]
         domain = self._thumbnail_domain()
         documents = self.with_context(active_test=False).search(domain, limit=limit)
-        for checksum, same in documents.grouped("checksum").items():
+        for checksum, same in documents.grouped(lambda document: document.preview_checksum or document.checksum).items():
             # Another transaction holds a row (the cleaner, a rename): the next call gets it.
             same = same.try_lock_for_update(allow_referencing=True).filtered_domain(domain)
             if same:
@@ -926,9 +997,170 @@ class IntFilemanagerDocument(models.Model):
             return None
         return done.stdout
 
-    def _to_ocr_http_stream(self):
-        """The recognized PDF of the file as a stream, for the viewer.
+    @api.model
+    def _preview_domain(self):
+        """The office files that wait for their preview (one that failed is not tried again)."""
+        return Domain([("mimetype", "in", list(PREVIEW_EXTENSIONS)), ("preview_state", "=", False)])
 
+    @api.model
+    def _preview_counts(self):
+        """How many office files wait for their preview, have it, or failed (for the settings)."""
+        counts = dict.fromkeys((False, "done", "failed"), 0)
+        counts.update(
+            self.sudo()
+            .with_context(active_test=False)
+            ._read_group([("mimetype", "in", list(PREVIEW_EXTENSIONS))], ["preview_state"], ["__count"])
+        )
+        return counts
+
+    @api.model
+    def _cron_previews(self, limit=PREVIEW_BATCH):
+        """Turn the office files that have no preview yet into PDFs, one blob at a time.
+
+        Documents with the same checksum share one preview. Every blob is committed
+        (``_commit_progress``), and a file gets the time of its setting at most, or the whole
+        run if that is shorter: it is started only if that time is left. With files left the
+        report of what remains makes Odoo call it again.
+
+        :param limit: the documents looked at in one call
+        """
+        assert self.env.context.get("cron_id") == self.env.ref(PREVIEW_CRON_XMLID).id, (
+            "Meant for cron usage only"
+        )
+        Text = self.env["int.filemanager.text"]
+        if not Text._flag("preview_enabled", True):
+            return
+        if not shutil.which("soffice"):
+            _logger.warning("LibreOffice is not installed: the previews of office files are not made.")
+            return
+        cron = self.env["ir.cron"]
+        deadline = Text._pass_deadline()
+        seconds = max(min(Text._setting("preview_seconds"), Text._budget()[2]), 1)
+        domain = self._preview_domain()
+        documents = self.with_context(active_test=False).search(domain, limit=limit)
+        for index, (checksum, same) in enumerate(documents.grouped("checksum").items()):
+            # The first file has the whole run: its time is at most that.
+            if index and deadline - time.monotonic() < seconds:
+                break
+            # Another transaction holds a row (the cleaner, a rename): the next call gets it.
+            same = same.try_lock_for_update(allow_referencing=True).filtered_domain(domain)
+            if same:
+                same._make_preview(checksum, seconds)
+            if not cron._commit_progress(len(same)):
+                break
+        cron._commit_progress(0, remaining=self.with_context(active_test=False).search_count(domain))
+
+    def _make_preview(self, checksum, seconds):
+        """Give the blob ``checksum`` its preview PDF, or mark the documents failed.
+
+        A document with the same file that has its outcome already hands it on (also a failure:
+        the same bytes fail again).
+        """
+        done = self.search([("checksum", "=", checksum), ("preview_state", "!=", False)], limit=1)
+        stored = None
+        if done:
+            values = {"preview_checksum": done.preview_checksum, "preview_state": done.preview_state}
+        else:
+            stored = self._convert_to_pdf(checksum, PREVIEW_EXTENSIONS[self[0].mimetype], seconds)
+            values = {"preview_state": "failed"}
+            if stored:
+                values = {"preview_checksum": stored["checksum"], "preview_state": "done"}
+        try:
+            # The users cannot write these fields (see ``write``); the job runs as superuser anyway.
+            self.sudo().with_context(tracking_disable=True).write(values)
+            if stored:
+                # The row first, then the file: the cleaner of the blobs looks at the rows.
+                self.sudo().flush_recordset(["preview_checksum"])
+                self._publish_blob(stored["tmp_path"], stored["checksum"])
+            if values["preview_state"] == "done":
+                # The picture of the first page, and the text of the old formats (read from it).
+                for xmlid in (THUMBNAIL_CRON_XMLID, TEXT_CRON_XMLID):
+                    self.env.ref(xmlid).sudo()._trigger()
+        finally:
+            if stored:
+                _remove_file(stored["tmp_path"])
+
+    @api.model
+    def _convert_to_pdf(self, checksum, extension, seconds):
+        """The PDF that LibreOffice makes of the blob ``checksum`` as stored, or ``None``.
+
+        The result of ``_store_stream``: the caller publishes the file or removes it. The blob has
+        no ending, so LibreOffice gets a link to it that has one. The program that cannot be
+        started is no fault of the file; the other faults are, and are told in the log.
+
+        :param extension: the ending that tells LibreOffice the format (see ``PREVIEW_EXTENSIONS``)
+        :param seconds: how long the program may take
+        """
+        path = self._blob_path(checksum)
+        try:
+            size = os.stat(path).st_size
+        except FileNotFoundError:
+            _logger.warning("No preview of %s: the file is missing.", checksum)
+            return None
+        limit = self.env["int.filemanager.text"]._setting("preview_max_size_mib")
+        if size > limit * 1024**2:
+            _logger.warning("No preview of %s: the file is bigger than %s MiB.", checksum, limit)
+            return None
+        with tempfile.TemporaryDirectory(prefix="int_filemanager_preview_", ignore_cleanup_errors=True) as job:
+            source = os.path.join(job, f"file.{extension}")
+            os.symlink(path, source)
+            target = os.path.join(job, "file.pdf")
+            code, errors = self._preview_run(job, source, seconds)
+            if code or not (os.path.isfile(target) and os.path.getsize(target)):
+                reason = f"it took more than {seconds:.0f} s" if code == 124 else errors or f"exit code {code}"
+                _logger.warning("No preview of %s: %s", checksum, reason)
+                return None
+            with open(target, "rb") as stream:
+                # A name without an ending: the head of the file tells what it is.
+                stored = self._store_stream(stream, "preview")
+        if stored["mimetype"] != PDF:
+            _remove_file(stored["tmp_path"])
+            _logger.warning("No preview of %s: LibreOffice made no PDF.", checksum)
+            return None
+        return stored
+
+    @api.model
+    def _preview_run(self, job, source, seconds):
+        """Run LibreOffice on ``source`` for at most ``seconds``; ``timeout`` stops all it started after that.
+
+        Each run has a profile of its own in ``job``: LibreOffice runs only once for one profile.
+        The priority is the lowest, the web pages come first.
+
+        :return: ``(exit code, the last line it wrote as errors)``; 124: the time was up
+        """
+        done = subprocess.run(  # noqa: S603 (fixed program names, list arguments, no shell)
+            [
+                "nice",
+                "-n",
+                str(max(PREVIEW_NICE - os.nice(0), 0)),
+                "timeout",
+                f"--kill-after={PREVIEW_KILL_SECONDS}",
+                f"{seconds:.3f}",
+                "soffice",
+                f"-env:UserInstallation={Path(job, 'profile').as_uri()}",
+                "--headless",
+                "--nologo",
+                "--nofirststartwizard",
+                "--invisible",
+                "--norestore",
+                "--convert-to",
+                "pdf",
+                "--outdir",
+                job,
+                source,
+            ],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            env={**os.environ, "HOME": job, "TMPDIR": job},
+            check=False,
+        )
+        lines = done.stderr.decode(errors="replace").strip().splitlines()
+        return done.returncode, lines[-1][:200] if lines else ""
+
+    def _to_ocr_http_stream(self):
+        """The PDF of the file that is not the file as a stream, for the viewer.
+
+        That is the recognized PDF of a scan, or the preview of an office file.
         ``ir.binary._record_to_stream`` calls it for the field ``ocr_content``: the way in is the
         document, so the rights and rules of the document decide, as for ``content``. The
         checksum of the PDF is the ETag.
@@ -936,12 +1168,12 @@ class IntFilemanagerDocument(models.Model):
         self.ensure_one()
         checksum = self.ocr_checksum
         if not checksum:
-            raise MissingError(self.env._("The text recognition made no PDF of this document."))
+            raise MissingError(self.env._("There is no PDF version of this document."))
         path = self._blob_path(checksum)
         try:
             stat = os.stat(path)
         except FileNotFoundError:
-            raise MissingError(self.env._("The recognized PDF of this document is missing.")) from None
+            raise MissingError(self.env._("The PDF version of this document is missing.")) from None
         return Stream(
             type="path",
             path=path,

@@ -129,7 +129,7 @@ class TestShareGateway(GatewayCase, TransactionCase):
     def test_fields_operators_and_values_outside_the_list_are_refused(self):
         for expression in (
             "folder_id.access_user_ids.login", "folder_id.access_user_ids", "create_uid", "create_uid.login",
-            "active", "origin_path", "content_search", "checksum", "ocr_checksum", "content", "company_id",
+            "active", "origin_path", "content_search", "checksum", "ocr_checksum", "preview_checksum", "content", "company_id",
             "message_ids", "folder_id.create_uid",
         ):  # fmt: skip
             with self.subTest(expression):

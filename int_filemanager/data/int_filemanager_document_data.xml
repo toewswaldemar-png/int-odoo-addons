@@ -11,4 +11,15 @@
         <field name="interval_type">minutes</field>
         <field name="priority">80</field>
     </record>
+    <!-- After the pictures of the PDFs, before the reading of the texts. -->
+    <record id="int_filemanager_preview_cron" model="ir.cron">
+        <field name="name">Filemanager: make the PDF preview of the office files</field>
+        <field name="model_id" ref="model_int_filemanager_document" />
+        <field name="state">code</field>
+        <field name="code">model._cron_previews()</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="priority">85</field>
+    </record>
 </odoo>

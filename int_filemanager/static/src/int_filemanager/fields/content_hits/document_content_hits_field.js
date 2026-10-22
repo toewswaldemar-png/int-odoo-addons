@@ -9,7 +9,7 @@ export function hitLabel(file, hit) {
     if (file.isImage) {
         return "";
     }
-    return file.isPdf
+    return file.hasTextPages
         ? _t("p. %(page)s", { page: hit.page })
         : _t("Block %(page)s", { page: hit.page });
 }

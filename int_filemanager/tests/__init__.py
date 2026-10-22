@@ -32,6 +32,7 @@ from . import test_share_unlock
 from . import test_share_upload
 from . import test_import
 from . import test_text_reader
+from . import test_text_preview
 from . import test_text_search
 from . import test_text_hits
 from . import test_text_admin
@@ -39,6 +40,7 @@ from . import test_folder_ocr_images
 from . import test_text_ocr_plan
 from . import test_text_ocr
 from . import test_document_ocr_download
+from . import test_document_office_preview
 from . import test_text_ocr_images
 from . import test_text_ocr_settings
 from . import test_open_mode

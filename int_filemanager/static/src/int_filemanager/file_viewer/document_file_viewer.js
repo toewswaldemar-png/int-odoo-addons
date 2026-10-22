@@ -151,8 +151,10 @@ export class DocumentFileViewer extends FileViewer {
             if (!iframe.isConnected) {
                 return;
             }
-            // The search begins on the current page.
-            app.pdfViewer.currentPageNumber = hit.page;
+            // The search begins on the current page; a block of text is no page.
+            if (this.state.file.hasTextPages) {
+                app.pdfViewer.currentPageNumber = hit.page;
+            }
             this.centerSelectedMatch(app);
             app.eventBus.dispatch("find", {
                 source: this,

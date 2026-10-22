@@ -22,11 +22,11 @@ from odoo.service.server import SLEEP_INTERVAL
 from odoo.tools import SQL, config
 
 from ..tools import ocr_plan
-from .int_filemanager_document import BLOB_FOLDER, _remove_file
+from .int_filemanager_document import BLOB_FOLDER, PREVIEW_EXTENSIONS, TEXT_CRON_XMLID, _remove_file
 
 _logger = logging.getLogger(__name__)
 
-CRON_XMLID = "int_filemanager.int_filemanager_text_cron"
+CRON_XMLID = TEXT_CRON_XMLID
 # Whoever changes how the text is read raises this: the texts are read again.
 ENGINE_VERSION = 2
 
@@ -107,6 +107,8 @@ SETTINGS = {
     "max_attempts": (3, 1),  # tries of a file that crashes or is too slow
     "ocr_jobs": (1, 1),  # cores of one text recognition (-j)
     "ocr_nice": (19, 0),  # priority of the text recognition (19: the lowest)
+    "preview_seconds": (120, 5),  # time LibreOffice has for one office file
+    "preview_max_size_mib": (500, 1),  # the biggest office file that gets a preview
 }
 
 
@@ -514,17 +516,31 @@ class IntFilemanagerText(models.Model):
         return tuple(types)
 
     @api.model
+    def _preview_read_types(self):
+        """The types that the reader cannot open (Word, Excel, PowerPoint of before 2007, RTF).
+
+        Their text is read from the PDF that LibreOffice made for the preview, once it is there.
+        """
+        if not importlib.util.find_spec("pdfminer"):
+            return ()
+        return tuple(mimetype for mimetype in PREVIEW_EXTENSIONS if mimetype not in OFFICE_TYPES)
+
+    @api.model
     def _missing_where(self):
         """Documents that are not archived, of a type with text, and have no row yet.
+
+        The files of the old formats count when their preview is made.
 
         Pictures count only if the recognition is on and the document lies in a folder where
         the recognition of images is on (``ocr_images_active``): a row for each photo would
         have them all recognized.
         """
+        preview_types = self._preview_read_types()
         return SQL(
             """
             document.active
             AND (document.mimetype IN %(types)s OR document.mimetype LIKE %(text)s
+                 OR %(preview)s
                  OR (%(images_on)s AND document.mimetype IN %(images)s AND EXISTS (
                          SELECT 1 FROM int_filemanager_folder folder
                           WHERE folder.id = document.folder_id AND folder.ocr_images_active)))
@@ -533,6 +549,11 @@ class IntFilemanagerText(models.Model):
             """,
             types=self._supported_types(),
             text=TEXT_PREFIX,
+            preview=(
+                SQL("(document.mimetype IN %s AND document.preview_checksum IS NOT NULL)", preview_types)
+                if preview_types
+                else SQL("FALSE")
+            ),
             images_on=self._ocr_options()["enabled"],
             images=IMAGE_TYPES,
         )
@@ -540,7 +561,9 @@ class IntFilemanagerText(models.Model):
     @api.model
     def _flush_for_missing(self):
         # Raw SQL: what is not written yet (a document just archived) must be, first.
-        self.env["int.filemanager.document"].flush_model(["checksum", "mimetype", "active", "folder_id"])
+        self.env["int.filemanager.document"].flush_model(
+            ["checksum", "mimetype", "active", "folder_id", "preview_checksum"]
+        )
         self.env["int.filemanager.folder"].flush_model(["ocr_images_active"])
         self.flush_model(["checksum"])
 
@@ -677,6 +700,8 @@ class IntFilemanagerText(models.Model):
         """
         self.ensure_one()
         row_id, mimetype, first_page = self.id, self.mimetype, self.next_page
+        if mimetype in self._preview_read_types():
+            mimetype = PDF
         path = self._text_source()
         if not os.path.isfile(path):
             self.write({"state": "failed", "message": self.env._("The file is missing.")})
@@ -695,16 +720,34 @@ class IntFilemanagerText(models.Model):
 
         The last finished section of a recognition that is under way, else the recognized PDF,
         else the original: the text of the scans is only in the first two (reading the original
-        again would lose it, and have the scans recognized a second time).
+        again would lose it, and have the scans recognized a second time). A file of an old
+        format is read from its preview; ``""`` if that is gone.
         """
         self.ensure_one()
         section = self._ocr_section_path()
         if section:
             return section
         Document = self.env["int.filemanager.document"]
+        if self.mimetype in self._preview_read_types():
+            return Document._blob_path(preview) if (preview := self._preview_checksum()) else ""
         if self.ocr_checksum and os.path.isfile(Document._blob_path(self.ocr_checksum)):
             return Document._blob_path(self.ocr_checksum)
         return Document._blob_path(self.checksum)
+
+    def _preview_checksum(self):
+        """The preview PDF of a file of an old format, from a document that has the file."""
+        self.ensure_one()
+        document = (
+            self.env["int.filemanager.document"]
+            .sudo()
+            .with_context(active_test=False)
+            .search_fetch(
+                [("checksum", "=", self.checksum), ("preview_checksum", "!=", False)],
+                ["preview_checksum"],
+                limit=1,
+            )
+        )
+        return document.preview_checksum
 
     @api.model
     def _reader_command(self, path, mimetype, first_page, pages=()):
