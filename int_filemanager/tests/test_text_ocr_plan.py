@@ -56,6 +56,16 @@ class TestOcrPlanner(BaseCase):
         self.assertEqual(plan.section_pages(25, 20, 50, fair), 1)
         self.assertTrue(plan.after_timeout(1, 20, 25, fair).counts)
 
+    def test_the_fair_time_is_a_part_of_what_a_run_gives_the_program(self):
+        self.assertEqual(plan.fair_seconds(1000), plan.MIN_COUNTING_SECONDS)
+        self.assertEqual(plan.fair_seconds(25), 20)
+        self.assertEqual(plan.fair_seconds(-5), 0)
+        # Whatever the length of a run, the first page of it is tried: the fair time never
+        # asks for more than the run has (a run of 35 seconds had a window of 25, asked 28).
+        for window in (5, 25, 49, 100, 1000):
+            with self.subTest(window=window):
+                self.assertEqual(plan.section_pages(window, 500, 1, plan.fair_seconds(window)), 1)
+
     def test_a_short_run_lowers_the_time_a_page_needs_to_count(self):
         self.assertTrue(plan.after_timeout(1, 3.0, 20, fair=20).counts)
         self.assertFalse(plan.after_timeout(1, 3.0, 19, fair=20).counts)

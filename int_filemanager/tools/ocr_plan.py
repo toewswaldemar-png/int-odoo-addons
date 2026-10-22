@@ -4,8 +4,9 @@ The scheduled action cuts the pages of a file that are scans into sections and r
 on one section at a time (see ``start_ocr.py``). What decides how it goes lives here, so each rule can be tried
 with numbers alone:
 
-- ``section_pages``, ``measured_seconds_per_page``, ``smoothed``, ``after_timeout``: how many
-  pages the next section has, and what a section that ran out of time teaches;
+- ``section_pages``, ``measured_seconds_per_page``, ``smoothed``, ``after_timeout``,
+  ``fair_seconds``: how many pages the next section has, and what a section that ran out of time
+  teaches;
 - ``classify``: what to do after ``ocrmypdf`` ended (exit code and error text);
 - ``page_ranges``, ``section_command``: the page list and the arguments for one section;
 - ``estimate_dpi``: the resolution of an image that has none.
@@ -29,6 +30,8 @@ DEFAULT_SECONDS_PER_PAGE = 5.0
 SMOOTHING = 0.5
 # A section that is one page and had less time than this only lacked the time: no fault of the page.
 MIN_COUNTING_SECONDS = 60
+# In a short run the fair time is this part of the time the run gives the program.
+FAIR_SHARE = 0.8
 # The lowest time per page kept (zero would read as "not measured").
 MIN_SECONDS_PER_PAGE = 0.1
 A4_WIDTH_INCHES = 21 / 2.54
@@ -79,6 +82,16 @@ def section_pages(seconds_left, seconds_per_page, pages_left, fair=MIN_COUNTING_
     if by_time < 1:
         return 1 if pages_left >= 1 and seconds_left >= fair else 0
     return max(min(by_time, FIRST_SECTION_PAGES if first else MAX_SECTION_PAGES, pages_left), 0)
+
+
+def fair_seconds(window):
+    """The time a single page must have had to count against its file.
+
+    ``MIN_COUNTING_SECONDS``, or in a run shorter than that most of the ``window`` (the time the
+    run gives the program): the page must be able to have it, or a file whose page needs more
+    than the run gives would never be tried again and never be given up.
+    """
+    return min(MIN_COUNTING_SECONDS, max(window, 0) * FAIR_SHARE)
 
 
 def measured_seconds_per_page(pages, seconds):

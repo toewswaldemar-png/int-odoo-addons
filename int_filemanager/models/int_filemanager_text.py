@@ -1139,7 +1139,7 @@ class IntFilemanagerText(models.Model):
             return OCR_PROGRESS
         # The program gets the run up to the time that the reading of the new pages needs.
         run_until = deadline - MIN_READ_SECONDS
-        fair = min(ocr_plan.MIN_COUNTING_SECONDS, self._budget()[2] * 0.8)
+        fair = ocr_plan.fair_seconds(self._budget()[2] - MIN_READ_SECONDS)
         pages = ocr_plan.section_pages(run_until - time.monotonic(), self.ocr_seconds_per_page, left, fair)
         if not pages:
             return OCR_NO_TIME
