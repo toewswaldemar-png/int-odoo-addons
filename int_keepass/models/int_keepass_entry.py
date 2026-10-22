@@ -1,5 +1,4 @@
-from odoo import _, api, fields, models
-from odoo.exceptions import AccessError
+from odoo import api, fields, models
 
 
 class IntKeepassEntry(models.Model):
@@ -47,32 +46,6 @@ class IntKeepassEntry(models.Model):
         self.check_access("read")
         self.env["int.keepass.source"]._forget()
         return True
-
-    @api.model
-    def action_sync_aida_users(self):
-        """Take over the user names of the entries whose address belongs to AIDA.
-
-        The address of AIDA is recognised by a piece of text in it (system parameter
-        ``int_keepass.aida_url_match``, ``ewas.central`` by default). Only the names are kept.
-        """
-        if not self.env.is_system():
-            raise AccessError(_("Only administrators can take over the AIDA user names."))
-        match = (self.env["ir.config_parameter"].sudo().get_param("int_keepass.aida_url_match") or "ewas.central").lower()
-        rows = self.env["int.keepass.source"]._data()["entries"].values()
-        names = {
-            row["username"].strip()
-            for row in rows
-            if row["username"] and row["username"].strip() and row["url"] and match in row["url"].lower()
-        }
-        users = self.env["int.keepass.aida.user"].sudo().with_context(active_test=False)
-        existing = {user.name: user for user in users.search([])}
-        gone = users.browse([user.id for name, user in existing.items() if name not in names and user.active])
-        back = users.browse([user.id for name, user in existing.items() if name in names and not user.active])
-        new = sorted(name for name in names if name not in existing)
-        gone.active = False
-        back.active = True
-        users.create([{"name": name} for name in new])
-        return {"added": len(new) + len(back), "removed": len(gone), "total": len(names)}
 
     @api.model
     def action_lock(self):

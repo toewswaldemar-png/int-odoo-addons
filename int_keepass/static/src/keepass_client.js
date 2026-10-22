@@ -1,5 +1,4 @@
 import { rpc } from "@web/core/network/rpc";
-import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { wrapRpc } from "./keepass_header";
 
@@ -37,16 +36,6 @@ registry.category("actions").add("int_keepass.refresh", async (env) => {
     }
     await env.services.orm.call("int.keepass.entry", "action_refresh", []);
     return env.services.action.doAction(ENTRY_ACTION, { clearBreadcrumbs: true });
-});
-
-// Takes the user names of the AIDA entries over into Odoo (names only). Held back by the
-// wrapper of the rpc until the password manager is unlocked, like every other call.
-registry.category("actions").add("int_keepass.sync_aida", async (env) => {
-    const result = await env.services.orm.call("int.keepass.entry", "action_sync_aida_users", []);
-    env.services.notification.add(
-        _t("%(total)s AIDA names found, %(added)s new, %(removed)s archived.", result),
-        { type: "success" }
-    );
 });
 
 registry.category("actions").add("int_keepass.lock", async (env) => {
