@@ -4,8 +4,8 @@ from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.tools.misc import format_duration, human_size
 
+from ..tools.programs import probe
 from .int_filemanager_share import SHARE_DEFAULTS
-from .int_filemanager_text import _probe
 from .res_users_settings import OPEN_MODE_PARAMETER, OPEN_MODES
 
 # The settings of the shares that are numbers (at least 1, see the constraint).
@@ -395,7 +395,7 @@ class ResConfigSettings(models.TransientModel):
         if not program:
             state = self.env._("Stopped: LibreOffice is not installed on the server.")
         else:
-            state = self.env._("Ready. %(version)s", version=_probe([program, "--version"]).strip())
+            state = self.env._("Ready. %(version)s", version=probe([program, "--version"]).strip())
         for settings in self:
             settings.int_filemanager_preview_state = state
             settings.int_filemanager_preview_done = counts["done"]

@@ -1,5 +1,4 @@
 import base64
-import contextlib
 import hashlib
 import importlib.util
 import itertools
@@ -25,7 +24,9 @@ from odoo.http import Stream
 from odoo.tools import SQL
 from odoo.tools.mimetypes import get_extension
 
-from ..tools.clash import clash_summary, clashing_names
+from ..tools.clash import NAME_TRIES, clash_summary, clashing_names
+from ..tools.files import remove_file
+from ..tools.programs import limited
 from ..tools.zip_stream import ZipEntry, export_names
 from .int_filemanager_text_page import folded
 
@@ -57,8 +58,6 @@ CHUNK_SIZE = 1024 * 1024
 # The head of a file is enough for ``guess_mimetype`` (it reads no more than this).
 HEAD_SIZE = 2048
 NAME_MAX_LENGTH = 255
-# Names tried for one upload ("a.txt", "a (2).txt", ...) before giving up.
-NAME_TRIES = 1000
 # The context key with the words of the full text search (see ``content_hits``), and how many
 # of them, and how long, are looked at.
 CONTENT_WORDS_KEY = "int_filemanager_words"
@@ -115,11 +114,6 @@ PREVIEW_BATCH = 20
 PREVIEW_NICE = 19
 # A process that was told to stop gets this long before it is killed.
 PREVIEW_KILL_SECONDS = 5
-
-
-def _remove_file(path):
-    with contextlib.suppress(FileNotFoundError):
-        os.unlink(path)
 
 
 def _files_in(directory):
@@ -668,7 +662,7 @@ class IntFilemanagerDocument(models.Model):
         upload_dir = self._upload_dir()
         os.makedirs(upload_dir, exist_ok=True)
         tmp_path = os.path.join(upload_dir, uuid.uuid4().hex)
-        self.env.cr.postrollback.add(lambda: _remove_file(tmp_path))
+        self.env.cr.postrollback.add(lambda: remove_file(tmp_path))
         digest = hashlib.sha256()
         size = 0
         head = b""
@@ -683,7 +677,7 @@ class IntFilemanagerDocument(models.Model):
             written = True
         finally:
             if not written:
-                _remove_file(tmp_path)
+                remove_file(tmp_path)
         # The core's rules: client type, then file name, then the head; html, svg and xml
         # become text/plain (office formats excepted), for every user. A client that sends
         # "any binary" says nothing: the core would skip the file name for it.
@@ -716,7 +710,7 @@ class IntFilemanagerDocument(models.Model):
         """
         path = self._blob_path(checksum)
         if os.path.exists(path):
-            _remove_file(tmp_path)
+            remove_file(tmp_path)
             return
         # One publisher per checksum, until this transaction ends (a blob placed by a
         # transaction that is rolled back stays on the disk, the cleaner sees to it). Look again
@@ -726,7 +720,7 @@ class IntFilemanagerDocument(models.Model):
             SQL("SELECT pg_advisory_xact_lock(hashtext(%s), hashtext(%s))", BLOB_LOCK_NAME, checksum)
         )
         if os.path.exists(path):
-            _remove_file(tmp_path)
+            remove_file(tmp_path)
             return
         # Before the blob exists, put it on the checklist: if this transaction is rolled back,
         # the cleaner finds the blob without a document and deletes it (like the core does).
@@ -800,8 +794,8 @@ class IntFilemanagerDocument(models.Model):
         } | Text._used_ocr_checksums(names)
         for checksum, marker in entries:
             if checksum not in used:
-                _remove_file(self._blob_path(checksum))
-            _remove_file(marker)
+                remove_file(self._blob_path(checksum))
+            remove_file(marker)
         cr.commit()  # releases the lock
         remaining = any(True for _entry in itertools.islice(self._checklist_entries(), 1))
         return len(entries), int(remaining)
@@ -820,7 +814,7 @@ class IntFilemanagerDocument(models.Model):
         oldest_kept = time.time() - hours * 3600
         for entry in os.scandir(upload_dir):
             if entry.is_file() and entry.stat().st_mtime < oldest_kept:
-                _remove_file(entry.path)
+                remove_file(entry.path)
 
     @api.model
     def _create_from_stream(self, stream, name, folder, mimetype=None, check=None, **values):
@@ -849,7 +843,7 @@ class IntFilemanagerDocument(models.Model):
             self._publish_blob(stored["tmp_path"], stored["checksum"])
         finally:
             # Nothing is left of a failed attempt.
-            _remove_file(stored["tmp_path"])
+            remove_file(stored["tmp_path"])
         if stored["mimetype"] in PREVIEW_EXTENSIONS:
             self.env.ref(PREVIEW_CRON_XMLID).sudo()._trigger()
         return document
@@ -1078,7 +1072,7 @@ class IntFilemanagerDocument(models.Model):
                     self.env.ref(xmlid).sudo()._trigger()
         finally:
             if stored:
-                _remove_file(stored["tmp_path"])
+                remove_file(stored["tmp_path"])
 
     @api.model
     def _convert_to_pdf(self, checksum, extension, seconds):
@@ -1114,7 +1108,7 @@ class IntFilemanagerDocument(models.Model):
                 # A name without an ending: the head of the file tells what it is.
                 stored = self._store_stream(stream, "preview")
         if stored["mimetype"] != PDF:
-            _remove_file(stored["tmp_path"])
+            remove_file(stored["tmp_path"])
             _logger.warning("No preview of %s: LibreOffice made no PDF.", checksum)
             return None
         return stored
@@ -1129,26 +1123,25 @@ class IntFilemanagerDocument(models.Model):
         :return: ``(exit code, the last line it wrote as errors)``; 124: the time was up
         """
         done = subprocess.run(  # noqa: S603 (fixed program names, list arguments, no shell)
-            [
-                "nice",
-                "-n",
-                str(max(PREVIEW_NICE - os.nice(0), 0)),
-                "timeout",
-                f"--kill-after={PREVIEW_KILL_SECONDS}",
-                f"{seconds:.3f}",
-                "soffice",
-                f"-env:UserInstallation={Path(job, 'profile').as_uri()}",
-                "--headless",
-                "--nologo",
-                "--nofirststartwizard",
-                "--invisible",
-                "--norestore",
-                "--convert-to",
-                "pdf",
-                "--outdir",
-                job,
-                source,
-            ],
+            limited(
+                [
+                    "soffice",
+                    f"-env:UserInstallation={Path(job, 'profile').as_uri()}",
+                    "--headless",
+                    "--nologo",
+                    "--nofirststartwizard",
+                    "--invisible",
+                    "--norestore",
+                    "--convert-to",
+                    "pdf",
+                    "--outdir",
+                    job,
+                    source,
+                ],
+                seconds,
+                PREVIEW_NICE,
+                PREVIEW_KILL_SECONDS,
+            ),
             stdin=subprocess.DEVNULL,
             capture_output=True,
             env={**os.environ, "HOME": job, "TMPDIR": job},

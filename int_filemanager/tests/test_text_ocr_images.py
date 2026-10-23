@@ -9,8 +9,9 @@ from unittest.mock import patch
 
 from odoo.tests.common import tagged
 
-from odoo.addons.int_filemanager.models.int_filemanager_text import ENGINE_VERSION, OCR_PROGRESS, _image_info
+from odoo.addons.int_filemanager.models.int_filemanager_text import ENGINE_VERSION, OCR_PROGRESS
 from odoo.addons.int_filemanager.tools import ocr_plan
+from odoo.addons.int_filemanager.tools.programs import image_info
 
 from .test_text_ocr import OcrCase
 from .test_text_search import TextCase
@@ -145,7 +146,7 @@ class TestImageInfo(PicturesCase, TextCase):
         with tempfile.NamedTemporaryFile(suffix=".img") as handle:
             handle.write(content)
             handle.flush()
-            return _image_info(handle.name)
+            return image_info(handle.name)
 
     def test_the_formats_the_odoo_process_does_not_know_are_read_too(self):
         tiff = picture([["one"], ["two"], ["three"]], form="TIFF", width=400)
@@ -160,7 +161,7 @@ class TestImageInfo(PicturesCase, TextCase):
 
     def test_a_file_that_is_no_picture_gives_nothing(self):
         self.assertIsNone(self._info(b"this is no picture"))
-        self.assertIsNone(_image_info("/nonexistent/path/to/nothing"))
+        self.assertIsNone(image_info("/nonexistent/path/to/nothing"))
 
 
 @tagged("post_install", "-at_install")

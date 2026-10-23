@@ -11,12 +11,12 @@ from werkzeug.security import safe_join
 from odoo import fields, models
 from odoo.exceptions import UserError
 
+from ..tools.clash import NAME_TRIES
+
 # Files that are not read in (compared in lower case with the lower case name).
 EXCLUDED_NAMES = ("thumbs.db", "desktop.ini", ".ds_store", "~$*", "*.tmp", "*.part", "*.crdownload")
 # A file that changes while it is copied is copied again, this often.
 STABLE_TRIES = 3
-# Names tried for one folder ("a", "a (2)", ...) before giving up.
-NAME_TRIES = 1000
 
 
 def _clash_key(name):

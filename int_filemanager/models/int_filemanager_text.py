@@ -22,15 +22,15 @@ from odoo.service.server import SLEEP_INTERVAL
 from odoo.tools import SQL, config
 
 from ..tools import ocr_plan
-from .int_filemanager_document import BLOB_FOLDER, PREVIEW_EXTENSIONS, TEXT_CRON_XMLID, _remove_file
+from ..tools.files import remove_file, remove_path
+from ..tools.programs import image_info, last_line, limited, probe
+from .int_filemanager_document import BLOB_FOLDER, PDF, PREVIEW_EXTENSIONS, TEXT_CRON_XMLID
 
 _logger = logging.getLogger(__name__)
 
-CRON_XMLID = TEXT_CRON_XMLID
 # Whoever changes how the text is read raises this: the texts are read again.
 ENGINE_VERSION = 2
 
-PDF = "application/pdf"
 OFFICE_TYPES = (
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -54,8 +54,6 @@ IMAGE_TYPES = (
 # would stay "a document without a row" for ever.
 TEXT_PREFIX = "text/%"
 READER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "extract_text.py")
-# Says how many pictures an image file has and how wide it is (Pillow knows few formats here).
-IMAGE_INFO = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "image_info.py")
 # The folder of the sections of the files that are being recognized, next to the blobs.
 OCR_FOLDER = ".ocr"
 # What a run of the recognition says: it did a step, it has nothing to do, it has no time left.
@@ -69,7 +67,6 @@ OCR_BLOCK_PARAMETER = "int_filemanager.ocr_blocked"
 OCR_BLOCK_SECONDS = 3600
 # What the programs are asked for their version and languages: kept for this long.
 TOOLS_CACHE_SECONDS = 300
-PROBE_SECONDS = 10
 # The last bytes of what the recognition wrote as errors, kept for the decision and the message.
 STDERR_BYTES = 4000
 # A process that was told to stop gets this long before it is killed.
@@ -110,50 +107,6 @@ SETTINGS = {
     "preview_seconds": (120, 5),  # time LibreOffice has for one office file
     "preview_max_size_mib": (500, 1),  # the biggest office file that gets a preview
 }
-
-
-def _probe(command):
-    """What a program writes when asked for its version or languages (empty if it fails)."""
-    try:
-        done = subprocess.run(  # noqa: S603 (a program found on the path, fixed arguments)
-            command, capture_output=True, check=False, timeout=PROBE_SECONDS, text=True, errors="replace"
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return ""
-    return done.stdout + done.stderr
-
-
-def _image_info(path):
-    """``(number of pictures, width in pixels)`` of an image file, from its header; ``None`` if it is none.
-
-    A child process answers (``tools/image_info.py``): the Odoo process loads only some of the
-    formats of Pillow, and TIFF and WebP are not among them.
-    """
-    try:
-        done = subprocess.run(  # noqa: S603 (own script, own interpreter, no shell)
-            [sys.executable, "-I", IMAGE_INFO, path],
-            capture_output=True,
-            check=False,
-            timeout=PROBE_SECONDS,
-        )
-        answer = json.loads(done.stdout.decode().splitlines()[-1])
-        return int(answer["frames"]), int(answer["width"])
-    except (OSError, subprocess.TimeoutExpired, IndexError, ValueError, KeyError):
-        return None
-
-
-def _remove_path(path):
-    """Remove a file or a folder with all in it (what a stopped program left)."""
-    if os.path.isdir(path) and not os.path.islink(path):
-        shutil.rmtree(path, ignore_errors=True)
-    else:
-        _remove_file(path)
-
-
-def _last_line(text):
-    """The last line of a text that has something in it, short (for a message)."""
-    lines = [line.strip() for line in (text or "").splitlines() if line.strip()]
-    return lines[-1][:200] if lines else ""
 
 
 def _is_scan_text(text):
@@ -304,7 +257,7 @@ class IntFilemanagerText(models.Model):
             raise AccessError(self.env._("Only a Filemanager administrator can do that."))
         self.sudo().filtered(lambda row: row.state not in ("pending", "running"))._reset()
         # Wake the scheduled action; if it is running already, it finds the rows by itself.
-        cron = self.env.ref(CRON_XMLID, raise_if_not_found=False)
+        cron = self.env.ref(TEXT_CRON_XMLID, raise_if_not_found=False)
         if cron:
             cron.sudo()._trigger()
 
@@ -467,7 +420,7 @@ class IntFilemanagerText(models.Model):
         calls it again at once and the next run goes on. Called again with the budget used up
         it returns at once.
         """
-        assert self.env.context.get("cron_id") == self.env.ref(CRON_XMLID).id, (
+        assert self.env.context.get("cron_id") == self.env.ref(TEXT_CRON_XMLID).id, (
             "Meant for cron usage only"
         )
         cron = self.env["ir.cron"]
@@ -1010,10 +963,10 @@ class IntFilemanagerText(models.Model):
         if cached and time.monotonic() - cached[0] < TOOLS_CACHE_SECONDS:
             return cached[1]
         program, tesseract = shutil.which("ocrmypdf"), shutil.which("tesseract")
-        version = _probe([program, "--version"]).strip() if program else ""
+        version = probe([program, "--version"]).strip() if program else ""
         languages = {
             line.strip()
-            for line in (_probe([tesseract, "--list-langs"]).splitlines()[1:] if tesseract else [])
+            for line in (probe([tesseract, "--list-langs"]).splitlines()[1:] if tesseract else [])
             if line.strip()
         }
         tools = {
@@ -1149,7 +1102,7 @@ class IntFilemanagerText(models.Model):
                 self._ocr_fail("missing")
                 return OCR_PROGRESS
         if self.mimetype in IMAGE_TYPES and not self.page_count:
-            info = _image_info(source)
+            info = image_info(source)
             if not info:
                 self._ocr_fail("bad_file")
                 return OCR_PROGRESS
@@ -1176,10 +1129,10 @@ class IntFilemanagerText(models.Model):
             os.makedirs(job, exist_ok=True)
             tried, dpi = set(), None
             while True:
-                _remove_file(target)
+                remove_file(target)
                 if ocr_plan.DPI in tried and not dpi:
                     # A picture without a resolution: take its width for the width of an A4 page.
-                    width = (_image_info(source) or (0, 0))[1]
+                    width = (image_info(source) or (0, 0))[1]
                     dpi = ocr_plan.estimate_dpi(width) if width else None
                 command = ocr_plan.section_command(
                     tools["program"],
@@ -1261,15 +1214,7 @@ class IntFilemanagerText(models.Model):
         try:
             with open(errors_path, "wb") as errors:
                 done = subprocess.run(  # noqa: S603 (fixed program names, list arguments, no shell)
-                    [
-                        "nice",
-                        "-n",
-                        str(max(nice - os.nice(0), 0)),
-                        "timeout",
-                        f"--kill-after={KILL_GRACE_SECONDS}",
-                        f"{seconds:.3f}",
-                        *command,
-                    ],
+                    limited(command, seconds, nice, KILL_GRACE_SECONDS),
                     stdin=subprocess.DEVNULL,
                     stdout=subprocess.DEVNULL,
                     stderr=errors,
@@ -1320,7 +1265,7 @@ class IntFilemanagerText(models.Model):
                     dpi=dpi,
                 )
             return
-        _remove_file(target)
+        remove_file(target)
         self._ocr_clean_job(keep=self.ocr_file)
         if outcome.action == ocr_plan.FAIL:
             self.write({"ocr_attempts": outcome.attempts})
@@ -1330,7 +1275,7 @@ class IntFilemanagerText(models.Model):
         else:
             # Block (a wrong setup) or pause (disk full): not the fault of the file. Nothing
             # more is started for a while, and the file waits as it was.
-            self._ocr_block(outcome.reason, _last_line(stderr))
+            self._ocr_block(outcome.reason, last_line(stderr))
             self.write({"ocr_state": "wait"})
 
     def _ocr_accept(self, numbers, target, name, used, deadline):
@@ -1346,7 +1291,7 @@ class IntFilemanagerText(models.Model):
         os.replace(target, final)
         result = self._run_reader(final, PDF, 1, max(deadline - time.monotonic(), MIN_READ_SECONDS), numbers)
         if result["error"] or not result["done"] or {page[0] for page in result["pages"]} != set(numbers):
-            _remove_file(final)
+            remove_file(final)
             self._ocr_after_failure(self.env._("The text of the recognized pages could not be read."))
             return
         old = self.ocr_file
@@ -1416,7 +1361,7 @@ class IntFilemanagerText(models.Model):
                 Document._publish_blob(stored["tmp_path"], stored["checksum"])
         finally:
             if stored:
-                _remove_file(stored["tmp_path"])
+                remove_file(stored["tmp_path"])
         self._ocr_drop_job()
 
     def _ocr_after_failure(self, reason):
@@ -1447,7 +1392,7 @@ class IntFilemanagerText(models.Model):
         self.write(
             {
                 "ocr_state": "failed",
-                "ocr_message": f"{text} {_last_line(detail)}".strip()[:MESSAGE_LENGTH],
+                "ocr_message": f"{text} {last_line(detail)}".strip()[:MESSAGE_LENGTH],
                 "ocr_file": False,
                 "ocr_file_size": 0,
             }
@@ -1462,7 +1407,7 @@ class IntFilemanagerText(models.Model):
             return
         for entry in os.scandir(job):
             if entry.name != keep:
-                _remove_path(entry.path)
+                remove_path(entry.path)
 
     def _ocr_drop_job(self):
         """Remove the job folder once this transaction is committed (it may be used until then)."""
@@ -1471,7 +1416,7 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_forget(self, path):
-        self.env.cr.postcommit.add(lambda: _remove_file(path))
+        self.env.cr.postcommit.add(lambda: remove_file(path))
 
     @api.model
     def _ocr_restart_values(self):
@@ -1500,7 +1445,7 @@ class IntFilemanagerText(models.Model):
             row._ocr_drop_job()
         rows.write({**self._ocr_restart_values(), "ocr_state": False})
         rows._reset()
-        cron = self.env.ref(CRON_XMLID, raise_if_not_found=False)
+        cron = self.env.ref(TEXT_CRON_XMLID, raise_if_not_found=False)
         if cron:
             cron.sudo()._trigger()
 
@@ -1526,7 +1471,7 @@ class IntFilemanagerText(models.Model):
             keep = row.ocr_file if row.ocr_state == "wait" else None
             for child in os.scandir(entry.path):
                 if child.name != keep and child.stat().st_mtime < oldest_kept:
-                    _remove_path(child.path)
+                    remove_path(child.path)
             with contextlib.suppress(OSError):
                 os.rmdir(entry.path)  # only when it is empty
 

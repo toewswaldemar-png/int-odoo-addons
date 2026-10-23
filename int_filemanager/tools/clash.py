@@ -11,6 +11,8 @@ from odoo.tools import SQL
 
 # Names shown in the message, the rest is counted.
 CLASH_NAMES_SHOWN = 5
+# Names tried for one new folder or file ("a", "a (2)", ...) before giving up.
+NAME_TRIES = 1000
 
 
 def clashing_names(env, table, column, target_id, names, moving_ids):

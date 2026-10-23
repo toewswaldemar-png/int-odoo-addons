@@ -8,11 +8,9 @@ from odoo.exceptions import ConcurrencyError, UserError
 from odoo.tools import SQL
 from odoo.tools.sql import escape_psql
 
-from ..tools.clash import CLASH_NAMES_SHOWN, clash_summary, clashing_names
+from ..tools.clash import CLASH_NAMES_SHOWN, NAME_TRIES, clash_summary, clashing_names
 from ..tools.zip_stream import export_name, export_names, folder_entry
 
-# Names tried for one new folder ("a", "a (2)", ...) before giving up.
-NAME_TRIES = 1000
 # The context key that the reading for the guests of a share sets (never the browser): the id of
 # the folder that the share gives. Its parent is not shown, see ``_read_format``.
 SHARE_ROOT_KEY = "int_filemanager_share_root"
