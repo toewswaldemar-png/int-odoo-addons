@@ -97,3 +97,39 @@ Danach: Text-Hauptdatei ca. 830 Zeilen, Dokument-Hauptdatei ca. 600. ZIP und Dow
 ## 6. Offene Entscheidung
 
 Stufe 1 allein oder Stufe 1 und 2? Empfehlung: beide. Stufe 1 macht die Trennung in Stufe 2 erst sauber, weil die Hilfsfunktionen sonst im Weg sind. Stufe 2 kann auch später kommen, ohne dass Stufe 1 umsonst war.
+
+## 7. Stufe 2 in drei kleinen Schritten (Plan vom 23.10.2026, noch nichts umgesetzt)
+
+Jeder Schritt ist eine eigene Sitzung und ein eigener Commit `[REF] int_filemanager: move … to …`. Reihenfolge nach Größe des Risikos: 2a, 2b, 2c. Alle Schritte verschieben nur; keine Zeile ändert ihr Verhalten.
+
+**Regeln für alle drei Schritte (Fallen, die sich beim Planen gezeigt haben):**
+
+1. Die Erweiterungsdatei steht in `models/__init__.py` **nach** der Hauptdatei und importiert nur **aus** der Hauptdatei, nie umgekehrt. Sonst wird die Klasse der Erweiterung vor dem Basismodell angelegt und das Laden schlägt fehl. Was beide Dateien brauchen, bleibt in der Hauptdatei oder geht nach `tools/`.
+2. Die Tests patchen Konstanten und Module über den Pfad der Datei (`patch(f"{MODULE}.NAME", …)`, `{MODULE}.subprocess.run`, `{MODULE}.importlib.util.find_spec`, `{MODULE}.shutil.which`). Wandert der Code, wandert der Pfad: `MODULE` in diesen Tests auf die neue Datei umstellen, sonst wirkt der Patch ins Leere und der Test läuft grün oder rot aus dem falschen Grund.
+3. Prüfung je Schritt: Syntaxbaum-Vergleich vorher/nachher (jede Methode und jedes Feld unverändert, nur an anderer Stelle; Skript wie in der Sitzung vom 23.10., Vergleich pro Klassenmitglied), Ruff über `pre_commit`, Tests der betroffenen Dateien mit `tools/check/tests.sh --test-tags "/int_filemanager:<Klasse>"`, am Ende von 2c einmal die ganze Suite (`tools/check/tests.sh`, ca. 4,5 Minuten, 994 Tests am 23.10.).
+4. Danach prüfen, dass `grep` auf die Methodennamen keine Aufrufstelle außerhalb der Dateien übersieht (Controller, Import, Freigabe, Text, Tests).
+
+### 2a: `int_filemanager_text_ocr.py` (aus `int_filemanager_text.py`, ca. 620 Zeilen)
+
+- Felder: `ocr_state`, `ocr_message`, `ocr_next_page`, `ocr_file`, `ocr_file_size`, `ocr_attempts`, `ocr_found_pages`, `ocr_seconds_per_page`, `ocr_checksum`, `ocr_size`; dazu `_ocr_checksum_is_sha256`, `_ocr_work_index`, `_unqueued_index`.
+- Methoden: alles ab `_flag` (`_ocr_options`, `_ocr_tools`, `_ocr_blocked`, `_ocr_block`, `_ocr_ready`, `_ocr_step`, `_ocr_dir`, `_job_dir`, `_ocr_section_path`, `_ocr_pages_left`, `_ocr_pages`, `_ocr_section`, `_ocr_io_failed`, `_ocr_run`, `_ocr_timed_out`, `_ocr_conclude`, `_ocr_accept`, `_ocr_finish`, `_ocr_after_failure`, `_ocr_fail`, `_ocr_clean_job`, `_ocr_drop_job`, `_ocr_forget`, `_ocr_restart_values`, `action_recognize_again`, `_gc_ocr_jobs`), dazu `_ocr_status` und `_ocr_queue`, `_scan_page_counts`, `_count_scan_pages` prüfen (Lesen und OCR rufen sie beide).
+- Nur-OCR-Konstanten (wandern mit): `DEFAULT_LANGUAGES`, `OCR_BLOCK_PARAMETER`, `OCR_BLOCK_SECONDS`, `OCR_FOLDER`, `OCR_LANGUAGES`, `OCR_OUTPUT_TYPES`, `STDERR_BYTES`, `TOOLS_CACHE_SECONDS`, `KILL_GRACE_SECONDS`, `MIN_TEACH_SECONDS`, `MIN_READ_SECONDS`, `JOB_MIN_AGE_SECONDS`, `_tools_cache`.
+- Bleiben in der Hauptdatei, weil Lesen und `_cron_ocr` sie brauchen: `OCR_PROGRESS`, `OCR_IDLE`, `OCR_NO_TIME`, `IMAGE_TYPES`, `MESSAGE_LENGTH`, `PDF`-Import, `TEXT_CRON_XMLID`-Import.
+- Nahtstelle (10 Verweise, laufen über `self` unverändert): Lesen → OCR in `_missing_where`, `_ocr_queue`, `_requeue_stale`, `_reset`, `_text_source`; OCR → Lesen in `_ocr_accept` (`_run_reader`, `_store_pages`) und `_ocr_finish` (`_count_scan_pages`, `_has_text`); `_work_left` und `_ocr_status` greifen auf OCR zu.
+- Tests, deren `MODULE`-Pfad sich ändert: `test_text_ocr.py` (`MIN_READ_SECONDS`, `MIN_TEACH_SECONDS`, `JOB_MIN_AGE_SECONDS`), `test_text_ocr_plan.py` (`KILL_GRACE_SECONDS`), `test_text_ocr_settings.py`, `test_text_ocr_images.py`. `test_text_search.py` patcht `GC_BATCH` und `MIN_ATTEMPT_SECONDS` der Hauptdatei: unverändert.
+- `res_config_settings.py` prüfen auf Importe aus der Text-Datei (`SETTINGS` bleibt in der Hauptdatei).
+
+### 2b: `int_filemanager_document_storage.py` (aus `int_filemanager_document.py`, ca. 330 Zeilen)
+
+- Methoden: `_blob_path`, `_store_stream`, `_publish_blob`, `_upload_dir`, `_checklist_dir`, `_mark_blob_for_gc`, `_checklist_entries`, `_gc_blobs`, `_gc_blob_uploads`, `_create_from_stream`, `_clean_name`, `_create_numbered`. Keine Felder.
+- Konstanten: `BLOB_LOCK_NAME`, `CHECKLIST_FOLDER`, `CHUNK_SIZE`, `DEFAULT_UPLOAD_MAX_AGE_HOURS`, `GC_BATCH`, `GC_LOCK_TIMEOUT`, `HEAD_SIZE`, `NAME_MAX_LENGTH`, `UPLOAD_AGE_PARAMETER`, `UPLOAD_FOLDER`. `BLOB_FOLDER` und `CHECKSUM_REGEX` bleiben in der Hauptdatei (Text-Datei und ZIP brauchen sie).
+- Alles bleibt als Methode am Dokument aufrufbar; Controller, Import, Freigabe und Text ändern sich nicht. Kein Mixin und kein eigenes Modell (sonst liefen die `@api.autovacuum`-Methoden doppelt).
+- Tests: `test_document_cleaner.py` (`GC_BATCH`-Pfad), `test_document_storage.py`, `BLOB_LOCK_NAME`-Import (`test_document_upload.py` o. ä., per `grep` finden).
+
+### 2c: `int_filemanager_document_rendition.py` (aus `int_filemanager_document.py`, ca. 290 Zeilen)
+
+- Felder: `thumbnail`, `thumbnail_state`, `preview_checksum`, `preview_state`; Indizes `_thumbnail_work_index`, `_preview_work_index`, `_preview_thumbnail_work_index`, `_preview_checksum_is_sha256`.
+- Methoden: `_thumbnail_domain`, `_cron_thumbnails`, `_make_thumbnail`, `_draw_first_page`, `_preview_domain`, `_preview_counts`, `_cron_previews`, `_make_preview`, `_convert_to_pdf`, `_preview_run`.
+- Konstanten: `PDF_THUMBNAIL`, `THUMBNAIL_*`, `PREVIEW_*`, `THUMBNAIL_CRON_XMLID`, `PREVIEW_CRON_XMLID`, `PREVIEW_EXTENSIONS`; `PDF` und `TEXT_CRON_XMLID` bleiben in der Hauptdatei (die Text-Datei importiert sie), `_logger` je Datei.
+- Achtung: `PREVIEW_EXTENSIONS` und `PDF` braucht auch die Hauptdatei (`STORAGE_FIELDS`, Text-Modell) und `_preview_*_index` benutzt `PREVIEW_EXTENSIONS` schon bei der Klassendefinition. Daher `PREVIEW_EXTENSIONS` in der Hauptdatei lassen und in der Erweiterung importieren.
+- Tests mit Pfad `…int_filemanager_document` für `subprocess.run`, `shutil.which`, `importlib.util.find_spec`: `test_document_office_preview.py`, `test_document_thumbnail.py` auf die neue Datei umstellen; `THUMBNAIL_CRON_XMLID`-Importe in `test_document_thumbnail.py`, `test_document_office_preview.py`, `test_share_upload.py`.
