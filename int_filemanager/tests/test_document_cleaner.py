@@ -6,7 +6,7 @@ from unittest.mock import patch
 from odoo.sql_db import db_connect
 from odoo.tests.common import TransactionCase, tagged
 
-MODULE = "odoo.addons.int_filemanager.models.int_filemanager_document"
+MODULE = "odoo.addons.int_filemanager.models.int_filemanager_document_storage"
 
 
 def remove(path):

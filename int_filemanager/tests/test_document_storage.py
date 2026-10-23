@@ -11,7 +11,7 @@ from odoo.sql_db import db_connect
 from odoo.tests.common import TransactionCase, new_test_user, tagged
 from odoo.tools import SQL
 
-from odoo.addons.int_filemanager.models.int_filemanager_document import BLOB_LOCK_NAME
+from odoo.addons.int_filemanager.models.int_filemanager_document_storage import BLOB_LOCK_NAME
 
 PNG_HEAD = b"\x89PNG\r\n\x1a\n" + b"\0" * 50
 ZIP_HEAD = b"PK\x03\x04" + b"\0" * 50
