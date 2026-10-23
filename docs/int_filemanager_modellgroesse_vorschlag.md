@@ -51,7 +51,7 @@ Nur von der Texterkennung benutzt: 15 Konstanten und die Hilfen `_probe`, `_imag
 
 ## 4. Weitere Befunde, unabhängig von der Aufteilung
 
-- Doppelte Konstanten: `PDF` in `int_filemanager_document.py`, `int_filemanager_text.py` und `tools/extract_text.py`; `GC_BATCH` in Dokument und Text; `NAME_TRIES` in Dokument, Ordner und Importzeile.
+- Doppelte Konstanten: `PDF` in `int_filemanager_document.py`, `int_filemanager_text.py` und `tools/extract_text.py`; `NAME_TRIES` in Dokument, Ordner und Importzeile.
 - Alias statt eigener Wert: `CRON_XMLID = TEXT_CRON_XMLID` in der Text-Datei.
 - Private Hilfen werden dateiübergreifend importiert: `res_config_settings.py` holt `_probe` aus der Text-Datei, die Text-Datei holt `_remove_file` aus der Dokument-Datei; die Dokument-Datei holt `folded` aus `int_filemanager_text_page.py`.
 - Rund 50 Zeilen reine Hilfsfunktionen ohne ORM hängen an den Modellen (`_probe`, `_image_info`, `_remove_path`, `_last_line`, `_is_scan_text`, `_remove_file`, `_files_in`). Das Modul hat dafür schon `tools/`.
@@ -61,12 +61,14 @@ Nur von der Texterkennung benutzt: 15 Konstanten und die Hilfen `_probe`, `_imag
 
 Jede Stufe ist ein eigener Commit, der nur verschiebt und kein Verhalten ändert (Regel „kleiner Diff, bei großem Umbau erst ein reiner Verschiebe-Commit“).
 
-### Stufe 1: aufräumen (klein, sicher)
+### Stufe 1: aufräumen (klein, sicher), umgesetzt am 23.10.2026
 
-- Hilfsfunktionen nach `tools/` (zum Beispiel `tools/subprocess_run.py`, `tools/blob_files.py`).
-- Doppelte Konstanten zusammenführen.
-- Den Aufruf `nice … timeout` in einer gemeinsamen Funktion bündeln.
-- Imports in den Tests anpassen, die diese Namen einführen: `_image_info`, `READER`, `ENGINE_VERSION`, `SETTINGS`, `OCR_PROGRESS`, `BLOB_LOCK_NAME`, `THUMBNAIL_CRON_XMLID`, `ZIP_MAX_SIZE_PARAMETER`.
+- `tools/files.py`: `remove_file`, `remove_path` (vorher `_remove_file` in der Dokument-Datei, `_remove_path` in der Text-Datei).
+- `tools/programs.py`: `probe`, `image_info`, `last_line` (vorher private Funktionen der Text-Datei; `res_config_settings.py` importierte `_probe` aus ihr) und `limited(command, seconds, nice, kill_after)`, der gemeinsame Vorsatz `nice -n … timeout --kill-after=…` von `_preview_run` und `_ocr_run`. Die Zeiten und die Priorität übergeben die Modelle beim Aufruf, weil die Tests `KILL_GRACE_SECONDS` im Modul patchen.
+- `NAME_TRIES` steht einmal in `tools/clash.py` (vorher Dokument, Ordner, Importzeile).
+- `PDF` und `TEXT_CRON_XMLID` kommen in der Text-Datei aus der Dokument-Datei; der Alias `CRON_XMLID` entfällt.
+- Tests: `test_text_ocr_images.py` importiert `image_info` aus `tools`; neu `tests/test_tools_programs.py`.
+- Nicht verschoben: `GC_BATCH` (zwei verschiedene Einstellungen mit gleichem Wert: Blobs je Lauf im Dokument, Texte je Lauf im Text; die Tests patchen es je Modul), `_files_in` (nur vom ZIP des Dokuments benutzt), `_is_scan_text` (nur vom Lesen benutzt), `PDF` in `tools/extract_text.py` (läuft als eigenes Programm mit `-I` und kann nichts importieren).
 
 ### Stufe 2: Dateien nach Thema trennen
 
