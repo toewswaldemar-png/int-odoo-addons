@@ -11,16 +11,13 @@ from PIL import Image
 from odoo.exceptions import AccessError
 from odoo.tests.common import TransactionCase, tagged
 
-from odoo.addons.int_filemanager.models.int_filemanager_document import (
-    PDF_THUMBNAIL,
-    THUMBNAIL_CRON_XMLID,
-    THUMBNAIL_SIZE,
-)
+from odoo.addons.int_filemanager.models.int_filemanager_document import THUMBNAIL_CRON_XMLID
+from odoo.addons.int_filemanager.models.int_filemanager_document_rendition import PDF_THUMBNAIL, THUMBNAIL_SIZE
 
 from . import text_files
 from .test_folder_access import AccessCase
 
-DOCUMENT_MODULE = "odoo.addons.int_filemanager.models.int_filemanager_document"
+DOCUMENT_MODULE = "odoo.addons.int_filemanager.models.int_filemanager_document_rendition"
 
 
 @tagged("post_install", "-at_install")

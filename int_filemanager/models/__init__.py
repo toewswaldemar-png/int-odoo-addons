@@ -3,6 +3,7 @@ from . import int_filemanager_tag
 from . import int_filemanager_folder
 from . import int_filemanager_document
 from . import int_filemanager_document_storage
+from . import int_filemanager_document_rendition
 from . import int_filemanager_link
 from . import int_filemanager_share
 from . import int_filemanager_document_link

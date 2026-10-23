@@ -19,7 +19,7 @@ from odoo.addons.int_filemanager.models.int_filemanager_document import (
 from . import text_files
 from .test_folder_access import AccessCase, remove
 
-MODULE = "odoo.addons.int_filemanager.models.int_filemanager_document"
+MODULE = "odoo.addons.int_filemanager.models.int_filemanager_document_rendition"
 PREVIEW = b"%PDF-1.4 the preview of an office file"
 SOFFICE = "/usr/bin/soffice"
 
