@@ -111,7 +111,7 @@ Jeder Schritt ist eine eigene Sitzung und ein eigener Commit `[REF] int_filemana
 
 ### 2a: `int_filemanager_text_ocr.py` (aus `int_filemanager_text.py`, ca. 620 Zeilen)
 
-**Umgesetzt am 23.10.2026** (Hauptdatei 1560 → 907 Zeilen, `int_filemanager_text_ocr.py` 637 Zeilen). Abweichungen vom Plan darunter:
+**Umgesetzt am 23.10.2026** (Hauptdatei 1560 → 897 Zeilen, `int_filemanager_text_ocr.py` 642 Zeilen). Abweichungen vom Plan darunter:
 
 - Es wanderten 13 Feldblöcke (10 Felder und die 3 Indizes bzw. Constraints), 27 Methoden und 13 Konstanten; `_ocr_status`, `_ocr_queue`, `_scan_page_counts` und `_count_scan_pages` blieben in der Hauptdatei (Status und Auswahl der Zeilen, die das Lesen und `_cron_ocr` brauchen).
 - Die Hauptdatei benutzt keine der verschobenen Konstanten, die Erweiterung importiert nur aus der Hauptdatei und aus `int_filemanager_document` (`IMAGE_TYPES`, `MESSAGE_LENGTH`, `OCR_IDLE`, `OCR_NO_TIME`, `OCR_PROGRESS`, `BLOB_FOLDER`, `PDF`, `TEXT_CRON_XMLID`).
@@ -136,6 +136,10 @@ Jeder Schritt ist eine eigene Sitzung und ein eigener Commit `[REF] int_filemana
 - Tests: `test_document_cleaner.py` (`GC_BATCH`-Pfad), `test_document_storage.py`, `BLOB_LOCK_NAME`-Import (`test_document_upload.py` o. ä., per `grep` finden).
 
 ### 2c: `int_filemanager_document_rendition.py` (aus `int_filemanager_document.py`, ca. 290 Zeilen)
+
+**Umgesetzt am 23.10.2026** (Hauptdatei 905 → 590 Zeilen, `int_filemanager_document_rendition.py` 336 Zeilen): 8 Feldblöcke (4 Felder, 3 Indizes, 1 Constraint), 10 Methoden, 8 Konstanten. Abweichung vom Plan: `THUMBNAIL_CRON_XMLID` und `PREVIEW_CRON_XMLID` bleiben in der Hauptdatei (zusammen mit `TEXT_CRON_XMLID`), weil die Speicher-Datei `PREVIEW_CRON_XMLID` braucht und drei Tests beide Namen von dort importieren. Das nicht mehr benutzte `_logger` der Hauptdatei entfiel. Syntaxbaum-Vergleich: nichts verloren, nichts geändert. Tests: `test_document_thumbnail.py` und `test_document_office_preview.py` patchen jetzt über die neue Datei (`subprocess.run`, `shutil.which`, `importlib.util.find_spec`); `PDF_THUMBNAIL` und `THUMBNAIL_SIZE` kommen von dort.
+
+**Ergebnis von Stufe 2:** `int_filemanager_text.py` 1560 → 897 Zeilen (+ `_text_ocr` 642), `int_filemanager_document.py` 1209 → 590 Zeilen (+ `_document_storage` 322, `_document_rendition` 336).
 
 - Felder: `thumbnail`, `thumbnail_state`, `preview_checksum`, `preview_state`; Indizes `_thumbnail_work_index`, `_preview_work_index`, `_preview_thumbnail_work_index`, `_preview_checksum_is_sha256`.
 - Methoden: `_thumbnail_domain`, `_cron_thumbnails`, `_make_thumbnail`, `_draw_first_page`, `_preview_domain`, `_preview_counts`, `_cron_previews`, `_make_preview`, `_convert_to_pdf`, `_preview_run`.
