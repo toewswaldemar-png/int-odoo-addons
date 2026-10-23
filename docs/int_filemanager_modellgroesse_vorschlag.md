@@ -128,6 +128,8 @@ Jeder Schritt ist eine eigene Sitzung und ein eigener Commit `[REF] int_filemana
 
 ### 2b: `int_filemanager_document_storage.py` (aus `int_filemanager_document.py`, ca. 330 Zeilen)
 
+**Umgesetzt am 23.10.2026** (Hauptdatei 1209 → 905 Zeilen, `int_filemanager_document_storage.py` 322 Zeilen): 12 Methoden und 10 Konstanten wie geplant, keine Felder. Die Hauptdatei braucht keine der verschobenen Konstanten; die Erweiterung importiert `BLOB_FOLDER`, `CHECKSUM_REGEX`, `PREVIEW_CRON_XMLID` und `PREVIEW_EXTENSIONS` aus der Hauptdatei. Syntaxbaum-Vergleich: nichts verloren, nichts geändert. Tests: `test_document_cleaner.py` (`GC_BATCH`) und `test_document_storage.py` (`BLOB_LOCK_NAME`) zeigen auf die neue Datei.
+
 - Methoden: `_blob_path`, `_store_stream`, `_publish_blob`, `_upload_dir`, `_checklist_dir`, `_mark_blob_for_gc`, `_checklist_entries`, `_gc_blobs`, `_gc_blob_uploads`, `_create_from_stream`, `_clean_name`, `_create_numbered`. Keine Felder.
 - Konstanten: `BLOB_LOCK_NAME`, `CHECKLIST_FOLDER`, `CHUNK_SIZE`, `DEFAULT_UPLOAD_MAX_AGE_HOURS`, `GC_BATCH`, `GC_LOCK_TIMEOUT`, `HEAD_SIZE`, `NAME_MAX_LENGTH`, `UPLOAD_AGE_PARAMETER`, `UPLOAD_FOLDER`. `BLOB_FOLDER` und `CHECKSUM_REGEX` bleiben in der Hauptdatei (Text-Datei und ZIP brauchen sie).
 - Alles bleibt als Methode am Dokument aufrufbar; Controller, Import, Freigabe und Text ändern sich nicht. Kein Mixin und kein eigenes Modell (sonst liefen die `@api.autovacuum`-Methoden doppelt).
