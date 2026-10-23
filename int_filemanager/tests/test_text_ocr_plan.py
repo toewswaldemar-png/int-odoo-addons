@@ -15,7 +15,7 @@ from odoo.addons.int_filemanager.tools import ocr_plan as plan
 
 from . import text_files
 
-MODULE = "odoo.addons.int_filemanager.models.int_filemanager_text"
+MODULE = "odoo.addons.int_filemanager.models.int_filemanager_text_ocr"
 
 
 @tagged("post_install", "-at_install")

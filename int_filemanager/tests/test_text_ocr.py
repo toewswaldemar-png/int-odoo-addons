@@ -13,18 +13,14 @@ import psutil
 from odoo.exceptions import AccessError
 from odoo.tests.common import new_test_user, tagged
 
-from odoo.addons.int_filemanager.models.int_filemanager_text import (
-    OCR_BLOCK_PARAMETER,
-    OCR_IDLE,
-    OCR_NO_TIME,
-    OCR_PROGRESS,
-)
+from odoo.addons.int_filemanager.models.int_filemanager_text import OCR_IDLE, OCR_NO_TIME, OCR_PROGRESS
+from odoo.addons.int_filemanager.models.int_filemanager_text_ocr import OCR_BLOCK_PARAMETER
 from odoo.addons.int_filemanager.tools import ocr_plan
 
 from . import text_files
 from .test_text_search import TextCase
 
-MODULE = "odoo.addons.int_filemanager.models.int_filemanager_text"
+MODULE = "odoo.addons.int_filemanager.models.int_filemanager_text_ocr"
 ADMIN_GROUPS = "base.group_user,int_filemanager.int_filemanager_group_admin"
 
 # A program that behaves like ``ocrmypdf`` as the test says (``config.json``): it logs its

@@ -15,4 +15,5 @@ from . import res_partner
 from . import res_users
 from . import res_users_settings
 from . import int_filemanager_text
+from . import int_filemanager_text_ocr
 from . import int_filemanager_text_page
