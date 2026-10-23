@@ -111,6 +111,13 @@ Jeder Schritt ist eine eigene Sitzung und ein eigener Commit `[REF] int_filemana
 
 ### 2a: `int_filemanager_text_ocr.py` (aus `int_filemanager_text.py`, ca. 620 Zeilen)
 
+**Umgesetzt am 23.10.2026** (Hauptdatei 1560 → 907 Zeilen, `int_filemanager_text_ocr.py` 637 Zeilen). Abweichungen vom Plan darunter:
+
+- Es wanderten 13 Feldblöcke (10 Felder und die 3 Indizes bzw. Constraints), 27 Methoden und 13 Konstanten; `_ocr_status`, `_ocr_queue`, `_scan_page_counts` und `_count_scan_pages` blieben in der Hauptdatei (Status und Auswahl der Zeilen, die das Lesen und `_cron_ocr` brauchen).
+- Die Hauptdatei benutzt keine der verschobenen Konstanten, die Erweiterung importiert nur aus der Hauptdatei und aus `int_filemanager_document` (`IMAGE_TYPES`, `MESSAGE_LENGTH`, `OCR_IDLE`, `OCR_NO_TIME`, `OCR_PROGRESS`, `BLOB_FOLDER`, `PDF`, `TEXT_CRON_XMLID`).
+- Verschoben mit einem Skript, das die Quelltext-Zeilen unverändert überträgt. Syntaxbaum-Vergleich gegen den letzten Commit: nichts verloren, nichts geändert; neu nur `_inherit` und ein zweites `_logger`.
+- Tests: `test_text_ocr.py` und `test_text_ocr_plan.py` patchen jetzt über `…int_filemanager_text_ocr`; `OCR_BLOCK_PARAMETER` kommt von dort.
+
 - Felder: `ocr_state`, `ocr_message`, `ocr_next_page`, `ocr_file`, `ocr_file_size`, `ocr_attempts`, `ocr_found_pages`, `ocr_seconds_per_page`, `ocr_checksum`, `ocr_size`; dazu `_ocr_checksum_is_sha256`, `_ocr_work_index`, `_unqueued_index`.
 - Methoden: alles ab `_flag` (`_ocr_options`, `_ocr_tools`, `_ocr_blocked`, `_ocr_block`, `_ocr_ready`, `_ocr_step`, `_ocr_dir`, `_job_dir`, `_ocr_section_path`, `_ocr_pages_left`, `_ocr_pages`, `_ocr_section`, `_ocr_io_failed`, `_ocr_run`, `_ocr_timed_out`, `_ocr_conclude`, `_ocr_accept`, `_ocr_finish`, `_ocr_after_failure`, `_ocr_fail`, `_ocr_clean_job`, `_ocr_drop_job`, `_ocr_forget`, `_ocr_restart_values`, `action_recognize_again`, `_gc_ocr_jobs`), dazu `_ocr_status` und `_ocr_queue`, `_scan_page_counts`, `_count_scan_pages` prüfen (Lesen und OCR rufen sie beide).
 - Nur-OCR-Konstanten (wandern mit): `DEFAULT_LANGUAGES`, `OCR_BLOCK_PARAMETER`, `OCR_BLOCK_SECONDS`, `OCR_FOLDER`, `OCR_LANGUAGES`, `OCR_OUTPUT_TYPES`, `STDERR_BYTES`, `TOOLS_CACHE_SECONDS`, `KILL_GRACE_SECONDS`, `MIN_TEACH_SECONDS`, `MIN_READ_SECONDS`, `JOB_MIN_AGE_SECONDS`, `_tools_cache`.
