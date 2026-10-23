@@ -41,7 +41,7 @@
         # The editor for pictures and Fabric, the library it draws with: loaded at the first
         # click on "Edit" (the registry `lazy_components`), not with every page.
         "int_filemanager.assets_image_editor": [
-            "int_filemanager/static/lib/fabric/fabric.min.js",
+            "int_filemanager/static/lib/fabric/fabric.js",
             "int_filemanager/static/src/image_editor/**/*",
         ],
         # The tests of the picture editor (Hoot); they load the bundle of the editor themselves.

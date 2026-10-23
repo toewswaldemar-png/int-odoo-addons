@@ -6,7 +6,7 @@ Der Bildeditor ist umgesetzt. **Der Code ist maßgeblich** (`static/src/image_ed
 
 ## 1. Entscheidungen
 
-1. **Fabric.js 7.4.0** (`static/lib/fabric/fabric.min.js`, MIT), nur in einem eigenen Bundle `int_filemanager.assets_image_editor`. Es wird beim ersten Klick auf „Bearbeiten“ geladen (`lazy_components`), nicht mit jeder Seite. Gäste laden es nie. Ein Test hält die Version fest; wer Fabric tauscht, prüft den Editor dagegen und ändert die Zahl in `tests/test_assets.py`.
+1. **Fabric.js 7.4.0** (`static/lib/fabric/fabric.js`, MIT), nur in einem eigenen Bundle `int_filemanager.assets_image_editor`. Es wird beim ersten Klick auf „Bearbeiten“ geladen (`lazy_components`), nicht mit jeder Seite. Gäste laden es nie. Ein Test hält die Version fest; wer Fabric tauscht, prüft den Editor dagegen und ändert die Zahl in `tests/test_assets.py`.
 2. **Der Editor ist ein Dienst** (`int_filemanager.image_editor`), den der Viewer von selbst findet. So haben Liste, Kanban, Kontextmenü und Formular denselben Knopf „Bearbeiten“; die Gäste-Seite hat den Dienst nicht und damit keinen Knopf.
 3. **Die Szene hat die Größe des Bildes.** Alle Marken liegen in Bildpunkten. Die Größen (Strichstärke, Schrift) richten sich nach dem Bild (`UNIT_PER_PIXEL`), damit sie auf einem Foto und auf einem Symbol gleich aussehen.
 4. **Große Bilder:** Gezeigt und gefiltert wird eine Arbeitskopie (längste Seite höchstens 2048 Pixel). Das Bild in voller Größe kommt nur beim Speichern an die Stelle der Kopie (`Picture.show(true)`); die Filter laufen dann noch einmal darauf. Ob der Browser ein Canvas dieser Größe machen kann, wird ausprobiert (`canvasFits`); sonst bietet der Speichern-Dialog nur die Größen an, die gehen.

@@ -14,7 +14,7 @@ export const REPO = path.resolve(HERE, "../..");
 export const MODULE_SRC = path.join(REPO, "int_filemanager/static/src");
 export const EDITOR_SRC = path.join(MODULE_SRC, "image_editor");
 export const VIEWER_SRC = path.join(MODULE_SRC, "int_filemanager/file_viewer");
-export const FABRIC = path.join(REPO, "int_filemanager/static/lib/fabric/fabric.min.js");
+export const FABRIC = path.join(REPO, "int_filemanager/static/lib/fabric/fabric.js");
 
 /** Where the tests put the pictures they make, so that they can be looked at (not in the repository). */
 export const OUT = path.join(os.tmpdir(), "image_editor_check");

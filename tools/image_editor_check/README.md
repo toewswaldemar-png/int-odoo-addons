@@ -1,7 +1,7 @@
 # Prüfungen des Bildeditors ohne Browser
 
 Prüft `int_filemanager/static/src/image_editor/` und die Einbindung in den Datei-Viewer mit Node:
-das echte Fabric (`static/lib/fabric/fabric.min.js`), das echte Owl aus dem Odoo-Quelltext, jsdom als
+das echte Fabric (`static/lib/fabric/fabric.js`), das echte Owl aus dem Odoo-Quelltext, jsdom als
 Browser und `@napi-rs/canvas` als Zeichenfläche. Odoo-Dienste und die meisten Core-Komponenten
 (`@web/...`) sind gestellt (`loader.mjs`); nur der Datei-Viewer des Cores und seine Template-Vererbung
 laufen echt.

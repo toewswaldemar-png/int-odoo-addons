@@ -400,7 +400,7 @@ class TestImageEditorAssets(TransactionCase):
     def test_the_version_of_fabric_is_the_one_the_editor_was_written_for(self):
         # A newer Fabric may change what the editor calls; replacing the file is a decision to
         # check the editor against it (and to change this number).
-        self.assertIn(f"`{FABRIC_VERSION}`", self.script)
+        self.assertRegex(self.script, rf'VERSION\s*=\s*"{re.escape(FABRIC_VERSION)}"')
 
     def test_the_parts_of_fabric_that_the_editor_relies_on_are_there(self):
         for piece in FABRIC_PARTS:
