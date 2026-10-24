@@ -1,20 +1,20 @@
-> Stand 24.10.2026. Planungsstand, es gibt noch keinen Code. Dieser Plan ist das Ergebnis einer Recherche- und Entwurfssitzung mit Odoo-19-Quelltext.
+> Planungsstand; den Umsetzungsstand nennt `int_bible/README.md`. Dieser Plan ist das Ergebnis einer Recherche- und Entwurfssitzung mit Odoo-19-Quelltext.
 > Namen: Das Modul heißt `int_bible`, seine Modelle `int.bible.*` (in der Recherche hieß es `int_bibel`). Menüs und Oberfläche bleiben deutsch (über `i18n/de.po`).
 > Pfade wie `docs/odoo/...`, `docs/odoo19_reference/...` und Kurzformen wie `W/` (= `addons/web/static/src`) beziehen sich auf dieses Repo (`docs/odoo` ist lokal, nicht versioniert, Odoo 19.0).
-> Einstieg für eine neue Sitzung: `docs/int_bible_uebergabe_2026-10-24.md`.
+> Einstieg für eine neue Sitzung: `docs/int_bible/uebergabe.md`.
 
-# Bibelmodul für Odoo 19 (`int_bible`): Entscheidungsvorlage (Stand nach Prüfung Searchpanel und Parallelstellen)
+# Bibelmodul für Odoo 19 (`int_bible`): Entscheidungsvorlage
 
 ## Ziel
 Neues Modul `int_bible` in diesem Repo (Ordner `int_bible/` in der Wurzel, neben den anderen Modulen): Bibeltext im Odoo lesen und durchsuchen, mehrere Übersetzungen parallel in der Liste, Lesezeichen und eigene Notizen, später Querverweise (Parallelstellen). Nur für angemeldete Odoo-Benutzer (Backend). Navigation Testament > Buch > Kapitel über das native Searchpanel, kein eigener JavaScript-Bildschirm im MVP. Beamer ist nicht Teil dieser Stufe.
 
-## Entscheidungen vom 24.10.2026
-Kapitel entstehen beim Import (Datei enthält nur 2 Testamente und 66 Bücher). Buchkürzel: Vorschlag von Claude, Prüfung durch den Nutzer. Modultrennung für Phase 2 und 3 erst zu Beginn von Phase 2. Übersetzungswahl über den Menüpunkt „Bibel > Meine Übersetzungen“. Testinstanz: lokaler Tower mit eigenem Test-Container und eigener Datenbank. Textquelle eBible.org, erstes Einlese-Format USFX (Zefania später). Einzelheiten und noch zu klärende Kleinigkeiten: `docs/int_bible_uebergabe_2026-10-24.md`.
+## Entscheidungen
+Kapitel entstehen beim Import (Datei enthält nur 2 Testamente und 66 Bücher). Buchkürzel: Vorschlag von Claude, Prüfung durch den Nutzer. Modultrennung für Phase 2 und 3 erst zu Beginn von Phase 2. Übersetzungswahl über den Menüpunkt „Bibel > Meine Übersetzungen“. Testinstanz: lokaler Tower mit eigenem Test-Container und eigener Datenbank. Textquelle eBible.org, erstes Einlese-Format USFX (Zefania später). Einzelheiten und noch zu klärende Kleinigkeiten: `docs/int_bible/uebergabe.md`.
 
 ## Bestand im Repo (belegt)
 - `int_presenter`: Grundgerüst, Ablauf soll Eintragsart „Bibelvers“ bekommen (`int_presenter/README.md:8-9,19`). Das Bibelmodul wäre die Textquelle.
-- `int_liedanzeige`: Hausmuster für Manifest, Gruppen (`res.groups.privilege`), ACL, `models.Constraint`, Menüs.
-- `int_filemanager`: Volltextsuche (`models/int_filemanager_text_page.py:106-200`) und Import mit Wiederaufnahme (`models/int_filemanager_import.py:248-262`) als Reserve.
+- Core `lunch`: Muster für Manifest (`lunch/__manifest__.py`, `data`-Reihenfolge Security zuerst, Views, Daten), Gruppen mit `res.groups.privilege` (`lunch/security/lunch_security.xml:4-21`), Record Rule (`:25`) und `models.Constraint` (`lunch/models/lunch_alert.py:60`).
+- Volltextsuche und Importbaustein: eine Volltextsuche (`to_tsvector`, `tsquery`) hat der Core nicht (Suche in `docs/odoo/odoo` und `docs/odoo/addons` ohne Treffer). Er bietet nur den Trigramm-Index für Teilstring-Suche (`index='trigram'`, z. B. `account_account.py:33`). Importformate nur CSV und Excel, siehe Abgleich Eigenbau 1.
 - Das Repo ist **öffentlich**: kein urheberrechtlich geschützter Text und keine Querverweisdaten hinein.
 
 ## Core-Fundstellen (Odoo 19.0, `docs/odoo`)
@@ -44,15 +44,12 @@ Verse werden nicht je Übersetzung als eigene Zeile geführt, sondern über eine
 - `int.bible.verse.text` = Text einer Stelle in einer Übersetzung.
 Grund: Parallele Übersetzungen in einer Zeile gehen nur so (Listenzeile = Stelle). Lesezeichen, Notizen und Querverweise hängen an der Stelle und verrutschen beim Wechsel der Übersetzung nicht. Ein späterer Umbau von flachen Versen auf Positionen wäre eine Migration; jetzt ist er billig.
 
-## Alternativen
-- **A, nativ: Searchpanel + Listenansicht + Positionsmodell (Empfehlung):** keine Zeile JavaScript.
-- **B, eigener Lese-Bildschirm (OWL):** schöneres Buch, Vers-Auswahl, Blättern. Als spätere Stufe, wenn A im Alltag nicht reicht.
-- **C, alles eigen:** ohne Nutzen.
+## Gewählte Umsetzung: native Liste (ohne eigenes JavaScript)
+Ein eigener Lese-Bildschirm (Owl) bleibt eine spätere Stufe, falls die Liste im Alltag nicht reicht.
 
-## Empfehlung: A
 Alltagsbild: Das Searchpanel ist das Inhaltsverzeichnis am linken Rand, die Liste das aufgeschlagene Kapitel, eine Zeile je Stelle, die gewählten Übersetzungen stehen nebeneinander als Spalten (Standard zwei, bis vier möglich). Querverweise sind eine Liste im Formular der Stelle.
 
-Was A nicht kann: kein „nächstes Kapitel“-Knopf (Klick im Baum), keine Mehrfachauswahl von Versen zum Kopieren, keine Trefferhervorhebung in der Liste (nativ ohne Highlight; die Hervorhebung des Filemanagers ist ein eigenes Widget), Sortierung und Suche über die berechnete Textspalte nur mit eigener `search=`-Methode, Zähler im Searchpanel zählen Stellen statt Verse einer Übersetzung (Annahme).
+Was A nicht kann: kein „nächstes Kapitel“-Knopf (Klick im Baum; ein Knopf im Listenkopf wäre möglich, Entscheidung nach Test in S5, siehe `docs/int_bible/odoo_abgleich.md` Nr. 23), keine Mehrfachauswahl von Versen zum Kopieren, keine Trefferhervorhebung in der Liste (nativ ohne Highlight; die Hervorhebung des Filemanagers ist ein eigenes Widget), Sortierung und Suche über die berechnete Textspalte nur mit eigener `search=`-Methode, Zähler im Searchpanel zählen Stellen statt Verse einer Übersetzung (Annahme).
 
 ## Änderungsumfang (Modul `int_bible`, `application: True`, `depends` base, web)
 - `int.bible.translation`: Name, Kürzel (eindeutig), Sprache, Rechtsstatus, Quellenvermerk, Status (neu, importiert, aktiv), Reihenfolge.
@@ -62,9 +59,9 @@ Was A nicht kann: kein „nächstes Kapitel“-Knopf (Klick im Baum), keine Mehr
 - `int.bible.verse.map`: Zuordnung abweichender Zählungen (Übersetzung, Verszahl der Übersetzung, Stelle), `models.Constraint` auf (Übersetzung, Verszahl). Standard ist Gleichheit, Ausnahmen als Daten (z. B. 3 Joh 14/15, Psalmenüberschriften, Mal 3/4). Der Import meldet Stellen, die in einer Übersetzung fehlen.
 - Benutzerwahl der Übersetzungen: Vererbung von `res.users.settings` (1:1 je Benutzer, `UNIQUE(user_id)`, `odoo/addons/base/models/res_users_settings.py:8-14`) in `models/res_users_settings.py` mit vier Many2one-Feldern, Präfix `int_bible_`. Bearbeitet wird sie über einen eigenen Menüpunkt „Bibel > Meine Übersetzungen“ (entschieden 24.10.2026); die technische Umsetzung (Aktion auf den eigenen Datensatz von `res.users.settings`) ist in S5 gegen den Core zu prüfen (Annahme).
 - `int.bible.note`: Benutzer, Stelle von/bis, Notiz, Farbe; Record Rule auf eigene Datensätze.
-- `int.bible.translation.import` (Wizard, Transient-Namensmuster `<Basismodell>.<Aktion>`, `coding_guidelines.md:851-854`): Datei (USFX XML als erstes Format), Übersetzung. Der Wizard parst nur (`_parse_usfx`, je Format eine kleine Methode, erweiterbar) und ruft die Geschäftslogik im Basismodell auf (`int.bible.translation._import_verses`), kein `cr.commit()` (`coding_guidelines.md:642-692`).
+- `int.bible.translation.import` (Wizard, Transient-Namensmuster `<Basismodell>.<Aktion>`, `coding_guidelines.md:851-854`): Datei (USFX XML als erstes Format), Übersetzung. Der Wizard liest die Datei mit der reinen Python-Funktion `tools/usfx.py` (Eigenbau, ohne Datenbank, je Format eine Datei) und ruft die Geschäftslogik im Basismodell auf (`int.bible.translation._import_verses`), kein `cr.commit()` (`coding_guidelines.md:642-692`).
 - Views: Liste (`limit="200"`, Text umbrechend, Stern-Spalte), Search-View mit `<searchpanel>` (Baum „Bibel“, `limit="false"`, `enable_counters`, **ohne `depth`**), Formular der Stelle (Texte, Notiz), Notizen-Liste, Verwaltung der Übersetzungen. Menü: Bibel lesen, Notizen, Konfiguration.
-- Sicherheit: Gruppen Benutzer/Manager (Muster `int_liedanzeige`). Texte lesen alle Benutzer, Pflege nur Manager.
+- Sicherheit: Gruppen Benutzer/Manager (Muster Core `lunch/security/lunch_security.xml:4-21`). Texte lesen alle Benutzer, Pflege nur Manager.
 - Keine Bibeltexte im Repo. Start mit gemeinfreien Fassungen (Luther 1912, Elberfelder 1905) von eBible.org (Rechtsstatus dort je Text ausgewiesen), Datei per Wizard.
 
 ## Suche: Filter, Gruppierungen, Favoriten (belegt, nativ)
@@ -111,21 +108,20 @@ Zielstruktur des Moduls `int_bible` (nur die Ordner, die das Modul wirklich brau
 int_bible/
 |-- __init__.py                      (importiert models, wizard)
 |-- __manifest__.py                  (depends: base, web; application: True; LGPL-3; data-Reihenfolge s. u.)
-|-- models/                          (je Datei ein Thema, Aufteilung wie int_filemanager)
-|   |-- __init__.py                  (Reihenfolge: Stammdaten, Inhalt, Benutzerdaten, Formate)
-|   |-- int_bible_translation.py     (Thema Stammdaten: Übersetzung, Rechtsstatus, Status)
-|   |-- int_bible_translation_load.py (Thema Einlesen: _inherit, Massen-Import der Verse, Bericht)
-|   |-- int_bible_parser.py          (AbstractModel: Schnittstelle _parse() für Dateiformate)
-|   |-- int_bible_parser_usfx.py     (AbstractModel: USFX XML, erstes Format; Zefania und weitere = weitere Dateien)
-|   |-- int_bible_section.py         (Thema Navigation: Baum Testament > Buch > Kapitel, Namen, Kürzel)
-|   |-- int_bible_section_reference.py (Thema Schreibweise: _inherit, „Joh 3,16“ lesen und schreiben)
-|   |-- int_bible_verse.py           (Thema Stelle: Felder, ordinal, Constraints, Anzeigename)
-|   |-- int_bible_verse_text.py      (eigenes Modell int.bible.verse.text: Text je Stelle und Übersetzung)
-|   |-- int_bible_verse_map.py       (eigenes Modell int.bible.verse.map: Zählungs-Zuordnung)
-|   |-- int_bible_verse_reading.py   (Thema Leseansicht: _inherit, Textspalten, fields_get, Suchmethoden)
-|   |-- int_bible_verse_bookmark.py  (Thema Lesezeichen: _inherit, favorite_user_ids, is_favorite)
-|   |-- int_bible_note.py            (Benutzerdaten: Notiz)
+|-- models/                          (eine Datei pro Modell, benannt nach dem Modell; Norm :57-61)
+|   |-- __init__.py                  (Reihenfolge: Stammdaten, Inhalt, Benutzerdaten)
+|   |-- int_bible_translation.py     (int.bible.translation: Stammdaten, Rechtsstatus, Status, Verse einlesen mit Bericht)
+|   |-- int_bible_section.py         (int.bible.section: Baum Testament > Buch > Kapitel, Namen, Kürzel, Stellenschreibweise über tools/reference.py, Kapitelwechsel falls S5 bestätigt)
+|   |-- int_bible_verse.py           (int.bible.verse: Felder, ordinal, Constraints, Anzeigename, Textspalten, fields_get, search=-Methoden, Lesezeichen favorite_user_ids)
+|   |-- int_bible_verse_text.py      (int.bible.verse.text: Text je Stelle und Übersetzung)
+|   |-- int_bible_verse_map.py       (int.bible.verse.map: Zählungs-Zuordnung)
+|   |-- int_bible_note.py            (int.bible.note: Notiz je Benutzer)
 |   |-- res_users_settings.py        (geerbtes Modell, eigene Datei, Norm :59-61)
+|-- tools/                           (Eigenbau ohne Datenbank, reines Python, Muster account/tools)
+|   |-- __init__.py
+|   |-- usfx.py                      (USFX XML lesen, erstes Format; Zefania und weitere = weitere Dateien)
+|   |-- reference.py                 (Schreibweise „Joh 3,16“, „Röm 5-8“ lesen und schreiben)
+|   |-- words.py                     (Suche „alle Wörter“: Eingabe zerlegen)
 |-- wizard/
 |   |-- int_bible_translation_import.py
 |   |-- int_bible_translation_import_views.xml
@@ -142,29 +138,26 @@ int_bible/
 |   |-- int_bible_translation_views.xml
 |   |-- int_bible_section_views.xml
 |   |-- int_bible_note_views.xml
-|   |-- res_users_settings_views.xml (Übersetzungswahl, wie int_filemanager/views/res_users_views.xml)
+|   |-- res_users_settings_views.xml (Übersetzungswahl)
 |   |-- int_bible_menus.xml          (Hauptmenüs, optional laut Norm :88-91)
 |-- i18n/
 |   |-- int_bible.pot
 |   |-- de.po
 |-- tests/
 |   |-- __init__.py
-|   |-- test_translation_load.py, test_parser_usfx.py, test_section_reference.py,
-|   |   test_verse_reading.py, test_verse_bookmark.py, test_searchpanel.py, test_note_security.py
+|   |-- test_translation.py, test_section.py, test_verse.py,
+|   |   test_searchpanel.py, test_note_security.py                          (laufen im Odoo)
+|   |-- test_usfx.py, test_reference.py, test_words.py                      (reine Python-Tests ohne Datenbank)
 ```
-Aufteilung nach Themen (belegt als Hausmuster und Core-Muster, Ausmaß geschätzt):
+Aufteilung nach Modellen (Core-Muster, Ausmaß geschätzt; Norm `:57-61`: eine Datei pro Modell, geerbte Modelle in eigener Datei; der Core teilt ein Modell nur bei sehr großen Dateien, z. B. `account_journal.py` 1331 + `account_journal_dashboard.py` 1200 Zeilen):
 | Datei | Eine Verantwortung | Muster | ca. Zeilen |
 |---|---|---|---|
-| `int_bible_translation.py` | Stammdaten der Übersetzung | `product_category.py` (69 Z.) | 80 |
-| `int_bible_translation_load.py` | Verse einer Übersetzung einlesen und melden | `int_filemanager_document_storage.py` (`_inherit` nach Thema) | 150 |
-| `int_bible_parser*.py` | ein Dateiformat lesen, austauschbar | Core: `account_edi_xml_ubl_*.py` je Format ein AbstractModel | je 80 |
-| `int_bible_section.py` | Navigationsbaum und Namen | `hr_department.py` (242 Z., `_parent_store`) | 120 |
-| `int_bible_section_reference.py` | Schreibweise „Joh 3,16“ lesen/schreiben (Parser und Formatierer zusammen mit den Kürzeln der Bücher) | `_inherit` nach Thema | 120 |
-| `int_bible_verse.py` | die Stelle selbst | `slide_slide_partner.py` (55 Z.) | 100 |
-| `int_bible_verse_reading.py` | Textspalten für die Liste, Suche über die Texte | `int_filemanager_document_rendition.py` | 200 |
-| `int_bible_verse_bookmark.py` | Lesezeichen je Benutzer | `project_project.py:83-103` | 60 |
+| `int_bible_translation.py` | Übersetzung: Stammdaten und Verse einlesen mit Bericht | `product_category.py` (69 Z.) | 230 |
+| `tools/usfx.py`, `tools/reference.py`, `tools/words.py` | Eigenbau ohne Datenbank: Datei lesen, Schreibweise lesen/schreiben, Wörter zerlegen | Core `account/tools/structured_reference.py` | je 80 |
+| `int_bible_section.py` | Navigationsbaum, Namen, Stellenschreibweise (dünn um `tools/reference.py`), Kapitelwechsel | `hr_department.py` (242 Z., `_parent_store`) | 220 |
+| `int_bible_verse.py` | die Stelle: Felder, Textspalten, Überschriften, `search=`-Methoden (Zerlegung in `tools/words.py`), Lesezeichen | `slide_slide.py` (1339 Z., viele Themen in einer Datei), `project_project.py:83-103` (Lesezeichen) | 310 |
+| `int_bible_verse_text.py`, `int_bible_verse_map.py` | je ein eigenes Modell | `slide_slide_partner.py` (55 Z.) | je 60 |
 | `int_bible_note.py` | Notiz je Benutzer | `slide_channel_partner.py` (257 Z.) | 100 |
-Keine Datei über ca. 250 Zeilen (Hausmaß: `int_filemanager` bis 1140, Core `slide_slide.py` 1339). Keine Mixins im MVP (nichts wird von mehreren Modellen geteilt, sonst Muster `int_filemanager_linkable.py`). Das Parser-Schnittstellenmodell ist die einzige Abstraktion und hat einen Zweck: weitere Formate (USFX, OSIS) ohne Eingriff in bestehende Dateien.
 Nicht vorhanden im MVP (Norm: nur anlegen, wenn nötig): `controllers/` (keine HTTP-Routen), `static/` (kein JavaScript), `report/`.
 
 | Punkt | Norm (Fundstelle) | Plan | Ergebnis |
@@ -182,7 +175,7 @@ Nicht vorhanden im MVP (Norm: nur anlegen, wenn nötig): `controllers/` (keine H
 | Kontextschlüssel | mit Modulpräfix (`:595-598`) | `int_bible_…` | passt |
 | Transaktion | kein `cr.commit()` (`:642-692`) | Import in einer Transaktion; Cron-Variante nur mit begründetem Commit | passt |
 | Erweiterbar, kleine Methoden | `:600-640` | Wizard parst, Basismodell importiert; `_get_slot_translations`, `_get_references_domain` als Einhängepunkte | passt |
-| Übersetzungen | `self.env._('…')` nur mit festen Texten (`:761-843`); Quelltexte englisch (so macht es `int_liedanzeige`), deutsche Texte in `i18n/de.po` | englische Quelltexte, `de.po` mitliefern (Lücke bei `int_liedanzeige`, `Liedanzeige_Odoo_Pruefung.md:83`) | **ergänzt** |
+| Übersetzungen | `self.env._('…')` nur mit festen Texten (`:761-843`); Quelltexte englisch, deutsche Texte in `i18n/de.po` | englische Quelltexte, `de.po` mitliefern | **ergänzt** |
 | Modultrennung | Kern trennt optionale Funktionen mit anderer Abhängigkeit in eigene Module (z. B. `website_slides_survey`, `hr_holidays_attendance`) | MVP = ein Modul `int_bible`; Querverweise und Lesepläne als **eigene Module** `int_bible_reference`, `int_bible_plan` (hängen von `int_bible`, Lesepläne zusätzlich von `mail`); Entscheidung endgültig erst zu Phase 2 | zu bestätigen, weicht von deiner Linie „ein Modul zusammenhalten“ beim Filemanager ab |
 
 `__manifest__.py`, Reihenfolge `data`: `security/int_bible_groups.xml`, `security/ir.model.access.csv`, `security/int_bible_note_security.xml`, `data/int.bible.section.csv`, `data/ir_filters_data.xml`, dann `views/` (Modellviews, Wizard-Views), zuletzt `views/int_bible_menus.xml` (Menüs verweisen auf die Actions). Demo: `data/int_bible_verse_demo.xml` unter `demo`.
@@ -223,16 +216,8 @@ Nicht vorhanden im MVP (Norm: nur anlegen, wenn nötig): `controllers/` (keine H
 - Messung vor Freigabe: Antwortzeit Searchpanel mit Zählern und Suche bei 31.000 und 155.000 Textzeilen; Importzeit; Listenseite mit 200 Zeilen × 5 Tags.
 - Regression: bestehende Module unverändert.
 
-## Vertrauensgrad
-- **Belegt:** alle Fundstellen oben, Hausmuster, Lizenzaussagen zu Luther 1912 und Elberfelder 1905, Eckdaten und Lizenz von openbible.info.
-- **Getestet:** nichts.
-- **Annahme:** Performance der Zähler und der Textspalte, Importzeit, Zählung der Stellen im Searchpanel, `text-wrap` bei Html (nicht benutzt), Trigram-Verfügbarkeit, Farbe der Auswahl im Panel (≈ `#d6ecfa`, überschlagen), Zeilenzahl der scrollmapper-Querverweistabelle.
-
 ## Phasen
 1. MVP (diese Freigabe): Modelle (Positionsmodell, Zuordnung), Import, Searchpanel-Liste mit paralleler Textspalte, Übersetzungswahl, Lesezeichen, Notizen, Verwaltung.
 2. Querverweise (Parallelstellen) mit Import aus openbible.info und Spalte neben dem Text; eigener Lese-Bildschirm (B) nur bei Bedarf.
 3. Bibellesepläne (Modelle, Plan-Wizard, Kanban und Liste, Erinnerung per Aktivität).
 4. Verbindung zu `int_presenter` (Bibelvers auf den Beamer) als eigener Auftrag.
-
-## Prüfung nach der Umsetzung
-Diff gegen diesen Plan, Fehlerfälle abhaken, gezielte Tests, volle Suite und Hook nur einmal vor dem Commit. Nicht committen, bis der Nutzer es sagt.
