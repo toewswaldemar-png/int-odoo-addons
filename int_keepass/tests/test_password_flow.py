@@ -5,13 +5,15 @@ import shutil
 import tempfile
 from unittest.mock import patch
 
+from pykeepass import PyKeePass
+
 from odoo.exceptions import UserError
 from odoo.tests.common import HttpCase, TransactionCase, tagged
 
 from ..cache import MetadataCache, cache_key
 from ..kdbx import read_kdbx
 from ..models.int_keepass_source import CACHE, PASSWORD_HEADER
-from .test_read_database import PASSWORD, create_database, make_database
+from .test_read_database import PASSWORD, make_database
 
 READ = "odoo.addons.int_keepass.models.int_keepass_source.read_kdbx"
 
@@ -87,8 +89,6 @@ class TestWorkerCache(TransactionCase):
 
     def setUp(self):
         super().setUp()
-        if create_database is None:
-            self.skipTest("pykeepass is not installed")
         folder = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
         self.path = make_database(folder)
@@ -111,8 +111,6 @@ class TestWorkerCache(TransactionCase):
     def test_a_changed_file_is_read_again(self):
         with patch(READ, wraps=read_kdbx) as reader:
             self.assertEqual(self.Entry.search([]).mapped("title"), ["Firewall", "Loose"])
-            from pykeepass import PyKeePass
-
             database = PyKeePass(self.path, password=PASSWORD)
             database.add_entry(database.root_group, "Added", "u", "p")
             database.save()
@@ -166,8 +164,6 @@ class TestPasswordHeader(HttpCase):
 
     def setUp(self):
         super().setUp()
-        if create_database is None:
-            self.skipTest("pykeepass is not installed")
         folder = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
         self.password = "pässwörd-€"  # not Latin-1: the header carries base64 of the UTF-8 bytes

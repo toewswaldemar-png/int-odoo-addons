@@ -4,10 +4,14 @@ import hashlib
 import logging
 import uuid
 
+import requests
+from pykeepass.exceptions import CredentialsError
+
 from odoo import _, api, models
 from odoo.exceptions import UserError
 from odoo.http import request
 
+from .. import vaultwarden
 from ..cache import MetadataCache, account_key, cache_key
 from ..kdbx import read_kdbx
 
@@ -118,20 +122,12 @@ class IntKeepassSource(models.AbstractModel):
     @api.model
     def _read_kdbx(self, password):
         try:
-            from pykeepass.exceptions import CredentialsError
-        except ImportError as error:
-            raise UserError(_("The Python library pykeepass is not installed.")) from error
-        try:
             return read_kdbx(self._path(), password)
         except CredentialsError as error:
             raise UserError(_("The KeePass password is wrong.")) from error
 
     @api.model
     def _read_vaultwarden(self, password):
-        import requests
-
-        from .. import vaultwarden
-
         pin = self._param("vaultwarden_cert_sha256")
         session = vaultwarden.pinned_session(pin) if pin else None
         try:

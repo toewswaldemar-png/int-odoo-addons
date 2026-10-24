@@ -11,7 +11,7 @@
     "author": "Waldemar Toews",
     "license": "LGPL-3",
     "depends": ["base", "web"],
-    "external_dependencies": {"python": ["pykeepass"]},
+    "external_dependencies": {"python": ["pykeepass", "argon2-cffi"]},
     "data": [
         "security/ir.model.access.csv",
         "views/int_keepass_views.xml",

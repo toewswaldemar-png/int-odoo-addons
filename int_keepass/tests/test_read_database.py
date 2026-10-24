@@ -2,15 +2,12 @@ import os
 import shutil
 import tempfile
 
+from pykeepass import create_database
+
 from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase, tagged
 
 from ..models.int_keepass_source import CACHE
-
-try:
-    from pykeepass import create_database
-except ImportError:
-    create_database = None
 
 PASSWORD = "test-only-password"
 
@@ -35,8 +32,6 @@ class TestReadDatabase(TransactionCase):
 
     def setUp(self):
         super().setUp()
-        if create_database is None:
-            self.skipTest("pykeepass is not installed")
         folder = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
         self.path = make_database(folder)

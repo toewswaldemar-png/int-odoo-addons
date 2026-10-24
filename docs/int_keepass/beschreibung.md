@@ -2,7 +2,7 @@
 
 Zeigt die Gruppen und Einträge (Titel, Benutzername, Adresse) einer KeePass-Datei (`.kdbx`) oder eines Vaultwarden-Kontos als gewöhnliche Datensätze in Odoo: Liste, Formular, Gruppenbaum im Suchpanel. Nichts davon liegt in der Datenbank, und Passwörter oder Notizen werden nie gelesen. Nur lesend.
 
-Das Modul hängt nur von `base` und `web` ab (dazu das Python-Paket `pykeepass`), nicht von `int_filemanager`.
+Das Modul hängt nur von `base` und `web` ab (dazu die Python-Pakete `pykeepass` und `argon2-cffi`, beide in `external_dependencies`; Odoo installiert das Modul ohne sie nicht), nicht von `int_filemanager`.
 
 ## Aufbau
 
@@ -32,16 +32,11 @@ KeePass → **Open** (Entsperr-Bildschirm, danach die Liste), **Refresh**, **Loc
 
 ## Einspielen
 
-Das Image braucht `pykeepass` (`Dockerfile`). Ordner `int_keepass` nach `extra-addons` kopieren (ohne `__pycache__`), Modul installieren oder `-u int_keepass`, Odoo neu starten (JS und XML). Nach dem Umbau früherer Fassungen: Der Stand mit der AIDA-Namensliste (Zweig `aida_login`) hat eine eigene Tabelle; ein Update auf diese Fassung löscht sie.
+Das Image braucht `pykeepass` (siehe `Dockerfile`). Ordner `int_keepass` nach `extra-addons` kopieren (ohne `__pycache__`), Modul installieren oder `-u int_keepass`, Odoo neu starten (JS und XML).
 
 ## Prüfen
 
-Skripte in `tools/int_keepass/` (Wegwerf-Umgebung auf dem Testserver, der Live-Betrieb wird nicht berührt):
-- `odoo_vaultwarden_check.sh`: alle Tests gegen einen Wegwerf-Postgres und einen Wegwerf-Vaultwarden mit TLS und Testkonto (Zertifikat festgesetzt).
-- `odoo_real_check.sh [DATEI.kdbx]`: dazu gegen eine echte Datei; das Passwort wird im Terminal getippt und läuft nur über stdin.
-- `read_check.py`, `vaultwarden_check.py`: lesen eine echte Quelle ohne Odoo und drucken nur Zähler und Ordnernamen.
-- `bw_crosscheck.sh`: die offizielle Bitwarden-CLI liest und schreibt gegen denselben Wegwerf-Vaultwarden (belegt, dass der Client mit dem Protokoll übereinstimmt).
-- `header.test.mjs`: die Browser-Hilfe (`node --test`).
+Skripte in `tools/int_keepass/` (Wegwerf-Umgebung auf dem Testserver, der Live-Betrieb wird nicht berührt): Tests gegen einen Wegwerf-Vaultwarden (`odoo_vaultwarden_check.sh`), dazu gegen eine echte Datei (`odoo_real_check.sh`), Lesen einer echten Quelle ohne Odoo (`read_check.py`, `vaultwarden_check.py`), Gegenprobe mit der Bitwarden-CLI (`bw_crosscheck.sh`) und die Browser-Hilfe (`header.test.mjs`, `node --test`).
 
 Der Odoo-Core blockiert Netzwerkzugriffe in Tests mit dem Tag `standard`; der Test gegen einen echten Vaultwarden trägt deshalb `external` und wird mit `--test-tags /int_keepass,external/int_keepass` gewählt.
 

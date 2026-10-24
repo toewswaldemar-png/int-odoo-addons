@@ -14,6 +14,14 @@ import hashlib
 import hmac
 import os
 import uuid
+import warnings
+
+import requests
+from argon2.low_level import Type, hash_secret_raw
+from cryptography.hazmat.primitives import hashes, padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDFExpand
+from requests.adapters import HTTPAdapter
 
 KDF_PBKDF2 = 0
 KDF_ARGON2ID = 1
@@ -48,8 +56,6 @@ def derive_master_key(password, email, kdf, iterations, memory=None, parallelism
     if kdf == KDF_PBKDF2:
         return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, iterations, 32)
     if kdf == KDF_ARGON2ID:
-        from argon2.low_level import Type, hash_secret_raw
-
         return hash_secret_raw(
             password.encode(),
             hashlib.sha256(salt).digest(),
@@ -69,17 +75,11 @@ def master_password_hash(master_key, password):
 
 def stretch_key(master_key):
     """64 bytes: 32 to encrypt, 32 to sign (HKDF-Expand with the labels "enc" and "mac")."""
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.kdf.hkdf import HKDFExpand
-
     return b"".join(HKDFExpand(hashes.SHA256(), 32, info).derive(master_key) for info in (b"enc", b"mac"))
 
 
 def decrypt(enc_string, key):
     """Open an EncString of type 2 (``2.iv|data|mac``): check the MAC first, then AES-256-CBC."""
-    from cryptography.hazmat.primitives import padding
-    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-
     kind, _, rest = enc_string.partition(".")
     if kind != "2":
         raise VaultwardenError(f"unsupported EncString type {kind!r}")
@@ -95,9 +95,6 @@ def decrypt(enc_string, key):
 
 def encrypt(plain, key):
     """The counterpart of :func:`decrypt` (the tests build their account with it)."""
-    from cryptography.hazmat.primitives import padding
-    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-
     iv = os.urandom(16)
     padder = padding.PKCS7(128).padder()
     encryptor = Cipher(algorithms.AES(key[:32]), modes.CBC(iv)).encryptor()
@@ -158,8 +155,6 @@ def read_vaultwarden(base_url, email, password, session=None, timeout=30):
     (the Bitwarden clients nest folders that way). Items in the trash and items of an
     organization are left out.
     """
-    import requests
-
     session = session or requests.Session()
     session.headers.update(CLIENT_HEADERS)
     session.request = _with_timeout(session.request, timeout)
@@ -210,11 +205,6 @@ def pinned_session(fingerprint):
     For a server with a self-signed certificate: the chain and the host name are not checked,
     the fingerprint is. A different certificate (a man in the middle) ends the connection.
     """
-    import warnings
-
-    import requests
-    from requests.adapters import HTTPAdapter
-
     pinned = fingerprint.replace(":", "").strip().lower()
 
     class PinnedAdapter(HTTPAdapter):

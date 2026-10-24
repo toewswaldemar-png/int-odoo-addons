@@ -1,5 +1,7 @@
 """Reads groups and entries from a .kdbx file; no Odoo imports, so it can run on its own."""
 
+from pykeepass import PyKeePass
+
 
 def read_kdbx(path, password=None, keyfile=None):
     """Return the raw content of a KeePass database.
@@ -9,8 +11,6 @@ def read_kdbx(path, password=None, keyfile=None):
     containing group or ``None`` at the top. Passwords and notes are never read.
     The recycle bin is left out.
     """
-    from pykeepass import PyKeePass
-
     database = PyKeePass(path, password=password, keyfile=keyfile)
     recycle_bin = database.recyclebin_group
     recycle_uuid = recycle_bin.uuid if recycle_bin else None
