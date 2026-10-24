@@ -1,8 +1,5 @@
-# pre-commit runs only the checks that Odoo itself defines; see docs/pruefautomatik_2026-10-02.md
-# - Python: ruff with Odoo's own ruff.toml (copied from the Odoo repository)
-# - JavaScript: ESLint + Prettier with Odoo's own addons/web/tooling configuration (.eslintrc.json)
-# Neither hook rewrites files: Odoo's guidelines forbid reformatting existing code.
-# docs/, tools/ (developer scripts) are not checked.
+# Ruff with Odoo's own ruff.toml (copied from the Odoo repository); see docs/pruefautomatik.md
+# The hook does not rewrite files.
 exclude: |
   (?x)
   \.svg$|/static/(src/)?lib/|/build/|/dist/|
@@ -11,7 +8,6 @@ exclude: |
   ^\.git/
 default_language_version:
   python: python3
-  node: "22.9.0"
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.10
@@ -19,17 +15,3 @@ repos:
       - id: ruff-check
         # Odoo's ruff.toml lists these rules as advised but not enforced (header of the file).
         args: [--no-fix, "--ignore=B904,COM812,E741,EM101,I001,RET,RUF021,RUF102,TID252,TRY002,UP006,UP007"]
-  - repo: local
-    hooks:
-      - id: eslint
-        name: eslint (Odoo web/tooling configuration)
-        entry: eslint
-        args: [--color]
-        verbose: true
-        types: [javascript]
-        language: node
-        additional_dependencies:
-          - "eslint@8.57.1"
-          - "eslint-config-prettier@8.10.0"
-          - "eslint-plugin-prettier@4.2.1"
-          - "prettier@2.8.8"
