@@ -1,8 +1,8 @@
 # Index – Odoo 19.0 Developer Reference (lokale Kopie)
 
-Stand: 2026-10-02 · 69 Dateien · 33994 Zeilen. Pro Zeile: Datei · Zeilenzahl · Titel · Abschnitte (H2). Zuerst hier die passende Datei suchen, dann nur diese Datei lesen.
+Abgerufen 2026-10-02. Pro Zeile: Datei · Zeilenzahl · Titel · Abschnitte (H2). Zuerst hier die passende Datei suchen, dann nur diese Datei lesen.
 
-**Hinweis:** Das ist der Volltext zum Nachschlagen. Verbindliche Regeln (Kurzfassung + Hausregeln) stehen in `docs/odoo_regeln/` (Einstieg: `odoo_regeln_index_2026-10-02.md`).
+**Hinweis:** Das ist der Volltext zum Nachschlagen. Maßgeblich ist die offizielle Dokumentation; Hinweise zur Prüfung stehen in `CLAUDE.md`.
 
 
 ## backend
@@ -94,4 +94,4 @@ Stand: 2026-10-02 · 69 Dateien · 33994 Zeilen. Pro Zeile: Datei · Zeilenzahl 
 
 ## contributing
 
-- `contributing/coding_guidelines.md` (1338) – **Coding guidelines** – Module structure; XML files; Python; Javascript; CSS and SCSS (Quelle: Contributing → Development, nicht Reference; Destillat: `docs/odoo_regeln/odoo_regeln_coding_guidelines_2026-10-02.md`)
+- `contributing/coding_guidelines.md` (1338) – **Coding guidelines** – Module structure; XML files; Python; Javascript; CSS and SCSS (Quelle: Contributing → Development, nicht Reference)

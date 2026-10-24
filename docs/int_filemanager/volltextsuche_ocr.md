@@ -1,6 +1,6 @@
 # int_filemanager: Volltextsuche und Texterkennung (OCR)
 
-Kurzfassung dessen, was gebaut ist und warum. Maßgeblich bleibt der Code; Belege zum Odoo-Kern stehen unten. Das Modul läuft auf jedem
+Kurzfassung dessen, was gebaut ist und warum. Maßgeblich bleibt der Code. Das Modul läuft auf jedem
 Odoo-19-Betrieb (Threaded oder Prefork, mit oder ohne Docker); Werte der Odoo-Konfiguration werden zur Laufzeit gelesen.
 
 ## 1. Ziel
@@ -20,13 +20,8 @@ keinen Dienst. Alles geschieht in Schritten, die einzeln committet werden, und i
 
 ## 3. Daten
 
-- **`int.filemanager.text`:** eine Zeile je Prüfsumme des Blobs (doppelte Dateien teilen sich eine Zeile). Lese-Zustand `state`: `pending`, `running`, `done`,
-  `empty`, `skipped`, `failed`; dazu Seitenzahl, `next_page` (Wiederaufnahme), Versuche, `engine_version` (wer das Lesen ändert, erhöht sie: dann wird neu
-  gelesen), `memory_limit_mib`. Erkennung getrennt davon: `ocr_state` (`wait`, `running`, `done`, `skipped`, `failed`), `ocr_next_page`, `ocr_file` und
-  `ocr_file_size` (letzte ganze Zwischendatei), Versuche, Sekunden je Seite, `ocr_found_pages`, `ocr_checksum`/`ocr_size` des erkannten PDFs,
-  `scan_pages` (Scanseiten, -1 = noch nicht gezählt).
-- **`int.filemanager.text.page`:** `text_id`, `page`, `content`, `scan` (Bild auf der Seite und kaum Text; Teilindex nur über diese Zeilen). PDFs: eine Zeile je Seite. Office- und Textdateien: Blöcke von höchstens 64 KB als
-  Pseudo-Seiten. Obergrenze je Zeile in Bytes (650.000), darüber wird gekürzt und vermerkt (`tsvector` bricht bei 1 MB, schon beim `INSERT`).
+- **`int.filemanager.text`:** eine Zeile je Prüfsumme des Blobs (doppelte Dateien teilen sich eine Zeile). Der Lese-Zustand `state` (`pending`, `running`, `done`, `empty`, `skipped`, `failed`) und der Erkennungs-Zustand `ocr_state` (`wait`, `running`, `done`, `skipped`, `failed`) sind getrennt; `engine_version` erzwingt neues Lesen, wenn das Lesen sich ändert. Die Felder im Einzelnen: Code.
+- **`int.filemanager.text.page`:** eine Zeile je Seite (PDF) oder je Block von höchstens 64 KB als Pseudo-Seite (Office, Text); `scan` markiert Seiten mit Bild und kaum Text (Teilindex nur darüber). Obergrenze je Zeile 650.000 Byte, darüber wird gekürzt (`tsvector` bricht bei 1 MB, schon beim `INSERT`).
 - **Rechte:** keine ACL für Nutzer auf den Textmodellen, Lesen nur für Filemanager-Administratoren. Gesucht wird über die Dokumente, deshalb gelten die
   Ordnerregeln; eine gleiche Prüfsumme in einem unsichtbaren Ordner verrät nichts, weil der Inhalt byte-gleich ist. Das Ordnerfeld
   „Texterkennung für Bilder“ (Erben/An/Aus, oberster Ordner ohne Wahl = aus) ist nur für Administratoren les- und schreibbar (`groups` am Feld).
@@ -78,10 +73,7 @@ wieder auf.
 **Wann:** „OCR aktiv“ an, Zeile gelesen und `scan_pages > 0`. Eine Seite zählt als Scan, wenn sie ein Bild oder eine Form in ihren Ressourcen hat
 (`XObject`, vom Reader gemeldet) und weniger als 20 Zeichen ohne Leerraum Text; das Ergebnis steht beim Lesen als `scan` in der Seitenzeile. Leere
 Trennblätter ohne Bild zählen nicht. Grenze: ein Bild, das als Inline-Bild im Inhaltsstrom steht (kein `XObject`), wird nicht erkannt. Gemischte Seiten
-(digitaler Text plus eingescanntes Bild) bleiben unberührt (`--skip-text`). Messung (14.10., 500 zufällige PDFs = 480 Zeilen, 4 Kerne, `-j2`, alter und neuer
-Code nacheinander): Warteschlange 75 Dateien mit 9.007 Seiten, jetzt 52 Dateien mit 1.583 Seiten; Erkennungszeit 3.767 s, jetzt 3.164 s (−16 %). Die
-Zeit an Dateien, die nichts fanden, sank von 587 s auf 95 s; der Rest ist echte Erkennung (rund 1.450 Seiten mit neuem Text, 2,1 s je Seite) und bleibt.
-Text danach gleich bis auf eine Seite (1.452 gegen 1.451 Seiten mit neuem Text): sie hatte kein `XObject`, die Erkennung fand dort Text.
+(digitaler Text plus eingescanntes Bild) bleiben unberührt (`--skip-text`).
 
 **Ablauf je Schritt (ein Abschnitt):**
 1. Zeile auf `running`, Commit (ein Absturz wird beim nächsten Lauf als Versuch gezählt).
@@ -99,27 +91,13 @@ Text danach gleich bis auf eine Seite (1.452 gegen 1.451 Seiten mit neuem Text):
    einer Seite Text gab (sonst wäre es eine zweite Kopie für nichts). Der Jobordner wird gelöscht, `state` neu bestimmt (`empty` → `done`).
    Dateisystemfehler im Schritt laufen in einem Savepoint und werden der Zeile zugeordnet (Platte voll → Pause, sonst ein Versuch).
 
-**Größe des Abschnitts (Seitenzahl):** `(Restzeit − 6 s) × 0,7 / Sekunden je Seite`, mindestens 1, höchstens 100, ohne Messung höchstens 10 Seiten bei angenommenen 5 s je
-Seite; die Zeit je Seite wird nach jedem Abschnitt geglättet (Hälfte alt, Hälfte neu, ohne den festen Aufwand von 6 s).
+**Größe des Abschnitts:** aus der Restzeit und der geglätteten Zeit je Seite (mindestens 1, höchstens 100 Seiten; ohne Messung höchstens 10).
 
 **Wiederaufnahme nach Absturz:** Zeile zeigt immer auf die letzte ganze Zwischendatei. Fehlt sie oder hat sie eine andere Größe, beginnt die Erkennung bei
 Seite 1 mit dem Original und verbraucht keinen Versuch (die Scanseiten werden aus den Seitenzeilen neu bestimmt). Ein Abschnitt zweimal mit `--skip-text` ändert das Ergebnis nicht. Zeilen, die beim Start eines Laufs
 noch `running` sind, gehen auf `wait` zurück (+1 Versuch).
 
-**Fehlerzuordnung** (`tools/ocr_plan.py`, `classify`, reine Funktion; Exit-Codes von `ocrmypdf`):
-
-| Ergebnis | Reaktion |
-|---|---|
-| 0 | fertig; 0 ohne Ausgabedatei: einmal mit `--force-ocr` |
-| 2, Text „resolution (DPI)“ | Bild: einmal mit geschätzter DPI (Breite / A4-Breite), unter 70 dpi mit Warnung |
-| 2, Usage-Text von `ocrmypdf` | falsche Einstellung/Option: OCR hält an (nicht die Schuld der Datei) |
-| 2 sonst | Datei kaputt/falsch: `failed` |
-| 6 | Seite hat Text: einmal `--force-ocr`, dann `failed` |
-| 8 | Passwort zum Öffnen: `failed` |
-| 3, 127 (Programm fehlt), 1, 9 | OCR hält an, Meldung in den Einstellungen |
-| 7 „Image too large“ | einmal mit `--tesseract-downsample-large-images`, dann `failed` |
-| 7, 4, 5, 10, 15, Signal | erneut bis `max_attempts`, dann `failed` |
-| „No space left“ | Pause; die Datei wartet unverändert |
+**Fehlerzuordnung:** `tools/ocr_plan.py`, `classify` (reine Funktion über die Exit-Codes von `ocrmypdf`). Grundsatz: Liegt der Fehler an der Datei (kaputt, Passwort), wird sie `failed`; liegt er an der Einstellung oder am Programm (falsche Option, Programm fehlt), hält die Erkennung an und meldet es in den Einstellungen; bei Zeit, Speicher oder Abstürzen gibt es Wiederholungen bis `max_attempts`; bei vollem Datenträger pausiert sie. Einzelne Fälle (fehlende DPI, Seite mit Text, zu großes Bild) werden einmal mit angepasster Option wiederholt.
 
 „Hält an“ und „Pause“ sperren das Starten für eine Stunde (Systemparameter `int_filemanager.ocr_blocked`); die Datei bleibt `wait`. Beim Aufgeben bleibt
 der bis dahin erkannte Text stehen, das Original wird nie angefasst.
@@ -138,40 +116,14 @@ veröffentlichtes PDF bis zum Commit „unbenutzt“); die Zeile markiert ihr PD
 
 Systemparameter `int_filemanager.*`, auf der Einstellungsseite (Block „Text in scans“) nur für Systemadministratoren:
 
-| Parameter | Standard |
-|---|---|
-| `time_reserve` (s unter dem Odoo-Limit) | 15 |
-| `memory_mib` (Lesen einer Datei) | 1024 |
-| `text_block_kib`, `text_cut_bytes` | 64, 650000 |
-| `work_mem_mib` (nur Suche) | 128 |
-| `max_attempts` | 3 |
-| `ocr_enabled` | aus |
-| `ocr_languages` | `deu+eng` |
-| `ocr_jobs` (Kerne je Erkennung) | 1 |
-| `ocr_nice` (19 niedrigste, 0 normal; als Auswahl) | 19 |
-| `ocr_deskew` (Ausrichten und Drehen; als Auswahl „1“/„0“) | 1 |
-| `ocr_output_type` (`pdf`, `pdfa`) | `pdf` |
+Namen und Standardwerte stehen in `models/res_config_settings.py` (Zeitreserve, Speicher je Datei, Blockgröße, Versuche, `ocr_enabled` standardmäßig aus, Sprachen `deu+eng`, Kerne, `nice`, Ausrichten, Ausgabeformat).
 
 Zahlenfelder speichern in den Odoo-Einstellungen keine 0, Häkchen kein „aus“ bei Standard „an“: deshalb Auswahlfelder. Die Programme (`ocrmypdf`, `tesseract`,
 Sprachen) werden zur Laufzeit gesucht und fünf Minuten gemerkt; `external_dependencies` im Manifest bleibt leer. Der Status zeigt Zustand mit Grund,
 Programme mit Version und Sprachen, Zahlen je Zustand, offene Seiten mit grober Restdauer, Gesamtgröße der erkannten PDFs und Hinweise (Zeichensatz `C`
 der Datenbank, `limit_time_real_cron`). Die Liste „Texte der Dateien“ (Administratoren) hat Spalten, Filter und Knöpfe „Erneut lesen“ und „Erneut erkennen“.
 
-## 9. Messwerte (zur Einordnung, hängen von Hardware und Bestand ab)
-
-- **Lesen:** normal 0,03 bis 0,11 s je Seite; Ausreißer einzelne Seiten bis 91 s. 250-MB-PDF mit 60 Seiten 6 s.
-- **Erkennung:** Scans etwa 7,5 CPU-s je Seite, mit vier Kernen rund 17 Seiten/min. Abschnitte kosten: 5 Seiten +139 %, 25 Seiten +21 %, 100 Seiten +3 bis
-  +19 %; fester Aufwand je Aufruf etwa 5,5 s. Eine 54-MB-Datei am Stück braucht 945 MB RAM, in Abschnitten zu 100 Seiten 392 MB.
-- **Qualität:** gegen die Textebene als Bild gerenderter Seiten 99 % der Wörter bei 300 dpi (97 % bei 150 dpi); echte Buchscans 98 bis 100 %, Handyscans von
-  Formularen 77 bis 91 %.
-- **Platz:** Text 1,9 bis 2,2 KB je Seite, GIN etwa 450 Byte; das erkannte PDF eines Scans ist eine volle zweite Kopie (etwa 0,84-fach).
-- **Index und Suche (3 Mio. Seiten):** Aufbau 13 bis 28 min, Einfügen mit Index etwa 180 Seiten/s; seltenes Wort 0,2 s, häufiges Wort (616.000 Seiten) 5 s mit
-  `work_mem` ab 32 MB und ohne parallele Arbeiter ab 1 s, mit 4 MB über 280 s. Die Rechteprüfung kostet nichts Messbares.
-- **Bestand (Stichprobe):** reine Scans 3 % der Seiten, gemischte Seiten 0,3 % (meist Titelseiten), keine signierten PDFs, verschlüsselte nur mit
-  Besitzerpasswort.
-- **Webzugriff:** CPU-Last im Odoo-Prozess verlangsamt im Threaded-Betrieb die Seiten (10 → 45 ms), ein Kindprozess nicht.
-
-## 10. Stolpersteine
+## 9. Stolpersteine
 
 - Der Core hält Prefork-Worker per Watchdog an (`SIGKILL`) und lädt im Threaded-Betrieb den Server neu, wenn ein Lauf das Limit reißt; nach drei Läufen ohne
   Fortschritt führt er den Cron nicht mehr aus. Darum eigene Frist und Abschnitte.
@@ -186,27 +138,7 @@ der Datenbank, `limit_time_real_cron`). Die Liste „Texte der Dateien“ (Admin
 - Dateinamen und Aufruf von `ocrmypdf`: nur Listenargumente, keine Shell; die Sprachen werden gegen ein festes Muster geprüft.
 - Der Exit-Code 2 von `ocrmypdf` heißt auch „falsche Option“, und dessen Hilfetext nennt `--image-dpi`: die Zuordnung darf nicht am Wort allein hängen.
 
-## 11. Belege im Odoo-Kern (Datei, Funktion)
-
-| Aussage | Fundstelle |
-|---|---|
-| Cron ruft die Methode mindestens zehnmal und zehn Sekunden lang; Teilfortschritt plant sofort neu; `remaining=0` heißt fertig | `ir_cron.py`: `_run_job`, `_reschedule_asap` |
-| `_commit_progress` liefert die Sekunden bis Jobstart + `MIN_TIME_PER_JOB` | `ir_cron.py`: `_commit_progress` |
-| Drei Zeitüberschreitungen ohne Fortschritt: Lauf entfällt | `ir_cron.py`: `CONSECUTIVE_TIMEOUT_FOR_FAILURE` |
-| Prefork-Watchdog, Schlaf `SLEEP_INTERVAL + PID % 10`, `RLIMIT_AS`/`RLIMIT_CPU` | `service/server.py`: `PreforkServer`, `Worker`, `WorkerCron` |
-| `0` heißt „kein Limit“ nur im Prefork | `service/server.py`, `tools/config.py` |
-| Pillow lädt nur Basisformate | `tools/image.py`: `Image.preinit()`, `Image._initialized = 2` |
-| Binäres Feld ausliefern über `ir.binary._record_to_stream` (Haken), Zugriffsprüfung über das Dokument | `ir_binary.py` |
-| Suchmethode mit `Domain.custom(to_sql=…)`, `NotImplemented` für unbekannte Operatoren | `orm/domains.py`, `orm/fields.py` |
-| Einstellungen: Zahl 0 und `False` werden nicht gespeichert | `res_config.py`: `set_values` |
-| `models.Index`/`Constraint` als Attribute | `orm/table_objects.py` |
-| Dateisystem-Aufräumen mit Checkliste und Tabellensperre | `ir_attachment.py`: `_gc_file_store_unsafe` |
-
-## 12. Abgrenzung und Offenes
+## 10. Abgrenzung und Offenes
 
 - **Nicht gemacht:** `attachment_indexation` als Abhängigkeit (synchron, ohne Grenze); Wortpositionen in der Datenbank (stehen in der Textebene des
   erkannten PDFs); OCR für gemischte Seiten (`--redo-ocr` ist mit Ausrichten nicht kombinierbar, im Bestand sehr selten); ein eigener Dienst oder Container.
-- **Paperless-ngx als Vergleich:** gleich sind Original unverändert plus Archiv-PDF nur für Scans, ein Prozess je Dokument, `skip_text`, Sidecar nicht
-  indexieren. Anders: Cron statt Celery/Redis, Rechte zur Abfragezeit über Odoo-Regeln, Postgres-Volltext statt Tantivy, Abschnitts-OCR mit eigener Frist.
-- **Ungemessen:** Gesamtlauf am ganzen Bestand (4.967 PDFs; die Stichprobe mal etwa 10 gerechnet: rund 2,4 h Lesen und 8,8 h Erkennen), Anteil der Trennblätter, Windows im Betrieb, Postgres 17, eine echte gemischte Seite für
-  `--redo-ocr`, die gespeicherte `tsvector`-Spalte in voller Größe.

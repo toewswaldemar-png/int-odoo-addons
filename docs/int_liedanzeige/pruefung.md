@@ -8,25 +8,9 @@ Das vorhandene Modul `int_liedanzeige` ist eine tragfähige Grundlage und bereit
 
 Eine einfache Einbettung der bestehenden React-Seiten würde dagegen weiterhin deren Go-Protokoll und einen zweiten Zustandsserver benötigen. Deshalb empfehle ich die vorhandene Owl-Umsetzung weiterzuführen. Diese Empfehlung bezieht sich auf den Funktionsumfang, nicht auf eine bereits nachgewiesene Produktionsreife.
 
-## Was konkret vorhanden ist
+## Zustand des Moduls
 
-| Funktion | Bestehende Go/React-Anwendung | Odoo-Modul |
-|---|---|---|
-| Lied- und Choranzeige | `/lied`, `/chor` | Gleiche Pfade, öffentliche Owl-Seiten |
-| Uhr, Datum, Nummer, kleine Uhr | React und CSS | Owl, SCSS, dynamische Textskalierung |
-| Zwei Steuerseiten | `/steuerung/lied`, `/steuerung/chor` | Vorhanden, Anmeldung und Bedienergruppe |
-| Gemeinsame Bediennummer | `steuerungState` | `control_state` im Zustandsmodell |
-| Lied wirkt auf beide Anzeigen | Go-Hub | Python-Aktionshandler |
-| Chor separat | Go-Hub | Separater Zielparameter |
-| Vier Stellen, Löschen, Rücktaste | Vorhanden | Vorhanden, inklusive Hilfstests |
-| Einstellungen | JSON-Datei und WebSocket | Modellfelder, Wertebereiche und ORM |
-| Echtzeit | Eigenes WebSocket-Protokoll | `bus.bus` und `bus_service` |
-| Wiederverbindung | Go-WebSocket und Synchronisation | Zustandsabfrage über RPC angelegt |
-| Liedverzeichnis | Im untersuchten Original kein entsprechendes Modell | Nummer, Titel, Text, Listen-/Formularansicht |
-| Dirigent | Im untersuchten Original keine entsprechende Seite | `/dirigent`, eigene Gruppe, Liedtext |
-| Kiosk-Fensterbefehle | Native Ausführung über Go | Befehle werden auf Bus-Kanal publiziert |
-| Globale Numpad-Eingabe | Native Windows-Hooks | Noch keine Verbindung vom Original-Kiosk zum Odoo-Modul |
-| Ereignisprotokoll | Go-Logkanal mit Historie | Keine entsprechende Moduloberfläche gefunden |
+Nicht im Modul vorhanden: eine Verbindung vom Original-Kiosk (Go) zum Modul für die globale Numpad-Eingabe und das Ereignisprotokoll des Originals; der Rest der Funktionen des Originals ist in Owl umgesetzt.
 
 Das Modul hängt nur von `base`, `bus`, `web` ab. Ein eigenes Website-Modul ist für diese Seiten nicht erforderlich. Es verwendet einen gemeinsamen Zustandsdatensatz `state_main`; mehrere unabhängige Säle sind damit noch kein vorhandenes Produktmerkmal.
 
@@ -108,9 +92,7 @@ Bei einem einzigen Raum den Singleton zunächst behalten. Mehrere unabhängige R
 
 ## Prüfnachweis und Abnahme
 
-**Ausgeführt:** Die zwei vorhandenen JavaScript-Testsuiten liefen mit Node: 19 Tests bestanden, 0 fehlgeschlagen. Geprüft werden Numpad-/Timer-/Layout-Hilfen und Einstellungswarteschlange. Node meldet lediglich die automatische Erkennung von ES-Modulen ohne package-Typangabe.
-
-**Im Repository vorhanden:** 59 Python-Testmethoden für Zustand, Bus, HTTP, Lieder und Kioskbenutzer. Diese wurden in dieser Prüfung nicht ausgeführt. Die HTTP-Tests prüfen unter anderem Antwortstatus und Assetabruf; sie sind kein Beleg, dass Owl in einem echten Browser fehlerfrei startet. Keine Browser-Tours oder `browser_js`-Tests im Modul gefunden.
+Die vorhandenen Tests (JavaScript-Hilfen und Python-Tests für Zustand, Bus, HTTP, Lieder und Kioskbenutzer) belegen nicht, dass Owl in einem echten Browser fehlerfrei startet; Browser-Tours gibt es im Modul nicht.
 
 Für die Betriebsfreigabe müssen mindestens diese Situationen bestehen:
 
@@ -128,9 +110,8 @@ Die lokale Core-Kopie wurde gegen ihre tatsächlichen APIs gelesen. Ihre Gleichh
 ## Quellen und zentrale Dateien
 
 - Offizielle Odoo-19-Anleitung: https://www.odoo.com/documentation/19.0/developer/howtos/standalone_owl_application.html
-- Odoo-Core lokal: `C:/Users/waldemar.toews/Documents/GitHub/odoo`, Branch 19.0, Commit 8d05257d. Besonders `addons/bus/models/ir_websocket.py`, `addons/bus/static/src/services/bus_service.js`, `addons/web/models/ir_http.py` und `odoo/orm/fields_textual.py`.
-- Modul: `C:/Users/waldemar.toews/Documents/GitHub/int-odoo-addons/int_liedanzeige`.
-- Original: `C:/Users/waldemar.toews/Documents/GitHub/Liedanzeige/Development`.
+- Odoo-Core: Branch 19.0, Commit `8d05257d`. Besonders `addons/bus/models/ir_websocket.py`, `addons/bus/static/src/services/bus_service.js`, `addons/web/models/ir_http.py` und `odoo/orm/fields_textual.py`.
+- Modul: `int_liedanzeige/`; Original: das Repository `Liedanzeige` (`Development/`).
 
 Konkrete Einstiegspunkte im Modul: `models/int_liedanzeige_state.py:71`, `static/src/display/display.js:122`, `static/src/control/control.js:198`, `static/src/common/boot.js`, `controllers/int_liedanzeige.py`, `security/ir.model.access.csv`.
 Im Original: `Development/kiosk/numpad.go:160` und `Development/kiosk/screen.go:272` für das inkompatible Go-Protokoll.

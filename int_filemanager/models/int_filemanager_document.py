@@ -14,7 +14,7 @@ from .int_filemanager_text_page import folded
 
 BLOB_FOLDER = "int_filemanager"
 # The most bytes of the files in one ZIP. The server stops a request after 30 minutes in our setup
-# (limit_time_real), and a slow line keeps it that long: see docs/int_filemanager_erkenntnisse.md.
+# (limit_time_real), and a slow line keeps it that long: see docs/int_filemanager/erkenntnisse.md.
 ZIP_MAX_SIZE_PARAMETER = "int_filemanager.zip_max_size"
 DEFAULT_ZIP_MAX_SIZE = 10 * 1024**3
 # The ids of a ZIP go into the address, and the proxy takes 8 KB of the request line.

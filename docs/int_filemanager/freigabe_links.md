@@ -26,10 +26,9 @@ Die Freigabe-Links sind umgesetzt. **Der Code ist maßgeblich** (`models/int_fil
 
 ## 2. Aufbau in Kürze
 
-- **Modell:** `int.filemanager.share` mit genau einem Ziel (`folder_id` oder `document_id`), Token (uuid4), Rechten, Passwort-Hash (`groups="base.group_system"`), Ablauf, Download-Limit (nur Dateien), gespeicherten Zählern und Upload-Grenzen (nur Ordner). Das Mixin `int.filemanager.shareable` liefert „Share“ und den Zähler an Ordner und Dokument.
+Modell, Routen und Gast-Oberfläche: Code (`models/int_filemanager_share.py`, `controllers/int_filemanager_share.py`, `tools/share_gateway.py`).
+
 - **Rechte:** Nutzer sehen nur die eigenen Freigaben (Regel `create_uid`), Administratoren alle. Anlegen darf man nur, was die **Ordner** dem Nutzer zeigen; eine Datei, die er nur über einen verknüpften Datensatz sieht, darf er nicht weitergeben. Die Einstellung `share_creators` kann das auf Administratoren beschränken.
-- **Routen** unter `/int_filemanager/share/<token>`: Seite, `unlock`, `page`, `rpc` (Lese-Gateway), `content`, `download` (POST), `thumbnail`, `image`, `upload`, `uploads`, `uploads/delete`.
-- **Gast-Oberfläche:** Dateiseite als QWeb, Ordnerseite als Owl-App im eigenen Bundle `int_filemanager.assets_guest` (Liste und Kanban des Core über ein Gateway statt `call_kw`), Passwortseite als Hülle.
 - **Prüfwerkzeuge:** Tests `test_share_*.py`, dazu `tools/check/share_live.sh`, `share_attacks.py`, `share_parallel.py` (Angriffsfälle und parallele Verbindungen auf einer Wegwerf-Instanz).
 
 ## 3. Sicherheitsgründe, die der Code allein nicht zeigt
@@ -83,7 +82,6 @@ Die Freigabe-Links sind umgesetzt. **Der Code ist maßgeblich** (`models/int_fil
 - Die Liste „Meine Uploads“ lebt im `localStorage` des Browsers. In einem anderen Browser hilft nur der Ersteller.
 - Der Upload-Ordner blockiert das Löschen des freigegebenen Ordners, solange er oder Dateien darin existieren (gewollt). Schaltet man „Hochladen“ am Link später aus, bleibt der Ordner mit den Dateien bestehen.
 - Gast-Uploads laufen durch Parser (Vorschau, OCR) im bestehenden Cron mit dessen Zeitgrenzen.
-- **Betrieb:** Die Gast-Links brauchen, dass Odoo die Datenbank aus der Anfrage bestimmt (eine Datenbank oder `dbfilter`). Eine gelesene Konfiguration hatte `proxy_mode = True`, `list_db = False`, keine Worker (Thread-Betrieb), kein `dbfilter`, eine Datenbank und kein `x_sendfile`. Andere Instanzen können abweichen und sind vor dem Einsatz zu prüfen.
 
 ## 5. Noch offen (nur durch Ausprobieren zu klären)
 

@@ -32,23 +32,11 @@ Dokumente des Filemanagers und Datensätze anderer Modelle kennen einander: am D
 - Die Datenbank kann über (`res_model`, `res_id`) nicht kaskadieren: der Mixin entfernt beim `unlink()` des Zielmodells die Verweise (wie `mail.thread.unlink` Nachrichten und Follower), dazu ein `@api.autovacuum` für Verweise auf nicht mehr vorhandene Datensätze (Zielmodell ohne `mail.thread`, direkte SQL-Löschungen).
 - Verweis löschen lässt die Datei bestehen; Dokument löschen entfernt seine Verweise; Archivieren blendet es am Datensatz aus; Verschieben in einen anderen Ordner ändert nichts an Verweisen und Sichtbarkeit über den Datensatz.
 
-## 4. Gemessen (400.000 Dokumente, 300 Ordner, 20.000 Verweise auf 5.000 Datensätze, synthetisch, gleichmäßig verteilt)
-| Abfrage | nur Ordnerregel | mit Datensatzweg |
-|---|---|---|
-| Anzahl, Nutzer mit Ordnerzugriff auf ein Drittel der Ordner | 0,08 s | 0,29 s |
-| Liste (80, absteigend) | 0,003 s | 0,014 s |
-| Namenssuche | 0,12 s | 0,12 s |
-| Anzahl, Nutzer nur über Datensatz | – | 0,02 s |
-| Zähler „Dokumente“ für 80 Datensätze | < 0,01 s | 0,006 s |
+## 4. Gemessen
 
-Ungünstigster Fall (alle 400.000 Dokumente verknüpft, 20.000 Datensätze): Anzahl 1,3 s, Liste (80) 0,19 s, Namenssuche 0,30 s. Die Anzahl am Listenende ist der teuerste Posten, die Liste selbst bleibt schnell. Nicht gemessen: echte 29.000 Ordner mit echten Namen.
+Bei 400.000 Dokumenten, 300 Ordnern und 20.000 Verweisen auf 5.000 Datensätze (synthetisch) kostet der Datensatzweg bei der Anzahl 0,29 s statt 0,08 s, die Liste (80) 0,014 s statt 0,003 s; im ungünstigsten Fall (alle Dokumente verknüpft) 1,3 s für die Anzahl, 0,19 s für die Liste. Die Anzahl am Listenende ist der teuerste Posten.
 
-## 5. Abgrenzung
-- Kein Ersatz für Chatter-Anhänge, kein Umzug alter Anhänge; `product.document` bleibt für Produktdatenblätter.
-- Keine Enterprise-Funktionen (Documents-App) und keine harte Abhängigkeit des Kerns von einer Business-App.
-- Versionen, Portal und Office im Browser sind nicht Teil des Moduls.
-
-## 6. Core-Fundstellen (Branch 19.0)
+## 5. Core-Fundstellen (Branch 19.0)
 | Aussage | Fundstelle |
 |---|---|
 | Verweis als `res_model` + `res_id` (`Many2oneReference`), Index auf beide | `odoo/addons/base/models/ir_attachment.py`: `_res_idx` |
@@ -59,6 +47,7 @@ Ungünstigster Fall (alle 400.000 Dokumente verknüpft, 20.000 Datensätze): Anz
 | `any` wendet die Regeln des Comodells an, `any!` umgeht sie | `fields_relational.py`: `bypass_search_access` |
 | Verbindungsmodule mit `auto_install` | `addons/account_fleet`, `hr_fleet`, `sale_project`: `__manifest__.py` |
 
-## 7. Nicht gebaut
-- Dialog zum Verknüpfen vom Datensatz aus mit Hinweis bei einem Dokument im eingeschränkten Ordner; Verbindungsmodule für weitere Apps (Reparatur, Verkauf, Einkauf, Buchhaltung, Fahrzeug).
-- Ideen, je mit eigenem Entwurf vor dem Bau: Scan-Eingang über einen Ordner und das vorhandene Einlesen; E-Mail an einen Ordner (`mail.alias.mixin.optional`, eigene `message_new`, die aus jedem Anhang ein Dokument macht, denn die Standardfassung speichert keine Anhänge; braucht Alias-Domain und Postfach); Dokument → Eingangsrechnung (`account.journal._create_document_from_attachment`, einmalige `ir.attachment`-Kopie mit Größengrenze); Zuordnungsvorschlag aus Dateiname und OCR-Text; erzeugte Belege automatisch ablegen; Dokument per Mail senden (temporäre `ir.attachment`-Kopie, Mailgrenze `base.default_max_email_size`); Teilen mit Kunden über Portal (`portal.mixin`-Token).
+## 6. Nicht gebaut
+
+- Dialog zum Verknüpfen vom Datensatz aus mit Hinweis bei einem Dokument im eingeschränkten Ordner; Verbindungsmodule (`int_filemanager_<app>`) für weitere Apps.
+- Kein Ersatz für Chatter-Anhänge, kein Umzug alter Anhänge; keine Enterprise-Funktionen (Documents-App); Versionen, Portal und Office im Browser sind nicht Teil des Moduls.

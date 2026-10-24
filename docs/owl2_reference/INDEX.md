@@ -1,6 +1,6 @@
 # Index – Owl 2.8.4 Dokumentation (lokale Kopie)
 
-Stand: 2026-10-02 · 27 Dateien · 5964 Zeilen. Pro Zeile: Datei · Zeilenzahl · Titel · Abschnitte (H2). Zuerst hier die passende Datei suchen, dann nur diese lesen.
+Abgerufen 2026-10-02. Pro Zeile: Datei · Zeilenzahl · Titel · Abschnitte (H2). Zuerst hier die passende Datei suchen, dann nur diese lesen.
 
 **Version:** Odoo 19.0 liefert Owl 2.8.4 mit (`addons/web/static/lib/owl/owl.js`). Die aktuelle Online-Doku (odoo.github.io/owl/documentation/v3/) beschreibt Owl 3 (Signals, Plugins, Effects, Computed Values) und gilt für Odoo 19 NICHT.
 
