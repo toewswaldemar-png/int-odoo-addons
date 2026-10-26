@@ -37,16 +37,6 @@
             <form duplicate="0">
                 <header>
                     <button
-                        name="action_share"
-                        type="object"
-                        string="Share"
-                        icon="fa-share-alt"
-                        class="btn-primary"
-                        invisible="not id or not active"
-                        groups="int_filemanager.int_filemanager_group_user"
-                        help="Make a link that gives this folder to whoever has it, without an account."
-                    />
-                    <button
                         name="action_download"
                         type="object"
                         string="Download"
@@ -57,15 +47,6 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button
-                            name="action_open_shares"
-                            type="object"
-                            class="oe_stat_button"
-                            icon="fa-share-alt"
-                            invisible="not share_count"
-                        >
-                            <field name="share_count" widget="statinfo" string="Shares" />
-                        </button>
                     </div>
                     <widget
                         name="web_ribbon"
@@ -88,10 +69,6 @@
                             name="access_group_ids"
                             widget="many2many_tags"
                             invisible="access_mode != 'restricted'"
-                            groups="int_filemanager.int_filemanager_group_admin"
-                        />
-                        <field
-                            name="ocr_images"
                             groups="int_filemanager.int_filemanager_group_admin"
                         />
                         <field name="company_id" groups="base.group_multi_company" readonly="parent_id" />

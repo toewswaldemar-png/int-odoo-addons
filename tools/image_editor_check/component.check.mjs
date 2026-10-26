@@ -49,8 +49,8 @@ globalThis.__services = {
     },
 };
 
-const { DocumentImageEditor } = await import("@int_filemanager/image_editor/document_image_editor");
-const { readState } = await import("@int_filemanager/image_editor/edit_state");
+const { DocumentImageEditor } = await import("@int_filemanager_image_editor/image_editor/document_image_editor");
+const { readState } = await import("@int_filemanager_image_editor/image_editor/edit_state");
 
 async function makeEditor(file) {
     const stage = document.createElement("div");

@@ -1,5 +1,4 @@
 from odoo import api, fields, models
-from odoo.fields import Domain
 
 
 class IntFilemanagerLinkable(models.AbstractModel):
@@ -18,11 +17,6 @@ class IntFilemanagerLinkable(models.AbstractModel):
     document_count = fields.Integer(
         string="Filemanager documents", compute="_compute_document_count"
     )
-    document_search = fields.Char(
-        string="Document contains",
-        compute="_compute_document_search",
-        search="_search_document_search",
-    )
 
     @api.depends("link_ids")
     @api.depends_context("uid")
@@ -40,19 +34,6 @@ class IntFilemanagerLinkable(models.AbstractModel):
             )
         for record in self:
             record.document_count = counts.get(record.id, 0)
-
-    def _compute_document_search(self):
-        self.document_search = False
-
-    def _search_document_search(self, operator, value):
-        """Records with a document whose file has these words in it (``content_search``).
-
-        Only the documents that the user sees take part: ``any`` applies the rules of the link
-        and of the document.
-        """
-        return Domain(
-            "link_ids", "any", [("document_id", "any", [("content_search", operator, value)])]
-        )
 
     def unlink(self):
         ids = self.ids

@@ -20,7 +20,6 @@ from .int_filemanager_document import (
     PDF,
     PREVIEW_CRON_XMLID,
     PREVIEW_EXTENSIONS,
-    TEXT_CRON_XMLID,
     THUMBNAIL_CRON_XMLID,
 )
 
@@ -110,6 +109,14 @@ class IntFilemanagerDocument(models.Model):
         return Domain("thumbnail_state", "=", False) & (
             Domain("mimetype", "=", PDF) | Domain("preview_checksum", "!=", False)
         )
+
+    @api.model
+    def _crons_after_preview(self):
+        """The scheduled actions to start when a preview is there: the picture of its first page.
+
+        A module that reads the file from the preview (the text of the old formats) adds its own.
+        """
+        return [THUMBNAIL_CRON_XMLID]
 
     @api.model
     def _cron_thumbnails(self, limit=THUMBNAIL_BATCH):
@@ -206,15 +213,15 @@ class IntFilemanagerDocument(models.Model):
         assert self.env.context.get("cron_id") == self.env.ref(PREVIEW_CRON_XMLID).id, (
             "Meant for cron usage only"
         )
-        Text = self.env["int.filemanager.text"]
-        if not Text._flag("preview_enabled", True):
+        Budget = self.env["int.filemanager.cron"]
+        if not Budget._flag("preview_enabled", True):
             return
         if not shutil.which("soffice"):
             _logger.warning("LibreOffice is not installed: the previews of office files are not made.")
             return
         cron = self.env["ir.cron"]
-        deadline = Text._pass_deadline()
-        seconds = max(min(Text._setting("preview_seconds"), Text._budget()[2]), 1)
+        deadline = Budget._pass_deadline()
+        seconds = max(min(Budget._setting("preview_seconds"), Budget._budget()[2]), 1)
         domain = self._preview_domain()
         documents = self.with_context(active_test=False).search(domain, limit=limit)
         for index, (checksum, same) in enumerate(documents.grouped("checksum").items()):
@@ -252,8 +259,7 @@ class IntFilemanagerDocument(models.Model):
                 self.sudo().flush_recordset(["preview_checksum"])
                 self._publish_blob(stored["tmp_path"], stored["checksum"])
             if values["preview_state"] == "done":
-                # The picture of the first page, and the text of the old formats (read from it).
-                for xmlid in (THUMBNAIL_CRON_XMLID, TEXT_CRON_XMLID):
+                for xmlid in self._crons_after_preview():
                     self.env.ref(xmlid).sudo()._trigger()
         finally:
             if stored:
@@ -276,7 +282,7 @@ class IntFilemanagerDocument(models.Model):
         except FileNotFoundError:
             _logger.warning("No preview of %s: the file is missing.", checksum)
             return None
-        limit = self.env["int.filemanager.text"]._setting("preview_max_size_mib")
+        limit = self.env["int.filemanager.cron"]._setting("preview_max_size_mib")
         if size > limit * 1024**2:
             _logger.warning("No preview of %s: the file is bigger than %s MiB.", checksum, limit)
             return None

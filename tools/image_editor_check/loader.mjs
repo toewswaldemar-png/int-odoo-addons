@@ -1,5 +1,6 @@
 // Hooks for the module loader of Node. They let the sources of the module run unchanged:
-//   - `@int_filemanager/<path>` is a file of `int_filemanager/static/src/`,
+//   - `@int_filemanager/<path>` is a file of `int_filemanager/static/src/`, `@int_filemanager_image_editor/<path>`
+//     one of `int_filemanager_image_editor/static/src/`,
 //   - `./picture` in the component is the shim (shim_picture.mjs),
 //   - `@web/...`, `@odoo/...`, `@mail/...` are stand-ins that hold what the sources use,
 //   - with REAL_OWL the stand-in for `@odoo/owl` hands out the real Owl (`globalThis.owl`, loaded by
@@ -7,10 +8,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { MODULE_SRC, odooWeb } from "./paths.mjs";
+import { EDITOR_MODULE_SRC, MODULE_SRC, odooWeb } from "./paths.mjs";
 
 const SHIM = new URL("./shim_picture.mjs", import.meta.url).href;
-const REAL_FILES = [MODULE_SRC.replaceAll("\\", "/")];
+const REAL_FILES = [MODULE_SRC, EDITOR_MODULE_SRC].map((dir) => dir.replaceAll("\\", "/"));
 
 export async function resolve(specifier, context, next) {
     if (specifier === "./picture" && context.parentURL?.endsWith("document_image_editor.js")) {
@@ -22,6 +23,10 @@ export async function resolve(specifier, context, next) {
     }
     if (specifier === "@int_filemanager/int_filemanager/views/list/document_list_controller") {
         return { url: "stub:upload_route", shortCircuit: true };
+    }
+    if (specifier.startsWith("@int_filemanager_image_editor/")) {
+        const file = path.join(EDITOR_MODULE_SRC, `${specifier.slice("@int_filemanager_image_editor/".length)}.js`);
+        return { url: pathToFileURL(file).href, shortCircuit: true };
     }
     if (specifier.startsWith("@int_filemanager/")) {
         const file = path.join(MODULE_SRC, `${specifier.slice("@int_filemanager/".length)}.js`);

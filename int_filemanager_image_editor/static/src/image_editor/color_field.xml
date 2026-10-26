@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="int_filemanager_image_editor.ImageEditorColorField">
+        <Dropdown state="menu">
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2 o-dropdown-caret"
+                t-att-title="props.title"
+                t-att-aria-label="props.title"
+            >
+                <span
+                    class="o_int_filemanager_image_editor_swatch"
+                    t-att-style="'background-color: ' + props.value"
+                />
+            </button>
+            <t t-set-slot="content">
+                <div class="o_int_filemanager_image_editor_palette p-2">
+                    <div t-foreach="palette" t-as="row" t-key="row_index" class="d-flex">
+                        <button
+                            t-foreach="row"
+                            t-as="color"
+                            t-key="color"
+                            type="button"
+                            class="o_int_filemanager_image_editor_swatch o_int_filemanager_image_editor_swatch_choice"
+                            t-att-class="{ 'active': isChosen(color) }"
+                            t-att-style="'background-color: ' + color"
+                            t-att-title="color"
+                            t-att-aria-label="color"
+                            t-on-click="() => this.choose(color)"
+                        />
+                    </div>
+                    <label class="d-flex align-items-center gap-2 mt-2 mb-0">
+                        <input
+                            type="color"
+                            class="o_int_filemanager_image_editor_color_input"
+                            t-att-value="props.value"
+                            t-on-input="onCustomColor"
+                        />
+                        <span>Other color</span>
+                    </label>
+                </div>
+            </t>
+        </Dropdown>
+    </t>
+</templates>

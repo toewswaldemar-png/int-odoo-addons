@@ -98,15 +98,13 @@ class TestOfficePreview(OfficeCase, TransactionCase):
         self._office()
         self.assertEqual(self.env["ir.cron.trigger"].search_count([("cron_id", "=", cron.id)]), triggers + 1)
 
-    def test_a_made_preview_wakes_the_actions_of_the_picture_and_of_the_text(self):
+    def test_a_made_preview_wakes_the_action_of_the_picture(self):
         triggers = self.env["ir.cron.trigger"]
-        crons = self.env.ref("int_filemanager.int_filemanager_thumbnail_cron") + self.env.ref(
-            "int_filemanager.int_filemanager_text_cron"
-        )
+        crons = self.env.ref("int_filemanager.int_filemanager_thumbnail_cron")
         before = triggers.search_count([("cron_id", "in", crons.ids)])
         self._office()
         self._cron()
-        self.assertEqual(triggers.search_count([("cron_id", "in", crons.ids)]), before + 2)
+        self.assertEqual(triggers.search_count([("cron_id", "in", crons.ids)]), before + 1)
 
     def test_the_scheduled_action_makes_the_preview_from_a_link_that_has_the_ending(self):
         document = self._office("report.docx")

@@ -32,7 +32,7 @@ trap 'cleanup; release_lock' EXIT
 
 ssh "$HOST" "docker rm -f $NAME >/dev/null 2>&1 || true; docker exec fmtest_pg dropdb -U odoo --if-exists $DB; rm -rf $R; \
   mkdir -p $R/addons $R/config $R/data $R/scripts $R/out && chmod 777 $R/data $R/out"
-tar -c --exclude=__pycache__ int_filemanager | ssh "$HOST" "tar -x -C $R/addons"
+tar -c --exclude=__pycache__ int_filemanager* | ssh "$HOST" "tar -x -C $R/addons"
 scp -q tools/check/share_live_seed.py tools/check/share_attacks.py tools/check/share_parallel.py "$HOST:$R/scripts/"
 ssh "$HOST" "sed -e 's/^db_name = .*/db_name = $DB/' -e 's#^data_dir = .*#data_dir = /var/lib/odoo#' \
   -e 's#^addons_path = .*#addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons#' \
@@ -42,7 +42,7 @@ ssh "$HOST" "sed -e 's/^db_name = .*/db_name = $DB/' -e 's#^data_dir = .*#data_d
 MOUNTS="-v $R/config:/etc/odoo:ro -v $R/addons:/mnt/extra-addons:ro -v $R/data:/var/lib/odoo"
 
 echo "== install + seed"
-ssh "$HOST" "docker run --rm --network fmtest-net $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB -i int_filemanager \
+ssh "$HOST" "docker run --rm --network fmtest-net $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB -i int_filemanager_share \
   --stop-after-init --workers=0 --no-http --log-level=warn >$R/install.log 2>&1"
 ssh "$HOST" "docker run --rm -i --network fmtest-net $MOUNTS -v $R/out:/out $IMAGE odoo shell -c /etc/odoo/odoo.conf -d $DB \
   --no-http --log-level=warn --workers=0 < $R/scripts/share_live_seed.py" | grep -E '^(SEED|Traceback|.*Error)' || true

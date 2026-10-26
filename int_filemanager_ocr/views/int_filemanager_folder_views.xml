@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="int_filemanager_folder_view_form" model="ir.ui.view">
+        <field name="name">int.filemanager.folder.view.form.inherit.int_filemanager_ocr</field>
+        <field name="model">int.filemanager.folder</field>
+        <field name="inherit_id" ref="int_filemanager.int_filemanager_folder_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='access_group_ids']" position="after">
+                <field
+                    name="ocr_images"
+                    groups="int_filemanager.int_filemanager_group_admin"
+                />
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -42,7 +42,7 @@ def migrate(cr, version):
     for table in EARLIER_TABLES:
         cr.execute(SQL("DROP TABLE IF EXISTS %s CASCADE", SQL.identifier(table)))
     cr.execute("""
-        ALTER TABLE int_filemanager_share
+        ALTER TABLE IF EXISTS int_filemanager_share
             DROP COLUMN IF EXISTS node_id,
             DROP COLUMN IF EXISTS expires_at,
             DROP COLUMN IF EXISTS revoked_at

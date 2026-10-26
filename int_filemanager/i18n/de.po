@@ -17,36 +17,6 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "%(pages)s pages"
-msgstr "%(pages)s Seiten"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "%(seconds)s s (%(mode)s server, limit of Odoo %(limit)s s)"
-msgstr "%(seconds)s s (%(mode)s-Server, Limit von Odoo %(limit)s s)"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "%(seconds)s s (Odoo has no limit)"
-msgstr "%(seconds)s s (Odoo hat kein Limit)"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "(about %(time)s hours of work)"
-msgstr "(etwa %(time)s Stunden Arbeit)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_popover.js:0
-msgid "%(name)s: %(count)s hits"
-msgstr "%(name)s: %(count)s Treffer"
-
-#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
 msgid "/mnt/hm-daten"
 msgstr "/mnt/hm-daten"
@@ -57,20 +27,10 @@ msgid "A document with this name already exists in this folder."
 msgstr "Ein Dokument mit diesem Namen existiert in diesem Ordner bereits."
 
 #. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_text_checksum_unique
-msgid "A file has one text."
-msgstr "Eine Datei hat einen Text."
-
-#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "A file needs a name."
 msgstr "Eine Datei braucht einen Namen."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_max_attempts
-msgid "A file that stops the reading or is too slow is tried this many times."
-msgstr "Eine Datei, die das Lesen abbricht oder zu langsam ist, wird so oft versucht."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_folder_name_per_parent
@@ -78,43 +38,9 @@ msgid "A folder with this name already exists here."
 msgstr "Ein Ordner mit diesem Namen existiert hier bereits."
 
 #. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_import_line__listed
-msgid "A folder: its content was listed by the check."
-msgstr "Ein Ordner: sein Inhalt wurde bei der Prüfung aufgelistet."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "A page takes longer than the time of one run."
-msgstr "Eine Seite braucht länger als die Zeit eines Durchlaufs."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid ""
-"A run of the scheduled action is as long as the limit of Odoo for it "
-"(limit_time_real_cron). A longer limit gives the recognition more work per "
-"run."
-msgstr ""
-"Ein Lauf der geplanten Aktion dauert so lange wie das Limit von Odoo dafür "
-"(limit_time_real_cron). Ein längeres Limit gibt der Texterkennung mehr "
-"Arbeit je Lauf."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "A symbolic link."
-msgstr "Eine symbolische Verknüpfung."
-
-#. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_tag_name_uniq
 msgid "A tag with this name already exists."
 msgstr "Ein Tag mit diesem Namen existiert bereits."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_text_page_page_per_text
-msgid "A text has one entry per page."
-msgstr "Ein Text hat einen Eintrag je Seite."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_folder_id
@@ -174,15 +100,7 @@ msgid "Allowed users"
 msgstr "Erlaubte Benutzer"
 
 #. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_import_line__clash
-msgid ""
-"Another one of this folder has the same name (case, spaces and composed or "
-"decomposed letters aside): this one gets a number."
-msgstr "Ein anderer Eintrag dieses Ordners hat denselben Namen (Groß-/Kleinschreibung, Leerzeichen und zusammengesetzte oder zerlegte Buchstaben zählen nicht): dieser bekommt eine Nummer."
-
-#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_search
 msgid "Archived"
@@ -195,58 +113,13 @@ msgid "Attachment Count"
 msgstr "Anzahl der Anhänge"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__attempts
-msgid "Attempts"
-msgstr "Versuche"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_import_line__path
-msgid "Below the folder to read in."
-msgstr "Unterhalb des einzulesenden Ordners."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
-msgid "Block %(page)s"
-msgstr "Block %(page)s"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"Blocks of text for files without pages (KiB), and the largest page of a PDF "
-"(bytes)."
-msgstr "Textblöcke für Dateien ohne Seiten (KiB) und die größte Seite eines PDFs (Bytes)."
-
-#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/fields/size/size_field.js:0
 msgid "Bytes"
 msgstr "Bytes"
 
 #. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid "Check"
-msgstr "Prüfen"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import.py:0
-msgid "Check the folder first."
-msgstr "Prüfen Sie zuerst den Ordner."
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__scanned
-msgid "Checked"
-msgstr "Geprüft"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__scanning
-msgid "Checking"
-msgstr "Wird geprüft"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__checksum
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__checksum
 msgid "Checksum"
 msgstr "Prüfsumme"
 
@@ -275,11 +148,6 @@ msgid "documents"
 msgstr "Dokumente"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__clash_count
-msgid "Clash Count"
-msgstr "Namen vergeben"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__color
 msgid "Color"
 msgstr "Farbe"
@@ -287,7 +155,6 @@ msgstr "Farbe"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__company_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__company_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__company_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__company_id
 msgid "Company"
 msgstr "Unternehmen"
@@ -304,59 +171,34 @@ msgstr "Konfiguration"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__content
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__content
 msgid "Content"
 msgstr "Inhalt"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_jobs
-msgid "Cores"
-msgstr "Kerne"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"Cores one recognition may use, and how much of the processor it takes when "
-"the server is busy."
-msgstr ""
-"Wie viele Kerne eine Texterkennung nutzen darf und wie viel vom Prozessor "
-"sie nimmt, wenn der Server ausgelastet ist."
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__create_uid
 msgid "Created by"
 msgstr "Erstellt von"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__create_date
 msgid "Created on"
 msgstr "Erstellt am"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__display_name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_res_partner__display_name
@@ -366,7 +208,6 @@ msgstr "Anzeigename"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__document_ids
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__document_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__document_id
 msgid "Document"
 msgstr "Dokument"
@@ -384,34 +225,17 @@ msgid "Document picture"
 msgstr "Dokumentbild"
 
 #. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_document_action
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__document_count
-#: model:ir.ui.menu,name:int_filemanager.int_filemanager_document_menu
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_graph
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_pivot
 #: model_terms:ir.ui.view,arch_db:int_filemanager.view_partner_form
 msgid "Documents"
 msgstr "Dokumente"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_document__thumbnail_state__done
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__done
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__done
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__done
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__done
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
 msgid "Done"
 msgstr "Erledigt"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__done_count
-msgid "Done Count"
-msgstr "Erledigt"
-
-#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
 #: code:addons/int_filemanager/static/src/int_filemanager/views/form/document_form_controller.xml:0
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
@@ -425,46 +249,10 @@ msgid "Download folder"
 msgstr "Ordner herunterladen"
 
 #. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__draft
-msgid "Draft"
-msgstr "Entwurf"
-
-#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/dropzone/document_dropzone.js:0
 msgid "Drop the files into %(folder)s"
 msgstr "Dateien in %(folder)s ablegen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid "Empty: the whole root folder"
-msgstr "Leer: der ganze Wurzelordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__engine_version
-msgid "Engine Version"
-msgstr "Version des Lesers"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__error_count
-msgid "Error Count"
-msgstr "Fehlgeschlagen"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__excluded
-msgid "Excluded"
-msgstr "Ausgeschlossen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__excluded_count
-msgid "Excluded Count"
-msgstr "Ausgeschlossen"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "Excluded by its name."
-msgstr "Wegen des Namens ausgeschlossen."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__extension
@@ -472,27 +260,14 @@ msgid "Extension"
 msgstr "Dateiendung"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_failed
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_document__thumbnail_state__failed
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__error
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__failed
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__failed
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_line_view_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__document_id
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__kind__file
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 msgid "File"
 msgstr "Datei"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__file_count
-msgid "File Count"
-msgstr "Dateien"
 
 #. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_ir_binary
@@ -528,29 +303,9 @@ msgid "Filemanager folder"
 msgstr "Dateimanager-Ordner"
 
 #. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_import
-msgid "Filemanager import"
-msgstr "Filemanager-Einlesen"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_import_line
-msgid "Filemanager import line"
-msgstr "Filemanager-Einlesezeile"
-
-#. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_int_filemanager_tag
 msgid "Filemanager tag"
 msgstr "Dateimanager-Tag"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_text
-msgid "Filemanager text of a file"
-msgstr "Dateimanager-Text einer Datei"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_text_page
-msgid "Filemanager text of a page"
-msgstr "Dateimanager-Text einer Seite"
 
 #. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.int_filemanager_import_cron_ir_actions_server
@@ -563,36 +318,14 @@ msgid "Filemanager: read the text of the files"
 msgstr "Dateimanager: Text der Dateien lesen"
 
 #. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_line_view_search
-msgid "Files"
-msgstr "Dateien"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__folder_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__source_path
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__folder_id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__folder_id
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__kind__folder
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Folder"
 msgstr "Ordner"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__folder_count
-msgid "Folder Count"
-msgstr "Ordner"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "Folder used."
-msgstr "Vorhandener Ordner verwendet."
-
-#. module: int_filemanager
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action
 #: model:ir.ui.menu,name:int_filemanager.int_filemanager_folder_menu
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_line_view_search
 msgid "Folders"
 msgstr "Ordner"
 
@@ -659,12 +392,6 @@ msgstr "Dateimanager: In einen Ordner verschieben"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_move__summary
 msgid "Summary"
 msgstr "Zusammenfassung"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/tools/share_gateway.py:0
-msgid "This takes too long. Ask for less."
-msgstr "Das dauert zu lange. Fragen Sie weniger an."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -748,82 +475,18 @@ msgid "Font awesome icon e.g. fa-tasks"
 msgstr "FontAwesome-Icon, z. B. fa-tasks"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__content_hits
-msgid "Found in the text"
-msgstr "Gefunden im Text"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__content_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
-msgid "Full text"
-msgstr "Volltext"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
-msgid "Future Activities"
-msgstr "Anstehende Aktivitäten"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__has_message
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__has_message
 msgid "Has Message"
 msgstr "Hat Nachricht"
 
 #. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hit_count_field.js:0
-msgid "Hit count"
-msgstr "Anzahl der Treffer"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__content_hit_count
-msgid "Hits"
-msgstr "Treffer"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
-msgid "Hits in the text"
-msgstr "Fundstellen im Text"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"How long one run of the scheduled action lasts, which program reads the PDF "
-"files, and when it ran last."
-msgstr "Wie lange ein Durchlauf der geplanten Aktion dauert, welches Programm die PDF-Dateien liest und wann sie zuletzt lief."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_jobs
-msgid "How many processor cores one text recognition may use."
-msgstr "Wie viele Prozessorkerne eine Texterkennung nutzen darf."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_memory_mib
-msgid ""
-"How much memory the reading of one file may use. A file that needs more is "
-"skipped, and read again if this is raised."
-msgstr "Wie viel Speicher das Lesen einer Datei höchstens braucht. Eine Datei, die mehr braucht, wird übersprungen und erneut gelesen, wenn der Wert erhöht wird."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_nice
-msgid ""
-"How much of the processor the recognition takes when the server is busy."
-msgstr ""
-"Wie viel vom Prozessor die Texterkennung nimmt, wenn der Server ausgelastet "
-"ist."
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__id
 #: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__id
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__id
 #: model:ir.model.fields,field_description:int_filemanager.field_res_partner__id
@@ -854,38 +517,10 @@ msgid "If checked, some messages have a delivery error."
 msgstr "Wenn markiert, weisen einige Nachrichten einen Zustellfehler auf."
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__ocr_images_active
-msgid "Images are recognized here"
-msgstr "Bilder werden hier erkannt"
-
-#. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_import_action
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__import_id
-#: model:ir.ui.menu,name:int_filemanager.int_filemanager_import_menu
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Import"
-msgstr "Einlesen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__target_folder_id
-msgid "Into folder"
-msgstr "In den Ordner"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_is_follower
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_is_follower
 msgid "Is Follower"
 msgstr "Ist Follower"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__kind
-msgid "Kind"
-msgstr "Art"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_cut_bytes
-msgid "Largest page (bytes)"
-msgstr "Größte Seite (Bytes)"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -897,99 +532,25 @@ msgstr "Groß"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__write_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_uid
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__write_uid
 msgid "Last Updated by"
 msgstr "Zuletzt aktualisiert von"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_link__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_model_folder__write_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__write_date
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__write_date
 msgid "Last Updated on"
 msgstr "Zuletzt aktualisiert am"
 
 #. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_list
-msgid "Last change"
-msgstr "Letzte Änderung"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__message
-msgid "Last problem"
-msgstr "Letztes Problem"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_lastcall
-msgid "Last run"
-msgstr "Letzter Lauf"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
-msgid "Late Activities"
-msgstr "Verspätete Aktivitäten"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_deskew__0
-msgid "Leave the pages as they are"
-msgstr "Seiten so lassen, wie sie sind"
-
-#. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__inherit
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__ocr_images__inherit
 msgid "Like the parent folder"
 msgstr "Wie der übergeordnete Ordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__line_ids
-msgid "Line"
-msgstr "Zeile"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__line_count
-msgid "Line Count"
-msgstr "Zeilen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid "Lines"
-msgstr "Zeilen"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import.py:0
-msgid "Lines of %(name)s"
-msgstr "Zeilen von %(name)s"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__listed
-msgid "Listed"
-msgstr "Aufgelistet"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid "Lists the folder and shows what would be read in. Nothing is copied."
-msgstr "Listet den Ordner auf und zeigt, was eingelesen würde. Es wird nichts kopiert."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_popover.xml:0
-msgid "Load more"
-msgstr "Mehr laden"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Load on the server"
-msgstr "Last auf dem Server"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
@@ -998,55 +559,11 @@ msgid "Location"
 msgstr "Ablageort"
 
 #. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__10
-msgid "Low"
-msgstr "Niedrig"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__19
-msgid "Lowest: the web pages come first"
-msgstr "Am niedrigsten: Die Webseiten gehen vor"
-
-#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/kanban/document_tile_size.js:0
-#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__5
 #: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_tile_size__medium
 msgid "Medium"
 msgstr "Mittel"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"Memory (MiB) the database may use for one search in the text; the number of "
-"tries for a file that stops the reading."
-msgstr "Speicher (MiB), den die Datenbank für eine Suche im Text nutzen darf; die Zahl der Versuche für eine Datei, die das Lesen abbricht."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__memory_limit_mib
-msgid "Memory Limit Mib"
-msgstr "Speichergrenze (MiB)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_work_mem_mib
-msgid "Memory of the search (MiB)"
-msgstr "Speicher der Suche (MiB)"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Memory per file"
-msgstr "Speicher je Datei"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_memory_mib
-msgid "Memory per file (MiB)"
-msgstr "Speicher je Datei (MiB)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__message
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__message
-msgid "Message"
-msgstr "Meldung"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_has_error
@@ -1062,8 +579,6 @@ msgstr "Nachrichten"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__mimetype
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__mimetype
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Mimetype"
 msgstr "Dateityp"
 
@@ -1074,16 +589,6 @@ msgid "Modified"
 msgstr "Geändert"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__mtime
-msgid "Modified on the disk"
-msgstr "Auf der Platte geändert"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
-msgid "My Activities"
-msgstr "Meine Aktivitäten"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__my_activity_date_deadline
 msgid "My Activity Deadline"
 msgstr "Frist für meine Aktivitäten"
@@ -1091,17 +596,9 @@ msgstr "Frist für meine Aktivitäten"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__name
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__name
 msgid "Name"
 msgstr "Name"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__clash
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_line_view_search
-msgid "Name taken"
-msgstr "Name vergeben"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
@@ -1124,52 +621,10 @@ msgid "Next Activity Type"
 msgstr "Nächster Aktivitätstyp"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__next_page
-msgid "Next Page"
-msgstr "Nächste Seite"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_next_page
-msgid "Next page to recognize"
-msgstr "Nächste zu erkennende Seite"
-
-#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "No free name for %(name)s in this folder."
 msgstr "Für %(name)s ist in diesem Ordner kein freier Name übrig."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "No free name for the folder %(name)s."
-msgstr "Kein freier Name für den Ordner %(name)s."
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__empty
-msgid "No text"
-msgstr "Kein Text"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_nice__0
-msgid "Normal: like the web pages"
-msgstr "Normal: wie die Webseiten"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "Not a regular file."
-msgstr "Keine gewöhnliche Datei."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_missing
-msgid "Not yet looked at"
-msgstr "Noch nicht angesehen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_notes
-msgid "Notes"
-msgstr "Hinweise"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction_counter
@@ -1196,111 +651,12 @@ msgid "Number of messages with delivery error"
 msgstr "Anzahl der Nachrichten mit Zustellfehler"
 
 #. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__ocr_images__off
-msgid "Off"
-msgstr "Aus"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "Off."
-msgstr "Aus."
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__ocr_images__on
-msgid "On"
-msgstr "An"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "Only a Filemanager administrator can do that."
-msgstr "Das kann nur ein Dateimanager-Administrator."
-
-#. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__restricted
 msgid "Only the users and groups allowed"
 msgstr "Nur die erlaubten Benutzer und Gruppen"
 
 #. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"Only what lies below this folder of the server can be read into the "
-"filemanager."
-msgstr "Nur was unterhalb dieses Ordners des Servers liegt, kann in den Filemanager eingelesen werden."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_import_root
-msgid ""
-"Only what lies below this folder of the server can be read into the "
-"filemanager. An absolute path, e.g. /mnt/hm-daten."
-msgstr "Nur was unterhalb dieses Ordners des Servers liegt, kann in den Filemanager eingelesen werden. Ein absoluter Pfad, z. B. /mnt/hm-daten."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__origin_path
-msgid "Origin Path"
-msgstr "Ursprünglicher Pfad"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_output_type__pdf
-msgid "PDF"
-msgstr "PDF"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_reader
-msgid "PDF reader"
-msgstr "PDF-Leser"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_output_type__pdfa
-msgid "PDF/A (archive)"
-msgstr "PDF/A (Archiv)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_output_type
-msgid "PDF/A takes longer and makes the file bigger."
-msgstr "PDF/A dauert länger und macht die Datei größer."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__page
-msgid "Page"
-msgstr "Seite"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "Page %(page)s was cut at the size limit."
-msgstr "Seite %(page)s wurde an der Größengrenze gekürzt."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "Page %(page)s was cut: too many different words."
-msgstr "Seite %(page)s wurde gekürzt: zu viele verschiedene Wörter."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__page_count
-msgid "Page Count"
-msgstr "Seitenzahl"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_deskew
-msgid "Pages"
-msgstr "Seiten"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_found_pages
-msgid "Pages with recognized text"
-msgstr "Seiten mit erkanntem Text"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__scan_pages
-msgid "Pages without text"
-msgstr "Seiten ohne Text"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_id
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__parent_id
 msgid "Parent"
 msgstr "Oberordner"
 
@@ -1308,22 +664,6 @@ msgstr "Oberordner"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_path
 msgid "Parent Path"
 msgstr "Übergeordneter Pfad"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__path
-msgid "Path"
-msgstr "Pfad"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "Paused: the disk is full."
-msgstr "Pausiert: Der Speicherplatz ist voll."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__pending_count
-msgid "Pending Count"
-msgstr "Offen"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -1350,115 +690,10 @@ msgid "There is no preview for this type of file."
 msgstr "Für diesen Dateityp gibt es keine Vorschau."
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_nice
-msgid "Priority"
-msgstr "Priorität"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_tools
-msgid "Programs"
-msgstr "Programme"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__progress
-msgid "Progress"
-msgstr "Fortschritt"
-
-#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.js:0
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
 msgid "Properties"
 msgstr "Eigenschaften"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_form
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_list
-msgid "Read again"
-msgstr "Erneut lesen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid "Read in"
-msgstr "Einlesen"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "Read in before."
-msgstr "Schon früher eingelesen."
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import__state__running
-msgid "Reading in"
-msgstr "Wird eingelesen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Reading of the files"
-msgstr "Lesen der Dateien"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"Reading one file may use this much memory (MiB). A file that needs more is "
-"skipped."
-msgstr "Das Lesen einer Datei darf so viel Speicher (MiB) brauchen. Eine Datei, die mehr braucht, wird übersprungen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "Ready."
-msgstr "Bereit."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_state
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_state
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
-msgid "Recognition"
-msgstr "Texterkennung"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
-msgid "Recognition failed"
-msgstr "Texterkennung fehlgeschlagen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_languages
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Recognition languages"
-msgstr "Sprachen der Texterkennung"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_message
-msgid "Recognition message"
-msgstr "Meldung der Texterkennung"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_attempts
-msgid "Recognition tries"
-msgstr "Versuche der Texterkennung"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
-msgid "Recognition waiting"
-msgstr "Texterkennung wartet"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_form
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_list
-msgid "Recognize again"
-msgstr "Erneut erkennen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_enabled
-msgid "Recognize the text in scans"
-msgstr "Text in Scans erkennen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
-msgid "Recognized"
-msgstr "Erkannt"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__ocr_checksum
@@ -1466,41 +701,9 @@ msgid "Recognized PDF"
 msgstr "Erkanntes PDF"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_checksum
-msgid "Recognized PDF (checksum)"
-msgstr "Erkanntes PDF (Prüfsumme)"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__ocr_content
 msgid "Recognized PDF (file)"
 msgstr "Erkanntes PDF (Datei)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_size
-msgid "Recognized PDF (size)"
-msgstr "Erkanntes PDF (Größe)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_pdf_size
-msgid "Recognized PDFs"
-msgstr "Erkannte PDFs"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "Renamed, the name was taken."
-msgstr "Umbenannt, der Name war vergeben."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "Renamed."
-msgstr "Umbenannt."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid "Report"
-msgstr "Bericht"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_user_id
@@ -1526,110 +729,6 @@ msgid "Restoring is not possible, these names are taken: %(names)s"
 msgstr "Wiederherstellen ist nicht möglich, diese Namen sind vergeben: %(names)s"
 
 #. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Result"
-msgstr "Ergebnis"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid "Retry the failed"
-msgstr "Fehlgeschlagene wiederholen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__root_path
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_import_root
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Root folder"
-msgstr "Wurzelordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_running
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__running
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__running
-msgid "Running"
-msgstr "Läuft"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_enabled
-msgid ""
-"Scanned pages (PDF files without text) get a text layer, so that the search "
-"finds their words. Pictures are read in the folders that have it switched "
-"on. The files themselves are not changed."
-msgstr ""
-"Gescannte Seiten (PDF-Dateien ohne Text) bekommen eine Textebene, damit die "
-"Suche ihre Wörter findet. Bilder werden in den Ordnern gelesen, bei denen "
-"das eingeschaltet ist. Die Dateien selbst werden nicht verändert."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"Scanned pages (PDF files without text) get a text layer, so that the search "
-"finds their words. The files themselves are not changed; the new PDF is "
-"shown in the preview, the download is the original. Pictures are read in the"
-" folders that have it switched on (folder form, Text recognition in images)."
-msgstr ""
-"Gescannte Seiten (PDF-Dateien ohne Text) bekommen eine Textebene, damit die "
-"Suche ihre Wörter findet. Die Dateien selbst werden nicht verändert; das "
-"neue PDF erscheint in der Vorschau, der Download ist das Original. Bilder "
-"werden in den Ordnern gelesen, bei denen das eingeschaltet ist "
-"(Ordnerformular, Texterkennung für Bilder)."
-
-#. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_text_ocr_action
-msgid "Scans"
-msgstr "Scans"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_done
-msgid "Scans done"
-msgstr "Scans erledigt"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_failed
-msgid "Scans failed"
-msgstr "Scans fehlgeschlagen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_running
-msgid "Scans running"
-msgstr "Scans laufen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_wait
-msgid "Scans waiting"
-msgstr "Scans warten"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Scheduled action"
-msgstr "Geplante Aktion"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Search"
-msgstr "Suche"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Search in files"
-msgstr "Suche in Dateien"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_seconds_per_page
-msgid "Seconds per page"
-msgstr "Sekunden je Seite"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_file
-msgid "Section file"
-msgstr "Abschnittsdatei"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__ocr_file_size
-msgid "Section file size"
-msgstr "Größe der Abschnittsdatei"
-
-#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "Select at least one document."
@@ -1648,41 +747,13 @@ msgid "Send exactly one file per request."
 msgstr "Senden Sie genau eine Datei pro Anfrage."
 
 #. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_import__root_path
-msgid "Set in the settings."
-msgstr "In den Einstellungen festgelegt."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import.py:0
-msgid "Set the root folder for reading in first (Settings > Filemanager)."
-msgstr "Legen Sie zuerst den Wurzelordner zum Einlesen fest (Einstellungen > Filemanager)."
-
-#. module: int_filemanager
 #: model:ir.actions.act_window,name:int_filemanager.res_config_settings_action
 #: model:ir.ui.menu,name:int_filemanager.res_config_settings_menu
 msgid "Settings"
 msgstr "Einstellungen"
 
 #. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Show the files"
-msgstr "Dateien anzeigen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hit_count_field.js:0
-msgid "Show the hits"
-msgstr "Treffer anzeigen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Show the scans"
-msgstr "Scans anzeigen"
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__size
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__size
 msgid "Size"
 msgstr "Größe"
 
@@ -1698,39 +769,11 @@ msgid "Size of the document cards"
 msgstr "Größe der Dokumentkarten"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_skipped
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__skipped
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__skipped
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__skipped
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
-msgid "Skipped"
-msgstr "Übersprungen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__skipped_count
-msgid "Skipped Count"
-msgstr "Übersprungen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_line_view_search
-msgid "Skipped or excluded"
-msgstr "Übersprungen oder ausgeschlossen"
-
-#. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/kanban/document_tile_size.js:0
 #: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_tile_size__small
 msgid "Small"
 msgstr "Klein"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__state
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import_line__state
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text__state
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_line_view_search
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
-msgid "State"
-msgstr "Status"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
@@ -1747,112 +790,12 @@ msgid ""
 msgstr ""
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_left
-msgid "Still to do"
-msgstr "Noch zu tun"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid "Stop"
-msgstr "Anhalten"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import.py:0
-msgid "Stop the reading in first."
-msgstr "Halten Sie zuerst das Einlesen an."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "Stopped."
-msgstr "Angehalten."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "Stopped: Tesseract lacks a language that is asked for."
-msgstr "Angehalten: Tesseract fehlt eine Sprache, die verlangt wird."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "Stopped: ocrmypdf or Tesseract is not installed on the server."
-msgstr ""
-"Angehalten: ocrmypdf oder Tesseract ist auf dem Server nicht installiert."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "Stopped: the program does not take the settings."
-msgstr "Angehalten: Das Programm nimmt die Einstellungen nicht an."
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_ocr_deskew__1
-msgid "Straighten and turn the pages"
-msgstr "Seiten geraderichten und drehen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_deskew
-msgid ""
-"Straightening and turning make the recognition better and the time longer."
-msgstr ""
-"Geraderichten und Drehen verbessern die Erkennung und verlängern die Zeit."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"Straightening and turning make the recognition better and the time longer. "
-"PDF/A takes longer and makes the file bigger."
-msgstr ""
-"Geraderichten und Drehen verbessern die Erkennung und verlängern die Zeit. "
-"PDF/A dauert länger und macht die Datei größer."
-
-#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__tag_ids
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Tags"
 msgstr "Tags"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__text_id
-msgid "Text"
-msgstr "Text"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_block_kib
-msgid "Text block (KiB)"
-msgstr "Textblock (KiB)"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Text in scans"
-msgstr "Text in Scans"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_form
-msgid "Text recognition"
-msgstr "Texterkennung"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__ocr_images
-msgid "Text recognition in images"
-msgstr "Texterkennung für Bilder"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Text sizes"
-msgstr "Textgrößen"
-
-#. module: int_filemanager
-#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_text_action
-#: model:ir.ui.menu,name:int_filemanager.int_filemanager_text_menu
-msgid "Texts of the files"
-msgstr "Texte der Dateien"
-
-#. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_document_checksum_is_sha256
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_text_checksum_is_sha256
 msgid "The checksum must be a SHA-256 in lowercase hexadecimal."
 msgstr "Die Prüfsumme muss ein SHA-256 in Kleinbuchstaben-Hexadezimal sein."
 
@@ -1861,76 +804,6 @@ msgstr "Die Prüfsumme muss ein SHA-256 in Kleinbuchstaben-Hexadezimal sein."
 #: code:addons/int_filemanager/models/int_filemanager_folder.py:0
 msgid "The company of a subfolder is the one of its parent. Change the top folder."
 msgstr "Die Firma eines Unterordners ist die seines übergeordneten Ordners. Ändern Sie den obersten Ordner."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_text_ocr_checksum_is_sha256
-msgid ""
-"The checksum of the recognized PDF must be a SHA-256 in lowercase "
-"hexadecimal."
-msgstr ""
-"Die Prüfsumme des erkannten PDFs muss ein SHA-256 in Kleinbuchstaben-"
-"Hexadezimal sein."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid ""
-"The database has the character set C: capital umlauts are not folded, so the"
-" search finds a word with a capital Ü only by its capital."
-msgstr ""
-"Die Datenbank hat den Zeichensatz C: Großbuchstaben mit Umlaut werden nicht "
-"gefaltet, die Suche findet ein Wort mit großem Ü deshalb nur mit dem großen "
-"Buchstaben."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_work_mem_mib
-msgid ""
-"The database may use this much memory for one search in the text of the "
-"files (for this search only). A word that is on very many pages needs it, or"
-" takes minutes."
-msgstr "Die Datenbank darf für eine Suche im Text der Dateien so viel Speicher nutzen (nur für diese Suche). Ein Wort, das auf sehr vielen Seiten steht, braucht ihn, sonst dauert es Minuten."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The file cannot be read by the text recognition."
-msgstr "Die Texterkennung kann die Datei nicht lesen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "The file is a link or not below the root folder."
-msgstr "Die Datei ist eine Verknüpfung oder liegt nicht unterhalb des Wurzelordners."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The file is missing."
-msgstr "Die Datei fehlt."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "The file is not below the root folder."
-msgstr "Die Datei liegt nicht unterhalb des Wurzelordners."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "The file keeps changing while it is copied."
-msgstr "Die Datei ändert sich ständig, während sie kopiert wird."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The file needs a password."
-msgstr "Die Datei braucht ein Passwort."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The file needs more memory than the budget allows."
-msgstr "Die Datei braucht mehr Speicher, als das Budget erlaubt."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1951,13 +824,6 @@ msgid "The file of this document is missing."
 msgstr "Die Datei dieses Dokuments fehlt."
 
 #. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid ""
-"The files of the folder are copied into the filemanager. The files on the "
-"disk stay as they are."
-msgstr "Die Dateien des Ordners werden in den Filemanager kopiert. Die Dateien auf der Platte bleiben unverändert."
-
-#. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "The files are %(size).1f GB together, more than the %(limit).1f GB that one ZIP may hold. Download them in parts."
@@ -1967,12 +833,6 @@ msgstr "Die Dateien sind zusammen %(size).1f GB groß, mehr als die %(limit).1f 
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
 msgid "The folder with everything in it that you see, as one ZIP."
 msgstr "Der Ordner mit allem, was Sie darin sehen, als ein ZIP."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import.py:0
-msgid "The folder %(folder)s is not a folder below the root folder."
-msgstr "Der Ordner %(folder)s ist kein Ordner unterhalb des Wurzelordners."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1988,209 +848,15 @@ msgstr "Der Ordner %(name)s ist nicht leer. Verschieben oder löschen Sie zuerst
 
 #. module: int_filemanager
 #. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "The folder above could not be read in."
-msgstr "Der darüberliegende Ordner konnte nicht eingelesen werden."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import.py:0
-msgid "The folder is being checked or read in already."
-msgstr "Der Ordner wird schon geprüft oder eingelesen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "The folder is not below the root folder."
-msgstr "Der Ordner liegt nicht unterhalb des Wurzelordners."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_import__source_path
-msgid ""
-"The folder to read in, below the root folder of the settings. Empty: the "
-"root folder itself."
-msgstr "Der einzulesende Ordner, unterhalb des Wurzelordners der Einstellungen. Leer: der Wurzelordner selbst."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_import__target_folder_id
-msgid "The folders and files come below this folder."
-msgstr "Die Ordner und Dateien kommen unter diesen Ordner."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The image has no usable resolution."
-msgstr "Das Bild hat keine brauchbare Auflösung."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The image is too large for the text recognition."
-msgstr "Das Bild ist für die Texterkennung zu groß."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "The languages of the text, as Tesseract names them, joined by +."
-msgstr "Die Sprachen des Textes, wie Tesseract sie nennt, mit + verbunden."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_ocr_languages
-msgid ""
-"The languages of the text, as Tesseract names them, joined by +: deu+eng."
-msgstr ""
-"Die Sprachen des Textes, wie Tesseract sie nennt, mit + verbunden: deu+eng."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_import_line__parent_id
-msgid "The line of the folder this one lies in."
-msgstr "Die Zeile des Ordners, in dem dieser liegt."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_text_cut_bytes
-msgid ""
-"The most text kept of one page of a PDF (in bytes, not letters). More is cut"
-" off."
-msgstr "Der meiste Text, der von einer PDF-Seite behalten wird (in Bytes, nicht Buchstaben). Mehr wird abgeschnitten."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import_line.py:0
-msgid "The name is not valid UTF-8."
-msgstr "Der Name ist kein gültiges UTF-8."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid ""
-"The picture has no resolution; %(dpi)s dpi was assumed, the text may not be "
-"recognized."
-msgstr ""
-"Das Bild hat keine Auflösung; angenommen wurden %(dpi)s dpi, der Text wird "
-"vielleicht nicht erkannt."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The reader did not come back, the server was stopped."
-msgstr "Der Leser kam nicht zurück, der Server wurde angehalten."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The reader stopped (exit code %(code)s)."
-msgstr "Der Leser hat angehalten (Exit-Code %(code)s)."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_list
-msgid ""
-"The recognition of the ticked files is thrown away and done again from the "
-"original."
-msgstr ""
-"Die Texterkennung der markierten Dateien wird verworfen und vom Original aus"
-" neu gemacht."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_form
-msgid ""
-"The recognition of this file is thrown away and done again from the "
-"original."
-msgstr ""
-"Die Texterkennung dieser Datei wird verworfen und vom Original aus neu "
-"gemacht."
-
-#. module: int_filemanager
-#. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "The PDF version of this document is missing."
 msgstr "Die PDF-Fassung dieses Dokuments fehlt."
 
 #. module: int_filemanager
 #. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_import.py:0
-msgid "The root folder %(root)s does not exist."
-msgstr "Der Wurzelordner %(root)s existiert nicht."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_text_block_kib
-msgid ""
-"The text of files without pages (Word, Excel, plain text) is saved in blocks"
-" of this size."
-msgstr "Der Text von Dateien ohne Seiten (Word, Excel, reiner Text) wird in Blöcken dieser Größe gespeichert."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_time_reserve
-msgid ""
-"The text of the files is read in runs of the scheduled action. A run stops "
-"this long before Odoo's own time limit for it would stop (and restart) the "
-"server."
-msgstr "Der Text der Dateien wird in Durchläufen der geplanten Aktion gelesen. Ein Durchlauf endet so lange vor dem Zeitlimit von Odoo, das den Server anhalten (und neu starten) würde."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"The text of the files is read in the background. A run stops this many "
-"seconds before Odoo's own time limit."
-msgstr "Der Text der Dateien wird im Hintergrund gelesen. Ein Durchlauf endet so viele Sekunden vor dem Zeitlimit von Odoo."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"The text of the files is read in the background; only what is done can be "
-"found by the search in the files."
-msgstr "Der Text der Dateien wird im Hintergrund gelesen; die Suche in den Dateien findet nur, was schon fertig ist."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The text of the recognized pages could not be read."
-msgstr "Der Text der erkannten Seiten konnte nicht gelesen werden."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_list
-msgid "The text of the ticked files is thrown away and read again."
-msgstr "Der Text der angekreuzten Dateien wird verworfen und erneut gelesen."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_form
-msgid "The text of this file is thrown away and read again."
-msgstr "Der Text dieser Datei wird verworfen und erneut gelesen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The text recognition did not come back, the server was stopped."
-msgstr ""
-"Die Texterkennung hat sich nicht gemeldet, der Server wurde angehalten."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The text recognition found no text."
-msgstr "Die Texterkennung hat keinen Text gefunden."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The text recognition gave no file."
-msgstr "Die Texterkennung hat keine Datei geliefert."
-
-#. module: int_filemanager
-#. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "There is no PDF version of this document."
 msgstr "Es gibt keine PDF-Fassung dieses Dokuments."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The text recognition refused pages that have text."
-msgstr "Die Texterkennung hat Seiten abgelehnt, die schon Text haben."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_text.py:0
-msgid "The text recognition stopped with an error several times."
-msgstr "Die Texterkennung ist mehrmals mit einem Fehler abgebrochen."
 
 #. module: int_filemanager
 #. odoo-python
@@ -2217,68 +883,9 @@ msgid "This folder does not exist."
 msgstr "Dieser Ordner existiert nicht."
 
 #. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_import_line_import_path
-msgid "This path is in the order already."
-msgstr "Dieser Pfad ist im Auftrag schon enthalten."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_budget
-msgid "Time of a run"
-msgstr "Dauer eines Durchlaufs"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Time reserve"
-msgstr "Zeitreserve"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_time_reserve
-msgid "Time reserve (seconds)"
-msgstr "Zeitreserve (Sekunden)"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_import_line__state__pending
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_line_view_search
-msgid "To do"
-msgstr "Zu erledigen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
-msgid "Today Activities"
-msgstr "Heutige Aktivitäten"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid ""
-"Too short: no file is read. Raise the limit of Odoo for scheduled actions "
-"(limit_time_real_cron) or lower the time reserve."
-msgstr "Zu kurz: keine Datei wird gelesen. Erhöhen Sie das Limit von Odoo für geplante Aktionen (limit_time_real_cron) oder senken Sie die Zeitreserve."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_import__total_size
-msgid "Total Size"
-msgstr "Gesamtgröße"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_max_attempts
-msgid "Tries per file"
-msgstr "Versuche je Datei"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
-msgid "Type"
-msgstr "Typ"
-
-#. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__activity_exception_decoration
 msgid "Type of the exception activity on record."
 msgstr "Typ der Ausnahmeaktivität im Datensatz."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_ocr_output_type
-msgid "Type of the new PDF"
-msgstr "Art des neuen PDFs"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -2292,100 +899,12 @@ msgid "User Settings"
 msgstr "Benutzereinstellungen"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_pending
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__ocr_state__wait
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_text__state__pending
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
-msgid "Waiting"
-msgstr "Wartet"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__ocr_images
-msgid ""
-"Whether the text in the images of this folder (JPEG, PNG, TIFF ...) is "
-"recognized, so that the search finds it. A top folder that says 'like the "
-"parent folder' is off. Nothing is recognized unless the text recognition is "
-"switched on in the settings."
-msgstr ""
-"Ob der Text in den Bildern dieses Ordners (JPEG, PNG, TIFF ...) erkannt "
-"wird, damit die Suche ihn findet. Ein oberster Ordner, der „Wie der "
-"übergeordnete Ordner“ sagt, ist aus. Es wird nichts erkannt, solange die "
-"Texterkennung in den Einstellungen nicht eingeschaltet ist."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"Which scans are done and what is still to do. Nothing is recognized while "
-"the state is not Ready."
-msgstr ""
-"Welche Scans fertig sind und was noch zu tun ist. Es wird nichts erkannt, "
-"solange der Zustand nicht „Bereit“ ist."
-
-#. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__access_mode
 msgid ""
 "Who sees this folder and its documents. A top folder that is not open to all"
 " is seen by the users and groups listed on it and by its followers (and by "
 "the administrators)."
 msgstr "Wer diesen Ordner und seine Dokumente sieht. Ein Ordner oberster Ebene, der nicht für alle offen ist, ist für die aufgeführten Benutzer und Gruppen sowie für seine Follower sichtbar (und für die Administratoren)."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_text_empty
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_text_view_search
-msgid "Without text"
-msgstr "Ohne Text"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "deu+eng"
-msgstr "deu+eng"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_import_view_form
-msgid "e.g. Test seminars"
-msgstr "z. B. Testseminare"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "no language"
-msgstr "keine Sprache"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "not installed"
-msgstr "nicht installiert"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "not installed: PDF files are not read"
-msgstr "nicht installiert: PDF-Dateien werden nicht gelesen"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "ocrmypdf %(version)s, Tesseract with %(languages)s"
-msgstr "ocrmypdf %(version)s, Tesseract mit %(languages)s"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "ocrmypdf is there, Tesseract is not"
-msgstr "ocrmypdf ist da, Tesseract nicht"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
-msgid "p. %(page)s"
-msgstr "S. %(page)s"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "pdfminer %(version)s"
-msgstr ""
 
 #. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.int_filemanager_thumbnail_cron_ir_actions_server
@@ -2434,13 +953,6 @@ msgstr "Ein Dokument wurde verknüpft."
 #: code:addons/int_filemanager/models/int_filemanager_link.py:0
 msgid "A document was unlinked."
 msgstr "Die Verknüpfung mit einem Dokument wurde gelöst."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_linkable__document_search
-#: model:ir.model.fields,field_description:int_filemanager.field_res_partner__document_search
-#: model:ir.model.fields,field_description:int_filemanager.field_res_users__document_search
-msgid "Document contains"
-msgstr "Dokument enthält"
 
 #. module: int_filemanager
 #. odoo-python
@@ -2510,11 +1022,6 @@ msgstr "Datensatz-ID"
 #: model:ir.model,name:int_filemanager.model_int_filemanager_linkable
 msgid "Record with documents of the filemanager"
 msgstr "Datensatz mit Dokumenten des Dateimanagers"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_text_page__scan
-msgid "Scan"
-msgstr "Scan"
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_link_document_record_uniq
@@ -2594,846 +1101,20 @@ msgid "Only the record of a link can be changed."
 msgstr "Bei einer Verknüpfung kann nur der Datensatz geändert werden."
 
 #. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "%(field)s: at least 1."
-msgstr "%(field)s: mindestens 1."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "%(field)s: at most %(ceiling)s, the limit that the administrators set."
-msgstr "%(field)s: höchstens %(ceiling)s, die Grenze der Administratoren."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/res_config_settings.py:0
-msgid "%(field)s: the start value is above the limit."
-msgstr "%(field)s: der Startwert liegt über der Grenze."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__active
-msgid "A blocked link (archived) does not work, and can be unblocked."
-msgstr "Ein gesperrter Link (archiviert) funktioniert nicht und kann wieder entsperrt werden."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_share_unlock_hours
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"A guest who typed the password of a share does not type it again for this "
-"long, in the same browser tab."
-msgstr "Wer das Passwort einer Freigabe eingegeben hat, muss es für diese Zeit im selben Browser-Tab nicht noch einmal eingeben."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "A limit of downloads is for files only."
-msgstr "Eine Begrenzung der Downloads gibt es nur für Dateien."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "A new share starts with these limits for the files that guests upload."
-msgstr "Eine neue Freigabe beginnt mit diesen Grenzen für die Dateien, die Gäste hochladen."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_share_target
-msgid "A share has a folder or a file as its target, not both and not none."
-msgstr "Eine Freigabe hat einen Ordner oder eine Datei als Ziel, nicht beides und nicht keines."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "A share has to allow at least one of: see, download, upload."
-msgstr "Eine Freigabe muss mindestens eines erlauben: ansehen, herunterladen, hochladen."
-
-#. module: int_filemanager
-#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_share_action
-msgid ""
-"A share is a link to a folder or a file. Whoever has it needs no account."
-msgstr "Eine Freigabe ist ein Link auf einen Ordner oder eine Datei. Wer ihn hat, braucht kein Konto."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__url
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "Address"
-msgstr "Adresse"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_share_invalid_tokens
-msgid ""
-"After this many addresses of shares that do not exist, an address is turned "
-"away for ten minutes (whoever has a right link is not)."
-msgstr "Nach so vielen Adressen von Freigaben, die es nicht gibt, wird ein Absender zehn Minuten lang abgewiesen (wer einen richtigen Link hat, nicht)."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__expiration_date
-msgid ""
-"After this moment the link does not work any more. Empty: it never ends."
-msgstr "Nach diesem Zeitpunkt funktioniert der Link nicht mehr. Leer: er endet nie."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__upload_max_total_mb
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_default_total_mb
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_max_total_mb
-msgid "All files together (MB)"
-msgstr "Alle Dateien zusammen (MB)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__upload_extensions
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_default_extensions
-msgid "Allowed endings"
-msgstr "Erlaubte Endungen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.js:0
-msgid "Allowed: %(kinds)s"
-msgstr "Erlaubt: %(kinds)s"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "Block"
-msgstr "Sperren"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_share__state__blocked
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_search
-msgid "Blocked"
-msgstr "Gesperrt"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_brake
-msgid "Brake on requests"
-msgstr "Bremse für Anfragen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Brakes"
-msgstr "Bremsen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__upload_size
-msgid "Bytes uploaded"
-msgstr "Hochgeladene Bytes"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form_dialog
-msgid "Close"
-msgstr "Schließen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form_dialog
-msgid "Create the link"
-msgstr "Link erstellen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__download_count
-msgid "Downloads"
-msgstr "Downloads"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__max_downloads
-msgid "Downloads allowed"
-msgstr "Erlaubte Downloads"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.share_file_page
-msgid "Downloads left:"
-msgstr "Verbleibende Downloads:"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "Everybody who has the link can then open it."
-msgstr "Danach kann jeder, der den Link hat, ihn öffnen."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__expiration_date
-msgid "Expiration Date"
-msgstr "Ablaufdatum"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_share__state__expired
-msgid "Expired"
-msgstr "Abgelaufen"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_share_creators__admin
-msgid "Filemanager administrators only"
-msgstr "Nur Administratoren des Filemanagers"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_share
-msgid "Filemanager share"
-msgstr "Filemanager-Freigabe"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_share_attempt
-msgid "Filemanager share: wrong password"
-msgstr "Filemanager-Freigabe: falsches Passwort"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__max_downloads
-msgid ""
-"Files only. The link ends after this many downloads. 0: no limit. Only the "
-"download button counts: a file that the guest may see in the browser can be "
-"saved without it."
-msgstr "Nur für Dateien. Der Link endet nach so vielen Downloads. 0: keine Begrenzung. Es zählt nur der Download-Knopf: Eine Datei, die der Gast im Browser ansehen darf, lässt sich auch ohne ihn speichern."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_share_uploads_per_minute
-msgid ""
-"Files that one address may send to a share in a minute. The limits of the "
-"share itself (size, number, total) do not depend on it."
-msgstr "Dateien, die ein Absender in einer Minute an eine Freigabe schicken darf. Die Grenzen der Freigabe selbst (Größe, Anzahl, Summe) hängen nicht davon ab."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__upload_count
-msgid "Files uploaded"
-msgstr "Hochgeladene Dateien"
-
-#. module: int_filemanager
-#: model:ir.model,name:int_filemanager.model_int_filemanager_shareable
-msgid "Folder or document that can be shared"
-msgstr "Ordner oder Dokument, das freigegeben werden kann"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__can_upload
-msgid ""
-"Folders only. The guests put files into a folder of their own below the "
-"shared folder, which only you and the administrators see."
-msgstr "Nur für Ordner. Die Gäste legen Dateien in einem eigenen Ordner unterhalb des freigegebenen Ordners ab, den nur Sie und die Administratoren sehen."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_share_password_tries_share
-msgid "From all addresses together."
-msgstr "Von allen Absendern zusammen."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__has_password
-msgid "Has Password"
-msgstr "Hat Passwort"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Highest values of the uploads"
-msgstr "Höchstwerte der Uploads"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_unlock_hours
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Hours the password is kept"
-msgstr "Stunden, die das Passwort gilt"
-
-#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_guest_search
 msgid "Images"
 msgstr "Bilder"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_attempt__ip
-msgid "Ip"
-msgstr "IP-Adresse"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_app.xml:0
-msgid "Kanban"
-msgstr "Kanban"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__upload_max_file_mb
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_default_file_mb
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_max_file_mb
-msgid "Largest file (MB)"
-msgstr "Größte Datei (MB)"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__last_access
-msgid "Last Access"
-msgstr "Letzter Zugriff"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_share__state__limit
-msgid "Limit reached"
-msgstr "Limit erreicht"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"Limits for the guests of the shares. The brake on wrong passwords is always "
-"on."
-msgstr "Grenzen für die Gäste der Freigaben. Die Bremse für falsche Passwörter ist immer eingeschaltet."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_share_brake
-msgid ""
-"Limits how many requests one address may send: made-up addresses of shares, "
-"and the requests to a share. Not the brake on wrong passwords: that one is "
-"always on."
-msgstr "Begrenzt, wie viele Anfragen ein Absender schicken darf: erfundene Adressen von Freigaben und Anfragen an eine Freigabe. Nicht die Bremse für falsche Passwörter: Die ist immer eingeschaltet."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_app.xml:0
-msgid "List"
-msgstr "Liste"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
-msgid ""
-"Make a link that gives this file to whoever has it, without an account."
-msgstr "Einen Link erstellen, der diese Datei an jeden gibt, der ihn hat, ohne Konto."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
-msgid ""
-"Make a link that gives this folder to whoever has it, without an account."
-msgstr "Einen Link erstellen, der diesen Ordner an jeden gibt, der ihn hat, ohne Konto."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_search
-msgid "My shares"
-msgstr "Meine Freigaben"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.xml:0
-msgid "My uploads"
-msgstr "Meine Uploads"
-
-#. module: int_filemanager
-#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_share_action
-msgid "No shares yet"
-msgstr "Noch keine Freigaben"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_action_service.js:0
-msgid "Not available on this page."
-msgstr "Auf dieser Seite nicht verfügbar."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__upload_max_files
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_default_files
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_max_files
-msgid "Number of files"
-msgstr "Anzahl der Dateien"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "Only the filemanager administrators may make shares."
-msgstr "Nur die Administratoren des Filemanagers dürfen Freigaben erstellen."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.share_password_page
-msgid "Open"
-msgstr "Öffnen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__password
-#: model_terms:ir.ui.view,arch_db:int_filemanager.share_password_page
-msgid "Password"
-msgstr "Passwort"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__password_hash
-msgid "Password Hash"
-msgstr "Passwort-Hash"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "Protection"
-msgstr "Schutz"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.xml:0
-msgid "Remove"
-msgstr "Entfernen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "Remove the password"
-msgstr "Passwort entfernen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_requests_per_minute
-msgid "Requests to a share in a minute"
-msgstr "Anfragen an eine Freigabe pro Minute"
-
-#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form_dialog
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form_dialog
 msgid "Save"
 msgstr "Speichern"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__can_view
-msgid "See"
-msgstr "Ansehen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__upload_extensions
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_share_default_extensions
-msgid ""
-"Separated by commas: pdf, jpg. Empty: every ending, except those that can "
-"run as a program or a page."
-msgstr "Durch Kommas getrennt: pdf, jpg. Leer: jede Endung, außer denen, die als Programm oder Seite laufen können."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-#: code:addons/int_filemanager/models/int_filemanager_shareable.py:0
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share_attempt__share_id
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
-msgid "Share"
-msgstr "Teilen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Share links"
-msgstr "Freigabe-Links"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_shareable.py:0
-#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_share_action
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__share_count
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__share_count
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_shareable__share_count
-#: model:ir.ui.menu,name:int_filemanager.int_filemanager_share_menu
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
-msgid "Shares"
-msgstr "Freigaben"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_password_length
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Shortest password"
-msgstr "Kürzestes Passwort"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.share_file_page
-msgid "Show"
-msgstr "Anzeigen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_orm.js:0
-msgid "Something went wrong. Try again."
-msgstr "Etwas ist schiefgegangen. Versuchen Sie es noch einmal."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Start values of the uploads"
-msgstr "Startwerte der Uploads"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.xml:0
-msgid "Taken over"
-msgstr "Übernommen"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "Target"
-msgstr "Ziel"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_share__state__archived
-msgid "Target archived"
-msgstr "Ziel archiviert"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__company_id
-msgid "The company of the folder or the file; empty if it has none."
-msgstr "Das Unternehmen des Ordners oder der Datei; leer, wenn es keines hat."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_share_max_downloads_positive
-msgid "The downloads allowed cannot be negative."
-msgstr "Die erlaubten Downloads dürfen nicht negativ sein."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "The expiration date has to be in the future."
-msgstr "Das Ablaufdatum muss in der Zukunft liegen."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.js:0
-msgid "The file could not be removed. Try again."
-msgstr "Die Datei konnte nicht entfernt werden. Versuchen Sie es noch einmal."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "The guests may"
-msgstr "Die Gäste dürfen"
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_share_upload_limits_positive
-msgid "The limits of the uploads have to be at least 1."
-msgstr "Die Grenzen der Uploads müssen mindestens 1 sein."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "The link stops working. It can be unblocked."
-msgstr "Der Link funktioniert nicht mehr. Er kann wieder entsperrt werden."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid ""
-"The makers of a share cannot set the limits of the uploads above these."
-msgstr "Wer eine Freigabe erstellt, kann die Grenzen der Uploads nicht über diese Werte setzen."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "The number of characters that the password of a share needs at least."
-msgstr "Die Anzahl der Zeichen, die das Passwort einer Freigabe mindestens braucht."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "The password needs between %(minimum)s and %(maximum)s characters."
-msgstr "Das Passwort braucht zwischen %(minimum)s und %(maximum)s Zeichen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "The password was removed."
-msgstr "Das Passwort wurde entfernt."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "The password was set."
-msgstr "Das Passwort wurde gesetzt."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__token
-msgid "The secret part of the address. Whoever has the address has the share."
-msgstr "Der geheime Teil der Adresse. Wer die Adresse hat, hat die Freigabe."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "The target of a share cannot be changed. Make a new share."
-msgstr "Das Ziel einer Freigabe lässt sich nicht ändern. Erstellen Sie eine neue Freigabe."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.js:0
-msgid "The upload failed. Try again."
-msgstr "Der Upload ist fehlgeschlagen. Versuchen Sie es noch einmal."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/controllers/int_filemanager_share.py:0
-msgid "This file does not exist."
-msgstr "Diese Datei gibt es nicht."
-
-#. module: int_filemanager
-#. odoo-javascript
-#. odoo-python
-#: code:addons/int_filemanager/controllers/int_filemanager_share.py:0
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.js:0
-msgid "This file has been taken over. It cannot be removed any more."
-msgstr "Diese Datei wurde übernommen. Sie lässt sich nicht mehr entfernen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This file is empty."
-msgstr "Diese Datei ist leer."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/controllers/int_filemanager_share.py:0
-msgid "This file is not there any more."
-msgstr "Diese Datei ist nicht mehr vorhanden."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This file is not what its name says it is."
-msgstr "Diese Datei ist nicht das, was ihr Name sagt."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This file is too large for this link."
-msgstr "Diese Datei ist für diesen Link zu groß."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.js:0
-msgid "This file is too large, or this link takes no more files."
-msgstr "Diese Datei ist zu groß, oder dieser Link nimmt keine Dateien mehr an."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/controllers/int_filemanager_share.py:0
-msgid "This is not a call."
-msgstr "Das ist kein gültiger Aufruf."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This kind of file cannot be uploaded here."
-msgstr "Diese Art von Datei kann hier nicht hochgeladen werden."
-
-#. module: int_filemanager
-#. odoo-javascript
-#. odoo-python
-#: code:addons/int_filemanager/controllers/int_filemanager_share.py:0
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-#: code:addons/int_filemanager/static/src/guest/guest_orm.js:0
-msgid "This link does not allow that."
-msgstr "Dieser Link erlaubt das nicht."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This link does not exist."
-msgstr "Diesen Link gibt es nicht."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.js:0
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.xml:0
-msgid "This link does not take files any more."
-msgstr "Dieser Link nimmt keine Dateien mehr an."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/controllers/int_filemanager_share.py:0
-msgid "This link does not take files."
-msgstr "Dieser Link nimmt keine Dateien an."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This link has been blocked."
-msgstr "Dieser Link wurde gesperrt."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This link has expired."
-msgstr "Dieser Link ist abgelaufen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/controllers/int_filemanager_share.py:0
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This link has reached its limit of downloads."
-msgstr "Dieser Link hat sein Limit an Downloads erreicht."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_orm.js:0
-msgid "This link is not valid any more."
-msgstr "Dieser Link ist nicht mehr gültig."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.share_password_page
-msgid "This link needs a password"
-msgstr "Dieser Link braucht ein Passwort"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This link needs its password."
-msgstr "Dieser Link braucht sein Passwort."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "This link takes no more files."
-msgstr "Dieser Link nimmt keine Dateien mehr an."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.xml:0
-msgid ""
-"This list is kept in this browser. Other browsers do not show these files."
-msgstr "Diese Liste wird in diesem Browser gespeichert. Andere Browser zeigen diese Dateien nicht an."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/controllers/int_filemanager_share.py:0
-msgid "This size does not exist."
-msgstr "Diese Größe gibt es nicht."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_share_token_uniq
-msgid "This token is taken."
-msgstr "Dieses Token ist vergeben."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__token
-msgid "Token"
-msgstr "Token"
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "Too many documents are selected for one download. Select fewer and download in parts."
 msgstr "Es sind zu viele Dokumente für einen Download ausgewählt. Wählen Sie weniger aus und laden Sie in Teilen herunter."
-
-#. module: int_filemanager
-#. odoo-javascript
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.js:0
-msgid "Too many files at once. Try again in a minute."
-msgstr "Zu viele Dateien auf einmal. Versuchen Sie es in einer Minute noch einmal."
-
-#. module: int_filemanager
-#. odoo-javascript
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-#: code:addons/int_filemanager/static/src/guest/guest_orm.js:0
-msgid "Too many requests. Try again in a minute."
-msgstr "Zu viele Anfragen. Versuchen Sie es in einer Minute noch einmal."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "Too many wrong addresses. Try again later."
-msgstr "Zu viele falsche Adressen. Versuchen Sie es später noch einmal."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "Too many wrong passwords. Try again later."
-msgstr "Zu viele falsche Passwörter. Versuchen Sie es später noch einmal."
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "Unblock"
-msgstr "Entsperren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.js:0
-msgid "Up to %(size)s per file"
-msgstr "Bis zu %(size)s je Datei"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/guest/guest_uploads.xml:0
-msgid "Upload files"
-msgstr "Dateien hochladen"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__upload_folder_id
-msgid "Upload folder"
-msgstr "Upload-Ordner"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__share_id
-msgid "Uploaded through"
-msgstr "Hochgeladen über"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "Uploads"
-msgstr "Uploads"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "Uploads - %(name)s"
-msgstr "Uploads - %(name)s"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_uploads_per_minute
-msgid "Uploads to a share in a minute"
-msgstr "Uploads an eine Freigabe pro Minute"
-
-#. module: int_filemanager
-#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_share_view_form
-msgid "Use"
-msgstr "Nutzung"
-
-#. module: int_filemanager
-#: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_share__state__valid
-msgid "Valid"
-msgstr "Gültig"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_share__view_count
-msgid "Visits"
-msgstr "Besuche"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "What this link shared is not available any more."
-msgstr "Was dieser Link freigegeben hat, ist nicht mehr verfügbar."
-
-#. module: int_filemanager
-#: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_share_upload_use_positive
-msgid "What was uploaded cannot be negative."
-msgstr "Das Hochgeladene darf nicht negativ sein."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_creators
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Who makes shares"
-msgstr "Wer Freigaben erstellt"
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_share_creators
-#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Whoever may make a share can give the folders and files that they see."
-msgstr "Wer Freigaben erstellen darf, kann die Ordner und Dateien freigeben, die er sieht."
-
-#. module: int_filemanager
-#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_share__password
-msgid ""
-"Whoever opens the link has to type it. It is never shown again; leave it "
-"empty to keep the one that is set."
-msgstr "Wer den Link öffnet, muss es eingeben. Es wird nie wieder angezeigt; leer lassen, um das gesetzte zu behalten."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_invalid_tokens
-msgid "Wrong addresses in 10 minutes"
-msgstr "Falsche Adressen in 10 Minuten"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/controllers/int_filemanager_share.py:0
-msgid "Wrong password."
-msgstr "Falsches Passwort."
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_password_tries_share
-msgid "Wrong passwords of a share in 10 minutes"
-msgstr "Falsche Passwörter einer Freigabe in 10 Minuten"
-
-#. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_share_password_tries_ip
-msgid "Wrong passwords of an address in 10 minutes"
-msgstr "Falsche Passwörter eines Absenders in 10 Minuten"
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "You may only share a folder or a file that the folders show to you."
-msgstr "Sie dürfen nur einen Ordner oder eine Datei freigeben, die Ihnen die Ordner anzeigen."
-
-#. module: int_filemanager
-#. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_share.py:0
-msgid "Uploading is for folders only."
-msgstr "Hochladen gibt es nur für Ordner."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -3457,7 +1138,6 @@ msgstr "Neuer Ordner"
 
 #. module: int_filemanager
 #. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.xml:0
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_move_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form_dialog
 msgid "Discard"
@@ -3520,1036 +1200,6 @@ msgstr ""
 #: code:addons/int_filemanager/static/src/file_viewer/document_file_viewer.xml:0
 msgid "Edit"
 msgstr "Bearbeiten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.xml:0
-msgid "Undo"
-msgstr "Rückgängig"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.xml:0
-msgid "Undo (Ctrl+Z)"
-msgstr "Rückgängig (Strg+Z)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.xml:0
-msgid "Redo"
-msgstr "Wiederholen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.xml:0
-msgid "Redo (Ctrl+Y)"
-msgstr "Wiederholen (Strg+Y)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.xml:0
-msgid "Delete (Del)"
-msgstr "Löschen (Entf)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.xml:0
-msgid "Save as new document"
-msgstr "Als neues Dokument speichern"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.js:0
-msgid "Discard the changes?"
-msgstr "Änderungen verwerfen?"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.js:0
-msgid "(edited)"
-msgstr "(bearbeitet)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/document_image_editor.js:0
-msgid "Stored as a new document: %(name)s"
-msgstr "Als neues Dokument gespeichert: %(name)s"
-
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Actual size (1)"
-msgstr "Originalgröße (1)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Add"
-msgstr "Addieren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Add a picture"
-msgstr "Bild hinzufügen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Adjust"
-msgstr "Anpassen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Adjust the picture (F)"
-msgstr "Bild anpassen (F)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Align bottom"
-msgstr "Unten ausrichten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Align center"
-msgstr "Zentriert ausrichten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Align left"
-msgstr "Links ausrichten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Align middle"
-msgstr "Mittig ausrichten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Align right"
-msgstr "Rechts ausrichten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Align top"
-msgstr "Oben ausrichten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Angle:"
-msgstr "Winkel:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Apply the crop"
-msgstr "Zuschnitt anwenden"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Arrow (A)"
-msgstr "Pfeil (A)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "As the picture"
-msgstr "Wie das Bild"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Black"
-msgstr "Schwarz"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Black and white"
-msgstr "Schwarzweiß"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Blur"
-msgstr "Weichzeichnen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Blur:"
-msgstr "Weichzeichnen:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Bold"
-msgstr "Fett"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Brightness"
-msgstr "Helligkeit"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Bring forward"
-msgstr "Eine Ebene nach vorn"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Bring to front"
-msgstr "In den Vordergrund"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Brownie"
-msgstr "Brownie"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Brush"
-msgstr "Pinsel"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\save_dialog.xml:0
-msgid "Cancel"
-msgstr "Abbrechen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Center"
-msgstr "Zentriert"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Circle"
-msgstr "Kreis"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Circles"
-msgstr "Kreise"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Click each point. Click the first point, double-click or press Enter to finish."
-msgstr "Klicken Sie jeden Punkt an. Zum Abschließen den ersten Punkt anklicken, doppelklicken oder die Eingabetaste drücken."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Click each point. Double-click or press Enter to finish."
-msgstr "Klicken Sie jeden Punkt an. Zum Abschließen doppelklicken oder die Eingabetaste drücken."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Click on the picture and type."
-msgstr "Klicken Sie auf das Bild und tippen Sie."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Click on the picture and type. Drag a handle to set the width."
-msgstr "Klicken Sie auf das Bild und tippen Sie. Die Breite stellen Sie an einem Griff ein."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Color over the picture"
-msgstr "Farbe über das Bild legen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Contrast"
-msgstr "Kontrast"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Copy (Ctrl+C)"
-msgstr "Kopieren (Strg+C)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Crop"
-msgstr "Zuschneiden"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Crop and turn (C)"
-msgstr "Zuschneiden und drehen (C)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Darken"
-msgstr "Abdunkeln"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Dashed"
-msgstr "Gestrichelt"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Density"
-msgstr "Dichte"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Difference"
-msgstr "Differenz"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Distance:"
-msgstr "Abstand:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Dotted"
-msgstr "Gepunktet"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Drag over what is to be hidden."
-msgstr "Ziehen Sie über das, was verdeckt werden soll."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Drag the frame and its handles; then apply."
-msgstr "Ziehen Sie den Rahmen und seine Griffe und wenden Sie den Zuschnitt dann an."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Drag to move the picture. The wheel zooms."
-msgstr "Ziehen verschiebt das Bild. Das Mausrad zoomt."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Duplicate (Ctrl+D)"
-msgstr "Duplizieren (Strg+D)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Effects"
-msgstr "Effekte"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Ellipse (E)"
-msgstr "Ellipse (E)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Emboss"
-msgstr "Prägen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Exclusion"
-msgstr "Ausschluss"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Fill"
-msgstr "Füllung"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Fill color"
-msgstr "Füllfarbe"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Fit to the window (0)"
-msgstr "An das Fenster anpassen (0)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Flip across"
-msgstr "Horizontal spiegeln"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Flip down"
-msgstr "Vertikal spiegeln"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\save_dialog.xml:0
-msgid "Format"
-msgstr "Format"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Free"
-msgstr "Frei"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Gamma"
-msgstr "Gamma"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Gradient"
-msgstr "Farbverlauf"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Gradient: from"
-msgstr "Farbverlauf: von"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Gradient: to"
-msgstr "Farbverlauf: bis"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Grayscale"
-msgstr "Graustufen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Grid"
-msgstr "Raster"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Group (Ctrl+G)"
-msgstr "Gruppieren (Strg+G)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Hide"
-msgstr "Verdecken"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Hide a part (X)"
-msgstr "Teil verdecken (X)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Highlight (M)"
-msgstr "Markieren (M)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Hue"
-msgstr "Farbton"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Invert"
-msgstr "Invertieren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Italic"
-msgstr "Kursiv"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Justify"
-msgstr "Blocksatz"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\save_dialog.xml:0
-msgid "Keep the marks editable (the next edit finds them again)"
-msgstr "Markierungen bearbeitbar halten (die nächste Bearbeitung findet sie wieder)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Kodachrome"
-msgstr "Kodachrome"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Letter spacing:"
-msgstr "Zeichenabstand:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Lighten"
-msgstr "Aufhellen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Line (L)"
-msgstr "Linie (L)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Line height:"
-msgstr "Zeilenhöhe:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Loading"
-msgstr "Wird geladen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Lock"
-msgstr "Sperren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Looks"
-msgstr "Bildlooks"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Marks"
-msgstr "Markierungen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Mirror across"
-msgstr "Horizontal spiegeln"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Mirror down"
-msgstr "Vertikal spiegeln"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Move the view (H, or hold Space)"
-msgstr "Ansicht verschieben (H oder Leertaste halten)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Multiply"
-msgstr "Multiplizieren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "No snapping"
-msgstr "Kein Einrasten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Noise"
-msgstr "Rauschen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "None"
-msgstr "Keine"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Opacity:"
-msgstr "Deckkraft:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\color_field.xml:0
-msgid "Other color"
-msgstr "Andere Farbe"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Overlay"
-msgstr "Überlagern"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Paste (Ctrl+V)"
-msgstr "Einfügen (Strg+V)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Pattern"
-msgstr "Muster"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Pen (P)"
-msgstr "Stift (P)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Pencil"
-msgstr "Bleistift"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Pixelate"
-msgstr "Verpixeln"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Pixels"
-msgstr "Pixel"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Polaroid"
-msgstr "Polaroid"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Polygon (click each point)"
-msgstr "Vieleck (jeden Punkt anklicken)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Polyline (click each point)"
-msgstr "Linienzug (jeden Punkt anklicken)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Put a picture on the picture (or paste it)"
-msgstr "Ein Bild auf das Bild legen (oder einfügen)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\save_dialog.xml:0
-msgid "Quality:"
-msgstr "Qualität:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Rectangle (R)"
-msgstr "Rechteck (R)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Remove a color"
-msgstr "Eine Farbe entfernen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Remove the crop"
-msgstr "Zuschnitt entfernen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Reset"
-msgstr "Zurücksetzen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Rounded corners:"
-msgstr "Abgerundete Ecken:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\save_dialog.js:0
-msgid "SVG (marks as vectors, with the picture)"
-msgstr "SVG (Markierungen als Vektoren, mit dem Bild)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Saturation"
-msgstr "Sättigung"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Screen"
-msgstr "Negativ multiplizieren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Select (V)"
-msgstr "Auswählen (V)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Send backward"
-msgstr "Eine Ebene nach hinten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Send to back"
-msgstr "In den Hintergrund"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Sepia"
-msgstr "Sepia"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Shadow"
-msgstr "Schatten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Shadow color"
-msgstr "Schattenfarbe"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Sharpen"
-msgstr "Schärfen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Show or hide the settings"
-msgstr "Einstellungen ein- oder ausblenden"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Size:"
-msgstr "Größe:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Snap to other marks and the edges"
-msgstr "An anderen Markierungen und den Rändern einrasten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Snap to the grid"
-msgstr "Am Raster einrasten"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Solid"
-msgstr "Durchgezogen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Space evenly, across"
-msgstr "Gleichmäßig verteilen, horizontal"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Space evenly, down"
-msgstr "Gleichmäßig verteilen, vertikal"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Spray"
-msgstr "Spray"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Strength:"
-msgstr "Stärke:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Strikethrough"
-msgstr "Durchgestrichen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Stripes"
-msgstr "Streifen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Subtract"
-msgstr "Subtrahieren"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Technicolor"
-msgstr "Technicolor"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Text (T)"
-msgstr "Text (T)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Text box"
-msgstr "Textfeld"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "The file could not be put on the picture."
-msgstr "Die Datei konnte nicht auf das Bild gelegt werden."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "The hidden part is gone from the file that is stored, but not from the picture that this one was made from."
-msgstr "Der verdeckte Teil fehlt in der gespeicherten Datei, nicht aber in dem Bild, aus dem sie entstanden ist."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\save_dialog.xml:0
-msgid "The marks are too large to be kept; the picture is stored without them."
-msgstr "Die Markierungen sind zu groß, um sie aufzubewahren; das Bild wird ohne sie gespeichert."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "The picture could not be loaded."
-msgstr "Das Bild konnte nicht geladen werden."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "The picture could not be stored."
-msgstr "Das Bild konnte nicht gespeichert werden."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "This kind of file cannot be put on a picture."
-msgstr "Diese Art von Datei kann nicht auf ein Bild gelegt werden."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "This picture is larger than your browser can store at full size. The file can be made smaller only."
-msgstr "Dieses Bild ist größer, als Ihr Browser es in voller Größe speichern kann. Die Datei kann nur kleiner gemacht werden."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Tint"
-msgstr "Tönen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Triangle"
-msgstr "Dreieck"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Turn and flip"
-msgstr "Drehen und spiegeln"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Turn left"
-msgstr "Nach links drehen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Turn right"
-msgstr "Nach rechts drehen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Underline"
-msgstr "Unterstrichen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Ungroup (Ctrl+Shift+G)"
-msgstr "Gruppierung aufheben (Strg+Umschalt+G)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Vibrance"
-msgstr "Dynamik"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Vintage"
-msgstr "Vintage"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Width:"
-msgstr "Stärke:"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\save_dialog.xml:0
-msgid "Your browser cannot make a file of the full size of this picture; the largest size it can make is offered."
-msgstr "Ihr Browser kann keine Datei in der vollen Größe dieses Bildes erzeugen; angeboten wird die größte Größe, die er erzeugen kann."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Your browser cannot make a file of this picture."
-msgstr "Ihr Browser kann aus diesem Bild keine Datei erzeugen."
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Zoom in"
-msgstr "Vergrößern"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Zoom in (+)"
-msgstr "Vergrößern (+)"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Zoom out"
-msgstr "Verkleinern"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.xml:0
-msgid "Zoom out (-)"
-msgstr "Verkleinern (-)"
-
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Discard changes"
-msgstr "Änderungen verwerfen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Stay here"
-msgstr "Hier bleiben"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Your changes will be lost if you close the editor without saving."
-msgstr "Ihre Änderungen gehen verloren, wenn Sie den Editor schließen, ohne zu speichern."
-
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Draw"
-msgstr "Zeichnen"
-
-#. module: int_filemanager
-#. odoo-javascript
-#: code:addons/int_filemanager/static/src/image_editor/image_editor\document_image_editor.js:0
-msgid "Shapes"
-msgstr "Formen"
 
 #. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_default_open_mode__single

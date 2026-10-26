@@ -5,7 +5,7 @@ globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
 const W = 3000, H = 4000;
 globalThis.__loadPicture = async () => { const c = napi.createCanvas(W, H); c.naturalWidth = W; c.naturalHeight = H; return c; };
 globalThis.__services = { dialog: {}, notification: { add() {} }, action: {}, orm: { call: async () => ({}) }, ui: { isSmall: false }, file_upload: {} };
-const { DocumentImageEditor } = await import("@int_filemanager/image_editor/document_image_editor");
+const { DocumentImageEditor } = await import("@int_filemanager_image_editor/image_editor/document_image_editor");
 const stage = document.createElement("div");
 Object.defineProperty(stage, "clientWidth", { value: 1000 }); Object.defineProperty(stage, "clientHeight", { value: 700 });
 const cv = document.createElement("canvas"); stage.appendChild(cv); document.body.appendChild(stage);

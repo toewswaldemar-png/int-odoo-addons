@@ -1,0 +1,1053 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* int_filemanager_image_editor
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0-20260817\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-14 13:02+0000\n"
+"PO-Revision-Date: 2026-10-14 13:02+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.xml:0
+msgid "Discard"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.xml:0
+msgid "Undo"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.xml:0
+msgid "Undo (Ctrl+Z)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.xml:0
+msgid "Redo"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.xml:0
+msgid "Redo (Ctrl+Y)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.xml:0
+msgid "Delete (Del)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.xml:0
+msgid "Save as new document"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.js:0
+msgid "Discard the changes?"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.js:0
+msgid "(edited)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/document_image_editor.js:0
+msgid "Stored as a new document: %(name)s"
+msgstr ""
+
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Actual size (1)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Add"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Add a picture"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Adjust"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Adjust the picture (F)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Align bottom"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Align center"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Align left"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Align middle"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Align right"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Align top"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Angle:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Apply the crop"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Arrow (A)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "As the picture"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Black"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Black and white"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Blur"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Blur:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Bold"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Brightness"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Bring forward"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Bring to front"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Brownie"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Brush"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\save_dialog.xml:0
+msgid "Cancel"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Center"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Circle"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Circles"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Click each point. Click the first point, double-click or press Enter to finish."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Click each point. Double-click or press Enter to finish."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Click on the picture and type."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Click on the picture and type. Drag a handle to set the width."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Color over the picture"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Contrast"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Copy (Ctrl+C)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Crop"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Crop and turn (C)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Darken"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Dashed"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Density"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Difference"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Distance:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Dotted"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Drag over what is to be hidden."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Drag the frame and its handles; then apply."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Drag to move the picture. The wheel zooms."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Duplicate (Ctrl+D)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Effects"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Ellipse (E)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Emboss"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Exclusion"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Fill"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Fill color"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Fit to the window (0)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Flip across"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Flip down"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\save_dialog.xml:0
+msgid "Format"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Free"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Gamma"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Gradient"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Gradient: from"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Gradient: to"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Grayscale"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Grid"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Group (Ctrl+G)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Hide"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Hide a part (X)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Highlight (M)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Hue"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Invert"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Italic"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Justify"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\save_dialog.xml:0
+msgid "Keep the marks editable (the next edit finds them again)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Kodachrome"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Letter spacing:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Lighten"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Line (L)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Line height:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Loading"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Lock"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Looks"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Marks"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Mirror across"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Mirror down"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Move the view (H, or hold Space)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Multiply"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "No snapping"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Noise"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "None"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Opacity:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\color_field.xml:0
+msgid "Other color"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Overlay"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Paste (Ctrl+V)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Pattern"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Pen (P)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Pencil"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Pixelate"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Pixels"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Polaroid"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Polygon (click each point)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Polyline (click each point)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Put a picture on the picture (or paste it)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\save_dialog.xml:0
+msgid "Quality:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Rectangle (R)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Remove a color"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Remove the crop"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Reset"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Rounded corners:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\save_dialog.js:0
+msgid "SVG (marks as vectors, with the picture)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Saturation"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Screen"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Select (V)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Send backward"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Send to back"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Sepia"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Shadow"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Shadow color"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Sharpen"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Show or hide the settings"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Size:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Snap to other marks and the edges"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Snap to the grid"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Solid"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Space evenly, across"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Space evenly, down"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Spray"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Strength:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Strikethrough"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Stripes"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Subtract"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Technicolor"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Text (T)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Text box"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "The file could not be put on the picture."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "The hidden part is gone from the file that is stored, but not from the picture that this one was made from."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\save_dialog.xml:0
+msgid "The marks are too large to be kept; the picture is stored without them."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "The picture could not be loaded."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "The picture could not be stored."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "This kind of file cannot be put on a picture."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "This picture is larger than your browser can store at full size. The file can be made smaller only."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Tint"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Triangle"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Turn and flip"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Turn left"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Turn right"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Underline"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Ungroup (Ctrl+Shift+G)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Vibrance"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Vintage"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Width:"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\save_dialog.xml:0
+msgid "Your browser cannot make a file of the full size of this picture; the largest size it can make is offered."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Your browser cannot make a file of this picture."
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Zoom in"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Zoom in (+)"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Zoom out"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.xml:0
+msgid "Zoom out (-)"
+msgstr ""
+
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Discard changes"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Stay here"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Your changes will be lost if you close the editor without saving."
+msgstr ""
+
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Draw"
+msgstr ""
+
+#. module: int_filemanager_image_editor
+#. odoo-javascript
+#: code:addons/int_filemanager_image_editor/static/src/image_editor/image_editor\document_image_editor.js:0
+msgid "Shapes"
+msgstr ""

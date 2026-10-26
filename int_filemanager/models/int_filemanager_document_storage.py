@@ -155,6 +155,22 @@ class IntFilemanagerDocument(models.Model):
                 if CHECKSUM_REGEX.fullmatch(name):
                     yield name, os.path.join(folder, name)
 
+    @api.model
+    def _gc_lock_tables(self):
+        """The tables that hold checksums of blobs, in the order the cleaner locks them."""
+        return [self._table]
+
+    @api.model
+    def _blobs_in_use(self, names):
+        """Which of these checksums a document uses, as its file or as its preview."""
+        documents = self.sudo().with_context(active_test=False)
+        return {
+            checksum for [checksum] in documents._read_group([("checksum", "in", names)], ["checksum"])
+        } | {
+            checksum
+            for [checksum] in documents._read_group([("preview_checksum", "in", names)], ["preview_checksum"])
+        }
+
     @api.autovacuum
     def _gc_blobs(self):
         """Delete the blobs on the checklist that no document uses (any more).
@@ -165,10 +181,10 @@ class IntFilemanagerDocument(models.Model):
         core, one run takes a batch only: the lock must not be held for a long time, and
         ``(done, remaining)`` makes Odoo call it again.
 
-        A blob counts as used if a *document* has its checksum or its preview, or a text row has
-        it as its recognized PDF (``used`` below). Whoever lets another model keep blobs of this storage
-        must add that model's checksums there and lock its table with the others, or the
-        cleaner deletes them. The tables are locked in a fixed order (documents, then texts).
+        A blob counts as used if a *document* has its checksum or its preview (``_blobs_in_use``).
+        Whoever lets another model keep blobs of this storage must add that model's checksums
+        there and its table to ``_gc_lock_tables``, or the cleaner deletes them. The tables are
+        locked in a fixed order (the documents first).
         """
         cr = self.env.cr
         if not os.path.isdir(self._checklist_dir()):
@@ -178,22 +194,15 @@ class IntFilemanagerDocument(models.Model):
         cr.commit()
         timeout = self.env.context.get("int_filemanager_lock_timeout", GC_LOCK_TIMEOUT)
         cr.execute(SQL("SET LOCAL lock_timeout TO %s", timeout))
-        Text = self.env["int.filemanager.text"]
         try:
-            for table in (self._table, Text._table):
+            for table in self._gc_lock_tables():
                 cr.execute(SQL("LOCK %s IN SHARE MODE", SQL.identifier(table)))
         except psycopg2.errors.LockNotAvailable:
             cr.rollback()  # a writer is busy; the next run tries again
             return 0, 0
         entries = list(itertools.islice(self._checklist_entries(), GC_BATCH))
         names = [name for name, _path in entries]
-        documents = self.sudo().with_context(active_test=False)
-        used = {
-            checksum for [checksum] in documents._read_group([("checksum", "in", names)], ["checksum"])
-        } | {
-            checksum
-            for [checksum] in documents._read_group([("preview_checksum", "in", names)], ["preview_checksum"])
-        } | Text._used_ocr_checksums(names)
+        used = self._blobs_in_use(names)
         for checksum, marker in entries:
             if checksum not in used:
                 remove_file(self._blob_path(checksum))

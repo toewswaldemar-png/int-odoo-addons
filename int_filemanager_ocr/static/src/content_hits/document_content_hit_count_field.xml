@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="int_filemanager_ocr.DocumentContentHitCountField">
+        <a
+            t-if="count"
+            role="button"
+            class="badge rounded-pill text-bg-primary text-decoration-none cursor-pointer"
+            t-att-data-tooltip="tooltip"
+            t-on-click.stop.prevent="openPopover"
+            t-out="count"
+        />
+    </t>
+</templates>

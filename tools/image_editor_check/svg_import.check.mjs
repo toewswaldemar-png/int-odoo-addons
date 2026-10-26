@@ -1,5 +1,5 @@
 import "./env.mjs";
-const IE = "@int_filemanager/image_editor/";
+const IE = "@int_filemanager_image_editor/image_editor/";
 const { importFile, placeInMiddle, isImportable } = await import(IE + "import_image");
 const { reviveObjects, cleanObjects } = await import(IE + "edit_state");
 const { MARK_PROPS } = await import(IE + "constants");

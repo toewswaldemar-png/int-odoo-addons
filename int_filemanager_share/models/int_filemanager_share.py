@@ -1,0 +1,1141 @@
+import calendar
+import re
+import time
+import unicodedata
+import uuid
+from datetime import timedelta
+
+from odoo import Command, api, fields, models
+from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.fields import Domain
+from odoo.tools import SQL
+from odoo.tools.mimetypes import guess_mimetype
+from odoo.tools.misc import (
+    hash_sign,
+    limited_field_access_token,
+    verify_hash_signed,
+    verify_limited_field_access_token,
+)
+
+from odoo.addons.int_filemanager.models.int_filemanager_link import FOLDER_ONLY_KEY
+
+from ..tools.request_brake import RequestBrake
+
+# The path of the page of a share; the token follows.
+SHARE_PATH = "/int_filemanager/share"
+# What the settings say when they are not saved. The names are those of the parameters
+# (``int_filemanager.<name>``), the types those of the values.
+SHARE_DEFAULTS = {
+    "share_creators": "user",
+    "share_default_file_mb": 25,
+    "share_default_total_mb": 500,
+    "share_default_files": 100,
+    "share_default_extensions": "",
+    "share_max_file_mb": 200,
+    "share_max_total_mb": 5 * 1024,
+    "share_max_files": 1000,
+    "share_password_length": 8,
+    "share_unlock_hours": 12,
+    # The brakes: "1" on, "0" off (a selection: Odoo does not save a 0 of a number, and a boolean
+    # that is on by default can never be switched off). The brake on passwords has no switch.
+    "share_brake": "1",
+    "share_invalid_tokens": 20,
+    "share_password_tries_ip": 5,
+    "share_password_tries_share": 30,
+    "share_requests_per_minute": 120,
+    "share_uploads_per_minute": 10,
+}
+# What a request that uploads may be bigger than the largest file: the form around the file. A
+# request to a share that takes no file (any more) may be no bigger than this.
+UPLOAD_FRAME = 64 * 1024
+MEBIBYTE = 1024 * 1024
+# How much of the start of a file is looked at to see what it is.
+UPLOAD_HEAD_SIZE = 2048
+# The receipt a guest gets for a file he uploaded: the proof, kept in his browser, that the file
+# is his (``ir.attachment`` of ``mail`` does the same with its ownership token). It ends with the
+# share, at the latest after 90 days. The pattern is checked before the token is verified, which
+# does not look at what it is given.
+RECEIPT_SCOPE = "int_filemanager.share_receipt"
+RECEIPT_DAYS = 90
+RECEIPT_PATTERN = re.compile(r"[0-9a-f]{64}o0x[0-9a-f]{1,12}")
+RECEIPT_MAX_LENGTH = 128
+RECEIPTS_MAX = 100
+# Endings that a guest never uploads, whatever the maker of the share allows: what runs as a
+# program or a script, what a browser or an office program runs by itself (pages, scripts, macros,
+# shortcuts, installers, images of disks). The list is in the code, not in the settings: a slip
+# there must not open a hole.
+BLOCKED_EXTENSIONS = frozenset(
+    [
+        "exe",
+        "com",
+        "scr",
+        "bat",
+        "cmd",
+        "msi",
+        "msp",
+        "mst",
+        "dll",
+        "sys",
+        "drv",
+        "ocx",
+        "cpl",
+        "lnk",
+        "url",
+        "pif",
+        "scf",
+        "inf",
+        "reg",
+        "gadget",
+        "application",
+        "appx",
+        "appxbundle",
+        "msix",
+        "msixbundle",
+        "vb",
+        "vbs",
+        "vbe",
+        "js",
+        "jse",
+        "mjs",
+        "cjs",
+        "wsf",
+        "wsh",
+        "ps1",
+        "psm1",
+        "psd1",
+        "ps1xml",
+        "hta",
+        "jar",
+        "jnlp",
+        "sh",
+        "bash",
+        "zsh",
+        "csh",
+        "ksh",
+        "fish",
+        "run",
+        "bin",
+        "elf",
+        "out",
+        "command",
+        "py",
+        "pyc",
+        "pyw",
+        "pyz",
+        "pl",
+        "pm",
+        "rb",
+        "php",
+        "php3",
+        "php4",
+        "php5",
+        "php7",
+        "phtml",
+        "phar",
+        "asp",
+        "aspx",
+        "ashx",
+        "asmx",
+        "jsp",
+        "jspx",
+        "cgi",
+        "htm",
+        "html",
+        "xhtml",
+        "shtml",
+        "mht",
+        "mhtml",
+        "svg",
+        "svgz",
+        "xml",
+        "xsl",
+        "xslt",
+        "xsd",
+        "swf",
+        "chm",
+        "hlp",
+        "apk",
+        "ipa",
+        "dmg",
+        "pkg",
+        "app",
+        "iso",
+        "img",
+        "vhd",
+        "vhdx",
+        "vmdk",
+        "docm",
+        "dotm",
+        "xlsm",
+        "xltm",
+        "xlam",
+        "pptm",
+        "potm",
+        "ppam",
+        "ppsm",
+        "sldm",
+        "library-ms",
+        "searchconnector-ms",
+    ]
+)
+# Endings whose files have a known start: the start has to say the same (a ``.pdf`` that is a page
+# or a program is refused). The values are what ``guess_mimetype`` answers for them. Other
+# endings are not checked this way (the answer is not reliable for them: ``guess_mimetype``
+# takes noise for a picture).
+CONTENT_TYPES_OF = {
+    "pdf": {"application/pdf"},
+    "png": {"image/png"},
+    "jpg": {"image/jpeg"},
+    "jpeg": {"image/jpeg"},
+    "gif": {"image/gif"},
+    "webp": {"image/webp"},
+    "zip": {"application/zip"},
+    "docx": {
+        "application/zip",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    },
+    "xlsx": {
+        "application/zip",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+    "pptx": {
+        "application/zip",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    },
+    "odt": {"application/zip", "application/vnd.oasis.opendocument.text"},
+    "ods": {"application/zip", "application/vnd.oasis.opendocument.spreadsheet"},
+    "odp": {"application/zip", "application/vnd.oasis.opendocument.presentation"},
+}
+# Text endings: a file with these that holds binary data is something else.
+TEXT_EXTENSIONS = frozenset(["txt", "csv", "tsv", "md", "log", "rtf", "json"])
+# What ``guess_mimetype`` says of a program, under any ending.
+EXECUTABLE_TYPES = frozenset(
+    [
+        "application/x-dosexec",
+        "application/x-msdownload",
+        "application/x-executable",
+        "application/x-sharedlib",
+        "application/x-pie-executable",
+        "application/x-mach-binary",
+    ]
+)
+# The longest password: the hash is made of all of it.
+PASSWORD_MAX_LENGTH = 128
+# What the guests of a folder share reach, per model: the field that names the folder.
+SCOPE_FOLDER_FIELD = {
+    "int.filemanager.folder": "id",
+    "int.filemanager.document": "folder_id",
+}
+# The key that opens a share with a password (``hash_sign``): its scope, and how long a key may
+# be before it is not looked at (a real one is about 100 characters).
+UNLOCK_SCOPE = "int_filemanager.share_unlock"
+UNLOCK_KEY_MAX_LENGTH = 512
+# Seconds that the brakes look back: wrong passwords and made-up tokens within ten minutes,
+# requests within a minute.
+BRAKE_WINDOW = 600
+REQUEST_WINDOW = 60
+# What the code alone sets, never a user through RPC (``readonly`` holds in the interface only):
+# a token that is guessable, a counter that is set back, an upload folder that is not the one made
+# for the share.
+SERVER_FIELDS = (
+    "token",
+    "view_count",
+    "download_count",
+    "last_access",
+    "upload_count",
+    "upload_size",
+    "upload_folder_id",
+)
+
+
+class ShareDenied(UserError):
+    """A guest is turned away. Odoo answers a ``UserError`` of a route of type ``http`` with its
+    ``http_status`` and its text only, no traceback; the text is meant for the guest."""
+
+
+class ShareBadRequest(ShareDenied):
+    http_status = 400
+
+
+class ShareNotFound(ShareDenied):
+    http_status = 404
+
+
+class ShareForbidden(ShareDenied):
+    http_status = 403
+
+
+class ShareGone(ShareDenied):
+    http_status = 410
+
+
+class ShareBusy(ShareDenied):
+    http_status = 429
+
+
+class ShareTooLarge(ShareDenied):
+    http_status = 413
+
+
+class ShareUnprocessable(ShareDenied):
+    http_status = 422
+
+
+class ShareUnsupported(ShareDenied):
+    http_status = 415
+
+
+class ShareNoSpace(ShareDenied):
+    http_status = 507
+
+
+class IntFilemanagerShare(models.Model):
+    """A link that gives a file or a folder to whoever has it, with no account.
+
+    What the guest may do is set on the link (see, download, upload), not taken from the user who
+    made it. The link ends at its expiration date, at its limit of downloads, or when it is
+    blocked (archived). The password is kept as a hash that no user can read.
+    """
+
+    _name = "int.filemanager.share"
+    _description = "Filemanager share"
+    _inherit = ["mail.thread"]
+    _order = "id desc"
+
+    @api.model
+    def _default_token(self):
+        return str(uuid.uuid4())
+
+    name = fields.Char(
+        required=True,
+        compute="_compute_name",
+        store=True,
+        precompute=True,
+        readonly=False,
+        tracking=True,
+    )
+    folder_id = fields.Many2one(
+        "int.filemanager.folder", ondelete="cascade", index="btree_not_null"
+    )
+    document_id = fields.Many2one(
+        "int.filemanager.document", ondelete="cascade", index="btree_not_null"
+    )
+    token = fields.Char(
+        required=True,
+        readonly=True,
+        copy=False,
+        default=lambda self: self._default_token(),
+        help="The secret part of the address. Whoever has the address has the share.",
+    )
+    url = fields.Char(string="Address", compute="_compute_url")
+    expiration_date = fields.Datetime(
+        help="After this moment the link does not work any more. Empty: it never ends.",
+        tracking=True,
+    )
+    active = fields.Boolean(
+        default=True,
+        tracking=True,
+        help="A blocked link (archived) does not work, and can be unblocked.",
+    )
+    can_view = fields.Boolean(string="See", default=True, tracking=True)
+    can_download = fields.Boolean(string="Download", default=True, tracking=True)
+    can_upload = fields.Boolean(
+        string="Upload",
+        tracking=True,
+        help="Folders only. The guests put files into a folder of their own below the shared "
+        "folder, which only you and the administrators see.",
+    )
+    password_hash = fields.Char(groups="base.group_system", copy=False)
+    password = fields.Char(
+        compute="_compute_password",
+        inverse="_inverse_password",
+        copy=False,
+        help="Whoever opens the link has to type it. It is never shown again; leave it empty "
+        "to keep the one that is set.",
+    )
+    has_password = fields.Boolean(compute="_compute_has_password", compute_sudo=True)
+    max_downloads = fields.Integer(
+        string="Downloads allowed",
+        default=0,
+        tracking=True,
+        help="Files only. The link ends after this many downloads. 0: no limit. Only the "
+        "download button counts: a file that the guest may see in the browser can be saved "
+        "without it.",
+    )
+    view_count = fields.Integer(string="Visits", default=0, readonly=True, copy=False)
+    download_count = fields.Integer(string="Downloads", default=0, readonly=True, copy=False)
+    last_access = fields.Datetime(readonly=True, copy=False)
+    upload_max_file_mb = fields.Integer(
+        string="Largest file (MB)",
+        default=lambda self: self._setting("share_default_file_mb"),
+        tracking=True,
+    )
+    upload_max_total_mb = fields.Integer(
+        string="All files together (MB)",
+        default=lambda self: self._setting("share_default_total_mb"),
+        tracking=True,
+    )
+    upload_max_files = fields.Integer(
+        string="Number of files",
+        default=lambda self: self._setting("share_default_files"),
+        tracking=True,
+    )
+    upload_extensions = fields.Char(
+        string="Allowed endings",
+        default=lambda self: self._setting("share_default_extensions") or False,
+        tracking=True,
+        help="Separated by commas: pdf, jpg. Empty: every ending, except those that can run "
+        "as a program or a page.",
+    )
+    upload_count = fields.Integer(string="Files uploaded", default=0, readonly=True, copy=False)
+    # Float, not Integer: an int4 column overflows above 2 GiB.
+    upload_size = fields.Float(string="Bytes uploaded", default=0, readonly=True, copy=False)
+    upload_folder_id = fields.Many2one(
+        "int.filemanager.folder",
+        string="Upload folder",
+        readonly=True,
+        copy=False,
+        ondelete="set null",
+        index="btree_not_null",
+    )
+    company_id = fields.Many2one(
+        "res.company",
+        compute="_compute_company_id",
+        store=True,
+        index=True,
+        help="The company of the folder or the file; empty if it has none.",
+    )
+    state = fields.Selection(
+        [
+            ("valid", "Valid"),
+            ("expired", "Expired"),
+            ("blocked", "Blocked"),
+            ("limit", "Limit reached"),
+            ("archived", "Target archived"),
+        ],
+        compute="_compute_state",
+    )
+
+    _token_uniq = models.UniqueIndex("(token)", "This token is taken.")
+    _target = models.Constraint(
+        "CHECK((folder_id IS NULL) != (document_id IS NULL))",
+        "A share has a folder or a file as its target, not both and not none.",
+    )
+    _max_downloads_positive = models.Constraint(
+        "CHECK(max_downloads >= 0)", "The downloads allowed cannot be negative."
+    )
+    _upload_limits_positive = models.Constraint(
+        "CHECK(upload_max_file_mb > 0 AND upload_max_total_mb > 0 AND upload_max_files > 0)",
+        "The limits of the uploads have to be at least 1.",
+    )
+    _upload_use_positive = models.Constraint(
+        "CHECK(upload_count >= 0 AND upload_size >= 0)", "What was uploaded cannot be negative."
+    )
+
+    @api.depends("folder_id", "document_id")
+    def _compute_name(self):
+        # The name of the target is the start of the name of the share; it can be changed.
+        for share in self:
+            if not share.name:
+                share.name = (share.folder_id or share.document_id).name
+
+    @api.depends("token")
+    def _compute_url(self):
+        for share in self:
+            share.url = f"{share.get_base_url()}{SHARE_PATH}/{share.token}" if share.token else False
+
+    def _compute_password(self):
+        # Never readable; the field is for typing.
+        self.password = False
+
+    def _inverse_password(self):
+        minimum = self._setting("share_password_length")
+        crypt_context = self.env["res.users"]._crypt_context()
+        for share in self:
+            if not share.password:
+                continue
+            if not minimum <= len(share.password) <= PASSWORD_MAX_LENGTH:
+                raise UserError(
+                    self.env._(
+                        "The password needs between %(minimum)s and %(maximum)s characters.",
+                        minimum=minimum,
+                        maximum=PASSWORD_MAX_LENGTH,
+                    )
+                )
+            # sudo: only the hash is written, in a field that no user may write.
+            share.sudo().password_hash = crypt_context.hash(share.password)
+            share.message_post(body=self.env._("The password was set."))
+        # What was typed is not kept: the screen that saved it does not get it back.
+        self.invalidate_recordset(["password"])
+
+    @api.depends("password_hash")
+    def _compute_has_password(self):
+        for share in self:
+            share.has_password = bool(share.password_hash)
+
+    @api.depends("folder_id.company_id", "document_id.company_id")
+    def _compute_company_id(self):
+        for share in self:
+            share.company_id = (share.folder_id or share.document_id).company_id
+
+    @api.depends(
+        "active",
+        "expiration_date",
+        "max_downloads",
+        "download_count",
+        "folder_id.active",
+        "document_id.active",
+    )
+    def _compute_state(self):
+        now = fields.Datetime.now()
+        for share in self:
+            if not share.active:
+                share.state = "blocked"
+            elif share.expiration_date and share.expiration_date <= now:
+                share.state = "expired"
+            elif share.max_downloads and share.download_count >= share.max_downloads:
+                share.state = "limit"
+            elif not (share.folder_id or share.document_id).active:
+                share.state = "archived"
+            else:
+                share.state = "valid"
+
+    @api.constrains("can_view", "can_download", "can_upload")
+    def _check_a_right(self):
+        for share in self:
+            if not (share.can_view or share.can_download or share.can_upload):
+                raise ValidationError(
+                    self.env._("A share has to allow at least one of: see, download, upload.")
+                )
+
+    @api.constrains("can_upload", "max_downloads", "document_id")
+    def _check_target_kind(self):
+        for share in self:
+            if share.document_id and share.can_upload:
+                raise ValidationError(self.env._("Uploading is for folders only."))
+            if share.folder_id and share.max_downloads:
+                raise ValidationError(self.env._("A limit of downloads is for files only."))
+
+    @api.constrains("expiration_date")
+    def _check_expiration_date(self):
+        now = fields.Datetime.now()
+        for share in self:
+            if share.expiration_date and share.expiration_date <= now:
+                raise ValidationError(self.env._("The expiration date has to be in the future."))
+
+    @api.constrains("upload_max_file_mb", "upload_max_total_mb", "upload_max_files")
+    def _check_upload_ceilings(self):
+        ceilings = {
+            "upload_max_file_mb": "share_max_file_mb",
+            "upload_max_total_mb": "share_max_total_mb",
+            "upload_max_files": "share_max_files",
+        }
+        for share in self:
+            for field, key in ceilings.items():
+                ceiling = self._setting(key)
+                if share[field] > ceiling:
+                    raise ValidationError(
+                        self.env._(
+                            "%(field)s: at most %(ceiling)s, the limit that the administrators set.",
+                            field=share._fields[field]._description_string(self.env),
+                            ceiling=ceiling,
+                        )
+                    )
+
+    @api.model
+    def _check_may_share(self, vals_list):
+        """Who may make a share, and of what: whatever the folders show to the user.
+
+        A file that a user sees only through a record that it is linked to (the rule of the
+        document, ``access_via_record``) is not theirs to pass on: the folder has to show it. As
+        for ``int.filemanager.link``.
+        """
+        if self._setting("share_creators") == "admin" and not self.env.user.has_group(
+            "int_filemanager.int_filemanager_group_admin"
+        ):
+            raise AccessError(self.env._("Only the filemanager administrators may make shares."))
+        folders = (
+            self.env["int.filemanager.folder"]
+            .browse({vals["folder_id"] for vals in vals_list if vals.get("folder_id")})
+            .exists()
+        )
+        documents = (
+            self.env["int.filemanager.document"]
+            .with_context(**{FOLDER_ONLY_KEY: True})
+            .browse({vals["document_id"] for vals in vals_list if vals.get("document_id")})
+            .exists()
+        )
+        if folders != folders._filtered_access("read") or documents != documents._filtered_access("read"):
+            raise AccessError(
+                self.env._("You may only share a folder or a file that the folders show to you.")
+            )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not self.env.su:
+            self._check_may_share(vals_list)
+            vals_list = [
+                {key: value for key, value in vals.items() if key not in SERVER_FIELDS}
+                for vals in vals_list
+            ]
+        shares = super().create(vals_list)
+        shares._ensure_upload_folder()
+        return shares
+
+    def write(self, vals):
+        # A share keeps its target: the upload folder, the rights and the limits fit the target.
+        # Who wants another target makes a new share.
+        for key in ("folder_id", "document_id"):
+            if key in vals and any(share[key].id != vals[key] for share in self):
+                raise UserError(
+                    self.env._("The target of a share cannot be changed. Make a new share.")
+                )
+        if not self.env.su:
+            vals = {key: value for key, value in vals.items() if key not in SERVER_FIELDS}
+        result = super().write(vals)
+        self._ensure_upload_folder()
+        return result
+
+    def action_show_address(self):
+        """After the dialog of the button "Share" saved the share: the same dialog again, now of
+        the saved share, with the address to copy."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Share"),
+            "res_model": self._name,
+            "res_id": self.id,
+            "views": [(self.env.ref("int_filemanager_share.int_filemanager_share_view_form_dialog").id, "form")],
+            "target": "new",
+        }
+
+    def action_remove_password(self):
+        """Let the link work without a password."""
+        self.check_access("write")
+        shares = self.sudo().filtered("password_hash")
+        shares.password_hash = False
+        for share in shares:
+            share.with_env(self.env).message_post(body=self.env._("The password was removed."))
+
+    def _upload_folder_usable(self):
+        """Whether the guests can still upload: the folder is there, is active and below the target."""
+        self.ensure_one()
+        # sudo: how the folders lie is not what the user sees.
+        share = self.sudo()
+        folder = share.upload_folder_id
+        return bool(
+            folder
+            and folder.active
+            and folder != share.folder_id
+            and folder.parent_path.startswith(share.folder_id.parent_path)
+        )
+
+    def _ensure_upload_folder(self):
+        """Make the folder for the uploads of the guests, below the shared folder.
+
+        When the share is saved, not at the first upload: two guests that upload at once would
+        both make it. Only the user who made the share, and the administrators, see it (as a
+        folder is restricted to its allowed users); the guests do not see each other's files.
+        An upload folder that is still there and below the target is used again.
+        """
+        Folder = self.env["int.filemanager.folder"].sudo().with_context(mail_create_nosubscribe=True)
+        for share in self.filtered(lambda share: share.active and share.can_upload and share.folder_id):
+            if share._upload_folder_usable():
+                continue
+            parent = share.folder_id.sudo()
+            folder = Folder._create_numbered(
+                self.env._("Uploads - %(name)s", name=share.name),
+                parent,
+                access_mode="restricted",
+                access_user_ids=[Command.set(share.create_uid.ids)],
+                company_id=parent.company_id.id,
+            )
+            share.sudo().upload_folder_id = folder
+
+    @api.model
+    def _setting(self, key):
+        """The value of a setting of the shares (``SHARE_DEFAULTS`` says which type it has)."""
+        default = SHARE_DEFAULTS[key]
+        value = self.env["ir.config_parameter"].sudo().get_param(f"int_filemanager.{key}", default)
+        return type(default)(value)
+
+    # --- the guest: finding the share, the password, the brakes --------------------------------
+
+    @api.model
+    def _brake(self):
+        """The counters of the brakes in memory (one per registry, so one per database)."""
+        registry = self.env.registry
+        brake = getattr(registry, "_int_filemanager_share_brake", None)
+        if brake is None:
+            brake = registry._int_filemanager_share_brake = RequestBrake()
+        return brake
+
+    @api.model
+    def _brake_is_on(self):
+        return self._setting("share_brake") == "1"
+
+    def _check_upload_brake(self, ip):
+        """Turn the address away that sends more files to this share in a minute than the
+        settings allow (the limits of the share itself are kept by ``_reserve_upload``)."""
+        self.ensure_one()
+        if self._brake_is_on():
+            limit = self._setting("share_uploads_per_minute")
+            if self._brake().hit(("uploads", self.id, ip), REQUEST_WINDOW) > limit:
+                raise ShareBusy(self.env._("Too many files at once. Try again in a minute."))
+
+    @api.model
+    def _resolve(self, token, ip, right=None, key=None, needs_key=True, braked=True):
+        """The share (as superuser) that a guest comes to with the token, or why not.
+
+        The order is part of what it promises: what is cheap to check comes first, and what the
+        guest may learn grows with each step. A made-up token says nothing but "not found" (and
+        counts toward the brake of the address); a share that is blocked or over says so before
+        it asks for the password; the password comes before the right, so that nobody without it
+        learns what the share allows.
+
+        :param ip: the address of the guest, for the brakes
+        :param right: ``"view"``, ``"download"`` or ``"upload"``, or several of them (one of them
+            is enough); empty: any
+        :param key: the key that ``_unlock`` gave, for a share with a password
+        :param needs_key: ``False`` for the calls that come before the password: the page that
+            asks for it, and the call that checks it
+        :param braked: ``False`` for the call that checks the password (its brake is its own)
+        """
+        share = self._find_by_token(token, ip)
+        if braked and self._brake_is_on():
+            limit = self._setting("share_requests_per_minute")
+            if self._brake().hit(("requests", share.id, ip), REQUEST_WINDOW) > limit:
+                raise ShareBusy(self.env._("Too many requests. Try again in a minute."))
+        messages = {
+            "blocked": self.env._("This link has been blocked."),
+            "expired": self.env._("This link has expired."),
+            "limit": self.env._("This link has reached its limit of downloads."),
+            "archived": self.env._("What this link shared is not available any more."),
+        }
+        if share.state != "valid":
+            raise ShareGone(messages[share.state])
+        if share.has_password and needs_key and not share._key_is_valid(key):
+            raise ShareForbidden(self.env._("This link needs its password."))
+        rights = (right,) if isinstance(right, str) else (right or ())
+        if rights and not any(share[f"can_{name}"] for name in rights):
+            raise ShareForbidden(self.env._("This link does not allow that."))
+        return share
+
+    @api.model
+    def _lookup(self, token):
+        """The share of the token (as superuser), also a blocked one, or nothing. Nothing is
+        counted and nothing is raised: for the places that must not have a side effect."""
+        # A token is a uuid: 36 characters. Anything else is not looked up.
+        if not (isinstance(token, str) and len(token) == 36):
+            return self.browse()
+        share = self.sudo().with_context(active_test=False).search([("token", "=", token)], limit=1)
+        # active_test=False was for the search; what the share leads to is looked up as usual
+        return share.with_context(active_test=True)
+
+    @api.model
+    def _find_by_token(self, token, ip):
+        """The share of the token, also a blocked one (``active_test=False``): the guest is told
+        that it is blocked, which is not what "not found" says. Any token that does not lead to
+        a share counts toward the brake of the address; one that does is let through."""
+        share = self._lookup(token)
+        if share:
+            return share
+        if self._brake_is_on():
+            limit = self._setting("share_invalid_tokens")
+            if self._brake().hit(("tokens", ip), BRAKE_WINDOW) > limit:
+                raise ShareBusy(self.env._("Too many wrong addresses. Try again later."))
+        raise ShareNotFound(self.env._("This link does not exist."))
+
+    def _unlock_secret(self):
+        """The secret of the key of this share: the one of the database and the hash of the
+        password. A key does not outlive a change of the password."""
+        self.ensure_one()
+        secret = self.env["ir.config_parameter"].sudo().get_param("database.secret")
+        return f"{secret}:{self.password_hash}"
+
+    def _unlock_key(self):
+        """The key that a guest who knew the password keeps, for the hours of the settings."""
+        self.ensure_one()
+        return hash_sign(
+            self.sudo().env,
+            UNLOCK_SCOPE,
+            [self.id],
+            expiration_hours=self._setting("share_unlock_hours"),
+            secret=self._unlock_secret(),
+        )
+
+    def _key_is_valid(self, key):
+        """Whether the key is one that ``_unlock_key`` made for this share, and is still good."""
+        self.ensure_one()
+        if not self.password_hash or not isinstance(key, str) or len(key) > UNLOCK_KEY_MAX_LENGTH:
+            return False
+        try:
+            values = verify_hash_signed(
+                self.sudo().env, UNLOCK_SCOPE, key, secret=self._unlock_secret()
+            )
+        except ValueError:  # not base64, not text, not JSON: the errors of all three are ValueErrors
+            return False
+        return values == [self.id]
+
+    def _unlock(self, password, ip):
+        """The key for the password, or ``False`` if it is wrong.
+
+        Every try is kept in the database (``int.filemanager.share.attempt``) and counts toward the
+        brake, per address and for the share as a whole; the hash takes about half a second to
+        check, so the brake comes first. A right password clears the tries of its address. The
+        brake on passwords has no switch.
+        """
+        self.ensure_one()
+        if not self.password_hash:
+            return False
+        self._take_a_try(ip)
+        crypt_context = self.env["res.users"]._crypt_context()
+        if (
+            isinstance(password, str)
+            and len(password) <= PASSWORD_MAX_LENGTH
+            and crypt_context.verify(password, self.password_hash)
+        ):
+            self._clear_tries(ip)
+            return self._unlock_key()
+        return False
+
+    def _take_a_try(self, ip):
+        """Take one of the tries of the address for this share, or turn it away (``ShareBusy``).
+
+        The try is written before the password is looked at, and in a transaction of its own that
+        holds a lock on the table of the tries: the guests that come at the same moment queue up,
+        and each one counts what the ones before it have committed. Without that, any number of
+        them would count the same few tries, all run the hash (half a second of the processor
+        each) and all be let through: under ``REPEATABLE READ`` the request has its view of the
+        table from the first thing it read, so it cannot see the tries that others write meanwhile.
+        The lock is the first statement of the transaction, so its view is taken after the lock is
+        granted. It is held for the count and one ``INSERT`` only, not for the hash.
+        """
+        with self.env.registry.cursor() as cr:
+            Attempt = self.env(cr=cr, su=True)["int.filemanager.share.attempt"]
+            cr.execute(SQL("LOCK TABLE %s IN SHARE ROW EXCLUSIVE MODE", SQL.identifier(Attempt._table)))
+            since = fields.Datetime.now() - timedelta(seconds=BRAKE_WINDOW)
+            by_share = Attempt.search_count([("share_id", "=", self.id), ("create_date", ">", since)])
+            by_ip = Attempt.search_count(
+                [("share_id", "=", self.id), ("ip", "=", ip), ("create_date", ">", since)]
+            )
+            if by_ip >= self._setting("share_password_tries_ip") or by_share >= self._setting(
+                "share_password_tries_share"
+            ):
+                raise ShareBusy(self.env._("Too many wrong passwords. Try again later."))
+            Attempt.create({"share_id": self.id, "ip": ip})
+            Attempt.env.flush_all()
+
+    def _clear_tries(self, ip):
+        """A right password: the tries of its address are forgotten (in a transaction of its own,
+        as the tries were written)."""
+        with self.env.registry.cursor() as cr:
+            env = self.env(cr=cr, su=True)
+            env["int.filemanager.share.attempt"].search(
+                [("share_id", "=", self.id), ("ip", "=", ip)]
+            ).unlink()
+            env.flush_all()
+
+    # --- what the guests reach -----------------------------------------------------------------
+
+    def _hidden_folders(self):
+        """The folders below the shared folder that the guests do not see, and what lies below them.
+
+        Those that say "only the users and groups allowed" (also if a folder below them is open
+        again: it lies in a hidden tree), and the folders for the uploads of **every** share, also
+        if somebody opened one: what a guest sent through one share is never seen by the guests of
+        another (the folder of this share, and those of shares of folders below this one).
+        """
+        self.ensure_one()
+        folders = self.env["int.filemanager.folder"].sudo().with_context(active_test=False)
+        hidden = folders.search(
+            [
+                ("id", "child_of", self.folder_id.id),
+                ("id", "!=", self.folder_id.id),
+                ("access_mode", "=", "restricted"),
+            ]
+        )
+        uploads = (
+            self.sudo()
+            .with_context(active_test=False)
+            .search([("upload_folder_id", "child_of", self.folder_id.id)])
+            .upload_folder_id
+        )
+        return hidden | self.sudo().upload_folder_id | uploads
+
+    def _scope_domain(self, model):
+        """The domain on ``model`` (folders or documents) of everything that the guests may reach.
+
+        The rules of records do not apply to the guests' reading (it runs as superuser), so this
+        domain is all that bounds them: it is joined to every search by ``&``, whatever they
+        ask for, and used to check every id they name. The shared folder and the folders below
+        it, without the hidden ones; for a file, the file; only what is active (the search
+        takes care of it); only the company of the share, if it has one.
+        """
+        self.ensure_one()
+        if self.document_id:
+            if model == "int.filemanager.document":
+                return Domain("id", "=", self.document_id.id)
+            return Domain.FALSE
+        field = SCOPE_FOLDER_FIELD[model]
+        domain = Domain(field, "child_of", self.folder_id.id)
+        hidden = self._hidden_folders()
+        if hidden:
+            domain &= ~Domain(field, "child_of", hidden.ids)
+        if self.company_id:
+            domain &= Domain("company_id", "in", [False, self.company_id.id])
+        return domain
+
+    # --- the counters --------------------------------------------------------------------------
+
+    def _count_visit(self):
+        """Count a visit of the page: at most one a minute, which is what ``view_count`` means.
+
+        One ``UPDATE`` of the two columns, no ``write`` (no chatter, no new ``write_date``). A
+        share that many guests open at once is a hot row: under ``REPEATABLE READ`` a statement
+        on a row that another transaction has changed fails and the whole request is run again.
+        The condition on ``last_access`` keeps all but one of them from changing it.
+        """
+        self.ensure_one()
+        now = fields.Datetime.now()
+        self.flush_recordset(["view_count", "last_access"])
+        updated = self.env.execute_query(
+            SQL(
+                """
+                UPDATE int_filemanager_share
+                   SET view_count = view_count + 1, last_access = %(now)s
+                 WHERE id = %(id)s AND (last_access IS NULL OR last_access < %(since)s)
+             RETURNING id
+                """,
+                now=now,
+                id=self.id,
+                since=now - timedelta(minutes=1),
+            )
+        )
+        if updated:
+            self._after_counting(["view_count", "last_access"])
+        return bool(updated)
+
+    def _count_download(self):
+        """Count a download; ``False`` if the limit of the share is reached by then.
+
+        Exact: the condition is in the statement, so two guests that download at the same time
+        cannot both take the last one (the second one is run again after the first and sees the
+        new count).
+        """
+        self.ensure_one()
+        self.flush_recordset(["max_downloads", "download_count", "last_access"])
+        updated = self.env.execute_query(
+            SQL(
+                """
+                UPDATE int_filemanager_share
+                   SET download_count = download_count + 1, last_access = %(now)s
+                 WHERE id = %(id)s AND (max_downloads = 0 OR download_count < max_downloads)
+             RETURNING id
+                """,
+                now=fields.Datetime.now(),
+                id=self.id,
+            )
+        )
+        if updated:
+            self._after_counting(["download_count", "last_access"])
+        return bool(updated)
+
+    def _after_counting(self, names):
+        """What the ORM has to know after a counter was changed in SQL: the cache, and the state
+        that depends on the download count."""
+        self.invalidate_recordset(names)
+        self.modified(names)
+
+    # --- the uploads ---------------------------------------------------------------------------
+
+    @api.model
+    def _upload_body_limit(self, token, key):
+        """The most that a request to the upload route of this token may carry, in bytes.
+
+        Odoo asks for it (the ``max_content_length`` of the route) before it reads the body, so a
+        body that is too big is turned away with a 413 before a byte of it is kept. It looks at the
+        whole state of the share, without a side effect and without an error: a share that is
+        blocked, over, full, locked by a password the request does not have the key of, or that
+        does not take files may be sent no more than the frame of a form. What a valid share takes
+        is the largest file it allows, or what is left of its total if that is less.
+        """
+        share = self._lookup(token)
+        if not share or share.state != "valid" or not share.can_upload:
+            return UPLOAD_FRAME
+        if share.has_password and not share._key_is_valid(key):
+            return UPLOAD_FRAME
+        if not share._upload_folder_usable():
+            return UPLOAD_FRAME
+        room = share.upload_max_total_mb * MEBIBYTE - share.upload_size
+        if share.upload_count >= share.upload_max_files or room <= 0:
+            return UPLOAD_FRAME
+        return min(share.upload_max_file_mb * MEBIBYTE, room) + UPLOAD_FRAME
+
+    def _upload_extensions(self):
+        """The endings that the maker of the share allows (lower case, no dot); empty: all."""
+        self.ensure_one()
+        return {
+            part.strip().lstrip(".").lower()
+            for part in (self.upload_extensions or "").split(",")
+            if part.strip().lstrip(".")
+        }
+
+    @api.model
+    def _upload_name(self, name):
+        """The name a guest's file gets: as ``_clean_name`` of the documents makes it, and without
+        the format characters (a right-to-left mark turns ``cod<mark>gpj.exe`` into what looks like
+        a picture) and without the dots and spaces at the end (Windows does not see them, so
+        ``a.exe.`` is a program there)."""
+        name = "".join(char for char in (name or "") if unicodedata.category(char) != "Cf")
+        return self.env["int.filemanager.document"]._clean_name(name.rstrip(". "))
+
+    def _check_upload(self, name, head):
+        """Refuse the file if its ending or its start do not fit. Nothing is stored yet.
+
+        ``name`` is the clean name, ``head`` the first bytes of the file. The endings of the block
+        list are never taken; of the others only those that the maker of the share named (all, if
+        none). A file that is a program is refused whatever its name says. For the endings whose
+        start is known the start has to say the same, and a text file has no binary data.
+        """
+        self.ensure_one()
+        extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        allowed = self._upload_extensions()
+        if extension in BLOCKED_EXTENSIONS or (allowed and extension not in allowed):
+            raise ShareUnsupported(self.env._("This kind of file cannot be uploaded here."))
+        if not head:  # an empty file is refused by its size
+            return
+        guessed = guess_mimetype(head)
+        expected = CONTENT_TYPES_OF.get(extension)
+        if (
+            guessed in EXECUTABLE_TYPES
+            or head.startswith(b"\x7fELF")
+            or (expected is not None and guessed not in expected)
+            or (extension in TEXT_EXTENSIONS and b"\x00" in head)
+        ):
+            raise ShareUnsupported(self.env._("This file is not what its name says it is."))
+
+    def _reserve_upload(self, size):
+        """Take one file of ``size`` bytes from the limits of the share, or refuse the upload.
+
+        One ``UPDATE`` with the limits in its condition: two guests that upload at once cannot
+        both take the last place (the second one is run again after the first and sees the new
+        count, see ``_count_download``). Called by the storage after the file is measured and
+        before it is kept (the ``check`` of ``_create_from_stream``): a refused file leaves no blob
+        behind, which a rollback could not take back.
+        """
+        self.ensure_one()
+        if size <= 0:
+            raise ShareBadRequest(self.env._("This file is empty."))
+        if size > self.upload_max_file_mb * MEBIBYTE:
+            raise ShareTooLarge(self.env._("This file is too large for this link."))
+        self.flush_recordset(
+            ["upload_max_files", "upload_max_total_mb", "upload_count", "upload_size"]
+        )
+        updated = self.env.execute_query(
+            SQL(
+                """
+                UPDATE int_filemanager_share
+                   SET upload_count = upload_count + 1, upload_size = upload_size + %(size)s
+                 WHERE id = %(id)s
+                   AND upload_count < upload_max_files
+                   AND upload_size + %(size)s <= upload_max_total_mb * %(mebibyte)s
+             RETURNING id
+                """,
+                size=size,
+                id=self.id,
+                mebibyte=MEBIBYTE,
+            )
+        )
+        if not updated:
+            raise ShareTooLarge(self.env._("This link takes no more files."))
+        self._after_counting(["upload_count", "upload_size"])
+
+    def _release_upload(self, size):
+        """Give back what ``_reserve_upload`` took, for a file that the guest took away again."""
+        self.ensure_one()
+        self.flush_recordset(["upload_count", "upload_size"])
+        self.env.execute_query(
+            SQL(
+                """
+                UPDATE int_filemanager_share
+                   SET upload_count = GREATEST(upload_count - 1, 0),
+                       upload_size = GREATEST(upload_size - %(size)s, 0)
+                 WHERE id = %(id)s
+                """,
+                size=size,
+                id=self.id,
+            )
+        )
+        self._after_counting(["upload_count", "upload_size"])
+
+    def _receipt(self, document):
+        """The receipt of a file that was uploaded through this share: it proves, to the share,
+        that the guest who holds it uploaded the file. Valid for the file only, until the share
+        ends or 90 days have passed."""
+        self.ensure_one()
+        end = time.time() + RECEIPT_DAYS * 86400
+        if self.expiration_date:
+            end = min(end, calendar.timegm(self.expiration_date.timetuple()))
+        return limited_field_access_token(
+            document, "id", timestamp=hex(int(end)), scope=RECEIPT_SCOPE
+        )
+
+    def _own_uploads(self, entries):
+        """The files of this share that the receipts in ``entries`` belong to.
+
+        ``entries`` is whatever the guest sent: a list of ``{"id", "receipt"}``. What is not in
+        that form is left out, and so is every receipt that is not right (not for this file,
+        not for this share, not valid any more), without a word: the guest learns nothing about
+        other files. The form is checked first because the check of the token does not look at
+        what it gets.
+        """
+        self.ensure_one()
+        receipts = {}
+        for entry in entries[:RECEIPTS_MAX]:
+            if not isinstance(entry, dict):
+                continue
+            document_id, receipt = entry.get("id"), entry.get("receipt")
+            if (
+                isinstance(document_id, int)
+                and not isinstance(document_id, bool)
+                and 0 < document_id <= 2147483647
+                and isinstance(receipt, str)
+                and len(receipt) <= RECEIPT_MAX_LENGTH
+                and RECEIPT_PATTERN.fullmatch(receipt)
+            ):
+                receipts[document_id] = receipt
+        documents = (
+            self.env["int.filemanager.document"]
+            .sudo()
+            .with_context(active_test=False)
+            .search([("id", "in", list(receipts)), ("share_id", "=", self.id)])
+        )
+        own = documents.browse()
+        for document in documents:
+            try:
+                valid = verify_limited_field_access_token(
+                    document, "id", receipts[document.id], scope=RECEIPT_SCOPE
+                )
+            except (ValueError, OverflowError, OSError):  # a time that is not one
+                continue
+            if valid:
+                own |= document
+        return own
+
+    def _removable_uploads(self, documents):
+        """Of these files, those that the guest may still take away: they lie in the folder of the
+        uploads, are not archived, and no user has linked them to a record (so, no user took them
+        over)."""
+        self.ensure_one()
+        linked = (
+            self.env["int.filemanager.link"]
+            .sudo()
+            .search([("document_id", "in", documents.ids)])
+            .document_id
+        )
+        return documents.filtered(
+            lambda document: document.active
+            and document.folder_id == self.sudo().upload_folder_id
+            and document not in linked
+        )

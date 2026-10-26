@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_int_filemanager_share_user,int.filemanager.share.user,model_int_filemanager_share,int_filemanager.int_filemanager_group_user,1,1,1,1
+access_int_filemanager_share_attempt,int.filemanager.share.attempt,model_int_filemanager_share_attempt,base.group_user,0,0,0,0

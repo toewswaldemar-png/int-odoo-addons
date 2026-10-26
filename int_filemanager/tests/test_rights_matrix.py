@@ -135,11 +135,10 @@ class TestRightsMatrix(AccessCase, TransactionCase):
 
     def test_the_fields_of_the_administrators_stay_closed_to_the_users(self):
         as_alice = self.shared.with_user(self.alice)
-        for name in ("ocr_images", "model_folder_ids"):
-            with self.assertRaises(AccessError):
-                as_alice[name]  # noqa: B018
-            with self.assertRaises(AccessError):
-                as_alice.write({name: False})
+        with self.assertRaises(AccessError):
+            as_alice.model_folder_ids  # noqa: B018
+        with self.assertRaises(AccessError):
+            as_alice.write({"model_folder_ids": False})
 
     # --- documents --------------------------------------------------------------------------
 
@@ -215,12 +214,8 @@ class TestRightsMatrix(AccessCase, TransactionCase):
 
     # --- what only the administrators open --------------------------------------------------
 
-    def test_the_lists_of_the_text_search_the_import_and_the_upload_folders_are_for_the_administrators(self):
+    def test_the_list_of_the_upload_folders_is_for_the_administrators(self):
         for model in (
-            "int.filemanager.import",
-            "int.filemanager.import.line",
-            "int.filemanager.text",
-            "int.filemanager.text.page",
             "int.filemanager.model.folder",
         ):
             self.env[model].with_user(self.boss).check_access("read")
@@ -228,13 +223,12 @@ class TestRightsMatrix(AccessCase, TransactionCase):
                 with self.assertRaises(AccessError):
                     self.env[model].with_user(user).check_access("read")
 
-    # --- shares and moves are the user's ----------------------------------------------------
+    # --- moves are the user's ---------------------------------------------------------------
 
-    def test_a_reader_makes_no_share_and_moves_nothing(self):
-        for model in ("int.filemanager.share", "int.filemanager.move"):
-            with self.assertRaises(AccessError):
-                self.env[model].with_user(self.reader).check_access("create")
-            self.env[model].with_user(self.alice).check_access("create")
+    def test_a_reader_moves_nothing(self):
+        with self.assertRaises(AccessError):
+            self.env["int.filemanager.move"].with_user(self.reader).check_access("create")
+        self.env["int.filemanager.move"].with_user(self.alice).check_access("create")
 
     # --- what the screens offer -------------------------------------------------------------
 
@@ -249,7 +243,6 @@ class TestRightsMatrix(AccessCase, TransactionCase):
                 as_reader = self.env[model].with_user(self.reader)
                 arch = as_reader.get_views([(False, view_type)])["views"][view_type]["arch"]
                 self.assertIn('edit="False"', arch)
-                self.assertNotIn("action_share", arch)
                 self.assertNotIn("Move to", arch)
                 as_alice = self.env[model].with_user(self.alice)
                 arch = as_alice.get_views([(False, view_type)])["views"][view_type]["arch"]

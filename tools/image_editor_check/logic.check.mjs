@@ -1,7 +1,7 @@
 import "./env.mjs";
 import { OUT } from "./paths.mjs";
 import fs from "node:fs";
-const IE = "@int_filemanager/image_editor/";
+const IE = "@int_filemanager_image_editor/image_editor/";
 const { Picture, canvasFits } = await import(IE + "picture");
 const marks = await import(IE + "marks");
 const { RedactMark } = await import(IE + "redact_mark");

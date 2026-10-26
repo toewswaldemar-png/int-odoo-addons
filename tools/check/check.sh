@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# odoo-ls for int_filemanager on the Tower test instance (must report nothing in int_filemanager).
+# odoo-ls for int_filemanager and its extension modules on the Tower test instance (must report nothing there).
 #
 # Usage (from the repo, Git Bash):  tools/check/check.sh
 #
-# Copies the working tree of int_filemanager to Tower, runs odoo-ls in a throwaway container from
+# Copies the working trees of int_filemanager* to Tower, runs odoo-ls in a throwaway container from
 # the test image (about 30 s) and filters the output with check_filter.py.
 # Never touches the live instance.
 set -euo pipefail
@@ -25,7 +25,7 @@ cleanup() {
 trap cleanup EXIT
 
 ssh "$HOST" "rm -rf $BASE/v2src && mkdir -p $BASE/v2src $WORK && chmod 777 $WORK"
-tar -c --exclude=__pycache__ int_filemanager | ssh "$HOST" "tar -x -C $BASE/v2src"
+tar -c --exclude=__pycache__ int_filemanager* | ssh "$HOST" "tar -x -C $BASE/v2src"
 scp -q tools/check/check_filter.py "$HOST:$WORK/check_filter.py"
 
 # A missing tool must not look like a clean result: stop loudly.

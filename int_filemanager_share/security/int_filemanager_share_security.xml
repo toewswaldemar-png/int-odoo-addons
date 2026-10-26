@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="int_filemanager_share_rule_company" model="ir.rule">
+        <field name="name">Filemanager share: multi-company</field>
+        <field name="model_id" ref="model_int_filemanager_share" />
+        <field
+            name="domain_force"
+        >['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <!-- Required: without it every reader would see all shares and their secret addresses. -->
+    <record id="int_filemanager_share_rule_user" model="ir.rule">
+        <field name="name">Filemanager share: own shares</field>
+        <field name="model_id" ref="model_int_filemanager_share" />
+        <field name="domain_force">[('create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('int_filemanager.int_filemanager_group_user'))]" />
+    </record>
+
+    <record id="int_filemanager_share_rule_admin" model="ir.rule">
+        <field name="name">Filemanager share: administrators see all</field>
+        <field name="model_id" ref="model_int_filemanager_share" />
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('int_filemanager.int_filemanager_group_admin'))]" />
+    </record>
+</odoo>

@@ -42,8 +42,8 @@ globalThis.__services = {
     file_upload: { bus: new EventTarget(), upload: async () => ({ state: "loaded", xhr: { responseText: "{}" } }) },
 };
 
-const { DocumentImageEditor } = await import("@int_filemanager/image_editor/document_image_editor");
-const { SaveDialog } = await import("@int_filemanager/image_editor/save_dialog");
+const { DocumentImageEditor } = await import("@int_filemanager_image_editor/image_editor/document_image_editor");
+const { SaveDialog } = await import("@int_filemanager_image_editor/image_editor/save_dialog");
 
 const templates = ["document_image_editor.xml", "color_field.xml", "save_dialog.xml"].map((name) =>
     fs.readFileSync(SRC + name, "utf8")

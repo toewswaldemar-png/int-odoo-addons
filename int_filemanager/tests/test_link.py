@@ -1,5 +1,3 @@
-import time
-from unittest.mock import patch
 
 from lxml import etree
 
@@ -406,23 +404,6 @@ class TestLink(AccessCase, TransactionCase):
             # alice sees both documents, the action shows those of the record
             found = self.Document.with_user(user).search(action["domain"])
             self.assertEqual(found, self.secret_doc)
-
-    def test_the_record_is_found_by_the_words_of_its_documents(self):
-        document = self._document(self.shared, "t.txt", b"the invoice of the plumber")
-        self._link(document, self.p2)
-        Text = self.env["int.filemanager.text"]
-        with patch.object(self.env.cr, "commit"):
-            Text._create_rows(1000)
-            for row in Text.search([("state", "=", "pending")]):
-                row._read_text(time.monotonic() + 120)
-        Text.flush_model()
-        as_outsider = self.Partner.with_user(self.outsider)
-        self.assertEqual(as_outsider.search([("document_search", "ilike", "plumber")]), self.p2)
-        self.assertEqual(as_outsider.search([("document_search", "ilike", "secret")]), self.p1)
-        self.assertFalse(as_outsider.search([("document_search", "ilike", "nothinghere")]))
-        # without the link the secret document shows nothing
-        self.link.unlink()
-        self.assertFalse(as_outsider.search([("document_search", "ilike", "secret")]))
 
     # --- the chatter ------------------------------------------------------------------------
 

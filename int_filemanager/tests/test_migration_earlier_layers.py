@@ -27,6 +27,8 @@ class TestMigrationEarlierLayers(TransactionCase):
         cr = self.env.cr
         cr.execute("CREATE TABLE int_filemanager_node (id serial PRIMARY KEY)")
         cr.execute("CREATE TABLE int_filemanager_file (id serial PRIMARY KEY, name varchar)")
+        # The table of the shares belongs to ``int_filemanager_share``: the core makes no claim on it.
+        cr.execute("CREATE TABLE IF NOT EXISTS int_filemanager_share (id serial PRIMARY KEY)")
         cr.execute("""
             ALTER TABLE int_filemanager_share
                 ADD COLUMN node_id integer REFERENCES int_filemanager_node (id),

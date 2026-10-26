@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Exports every translatable term of int_filemanager (Python, XML views, JS, QWeb) from a
+# Exports every translatable term of a module (Python, XML views, JS, QWeb; default int_filemanager,
+# I18N_MODULE=int_filemanager_share for another one) from a
 # fresh install on the Tower test instance into a .pot next to this script's output dir:
 #   tools/check/i18n_export.sh  ->  prints the path of the fetched file (tmp)
 # With I18N_LANG=de_DE it installs the module with its translation of that language (i18n/de.po)
@@ -14,7 +15,8 @@ BASE=/mnt/user/appdata/fmtest
 R="$BASE/v2i18n"
 IMAGE=odoo:19.0-hm-test
 DB=fmv2_i18n
-OUT="${1:-/tmp/int_filemanager.pot}"
+MODULE="${I18N_MODULE:-int_filemanager}"
+OUT="${1:-/tmp/$MODULE.pot}"
 LANGUAGE="${I18N_LANG:-pot}"
 LOAD=""
 EXTENSION=pot
@@ -33,16 +35,16 @@ cleanup() {
 trap 'cleanup; release_lock' EXIT
 
 ssh "$HOST" "rm -rf $R && mkdir -p $R/addons $R/config $R/data $R/out && chmod 777 $R/data $R/out"
-tar -c --exclude=__pycache__ int_filemanager | ssh "$HOST" "tar -x -C $R/addons"
+tar -c --exclude=__pycache__ int_filemanager* | ssh "$HOST" "tar -x -C $R/addons"
 ssh "$HOST" "sed -e 's/^db_name = .*/db_name = $DB/' -e 's#^data_dir = .*#data_dir = /var/lib/odoo#' \
   -e 's#^addons_path = .*#addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons#' \
   $BASE/config_v2/odoo.conf > $R/config/odoo.conf"
 ssh "$HOST" "docker exec fmtest_pg dropdb -U odoo --if-exists $DB && docker run --rm --network fmtest-net \
   -v $R/config:/etc/odoo:ro -v $R/addons:/mnt/extra-addons:ro -v $R/data:/var/lib/odoo -v $R/out:/out $IMAGE \
-  odoo -c /etc/odoo/odoo.conf -d $DB -i int_filemanager $LOAD --stop-after-init --workers=0 --no-http --log-level=warn \
+  odoo -c /etc/odoo/odoo.conf -d $DB -i $MODULE $LOAD --stop-after-init --workers=0 --no-http --log-level=warn \
   >$R/install.log 2>&1 && docker run --rm --network fmtest-net \
   -v $R/config:/etc/odoo:ro -v $R/addons:/mnt/extra-addons:ro -v $R/data:/var/lib/odoo -v $R/out:/out $IMAGE \
-  odoo i18n export -c /etc/odoo/odoo.conf -d $DB -l $LANGUAGE -o /out/int_filemanager.$EXTENSION int_filemanager \
+  odoo i18n export -c /etc/odoo/odoo.conf -d $DB -l $LANGUAGE -o /out/$MODULE.$EXTENSION $MODULE \
   >$R/export.log 2>&1"
-scp -q "$HOST:$R/out/int_filemanager.$EXTENSION" "$OUT"
+scp -q "$HOST:$R/out/$MODULE.$EXTENSION" "$OUT"
 echo "$OUT"

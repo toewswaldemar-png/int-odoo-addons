@@ -14,7 +14,7 @@ function render(caching) {
 const a = render(true), b = render(false);
 console.log(JSON.stringify(a.info)); console.log(JSON.stringify(b.info));
 
-const { drawDirectly } = await import("@int_filemanager/image_editor/marks");
+const { drawDirectly } = await import("@int_filemanager_image_editor/image_editor/marks");
 function renderEditorWay() {
   const canvas = new f.Canvas(document.createElement("canvas"), { width: 3000, height: 1400 });
   const t = new f.IText("Hy", { left: 100, top: 50, fontSize: 1100, fontFamily: "sans-serif", fontWeight: "bold", fill: "#d00000" });

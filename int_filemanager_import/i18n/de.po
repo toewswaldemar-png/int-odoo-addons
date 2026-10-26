@@ -1,0 +1,528 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* int_filemanager_import
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0-20260817\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-14 13:02+0000\n"
+"PO-Revision-Date: 2026-10-14 13:02+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,help:int_filemanager_import.field_int_filemanager_import_line__listed
+msgid "A folder: its content was listed by the check."
+msgstr "Ein Ordner: sein Inhalt wurde bei der Prüfung aufgelistet."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "A symbolic link."
+msgstr "Eine symbolische Verknüpfung."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,help:int_filemanager_import.field_int_filemanager_import_line__clash
+msgid ""
+"Another one of this folder has the same name (case, spaces and composed or "
+"decomposed letters aside): this one gets a number."
+msgstr "Ein anderer Eintrag dieses Ordners hat denselben Namen (Groß-/Kleinschreibung, Leerzeichen und zusammengesetzte oder zerlegte Buchstaben zählen nicht): dieser bekommt eine Nummer."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,help:int_filemanager_import.field_int_filemanager_import_line__path
+msgid "Below the folder to read in."
+msgstr "Unterhalb des einzulesenden Ordners."
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid "Check"
+msgstr "Prüfen"
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import.py:0
+msgid "Check the folder first."
+msgstr "Prüfen Sie zuerst den Ordner."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import__state__scanned
+msgid "Checked"
+msgstr "Geprüft"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import__state__scanning
+msgid "Checking"
+msgstr "Wird geprüft"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__clash_count
+msgid "Clash Count"
+msgstr "Namen vergeben"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__company_id
+msgid "Company"
+msgstr "Unternehmen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__create_uid
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__create_uid
+msgid "Created by"
+msgstr "Erstellt von"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__create_date
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__create_date
+msgid "Created on"
+msgstr "Erstellt am"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__display_name
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__display_name
+msgid "Display Name"
+msgstr "Anzeigename"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__document_id
+msgid "Document"
+msgstr "Dokument"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import__state__done
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import_line__state__done
+msgid "Done"
+msgstr "Erledigt"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__done_count
+msgid "Done Count"
+msgstr "Erledigt"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import__state__draft
+msgid "Draft"
+msgstr "Entwurf"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid "Empty: the whole root folder"
+msgstr "Leer: der ganze Wurzelordner"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__error_count
+msgid "Error Count"
+msgstr "Fehlgeschlagen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import_line__state__excluded
+msgid "Excluded"
+msgstr "Ausgeschlossen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__excluded_count
+msgid "Excluded Count"
+msgstr "Ausgeschlossen"
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "Excluded by its name."
+msgstr "Wegen des Namens ausgeschlossen."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import_line__state__error
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_line_view_search
+msgid "Failed"
+msgstr "Fehlgeschlagen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import_line__kind__file
+msgid "File"
+msgstr "Datei"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__file_count
+msgid "File Count"
+msgstr "Dateien"
+
+#. module: int_filemanager_import
+#: model:ir.model,name:int_filemanager_import.model_int_filemanager_import
+msgid "Filemanager import"
+msgstr "Filemanager-Einlesen"
+
+#. module: int_filemanager_import
+#: model:ir.model,name:int_filemanager_import.model_int_filemanager_import_line
+msgid "Filemanager import line"
+msgstr "Filemanager-Einlesezeile"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_line_view_search
+msgid "Files"
+msgstr "Dateien"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__source_path
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__folder_id
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import_line__kind__folder
+msgid "Folder"
+msgstr "Ordner"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__folder_count
+msgid "Folder Count"
+msgstr "Ordner"
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "Folder used."
+msgstr "Vorhandener Ordner verwendet."
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_line_view_search
+msgid "Folders"
+msgstr "Ordner"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__id
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__id
+msgid "ID"
+msgstr "ID"
+
+#. module: int_filemanager_import
+#: model:ir.actions.act_window,name:int_filemanager_import.int_filemanager_import_action
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__import_id
+#: model:ir.ui.menu,name:int_filemanager_import.int_filemanager_import_menu
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.res_config_settings_view_form
+msgid "Import"
+msgstr "Einlesen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__target_folder_id
+msgid "Into folder"
+msgstr "In den Ordner"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__kind
+msgid "Kind"
+msgstr "Art"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__write_uid
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__write_uid
+msgid "Last Updated by"
+msgstr "Zuletzt aktualisiert von"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__write_date
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__write_date
+msgid "Last Updated on"
+msgstr "Zuletzt aktualisiert am"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__message
+msgid "Last problem"
+msgstr "Letztes Problem"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__line_ids
+msgid "Line"
+msgstr "Zeile"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__line_count
+msgid "Line Count"
+msgstr "Zeilen"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid "Lines"
+msgstr "Zeilen"
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import.py:0
+msgid "Lines of %(name)s"
+msgstr "Zeilen von %(name)s"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__listed
+msgid "Listed"
+msgstr "Aufgelistet"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid "Lists the folder and shows what would be read in. Nothing is copied."
+msgstr "Listet den Ordner auf und zeigt, was eingelesen würde. Es wird nichts kopiert."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__message
+msgid "Message"
+msgstr "Meldung"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__mtime
+msgid "Modified on the disk"
+msgstr "Auf der Platte geändert"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__name
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__name
+msgid "Name"
+msgstr "Name"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__clash
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_line_view_search
+msgid "Name taken"
+msgstr "Name vergeben"
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "No free name for the folder %(name)s."
+msgstr "Kein freier Name für den Ordner %(name)s."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "Not a regular file."
+msgstr "Keine gewöhnliche Datei."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,help:int_filemanager_import.field_res_config_settings__int_filemanager_import_root
+msgid ""
+"Only what lies below this folder of the server can be read into the "
+"filemanager. An absolute path, e.g. /mnt/hm-daten."
+msgstr "Nur was unterhalb dieses Ordners des Servers liegt, kann in den Filemanager eingelesen werden. Ein absoluter Pfad, z. B. /mnt/hm-daten."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_document__origin_path
+msgid "Origin Path"
+msgstr "Ursprünglicher Pfad"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__parent_id
+msgid "Parent"
+msgstr "Oberordner"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__path
+msgid "Path"
+msgstr "Pfad"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__pending_count
+msgid "Pending Count"
+msgstr "Offen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__progress
+msgid "Progress"
+msgstr "Fortschritt"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid "Read in"
+msgstr "Einlesen"
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "Read in before."
+msgstr "Schon früher eingelesen."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import__state__running
+msgid "Reading in"
+msgstr "Wird eingelesen"
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "Renamed, the name was taken."
+msgstr "Umbenannt, der Name war vergeben."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "Renamed."
+msgstr "Umbenannt."
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid "Report"
+msgstr "Bericht"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid "Retry the failed"
+msgstr "Fehlgeschlagene wiederholen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__root_path
+#: model:ir.model.fields,field_description:int_filemanager_import.field_res_config_settings__int_filemanager_import_root
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.res_config_settings_view_form
+msgid "Root folder"
+msgstr "Wurzelordner"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,help:int_filemanager_import.field_int_filemanager_import__root_path
+msgid "Set in the settings."
+msgstr "In den Einstellungen festgelegt."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import.py:0
+msgid "Set the root folder for reading in first (Settings > Filemanager)."
+msgstr "Legen Sie zuerst den Wurzelordner zum Einlesen fest (Einstellungen > Filemanager)."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__size
+msgid "Size"
+msgstr "Größe"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import_line__state__skipped
+msgid "Skipped"
+msgstr "Übersprungen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__skipped_count
+msgid "Skipped Count"
+msgstr "Übersprungen"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_line_view_search
+msgid "Skipped or excluded"
+msgstr "Übersprungen oder ausgeschlossen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__state
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import_line__state
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_line_view_search
+msgid "State"
+msgstr "Status"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid "Stop"
+msgstr "Anhalten"
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import.py:0
+msgid "Stop the reading in first."
+msgstr "Halten Sie zuerst das Einlesen an."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "The file is a link or not below the root folder."
+msgstr "Die Datei ist eine Verknüpfung oder liegt nicht unterhalb des Wurzelordners."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "The file is not below the root folder."
+msgstr "Die Datei liegt nicht unterhalb des Wurzelordners."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "The file keeps changing while it is copied."
+msgstr "Die Datei ändert sich ständig, während sie kopiert wird."
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid ""
+"The files of the folder are copied into the filemanager. The files on the "
+"disk stay as they are."
+msgstr "Die Dateien des Ordners werden in den Filemanager kopiert. Die Dateien auf der Platte bleiben unverändert."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import.py:0
+msgid "The folder %(folder)s is not a folder below the root folder."
+msgstr "Der Ordner %(folder)s ist kein Ordner unterhalb des Wurzelordners."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "The folder above could not be read in."
+msgstr "Der darüberliegende Ordner konnte nicht eingelesen werden."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import.py:0
+msgid "The folder is being checked or read in already."
+msgstr "Der Ordner wird schon geprüft oder eingelesen."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "The folder is not below the root folder."
+msgstr "Der Ordner liegt nicht unterhalb des Wurzelordners."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,help:int_filemanager_import.field_int_filemanager_import__source_path
+msgid ""
+"The folder to read in, below the root folder of the settings. Empty: the "
+"root folder itself."
+msgstr "Der einzulesende Ordner, unterhalb des Wurzelordners der Einstellungen. Leer: der Wurzelordner selbst."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,help:int_filemanager_import.field_int_filemanager_import__target_folder_id
+msgid "The folders and files come below this folder."
+msgstr "Die Ordner und Dateien kommen unter diesen Ordner."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,help:int_filemanager_import.field_int_filemanager_import_line__parent_id
+msgid "The line of the folder this one lies in."
+msgstr "Die Zeile des Ordners, in dem dieser liegt."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import_line.py:0
+msgid "The name is not valid UTF-8."
+msgstr "Der Name ist kein gültiges UTF-8."
+
+#. module: int_filemanager_import
+#. odoo-python
+#: code:addons/int_filemanager_import/models/int_filemanager_import.py:0
+msgid "The root folder %(root)s does not exist."
+msgstr "Der Wurzelordner %(root)s existiert nicht."
+
+#. module: int_filemanager_import
+#: model:ir.model.constraint,message:int_filemanager_import.constraint_int_filemanager_import_line_import_path
+msgid "This path is in the order already."
+msgstr "Dieser Pfad ist im Auftrag schon enthalten."
+
+#. module: int_filemanager_import
+#: model:ir.model.fields.selection,name:int_filemanager_import.selection__int_filemanager_import_line__state__pending
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_line_view_search
+msgid "To do"
+msgstr "Zu erledigen"
+
+#. module: int_filemanager_import
+#: model:ir.model.fields,field_description:int_filemanager_import.field_int_filemanager_import__total_size
+msgid "Total Size"
+msgstr "Gesamtgröße"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.int_filemanager_import_view_form
+msgid "e.g. Test seminars"
+msgstr "z. B. Testseminare"
+
+#. module: int_filemanager_import
+#: model_terms:ir.ui.view,arch_db:int_filemanager_import.res_config_settings_view_form
+msgid ""
+"Only what lies below this folder of the server can be read into the "
+"filemanager."
+msgstr "Nur was unterhalb dieses Ordners des Servers liegt, kann in den Filemanager eingelesen werden."

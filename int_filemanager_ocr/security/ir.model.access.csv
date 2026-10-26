@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_int_filemanager_text_admin,int.filemanager.text.admin,model_int_filemanager_text,int_filemanager.int_filemanager_group_admin,1,0,0,0
+access_int_filemanager_text_page_admin,int.filemanager.text.page.admin,model_int_filemanager_text_page,int_filemanager.int_filemanager_group_admin,1,0,0,0

@@ -3,14 +3,11 @@ import re
 
 from odoo import api, fields, models
 from odoo.exceptions import MissingError, UserError
-from odoo.fields import Domain
 from odoo.http import Stream
-from odoo.tools import SQL
 from odoo.tools.mimetypes import get_extension
 
 from ..tools.clash import clash_summary, clashing_names
 from ..tools.zip_stream import ZipEntry, export_names
-from .int_filemanager_text_page import folded
 
 BLOB_FOLDER = "int_filemanager"
 # The most bytes of the files in one ZIP. The server stops a request after 30 minutes in our setup
@@ -23,17 +20,8 @@ ZIP_PATH = "/int_filemanager/zip/"
 # Names of missing files shown in a message.
 MISSING_NAMES_SHOWN = 5
 CHECKSUM_REGEX = re.compile(r"[0-9a-f]{64}")
-# The context key with the words of the full text search (see ``content_hits``), and how many
-# of them, and how long, are looked at.
-CONTENT_WORDS_KEY = "int_filemanager_words"
-CONTENT_WORDS_MAX = 10
-CONTENT_WORD_LENGTH = 200
-# The hits that the list loads at a time for one file (``get_content_hits``), and the most a call may ask for.
-CONTENT_BLOCK = 20
-CONTENT_BLOCK_MAX = 50
 # Set by the storage only (see ``write``), like the core does for ``ir.attachment``. The picture
-# of a PDF and its state are made by the scheduled action alone; the share a file came in
-# through, by the upload of the share.
+# of a PDF and its state are made by the scheduled action alone.
 STORAGE_FIELDS = (
     "checksum",
     "size",
@@ -42,16 +30,9 @@ STORAGE_FIELDS = (
     "thumbnail_state",
     "preview_checksum",
     "preview_state",
-    "share_id",
-    "edit_source_id",
-    "edit_state",
 )
-# The most bytes of the state that the picture editor stores with a picture (the marks, the
-# filters, the crop, and the small pictures that were put into the editor).
-EDIT_STATE_MAX_SIZE = 8 * 1024**2
 PDF = "application/pdf"
 THUMBNAIL_CRON_XMLID = "int_filemanager.int_filemanager_thumbnail_cron"
-TEXT_CRON_XMLID = "int_filemanager.int_filemanager_text_cron"
 # The office files that LibreOffice turns into a PDF for the viewer (``_cron_previews``), with the
 # ending it needs to know the format (a blob has none).
 PREVIEW_CRON_XMLID = "int_filemanager.int_filemanager_preview_cron"
@@ -89,9 +70,8 @@ class IntFilemanagerDocument(models.Model):
 
     _name = "int.filemanager.document"
     _description = "Filemanager document"
-    _inherit = ["mail.thread", "mail.activity.mixin", "int.filemanager.shareable"]
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "name"
-    _share_target = "document_id"
 
     name = fields.Char(required=True, tracking=True)
     folder_id = fields.Many2one(
@@ -115,36 +95,6 @@ class IntFilemanagerDocument(models.Model):
     )
     company_id = fields.Many2one(
         related="folder_id.company_id", store=True, index=True
-    )
-    origin_path = fields.Char(groups="base.group_system", copy=False)
-    # The share (link for guests) that a guest uploaded the file through; empty for all others.
-    share_id = fields.Many2one(
-        "int.filemanager.share",
-        string="Uploaded through",
-        readonly=True,
-        copy=False,
-        index="btree_not_null",
-        ondelete="set null",
-    )
-    # What the picture editor leaves with a picture it stored: the picture it started from and the
-    # state of the editor (marks, filters, crop) on that picture, so that the next edit finds the
-    # marks as objects again. Both are set by the storage only; the editor reads them through
-    # ``get_edit_session``, which hands out the source only to someone who may read it.
-    edit_source_id = fields.Many2one(
-        "int.filemanager.document",
-        string="Edited from",
-        readonly=True,
-        copy=False,
-        index="btree_not_null",
-        ondelete="set null",
-        groups="base.group_system",
-    )
-    edit_state = fields.Json(
-        string="Editor state",
-        readonly=True,
-        copy=False,
-        exportable=False,
-        groups="base.group_system",
     )
     # A binary field that holds nothing: ``ir.binary`` only streams a record's *binary field*
     # (``/web/content/<model>/<id>/content``). The bytes come from the blob, see
@@ -173,27 +123,6 @@ class IntFilemanagerDocument(models.Model):
         copy=False,
         exportable=False,
     )
-    # The text inside the file, for the search only (the pages are in ``int.filemanager.text``).
-    # Not "Content": that is the label of the binary field above, Odoo warns of two alike.
-    content_search = fields.Char(
-        string="Full text",
-        compute="_compute_content_search",
-        search="_search_content_search",
-        exportable=False,
-    )
-    # Where the words of the full text search are, for the column of the list: set only while
-    # the list is searched by them (the search puts them in the context, see the search view).
-    content_hits = fields.Json(
-        string="Found in the text",
-        compute="_compute_content_hits",
-        exportable=False,
-    )
-    # How many pages of the file have the words (the badge of the list).
-    content_hit_count = fields.Integer(
-        string="Hits",
-        compute="_compute_content_hits",
-        exportable=False,
-    )
     # "mp3" for "song.MP3": the kind of file as the user knows it; the mimetype says "audio/mpeg".
     extension = fields.Char(compute="_compute_extension", exportable=False)
 
@@ -205,8 +134,6 @@ class IntFilemanagerDocument(models.Model):
         "CHECK (checksum ~ '^[0-9a-f]{64}$')",
         "The checksum must be a SHA-256 in lowercase hexadecimal.",
     )
-    # A hash index only finds an equal path (a btree index fails above about 2.7 KB).
-    _origin_path_index = models.Index("USING hash (origin_path)")
 
     def _compute_content(self):
         self.content = False
@@ -217,113 +144,17 @@ class IntFilemanagerDocument(models.Model):
     def _compute_ocr_content(self):
         self.ocr_content = False
 
-    @api.depends("checksum", "preview_checksum")
+    @api.depends("preview_checksum")
     def _compute_ocr_checksum(self):
-        # The text rows are for the administrators; the checksum of the PDF is no secret to
-        # whoever may read the document it belongs to. An office file has the preview instead.
-        Text = self.env["int.filemanager.text"].sudo()
-        found = {
-            row.checksum: row.ocr_checksum
-            for row in Text.search_fetch(
-                [("checksum", "in", self.mapped("checksum")), ("ocr_checksum", "!=", False)],
-                ["checksum", "ocr_checksum"],
-            )
-        }
+        # The PDF that the viewer shows instead of the file: the preview of an office file. A
+        # module that recognizes the text of scans (``int_filemanager_ocr``) adds the PDF it made.
         for document in self:
-            document.ocr_checksum = found.get(document.checksum) or document.preview_checksum
-
-    def _compute_content_search(self):
-        self.content_search = False
-
-    @api.model
-    def _content_words(self, words):
-        """The words of a search as the search takes them: texts only, cut in length and in number."""
-        if isinstance(words, str):
-            words = [words]
-        elif not isinstance(words, (list, tuple)):
-            words = []
-        words = [word[:CONTENT_WORD_LENGTH] for word in words if isinstance(word, str) and word.strip()]
-        return words[:CONTENT_WORDS_MAX]
-
-    @api.depends_context(CONTENT_WORDS_KEY)
-    def _compute_content_hits(self):
-        """The first page of the files that have the words of the search, with an excerpt, and the count.
-
-        The words come from the context: the search view sets them from what was typed in the
-        field "Full text". Whoever sets them by hand only gets excerpts of files they can read
-        anyway (the field is read for readable documents), and no more than they could search.
-        The words go with the hits: the list asks for the other hits with them.
-        """
-        words = self._content_words(self.env.context.get(CONTENT_WORDS_KEY) or [])
-        found = self.env["int.filemanager.text.page"]._content_hits(self.mapped("checksum"), words)
-        for document in self:
-            entry = found.get(document.checksum)
-            document.content_hits = {**entry, "words": words} if entry else False
-            document.content_hit_count = entry["total"] if entry else 0
-
-    def get_content_hits(self, words, offset=0, limit=CONTENT_BLOCK):
-        """A block of the pages of this file that have the words, for the list that shows all of them.
-
-        Public (the list calls it), so it checks the right itself: only a file that the user may
-        read gives hits, and no more than the search would find.
-
-        :param words: the words of the search (see ``_content_words``)
-        :param offset: how many of the pages with a hit (by page number) are skipped
-        :param limit: how many are given, at most ``CONTENT_BLOCK_MAX``
-        :return: ``{"hits": [{"page", "parts", "terms"}], "total": n}``
-        """
-        self.ensure_one()
-        self.check_access("read")
-        offset = offset if isinstance(offset, int) and offset > 0 else 0
-        limit = min(limit, CONTENT_BLOCK_MAX) if isinstance(limit, int) and limit > 0 else CONTENT_BLOCK
-        found = self.env["int.filemanager.text.page"]._content_hits(
-            [self.checksum], self._content_words(words), offset, limit
-        )
-        return found.get(self.checksum, {"hits": [], "total": 0})
+            document.ocr_checksum = document.preview_checksum
 
     @api.depends("name")
     def _compute_extension(self):
         for document in self:
             document.extension = get_extension(document.name or "").lstrip(".")
-
-    def _search_content_search(self, operator, value):
-        """Documents whose file has these words in it (``websearch`` syntax: quotes, ``-``, ``or``).
-
-        Words, not letters: ``Mueller`` finds ``Müller`` and the other way round, ``Rechnung`` finds
-        ``Rechnungen``, ``Rechn`` finds nothing. A plural with an umlaut is another word: ``Haus``
-        does not find ``Häuser`` (the folding makes ``haeuser``, the stemmer cuts ``haeus``). A text belongs to a blob, so every document with the
-        checksum is found; the rules of the folders still decide which of them the user sees,
-        as the search runs over the documents. Equal checksum means equal content, nothing
-        is given away by a hit in a folder the user cannot see.
-        """
-        if operator == "ilike" and isinstance(value, str):
-            values = [value]
-        elif operator == "in" and value and all(isinstance(item, str) for item in value):
-            values = list(value)  # the ORM turns ``=`` into ``in``
-        else:
-            return NotImplemented
-        domains = [Domain.custom(to_sql=self._content_sql(item)) for item in values if item.strip()]
-        return Domain.OR(domains) if domains else Domain.TRUE
-
-    @api.model
-    def _content_sql(self, words):
-        def to_sql(model, alias, query):
-            model.env["int.filemanager.text"]._use_search_memory()
-            return SQL(
-                """
-                %(checksum)s IN (
-                    SELECT text.checksum
-                      FROM int_filemanager_text_page page
-                      JOIN int_filemanager_text text ON text.id = page.text_id
-                     WHERE to_tsvector('german', %(content)s)
-                           @@ websearch_to_tsquery('german', %(words)s))
-                """,
-                checksum=model._field_to_sql(alias, "checksum", query),
-                content=SQL(folded("page.content")),
-                words=SQL(folded("%s::text"), words),
-            )
-
-        return to_sql
 
     def write(self, vals):
         # ``readonly`` holds in the interface only: through RPC a user could point a document
@@ -497,41 +328,6 @@ class IntFilemanagerDocument(models.Model):
             return int(value)
         except ValueError:
             return DEFAULT_ZIP_MAX_SIZE
-
-    def action_share(self):
-        """The share dialog of one file: the list has the button for the ticked rows too."""
-        self._check_one_selected()
-        return super().action_share()
-
-    def get_edit_session(self):
-        """What the picture editor needs to go on with a picture that it stored before.
-
-        The state of the editor and the picture that it was made on. The picture is handed out
-        only if the user may read it (their rules, and not archived): the one who may read the
-        edited picture need not see where it came from. The editor then starts with the flat
-        picture.
-
-        :return: ``{"state": dict, "source": {"id", "name", "mimetype", "checksum", "size"}}``,
-            or ``{}`` if there is nothing to go on with
-        """
-        self.ensure_one()
-        self.check_access("read")
-        stored = self.sudo()
-        if not stored.edit_state or not stored.edit_source_id:
-            return {}
-        source = self.search([("id", "=", stored.edit_source_id.id)])
-        if not source:
-            return {}
-        return {
-            "state": stored.edit_state,
-            "source": {
-                "id": source.id,
-                "name": source.name,
-                "mimetype": source.mimetype,
-                "checksum": source.checksum,
-                "size": source.size,
-            },
-        }
 
     def _check_one_selected(self):
         # The buttons in the head of the list act on every ticked row; these act on one.

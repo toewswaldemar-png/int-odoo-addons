@@ -11,9 +11,6 @@ from odoo.tools.sql import escape_psql
 from ..tools.clash import CLASH_NAMES_SHOWN, NAME_TRIES, clash_summary, clashing_names
 from ..tools.zip_stream import export_name, export_names, folder_entry
 
-# The context key that the reading for the guests of a share sets (never the browser): the id of
-# the folder that the share gives. Its parent is not shown, see ``_read_format``.
-SHARE_ROOT_KEY = "int_filemanager_share_root"
 # The context key that makes the name of a folder its path ("Club / 2026 / Invoices"), like
 # ``product.category``. It is off unless a view asks for it (the field that picks a folder): the
 # chatter, the messages and the guests keep the plain name.
@@ -42,13 +39,12 @@ class IntFilemanagerFolder(models.Model):
 
     _name = "int.filemanager.folder"
     _description = "Filemanager folder"
-    _inherit = ["mail.thread", "int.filemanager.shareable"]
+    _inherit = ["mail.thread"]
     _parent_store = True
     # The full path, like ``product.category`` and ``stock.location``: a folder stands right below
     # its parent in every list and every picker (by ``name`` alone "Root / Hallo" would come before
     # "Root").
     _order = "complete_name, id"
-    _share_target = "folder_id"
 
     name = fields.Char(required=True, tracking=True)
     # Only there to sort: it names every folder above, also the ones the user may not read, so
@@ -106,22 +102,6 @@ class IntFilemanagerFolder(models.Model):
         index=True,
     )
 
-    ocr_images = fields.Selection(
-        [
-            ("inherit", "Like the parent folder"),
-            ("on", "On"),
-            ("off", "Off"),
-        ],
-        string="Text recognition in images",
-        # The administrators only: a field that is only left out of the view could be written
-        # through RPC by every user of the filemanager, and would start the recognition of images.
-        groups="int_filemanager.int_filemanager_group_admin",
-        required=True,
-        default="inherit",
-        help="Whether the text in the images of this folder (JPEG, PNG, TIFF ...) is recognized, "
-        "so that the search finds it. A top folder that says 'like the parent folder' is off. "
-        "Nothing is recognized unless the text recognition is switched on in the settings.",
-    )
     model_folder_ids = fields.One2many(
         "int.filemanager.model.folder",
         "folder_id",
@@ -134,12 +114,6 @@ class IntFilemanagerFolder(models.Model):
         "contacts. Whoever may change such a record can upload files there, without access to "
         "the folder.",
     )
-    # What ``ocr_images`` comes to for this folder after the parent is looked at.
-    ocr_images_active = fields.Boolean(
-        string="Images are recognized here",
-        compute="_compute_ocr_images_active", store=True, recursive=True
-    )
-
     # Names are unique per folder regardless of case, like on Windows. NULLS NOT
     # DISTINCT: otherwise two top folders (parent_id IS NULL) would never collide.
     _name_per_parent = models.UniqueIndex(
@@ -160,15 +134,6 @@ class IntFilemanagerFolder(models.Model):
         for folder in self:
             inherits = folder.access_mode == "inherit" and folder.parent_id
             folder.access_folder_id = folder.parent_id.access_folder_id if inherits else folder
-
-    @api.depends("ocr_images", "parent_id.ocr_images_active")
-    def _compute_ocr_images_active(self):
-        for folder in self:
-            if folder.ocr_images == "inherit":
-                # A top folder has no parent to ask: off.
-                folder.ocr_images_active = folder.parent_id.ocr_images_active
-            else:
-                folder.ocr_images_active = folder.ocr_images == "on"
 
     @api.model
     def _create_numbered(self, name, parent, **values):
@@ -251,24 +216,11 @@ class IntFilemanagerFolder(models.Model):
         raise ConcurrencyError(f"The folder {name} was made by another transaction")
 
     def _read_format(self, fnames, load="_classic_read"):
-        """The shared folder has no parent for the guests of its share.
-
-        Its parent lies outside what they may reach, and its name must not be given away. The
-        search panel of the guests needs it as well: it keeps a folder only if the chain of its
-        parents lies in the result completely (``_search_panel_sanitized_parent_hierarchy``),
-        so a root with a parent outside would leave the panel empty. Here, where every reading
-        passes (``read``, ``search_read``, ``web_read``), the root has none. The same place keeps
-        ``complete_name`` (the sort key, with the names of all folders above) from the users.
-        """
+        """``complete_name``, the sort key (with the names of all folders above), is not given out."""
         result = super()._read_format(fnames, load)
         if not self.env.su:
             for values in result:
                 values.pop("complete_name", None)
-        root_id = self.env.context.get(SHARE_ROOT_KEY)
-        if root_id:
-            for values in result:
-                if values["id"] == root_id and "parent_id" in values:
-                    values["parent_id"] = False
         return result
 
     @api.depends("name", "parent_path")

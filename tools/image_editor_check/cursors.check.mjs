@@ -2,7 +2,7 @@ import "./env.mjs";
 import { OUT } from "./paths.mjs";
 import fs from "node:fs";
 const f = fabric;
-const { styleHandles, cornerCursor, ROTATE_CURSOR } = await import("@int_filemanager/image_editor/controls");
+const { styleHandles, cornerCursor, ROTATE_CURSOR } = await import("@int_filemanager_image_editor/image_editor/controls");
 const canvas = new f.Canvas(document.createElement("canvas"), { width: 800, height: 600 });
 const ev = { shiftKey: false, altKey: false };
 let fails = 0;

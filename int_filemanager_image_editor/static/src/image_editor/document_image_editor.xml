@@ -1,0 +1,718 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="int_filemanager_image_editor.DocumentImageEditor">
+        <div
+            class="o_int_filemanager_image_editor modal modal-fullscreen d-flex flex-column"
+            data-bs-backdrop="false"
+            tabindex="-1"
+            t-ref="root"
+            t-on-keydown.stop="onKeydown"
+            t-on-keyup.stop="onKeyup"
+            t-on-paste="onPaste"
+        >
+            <!-- The bar of the core's file viewer, with the buttons for the whole picture. -->
+            <div class="o-FileViewer-header d-flex flex-wrap align-items-center w-100">
+                <div class="d-flex align-items-center ms-4 me-2">
+                    <i class="fa fa-pencil" role="img" aria-hidden="true" />
+                </div>
+                <button
+                    type="button"
+                    class="o-FileViewer-headerButton o_int_filemanager_image_editor_button px-3"
+                    title="Undo (Ctrl+Z)"
+                    aria-label="Undo"
+                    t-att-disabled="!state.canUndo"
+                    t-on-click="undo"
+                >
+                    <i class="fa fa-fw fa-undo" role="img" />
+                </button>
+                <button
+                    type="button"
+                    class="o-FileViewer-headerButton o_int_filemanager_image_editor_button px-3"
+                    title="Redo (Ctrl+Y)"
+                    aria-label="Redo"
+                    t-att-disabled="!state.canRedo"
+                    t-on-click="redo"
+                >
+                    <i class="fa fa-fw fa-repeat" role="img" />
+                </button>
+                <span class="o_int_filemanager_image_editor_separator" />
+                <button
+                    type="button"
+                    class="o-FileViewer-headerButton o_int_filemanager_image_editor_button px-3"
+                    title="Zoom out (-)"
+                    aria-label="Zoom out"
+                    t-att-disabled="!state.ready"
+                    t-on-click="zoomOut"
+                >
+                    <i class="fa fa-fw fa-search-minus" role="img" />
+                </button>
+                <button
+                    type="button"
+                    class="o-FileViewer-headerButton o_int_filemanager_image_editor_button px-2"
+                    title="Fit to the window (0)"
+                    t-att-disabled="!state.ready"
+                    t-on-click="zoomFit"
+                >
+                    <t t-out="state.zoom" /> %
+                </button>
+                <button
+                    type="button"
+                    class="o-FileViewer-headerButton o_int_filemanager_image_editor_button px-3"
+                    title="Zoom in (+)"
+                    aria-label="Zoom in"
+                    t-att-disabled="!state.ready"
+                    t-on-click="zoomIn"
+                >
+                    <i class="fa fa-fw fa-search-plus" role="img" />
+                </button>
+                <button
+                    type="button"
+                    class="o-FileViewer-headerButton o_int_filemanager_image_editor_button px-2"
+                    title="Actual size (1)"
+                    t-att-disabled="!state.ready"
+                    t-on-click="zoomActual"
+                >
+                    1:1
+                </button>
+                <span class="o_int_filemanager_image_editor_separator" />
+                <button
+                    type="button"
+                    class="o-FileViewer-headerButton o_int_filemanager_image_editor_button px-3"
+                    title="Put a picture on the picture (or paste it)"
+                    aria-label="Add a picture"
+                    t-att-disabled="!state.ready"
+                    t-on-click="chooseImport"
+                >
+                    <i class="fa fa-fw fa-picture-o" role="img" />
+                </button>
+                <button
+                    type="button"
+                    class="o-FileViewer-headerButton o_int_filemanager_image_editor_button px-3"
+                    t-att-class="{ 'active': state.panel }"
+                    title="Show or hide the settings"
+                    aria-label="Settings"
+                    t-on-click="togglePanel"
+                >
+                    <i class="fa fa-fw fa-sliders" role="img" />
+                </button>
+                <div class="flex-grow-1" />
+                <button
+                    type="button"
+                    class="btn btn-primary me-2"
+                    t-att-disabled="!state.ready or state.saving"
+                    t-on-click="openSave"
+                >
+                    <i
+                        t-att-class="'fa fa-fw ' + (state.saving ? 'fa-circle-o-notch fa-spin' : 'fa-save')"
+                        role="img"
+                    />
+                    Save as new document
+                </button>
+                <button type="button" class="btn btn-secondary me-2" t-on-click="cancel">
+                    Discard
+                </button>
+            </div>
+            <input
+                type="file"
+                class="d-none"
+                t-ref="import"
+                t-att-accept="acceptedPictures"
+                t-on-change="onImportChosen"
+            />
+            <i
+                t-if="!state.ready"
+                class="fa fa-3x fa-circle-o-notch fa-fw fa-spin position-absolute top-50 start-50 text-white"
+                role="img"
+                title="Loading"
+            />
+            <div class="o_int_filemanager_image_editor_body d-flex flex-grow-1">
+                <t t-call="int_filemanager_image_editor.ImageEditorTools" />
+                <!-- Fabric wraps the canvas in elements of its own: nothing else lives in here. -->
+                <div class="o_int_filemanager_image_editor_stage flex-grow-1" t-ref="stage">
+                    <canvas t-ref="canvas" />
+                </div>
+                <aside
+                    t-if="state.panel"
+                    class="o_int_filemanager_image_editor_panel d-flex flex-column gap-3 p-3"
+                >
+                    <t t-call="int_filemanager_image_editor.ImageEditorPanel" />
+                </aside>
+            </div>
+        </div>
+    </t>
+
+    <!-- The tools: single buttons, and the related ones in a dropdown of Odoo (the button shows the one
+         that was used last). -->
+    <t t-name="int_filemanager_image_editor.ImageEditorTools">
+        <nav class="o_int_filemanager_image_editor_tools d-flex">
+            <t t-foreach="toolEntries" t-as="entry" t-key="entry.id">
+                <span t-if="entry.separated" class="o_int_filemanager_image_editor_tools_separator" />
+                <Dropdown t-if="entry.tools" position="menuPosition" menuClass="'o_int_filemanager_image_editor_tool_menu'">
+                    <button
+                        type="button"
+                        class="o_int_filemanager_image_editor_button o_int_filemanager_image_editor_tool"
+                        t-att-class="{ 'active': isGroupActive(entry) }"
+                        t-att-title="entry.title"
+                        t-att-aria-label="entry.title"
+                        t-att-disabled="!state.ready"
+                    >
+                        <i t-att-class="'fa fa-fw ' + groupIcon(entry)" role="img" />
+                        <i class="fa fa-caret-right o_int_filemanager_image_editor_tool_more" role="img" aria-hidden="true" />
+                    </button>
+                    <t t-set-slot="content">
+                        <DropdownItem
+                            t-foreach="entry.tools"
+                            t-as="tool"
+                            t-key="tool.id"
+                            class="{ 'active': state.tool === tool.id }"
+                            attrs="{ 'data-tool': tool.id }"
+                            onSelected="() => this.setTool(tool.id)"
+                        >
+                            <i t-att-class="'fa fa-fw me-2 ' + tool.icon" role="img" aria-hidden="true" />
+                            <span t-out="tool.title" />
+                        </DropdownItem>
+                    </t>
+                </Dropdown>
+                <button
+                    t-else=""
+                    type="button"
+                    class="o_int_filemanager_image_editor_button o_int_filemanager_image_editor_tool"
+                    t-att-class="{ 'active': state.tool === entry.id }"
+                    t-att-data-tool="entry.id"
+                    t-att-title="entry.title"
+                    t-att-aria-label="entry.title"
+                    t-att-disabled="!state.ready"
+                    t-on-click="() => this.setTool(entry.id)"
+                >
+                    <i t-att-class="'fa fa-fw ' + entry.icon" role="img" />
+                </button>
+            </t>
+        </nav>
+    </t>
+
+    <t t-name="int_filemanager_image_editor.ImageEditorPanel">
+        <p t-if="hint" class="o_int_filemanager_image_editor_hint small mb-0" t-out="hint" />
+        <t t-if="isAdjustTool">
+            <t t-call="int_filemanager_image_editor.ImageEditorPanelAdjust" />
+        </t>
+        <t t-elif="isCropTool">
+            <t t-call="int_filemanager_image_editor.ImageEditorPanelCrop" />
+        </t>
+        <t t-else="">
+            <t t-call="int_filemanager_image_editor.ImageEditorPanelStyle" />
+            <t t-call="int_filemanager_image_editor.ImageEditorPanelEdit" />
+        </t>
+        <t t-call="int_filemanager_image_editor.ImageEditorPanelView" />
+    </t>
+
+    <!-- Colour, line, fill, text, brush and effects of the mark that is chosen or made next. -->
+    <t t-name="int_filemanager_image_editor.ImageEditorPanelStyle">
+        <details t-if="hasColor or isPen" class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Color</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <ColorField
+                    value="state.style.stroke"
+                    title="labels.color"
+                    onChange="(color) => this.setStyle({ stroke: color })"
+                />
+            </div>
+        </div>
+        </details>
+        <details t-if="isPen" class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Brush</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <select class="form-select form-select-sm" t-on-change="(ev) => this.onStyleChoice('brush', ev)">
+                <option
+                    t-foreach="brushes"
+                    t-as="brush"
+                    t-key="brush"
+                    t-att-value="brush"
+                    t-att-selected="brush === state.style.brush"
+                    t-out="labels[brush]"
+                />
+            </select>
+            <label t-if="state.style.brush === 'spray'" class="d-flex flex-column">
+                <span class="small">Density</span>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="5"
+                    max="80"
+                    step="1"
+                    t-att-value="state.style.density"
+                    t-on-input="(ev) => this.onStyleInput('density', ev)"
+                />
+            </label>
+        </div>
+        </details>
+        <details t-if="hasLine or isPen" class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Line</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <label class="d-flex flex-column">
+                <span class="small">Width: <t t-out="state.style.width" /></span>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="0.5"
+                    max="40"
+                    step="0.5"
+                    t-att-value="state.style.width"
+                    t-on-input="(ev) => this.onStyleInput('width', ev)"
+                    t-on-change="onCommitInput"
+                />
+            </label>
+            <select
+                t-if="!state.style.brush or state.style.brush === 'pencil' or !isPen"
+                class="form-select form-select-sm"
+                t-on-change="(ev) => this.onStyleChoice('dash', ev)"
+            >
+                <option value="solid" t-att-selected="state.style.dash === 'solid'">Solid</option>
+                <option value="dashed" t-att-selected="state.style.dash === 'dashed'">Dashed</option>
+                <option value="dotted" t-att-selected="state.style.dash === 'dotted'">Dotted</option>
+            </select>
+        </div>
+        </details>
+        <details t-if="hasFill" class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Fill</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <select class="form-select form-select-sm" t-on-change="(ev) => this.onStyleChoice('fillMode', ev)">
+                <option value="none" t-att-selected="state.style.fillMode === 'none'">None</option>
+                <option value="solid" t-att-selected="state.style.fillMode === 'solid'">Color</option>
+                <option value="gradient" t-att-selected="state.style.fillMode === 'gradient'">Gradient</option>
+                <option value="pattern" t-att-selected="state.style.fillMode === 'pattern'">Stripes</option>
+            </select>
+            <div t-if="state.style.fillMode === 'solid' or state.style.fillMode === 'pattern'" class="d-flex align-items-center gap-2">
+                <ColorField
+                    value="state.style.fill"
+                    title="labels.fillColor"
+                    onChange="(color) => this.setStyle({ fill: color })"
+                />
+            </div>
+            <t t-if="state.style.fillMode === 'gradient'">
+                <div class="d-flex align-items-center gap-2">
+                    <ColorField
+                        value="state.style.gradient.from"
+                        title="labels.gradientFrom"
+                        onChange="(color) => this.onGradientColor('from', color)"
+                    />
+                    <i class="fa fa-long-arrow-right" role="img" />
+                    <ColorField
+                        value="state.style.gradient.to"
+                        title="labels.gradientTo"
+                        onChange="(color) => this.onGradientColor('to', color)"
+                    />
+                </div>
+                <label class="d-flex flex-column">
+                    <span class="small">Angle: <t t-out="state.style.gradient.angle" />°</span>
+                    <input
+                        type="range"
+                        class="form-range"
+                        min="-180"
+                        max="180"
+                        step="5"
+                        t-att-value="state.style.gradient.angle"
+                        t-on-input="(ev) => this.onNestedInput('gradient', 'angle', ev)"
+                        t-on-change="onCommitInput"
+                    />
+                </label>
+            </t>
+        </div>
+        </details>
+        <section t-if="hasRadius" class="o_int_filemanager_image_editor_section_body o_int_filemanager_image_editor_section_plain d-flex flex-column gap-2">
+            <label class="d-flex flex-column">
+                <span class="small">Rounded corners: <t t-out="state.style.radius" /></span>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    t-att-value="state.style.radius"
+                    t-on-input="(ev) => this.onStyleInput('radius', ev)"
+                    t-on-change="onCommitInput"
+                />
+            </label>
+        </section>
+        <details t-if="isTextKind" class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Text</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <select class="form-select form-select-sm" t-on-change="(ev) => this.onStyleChoice('font', ev)">
+                <option
+                    t-foreach="fonts"
+                    t-as="font"
+                    t-key="font"
+                    t-att-value="font"
+                    t-att-selected="font === state.style.font"
+                    t-att-style="'font-family: ' + font"
+                    t-out="font"
+                />
+            </select>
+            <label class="d-flex flex-column">
+                <span class="small">Size: <t t-out="state.style.textSize" /></span>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="4"
+                    max="300"
+                    step="1"
+                    t-att-value="state.style.textSize"
+                    t-on-input="(ev) => this.onStyleInput('textSize', ev)"
+                    t-on-change="onCommitInput"
+                />
+            </label>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary fw-bold" t-att-class="{ 'active': state.style.bold }" title="Bold" aria-label="Bold" t-on-click="() => this.toggleStyle('bold')">B</button>
+                <button type="button" class="btn btn-outline-secondary fst-italic" t-att-class="{ 'active': state.style.italic }" title="Italic" aria-label="Italic" t-on-click="() => this.toggleStyle('italic')">I</button>
+                <button type="button" class="btn btn-outline-secondary text-decoration-underline" t-att-class="{ 'active': state.style.underline }" title="Underline" aria-label="Underline" t-on-click="() => this.toggleStyle('underline')">U</button>
+                <button type="button" class="btn btn-outline-secondary text-decoration-line-through" t-att-class="{ 'active': state.style.linethrough }" title="Strikethrough" aria-label="Strikethrough" t-on-click="() => this.toggleStyle('linethrough')">S</button>
+            </div>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" t-att-class="{ 'active': state.style.align === 'left' }" title="Align left" aria-label="Align left" t-on-click="() => this.setStyle({ align: 'left' })"><i class="fa fa-align-left" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" t-att-class="{ 'active': state.style.align === 'center' }" title="Center" aria-label="Center" t-on-click="() => this.setStyle({ align: 'center' })"><i class="fa fa-align-center" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" t-att-class="{ 'active': state.style.align === 'right' }" title="Align right" aria-label="Align right" t-on-click="() => this.setStyle({ align: 'right' })"><i class="fa fa-align-right" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" t-att-class="{ 'active': state.style.align === 'justify' }" title="Justify" aria-label="Justify" t-on-click="() => this.setStyle({ align: 'justify' })"><i class="fa fa-align-justify" role="img" /></button>
+            </div>
+            <label class="d-flex flex-column">
+                <span class="small">Line height: <t t-out="state.style.lineHeight" /></span>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="0.8"
+                    max="3"
+                    step="0.05"
+                    t-att-value="state.style.lineHeight"
+                    t-on-input="(ev) => this.onStyleInput('lineHeight', ev)"
+                    t-on-change="onCommitInput"
+                />
+            </label>
+            <label class="d-flex flex-column">
+                <span class="small">Letter spacing: <t t-out="state.style.spacing" /></span>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="-100"
+                    max="800"
+                    step="10"
+                    t-att-value="state.style.spacing"
+                    t-on-input="(ev) => this.onStyleInput('spacing', ev)"
+                    t-on-change="onCommitInput"
+                />
+            </label>
+        </div>
+        </details>
+        <details t-if="isRedact" class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Hide</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <select class="form-select form-select-sm" t-on-change="(ev) => this.onRedactMode(ev)">
+                <option
+                    t-foreach="redactModes"
+                    t-as="mode"
+                    t-key="mode"
+                    t-att-value="mode"
+                    t-att-selected="mode === state.redact.mode"
+                    t-out="labels[mode + 'Mode']"
+                />
+            </select>
+            <label t-if="state.redact.mode !== 'black'" class="d-flex flex-column">
+                <span class="small">Strength: <t t-out="state.redact.strength" /></span>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="2"
+                    max="100"
+                    step="1"
+                    t-att-value="state.redact.strength"
+                    t-on-input="(ev) => this.onRedactStrength(ev)"
+                    t-on-change="onCommitInput"
+                />
+            </label>
+            <p class="small text-body-secondary mb-0">
+                The hidden part is gone from the file that is stored, but not from the picture
+                that this one was made from.
+            </p>
+        </div>
+        </details>
+        <details t-if="hasEffects" class="o_int_filemanager_image_editor_section">
+            <summary>Effects</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <label class="d-flex flex-column">
+                <span class="small">Opacity: <t t-out="Math.round(state.style.opacity * 100)" /> %</span>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="0.05"
+                    max="1"
+                    step="0.05"
+                    t-att-value="state.style.opacity"
+                    t-on-input="(ev) => this.onStyleInput('opacity', ev)"
+                    t-on-change="onCommitInput"
+                />
+            </label>
+            <div class="form-check">
+                <input
+                    id="int_filemanager_editor_shadow"
+                    type="checkbox"
+                    class="form-check-input"
+                    t-att-checked="state.style.shadow.on"
+                    t-on-change="onShadowToggle"
+                />
+                <label class="form-check-label" for="int_filemanager_editor_shadow">Shadow</label>
+            </div>
+            <t t-if="state.style.shadow.on">
+                <div class="d-flex align-items-center gap-2">
+                    <ColorField
+                        value="state.style.shadow.color"
+                        title="labels.shadowColor"
+                        onChange="(color) => this.onShadowColor(color)"
+                    />
+                </div>
+                <label class="d-flex flex-column">
+                    <span class="small">Blur: <t t-out="state.style.shadow.blur" /></span>
+                    <input
+                        type="range"
+                        class="form-range"
+                        min="0"
+                        max="60"
+                        step="1"
+                        t-att-value="state.style.shadow.blur"
+                        t-on-input="(ev) => this.onNestedInput('shadow', 'blur', ev)"
+                        t-on-change="onCommitInput"
+                    />
+                </label>
+                <label class="d-flex flex-column">
+                    <span class="small">Distance: <t t-out="state.style.shadow.offset" /></span>
+                    <input
+                        type="range"
+                        class="form-range"
+                        min="0"
+                        max="60"
+                        step="1"
+                        t-att-value="state.style.shadow.offset"
+                        t-on-input="(ev) => this.onNestedInput('shadow', 'offset', ev)"
+                        t-on-change="onCommitInput"
+                    />
+                </label>
+            </t>
+        </div>
+        </details>
+    </t>
+
+    <!-- What can be done with the marks that are there. -->
+    <t t-name="int_filemanager_image_editor.ImageEditorPanelEdit">
+        <details t-if="hasSelection or state.hasClipboard" class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Marks</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" title="Bring to front" t-att-disabled="!hasSelection" t-on-click="() => this.order('front')"><i class="fa fa-angle-double-up" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Bring forward" t-att-disabled="!hasSelection" t-on-click="() => this.order('forward')"><i class="fa fa-angle-up" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Send backward" t-att-disabled="!hasSelection" t-on-click="() => this.order('backward')"><i class="fa fa-angle-down" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Send to back" t-att-disabled="!hasSelection" t-on-click="() => this.order('back')"><i class="fa fa-angle-double-down" role="img" /></button>
+            </div>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" title="Group (Ctrl+G)" t-att-disabled="!state.selection.canGroup" t-on-click="group"><i class="fa fa-object-group" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Ungroup (Ctrl+Shift+G)" t-att-disabled="!state.selection.canUngroup" t-on-click="ungroup"><i class="fa fa-object-ungroup" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Duplicate (Ctrl+D)" t-att-disabled="!hasSelection" t-on-click="duplicate"><i class="fa fa-clone" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Copy (Ctrl+C)" t-att-disabled="!hasSelection" t-on-click="copy"><i class="fa fa-files-o" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Paste (Ctrl+V)" t-att-disabled="!state.hasClipboard" t-on-click="paste"><i class="fa fa-clipboard" role="img" /></button>
+            </div>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" title="Align left" t-att-disabled="!hasSelection" t-on-click="() => this.align('left')"><i class="fa fa-align-left" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Align center" t-att-disabled="!hasSelection" t-on-click="() => this.align('center')"><i class="fa fa-align-center" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Align right" t-att-disabled="!hasSelection" t-on-click="() => this.align('right')"><i class="fa fa-align-right" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Align top" t-att-disabled="!hasSelection" t-on-click="() => this.align('top')"><i class="fa fa-arrow-up" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Align middle" t-att-disabled="!hasSelection" t-on-click="() => this.align('middle')"><i class="fa fa-arrows-v" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Align bottom" t-att-disabled="!hasSelection" t-on-click="() => this.align('bottom')"><i class="fa fa-arrow-down" role="img" /></button>
+            </div>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" title="Space evenly, across" t-att-disabled="state.selection.count &lt; 3" t-on-click="() => this.distribute('horizontal')">⇔</button>
+                <button type="button" class="btn btn-outline-secondary" title="Space evenly, down" t-att-disabled="state.selection.count &lt; 3" t-on-click="() => this.distribute('vertical')">⇕</button>
+                <button type="button" class="btn btn-outline-secondary" title="Mirror across" t-att-disabled="!hasSelection" t-on-click="() => this.mirrorSelection('horizontal')"><i class="fa fa-arrows-h" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Mirror down" t-att-disabled="!hasSelection" t-on-click="() => this.mirrorSelection('vertical')"><i class="fa fa-arrows-v" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" t-att-class="{ 'active': state.selection.locked }" title="Lock" t-att-disabled="!hasSelection" t-on-click="toggleLock"><i t-att-class="'fa ' + (state.selection.locked ? 'fa-lock' : 'fa-unlock')" role="img" /></button>
+                <button type="button" class="btn btn-outline-danger" title="Delete (Del)" t-att-disabled="!hasSelection" t-on-click="deleteSelection"><i class="fa fa-trash" role="img" /></button>
+            </div>
+        </div>
+        </details>
+    </t>
+
+    <!-- The picture itself: the filters. -->
+    <t t-name="int_filemanager_image_editor.ImageEditorPanelAdjust">
+        <section class="o_int_filemanager_image_editor_section_body o_int_filemanager_image_editor_section_plain d-flex flex-column gap-2">
+            <div class="d-flex align-items-center justify-content-between">
+                <h6 class="mb-0">Adjust</h6>
+                <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="!hasFilters" t-on-click="resetFilters">Reset</button>
+            </div>
+            <label t-foreach="sliders" t-as="slider" t-key="slider.id" class="d-flex flex-column">
+                <span class="small">
+                    <t t-out="labels[slider.id]" />: <t t-out="filterValue(slider.id)" />
+                </span>
+                <input
+                    type="range"
+                    class="form-range"
+                    t-att-min="slider.min"
+                    t-att-max="slider.max"
+                    t-att-step="slider.step"
+                    t-att-value="filterValue(slider.id)"
+                    t-on-input="(ev) => this.onFilterInput(slider.id, ev)"
+                    t-on-change="(ev) => this.onFilterChange(slider.id, ev)"
+                />
+            </label>
+        </section>
+        <details class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Looks</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <div class="d-flex flex-wrap gap-1">
+                <button
+                    t-foreach="toggles"
+                    t-as="toggle"
+                    t-key="toggle.id"
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    t-att-class="{ 'active': state.filters[toggle.id] }"
+                    t-on-click="() => this.toggleFilter(toggle.id)"
+                    t-out="labels[toggle.id]"
+                />
+            </div>
+        </div>
+        </details>
+        <section class="o_int_filemanager_image_editor_section_body o_int_filemanager_image_editor_section_plain d-flex flex-column gap-2">
+            <div class="form-check">
+                <input
+                    id="int_filemanager_editor_removecolor"
+                    type="checkbox"
+                    class="form-check-input"
+                    t-att-checked="!!state.filters.removecolor"
+                    t-on-change="() => this.toggleColorFilter('removecolor', removeColorDefaults)"
+                />
+                <label class="form-check-label" for="int_filemanager_editor_removecolor">Remove a color</label>
+            </div>
+            <t t-if="state.filters.removecolor">
+                <div class="d-flex align-items-center gap-2">
+                    <ColorField
+                        value="state.filters.removecolor.color"
+                        title="labels.color"
+                        onChange="(color) => this.onColorFilterChange('removecolor', 'color', color)"
+                    />
+                </div>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    t-att-value="state.filters.removecolor.distance"
+                    t-on-input="(ev) => this.onColorFilterRange('removecolor', 'distance', ev)"
+                    t-on-change="onCommitInput"
+                />
+            </t>
+            <div class="form-check">
+                <input
+                    id="int_filemanager_editor_blendcolor"
+                    type="checkbox"
+                    class="form-check-input"
+                    t-att-checked="!!state.filters.blendcolor"
+                    t-on-change="() => this.toggleColorFilter('blendcolor', blendColorDefaults)"
+                />
+                <label class="form-check-label" for="int_filemanager_editor_blendcolor">Color over the picture</label>
+            </div>
+            <t t-if="state.filters.blendcolor">
+                <div class="d-flex align-items-center gap-2">
+                    <ColorField
+                        value="state.filters.blendcolor.color"
+                        title="labels.color"
+                        onChange="(color) => this.onColorFilterChange('blendcolor', 'color', color)"
+                    />
+                </div>
+                <select class="form-select form-select-sm" t-on-change="(ev) => this.onColorFilterChoice('blendcolor', 'mode', ev)">
+                    <option
+                        t-foreach="blendModes"
+                        t-as="mode"
+                        t-key="mode"
+                        t-att-value="mode"
+                        t-att-selected="mode === state.filters.blendcolor.mode"
+                        t-out="labels[mode]"
+                    />
+                </select>
+                <input
+                    type="range"
+                    class="form-range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    t-att-value="state.filters.blendcolor.alpha"
+                    t-on-input="(ev) => this.onColorFilterRange('blendcolor', 'alpha', ev)"
+                    t-on-change="onCommitInput"
+                />
+            </t>
+        </section>
+    </t>
+
+    <t t-name="int_filemanager_image_editor.ImageEditorPanelCrop">
+        <details class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Crop</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <select class="form-select form-select-sm" t-on-change="onAspect">
+                <option
+                    t-foreach="aspects"
+                    t-as="aspect"
+                    t-key="aspect.id"
+                    t-att-value="aspect.id"
+                    t-att-selected="aspect.id === state.aspect"
+                    t-out="labels[aspect.id] or aspect.id"
+                />
+            </select>
+            <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-sm btn-primary" t-on-click="applyCrop">Apply the crop</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="!state.cropped" t-on-click="resetCrop">Remove the crop</button>
+            </div>
+        </div>
+        </details>
+        <details class="o_int_filemanager_image_editor_section" open="open">
+            <summary>Turn and flip</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" title="Turn left" aria-label="Turn left" t-on-click="() => this.rotate(false)"><i class="fa fa-rotate-left" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Turn right" aria-label="Turn right" t-on-click="() => this.rotate(true)"><i class="fa fa-rotate-right" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Flip across" aria-label="Flip across" t-on-click="() => this.flip(true)"><i class="fa fa-arrows-h" role="img" /></button>
+                <button type="button" class="btn btn-outline-secondary" title="Flip down" aria-label="Flip down" t-on-click="() => this.flip(false)"><i class="fa fa-arrows-v" role="img" /></button>
+            </div>
+        </div>
+        </details>
+    </t>
+
+    <t t-name="int_filemanager_image_editor.ImageEditorPanelView">
+        <details class="o_int_filemanager_image_editor_section">
+            <summary>Grid</summary>
+            <div class="o_int_filemanager_image_editor_section_body d-flex flex-column gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <div class="form-check mb-0">
+                    <input
+                        id="int_filemanager_editor_grid"
+                        type="checkbox"
+                        class="form-check-input"
+                        t-att-checked="state.grid"
+                        t-on-change="onGrid"
+                    />
+                    <label class="form-check-label" for="int_filemanager_editor_grid">Show</label>
+                </div>
+                <select class="form-select form-select-sm w-auto" t-on-change="onGridStep">
+                    <option
+                        t-foreach="gridSteps"
+                        t-as="step"
+                        t-key="step"
+                        t-att-value="step"
+                        t-att-selected="step === state.gridStep"
+                        t-out="step"
+                    />
+                </select>
+            </div>
+            <select class="form-select form-select-sm" t-on-change="onSnap">
+                <option value="off" t-att-selected="state.snap === 'off'">No snapping</option>
+                <option value="grid" t-att-selected="state.snap === 'grid'">Snap to the grid</option>
+                <option value="objects" t-att-selected="state.snap === 'objects'">Snap to other marks and the edges</option>
+            </select>
+        </div>
+        </details>
+    </t>
+</templates>

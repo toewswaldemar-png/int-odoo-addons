@@ -1,8 +1,8 @@
-"""Filter the odoo-ls output down to int_filemanager.
+"""Filter the odoo-ls output down to int_filemanager and its extension modules (int_filemanager*).
 
 Runs inside the Odoo test image on Tower. odoo-ls checks far more than our module (~1,800
 diagnostics in the Odoo core), and it exits normally whatever it finds, so its exit status says
-nothing about our code. Every finding under int_filemanager of severity error or warning fails
+nothing about our code. Every finding under int_filemanager* of severity error or warning fails
 the check.
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 
 WORK = Path("/work")
 PREFIX = "/mnt/v2src/"
-MODULE = "int_filemanager/"
+MODULE = "int_filemanager"
 # odoo-ls severities: 1 error, 2 warning, 3 information, 4 hint. Information covers
 # known limitations such as OLS03024 (classes declared in test functions).
 MAX_SEVERITY = 2

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="int_filemanager_document_view_list" model="ir.ui.view">
+        <field name="name">int.filemanager.document.view.list.inherit.int_filemanager_ocr</field>
+        <field name="model">int.filemanager.document</field>
+        <field name="inherit_id" ref="int_filemanager.int_filemanager_document_view_list" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tag_ids']" position="after">
+            <field
+                name="content_hit_count"
+                widget="int_filemanager_content_hit_count"
+                column_invisible="not context.get('int_filemanager_words')"
+            />
+            <field
+                name="content_hits"
+                widget="int_filemanager_content_hits"
+                column_invisible="not context.get('int_filemanager_words')"
+            />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="int_filemanager_document_view_search" model="ir.ui.view">
+        <field name="name">int.filemanager.document.view.search.inherit.int_filemanager_ocr</field>
+        <field name="model">int.filemanager.document</field>
+        <field name="inherit_id" ref="int_filemanager.int_filemanager_document_view_search" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tag_ids']" position="after">
+            <field
+                name="content_search"
+                string="Full text"
+                context="{'int_filemanager_words': self}"
+            />
+            </xpath>
+        </field>
+    </record>
+</odoo>

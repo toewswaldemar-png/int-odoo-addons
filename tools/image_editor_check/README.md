@@ -1,6 +1,6 @@
 # Prüfungen des Bildeditors ohne Browser
 
-Prüft `int_filemanager/static/src/image_editor/` und die Einbindung in den Datei-Viewer mit Node:
+Prüft `int_filemanager_image_editor/static/src/image_editor/` und die Einbindung in den Datei-Viewer mit Node:
 das echte Fabric (`static/lib/fabric/fabric.js`), das echte Owl aus dem Odoo-Quelltext, jsdom als
 Browser und `@napi-rs/canvas` als Zeichenfläche. Odoo-Dienste und die meisten Core-Komponenten
 (`@web/...`) sind gestellt (`loader.mjs`); nur der Datei-Viewer des Cores und seine Template-Vererbung
@@ -38,7 +38,7 @@ abbricht. Bilder, die die Prüfungen zur Ansicht erzeugen (`full.png`, `saved.pn
 | `run.mjs` | startet jedes Skript mit den richtigen Schaltern und zählt `PASS`/`FAIL` |
 | `paths.mjs` | alle Pfade (aus dem Ort des Repositorys), Suche nach dem Odoo-Quelltext und den Paketen |
 | `env.mjs` | jsdom, Fabric und die Zeichenfläche |
-| `register.mjs`, `loader.mjs` | Hooks des Modul-Loaders: `@int_filemanager/...` auf die Quelldateien, Stellvertreter für `@web/...`, `@odoo/...` |
+| `register.mjs`, `loader.mjs` | Hooks des Modul-Loaders: `@int_filemanager/...` und `@int_filemanager_image_editor/...` auf die Quelldateien, Stellvertreter für `@web/...`, `@odoo/...` |
 | `shim_picture.mjs` | `picture.js` mit einem `loadPicture`, das ein Bild der Prüfung liefert statt vom Server zu laden |
 | `logic.check.mjs` | Geometrie, Filter, Verlauf, Zustand, Marken, Export (37) |
 | `component.check.mjs` | die Komponente `DocumentImageEditor`: Zeichnen, Ziehen, Zuschneiden, Speichern (93) |

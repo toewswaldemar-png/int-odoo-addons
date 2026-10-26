@@ -246,15 +246,6 @@ class TestFolderAndDocument(TransactionCase):
         document.sudo().write({"size": 99, "mimetype": "text/x"})
         self.assertEqual((document.size, document.mimetype), (99, "text/x"))
 
-    def test_the_origin_path_is_for_administrators_only(self):
-        document = self._document()
-        document.sudo().origin_path = "/mnt/data/a.txt"
-        as_user = document.with_user(self.user)
-        with self.assertRaises(AccessError):
-            as_user.origin_path  # noqa: B018
-        self.assertNotIn("origin_path", self.Document.with_user(self.user).fields_get())
-        self.assertEqual(document.sudo().origin_path, "/mnt/data/a.txt")
-
     def test_a_user_sorts_and_filters_by_size(self):
         small, large = self._document("s.txt", b"x"), self._document("l.txt", b"x" * 10)
         found = self.Document.with_user(self.user).search(
@@ -331,27 +322,10 @@ class TestFolderAndDocument(TransactionCase):
         self.assertIn('js_class="int_filemanager_document_list"', arch)
         # The buttons are in the head of the list, none is in a row.
         head = arch[arch.index("<header>") : arch.index("</header>")]
-        for name in ("action_download", "action_share"):
-            self.assertIn(f'name="{name}"', head)
-            self.assertEqual(arch.count(f'name="{name}"'), 1)
+        self.assertIn('name="action_download"', head)
+        self.assertEqual(arch.count('name="action_download"'), 1)
         self.assertIn('widget="int_filemanager_document_name"', arch)
         self.assertIn('name="action_download"', views["views"]["form"]["arch"])
-
-    def test_the_share_button_of_the_list_is_for_the_group_that_may_share(self):
-        # The same arch makes the buttons of the ticked rows and the menu of the right click.
-        # The user without the group loads the list through the way over a linked record.
-        self.env["int.filemanager.link"]._toggle_access_via_record(True)
-        for user, has_button in ((self.user, True), (self.outsider, False)):
-            with self.subTest(user=user.login):
-                views = self.Document.with_user(user).get_views([(False, "list")])
-                self.assertEqual('name="action_share"' in views["views"]["list"]["arch"], has_button)
-
-    def test_the_share_action_of_the_list_wants_one_document(self):
-        document = self._document()
-        action = document.with_user(self.user).action_share()
-        self.assertEqual(action["context"], {"default_document_id": document.id})
-        with self.assertRaises(UserError):
-            (document + self._document("b.txt")).action_share()
 
     def test_the_lists_move_by_multi_edit_and_nothing_is_duplicated_or_created_by_hand(self):
         views = self.Document.get_views([(False, "list"), (False, "form")])

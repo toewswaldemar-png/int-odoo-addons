@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.int_filemanager_share</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="int_filemanager.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='int_filemanager']" position="inside">
+                <block title="Share links" name="int_filemanager_share_block">
+                    <setting
+                        id="int_filemanager_share_creators"
+                        string="Who makes shares"
+                        help="Whoever may make a share can give the folders and files that they see."
+                    >
+                        <field name="int_filemanager_share_creators" />
+                    </setting>
+                    <setting
+                        id="int_filemanager_share_defaults"
+                        string="Start values of the uploads"
+                        help="A new share starts with these limits for the files that guests upload."
+                    >
+                        <div class="content-group">
+                            <div class="row mt8">
+                                <label class="col-lg-4" for="int_filemanager_share_default_file_mb" />
+                                <field name="int_filemanager_share_default_file_mb" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_default_total_mb" />
+                                <field name="int_filemanager_share_default_total_mb" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_default_files" />
+                                <field name="int_filemanager_share_default_files" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_default_extensions" />
+                                <field name="int_filemanager_share_default_extensions" />
+                            </div>
+                        </div>
+                    </setting>
+                    <setting
+                        id="int_filemanager_share_maximums"
+                        string="Highest values of the uploads"
+                        help="The makers of a share cannot set the limits of the uploads above these."
+                    >
+                        <div class="content-group">
+                            <div class="row mt8">
+                                <label class="col-lg-4" for="int_filemanager_share_max_file_mb" />
+                                <field name="int_filemanager_share_max_file_mb" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_max_total_mb" />
+                                <field name="int_filemanager_share_max_total_mb" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_max_files" />
+                                <field name="int_filemanager_share_max_files" />
+                            </div>
+                        </div>
+                    </setting>
+                    <setting
+                        id="int_filemanager_share_password"
+                        string="Shortest password"
+                        help="The number of characters that the password of a share needs at least."
+                    >
+                        <field name="int_filemanager_share_password_length" />
+                    </setting>
+                    <setting
+                        id="int_filemanager_share_unlock"
+                        string="Hours the password is kept"
+                        help="A guest who typed the password of a share does not type it again for this long, in the same browser tab."
+                    >
+                        <field name="int_filemanager_share_unlock_hours" />
+                    </setting>
+                    <setting
+                        id="int_filemanager_share_brake"
+                        string="Brakes"
+                        help="Limits for the guests of the shares. The brake on wrong passwords is always on."
+                    >
+                        <div class="content-group">
+                            <div class="row mt8">
+                                <label class="col-lg-4" for="int_filemanager_share_brake" />
+                                <field name="int_filemanager_share_brake" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_invalid_tokens" />
+                                <field name="int_filemanager_share_invalid_tokens" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_requests_per_minute" />
+                                <field name="int_filemanager_share_requests_per_minute" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_uploads_per_minute" />
+                                <field name="int_filemanager_share_uploads_per_minute" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_password_tries_ip" />
+                                <field name="int_filemanager_share_password_tries_ip" />
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4" for="int_filemanager_share_password_tries_share" />
+                                <field name="int_filemanager_share_password_tries_share" />
+                            </div>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>
