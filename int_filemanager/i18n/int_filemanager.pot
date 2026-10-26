@@ -1113,6 +1113,12 @@ msgid "This is not a valid folder path: %(path)s"
 msgstr ""
 
 #. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/hooks.py:0
+msgid "This module needs a PostgreSQL built with ICU: the collation %(collation)s is missing."
+msgstr ""
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__thumbnail
 msgid "Thumbnail"
 msgstr ""

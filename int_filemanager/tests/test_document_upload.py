@@ -95,6 +95,24 @@ class TestDocumentUpload(HttpCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["size"], 130 * 1024 * 1024)
 
+    def test_the_large_limit_is_for_those_who_may_upload(self):
+        # The body is read before the controller runs: whoever may not upload keeps the core's
+        # limit (a reader, a portal user), so that nothing large is spooled to the disk for them.
+        reader = new_test_user(
+            self.env,
+            login="upload_reader",
+            groups="base.group_user,int_filemanager.int_filemanager_group_reader",
+        )
+        new_test_user(self.env, login="upload_portal", groups="base.group_portal")
+        before = self.Document.search_count([])
+        for login in (reader.login, "upload_portal", self.outsider.login):
+            with self.subTest(login=login):
+                self.authenticate(login, login)
+                response = self._upload(bytes(130 * 1024 * 1024), "big.bin")
+                self.assertEqual(response.status_code, 413)
+        self.assertEqual(self.Document.search_count([]), before)
+        self.assertFalse(self._leftovers())
+
     def test_the_limit_is_a_system_parameter(self):
         self.env["ir.config_parameter"].set_param("int_filemanager.max_upload_size", "1000")
         before = self.Document.search_count([])

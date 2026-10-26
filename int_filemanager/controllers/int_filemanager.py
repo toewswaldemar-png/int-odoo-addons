@@ -6,12 +6,14 @@ from werkzeug.exceptions import BadRequest
 
 from odoo import fields, http
 from odoo.exceptions import AccessError, UserError
-from odoo.http import Response, request
+from odoo.http import DEFAULT_MAX_CONTENT_LENGTH, Response, request
 
 from ..tools.zip_stream import export_name, zip_chunks, zip_length
 
 _logger = logging.getLogger(__name__)
 
+# The group that may write into folders, and so upload (see ``ir.model.access.csv``).
+UPLOAD_GROUP = "int_filemanager.int_filemanager_group_user"
 MAX_UPLOAD_SIZE_PARAMETER = "int_filemanager.max_upload_size"
 DEFAULT_MAX_UPLOAD_SIZE = 20 * 1024**3
 
@@ -20,8 +22,12 @@ def max_upload_size(controller):
     """The limit of one upload request in bytes, from the system parameter.
 
     The core's own limit (128 MiB) stops every upload route that does not set its own.
-    Odoo calls this after the sign-in, so the database is at hand.
+    Odoo calls this after the sign-in, so the database is at hand. The body is read before the
+    controller runs, so only whoever may upload gets the large limit: every other user (a
+    portal user, a reader) keeps the core's, and is refused by the storage afterwards.
     """
+    if not request.env.user.has_group(UPLOAD_GROUP):
+        return DEFAULT_MAX_CONTENT_LENGTH
     value = (
         request.env["ir.config_parameter"]
         .sudo()

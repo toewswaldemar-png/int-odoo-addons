@@ -27,8 +27,10 @@ class IntFilemanagerModelFolder(models.Model):
     )
     company_id = fields.Many2one("res.company", default=lambda self: self.env.company, index=True)
 
+    # COALESCE: no company is one company here too (NULLS NOT DISTINCT needs PostgreSQL 15, the
+    # core of Odoo 19 runs on 13).
     _model_per_company = models.UniqueIndex(
-        "(res_model, company_id) NULLS NOT DISTINCT",
+        "(res_model, COALESCE(company_id, 0))",
         "There is a folder for this kind of record already.",
     )
 

@@ -116,10 +116,10 @@ def zip_length(entries):
     total = central = 0
     for name, _path, size, _date in entries:
         name_length = len(name.encode())
-        if name.endswith("/"):  # a folder: the header and nothing else
+        if name.endswith("/"):  # a folder: the header and the data descriptor of an empty file
             extra = [total] if total > ZIP64_LIMIT else []
             central += 46 + name_length + (4 + 8 * len(extra) if extra else 0)
-            total += 30 + name_length
+            total += 30 + name_length + 16
             continue
         # The writer cannot go back in a stream: the sizes follow the data (a data descriptor).
         zip64_file = size * 1.05 > ZIP64_LIMIT
@@ -165,13 +165,15 @@ def zip_chunks(entries):
     archive = zipfile.ZipFile(sink, "w", zipfile.ZIP_STORED, allowZip64=True)
     for name, path, size, date in entries:
         info = zipfile.ZipInfo(name, date_time(date))
+        info.compress_type = zipfile.ZIP_STORED
         if path is None:
-            info.CRC = info.compress_size = info.file_size = 0
+            # An empty file with a name that ends with a slash. ``ZipFile.mkdir`` would do the same
+            # without the data descriptor, but it is new in Python 3.11 and Odoo 19 runs on 3.10.
             info.external_attr = (0o40755 << 16) | 0x10  # a folder, for Unix and for DOS
-            archive.mkdir(info)
+            with archive.open(info, "w"):
+                pass
             yield from sink.take()
             continue
-        info.compress_type = zipfile.ZIP_STORED
         info.file_size = size  # the writer decides on ZIP64 from it, in a stream it cannot wait
         done = 0
         with open(path, "rb") as source, archive.open(info, "w") as target:

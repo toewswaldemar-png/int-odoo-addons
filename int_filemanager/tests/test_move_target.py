@@ -50,6 +50,24 @@ class TestMoveTarget(AccessCase, TransactionCase):
         self.deep.with_user(self.alice).write({"parent_id": False})
         self.assertFalse(self.deep.parent_id)
 
+    def test_the_one_who_puts_a_folder_at_the_top_still_sees_it_and_its_documents(self):
+        # At the top a folder that says "like the parent" decides for itself and is seen by the
+        # listed only: the one who moved it is listed, as the one who makes a top folder is.
+        document = self._document(self.deep)
+        self.deep.with_user(self.alice).write({"parent_id": False})
+        self.assertIn(self.deep, self._seen_by(self.alice))
+        self.assertIn(document, self._seen_by(self.alice, "int.filemanager.document"))
+        self.assertEqual(self.deep.access_user_ids, self.alice)
+        self.assertNotIn(self.deep, self._seen_by(self.bob))
+
+    def test_a_folder_that_says_otherwise_keeps_its_lists_when_put_at_the_top(self):
+        private = self.Folder.create(
+            {"name": "Private", "parent_id": self.shared.id, "access_mode": "restricted"}
+        )
+        self._invite(private, self.alice, self.bob)
+        private.with_user(self.alice).write({"parent_id": False})
+        self.assertEqual(private.access_user_ids, self.alice + self.bob)
+
     def test_nothing_is_asked_of_the_superuser_but_the_rules_of_the_tree(self):
         document = self._document(self.deep)
         document.write({"folder_id": self.inner.id})

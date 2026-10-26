@@ -106,10 +106,11 @@ class IntFilemanagerFolder(models.Model):
         index=True,
     )
 
-    # Names are unique per folder regardless of case, like on Windows. NULLS NOT
-    # DISTINCT: otherwise two top folders (parent_id IS NULL) would never collide.
+    # Names are unique per folder regardless of case, like on Windows. COALESCE: otherwise two top
+    # folders (parent_id IS NULL) would never collide, and NULLS NOT DISTINCT needs PostgreSQL 15,
+    # where Odoo 19 runs on 13 (``MIN_PG_VERSION``).
     _name_per_parent = models.UniqueIndex(
-        '(parent_id, lower(name COLLATE "und-x-icu")) NULLS NOT DISTINCT WHERE active',
+        '(COALESCE(parent_id, 0), lower(name COLLATE "und-x-icu")) WHERE active',
         "A folder with this name already exists here.",
     )
 
@@ -263,13 +264,21 @@ class IntFilemanagerFolder(models.Model):
                 parent._check_active_target()
                 vals["company_id"] = parent.company_id.id
         folders = super().create(vals_list)
-        if not self.env.su:
-            # as superuser: the user may not read the folder yet, that is what is being fixed
-            own = folders.sudo().filtered(
-                lambda folder: folder.access_folder_id == folder and folder.access_mode != "open"
-            )
-            own.with_context(tracking_disable=True).write({"access_user_ids": [Command.link(self.env.uid)]})
+        folders._list_current_user()
         return folders
+
+    def _list_current_user(self):
+        """List the user on the folders that decide for themselves and are not open to all.
+
+        As superuser: the user may not read the folder yet (it was just made, or put at the top),
+        and that is what is being fixed. Not done for the superuser, who sees everything.
+        """
+        if self.env.su:
+            return
+        own = self.sudo().filtered(
+            lambda folder: folder.access_folder_id == folder and folder.access_mode != "open"
+        )
+        own.with_context(tracking_disable=True).write({"access_user_ids": [Command.link(self.env.uid)]})
 
     def write(self, vals):
         # Archiving or restoring a folder does it on everything below, like a project does it on
@@ -282,9 +291,18 @@ class IntFilemanagerFolder(models.Model):
         moving = not in_cascade and ("parent_id" in vals or "company_id" in vals)
         if moving:
             vals = self._check_move(vals)
+        # A subfolder put at the top no longer takes over its parent: it decides for itself, and
+        # the lists are the administrators' to edit, so the one who moved it would not see it again.
+        lifted = self.browse()
+        if moving and "parent_id" in vals and not vals["parent_id"]:
+            # sudo: ``access_mode`` is the administrators' to read; the records keep the user's env
+            lifted = self.browse(
+                self.sudo().filtered(lambda folder: folder.parent_id and folder.access_mode == "inherit").ids
+            )
         # The name that the tracking keeps of a folder is the plain one, whatever the context.
         plain = self.with_context(**{PATH_KEY: False})
         result = super(IntFilemanagerFolder, plain).write(vals)
+        lifted._list_current_user()
         if cascade:
             self._cascade_active(vals["active"])
         if moving and "company_id" in vals:

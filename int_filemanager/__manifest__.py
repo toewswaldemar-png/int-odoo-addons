@@ -28,5 +28,6 @@
             "int_filemanager/static/tests/**/*",
         ],
     },
+    "pre_init_hook": "pre_init_hook",
     "application": True,
 }
