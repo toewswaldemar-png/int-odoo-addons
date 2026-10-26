@@ -8,7 +8,6 @@ and Odoo has to run one of them again (serialization failure). Prints one RESULT
 the shell script that started the instance then reads the counters from the database.
 """
 
-import gzip
 import http.client
 import json
 import re
@@ -101,34 +100,24 @@ results = parallel(40, lambda n: request("GET", path("visits")))
 result("visit40", statuses=statuses(results), max_seconds=round(max(r[2] for r in results), 2), expected="40x200, view_count 1")
 
 print("== wrong passwords: 40 at once (limit 5 per address, 30 per share, in 10 minutes) ==")
-body = json.dumps({"password": "wrong"}).encode()
-results = parallel(40, lambda n: request("POST", path("password", "/unlock"), body, {"Content-Type": "application/json"}))
-result("password40_wrong", statuses=statuses(results), expected="exactly 5x403 (the tries are taken under a lock), the rest 429")
-status = request("POST", path("password", "/unlock"), json.dumps({"password": "a long password"}).encode(), {"Content-Type": "application/json"})[0]
+form = {"Content-Type": "application/x-www-form-urlencoded"}
+body = b"password=wrong"
+results = parallel(40, lambda n: request("POST", path("password", "/unlock"), body, form))
+result("password40_wrong", statuses=statuses(results), expected="4x403 and the rest 429 (5 tries per address, one was used by share_attacks.py; they are taken under a lock)")
+status = request("POST", path("password", "/unlock"), b"password=a+long+password", form)[0]
 result("password_right_after", status=status, expected="429 (the address is blocked)")
 
-print("== timings: the page and the gateway on a share of 300 folders and 21000 files ==")
-
-
-def gateway(payload):
-    return request("POST", path("big", "/rpc"), json.dumps(payload).encode(), {"Content-Type": "application/json"})
-
-
+print("== timings: the pages on a share of 300 folders and 21000 files ==")
+big = SEED["shares"]["big"]["token"]
+first = re.search(r"/folder/(\d+)", request("GET", path("big"))[1].decode())
+inner = first.group(1) if first else None
 calls = {
-    "page": lambda: request("GET", path("big")),
-    "web_search_read (80 rows)": lambda: gateway(
-        {"model": "int.filemanager.document", "method": "web_search_read", "args": [],
-         "kwargs": {"domain": [], "specification": {"name": {}, "size": {}, "mimetype": {}, "write_date": {}, "folder_id": {"fields": {"display_name": {}}}}, "limit": 80, "order": "name asc"}}),
-    "web_search_read, name ilike 'Dokument 017'": lambda: gateway(
-        {"model": "int.filemanager.document", "method": "web_search_read", "args": [],
-         "kwargs": {"domain": [["name", "ilike", "Dokument 017"]], "specification": {"name": {}}, "limit": 80}}),
-    "search_panel_select_range (300 folders)": lambda: gateway(
-        {"model": "int.filemanager.document", "method": "search_panel_select_range", "args": ["folder_id"],
-         "kwargs": {"category_domain": [], "filter_domain": [], "enable_counters": False, "expand": True,
-                    "hierarchize": True, "limit": 0, "search_domain": [], "comodel_domain": []}}),
-    "web_read_group by folder (counts)": lambda: gateway(
-        {"model": "int.filemanager.document", "method": "web_read_group", "args": [],
-         "kwargs": {"domain": [], "groupby": ["folder_id"], "aggregates": ["__count"]}}),
+    "root page (300 folders, first page)": lambda: request("GET", path("big")),
+    "root page, sorted by size": lambda: request("GET", path("big", "?sortby=size")),
+    "root page 10 (the last)": lambda: request("GET", path("big", f"/folder/{SEED['archive']}/page/10")),
+    "a folder with 70 files": lambda: request("GET", path("big", f"/folder/{inner}")),
+    "search 'Dokument 017' (below the root)": lambda: request("GET", path("big", "?search=Dokument+017")),
+    "search that finds nothing": lambda: request("GET", path("big", "?search=nothing+like+it")),
 }
 for name, call in calls.items():
     times, codes = [], set()
@@ -138,14 +127,6 @@ for name, call in calls.items():
         codes.add(status)
     result("time", call=name, status=sorted(codes), median_ms=round(statistics.median(times) * 1000), max_ms=round(max(times) * 1000))
 
-print("== the bundle of the guest page ==")
-status, page, __s, __h = request("GET", path("view"))
-text = page.decode()
-total_raw = total_gz = 0
-for url in re.findall(r'(?:src|href)="(/web/assets/[^"]+)"', text):
-    status, data, __s, headers = request("GET", url, None, {"Accept-Encoding": "gzip"})
-    raw = len(gzip.decompress(data)) if headers.get("Content-Encoding") == "gzip" else len(data)
-    total_raw += raw
-    total_gz += len(data)
-    result("asset", url=url.split("/")[-1], status=status, raw_kb=round(raw / 1024), sent_kb=round(len(data) / 1024))
-result("bundle_total", raw_kb=round(total_raw / 1024), sent_kb=round(total_gz / 1024))
+print("== the size of a page ==")
+status, page_text, __s, __h = request("GET", path("big"))
+result("page_size", status=status, kb=round(len(page_text) / 1024))

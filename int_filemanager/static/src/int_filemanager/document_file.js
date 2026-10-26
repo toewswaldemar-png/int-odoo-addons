@@ -30,16 +30,8 @@ const PAGED_MIMETYPES = [
 // A text file is read whole into the viewer.
 export const TEXT_MAX_SIZE = 2 * 1024 * 1024;
 
-/** The routes of the core; the guest page replaces them with those of the share. */
-export const addresses = {
-    content: (id, field) => `/web/content/${MODEL}/${id}/${field}`,
-    /** @returns {string|false} the address of a smaller version of a picture of a document */
-    image: (id, field, params) => imageUrl(MODEL, id, field, params),
-    params: () => ({}),
-};
-
 function contentRoute(id, field) {
-    return addresses.content(id, field);
+    return `/web/content/${MODEL}/${id}/${field}`;
 }
 
 /** A document as the core's file viewer wants a file. */
@@ -57,7 +49,7 @@ export class DocumentFile extends FileModelMixin(Object) {
 
     /** @override */
     get urlQueryParams() {
-        const params = { ...super.urlQueryParams, ...addresses.params() };
+        const params = { ...super.urlQueryParams };
         if (this.viewer_pdf_checksum) {
             params.unique = this.viewer_pdf_checksum;
         }
@@ -78,7 +70,6 @@ export class DocumentFile extends FileModelMixin(Object) {
     get downloadUrl() {
         return url(contentRoute(this.id, CONTENT_FIELD), {
             ...super.urlQueryParams,
-            ...addresses.params(),
             download: true,
         });
     }
@@ -139,9 +130,7 @@ export function thumbnailUrl(record, size) {
     } else {
         return false;
     }
-    // A guest gets no checksum: the time of the last change serves as well.
-    const unique = file.checksum || String(record.data.write_date || "");
-    return addresses.image(file.id, field, { width: size, height: size, unique });
+    return imageUrl(MODEL, file.id, field, { width: size, height: size, unique: file.checksum });
 }
 
 export async function readDocumentFile(orm, id) {

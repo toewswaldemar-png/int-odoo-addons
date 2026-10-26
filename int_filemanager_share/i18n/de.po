@@ -6,91 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 13:02+0000\n"
-"PO-Revision-Date: 2026-10-14 13:02+0000\n"
+"POT-Creation-Date: 2026-10-26 14:00+0000\n"
+"PO-Revision-Date: 2026-10-26 14:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_search
-msgid "Archived"
-msgstr "Archiviert"
-
-#. module: int_filemanager_share
-#: model:ir.actions.act_window,name:int_filemanager_share.int_filemanager_document_action
-#: model:ir.ui.menu,name:int_filemanager_share.int_filemanager_document_menu
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_graph
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_pivot
-msgid "Documents"
-msgstr "Dokumente"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_kanban
-msgid "Download"
-msgstr "Herunterladen"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_search
-msgid "Folder"
-msgstr "Ordner"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_search
-msgid "Folders"
-msgstr "Ordner"
-
-#. module: int_filemanager_share
-#. odoo-python
-#: code:addons/int_filemanager_share/tools/share_gateway.py:0
-msgid "This takes too long. Ask for less."
-msgstr "Das dauert zu lange. Fragen Sie weniger an."
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_search
-msgid "Future Activities"
-msgstr "Anstehende Aktivitäten"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_search
-msgid "Late Activities"
-msgstr "Verspätete Aktivitäten"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_search
-msgid "Mimetype"
-msgstr "Dateityp"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_form
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_list
-msgid "Modified"
-msgstr "Geändert"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_search
-msgid "My Activities"
-msgstr "Meine Aktivitäten"
-
-#. module: int_filemanager_share
-#. odoo-javascript
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_kanban
-msgid "Properties"
-msgstr "Eigenschaften"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_search
-msgid "Tags"
-msgstr "Tags"
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_search
-msgid "Today Activities"
-msgstr "Heutige Aktivitäten"
 
 #. module: int_filemanager_share
 #. odoo-python
@@ -111,9 +34,16 @@ msgid "%(field)s: the start value is above the limit."
 msgstr "%(field)s: der Startwert liegt über der Grenze."
 
 #. module: int_filemanager_share
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
+msgid "<i class=\"fa fa-upload me-1\" role=\"img\" aria-hidden=\"true\"/>Upload files"
+msgstr "<i class=\"fa fa-upload me-1\" role=\"img\" aria-hidden=\"true\"/>Dateien hochladen"
+
+#. module: int_filemanager_share
 #: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__active
 msgid "A blocked link (archived) does not work, and can be unblocked."
-msgstr "Ein gesperrter Link (archiviert) funktioniert nicht und kann wieder entsperrt werden."
+msgstr ""
+"Ein gesperrter Link (archiviert) funktioniert nicht und kann wieder "
+"entsperrt werden."
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,help:int_filemanager_share.field_res_config_settings__int_filemanager_share_unlock_hours
@@ -121,7 +51,9 @@ msgstr "Ein gesperrter Link (archiviert) funktioniert nicht und kann wieder ents
 msgid ""
 "A guest who typed the password of a share does not type it again for this "
 "long, in the same browser tab."
-msgstr "Wer das Passwort einer Freigabe eingegeben hat, muss es für diese Zeit im selben Browser-Tab nicht noch einmal eingeben."
+msgstr ""
+"Wer das Passwort einer Freigabe eingegeben hat, muss es für diese Zeit im "
+"selben Browser-Tab nicht noch einmal eingeben."
 
 #. module: int_filemanager_share
 #. odoo-python
@@ -132,24 +64,42 @@ msgstr "Eine Begrenzung der Downloads gibt es nur für Dateien."
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.res_config_settings_view_form
 msgid "A new share starts with these limits for the files that guests upload."
-msgstr "Eine neue Freigabe beginnt mit diesen Grenzen für die Dateien, die Gäste hochladen."
+msgstr ""
+"Eine neue Freigabe beginnt mit diesen Grenzen für die Dateien, die Gäste "
+"hochladen."
 
 #. module: int_filemanager_share
 #: model:ir.model.constraint,message:int_filemanager_share.constraint_int_filemanager_share_target
 msgid "A share has a folder or a file as its target, not both and not none."
-msgstr "Eine Freigabe hat einen Ordner oder eine Datei als Ziel, nicht beides und nicht keines."
+msgstr ""
+"Eine Freigabe hat einen Ordner oder eine Datei als Ziel, nicht beides und "
+"nicht keines."
 
 #. module: int_filemanager_share
 #. odoo-python
 #: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
 msgid "A share has to allow at least one of: see, download, upload."
-msgstr "Eine Freigabe muss mindestens eines erlauben: ansehen, herunterladen, hochladen."
+msgstr ""
+"Eine Freigabe muss mindestens eines erlauben: ansehen, herunterladen, "
+"hochladen."
 
 #. module: int_filemanager_share
 #: model_terms:ir.actions.act_window,help:int_filemanager_share.int_filemanager_share_action
 msgid ""
 "A share is a link to a folder or a file. Whoever has it needs no account."
-msgstr "Eine Freigabe ist ein Link auf einen Ordner oder eine Datei. Wer ihn hat, braucht kein Konto."
+msgstr ""
+"Eine Freigabe ist ein Link auf einen Ordner oder eine Datei. Wer ihn hat, "
+"braucht kein Konto."
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_needaction
+msgid "Action Needed"
+msgstr "Aktion notwendig"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__active
+msgid "Active"
+msgstr "Aktiv"
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__url
@@ -162,13 +112,21 @@ msgstr "Adresse"
 msgid ""
 "After this many addresses of shares that do not exist, an address is turned "
 "away for ten minutes (whoever has a right link is not)."
-msgstr "Nach so vielen Adressen von Freigaben, die es nicht gibt, wird ein Absender zehn Minuten lang abgewiesen (wer einen richtigen Link hat, nicht)."
+msgstr ""
+"Nach so vielen Adressen von Freigaben, die es nicht gibt, wird ein Absender "
+"zehn Minuten lang abgewiesen (wer einen richtigen Link hat, nicht)."
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__expiration_date
 msgid ""
 "After this moment the link does not work any more. Empty: it never ends."
-msgstr "Nach diesem Zeitpunkt funktioniert der Link nicht mehr. Leer: er endet nie."
+msgstr ""
+"Nach diesem Zeitpunkt funktioniert der Link nicht mehr. Leer: er endet nie."
+
+#. module: int_filemanager_share
+#: model:ir.model.fields.selection,name:int_filemanager_share.selection__res_config_settings__int_filemanager_share_creators__user
+msgid "All filemanager users"
+msgstr "Alle Filemanager-Nutzer"
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__upload_max_total_mb
@@ -184,10 +142,15 @@ msgid "Allowed endings"
 msgstr "Erlaubte Endungen"
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.js:0
-msgid "Allowed: %(kinds)s"
-msgstr "Erlaubt: %(kinds)s"
+#. odoo-python
+#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
+msgid "Allowed: %(kinds)s."
+msgstr "Erlaubt: %(kinds)s."
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_attachment_count
+msgid "Attachment Count"
+msgstr "Anzahl der Anhänge"
 
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_share_view_form
@@ -221,9 +184,53 @@ msgid "Close"
 msgstr "Schließen"
 
 #. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__company_id
+msgid "Company"
+msgstr "Unternehmen"
+
+#. module: int_filemanager_share
+#: model:ir.model,name:int_filemanager_share.model_res_config_settings
+msgid "Config Settings"
+msgstr "Konfigurationseinstellungen"
+
+#. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_share_view_form_dialog
 msgid "Create the link"
 msgstr "Link erstellen"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__create_uid
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share_attempt__create_uid
+msgid "Created by"
+msgstr "Erstellt von"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__create_date
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share_attempt__create_date
+msgid "Created on"
+msgstr "Erstellt am"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_document__display_name
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_folder__display_name
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__display_name
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share_attempt__display_name
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_shareable__display_name
+#: model:ir.model.fields,field_description:int_filemanager_share.field_res_config_settings__display_name
+msgid "Display Name"
+msgstr "Anzeigename"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__document_id
+msgid "Document"
+msgstr "Dokument"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__can_download
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_file_page
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
+msgid "Download"
+msgstr "Herunterladen"
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__download_count
@@ -261,6 +268,16 @@ msgid "Filemanager administrators only"
 msgstr "Nur Administratoren des Filemanagers"
 
 #. module: int_filemanager_share
+#: model:ir.model,name:int_filemanager_share.model_int_filemanager_document
+msgid "Filemanager document"
+msgstr "Dateimanager-Dokument"
+
+#. module: int_filemanager_share
+#: model:ir.model,name:int_filemanager_share.model_int_filemanager_folder
+msgid "Filemanager folder"
+msgstr "Dateimanager-Ordner"
+
+#. module: int_filemanager_share
 #: model:ir.model,name:int_filemanager_share.model_int_filemanager_share
 msgid "Filemanager share"
 msgstr "Filemanager-Freigabe"
@@ -276,14 +293,20 @@ msgid ""
 "Files only. The link ends after this many downloads. 0: no limit. Only the "
 "download button counts: a file that the guest may see in the browser can be "
 "saved without it."
-msgstr "Nur für Dateien. Der Link endet nach so vielen Downloads. 0: keine Begrenzung. Es zählt nur der Download-Knopf: Eine Datei, die der Gast im Browser ansehen darf, lässt sich auch ohne ihn speichern."
+msgstr ""
+"Nur für Dateien. Der Link endet nach so vielen Downloads. 0: keine "
+"Begrenzung. Es zählt nur der Download-Knopf: Eine Datei, die der Gast im "
+"Browser ansehen darf, lässt sich auch ohne ihn speichern."
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,help:int_filemanager_share.field_res_config_settings__int_filemanager_share_uploads_per_minute
 msgid ""
 "Files that one address may send to a share in a minute. The limits of the "
 "share itself (size, number, total) do not depend on it."
-msgstr "Dateien, die ein Absender in einer Minute an eine Freigabe schicken darf. Die Grenzen der Freigabe selbst (Größe, Anzahl, Summe) hängen nicht davon ab."
+msgstr ""
+"Dateien, die ein Absender in einer Minute an eine Freigabe schicken darf. "
+"Die Grenzen der Freigabe selbst (Größe, Anzahl, Summe) hängen nicht davon "
+"ab."
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__upload_count
@@ -291,16 +314,44 @@ msgid "Files uploaded"
 msgstr "Hochgeladene Dateien"
 
 #. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__folder_id
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
+msgid "Folder"
+msgstr "Ordner"
+
+#. module: int_filemanager_share
+#: model:ir.model,name:int_filemanager_share.model_int_filemanager_shareable
+msgid "Folder or document that can be shared"
+msgstr "Ordner oder Dokument, das freigegeben werden kann"
+
+#. module: int_filemanager_share
 #: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__can_upload
 msgid ""
 "Folders only. The guests put files into a folder of their own below the "
 "shared folder, which only you and the administrators see."
-msgstr "Nur für Ordner. Die Gäste legen Dateien in einem eigenen Ordner unterhalb des freigegebenen Ordners ab, den nur Sie und die Administratoren sehen."
+msgstr ""
+"Nur für Ordner. Die Gäste legen Dateien in einem eigenen Ordner unterhalb "
+"des freigegebenen Ordners ab, den nur Sie und die Administratoren sehen."
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_follower_ids
+msgid "Followers"
+msgstr "Follower"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "Follower (Partner)"
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,help:int_filemanager_share.field_res_config_settings__int_filemanager_share_password_tries_share
 msgid "From all addresses together."
 msgstr "Von allen Absendern zusammen."
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__has_message
+msgid "Has Message"
+msgstr "Hat Nachricht"
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__has_password
@@ -319,15 +370,35 @@ msgid "Hours the password is kept"
 msgstr "Stunden, die das Passwort gilt"
 
 #. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_document__id
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_folder__id
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__id
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share_attempt__id
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_shareable__id
+#: model:ir.model.fields,field_description:int_filemanager_share.field_res_config_settings__id
+msgid "ID"
+msgstr "ID"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "Wenn aktiviert, erfordern neue Nachrichten Ihre Aufmerksamkeit."
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__message_has_error
+#: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr "Wenn aktiviert, weisen einige Nachrichten einen Zustellungsfehler auf."
+
+#. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share_attempt__ip
 msgid "Ip"
 msgstr "IP-Adresse"
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_app.xml:0
-msgid "Kanban"
-msgstr "Kanban"
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_is_follower
+msgid "Is Follower"
+msgstr "Ist Follower"
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__upload_max_file_mb
@@ -342,6 +413,18 @@ msgid "Last Access"
 msgstr "Letzter Zugriff"
 
 #. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__write_uid
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share_attempt__write_uid
+msgid "Last Updated by"
+msgstr "Zuletzt aktualisiert von"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__write_date
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share_attempt__write_date
+msgid "Last Updated on"
+msgstr "Zuletzt aktualisiert am"
+
+#. module: int_filemanager_share
 #: model:ir.model.fields.selection,name:int_filemanager_share.selection__int_filemanager_share__state__limit
 msgid "Limit reached"
 msgstr "Limit erreicht"
@@ -351,7 +434,9 @@ msgstr "Limit erreicht"
 msgid ""
 "Limits for the guests of the shares. The brake on wrong passwords is always "
 "on."
-msgstr "Grenzen für die Gäste der Freigaben. Die Bremse für falsche Passwörter ist immer eingeschaltet."
+msgstr ""
+"Grenzen für die Gäste der Freigaben. Die Bremse für falsche Passwörter ist "
+"immer eingeschaltet."
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,help:int_filemanager_share.field_res_config_settings__int_filemanager_share_brake
@@ -359,25 +444,43 @@ msgid ""
 "Limits how many requests one address may send: made-up addresses of shares, "
 "and the requests to a share. Not the brake on wrong passwords: that one is "
 "always on."
-msgstr "Begrenzt, wie viele Anfragen ein Absender schicken darf: erfundene Adressen von Freigaben und Anfragen an eine Freigabe. Nicht die Bremse für falsche Passwörter: Die ist immer eingeschaltet."
-
-#. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_app.xml:0
-msgid "List"
-msgstr "Liste"
+msgstr ""
+"Begrenzt, wie viele Anfragen ein Absender schicken darf: erfundene Adressen "
+"von Freigaben und Anfragen an eine Freigabe. Nicht die Bremse für falsche "
+"Passwörter: Die ist immer eingeschaltet."
 
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_form
 msgid ""
 "Make a link that gives this file to whoever has it, without an account."
-msgstr "Einen Link erstellen, der diese Datei an jeden gibt, der ihn hat, ohne Konto."
+msgstr ""
+"Einen Link erstellen, der diese Datei an jeden gibt, der ihn hat, ohne "
+"Konto."
 
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_folder_view_form
 msgid ""
 "Make a link that gives this folder to whoever has it, without an account."
-msgstr "Einen Link erstellen, der diesen Ordner an jeden gibt, der ihn hat, ohne Konto."
+msgstr ""
+"Einen Link erstellen, der diesen Ordner an jeden gibt, der ihn hat, ohne "
+"Konto."
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_has_error
+msgid "Message Delivery error"
+msgstr "Fehler bei der Nachrichtenzustellung"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_ids
+msgid "Messages"
+msgstr "Nachrichten"
+
+#. module: int_filemanager_share
+#. odoo-python
+#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
+msgid "Modified"
+msgstr "Geändert"
 
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_share_view_search
@@ -385,10 +488,23 @@ msgid "My shares"
 msgstr "Meine Freigaben"
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.xml:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "My uploads"
 msgstr "Meine Uploads"
+
+#. module: int_filemanager_share
+#. odoo-python
+#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__name
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_share_view_form
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
+msgid "Name"
+msgstr "Name"
+
+#. module: int_filemanager_share
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
+msgid "No file or folder has this name."
+msgstr "Keine Datei und kein Ordner hat diesen Namen."
 
 #. module: int_filemanager_share
 #: model_terms:ir.actions.act_window,help:int_filemanager_share.int_filemanager_share_action
@@ -396,10 +512,14 @@ msgid "No shares yet"
 msgstr "Noch keine Freigaben"
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_action_service.js:0
-msgid "Not available on this page."
-msgstr "Auf dieser Seite nicht verfügbar."
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_needaction_counter
+msgid "Number of Actions"
+msgstr "Anzahl der Aktionen"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_has_error_counter
+msgid "Number of errors"
+msgstr "Anzahl der Fehler"
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__upload_max_files
@@ -407,6 +527,26 @@ msgstr "Auf dieser Seite nicht verfügbar."
 #: model:ir.model.fields,field_description:int_filemanager_share.field_res_config_settings__int_filemanager_share_max_files
 msgid "Number of files"
 msgstr "Anzahl der Dateien"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr "Anzahl der Nachrichten, die eine Aktion erfordern"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "Anzahl der Nachrichten mit Zustellungsfehler"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields.selection,name:int_filemanager_share.selection__res_config_settings__int_filemanager_share_brake__0
+msgid "Off"
+msgstr "Aus"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields.selection,name:int_filemanager_share.selection__res_config_settings__int_filemanager_share_brake__1
+msgid "On"
+msgstr "Ein"
 
 #. module: int_filemanager_share
 #. odoo-python
@@ -436,8 +576,7 @@ msgid "Protection"
 msgstr "Schutz"
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.xml:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "Remove"
 msgstr "Entfernen"
 
@@ -452,6 +591,11 @@ msgid "Requests to a share in a minute"
 msgstr "Anfragen an eine Freigabe pro Minute"
 
 #. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr "SMS-Zustellungsfehler"
+
+#. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_share_view_form_dialog
 msgid "Save"
 msgstr "Speichern"
@@ -462,12 +606,20 @@ msgid "See"
 msgstr "Ansehen"
 
 #. module: int_filemanager_share
+#. odoo-python
+#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
+msgid "Send exactly one file per request."
+msgstr "Pro Anfrage genau eine Datei senden."
+
+#. module: int_filemanager_share
 #: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__upload_extensions
 #: model:ir.model.fields,help:int_filemanager_share.field_res_config_settings__int_filemanager_share_default_extensions
 msgid ""
 "Separated by commas: pdf, jpg. Empty: every ending, except those that can "
 "run as a program or a page."
-msgstr "Durch Kommas getrennt: pdf, jpg. Leer: jede Endung, außer denen, die als Programm oder Seite laufen können."
+msgstr ""
+"Durch Kommas getrennt: pdf, jpg. Leer: jede Endung, außer denen, die als "
+"Programm oder Seite laufen können."
 
 #. module: int_filemanager_share
 #. odoo-python
@@ -506,14 +658,16 @@ msgstr "Kürzestes Passwort"
 
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_file_page
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
 msgid "Show"
 msgstr "Anzeigen"
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_orm.js:0
-msgid "Something went wrong. Try again."
-msgstr "Etwas ist schiefgegangen. Versuchen Sie es noch einmal."
+#. odoo-python
+#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
+msgid "Size"
+msgstr "Größe"
 
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.res_config_settings_view_form
@@ -521,8 +675,12 @@ msgid "Start values of the uploads"
 msgstr "Startwerte der Uploads"
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.xml:0
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__state
+msgid "State"
+msgstr "Status"
+
+#. module: int_filemanager_share
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "Taken over"
 msgstr "Übernommen"
 
@@ -553,10 +711,9 @@ msgid "The expiration date has to be in the future."
 msgstr "Das Ablaufdatum muss in der Zukunft liegen."
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.js:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "The file could not be removed. Try again."
-msgstr "Die Datei konnte nicht entfernt werden. Versuchen Sie es noch einmal."
+msgstr "Die Datei konnte nicht entfernt werden. Bitte erneut versuchen."
 
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_share_view_form
@@ -577,12 +734,21 @@ msgstr "Der Link funktioniert nicht mehr. Er kann wieder entsperrt werden."
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.res_config_settings_view_form
 msgid ""
 "The makers of a share cannot set the limits of the uploads above these."
-msgstr "Wer eine Freigabe erstellt, kann die Grenzen der Uploads nicht über diese Werte setzen."
+msgstr ""
+"Wer eine Freigabe erstellt, kann die Grenzen der Uploads nicht über diese "
+"Werte setzen."
 
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.res_config_settings_view_form
 msgid "The number of characters that the password of a share needs at least."
-msgstr "Die Anzahl der Zeichen, die das Passwort einer Freigabe mindestens braucht."
+msgstr ""
+"Die Anzahl der Zeichen, die das Passwort einer Freigabe mindestens braucht."
+
+#. module: int_filemanager_share
+#. odoo-python
+#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
+msgid "The password is wrong."
+msgstr "Das Passwort ist falsch."
 
 #. module: int_filemanager_share
 #. odoo-python
@@ -611,13 +777,25 @@ msgstr "Der geheime Teil der Adresse. Wer die Adresse hat, hat die Freigabe."
 #. odoo-python
 #: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
 msgid "The target of a share cannot be changed. Make a new share."
-msgstr "Das Ziel einer Freigabe lässt sich nicht ändern. Erstellen Sie eine neue Freigabe."
+msgstr ""
+"Das Ziel einer Freigabe lässt sich nicht ändern. Erstellen Sie eine neue "
+"Freigabe."
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.js:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "The upload failed. Try again."
-msgstr "Der Upload ist fehlgeschlagen. Versuchen Sie es noch einmal."
+msgstr "Der Upload ist fehlgeschlagen. Bitte erneut versuchen."
+
+#. module: int_filemanager_share
+#. odoo-python
+#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
+msgid "There is no space left to store the file."
+msgstr "Es ist kein Speicherplatz mehr frei, um die Datei zu speichern."
+
+#. module: int_filemanager_share
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
+msgid "There is nothing in this folder."
+msgstr "In diesem Ordner ist nichts."
 
 #. module: int_filemanager_share
 #. odoo-python
@@ -626,10 +804,9 @@ msgid "This file does not exist."
 msgstr "Diese Datei gibt es nicht."
 
 #. module: int_filemanager_share
-#. odoo-javascript
 #. odoo-python
 #: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.js:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "This file has been taken over. It cannot be removed any more."
 msgstr "Diese Datei wurde übernommen. Sie lässt sich nicht mehr entfernen."
 
@@ -658,10 +835,15 @@ msgid "This file is too large for this link."
 msgstr "Diese Datei ist für diesen Link zu groß."
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.js:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "This file is too large, or this link takes no more files."
 msgstr "Diese Datei ist zu groß, oder dieser Link nimmt keine Dateien mehr an."
+
+#. module: int_filemanager_share
+#. odoo-python
+#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
+msgid "This folder does not exist."
+msgstr "Diesen Ordner gibt es nicht."
 
 #. module: int_filemanager_share
 #. odoo-python
@@ -676,11 +858,9 @@ msgid "This kind of file cannot be uploaded here."
 msgstr "Diese Art von Datei kann hier nicht hochgeladen werden."
 
 #. module: int_filemanager_share
-#. odoo-javascript
 #. odoo-python
 #: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
 #: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
-#: code:addons/int_filemanager_share/static/src/guest/guest_orm.js:0
 msgid "This link does not allow that."
 msgstr "Dieser Link erlaubt das nicht."
 
@@ -691,9 +871,8 @@ msgid "This link does not exist."
 msgstr "Diesen Link gibt es nicht."
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.js:0
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.xml:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "This link does not take files any more."
 msgstr "Dieser Link nimmt keine Dateien mehr an."
 
@@ -723,12 +902,6 @@ msgid "This link has reached its limit of downloads."
 msgstr "Dieser Link hat sein Limit an Downloads erreicht."
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_orm.js:0
-msgid "This link is not valid any more."
-msgstr "Dieser Link ist nicht mehr gültig."
-
-#. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_password_page
 msgid "This link needs a password"
 msgstr "Dieser Link braucht ein Passwort"
@@ -746,8 +919,7 @@ msgid "This link takes no more files."
 msgstr "Dieser Link nimmt keine Dateien mehr an."
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.xml:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid ""
 "This list is kept in this browser. Other browsers do not show these files."
 msgstr "Diese Liste wird in diesem Browser gespeichert. Andere Browser zeigen diese Dateien nicht an."
@@ -769,18 +941,16 @@ msgid "Token"
 msgstr "Token"
 
 #. module: int_filemanager_share
-#. odoo-javascript
 #. odoo-python
 #: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.js:0
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "Too many files at once. Try again in a minute."
-msgstr "Zu viele Dateien auf einmal. Versuchen Sie es in einer Minute noch einmal."
+msgstr ""
+"Zu viele Dateien auf einmal. Versuchen Sie es in einer Minute noch einmal."
 
 #. module: int_filemanager_share
-#. odoo-javascript
 #. odoo-python
 #: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
-#: code:addons/int_filemanager_share/static/src/guest/guest_orm.js:0
 msgid "Too many requests. Try again in a minute."
 msgstr "Zu viele Anfragen. Versuchen Sie es in einer Minute noch einmal."
 
@@ -802,14 +972,18 @@ msgid "Unblock"
 msgstr "Entsperren"
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.js:0
-msgid "Up to %(size)s per file"
-msgstr "Bis zu %(size)s je Datei"
+#. odoo-python
+#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
+msgid "Up to %(size)s per file."
+msgstr "Bis zu %(size)s je Datei."
 
 #. module: int_filemanager_share
-#. odoo-javascript
-#: code:addons/int_filemanager_share/static/src/guest/guest_uploads.xml:0
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__can_upload
+msgid "Upload"
+msgstr "Hochladen"
+
+#. module: int_filemanager_share
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
 msgid "Upload files"
 msgstr "Dateien hochladen"
 
@@ -822,6 +996,17 @@ msgstr "Upload-Ordner"
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_document__share_id
 msgid "Uploaded through"
 msgstr "Hochgeladen über"
+
+#. module: int_filemanager_share
+#. odoo-python
+#: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
+msgid "Uploading is for folders only."
+msgstr "Hochladen gibt es nur für Ordner."
+
+#. module: int_filemanager_share
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_upload_area
+msgid "Uploading…"
+msgstr "Wird hochgeladen…"
 
 #. module: int_filemanager_share
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_share_view_form
@@ -855,6 +1040,16 @@ msgid "Visits"
 msgstr "Besuche"
 
 #. module: int_filemanager_share
+#: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share__website_message_ids
+msgid "Website Messages"
+msgstr "Website-Nachrichten"
+
+#. module: int_filemanager_share
+#: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__website_message_ids
+msgid "Website communication history"
+msgstr "Verlauf der Website-Kommunikation"
+
+#. module: int_filemanager_share
 #. odoo-python
 #: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
 msgid "What this link shared is not available any more."
@@ -875,25 +1070,23 @@ msgstr "Wer Freigaben erstellt"
 #: model:ir.model.fields,help:int_filemanager_share.field_res_config_settings__int_filemanager_share_creators
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.res_config_settings_view_form
 msgid "Whoever may make a share can give the folders and files that they see."
-msgstr "Wer Freigaben erstellen darf, kann die Ordner und Dateien freigeben, die er sieht."
+msgstr ""
+"Wer Freigaben erstellen darf, kann die Ordner und Dateien freigeben, die er "
+"sieht."
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_share__password
 msgid ""
 "Whoever opens the link has to type it. It is never shown again; leave it "
 "empty to keep the one that is set."
-msgstr "Wer den Link öffnet, muss es eingeben. Es wird nie wieder angezeigt; leer lassen, um das gesetzte zu behalten."
+msgstr ""
+"Wer den Link öffnet, muss es eingeben. Es wird nie wieder angezeigt; leer "
+"lassen, um das gesetzte zu behalten."
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_res_config_settings__int_filemanager_share_invalid_tokens
 msgid "Wrong addresses in 10 minutes"
 msgstr "Falsche Adressen in 10 Minuten"
-
-#. module: int_filemanager_share
-#. odoo-python
-#: code:addons/int_filemanager_share/controllers/int_filemanager.py:0
-msgid "Wrong password."
-msgstr "Falsches Passwort."
 
 #. module: int_filemanager_share
 #: model:ir.model.fields,field_description:int_filemanager_share.field_res_config_settings__int_filemanager_share_password_tries_share
@@ -909,20 +1102,11 @@ msgstr "Falsche Passwörter eines Absenders in 10 Minuten"
 #. odoo-python
 #: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
 msgid "You may only share a folder or a file that the folders show to you."
-msgstr "Sie dürfen nur einen Ordner oder eine Datei freigeben, die Ihnen die Ordner anzeigen."
+msgstr ""
+"Sie dürfen nur einen Ordner oder eine Datei freigeben, die Ihnen die Ordner "
+"anzeigen."
 
 #. module: int_filemanager_share
-#. odoo-python
-#: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
-msgid "Uploading is for folders only."
-msgstr "Hochladen gibt es nur für Ordner."
-
-#. module: int_filemanager_share
-#: model_terms:ir.ui.view,arch_db:int_filemanager_share.res_config_settings_view_form
-msgid "Limits"
-msgstr "Grenzen"
-
-#. module: int_filemanager_share
-#: model:ir.model,name:int_filemanager_share.model_int_filemanager_shareable
-msgid "Folder or document that can be shared"
-msgstr "Ordner oder Dokument, das freigegeben werden kann"
+#: model_terms:ir.ui.view,arch_db:int_filemanager_share.share_folder_page
+msgid "breadcrumb"
+msgstr "Pfad"

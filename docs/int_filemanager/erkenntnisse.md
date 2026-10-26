@@ -88,7 +88,7 @@ Diese Datei hält nur, was nicht aus dem Code ersichtlich ist: gemessene Werte, 
 - CSS-Klassen heißen `o_<Modul>_…` (Richtlinie), SCSS-Zeilen höchstens 80 Zeichen.
 
 **Gäste**
-- Das Gateway antwortet mit Status und kurzem Text, nicht mit JSON-RPC (`guestRpc` macht daraus einen `RPCError`). `user` ist ein Modul, kein Dienst, und braucht einen Login, darum für Gäste gepatcht. Der Freigabe-Schlüssel liegt nur im `sessionStorage` des Tabs, Quittungen im `localStorage` je Freigabe.
+- Die Gäste haben keine Odoo-Oberfläche mehr: Ihre Seiten sind serverseitig gerendert (Portal-Layout), siehe `docs/int_filemanager_share/freigabe_links.md`. Quittungen der Uploads liegen im `localStorage` je Freigabe; der Schlüssel eines Passwort-Links in einem Cookie.
 
 ## 7. Nicht gebaut / offen
 

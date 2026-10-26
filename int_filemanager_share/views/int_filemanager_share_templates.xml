@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <!-- Guest pages: everything a guest or the data brings in must go through t-out. -->
-    <template id="share_layout" name="Filemanager share: the head of a page">
-        <t t-call="web.layout">
-            <t t-set="head">
-                <t t-call-assets="web.assets_frontend" t-js="false" />
-                <t t-out="head_extra" />
-            </t>
-            <t t-out="0" />
+    <!-- The pages of the guests, in the layout of the portal (the pages of a document that is shown
+         with its access token, as in sale or project). Everything that a guest or the data brings
+         in goes through t-out. -->
+    <template id="share_layout" name="Filemanager share: the layout of a page">
+        <t t-call="portal.frontend_layout">
+            <t t-set="is_portal" t-value="True" />
+            <div id="wrap" class="o_portal_wrap">
+                <div class="container pt-3 pb-5">
+                    <t t-out="0" />
+                </div>
+            </div>
         </t>
     </template>
 
     <template id="share_file_page" name="Filemanager share: a file">
         <t t-call="int_filemanager_share.share_layout">
             <t t-set="title" t-value="name" />
-            <div class="container py-5" style="max-width: 40rem">
+            <div class="mx-auto" style="max-width: 40rem">
                 <div class="card">
                     <div class="card-body text-center">
                         <img
@@ -42,7 +45,6 @@
                                 rel="noopener"
                             >Show</a>
                             <form t-if="download_url" t-att-action="download_url" method="post">
-                                <input t-if="key" type="hidden" name="k" t-att-value="key" />
                                 <button type="submit" class="btn btn-primary">Download</button>
                             </form>
                         </div>
@@ -52,18 +54,117 @@
         </t>
     </template>
 
+    <template id="share_upload_area" name="Filemanager share: the upload area">
+        <section
+            class="o_if_share_upload card mb-4"
+            t-att-data-token="token"
+            t-att-data-max-size="upload_max_file"
+        >
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button type="button" class="btn btn-primary o_if_share_choose">
+                        <i class="fa fa-upload me-1" role="img" aria-hidden="true" />Upload files
+                    </button>
+                    <input type="file" multiple="multiple" class="d-none" aria-label="Upload files" />
+                    <span class="text-muted small" t-out="upload_hint" />
+                </div>
+                <div class="o_if_share_closed alert alert-warning mt-3 mb-0 d-none" role="alert">
+                    This link does not take files any more.
+                </div>
+                <ul class="o_if_share_progress list-unstyled mt-3 mb-0" aria-live="polite" />
+                <div class="o_if_share_mine mt-3 d-none">
+                    <h2 class="h6 mb-1">My uploads</h2>
+                    <ul class="o_if_share_mine_list list-group list-group-flush" />
+                    <p class="text-muted small mt-1 mb-0">
+                        This list is kept in this browser. Other browsers do not show these files.
+                    </p>
+                </div>
+                <!-- The texts that the script shows: they are translated here, not in the script. -->
+                <div class="d-none">
+                    <div data-msg="uploading">Uploading…</div>
+                    <div data-msg="too_large">This file is too large, or this link takes no more files.</div>
+                    <div data-msg="closed">This link does not take files any more.</div>
+                    <div data-msg="busy">Too many files at once. Try again in a minute.</div>
+                    <div data-msg="failed">The upload failed. Try again.</div>
+                    <div data-msg="remove">Remove</div>
+                    <div data-msg="taken">Taken over</div>
+                    <div data-msg="taken_over">This file has been taken over. It cannot be removed any more.</div>
+                    <div data-msg="remove_failed">The file could not be removed. Try again.</div>
+                </div>
+            </div>
+        </section>
+    </template>
+
     <template id="share_folder_page" name="Filemanager share: a folder">
-        <t t-call="web.layout">
-            <t t-set="title" t-value="name" />
-            <t t-set="body_classname" t-value="'o_web_client'" />
-            <t t-set="head">
-                <script>
-                    odoo.__session_info__ = <t t-out="json.dumps(session_info)" />;
-                    odoo.int_filemanager_token = <t t-out="json.dumps(token)" />;
-                    odoo.int_filemanager_folder_name = <t t-out="json.dumps(name)" />;
-                    odoo.int_filemanager_rights = <t t-out="json.dumps(rights)" />;
-                </script>
-                <t t-call-assets="int_filemanager_share.assets_guest" />
+        <t t-call="int_filemanager_share.share_layout">
+            <t t-if="not listing">
+                <h1 class="h3 text-break mb-3" t-out="name" />
+            </t>
+            <t t-else="">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li
+                            t-foreach="breadcrumbs"
+                            t-as="crumb"
+                            t-attf-class="breadcrumb-item#{'' if crumb['url'] else ' active'}"
+                        >
+                            <a t-if="crumb['url']" t-att-href="crumb['url']" t-out="crumb['name']" />
+                            <t t-else="" t-out="crumb['name']" />
+                        </li>
+                    </ol>
+                </nav>
+                <t t-call="portal.portal_searchbar" />
+            </t>
+            <div t-if="upload_closed" class="alert alert-warning" role="alert">
+                This link does not take files any more.
+            </div>
+            <t t-if="rights['can_upload']" t-call="int_filemanager_share.share_upload_area" />
+            <t t-if="listing">
+                <p t-if="not rows and search_results" class="alert alert-info">
+                    No file or folder has this name.
+                </p>
+                <p t-elif="not rows" class="alert alert-info">There is nothing in this folder.</p>
+                <t t-else="" t-call="portal.portal_table">
+                    <thead>
+                        <tr class="active">
+                            <th>Name</th>
+                            <th t-if="search_results">Folder</th>
+                            <th class="text-end">Size</th>
+                            <th class="text-end">Modified</th>
+                            <th />
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="rows" t-as="row">
+                            <td class="text-break">
+                                <i t-attf-class="fa #{row['icon']} fa-fw me-2 text-muted" role="img" aria-hidden="true" />
+                                <a t-if="row['kind'] == 'folder'" t-att-href="row['url']" t-out="row['name']" />
+                                <span t-else="" t-out="row['name']" />
+                            </td>
+                            <td t-if="search_results" class="text-muted" t-out="row['where']" />
+                            <td class="text-end text-nowrap" t-out="row['size_text']" />
+                            <td class="text-end text-nowrap" t-out="row['date']" />
+                            <td class="text-end text-nowrap">
+                                <a
+                                    t-if="row.get('show_url')"
+                                    t-att-href="row['show_url']"
+                                    class="btn btn-sm btn-link"
+                                    target="_blank"
+                                    rel="noopener"
+                                    title="Show"
+                                    aria-label="Show"
+                                ><i class="fa fa-eye" role="img" aria-hidden="true" /></a>
+                                <a
+                                    t-if="row.get('download_url')"
+                                    t-att-href="row['download_url']"
+                                    class="btn btn-sm btn-link"
+                                    title="Download"
+                                    aria-label="Download"
+                                ><i class="fa fa-download" role="img" aria-hidden="true" /></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </t>
             </t>
         </t>
     </template>
@@ -71,12 +172,10 @@
     <template id="share_password_page" name="Filemanager share: the password">
         <t t-call="int_filemanager_share.share_layout">
             <t t-set="title">Password</t>
-            <t t-set="head_extra">
-                <t t-call-assets="int_filemanager_share.assets_guest_password" t-css="false" />
-            </t>
-            <div class="container py-5" style="max-width: 24rem">
-                <form id="o_share_password" class="card card-body" t-att-data-token="token">
+            <div class="mx-auto" style="max-width: 24rem">
+                <form class="card card-body" method="post" t-att-action="unlock_url">
                     <h1 class="h5">This link needs a password</h1>
+                    <div t-if="error" class="alert alert-danger" role="alert" t-out="error" />
                     <input
                         type="password"
                         name="password"
@@ -84,9 +183,9 @@
                         autocomplete="off"
                         aria-label="Password"
                         required="required"
+                        autofocus="autofocus"
                     />
                     <button type="submit" class="btn btn-primary">Open</button>
-                    <p class="o_share_message text-danger mt-3 mb-0" role="alert" />
                 </form>
             </div>
         </t>

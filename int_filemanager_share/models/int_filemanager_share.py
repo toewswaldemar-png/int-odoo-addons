@@ -276,10 +276,6 @@ class ShareTooLarge(ShareDenied):
     http_status = 413
 
 
-class ShareUnprocessable(ShareDenied):
-    http_status = 422
-
-
 class ShareUnsupported(ShareDenied):
     http_status = 415
 
@@ -863,9 +859,10 @@ class IntFilemanagerShare(models.Model):
     def _scope_domain(self, model):
         """The domain on ``model`` (folders or documents) of everything that the guests may reach.
 
-        The rules of records do not apply to the guests' reading (it runs as superuser), so this
-        domain is all that bounds them: it is joined to every search by ``&``, whatever they
-        ask for, and used to check every id they name. The shared folder and the folders below
+        The guests have no rights on the records: the pages read them as superuser, after the token
+        of the share has been checked, so this domain is all that bounds the reading. It is joined
+        to every search of a page by ``&`` and used to check every id of an address. The shared
+        folder and the folders below
         it, without the hidden ones; for a file, the file; only what is active (the search
         takes care of it); only the company of the share, if it has one.
         """

@@ -12,6 +12,8 @@ from odoo.tools.misc import verify_limited_field_access_token
 from odoo.addons.int_filemanager.models.int_filemanager_document import THUMBNAIL_CRON_XMLID
 from odoo.addons.int_filemanager.tests.test_folder_access import AccessCase
 
+from .common import guest_key
+
 
 PDF = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\n" + b"x" * 100
 PASSWORD = "a long password"
@@ -46,15 +48,15 @@ class TestShareUpload(AccessCase, HttpCase):
 
     # --- helpers ------------------------------------------------------------------------------
 
-    def _url(self, share=None, tail="upload", key=None):
+    def _url(self, share=None, tail="upload"):
         share = share or self.share
-        url = f"/int_filemanager/share/{share.token}/{tail}"
-        return f"{url}?k={key}" if key else url
+        return f"/int_filemanager/share/{share.token}/{tail}"
 
     def _send(self, name, data, share=None, key=None, mimetype="application/octet-stream", **kwargs):
-        return self.url_open(
-            self._url(share, key=key), files={"ufile": (name, data, mimetype)}, **kwargs
-        )
+        if key:  # the key of the password is in the cookie of the share
+            with guest_key(self.opener, share or self.share, key):
+                return self.url_open(self._url(share), files={"ufile": (name, data, mimetype)}, **kwargs)
+        return self.url_open(self._url(share), files={"ufile": (name, data, mimetype)}, **kwargs)
 
     def _post_json(self, tail, body, share=None):
         # ``url_open`` sends a body that is false (``[]``, ``{}``, ``null``) as a GET: pass text
@@ -129,22 +131,21 @@ class TestShareUpload(AccessCase, HttpCase):
         self.addCleanup(os.remove, self.Document._blob_path(document.checksum))
         self.assertEqual(document.create_uid, self.env.ref("base.public_user"))
 
-    def test_a_share_with_a_password_wants_the_key_in_the_address(self):
+    def test_a_share_with_a_password_wants_the_key_in_the_cookie(self):
         self.share.password = PASSWORD
         self.assertEqual(self._send("a.pdf", PDF).status_code, 403)
         self.assertEqual(self._send("a.pdf", PDF, key="wrong").status_code, 403)
         answer = self._upload_ok(key=self.share._unlock_key())
         self.addCleanup(os.remove, self.Document._blob_path(self.Document.browse(answer["id"]).checksum))
 
-    def test_the_page_tells_the_app_how_large_a_file_may_be(self):
+    def test_the_page_tells_the_script_how_large_a_file_may_be(self):
         self.share.upload_extensions = "pdf, JPG"
         text = self.url_open(f"/int_filemanager/share/{self.share.token}").text
-        self.assertIn(f'"max_file_upload_size": {MEBIBYTE}', text)
-        self.assertIn(f'"upload_max_file": {MEBIBYTE}', text)
-        self.assertIn('"upload_extensions": ["jpg", "pdf"]', text)
+        self.assertIn(f'data-max-size="{MEBIBYTE}"', text)
+        self.assertRegex(text, r"Up to\s+1\.00 Mb\s+per file")
+        self.assertIn("Allowed: jpg, pdf", text)
         looking = self.Share.create({"folder_id": self.folder.id})
-        text = self.url_open(f"/int_filemanager/share/{looking.token}").text
-        self.assertIn('"max_file_upload_size": 0', text)
+        self.assertNotIn("o_if_share_upload", self.url_open(f"/int_filemanager/share/{looking.token}").text)
 
     # --- the limits ----------------------------------------------------------------------
 

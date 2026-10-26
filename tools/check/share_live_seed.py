@@ -100,6 +100,7 @@ for start in range(0, len(rows), 2000):
     env.cr.commit()
 big = Share.create({"name": "big", "folder_id": archive.id})
 seed["shares"]["big"] = {"id": big.id, "token": big.token}
+seed["archive"] = archive.id
 env.cr.commit()
 with open("/out/seed.json", "w") as out:
     json.dump(seed, out)

@@ -16,7 +16,7 @@ int_filemanager_share   int_filemanager_record   int_filemanager_ocr   int_filem
 | `int_filemanager` | Ordner, Dokumente, Storage (Blobs), Thumbnails und Office-Vorschau, ZIP, Rechte (Ordner entscheiden), Oberfläche (Liste, Kanban, Viewer) |
 | `int_filemanager_record` | Dokumente an Datensätzen: Modelle `link` und `model.folder`, Mixin `linkable` (Kontakt `res.partner`), Sichtbarkeit über den verknüpften Datensatz (Einstellung), Upload am Datensatz, Ablageordner je Modell. Konzept: `docs/int_filemanager_record/datensatz_verknuepfung.md` |
 | `int_filemanager_record_ocr` | `auto_install` mit `record` und `ocr`: die Suche „Dokument enthält“ am Kontakt (`document_search`) |
-| `int_filemanager_share` | Freigabe-Links: Modell, Routen, Gast-Seite und -Bundles, Gateway, Bremsen, Settings; `share_id` am Dokument, Share-Knöpfe an Dokument und Ordner |
+| `int_filemanager_share` | Freigabe-Links: Modell, Routen, Gast-Seiten im Portal-Layout (hängt von `portal` ab), Upload-Skript, Bremsen, Settings; `share_id` am Dokument, Share-Knöpfe an Dokument und Ordner |
 | `int_filemanager_ocr` | Volltextsuche und OCR: Modelle `text` und `text_page`, Cron, `content_search` und `content_hits` am Dokument, `ocr_images` am Ordner, Settings und Status, Widgets der Treffer |
 | `int_filemanager_image_editor` | Bildeditor (Fabric, lazy Bundle), `edit_state` und `edit_source_id` am Dokument, `get_edit_session` |
 | `int_filemanager_import` | Einlesen eines Ordners der Serverplatte, `origin_path` am Dokument |
@@ -41,7 +41,7 @@ Wer den Kern erweitert, überschreibt diese Stellen mit `super()`:
 
 ## Regeln beim Weiterbauen
 
-- Externe IDs, Vorlagen, Bundles und Hoot-Modulnamen tragen den Namen des Moduls, das sie definiert (`int_filemanager_share.assets_guest`, `@int_filemanager_ocr/content_hits/...`). Systemparameter und Routen blieben bei `int_filemanager.*` und `/int_filemanager/...`.
+- Externe IDs, Vorlagen, Bundles und Hoot-Modulnamen tragen den Namen des Moduls, das sie definiert (`int_filemanager_share.share_folder_page`, `@int_filemanager_ocr/content_hits/...`). Systemparameter und Routen blieben bei `int_filemanager.*` und `/int_filemanager/...`.
 - Ein Erweiterungsmodul fügt Felder zu Views per `xpath` hinzu (Settings-Blöcke: `//block[@name=...]`).
 - Tests eines Moduls liegen im Modul. Gemeinsame Bausteine der Tests (`AccessCase`, `BlobCase`, `text_files`) stehen im Kern und werden mit `odoo.addons.int_filemanager.tests...` importiert.
 - Übersetzungen: jedes Modul hat `i18n/<modul>.pot` und `de.po`; Begriffe stehen in dem Modul, das sie definiert.

@@ -12,6 +12,8 @@ from odoo.tools import image as image_tools
 
 from odoo.addons.int_filemanager.tests.test_folder_access import AccessCase
 
+from .common import guest_key
+
 
 PASSWORD = "a long password"
 
@@ -150,7 +152,8 @@ class TestShareFiles(AccessCase, HttpCase):
     def test_a_blocked_share_and_a_password_stop_the_files(self):
         share = self.Share.create({"folder_id": self.folder.id, "password": PASSWORD})
         self.assertEqual(self._open(self.pdf, share).status_code, 403)
-        self.assertEqual(self._open(self.pdf, share, params={"k": share._unlock_key()}).status_code, 200)
+        with guest_key(self.opener, share):
+            self.assertEqual(self._open(self.pdf, share).status_code, 200)
         self.share.action_archive()
         self.assertEqual(self._open(self.pdf).status_code, 410)
 

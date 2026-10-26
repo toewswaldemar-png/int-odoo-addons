@@ -6,6 +6,8 @@ from odoo.tests.common import HttpCase, freeze_time, tagged
 
 from odoo.addons.int_filemanager.tests.test_folder_access import AccessCase
 
+from ..controllers.int_filemanager import key_cookie
+from .common import NoSessionMixin
 from ..models.int_filemanager_share import ShareBusy, ShareForbidden, ShareGone, ShareNotFound
 
 PASSWORD = "a long password"
@@ -13,7 +15,7 @@ IP = "9.9.9.9"
 
 
 @tagged("post_install", "-at_install")
-class TestShareUnlock(AccessCase, HttpCase):
+class TestShareUnlock(NoSessionMixin, AccessCase, HttpCase):
     """The password of a share: the key for it, the tries that are counted, the order of the checks."""
 
     @classmethod
@@ -28,28 +30,42 @@ class TestShareUnlock(AccessCase, HttpCase):
         super().setUp()
         self.share = self.Share.create({"folder_id": self.shared.id, "password": PASSWORD})
 
-    def _unlock(self, share=None, password=PASSWORD):
+    def _unlock(self, share=None, password=PASSWORD, **kwargs):
         share = share or self.share
         return self.url_open(
-            f"/int_filemanager/share/{share.token}/unlock", data={"password": password}
+            f"/int_filemanager/share/{share.token}/unlock", data={"password": password}, **kwargs
         )
 
     # --- the route ----------------------------------------------------------------------------
 
-    def test_the_right_password_gives_a_key_and_no_cookie(self):
-        response = self._unlock()
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(self.share._key_is_valid(response.json()["key"]))
+    def test_the_right_password_sets_the_cookie_of_the_share_and_leads_to_it(self):
+        response = self._unlock(allow_redirects=False)
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.headers["Location"], f"/int_filemanager/share/{self.share.token}")
+        cookie = response.cookies[key_cookie(self.share.token)]
+        self.assertTrue(self.share._key_is_valid(cookie))
+        header = response.headers["Set-Cookie"]
+        self.assertIn("Path=/", header)
+        self.assertIn("HttpOnly", header)
+        self.assertIn("SameSite=Lax", header)
+        self.assertIn(f"Max-Age={12 * 3600}", header)
         self.assertNotIn("session_id", response.cookies)
-        self.assertNotIn("Set-Cookie", response.headers)
         self.assertEqual(response.headers["Referrer-Policy"], "no-referrer")
         self.assertEqual(response.headers["X-Robots-Tag"], "noindex, nofollow")
         self.assertEqual(response.headers["Cache-Control"], "private, no-cache")
 
-    def test_a_wrong_password_is_403_and_the_try_is_kept(self):
+    def test_the_browser_that_followed_it_opens_the_share(self):
+        self.assertIn("password", self.url_open(f"/int_filemanager/share/{self.share.token}").text)
+        response = self._unlock()
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("This link needs a password", response.text)
+
+    def test_a_wrong_password_is_403_with_the_page_again_and_the_try_is_kept(self):
         response = self._unlock(password="another password")
         self.assertEqual(response.status_code, 403)
-        self.assertNotIn("key", response.json())
+        self.assertIn("The password is wrong.", response.text)
+        self.assertIn("This link needs a password", response.text)
+        self.assertNoSession(response)
         self.assertEqual(self.Attempt.search_count([("share_id", "=", self.share.id)]), 1)
         self.assertEqual(self._unlock(password=None).status_code, 403)
         url = f"/int_filemanager/share/{self.share.token}/unlock"
@@ -69,7 +85,9 @@ class TestShareUnlock(AccessCase, HttpCase):
 
     def test_a_share_without_a_password_has_nothing_to_unlock(self):
         share = self.Share.create({"folder_id": self.shared.id})
-        self.assertEqual(self._unlock(share).status_code, 403)
+        response = self._unlock(share, allow_redirects=False)
+        self.assertEqual(response.status_code, 303)  # on to the share
+        self.assertNoSession(response)
         self.assertFalse(self.Attempt.search_count([("share_id", "=", share.id)]))
 
     def test_a_big_request_is_turned_away_before_it_is_read(self):

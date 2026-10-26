@@ -1,10 +1,10 @@
+from . import common  # noqa: F401
 from . import test_hooks
 from . import test_share
 from . import test_share_brake
 from . import test_share_buttons
 from . import test_share_document
 from . import test_share_files
-from . import test_share_gateway
 from . import test_share_pages
 from . import test_share_scope
 from . import test_share_settings

@@ -3,8 +3,6 @@ from odoo.tests.common import TransactionCase, tagged
 
 from odoo.addons.int_filemanager.tests.test_folder_access import AccessCase
 
-from ..models.int_filemanager_folder import SHARE_ROOT_KEY
-
 FOLDER = "int.filemanager.folder"
 DOCUMENT = "int.filemanager.document"
 
@@ -157,37 +155,3 @@ class TestShareScope(AccessCase, TransactionCase):
             with self.subTest(client=client):
                 found = self.env[DOCUMENT].search(Domain.AND([scope, Domain(client)]))
                 self.assertFalse(found - inside)
-
-    # --- the parent of the shared folder --------------------------------------------------------
-
-    def test_the_guests_do_not_see_the_parent_of_the_shared_folder(self):
-        parent = self.Folder.create({"name": "Parent of the shared", "access_mode": "restricted"})
-        child = self._folder("child", parent)
-        grandchild = self._folder("grandchild", child)
-        Folder = self.env[FOLDER]
-        read = {r["id"]: r["parent_id"] for r in Folder.browse([child.id, grandchild.id]).read(["parent_id"])}
-        self.assertEqual(read[child.id][0], parent.id)
-        guest = Folder.with_context(**{SHARE_ROOT_KEY: child.id})
-        read = {r["id"]: r["parent_id"] for r in guest.browse([child.id, grandchild.id]).read(["parent_id"])}
-        self.assertFalse(read[child.id])
-        self.assertEqual(read[grandchild.id][0], child.id)
-        found = guest.search_read([("id", "in", [child.id, grandchild.id])], ["parent_id", "display_name"])
-        self.assertEqual({r["id"]: bool(r["parent_id"]) for r in found}, {child.id: False, grandchild.id: True})
-
-    def test_the_search_panel_of_the_guests_keeps_a_root_that_has_a_parent(self):
-        parent = self.Folder.create({"name": "Parent of the shared", "access_mode": "open"})
-        child = self._folder("child", parent)
-        grandchild = self._folder("grandchild", child)
-        share = self.Share.create({"folder_id": child.id})
-        arguments = {
-            "comodel_domain": list(share._scope_domain(FOLDER)),
-            "expand": True,
-            "limit": 0,
-        }
-        Document = self.env[DOCUMENT]
-        # Without the mask the chain of the root leads outside the result: the panel is empty.
-        self.assertFalse(Document.search_panel_select_range("folder_id", **arguments)["values"])
-        guest = Document.with_context(**{SHARE_ROOT_KEY: child.id})
-        values = guest.search_panel_select_range("folder_id", **arguments)["values"]
-        self.assertEqual({value["id"] for value in values}, {child.id, grandchild.id})
-        self.assertFalse(next(value for value in values if value["id"] == child.id)["parent_id"])
