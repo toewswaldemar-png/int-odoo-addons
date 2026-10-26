@@ -1176,3 +1176,13 @@ msgstr "Word-, Excel- und PowerPoint-Dateien"
 #: code:addons/int_filemanager/static/src/int_filemanager/views/drag/document_drag_ghost.js:0
 msgid "documents"
 msgstr "Dokumente"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__complete_name
+msgid "Complete Name"
+msgstr "Vollständiger Name"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_cron
+msgid "Settings and time of the scheduled actions of the filemanager"
+msgstr "Einstellungen und Zeit der geplanten Aktionen des Dateimanagers"
