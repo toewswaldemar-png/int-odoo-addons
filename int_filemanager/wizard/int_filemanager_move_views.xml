@@ -12,7 +12,6 @@
                     <field name="summary" string="Moving" />
                     <field
                         name="target_folder_id"
-                        context="{'hierarchical_naming': True}"
                         options="{'no_create': True, 'no_open': True}"
                         required="document_ids"
                         placeholder="Choose a folder..."

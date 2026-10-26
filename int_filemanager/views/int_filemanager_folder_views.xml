@@ -17,7 +17,7 @@
                     />
                 </header>
                 <field name="name" />
-                <field name="parent_id" context="{'hierarchical_naming': True}" />
+                <field name="parent_id" />
                 <field name="access_mode" groups="int_filemanager.int_filemanager_group_admin" />
                 <field name="company_id" groups="base.group_multi_company" />
             </list>
@@ -51,7 +51,7 @@
                     <group>
                         <field name="active" invisible="1" />
                         <field name="name" />
-                        <field name="parent_id" context="{'hierarchical_naming': True}" />
+                        <field name="parent_id" />
                         <field name="access_mode" groups="int_filemanager.int_filemanager_group_admin" />
                         <field
                             name="access_user_ids"
@@ -79,7 +79,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name" />
-                <field name="parent_id" context="{'hierarchical_naming': True}" />
+                <field name="parent_id" />
                 <separator />
                 <filter
                     name="filter_archived"
@@ -98,7 +98,7 @@
             <form>
                 <group>
                     <field name="name" />
-                    <field name="parent_id" context="{'hierarchical_naming': True}" />
+                    <field name="parent_id" />
                 </group>
                 <footer>
                     <button string="Save" special="save" class="btn-primary" data-hotkey="q" />

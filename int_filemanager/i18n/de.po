@@ -1192,3 +1192,26 @@ msgstr "Vollständiger Name"
 #: model:ir.model,name:int_filemanager.model_int_filemanager_cron
 msgid "Settings and time of the scheduled actions of the filemanager"
 msgstr "Einstellungen und Zeit der geplanten Aktionen des Dateimanagers"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_named.py:0
+msgid "A name has %(limit)s characters at most."
+msgstr "Ein Name hat höchstens %(limit)s Zeichen."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_named.py:0
+msgid "A name is not empty, and not . or ..: %(name)s"
+msgstr "Ein Name ist nicht leer und weder . noch ..: %(name)s"
+
+#. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_named
+msgid "Filemanager: a record with a name that is unique where it lies"
+msgstr "Filemanager: ein Datensatz mit einem Namen, der an seinem Ort eindeutig ist"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Stopped: %(programs)s is missing on the server (GNU coreutils)."
+msgstr "Angehalten: %(programs)s fehlt auf dem Server (GNU coreutils)."

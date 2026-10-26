@@ -9,4 +9,7 @@ class IntFilemanagerTag(models.Model):
     name = fields.Char(required=True)
     color = fields.Integer(default=0)
 
-    _name_uniq = models.Constraint("UNIQUE(name)", "A tag with this name already exists.")
+    # Case aside, like the names of folders and documents: "Invoice" and "invoice" are one tag.
+    _name_uniq = models.UniqueIndex(
+        '(lower(name COLLATE "und-x-icu"))', "A tag with this name already exists."
+    )

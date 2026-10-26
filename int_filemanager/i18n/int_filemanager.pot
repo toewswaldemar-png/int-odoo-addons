@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 12:18+0000\n"
-"PO-Revision-Date: 2026-10-26 12:18+0000\n"
+"POT-Creation-Date: 2026-10-26 16:10+0000\n"
+"PO-Revision-Date: 2026-10-26 16:10+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -71,6 +71,18 @@ msgstr ""
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_folder_name_per_parent
 msgid "A folder with this name already exists here."
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_named.py:0
+msgid "A name has %(limit)s characters at most."
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_named.py:0
+msgid "A name is not empty, and not . or ..: %(name)s"
 msgstr ""
 
 #. module: int_filemanager
@@ -271,6 +283,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_move__display_name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_named__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__display_name
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__display_name
@@ -413,6 +426,11 @@ msgid "Filemanager tag"
 msgstr ""
 
 #. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_int_filemanager_named
+msgid "Filemanager: a record with a name that is unique where it lies"
+msgstr ""
+
+#. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.int_filemanager_thumbnail_cron_ir_actions_server
 msgid "Filemanager: draw the first page of the PDFs"
 msgstr ""
@@ -507,6 +525,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_move__id
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_named__id
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__id
 #: model:ir.model.fields,field_description:int_filemanager.field_ir_binary__id
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__id
@@ -682,6 +701,7 @@ msgstr ""
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__name
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_named__name
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__name
 msgid "Name"
 msgstr ""
@@ -722,8 +742,7 @@ msgstr ""
 
 #. module: int_filemanager
 #. odoo-python
-#: code:addons/int_filemanager/models/int_filemanager_document_storage.py:0
-#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+#: code:addons/int_filemanager/models/int_filemanager_named.py:0
 msgid "No free name for %(name)s in this folder."
 msgstr ""
 
@@ -972,6 +991,12 @@ msgstr ""
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Stopped: %(programs)s is missing on the server (GNU coreutils)."
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "Stopped: LibreOffice is not installed on the server."
 msgstr ""
 
@@ -1115,7 +1140,9 @@ msgstr ""
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/hooks.py:0
-msgid "This module needs a PostgreSQL built with ICU: the collation %(collation)s is missing."
+msgid ""
+"This module needs a PostgreSQL built with ICU: the collation %(collation)s "
+"is missing."
 msgstr ""
 
 #. module: int_filemanager

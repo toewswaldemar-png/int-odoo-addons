@@ -8,9 +8,9 @@
     "depends": ["base", "mail"],
     "data": [
         "security/int_filemanager_groups.xml",
-        "security/ir.model.access.csv",
         "security/int_filemanager_folder_security.xml",
         "security/int_filemanager_document_security.xml",
+        "security/ir.model.access.csv",
         "views/int_filemanager_menus.xml",
         "wizard/int_filemanager_move_views.xml",
         "views/int_filemanager_folder_views.xml",
@@ -29,5 +29,6 @@
         ],
     },
     "pre_init_hook": "pre_init_hook",
+    "uninstall_hook": "uninstall_hook",
     "application": True,
 }

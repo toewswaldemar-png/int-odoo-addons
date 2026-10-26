@@ -19,12 +19,11 @@
                 <field
                     name="folder_id"
                     string="Location"
-                    context="{'hierarchical_naming': True}"
                     optional="show"
                 />
                 <field name="size" widget="int_filemanager_size" optional="show" />
                 <field name="write_date" string="Modified" optional="show" />
-                <field name="tag_ids" widget="many2many_tags" optional="show" />
+                <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show" />
                 <field
                     name="activity_ids"
                     string="Next Activity"
@@ -65,7 +64,7 @@
                                 <field name="folder_id" class="text-truncate" />
                                 <field name="size" widget="int_filemanager_size" />
                             </div>
-                            <field name="tag_ids" widget="many2many_tags" />
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" />
                         </div>
                     </t>
                 </templates>
@@ -124,8 +123,8 @@
                         <field name="checksum" invisible="1" />
                         <field name="viewer_pdf_checksum" invisible="1" />
                         <field name="name" />
-                        <field name="folder_id" string="Location" context="{'hierarchical_naming': True}" />
-                        <field name="tag_ids" widget="many2many_tags" />
+                        <field name="folder_id" string="Location" />
+                        <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" />
                     </group>
                     <group string="File" name="file">
                         <field name="extension" class="text-uppercase" />
@@ -146,7 +145,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name" />
-                <field name="folder_id" context="{'hierarchical_naming': True}" />
+                <field name="folder_id" />
                 <field name="tag_ids" />
                 <filter
                     name="filter_archived"

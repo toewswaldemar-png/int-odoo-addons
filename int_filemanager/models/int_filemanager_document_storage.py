@@ -4,19 +4,18 @@ import hashlib
 import itertools
 import os
 import time
-import unicodedata
 import uuid
 
 import psycopg2.errors
-from psycopg2 import IntegrityError
 
 from odoo import api, models
 from odoo.exceptions import UserError
 from odoo.tools import SQL
 
-from ..tools.clash import NAME_TRIES
 from ..tools.files import remove_file
+from ..tools.filestore import check_contents, filestore, full_path
 from .int_filemanager_document import BLOB_FOLDER, CHECKSUM_REGEX, PREVIEW_CRON_XMLID, PREVIEW_EXTENSIONS
+from .int_filemanager_named import NAME_MAX_LENGTH
 
 
 UPLOAD_FOLDER = ".upload"
@@ -33,7 +32,6 @@ DEFAULT_UPLOAD_MAX_AGE_HOURS = 24
 CHUNK_SIZE = 1024 * 1024
 # The head of a file is enough for ``guess_mimetype`` (it reads no more than this).
 HEAD_SIZE = 2048
-NAME_MAX_LENGTH = 255
 
 
 class IntFilemanagerDocument(models.Model):
@@ -44,9 +42,7 @@ class IntFilemanagerDocument(models.Model):
         """The absolute path of the blob with this SHA-256 checksum."""
         if not CHECKSUM_REGEX.fullmatch(checksum or ""):
             raise ValueError("A checksum is 64 lowercase hexadecimal characters.")
-        return self.env["ir.attachment"]._full_path(
-            f"{BLOB_FOLDER}/{checksum[:2]}/{checksum}"
-        )
+        return full_path(self.env, f"{BLOB_FOLDER}/{checksum[:2]}/{checksum}")
 
     @api.model
     def _store_stream(self, stream, name, mimetype=None):
@@ -85,11 +81,7 @@ class IntFilemanagerDocument(models.Model):
         # "any binary" says nothing: the core would skip the file name for it.
         if mimetype == "application/octet-stream":
             mimetype = None
-        values = (
-            self.env["ir.attachment"]
-            .with_context(image_no_postprocess=True, attachments_mime_plainxml=True)
-            ._check_contents({"name": name, "mimetype": mimetype, "raw": head})
-        )
+        values = check_contents(self.env, name, mimetype, head)
         return {
             "tmp_path": tmp_path,
             "checksum": digest.hexdigest(),
@@ -132,11 +124,11 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _upload_dir(self):
-        return os.path.join(self.env["ir.attachment"]._filestore(), BLOB_FOLDER, UPLOAD_FOLDER)
+        return os.path.join(filestore(self.env), BLOB_FOLDER, UPLOAD_FOLDER)
 
     @api.model
     def _checklist_dir(self):
-        return os.path.join(self.env["ir.attachment"]._filestore(), BLOB_FOLDER, CHECKLIST_FOLDER)
+        return os.path.join(filestore(self.env), BLOB_FOLDER, CHECKLIST_FOLDER)
 
     @api.model
     def _mark_blob_for_gc(self, checksum):
@@ -270,12 +262,10 @@ class IntFilemanagerDocument(models.Model):
     def _clean_name(self, name):
         """A name as the browser or the disk gives it, made fit for a document.
 
-        Only the last part of a path stays, the characters are composed (NFC: an "ä" typed
-        as one character and as "a" plus a mark are one name), control characters go.
+        Only the last part of a path stays, the characters are cleaned like every name
+        (``_normalize_name``), and a name that is too long loses the end of its stem.
         """
-        name = (name or "").replace("\\", "/").rsplit("/", 1)[-1]
-        name = unicodedata.normalize("NFC", name)
-        name = "".join(char for char in name if unicodedata.category(char) != "Cc").strip()
+        name = self._normalize_name((name or "").replace("\\", "/").rsplit("/", 1)[-1])
         if name in ("", ".", ".."):
             raise UserError(self.env._("A file needs a name."))
         if len(name) > NAME_MAX_LENGTH:
@@ -287,52 +277,33 @@ class IntFilemanagerDocument(models.Model):
     def _create_numbered(self, stored, name, folder, **values):
         """Create the document under ``name``, or under the first free ``stem (2).ext``.
 
-        Two documents of a folder cannot share a name (case aside). The names that are taken
-        are looked up in one go; one that slips through (another case, a parallel upload) is
-        caught by the unique index of the database. Odoo does not retry on that error.
+        The rows of an upload are no news: no message of its creation in the chatter, and the user
+        does not follow the document (20,000 files of a folder would be 20,000 messages and
+        follower rows). What is done to it later is logged as usual.
         """
-        stem, extension = os.path.splitext(name)
+        documents = self.sudo().with_context(mail_create_nolog=True, mail_create_nosubscribe=True)
 
-        def numbered(number):
-            return name if number == 1 else f"{stem} ({number}){extension}"
-
-        taken = {
-            document.name.lower()
-            for document in self.sudo().search_fetch(
-                [
-                    ("folder_id", "=", folder.id),
-                    ("name", "in", [numbered(number) for number in range(1, 101)]),
-                ],
-                ["name"],
+        def create(candidate):
+            document = documents.create(
+                {
+                    **values,
+                    "name": candidate,
+                    "folder_id": folder.id,
+                    "checksum": stored["checksum"],
+                    "size": stored["size"],
+                    "mimetype": stored["mimetype"],
+                }
             )
-        }
-        constraint = self._name_per_folder.full_name(self)
-        for number in range(1, NAME_TRIES + 1):
-            candidate = numbered(number)
-            if candidate.lower() in taken:
-                continue
-            try:
-                with self.env.cr.savepoint():
-                    document = (
-                        self.sudo()
-                        .create(
-                            {
-                                **values,
-                                "name": candidate,
-                                "folder_id": folder.id,
-                                "checksum": stored["checksum"],
-                                "size": stored["size"],
-                                "mimetype": stored["mimetype"],
-                            }
-                        )
-                        .with_env(self.env)
-                    )
-                    # The row must exist before the blob does: the cleaner looks at the rows.
-                    document.sudo().flush_recordset(["checksum"])
-            except IntegrityError as error:
-                if error.diag.constraint_name != constraint:
-                    raise
-                taken.add(candidate.lower())
-            else:
-                return document
-        raise UserError(self.env._("No free name for %(name)s in this folder.", name=name))
+            # The row must exist before the blob does: the cleaner looks at the rows.
+            document.flush_recordset(["checksum"])
+            return document.with_env(self.env)
+
+        return self.sudo()._create_numbered_name(
+            name, [("folder_id", "=", folder.id)], self._name_per_folder, create
+        )
+
+    @api.model
+    def _numbered_name(self, name, number):
+        """``stem (2).ext``: the number goes before the ending."""
+        stem, extension = os.path.splitext(name)
+        return f"{stem} ({number}){extension}"

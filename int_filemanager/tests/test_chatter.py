@@ -55,6 +55,24 @@ class TestChatter(TransactionCase):
     def test_a_new_document_shows_no_change(self):
         self.assertEqual(self._changes(self._document()), [])
 
+    def test_an_upload_is_no_news_in_the_chatter_and_nobody_follows_it(self):
+        # 20,000 files of one folder would be 20,000 messages and 20,000 follower rows.
+        document = self.Document.with_user(self.user)._create_from_stream(
+            io.BytesIO(b"x"), "mine.txt", self.sub.with_user(self.user)
+        )
+        self.addCleanup(remove, self.Document._blob_path(document.checksum))
+        self._flush_tracking()
+        self.assertFalse(document.sudo().message_ids)
+        self.assertFalse(document.sudo().message_follower_ids)
+        # What is done to it later is logged as usual.
+        document.name = "yours.txt"
+        self.assertEqual(self._changes(document), ["name"])
+
+    def test_the_folders_of_an_import_are_no_news_either(self):
+        folder = self.Folder._create_numbered("Imported", self.top)
+        self._flush_tracking()
+        self.assertFalse(folder.message_ids)
+
     def test_a_rename_is_shown_with_the_old_and_the_new_name(self):
         document = self._document("a.txt")
         document.name = "b.txt"

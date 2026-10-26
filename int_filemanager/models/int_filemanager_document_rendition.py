@@ -15,7 +15,8 @@ from odoo import api, fields, models
 from odoo.fields import Domain
 
 from ..tools.files import remove_file
-from ..tools.programs import limited
+from ..tools.programs import LIMIT_PROGRAMS, limited, missing_programs
+from .int_filemanager_cron import PREVIEW_ENABLED_DEFAULT
 from .int_filemanager_document import (
     PDF,
     PREVIEW_CRON_XMLID,
@@ -214,10 +215,13 @@ class IntFilemanagerDocument(models.Model):
             "Meant for cron usage only"
         )
         Budget = self.env["int.filemanager.cron"]
-        if not Budget._flag("preview_enabled", True):
+        if not Budget._flag("preview_enabled", PREVIEW_ENABLED_DEFAULT):
             return
         if not shutil.which("soffice"):
             _logger.warning("LibreOffice is not installed: the previews of office files are not made.")
+            return
+        if missing := missing_programs(*LIMIT_PROGRAMS):
+            _logger.warning("%s not found: the previews of office files are not made.", ", ".join(missing))
             return
         cron = self.env["ir.cron"]
         deadline = Budget._pass_deadline()

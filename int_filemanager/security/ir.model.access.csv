@@ -1,5 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_int_filemanager_tag_user,int.filemanager.tag,model_int_filemanager_tag,int_filemanager.int_filemanager_group_user,1,1,1,1
+access_int_filemanager_tag_user,int.filemanager.tag,model_int_filemanager_tag,int_filemanager.int_filemanager_group_user,1,1,1,0
+access_int_filemanager_tag_admin,int.filemanager.tag.admin,model_int_filemanager_tag,int_filemanager.int_filemanager_group_admin,1,1,1,1
 access_int_filemanager_move_user,int.filemanager.move.user,model_int_filemanager_move,int_filemanager.int_filemanager_group_user,1,1,1,1
 access_int_filemanager_folder_user,int.filemanager.folder.user,model_int_filemanager_folder,int_filemanager.int_filemanager_group_user,1,1,1,1
 access_int_filemanager_document_user,int.filemanager.document.user,model_int_filemanager_document,int_filemanager.int_filemanager_group_user,1,1,0,1

@@ -1,19 +1,19 @@
 import collections
-import unicodedata
 
 from psycopg2 import IntegrityError
 
 from odoo import Command, api, fields, models
-from odoo.exceptions import ConcurrencyError, UserError
+from odoo.exceptions import AccessError, ConcurrencyError, UserError
 from odoo.tools import SQL
 from odoo.tools.sql import escape_psql
 
-from ..tools.clash import CLASH_NAMES_SHOWN, NAME_TRIES, clash_summary, clashing_names
+from ..tools.clash import CLASH_NAMES_SHOWN
 from ..tools.zip_stream import export_name, export_names, folder_entry
+from .int_filemanager_named import NAME_MAX_LENGTH
 
-# The context key that makes the name of a folder its path ("Club / 2026 / Invoices"), like
-# ``product.category``. It is off unless a view asks for it (the field that picks a folder): the
-# chatter, the messages and the guests keep the plain name.
+# The context key that makes the name of a folder its path ("Club / 2026 / Invoices"), as the core
+# does for ``product.category`` and ``hr.department``: on unless the context says ``False``. The
+# search panel of the core asks for the plain name; the chatter keeps it too (see ``write``).
 PATH_KEY = "hierarchical_naming"
 # The context key of the cascades (archive, restore, company down a tree): what they write below the
 # folder the user acted on was checked at that folder. Only a superuser is believed: the context is
@@ -22,13 +22,12 @@ CASCADE_KEY = "int_filemanager_cascade"
 # The separator of the path, and what stands for the folders above that the user may not read.
 PATH_SEPARATOR = " / "
 PATH_HIDDEN = "…"
-# The route that sends the ZIP of a folder.
-ZIP_PATH = "/int_filemanager/folder_zip/"
+# The route that sends the ZIP of a folder (the id follows).
+FOLDER_ZIP_PATH = "/int_filemanager/folder_zip/"
 # The most paths of one call of ``action_make_paths`` (the browser sends its folders in packages),
-# how many folders one path may have, and how long the name of one may be.
+# and how many folders one path may have.
 MAKE_PATHS_MAX = 500
 PATH_DEPTH_MAX = 50
-FOLDER_NAME_MAX_LENGTH = 255
 
 
 class IntFilemanagerFolder(models.Model):
@@ -44,17 +43,23 @@ class IntFilemanagerFolder(models.Model):
 
     _name = "int.filemanager.folder"
     _description = "Filemanager folder"
-    _inherit = ["mail.thread"]
+    _inherit = ["mail.thread", "int.filemanager.named"]
     _parent_store = True
     # The full path, like ``product.category`` and ``stock.location``: a folder stands right below
     # its parent in every list and every picker (by ``name`` alone "Root / Hallo" would come before
     # "Root").
     _order = "complete_name, id"
 
-    name = fields.Char(required=True, tracking=True)
-    # Only there to sort: it names every folder above, also the ones the user may not read, so
-    # ``_read_format`` does not give it out (the path that is shown is ``display_name``).
-    complete_name = fields.Char(compute="_compute_complete_name", recursive=True, store=True)
+    name = fields.Char(tracking=True)
+    # Only there to sort: it names every folder above, also the ones the user may not read. So only
+    # the administrators read, search or group by it; ordering by it is open to all
+    # (``_order_field_to_sql``), as it gives no name away. The path that is shown is ``display_name``.
+    complete_name = fields.Char(
+        compute="_compute_complete_name",
+        recursive=True,
+        store=True,
+        groups="int_filemanager.int_filemanager_group_admin",
+    )
     parent_id = fields.Many2one(
         "int.filemanager.folder", index=True, ondelete="restrict", tracking=True
     )
@@ -118,7 +123,7 @@ class IntFilemanagerFolder(models.Model):
     def _compute_complete_name(self):
         for folder in self:
             if folder.parent_id:
-                folder.complete_name = f"{folder.parent_id.complete_name} / {folder.name}"
+                folder.complete_name = f"{folder.parent_id.complete_name}{PATH_SEPARATOR}{folder.name}"
             else:
                 folder.complete_name = folder.name
 
@@ -132,55 +137,31 @@ class IntFilemanagerFolder(models.Model):
     def _create_numbered(self, name, parent, **values):
         """Create the folder under ``name`` below ``parent``, or under the first free ``name (2)``.
 
-        Two active folders of a parent cannot share a name (case aside). The names that are taken
-        are looked up in one go; one that slips through (another case, a parallel request) is
-        caught by the unique index of the database. Odoo does not retry on that error.
+        No message in the chatter for it, like the folders of ``action_make_paths``: an import
+        makes a lot of them.
         """
-
-        def numbered(number):
-            return name if number == 1 else f"{name} ({number})"
-
-        taken = {
-            folder.name.lower()
-            for folder in self.search_fetch(
-                [
-                    ("parent_id", "=", parent.id),
-                    ("name", "in", [numbered(number) for number in range(1, 101)]),
-                ],
-                ["name"],
-            )
-        }
-        constraint = self._name_per_parent.full_name(self)
-        for number in range(1, NAME_TRIES + 1):
-            candidate = numbered(number)
-            if candidate.lower() in taken:
-                continue
-            try:
-                with self.env.cr.savepoint():
-                    return self.create({**values, "name": candidate, "parent_id": parent.id})
-            except IntegrityError as error:
-                if error.diag.constraint_name != constraint:
-                    raise
-                taken.add(candidate.lower())
-        raise UserError(self.env._("No free name for %(name)s in this folder.", name=name))
+        folders = self.with_context(mail_create_nolog=True)
+        return self._create_numbered_name(
+            name,
+            [("parent_id", "=", parent.id)],
+            self._name_per_parent,
+            lambda candidate: folders.create({**values, "name": candidate, "parent_id": parent.id}),
+        )
 
     @api.model
     def _path_names(self, path):
         """The names of the folders of a path of the browser, cleaned; refuses a path that is none.
 
         A path leads down from a folder: no slash at the start, no ``.`` or ``..``, no empty part.
-        The names are composed (NFC) and lose their control characters, like a name of a document.
+        The names are cleaned like every name (``_normalize_name``).
         """
         names = []
         if isinstance(path, str) and path and "\\" not in path and not path.startswith("/"):
-            for part in path.split("/"):
-                part = unicodedata.normalize("NFC", part)
-                part = "".join(char for char in part if unicodedata.category(char) != "Cc").strip()
-                names.append(part)
+            names = [self._normalize_name(part) for part in path.split("/")]
         if (
             not names
             or len(names) > PATH_DEPTH_MAX
-            or any(name in ("", ".", "..") or len(name) > FOLDER_NAME_MAX_LENGTH for name in names)
+            or any(name in ("", ".", "..") or len(name) > NAME_MAX_LENGTH for name in names)
         ):
             raise UserError(self.env._("This is not a valid folder path: %(path)s", path=str(path)[:100]))
         return names
@@ -208,36 +189,42 @@ class IntFilemanagerFolder(models.Model):
             raise UserError(self.env._("The name %(name)s is not available here.", name=name))
         raise ConcurrencyError(f"The folder {name} was made by another transaction")
 
-    def _read_format(self, fnames, load="_classic_read"):
-        """``complete_name``, the sort key (with the names of all folders above), is not given out."""
-        result = super()._read_format(fnames, load)
-        if not self.env.su:
-            for values in result:
-                values.pop("complete_name", None)
-        return result
+    @api.model
+    def _order_field_to_sql(self, alias, field_name, direction, nulls, query):
+        """Order by the path without asking for the right to read it (see ``complete_name``)."""
+        if field_name == "complete_name":
+            sql_field = self._fields[field_name].to_sql(self, alias)
+            query._order_groupby.append(sql_field)
+            return SQL("%s %s %s", sql_field, direction, nulls)
+        return super()._order_field_to_sql(alias, field_name, direction, nulls, query)
 
     @api.depends("name", "parent_path")
     @api.depends_context(PATH_KEY, "uid", "allowed_company_ids")
     def _compute_display_name(self):
-        """The name, or with ``hierarchical_naming`` the path, as far as the user may read it.
+        """The path, or with ``hierarchical_naming`` off the name, as far as the user may read it.
 
         Which folders above are named is the user's to see (the record rules): the path stops at
         the first one the user may not read and starts with "…", so a name is never given away.
         A folder can be seen though its parent is not (the rules look at ``access_folder_id``).
+        The core reads the name of a Many2one as superuser, so the rules are asked as the user and
+        not as the environment of the call. (The name of the direct parent that a visible folder
+        points to is shown with that Many2one, as the core does for every record.)
         """
-        if not self.env.context.get(PATH_KEY):
+        if not self.env.context.get(PATH_KEY, True):
             return super()._compute_display_name()
         chains = {
             folder: [int(folder_id) for folder_id in (folder.parent_path or "").split("/") if folder_id]
             for folder in self
         }
         above = {folder_id for chain in chains.values() for folder_id in chain[:-1]}
-        readable = {
-            folder.id: folder.name
-            for folder in self.with_context(active_test=False).search_fetch(
-                [("id", "in", list(above))], ["name"]
-            )
-        }
+        viewer = self.with_user(self.env.uid).with_context(active_test=False)
+        try:
+            readable = {
+                folder.id: folder.name for folder in viewer.search_fetch([("id", "in", list(above))], ["name"])
+            }
+        except AccessError:
+            # No right to folders at all (a document that is seen through a record): none above is named.
+            readable = {}
         for folder, chain in chains.items():
             parts = [folder.name]
             for folder_id in reversed(chain[:-1]):
@@ -337,17 +324,9 @@ class IntFilemanagerFolder(models.Model):
                     target.check_access("write")
                 target.sudo()._check_active_target()
                 vals = {**vals, "company_id": target.sudo().company_id.id}
-            if moved:
-                active = moved.filtered("active")
-                clash = clashing_names(
-                    self.env, self._table, "parent_id", target.id, active.mapped("name"), active.ids
-                )
-                if clash:
-                    raise UserError(
-                        self.env._(
-                            "These names are taken here: %(names)s", names=clash_summary(clash)
-                        )
-                    )
+            taken = moved._names_taken("parent_id", target)
+            if taken:
+                raise UserError(self.env._("These names are taken here: %(names)s", names=taken))
         elif "company_id" in vals and self.filtered(
             lambda folder: folder.parent_id and folder.company_id.id != (vals["company_id"] or False)
         ):
@@ -427,7 +406,7 @@ class IntFilemanagerFolder(models.Model):
         Document = self.env["int.filemanager.document"]
         [[total]] = Document._read_group([("folder_id", "in", list(self._zip_tree()))], [], ["size:sum"])
         Document._check_zip_size(total or 0)
-        return {"type": "ir.actions.act_url", "url": f"{ZIP_PATH}{self.id}", "target": "download"}
+        return {"type": "ir.actions.act_url", "url": f"{FOLDER_ZIP_PATH}{self.id}", "target": "download"}
 
     def _zip_tree(self):
         """The folders of the ZIP of this folder: ``{id: [subfolders]}``, this one and what lies below.

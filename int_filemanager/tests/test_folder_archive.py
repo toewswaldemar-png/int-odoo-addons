@@ -88,7 +88,7 @@ class TestFolderArchive(TransactionCase):
     def test_a_document_in_an_archived_folder_cannot_be_restored_alone(self):
         document = self._document(self.leaf)
         self.mid.action_archive()
-        with self.assertRaisesRegex(UserError, "Restore the folder Leaf first"):
+        with self.assertRaisesRegex(UserError, "Restore the folder Top / Mid / Leaf first"):
             document.action_unarchive()
 
     def test_a_document_may_be_restored_when_its_folder_is_active(self):

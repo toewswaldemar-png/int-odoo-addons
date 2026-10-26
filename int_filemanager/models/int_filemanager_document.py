@@ -6,7 +6,6 @@ from odoo.exceptions import MissingError, UserError
 from odoo.http import Stream
 from odoo.tools.mimetypes import get_extension
 
-from ..tools.clash import clash_summary, clashing_names
 from ..tools.zip_stream import ZipEntry, export_names
 from .int_filemanager_folder import CASCADE_KEY
 
@@ -17,7 +16,7 @@ ZIP_MAX_SIZE_PARAMETER = "int_filemanager.zip_max_size"
 DEFAULT_ZIP_MAX_SIZE = 10 * 1024**3
 # The ids of a ZIP go into the address, and the proxy takes 8 KB of the request line.
 ZIP_PATH_MAX_LENGTH = 7000
-ZIP_PATH = "/int_filemanager/zip/"
+DOCUMENTS_ZIP_PATH = "/int_filemanager/zip/"
 # Names of missing files shown in a message.
 MISSING_NAMES_SHOWN = 5
 CHECKSUM_REGEX = re.compile(r"[0-9a-f]{64}")
@@ -71,10 +70,10 @@ class IntFilemanagerDocument(models.Model):
 
     _name = "int.filemanager.document"
     _description = "Filemanager document"
-    _inherit = ["mail.thread", "mail.activity.mixin"]
+    _inherit = ["mail.thread", "mail.activity.mixin", "int.filemanager.named"]
     _order = "name"
 
-    name = fields.Char(required=True, tracking=True)
+    name = fields.Char(tracking=True)
     folder_id = fields.Many2one(
         "int.filemanager.folder",
         required=True,
@@ -83,7 +82,8 @@ class IntFilemanagerDocument(models.Model):
         tracking=True,
     )
     checksum = fields.Char(readonly=True, required=True, index=True)
-    # Float, not Integer: an int4 column overflows above 2 GiB.
+    # Float, not Integer: an int4 column overflows above 2 GiB. A float8 holds every whole number
+    # up to 2**53 (8 PiB) exactly, so sums of sizes are exact as well.
     size = fields.Float(readonly=True)
     mimetype = fields.Char(readonly=True)
     active = fields.Boolean(default=True, tracking=True)
@@ -235,17 +235,10 @@ class IntFilemanagerDocument(models.Model):
         if not self.env.su:
             folder.check_access("write")
         folder.sudo()._check_active_target()
-        active = moved.filtered("active")
-        clash = clashing_names(
-            self.env, self._table, "folder_id", folder.id, active.mapped("name"), active.ids
-        )
-        if clash:
+        taken = moved._names_taken("folder_id", folder)
+        if taken:
             raise UserError(
-                self.env._(
-                    "These names are taken in %(folder)s: %(names)s",
-                    folder=folder.name,
-                    names=clash_summary(clash),
-                )
+                self.env._("These names are taken in %(folder)s: %(names)s", folder=folder.name, names=taken)
             )
 
     def unlink(self):
@@ -279,7 +272,7 @@ class IntFilemanagerDocument(models.Model):
         count at that moment, not at this one. Here the user gets a message at once instead of
         an error page in a new tab.
         """
-        path = ZIP_PATH + ",".join(str(document_id) for document_id in self.ids)
+        path = DOCUMENTS_ZIP_PATH + ",".join(str(document_id) for document_id in self.ids)
         if len(path) > ZIP_PATH_MAX_LENGTH:
             raise UserError(
                 self.env._("Too many documents are selected for one download. Select fewer and download in parts.")

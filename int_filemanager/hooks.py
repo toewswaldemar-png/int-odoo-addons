@@ -1,4 +1,10 @@
+import os
+
 from odoo.exceptions import UserError
+
+from .models.int_filemanager_document import BLOB_FOLDER
+from .tools.files import remove_path
+from .tools.filestore import filestore
 
 # The collation that the unique indexes of the names use: the case of a name is folded as a person
 # sees it ("Ä" and "ä" are one name), which the "C" locale of an Odoo database does not do.
@@ -15,3 +21,15 @@ def pre_init_hook(env):
                 collation=COLLATION,
             )
         )
+
+
+def uninstall_hook(env):
+    """Remove the files of the documents from the filestore of the database.
+
+    The documents go with the module, and the cleaner of the files is a method of the module: what
+    lies in ``<filestore>/int_filemanager`` would stay for ever, with nobody to look after it. Done
+    after the commit: if the uninstallation fails and is rolled back, the documents are still
+    there and need their files.
+    """
+    path = os.path.join(filestore(env), BLOB_FOLDER)
+    env.cr.postcommit.add(lambda: remove_path(path))

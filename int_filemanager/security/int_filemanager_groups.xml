@@ -34,5 +34,8 @@
         <field name="sequence">30</field>
         <field name="privilege_id" ref="privilege_int_filemanager" />
         <field name="implied_ids" eval="[(4, ref('int_filemanager_group_user'))]" />
+        <!-- The administrator of the database is the one of the filemanager, like in the core
+             (project, hr_holidays): else nobody sees the menu after the installation. -->
+        <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]" />
     </record>
 </odoo>

@@ -8,6 +8,8 @@ from odoo import fields, http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import Response, request
 
+from ..models.int_filemanager_document import DOCUMENTS_ZIP_PATH
+from ..models.int_filemanager_folder import FOLDER_ZIP_PATH
 from ..tools.zip_stream import export_name, zip_chunks, zip_length
 
 _logger = logging.getLogger(__name__)
@@ -26,6 +28,10 @@ def max_upload_size(controller):
     is read before the controller runs, so only whoever may upload gets the large limit: every
     other user (a portal user, a reader) keeps the limit that the core has just set on the
     request, and is refused by the storage afterwards.
+
+    Werkzeug takes the body of a form into a temporary file before the controller runs: ``TMPDIR``
+    of the server needs the room of the biggest upload that may come at the same time, besides the
+    filestore (see docs/int_filemanager/betrieb.md).
     """
     if not request.env.user.has_group(UPLOAD_GROUP):
         return request.httprequest.max_content_length
@@ -137,7 +143,7 @@ class IntFilemanager(http.Controller):
     def _error(self, status, message):
         return request.make_json_response({"error": {"message": message}}, status=status)
 
-    @http.route("/int_filemanager/zip/<string:ids>", type="http", auth="user", methods=["GET"])
+    @http.route(f"{DOCUMENTS_ZIP_PATH}<string:ids>", type="http", auth="user", methods=["GET"])
     def zip(self, ids):
         """The files of these documents as one ZIP, flat, sent as it is written.
 
@@ -163,7 +169,7 @@ class IntFilemanager(http.Controller):
             return self._zip_refused(error)
         return self._zip_response(entries, f"documents-{fields.Date.context_today(documents)}.zip")
 
-    @http.route("/int_filemanager/folder_zip/<int:folder_id>", type="http", auth="user", methods=["GET"])
+    @http.route(f"{FOLDER_ZIP_PATH}<int:folder_id>", type="http", auth="user", methods=["GET"])
     def folder_zip(self, folder_id):
         """A folder with everything below it that the user sees, as one ZIP.
 

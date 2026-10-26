@@ -1,9 +1,12 @@
 import io
 import os
 
+from psycopg2 import IntegrityError
+
 from odoo import Command, http
 from odoo.exceptions import AccessError
 from odoo.tests.common import HttpCase, TransactionCase, new_test_user, tagged
+from odoo.tools import mute_logger
 
 from .test_folder_access import AccessCase, remove
 
@@ -228,14 +231,26 @@ class TestRightsMatrix(AccessCase, TransactionCase):
         with self.assertRaises(AccessError):
             self.Tag.with_user(self.reader).create({"name": "New"})
 
-    def test_the_tags_are_for_every_folder_user_to_make_change_and_delete(self):
-        # global, not tied to a folder
+    def test_the_tags_are_for_every_folder_user_to_make_and_change_and_for_the_administrators_to_delete(self):
+        # global, not tied to a folder: deleting one takes it from every document
         tag = self.Tag.with_user(self.alice).create({"name": "Invoices"})
         self.assertEqual(self.Tag.with_user(self.bob).search([("name", "=", "Invoices")]), tag)
         tag.with_user(self.bob).write({"name": "Bills"})
         self.assertEqual(tag.name, "Bills")
-        tag.with_user(self.bob).unlink()
+        with self.assertRaises(AccessError):
+            tag.with_user(self.bob).unlink()
+        tag.with_user(self.boss).unlink()
         self.assertFalse(tag.exists())
+
+    def test_a_tag_is_one_tag_whatever_its_case(self):
+        self.Tag.create({"name": "Invoices"})
+        with self.assertRaises(IntegrityError), mute_logger("odoo.sql_db"), self.env.cr.savepoint():
+            self.Tag.create({"name": "invoices"})
+
+    def test_the_administrator_of_the_database_is_one_of_the_filemanager(self):
+        admin = self.env.ref("int_filemanager.int_filemanager_group_admin")
+        self.assertLessEqual(admin, self.env.ref("base.user_admin").all_group_ids)
+        self.assertIn(self.env.ref("base.user_root"), admin.with_context(active_test=False).user_ids)
 
     def test_a_user_without_the_group_has_no_right_on_the_tags(self):
         with self.assertRaises(AccessError):

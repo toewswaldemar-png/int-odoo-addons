@@ -15,6 +15,7 @@ from odoo.exceptions import AccessError
 
 from odoo.addons.int_filemanager.models.int_filemanager_document import BLOB_FOLDER, PDF
 from odoo.addons.int_filemanager.tools.files import remove_file, remove_path
+from odoo.addons.int_filemanager.tools.filestore import filestore
 from odoo.addons.int_filemanager.tools.programs import last_line, limited, probe
 
 from ..tools import ocr_plan
@@ -189,7 +190,7 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_dir(self):
-        return os.path.join(self.env["ir.attachment"]._filestore(), BLOB_FOLDER, OCR_FOLDER)
+        return os.path.join(filestore(self.env), BLOB_FOLDER, OCR_FOLDER)
 
     def _job_dir(self):
         """The folder of the sections of this file."""

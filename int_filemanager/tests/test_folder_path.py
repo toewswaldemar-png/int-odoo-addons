@@ -1,3 +1,4 @@
+from odoo.exceptions import AccessError
 from odoo.tests.common import TransactionCase, tagged
 
 from .test_folder_access import AccessCase
@@ -18,9 +19,31 @@ class TestFolderPath(AccessCase, TransactionCase):
         folder = folder.with_context(**PATH)
         return (folder.with_user(user) if user else folder).display_name
 
-    def test_the_name_is_the_plain_name_unless_a_view_asks_for_the_path(self):
-        self.assertEqual(self.deep.display_name, "Deep")
-        self.assertEqual(self.deep.with_user(self.alice).display_name, "Deep")
+    def test_the_name_is_the_path_unless_the_context_asks_for_the_plain_name(self):
+        # As ``product.category`` and ``hr.department`` do it: ``hierarchical_naming`` is on by default.
+        self.assertEqual(self.deep.display_name, "Shared / Deep")
+        self.assertEqual(self.deep.with_user(self.alice).display_name, "Shared / Deep")
+        plain = self.deep.with_context(hierarchical_naming=False)
+        self.assertEqual(plain.display_name, "Deep")
+
+    def test_the_hidden_folder_is_not_named_where_the_core_reads_the_name_as_superuser(self):
+        # ``web_read`` asks the name of a Many2one as superuser: the path is still the user's.
+        opened = self.Folder.create(
+            {"name": "Opened", "parent_id": self.secret.id, "access_mode": "open"}
+        )
+        deeper = self.Folder.create({"name": "Deeper", "parent_id": opened.id})
+        document = self._document(opened)
+        name = {"display_name": {}}
+        [folder] = deeper.with_user(self.alice).web_read({"parent_id": {"fields": name}})
+        self.assertEqual(folder["parent_id"]["display_name"], "… / Opened")
+        [values] = document.with_user(self.alice).web_read({"folder_id": {"fields": name}})
+        self.assertEqual(values["folder_id"]["display_name"], "… / Opened")
+        [values] = document.with_user(self.boss).web_read({"folder_id": {"fields": name}})
+        self.assertEqual(values["folder_id"]["display_name"], "Secret / Opened")
+
+    def test_the_search_panel_and_the_chatter_ask_for_the_plain_name(self):
+        result = self.Document.with_user(self.alice).search_panel_select_range("folder_id", expand=True, limit=0)
+        self.assertEqual({value["display_name"] for value in result["values"]}, {"Shared", "Deep"})
 
     def test_the_path_names_every_folder_above(self):
         self.assertEqual(self._path(self.deep), "Shared / Deep")
@@ -72,20 +95,36 @@ class TestFolderPath(AccessCase, TransactionCase):
             {"name": "Opened", "parent_id": self.secret.id, "access_mode": "open"}
         )
         self.assertEqual(opened.complete_name, "Secret / Opened")
-        values = opened.with_user(self.alice).read(["name", "complete_name"])[0]
-        self.assertEqual(values["name"], "Opened")
-        self.assertNotIn("complete_name", values)
+        as_alice = opened.with_user(self.alice)
+        self.assertEqual(as_alice.read(["name"])[0]["name"], "Opened")
+        # Not to read, not to search for, not to group by: only the administrators may.
+        with self.assertRaises(AccessError):
+            as_alice.read(["complete_name"])
+        with self.assertRaises(AccessError):
+            self.Folder.with_user(self.alice).search([("complete_name", "ilike", "Secret")])
+        with self.assertRaises(AccessError):
+            self.Folder.with_user(self.alice)._read_group([], ["complete_name"], ["__count"])
+        self.assertEqual(opened.with_user(self.boss).read(["complete_name"])[0]["complete_name"], "Secret / Opened")
+        self.assertNotIn("complete_name", self.Folder.with_user(self.alice).fields_get())
+
+    def test_every_user_may_order_by_the_path(self):
+        # The default order of the folders, and of the documents by their folder: it names nothing.
+        folders = self.Folder.with_user(self.alice).search([])
+        self.assertEqual(folders.mapped("name"), ["Shared", "Deep"])
+        first = self._document(self.deep, "a.txt")
+        second = self._document(self.shared, "b.txt")
+        ordered = self.Document.with_user(self.alice).search([], order="folder_id, id")
+        self.assertEqual(ordered.ids, [second.id, first.id])
+
+    def test_a_user_who_renames_a_folder_moves_the_path(self):
+        # The path is computed as superuser: the user need not read ``complete_name``.
+        folder = self.Folder.with_user(self.alice).create({"name": "Mine", "parent_id": self.shared.id})
+        folder.write({"name": "Yours"})
+        self.assertEqual(folder.sudo().complete_name, "Shared / Yours")
 
     def test_the_search_for_a_folder_shows_the_paths(self):
-        result = self.Folder.with_user(self.alice).with_context(**PATH).name_search("Deep")
+        result = self.Folder.with_user(self.alice).name_search("Deep")
         self.assertEqual([name for __, name in result], ["Shared / Deep"])
-
-    def test_the_fields_that_pick_a_folder_ask_for_the_path(self):
-        documents = self.Document.get_views([(False, "list"), (False, "form")])
-        folders = self.Folder.get_views([(False, "list"), (False, "form")])
-        for views in (documents, folders):
-            for view_type in ("list", "form"):
-                self.assertIn("hierarchical_naming", views["views"][view_type]["arch"], view_type)
 
     def test_the_chatter_keeps_the_plain_name_of_a_folder(self):
         document = self._document(self.deep)

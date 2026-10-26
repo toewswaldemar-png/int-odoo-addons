@@ -10,12 +10,16 @@ from odoo.addons.base.models.ir_cron import MIN_TIME_PER_JOB
 # What a run may take if Odoo has no limit for it.
 NO_LIMIT_SECONDS = 300
 
+# The numbers of the settings, and the one place that knows their defaults (the settings screen
+# takes them from here too). The values lie in the system parameters ``int_filemanager.<name>``.
 SETTINGS = {
     # name: (default, least)
     "time_reserve": (15, 0),  # seconds kept free below the limit of Odoo
     "preview_seconds": (120, 5),  # time LibreOffice has for one office file
     "preview_max_size_mib": (500, 1),  # the biggest office file that gets a preview
 }
+# Are the previews of office files made unless the parameter ``int_filemanager.preview_enabled`` says no?
+PREVIEW_ENABLED_DEFAULT = True
 
 
 class IntFilemanagerCron(models.AbstractModel):
