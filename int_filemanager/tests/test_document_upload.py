@@ -113,6 +113,16 @@ class TestDocumentUpload(HttpCase):
         self.assertEqual(self.Document.search_count([]), before)
         self.assertFalse(self._leftovers())
 
+    def test_whoever_may_not_upload_keeps_the_limit_of_the_database(self):
+        # ``web.max_file_upload_size`` is the limit of every route of the database; the route
+        # raises it for the group only, not for the others.
+        self.env["ir.config_parameter"].set_param("web.max_file_upload_size", "1000")
+        self.authenticate(self.outsider.login, self.outsider.login)
+        response = self._upload(bytes(5000), "too-big.bin")
+        self.assertEqual(response.status_code, 413)
+        self.authenticate("upload_user", "upload_user")
+        self.assertEqual(self._upload(bytes(5000), "big.bin").status_code, 200)
+
     def test_the_limit_is_a_system_parameter(self):
         self.env["ir.config_parameter"].set_param("int_filemanager.max_upload_size", "1000")
         before = self.Document.search_count([])

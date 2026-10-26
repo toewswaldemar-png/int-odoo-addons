@@ -6,7 +6,7 @@ from werkzeug.exceptions import BadRequest
 
 from odoo import fields, http
 from odoo.exceptions import AccessError, UserError
-from odoo.http import DEFAULT_MAX_CONTENT_LENGTH, Response, request
+from odoo.http import Response, request
 
 from ..tools.zip_stream import export_name, zip_chunks, zip_length
 
@@ -21,13 +21,14 @@ DEFAULT_MAX_UPLOAD_SIZE = 20 * 1024**3
 def max_upload_size(controller):
     """The limit of one upload request in bytes, from the system parameter.
 
-    The core's own limit (128 MiB) stops every upload route that does not set its own.
-    Odoo calls this after the sign-in, so the database is at hand. The body is read before the
-    controller runs, so only whoever may upload gets the large limit: every other user (a
-    portal user, a reader) keeps the core's, and is refused by the storage afterwards.
+    The core's own limit (128 MiB, or ``web.max_file_upload_size``) stops every upload route that
+    does not set its own. Odoo calls this after the sign-in, so the database is at hand. The body
+    is read before the controller runs, so only whoever may upload gets the large limit: every
+    other user (a portal user, a reader) keeps the limit that the core has just set on the
+    request, and is refused by the storage afterwards.
     """
     if not request.env.user.has_group(UPLOAD_GROUP):
-        return DEFAULT_MAX_CONTENT_LENGTH
+        return request.httprequest.max_content_length
     value = (
         request.env["ir.config_parameter"]
         .sudo()
