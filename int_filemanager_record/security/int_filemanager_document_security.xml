@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- The second way to see a document, next to the rule of its folder (in the core): the rules
+         of one group add up. Switched on with the setting, together with the access rows of the
+         internal users. -->
+    <data noupdate="1">
+        <record id="int_filemanager_document_rule_record" model="ir.rule">
+            <field name="name">Filemanager document: through a linked record</field>
+            <field name="model_id" ref="int_filemanager.model_int_filemanager_document" />
+            <field name="active" eval="False" />
+            <field name="domain_force">[('access_via_record', '=', True)]</field>
+            <field name="perm_write" eval="False" />
+            <field name="perm_create" eval="False" />
+            <field name="perm_unlink" eval="False" />
+            <field name="groups" eval="[(4, ref('base.group_user'))]" />
+        </record>
+    </data>
+</odoo>

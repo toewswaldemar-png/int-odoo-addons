@@ -37,7 +37,8 @@ class AccessCase:
         return document
 
     def _invite(self, folder, *users):
-        folder.message_subscribe(partner_ids=[user.partner_id.id for user in users])
+        """List the users on the folder, as an administrator does."""
+        folder.write({"access_user_ids": [Command.link(user.id) for user in users]})
 
     def _seen_by(self, user, model="int.filemanager.folder"):
         return self.env[model].with_user(user).search([])
@@ -45,7 +46,7 @@ class AccessCase:
 
 @tagged("post_install", "-at_install")
 class TestFolderAccess(AccessCase, TransactionCase):
-    """Who sees a folder: open to all, or the followers of the folder that decides."""
+    """Who sees a folder: open to all, or the users and groups listed on the folder that decides."""
 
     @classmethod
     def setUpClass(cls):
@@ -178,15 +179,39 @@ class TestFolderAccess(AccessCase, TransactionCase):
         self.secret.access_user_ids = self.alice
         self.assertEqual(self.secret.with_user(self.boss).access_user_ids, self.alice)
 
-    def test_a_follower_may_invite_others(self):
+    def test_a_follower_gets_the_notices_but_does_not_see_the_folder_for_it(self):
+        self.secret.message_subscribe(partner_ids=[self.alice.partner_id.id])
+        self.assertNotIn(self.secret, self._seen_by(self.alice))
+
+    def test_a_listed_user_cannot_let_others_in_by_following_or_listing(self):
         self._invite(self.secret, self.alice)
-        self.secret.with_user(self.alice).message_subscribe(partner_ids=[self.bob.partner_id.id])
-        self.assertIn(self.secret, self._seen_by(self.bob))
+        as_alice = self.secret.with_user(self.alice)
+        as_alice.message_subscribe(partner_ids=[self.bob.partner_id.id])
+        self.assertNotIn(self.secret, self._seen_by(self.bob))
+        with self.assertRaises(AccessError):
+            as_alice.write({"access_user_ids": [Command.link(self.bob.id)]})
+        self.assertNotIn(self.secret, self._seen_by(self.bob))
 
     def test_the_creator_of_a_folder_sees_it(self):
         mine = self.Folder.with_user(self.alice).create({"name": "Mine"})
         self.assertIn(mine, self._seen_by(self.alice))
         self.assertNotIn(mine, self._seen_by(self.bob))
+
+    def test_the_creator_keeps_the_folder_when_the_notices_are_stopped(self):
+        mine = self.Folder.with_user(self.alice).create({"name": "Mine"})
+        self.assertEqual(mine.sudo().access_user_ids, self.alice)
+        mine.sudo().message_unsubscribe(partner_ids=[self.alice.partner_id.id])
+        self.assertIn(mine, self._seen_by(self.alice))
+
+    def test_a_subfolder_is_listed_by_its_parent_only(self):
+        mine = self.Folder.with_user(self.alice).create({"name": "Mine"})
+        sub = self.Folder.with_user(self.alice).create({"name": "Sub", "parent_id": mine.id})
+        self.assertFalse(sub.sudo().access_user_ids)
+        self.assertIn(sub, self._seen_by(self.alice))
+        self.assertNotIn(sub, self._seen_by(self.bob))
+
+    def test_what_the_code_makes_as_superuser_lists_nobody(self):
+        self.assertFalse(self.secret.access_user_ids)
 
     def test_a_folder_can_be_made_below_a_folder_the_user_sees(self):
         self._invite(self.secret, self.alice)

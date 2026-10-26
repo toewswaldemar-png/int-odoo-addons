@@ -196,6 +196,29 @@ class IntFilemanagerDocument(models.Model):
                 self._mark_blob_for_gc(checksum)
         return result
 
+    def _filtered_folder_access(self, operation="read"):
+        """The documents whose folder the user may ``operation``.
+
+        A document is seen by the rules of its folder, so this is ``_filtered_access`` as far as
+        the folders go. A module that shows a document by another way (a record it is linked to)
+        does not change the answer: it is what the folders show, for whoever may not pass on a
+        document that they see only by that other way. As ``ir.attachment`` asks the record it
+        belongs to, here the folder is asked.
+        """
+        # The ids as superuser (the user may not read the document), the check as the user.
+        folders = self.env["int.filemanager.folder"].browse(self.sudo().folder_id.ids)
+        allowed = set(folders._filtered_access(operation).ids)
+        return self.filtered(lambda document: document.sudo().folder_id.id in allowed)
+
+    def _documents_referenced(self):
+        """Of these documents, those that something else points to; none in the core.
+
+        A module that keeps a reference to a document (a link to a record, say) returns them with
+        ``super()``, so that whoever may take a file away (a guest of a share, for its own
+        uploads) leaves them alone.
+        """
+        return self.browse()
+
     def _check_move(self, folder_id):
         """Check the folder that the documents are put into.
 

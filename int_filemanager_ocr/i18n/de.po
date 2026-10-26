@@ -17,6 +17,12 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: int_filemanager_ocr
+#. odoo-javascript
+#: code:addons/int_filemanager_ocr/static/src/content_hits/document_content_hits_popover.js:0
+msgid "%(name)s: %(count)s hits"
+msgstr "%(name)s: %(count)s Treffer"
+
+#. module: int_filemanager_ocr
 #. odoo-python
 #: code:addons/int_filemanager_ocr/models/res_config_settings.py:0
 msgid "%(pages)s pages"
@@ -41,12 +47,6 @@ msgid "(about %(time)s hours of work)"
 msgstr "(etwa %(time)s Stunden Arbeit)"
 
 #. module: int_filemanager_ocr
-#. odoo-javascript
-#: code:addons/int_filemanager_ocr/static/src/int_filemanager/fields/content_hits/document_content_hits_popover.js:0
-msgid "%(name)s: %(count)s hits"
-msgstr "%(name)s: %(count)s Treffer"
-
-#. module: int_filemanager_ocr
 #: model:ir.model.constraint,message:int_filemanager_ocr.constraint_int_filemanager_text_checksum_unique
 msgid "A file has one text."
 msgstr "Eine Datei hat einen Text."
@@ -59,6 +59,7 @@ msgstr "Eine Datei, die das Lesen abbricht oder zu langsam ist, wird so oft vers
 #. module: int_filemanager_ocr
 #. odoo-python
 #: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "A page takes longer than the time of one run."
 msgstr "Eine Seite braucht länger als die Zeit eines Durchlaufs."
 
@@ -86,7 +87,7 @@ msgstr "Versuche"
 
 #. module: int_filemanager_ocr
 #. odoo-javascript
-#: code:addons/int_filemanager_ocr/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
+#: code:addons/int_filemanager_ocr/static/src/content_hits/document_content_hits_field.js:0
 msgid "Block %(page)s"
 msgstr "Block %(page)s"
 
@@ -132,8 +133,11 @@ msgid "Created on"
 msgstr "Erstellt am"
 
 #. module: int_filemanager_ocr
+#: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_document__display_name
+#: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_folder__display_name
 #: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_text__display_name
 #: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_text_page__display_name
+#: model:ir.model.fields,field_description:int_filemanager_ocr.field_res_config_settings__display_name
 msgid "Display Name"
 msgstr "Anzeigename"
 
@@ -191,7 +195,7 @@ msgstr "Volltext"
 
 #. module: int_filemanager_ocr
 #. odoo-javascript
-#: code:addons/int_filemanager_ocr/static/src/int_filemanager/fields/content_hits/document_content_hit_count_field.js:0
+#: code:addons/int_filemanager_ocr/static/src/content_hits/document_content_hit_count_field.js:0
 msgid "Hit count"
 msgstr "Anzahl der Treffer"
 
@@ -202,7 +206,7 @@ msgstr "Treffer"
 
 #. module: int_filemanager_ocr
 #. odoo-javascript
-#: code:addons/int_filemanager_ocr/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
+#: code:addons/int_filemanager_ocr/static/src/content_hits/document_content_hits_field.js:0
 msgid "Hits in the text"
 msgstr "Fundstellen im Text"
 
@@ -234,8 +238,11 @@ msgstr ""
 "ist."
 
 #. module: int_filemanager_ocr
+#: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_document__id
+#: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_folder__id
 #: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_text__id
 #: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_text_page__id
+#: model:ir.model.fields,field_description:int_filemanager_ocr.field_res_config_settings__id
 msgid "ID"
 msgstr "ID"
 
@@ -281,7 +288,7 @@ msgstr "Wie der übergeordnete Ordner"
 
 #. module: int_filemanager_ocr
 #. odoo-javascript
-#: code:addons/int_filemanager_ocr/static/src/int_filemanager/fields/content_hits/document_content_hits_popover.xml:0
+#: code:addons/int_filemanager_ocr/static/src/content_hits/document_content_hits_popover.xml:0
 msgid "Load more"
 msgstr "Mehr laden"
 
@@ -301,7 +308,6 @@ msgid "Lowest: the web pages come first"
 msgstr "Am niedrigsten: Die Webseiten gehen vor"
 
 #. module: int_filemanager_ocr
-#. odoo-javascript
 #: model:ir.model.fields.selection,name:int_filemanager_ocr.selection__res_config_settings__int_filemanager_ocr_nice__5
 msgid "Medium"
 msgstr "Mittel"
@@ -392,6 +398,7 @@ msgstr "An"
 #. module: int_filemanager_ocr
 #. odoo-python
 #: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "Only a Filemanager administrator can do that."
 msgstr "Das kann nur ein Dateimanager-Administrator."
 
@@ -569,6 +576,11 @@ msgid "Running"
 msgstr "Läuft"
 
 #. module: int_filemanager_ocr
+#: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_text_page__scan
+msgid "Scan"
+msgstr "Scan"
+
+#. module: int_filemanager_ocr
 #: model:ir.model.fields,help:int_filemanager_ocr.field_res_config_settings__int_filemanager_ocr_enabled
 msgid ""
 "Scanned pages (PDF files without text) get a text layer, so that the search "
@@ -655,7 +667,7 @@ msgstr "Dateien anzeigen"
 
 #. module: int_filemanager_ocr
 #. odoo-javascript
-#: code:addons/int_filemanager_ocr/static/src/int_filemanager/fields/content_hits/document_content_hit_count_field.js:0
+#: code:addons/int_filemanager_ocr/static/src/content_hits/document_content_hit_count_field.js:0
 msgid "Show the hits"
 msgstr "Treffer anzeigen"
 
@@ -805,19 +817,20 @@ msgstr "Die Datenbank darf für eine Suche im Text der Dateien so viel Speicher 
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The file cannot be read by the text recognition."
 msgstr "Die Texterkennung kann die Datei nicht lesen."
 
 #. module: int_filemanager_ocr
 #. odoo-python
 #: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The file is missing."
 msgstr "Die Datei fehlt."
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The file needs a password."
 msgstr "Die Datei braucht ein Passwort."
 
@@ -829,13 +842,13 @@ msgstr "Die Datei braucht mehr Speicher, als das Budget erlaubt."
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The image has no usable resolution."
 msgstr "Das Bild hat keine brauchbare Auflösung."
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The image is too large for the text recognition."
 msgstr "Das Bild ist für die Texterkennung zu groß."
 
@@ -860,7 +873,7 @@ msgstr "Der meiste Text, der von einer PDF-Seite behalten wird (in Bytes, nicht 
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid ""
 "The picture has no resolution; %(dpi)s dpi was assumed, the text may not be "
 "recognized."
@@ -929,7 +942,7 @@ msgstr "Der Text der Dateien wird im Hintergrund gelesen; die Suche in den Datei
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The text of the recognized pages could not be read."
 msgstr "Der Text der erkannten Seiten konnte nicht gelesen werden."
 
@@ -952,25 +965,25 @@ msgstr ""
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The text recognition found no text."
 msgstr "Die Texterkennung hat keinen Text gefunden."
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The text recognition gave no file."
 msgstr "Die Texterkennung hat keine Datei geliefert."
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The text recognition refused pages that have text."
 msgstr "Die Texterkennung hat Seiten abgelehnt, die schon Text haben."
 
 #. module: int_filemanager_ocr
 #. odoo-python
-#: code:addons/int_filemanager_ocr/models/int_filemanager_text.py:0
+#: code:addons/int_filemanager_ocr/models/int_filemanager_text_ocr.py:0
 msgid "The text recognition stopped with an error several times."
 msgstr "Die Texterkennung ist mehrmals mit einem Fehler abgebrochen."
 
@@ -1085,7 +1098,7 @@ msgstr "ocrmypdf ist da, Tesseract nicht"
 
 #. module: int_filemanager_ocr
 #. odoo-javascript
-#: code:addons/int_filemanager_ocr/static/src/int_filemanager/fields/content_hits/document_content_hits_field.js:0
+#: code:addons/int_filemanager_ocr/static/src/content_hits/document_content_hits_field.js:0
 msgid "p. %(page)s"
 msgstr "S. %(page)s"
 
@@ -1094,15 +1107,3 @@ msgstr "S. %(page)s"
 #: code:addons/int_filemanager_ocr/models/res_config_settings.py:0
 msgid "pdfminer %(version)s"
 msgstr ""
-
-#. module: int_filemanager_ocr
-#: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_linkable__document_search
-#: model:ir.model.fields,field_description:int_filemanager_ocr.field_res_partner__document_search
-#: model:ir.model.fields,field_description:int_filemanager_ocr.field_res_users__document_search
-msgid "Document contains"
-msgstr "Dokument enthält"
-
-#. module: int_filemanager_ocr
-#: model:ir.model.fields,field_description:int_filemanager_ocr.field_int_filemanager_text_page__scan
-msgid "Scan"
-msgstr "Scan"

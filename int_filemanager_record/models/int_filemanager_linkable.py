@@ -52,7 +52,7 @@ class IntFilemanagerLinkable(models.AbstractModel):
         # Without the panel of the folders: the user of the record may not see the folders. The
         # keys of the context tell the list where an upload goes (the record, not a folder).
         search_view = self.env.ref(
-            "int_filemanager.int_filemanager_document_view_search_record"
+            "int_filemanager_record.int_filemanager_document_view_search_record"
         ).sudo()
         action.update(
             name=self.env._("Documents of %(record)s", record=self.display_name),

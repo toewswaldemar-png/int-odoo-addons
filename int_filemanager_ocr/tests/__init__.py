@@ -3,7 +3,6 @@ from . import test_blob_cleaner
 from . import test_document_ocr_download
 from . import test_folder_ocr_images
 from . import test_hooks
-from . import test_link_search
 from . import test_rights
 from . import test_text_admin
 from . import test_text_hits

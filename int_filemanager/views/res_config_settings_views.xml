@@ -7,15 +7,6 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <app string="Filemanager" name="int_filemanager" groups="base.group_system">
-                    <block title="Access" name="int_filemanager_access_block">
-                        <setting
-                            id="int_filemanager_access_via_record"
-                            string="Access through linked records"
-                            help="Whoever may read a record (a contact, say) may also read the documents linked to it, without a right on their folder. Off: only the folders decide, and a file uploaded to a record is seen by those who see its upload folder."
-                        >
-                            <field name="int_filemanager_access_via_record" />
-                        </setting>
-                    </block>
                     <block title="Display" name="int_filemanager_display_block">
                         <setting
                             id="int_filemanager_default_open_mode"

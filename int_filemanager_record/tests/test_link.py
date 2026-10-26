@@ -6,7 +6,7 @@ from odoo.exceptions import AccessError, UserError
 from odoo.tests import Form, TransactionCase, tagged
 from odoo.tests.common import new_test_user
 
-from .test_folder_access import AccessCase
+from odoo.addons.int_filemanager.tests.test_folder_access import AccessCase
 
 
 @tagged("post_install", "-at_install")

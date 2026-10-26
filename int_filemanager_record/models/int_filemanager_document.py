@@ -4,8 +4,6 @@ from collections.abc import Collection
 from odoo import api, fields, models
 from odoo.fields import Domain
 
-from .int_filemanager_link import FOLDER_ONLY_KEY
-
 
 class IntFilemanagerDocument(models.Model):
     """The second way to see a document: through a record it is linked to.
@@ -35,7 +33,7 @@ class IntFilemanagerDocument(models.Model):
     )
 
     @api.depends("link_ids.res_model", "link_ids.res_id")
-    @api.depends_context("uid", FOLDER_ONLY_KEY)
+    @api.depends_context("uid")
     def _compute_access_via_record(self):
         """The Python side of the rule.
 
@@ -44,8 +42,6 @@ class IntFilemanagerDocument(models.Model):
         the other models must be those that the user reads, not all of them.
         """
         self.access_via_record = False
-        if self.env.context.get(FOLDER_ONLY_KEY):
-            return
         wanted = defaultdict(set)
         for link in self.link_ids:
             if link.res_model in self.env:
@@ -70,21 +66,17 @@ class IntFilemanagerDocument(models.Model):
         if operator not in ("=", "!=") or not isinstance(value, bool):
             return NotImplemented
         parts = []
-        if not self.env.context.get(FOLDER_ONLY_KEY):
-            for res_model in self.env["int.filemanager.link"]._linkable_models():
-                query = (
-                    self.env[res_model]
-                    .with_user(self.env.uid)
-                    .with_context(active_test=False)
-                    ._search([])
+        for res_model in self.env["int.filemanager.link"]._linkable_models():
+            query = (
+                self.env[res_model].with_user(self.env.uid).with_context(active_test=False)._search([])
+            )
+            parts.append(
+                Domain(
+                    "link_ids",
+                    "any!",
+                    [("res_model", "=", res_model), ("res_id", "in", query)],
                 )
-                parts.append(
-                    Domain(
-                        "link_ids",
-                        "any!",
-                        [("res_model", "=", res_model), ("res_id", "in", query)],
-                    )
-                )
+            )
         domain = Domain.OR(parts)
         return domain if (operator == "=") == value else ~domain
 
@@ -157,3 +149,8 @@ class IntFilemanagerDocument(models.Model):
         readable = Partner.browse({res_id for ids in res_ids.values() for res_id in ids}).exists()
         readable = readable._filtered_access("read")
         return {document_id: Partner.browse(ids) & readable for document_id, ids in res_ids.items()}
+
+    def _documents_referenced(self):
+        """The documents that are linked to a record, besides what the core names."""
+        linked = self.env["int.filemanager.link"].sudo().search([("document_id", "in", self.ids)])
+        return super()._documents_referenced() | self.browse(linked.document_id.ids)

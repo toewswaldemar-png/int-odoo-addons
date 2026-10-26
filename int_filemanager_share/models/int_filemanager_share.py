@@ -17,7 +17,6 @@ from odoo.tools.misc import (
     verify_limited_field_access_token,
 )
 
-from odoo.addons.int_filemanager.models.int_filemanager_link import FOLDER_ONLY_KEY
 
 from ..tools.request_brake import RequestBrake
 
@@ -546,9 +545,8 @@ class IntFilemanagerShare(models.Model):
     def _check_may_share(self, vals_list):
         """Who may make a share, and of what: whatever the folders show to the user.
 
-        A file that a user sees only through a record that it is linked to (the rule of the
-        document, ``access_via_record``) is not theirs to pass on: the folder has to show it. As
-        for ``int.filemanager.link``.
+        A file that a user sees by another way than its folder (a record it is linked to, in
+        ``int_filemanager_record``) is not theirs to pass on: the folder has to show it.
         """
         if self._setting("share_creators") == "admin" and not self.env.user.has_group(
             "int_filemanager.int_filemanager_group_admin"
@@ -561,11 +559,10 @@ class IntFilemanagerShare(models.Model):
         )
         documents = (
             self.env["int.filemanager.document"]
-            .with_context(**{FOLDER_ONLY_KEY: True})
             .browse({vals["document_id"] for vals in vals_list if vals.get("document_id")})
             .exists()
         )
-        if folders != folders._filtered_access("read") or documents != documents._filtered_access("read"):
+        if folders != folders._filtered_access("read") or documents != documents._filtered_folder_access("read"):
             raise AccessError(
                 self.env._("You may only share a folder or a file that the folders show to you.")
             )
@@ -1125,17 +1122,12 @@ class IntFilemanagerShare(models.Model):
 
     def _removable_uploads(self, documents):
         """Of these files, those that the guest may still take away: they lie in the folder of the
-        uploads, are not archived, and no user has linked them to a record (so, no user took them
-        over)."""
+        uploads, are not archived, and nothing refers to them (a user linked it to a record, say:
+        so, a user took it over)."""
         self.ensure_one()
-        linked = (
-            self.env["int.filemanager.link"]
-            .sudo()
-            .search([("document_id", "in", documents.ids)])
-            .document_id
-        )
+        referenced = documents._documents_referenced()
         return documents.filtered(
             lambda document: document.active
             and document.folder_id == self.sudo().upload_folder_id
-            and document not in linked
+            and document not in referenced
         )

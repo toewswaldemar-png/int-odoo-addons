@@ -3,7 +3,7 @@ import unicodedata
 
 from psycopg2 import IntegrityError
 
-from odoo import api, fields, models
+from odoo import Command, api, fields, models
 from odoo.exceptions import ConcurrencyError, UserError
 from odoo.tools import SQL
 from odoo.tools.sql import escape_psql
@@ -31,8 +31,9 @@ class IntFilemanagerFolder(models.Model):
     """A folder: an ordinary record with a parent.
 
     Who sees a folder (and its documents) is decided by record rules: a folder is open to all
-    filemanager users, or only to the users and groups listed on it. Followers
-    (``mail.thread``, the creator is one) see it too, the pattern of ``project.project``.
+    filemanager users, or only to the users and groups listed on it (the creator of a top
+    folder is listed). Followers (``mail.thread``) only get its notices; whoever may invite
+    people to a folder is the administrator, who edits the lists.
     A subfolder takes over what its parent says, unless it says otherwise itself.
     Filemanager administrators see everything.
     """
@@ -71,8 +72,7 @@ class IntFilemanagerFolder(models.Model):
         tracking=True,
         groups="int_filemanager.int_filemanager_group_admin",
         help="Who sees this folder and its documents. A top folder that is not open to all is "
-        "seen by the users and groups listed on it and by its followers (and by the "
-        "administrators).",
+        "seen by the users and groups listed on it (and by the administrators).",
     )
     access_user_ids = fields.Many2many(
         "res.users",
@@ -92,7 +92,7 @@ class IntFilemanagerFolder(models.Model):
         tracking=True,
         groups="int_filemanager.int_filemanager_group_admin",
     )
-    # The folder whose ``access_mode`` and followers decide for this one: itself, or the
+    # The folder whose ``access_mode`` and lists decide for this one: itself, or the
     # nearest parent that does not say "like the parent". The record rules look at it.
     access_folder_id = fields.Many2one(
         "int.filemanager.folder",
@@ -102,18 +102,6 @@ class IntFilemanagerFolder(models.Model):
         index=True,
     )
 
-    model_folder_ids = fields.One2many(
-        "int.filemanager.model.folder",
-        "folder_id",
-        string="Upload folder for",
-        # The administrators only, like the settings themselves: they are the ones who have a
-        # right on the model, and a field that is only left out of the view could be written
-        # through RPC by every user of the filemanager.
-        groups="int_filemanager.int_filemanager_group_admin",
-        help="The kinds of record whose uploaded files go to this folder, for example "
-        "contacts. Whoever may change such a record can upload files there, without access to "
-        "the folder.",
-    )
     # Names are unique per folder regardless of case, like on Windows. NULLS NOT
     # DISTINCT: otherwise two top folders (parent_id IS NULL) would never collide.
     _name_per_parent = models.UniqueIndex(
@@ -256,7 +244,12 @@ class IntFilemanagerFolder(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """A subfolder has the company of its parent, and the parent has to be in use."""
+        """A subfolder has the company of its parent, and the parent has to be in use.
+
+        A folder that decides for itself (a top folder) lists whoever made it: the lists are the
+        administrators' to edit, so without this the creator would not see the folder again. A
+        subfolder is seen as its parent is.
+        """
         vals_list = [dict(vals) for vals in vals_list]
         for vals in vals_list:
             # The default of the parent (the list puts the folder of its panel there) counts too.
@@ -265,7 +258,14 @@ class IntFilemanagerFolder(models.Model):
                 parent = self.browse(parent_id).sudo()
                 parent._check_active_target()
                 vals["company_id"] = parent.company_id.id
-        return super().create(vals_list)
+        folders = super().create(vals_list)
+        if not self.env.su:
+            # as superuser: the user may not read the folder yet, that is what is being fixed
+            own = folders.sudo().filtered(
+                lambda folder: folder.access_folder_id == folder and folder.access_mode != "open"
+            )
+            own.with_context(tracking_disable=True).write({"access_user_ids": [Command.link(self.env.uid)]})
+        return folders
 
     def write(self, vals):
         # Archiving or restoring a folder does it on everything below, like a project does it on

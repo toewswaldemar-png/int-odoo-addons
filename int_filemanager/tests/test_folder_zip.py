@@ -184,22 +184,9 @@ class TestFolderZip(HttpCase):
     def test_an_invitation_shows_the_hidden_folder(self):
         secret, __ = self._hide_below()
         self._document(secret, "secret.txt", b"classified")
-        secret.message_subscribe(partner_ids=[self.user.partner_id.id])
+        secret.access_user_ids = self.user
         __, archive = self._zip()
         self.assertIn("Club/Secret/secret.txt", archive.namelist())
-
-    def test_a_document_that_is_read_through_a_record_stays_in_its_hidden_folder(self):
-        secret, __ = self._hide_below()
-        document = self._document(secret, "linked.txt", b"classified")
-        partner = self.env["res.partner"].create({"name": "Linked to"})
-        self.env["int.filemanager.link"]._toggle_access_via_record(True)
-        self.env["int.filemanager.link"].create(
-            {"document_id": document.id, "record_ref": f"res.partner,{partner.id}"}
-        )
-        self.assertEqual(self.Document.with_user(self.user).search([("id", "=", document.id)]), document)
-        response, archive = self._zip()
-        self.assertNotIn(b"linked.txt", response.content)
-        self.assertFalse([name for name in archive.namelist() if "linked" in name])
 
     def test_a_folder_the_user_may_not_see_is_refused(self):
         secret, __ = self._hide_below()

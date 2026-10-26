@@ -6,10 +6,6 @@ from markupsafe import Markup
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 
-# The rule that lets a user see a document through a record says False when this is set: the
-# check "may this user pass the document on" wants to know about the folder only.
-FOLDER_ONLY_KEY = "int_filemanager_folder_only"
-
 
 class IntFilemanagerLink(models.Model):
     """A document tied to a record of another model (a contact, a repair order ...).
@@ -99,9 +95,8 @@ class IntFilemanagerLink(models.Model):
         Whoever sees a document only through a record must not pass it on to other records:
         the folder has to show it to the user. And the record has to be one the user writes.
         """
-        folder_only = self.env["int.filemanager.document"].with_context(**{FOLDER_ONLY_KEY: True})
-        documents = folder_only.browse({triple[0] for triple in triples}).exists()
-        by_folder = set(documents._filtered_access("read").ids)
+        documents = self.env["int.filemanager.document"].browse({triple[0] for triple in triples}).exists()
+        by_folder = set(documents._filtered_folder_access("read").ids)
         ids_by_model = defaultdict(set)
         for __, res_model, res_id in triples:
             ids_by_model[res_model].add(res_id)
@@ -268,12 +263,12 @@ class IntFilemanagerLink(models.Model):
         :param active: True to switch on, False to switch off
         """
         rules = (
-            self.env.ref("int_filemanager.int_filemanager_document_rule_record")
-            + self.env.ref("int_filemanager.int_filemanager_link_rule_record")
+            self.env.ref("int_filemanager_record.int_filemanager_document_rule_record")
+            + self.env.ref("int_filemanager_record.int_filemanager_link_rule_record")
         ).sudo()
         accesses = (
-            self.env.ref("int_filemanager.access_int_filemanager_document_internal")
-            + self.env.ref("int_filemanager.access_int_filemanager_link_internal")
+            self.env.ref("int_filemanager_record.access_int_filemanager_document_internal")
+            + self.env.ref("int_filemanager_record.access_int_filemanager_link_internal")
         ).sudo()
         rules.filtered(lambda rule: rule.active != active).write({"active": active})
         accesses.filtered(lambda access: access.active != active).write({"active": active})

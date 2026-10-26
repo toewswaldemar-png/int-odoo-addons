@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from psycopg2 import IntegrityError
 
-from odoo import fields
+from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests.common import TransactionCase, freeze_time, tagged
 from odoo.tools import mute_logger
@@ -159,18 +159,6 @@ class TestShare(AccessCase, TransactionCase):
         self._share(self.secret)
         self._share(self._document(self.secret, "t.txt", b"t"))
 
-    def test_a_file_seen_only_through_a_record_cannot_be_given(self):
-        hidden = self._document(self.secret, "h.txt", b"hidden")
-        partner = self.env["res.partner"].create({"name": "P"})
-        self.env["int.filemanager.link"].create(
-            {"document_id": hidden.id, "record_ref": f"res.partner,{partner.id}"}
-        )
-        self.env["int.filemanager.link"]._toggle_access_via_record(True)
-        self.assertIn(hidden, self.Document.with_user(self.alice).search([]))
-        with self.assertRaises(AccessError):
-            self._share(hidden)
-        self._share(hidden, user=self.boss)
-
     def test_the_setting_can_leave_the_making_to_the_administrators(self):
         self.Config.set_param("int_filemanager.share_creators", "admin")
         with self.assertRaises(AccessError):
@@ -194,7 +182,7 @@ class TestShare(AccessCase, TransactionCase):
     def test_a_share_stays_when_the_maker_loses_the_folder(self):
         self._invite(self.secret, self.alice)
         share = self._share(self.secret)
-        self.secret.message_unsubscribe(partner_ids=[self.alice.partner_id.id])
+        self.secret.write({"access_user_ids": [Command.unlink(self.alice.id)]})
         self.assertEqual(share.with_user(self.alice).name, "Secret")
         share.with_user(self.alice).write({"name": "Still mine"})
 

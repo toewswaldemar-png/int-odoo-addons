@@ -184,7 +184,7 @@ class TestUploadAtRecord(HttpCase):
         # not invited to the restricted folder: it is not there for the user, as before
         response = self._upload("link_folder_user", folder_id=self.folder.id)
         self.assertEqual(response.status_code, 404)
-        self.folder.message_subscribe(partner_ids=user.partner_id.ids)
+        self.folder.access_user_ids = user
         response = self._upload("link_folder_user", folder_id=self.folder.id)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(self.Document.browse(response.json()["id"]).link_ids)

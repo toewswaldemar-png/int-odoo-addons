@@ -3,15 +3,19 @@
 `int_filemanager` ist der Kern. Was nicht jeder Betrieb braucht, steht in Erweiterungsmodulen, die vom Kern abhängen und nur über `_inherit`, View-Vererbung und die Erweiterungspunkte unten an ihn anknüpfen. Der Kern kennt keines davon.
 
 ```
-int_filemanager_share   int_filemanager_ocr   int_filemanager_image_editor   int_filemanager_import
-            \                  |                        |                         /
+                 int_filemanager_record_ocr (auto_install)
+                          /                \
+int_filemanager_share   int_filemanager_record   int_filemanager_ocr   int_filemanager_image_editor   int_filemanager_import
+            \                  |                        |                         |                       /
                                   int_filemanager (Kern)
                                        base, mail
 ```
 
 | Modul | Inhalt |
 |---|---|
-| `int_filemanager` | Ordner, Dokumente, Storage (Blobs), Thumbnails und Office-Vorschau, ZIP, Verknüpfungen, Rechte, Oberfläche (Liste, Kanban, Viewer) |
+| `int_filemanager` | Ordner, Dokumente, Storage (Blobs), Thumbnails und Office-Vorschau, ZIP, Rechte (Ordner entscheiden), Oberfläche (Liste, Kanban, Viewer) |
+| `int_filemanager_record` | Dokumente an Datensätzen: Modelle `link` und `model.folder`, Mixin `linkable` (Kontakt `res.partner`), Sichtbarkeit über den verknüpften Datensatz (Einstellung), Upload am Datensatz, Ablageordner je Modell. Konzept: `docs/int_filemanager_record/datensatz_verknuepfung.md` |
+| `int_filemanager_record_ocr` | `auto_install` mit `record` und `ocr`: die Suche „Dokument enthält“ am Kontakt (`document_search`) |
 | `int_filemanager_share` | Freigabe-Links: Modell, Routen, Gast-Seite und -Bundles, Gateway, Bremsen, Settings; `share_id` am Dokument, Share-Knöpfe an Dokument und Ordner |
 | `int_filemanager_ocr` | Volltextsuche und OCR: Modelle `text` und `text_page`, Cron, `content_search` und `content_hits` am Dokument, `ocr_images` am Ordner, Settings und Status, Widgets der Treffer |
 | `int_filemanager_image_editor` | Bildeditor (Fabric, lazy Bundle), `edit_state` und `edit_source_id` am Dokument, `get_edit_session` |
@@ -29,6 +33,10 @@ Wer den Kern erweitert, überschreibt diese Stellen mit `super()`:
 | `document._compute_viewer_pdf_checksum` | Das PDF, das der Viewer statt der Datei zeigt (Vorschau; `ocr` ergänzt das erkannte PDF) | `ocr` |
 | `controllers.IntFilemanager._upload_values(**kwargs)` | Felder, die das Formular des Uploads zum Dokument hinzufügt | `image_editor` |
 | Dienst `int_filemanager.image_editor` (JS, optional) | Knopf „Bearbeiten“ im Viewer und im Formular | `image_editor` |
+| `controllers.IntFilemanager._upload_folder(folder_id, **kwargs)` und `_after_upload(document, **kwargs)` | Wohin die Datei des Uploads kommt (im Kern der Ordner, in den der Nutzer schreiben darf) und was danach folgt | `record` (Upload am Datensatz) |
+| `document._filtered_folder_access(operation)` | Die Dokumente, deren Ordner der Nutzer lesen darf, ohne andere Wege, ein Dokument zu sehen. Wer ein Dokument weitergibt (Verknüpfen, Freigabe), fragt dies, nicht `_filtered_access` | `share`, `record` |
+| `document._documents_referenced()` | Welche Dokumente etwas anderes noch braucht (im Kern keine); ein Gast der Freigabe nimmt sie nicht weg | `share` fragt, `record` antwortet |
+| `DocumentListController.uploadTarget` (JS) | Wohin die Dateien der Ablagefläche gehen, wenn nicht in den Ordner des Bereichs: Text und Formularfelder | `record` |
 | `write()` | Jedes Modul wirft seine eigenen, nur vom Server gesetzten Felder für Nicht-Superuser weg (`STORAGE_FIELDS` im Kern, `EDIT_FIELDS`, `SHARE_FIELDS`) | alle |
 
 ## Regeln beim Weiterbauen
@@ -43,5 +51,6 @@ Wer den Kern erweitert, überschreibt diese Stellen mit `super()`:
 
 - **Vorschau und Thumbnails bleiben im Kern.** Der Viewer für Office-Dateien braucht sie, und sie sind unabhängig von OCR.
 - **Der Kern hat keine Datenbank-Migration für die Aufteilung.** Die Tabellen und Spalten der verschobenen Modelle sind unverändert; bei einer bestehenden Datenbank mit Daten müssten vorher die externen IDs (`ir_model_data.module`) der verschobenen Modelle, Felder, Views, Crons, Regeln und Zugriffsrechte auf die neuen Module umgeschrieben werden, sonst löscht das Update des Kerns deren Tabellen. Gebaut wurde das nicht, weil die vorhandene Datenbank nur Testdaten hat.
+- **Die Verknüpfung ist ein eigenes Modul, weil die Rechte der Ordner ohne sie vollständig sind.** Der Kern hat die Regeln für Firma, Sichtbarkeit und Administrator an Ordner und Dokument und sonst nichts; `record` fügt dem Dokument eine zweite Gruppenregel (über den Datensatz) und dem Link eigene hinzu. Auch hier gibt es keine Datenbank-Migration: die externen IDs der Modelle `link` und `model.folder`, ihrer Regeln, Zugriffsrechte und Views (`ir_model_data.module`) müssten bei einer bestehenden Datenbank mit Daten vor dem Update des Kerns auf `int_filemanager_record` umgeschrieben werden, sonst löscht es deren Tabellen. Die Testdatenbank wird neu aufgesetzt.
 - **Die Tabelle der Freigaben gehört `int_filemanager_share`.** Die Migration des Kerns löscht nur die Tabellen der entfernten Modelle; die alten Spalten von `int_filemanager_share` (`node_id`, `expires_at`, `revoked_at`) räumt der `pre_init_hook` des Share-Moduls ab (Migrationsskripte laufen bei einer Installation nicht).
-- **Stand der Prüfung:** statisch geprüft (Syntax, externe IDs, Importe, Manifeste, Testpakete). Die Odoo-Tests und die Hoot-Tests sind nach der Aufteilung noch nicht gelaufen.
+- **Stand der Prüfung (Aufteilung):** statisch geprüft (Syntax, externe IDs, Importe, Manifeste, Testpakete). Die Odoo-Tests und die Hoot-Tests sind nach der Aufteilung noch nicht gelaufen.

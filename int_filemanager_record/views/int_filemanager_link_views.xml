@@ -17,7 +17,7 @@
     <record id="int_filemanager_document_view_form_link" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.form.inherit.link</field>
         <field name="model">int.filemanager.document</field>
-        <field name="inherit_id" ref="int_filemanager_document_view_form" />
+        <field name="inherit_id" ref="int_filemanager.int_filemanager_document_view_form" />
         <field name="arch" type="xml">
             <field name="tag_ids" position="after">
                 <field name="partner_ids" widget="many2many_tags" />
@@ -28,7 +28,7 @@
     <record id="int_filemanager_document_view_list_link" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.list.inherit.link</field>
         <field name="model">int.filemanager.document</field>
-        <field name="inherit_id" ref="int_filemanager_document_view_list" />
+        <field name="inherit_id" ref="int_filemanager.int_filemanager_document_view_list" />
         <field name="arch" type="xml">
             <field name="tag_ids" position="after">
                 <field name="partner_ids" widget="many2many_tags" optional="show" />
@@ -39,7 +39,7 @@
     <record id="int_filemanager_document_view_search_link" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.search.inherit.link</field>
         <field name="model">int.filemanager.document</field>
-        <field name="inherit_id" ref="int_filemanager_document_view_search" />
+        <field name="inherit_id" ref="int_filemanager.int_filemanager_document_view_search" />
         <field name="arch" type="xml">
             <field name="tag_ids" position="after">
                 <field name="partner_ids" />
@@ -50,7 +50,7 @@
     <record id="int_filemanager_document_view_search_record" model="ir.ui.view">
         <field name="name">int.filemanager.document.view.search.record</field>
         <field name="model">int.filemanager.document</field>
-        <field name="inherit_id" ref="int_filemanager_document_view_search" />
+        <field name="inherit_id" ref="int_filemanager.int_filemanager_document_view_search" />
         <field name="mode">primary</field>
         <field name="arch" type="xml">
             <searchpanel position="replace" />

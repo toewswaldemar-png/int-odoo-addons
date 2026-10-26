@@ -67,7 +67,7 @@ class TestRightsMatrix(AccessCase, TransactionCase):
         folder = self.Folder.with_user(self.alice).create({"name": "Mine"})
         self.assertEqual(folder.create_uid, self.alice)
 
-    def test_a_follower_changes_and_deletes_the_folder_too(self):
+    def test_a_listed_user_changes_and_deletes_the_folder_too(self):
         self._invite(self.secret, self.alice)
         as_alice = self.secret.with_user(self.alice)
         as_alice.write({"name": "Renamed"})
@@ -128,17 +128,10 @@ class TestRightsMatrix(AccessCase, TransactionCase):
             self.secret.with_user(self.reader).message_subscribe(partner_ids=[self.bob.partner_id.id])
         self.assertNotIn(self.secret, self._seen_by(self.bob))
 
-    def test_a_follower_invites_others(self):
+    def test_a_listed_user_does_not_invite_others(self):
         self._invite(self.secret, self.alice)
         self.secret.with_user(self.alice).message_subscribe(partner_ids=[self.bob.partner_id.id])
-        self.assertIn(self.secret, self._seen_by(self.bob))
-
-    def test_the_fields_of_the_administrators_stay_closed_to_the_users(self):
-        as_alice = self.shared.with_user(self.alice)
-        with self.assertRaises(AccessError):
-            as_alice.model_folder_ids  # noqa: B018
-        with self.assertRaises(AccessError):
-            as_alice.write({"model_folder_ids": False})
+        self.assertNotIn(self.secret, self._seen_by(self.bob))
 
     # --- documents --------------------------------------------------------------------------
 
@@ -177,7 +170,6 @@ class TestRightsMatrix(AccessCase, TransactionCase):
                 as_bob.check_access(operation)
 
     def test_a_user_without_the_group_has_no_right_on_the_documents(self):
-        # without a link; the way over a linked record has its own rows, in test_link
         as_outsider = self.document.with_user(self.outsider)
         for operation in ("read", "write", "unlink"):
             with self.assertRaises(AccessError):
@@ -188,6 +180,17 @@ class TestRightsMatrix(AccessCase, TransactionCase):
         as_boss = hidden.with_user(self.boss)
         for operation in ("read", "write", "unlink"):
             as_boss.check_access(operation)
+
+    def test_the_documents_that_the_folders_show_are_those_that_the_rules_show(self):
+        hidden = self._document(self.inner, "hidden.txt")
+        both = (self.document + hidden).with_user(self.alice)
+        self.assertEqual(both._filtered_folder_access("read"), self.document.with_user(self.alice))
+        self.assertEqual(both._filtered_folder_access("read"), both._filtered_access("read"))
+        self._invite(self.secret, self.alice)
+        self.assertEqual(both._filtered_folder_access("read"), both)
+
+    def test_nothing_refers_to_a_document_in_the_core(self):
+        self.assertFalse(self.document._documents_referenced())
 
     # --- tags -------------------------------------------------------------------------------
 

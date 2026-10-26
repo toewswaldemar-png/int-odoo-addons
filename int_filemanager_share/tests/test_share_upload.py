@@ -439,25 +439,21 @@ class TestShareUpload(AccessCase, HttpCase):
         self.assertEqual(len(self._documents()), 2)
 
     def test_a_file_that_a_user_took_over_cannot_be_taken_away(self):
-        moved, linked, archived = self._own("a.pdf"), self._own("b.pdf", PDF + b"2"), self._own("c.pdf", PDF + b"3")
+        moved, referenced, archived = self._own("a.pdf"), self._own("b.pdf", PDF + b"2"), self._own("c.pdf", PDF + b"3")
         self.Document.browse(moved["id"]).folder_id = self.folder
-        partner = self.env["res.partner"].create({"name": "Somebody"})
-        self.env["int.filemanager.link"].create(
-            {
-                "document_id": linked["id"],
-                "res_model_id": self.env["ir.model"]._get_id("res.partner"),
-                "res_id": partner.id,
-            }
-        )
         self.Document.browse(archived["id"]).active = False
-        for answer in (moved, linked, archived):
-            with self.subTest(answer["name"]):
-                body = {"id": answer["id"], "receipt": answer["receipt"]}
-                self.assertEqual(self._post_json("uploads/delete", body).status_code, 403)
-                self.assertTrue(self.Document.with_context(active_test=False).browse(answer["id"]).exists())
-        listed = self._post_json(
-            "uploads", {"receipts": [{"id": a["id"], "receipt": a["receipt"]} for a in (moved, linked, archived)]}
-        ).json()
+        # what refers to a file is for the modules that keep a reference (a link to a record, in
+        # int_filemanager_record); the share asks the hook of the core
+        kept = self.Document.browse(referenced["id"])
+        with patch.object(type(self.Document), "_documents_referenced", lambda documents: documents & kept):
+            for answer in (moved, referenced, archived):
+                with self.subTest(answer["name"]):
+                    body = {"id": answer["id"], "receipt": answer["receipt"]}
+                    self.assertEqual(self._post_json("uploads/delete", body).status_code, 403)
+                    self.assertTrue(self.Document.with_context(active_test=False).browse(answer["id"]).exists())
+            listed = self._post_json(
+                "uploads", {"receipts": [{"id": a["id"], "receipt": a["receipt"]} for a in (moved, referenced, archived)]}
+            ).json()
         self.assertEqual([item["removable"] for item in listed], [False, False, False])
 
     def test_an_ended_share_does_not_remove_or_list(self):

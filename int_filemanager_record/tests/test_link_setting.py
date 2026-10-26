@@ -1,15 +1,15 @@
 from odoo.exceptions import AccessError
 from odoo.tests.common import TransactionCase, tagged
 
-from .test_folder_access import AccessCase
+from odoo.addons.int_filemanager.tests.test_folder_access import AccessCase
 
 RULES = (
-    "int_filemanager.int_filemanager_document_rule_record",
-    "int_filemanager.int_filemanager_link_rule_record",
+    "int_filemanager_record.int_filemanager_document_rule_record",
+    "int_filemanager_record.int_filemanager_link_rule_record",
 )
 ACCESSES = (
-    "int_filemanager.access_int_filemanager_document_internal",
-    "int_filemanager.access_int_filemanager_link_internal",
+    "int_filemanager_record.access_int_filemanager_document_internal",
+    "int_filemanager_record.access_int_filemanager_link_internal",
 )
 
 

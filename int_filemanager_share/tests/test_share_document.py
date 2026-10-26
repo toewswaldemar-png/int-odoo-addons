@@ -20,9 +20,7 @@ class TestShareOfTheDocument(AccessCase, TransactionCase):
 
     def test_the_share_button_of_the_list_is_for_the_group_that_may_share(self):
         # The same arch makes the buttons of the ticked rows and the menu of the right click.
-        # The user without the group loads the list through the way over a linked record.
-        self.env["int.filemanager.link"]._toggle_access_via_record(True)
-        for user, has_button in ((self.alice, True), (self.outsider, False)):
+        for user, has_button in ((self.alice, True), (self.reader, False)):
             with self.subTest(user=user.login):
                 views = self.Document.with_user(user).get_views([(False, "list")])
                 self.assertEqual('name="action_share"' in views["views"]["list"]["arch"], has_button)

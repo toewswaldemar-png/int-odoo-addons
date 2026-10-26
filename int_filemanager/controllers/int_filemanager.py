@@ -63,20 +63,11 @@ class IntFilemanager(http.Controller):
         methods=["POST"],
         max_content_length=max_upload_size,
     )
-    def upload(
-        self,
-        folder_id=None,
-        link_model=None,
-        link_id=None,
-        **kwargs,
-    ):
-        """Store one file as a document of the folder, or of the record it is uploaded at.
+    def upload(self, folder_id=None, **kwargs):
+        """Store one file as a document of the folder.
 
-        With ``link_model`` and ``link_id`` the file goes to the folder that the settings name
-        for the model of the record and is linked to the record; whoever may change the record
-        may do that, the folders are not looked at. Without them the file goes to ``folder_id``.
-
-        Modules that keep more with the file (``_upload_values``) read it from the form.
+        Modules that keep more with the file (``_upload_values``), or send it somewhere else than
+        a folder (``_upload_folder``, ``_after_upload``), read what they need from the form.
 
         The answer is JSON; an error carries ``{"error": {"message": ...}}`` and a status that
         Odoo's ``file_upload`` service shows to the user.
@@ -85,27 +76,12 @@ class IntFilemanager(http.Controller):
         if len(files) != 1:
             return self._error(400, request.env._("Send exactly one file per request."))
         try:
-            if link_model:
-                record = self._record_to_link(link_model, link_id)
-                folder = self._record_folder(record)
-            else:
-                record = None
-                folder = self._folder_to_write(folder_id)
+            folder = self._upload_folder(folder_id, **kwargs)
             upload = files[0]
-            values = {} if record else self._upload_values(**kwargs)
             document = request.env["int.filemanager.document"]._create_from_stream(
-                upload.stream, upload.filename, folder, upload.mimetype, **values
+                upload.stream, upload.filename, folder, upload.mimetype, **self._upload_values(**kwargs)
             )
-            if record:
-                # The storage and the link run as superuser: the right to change the record was
-                # checked, the uploader need not see the folder.
-                request.env["int.filemanager.link"].sudo().create(
-                    {
-                        "document_id": document.id,
-                        "res_model_id": request.env["ir.model"]._get_id(record._name),
-                        "res_id": record.id,
-                    }
-                )
+            self._after_upload(document, **kwargs)
         except _NotFound as error:
             return self._error(404, error.args[0])
         except AccessError as error:
@@ -125,9 +101,16 @@ class IntFilemanager(http.Controller):
             }
         )
 
+    def _upload_folder(self, folder_id, **kwargs):
+        """The folder that takes the file: the one of the form, if the user may write into it."""
+        return self._folder_to_write(folder_id)
+
     def _upload_values(self, **kwargs):
         """The field values that the form of an upload adds to the document, none in the core."""
         return {}
+
+    def _after_upload(self, document, **kwargs):
+        """What follows the storage of the file, nothing in the core."""
 
     def _folder_to_write(self, folder_id):
         """The folder, if the user may write into it (the storage runs as superuser)."""
@@ -138,31 +121,6 @@ class IntFilemanager(http.Controller):
         if not folder:
             raise _NotFound(request.env._("This folder does not exist."))
         folder.check_access("write")
-        return folder
-
-    def _record_to_link(self, link_model, link_id):
-        """The record that the file is uploaded at, if the user may change it."""
-        env = request.env
-        if link_model not in env["int.filemanager.link"]._linkable_models():
-            raise UserError(env._("Documents cannot be linked to this kind of record."))
-        try:
-            record = env[link_model].browse(int(link_id)).exists()
-        except (TypeError, ValueError):
-            record = None
-        if not record:
-            raise _NotFound(env._("This record does not exist."))
-        record.check_access("write")
-        return record
-
-    def _record_folder(self, record):
-        folder = request.env["int.filemanager.model.folder"]._folder_for_record(record)
-        if not folder:
-            raise UserError(
-                request.env._(
-                    "No folder is set for the files of this kind of record. Ask the administrator "
-                    "of the filemanager to choose an upload folder."
-                )
-            )
         return folder
 
     def _error(self, status, message):

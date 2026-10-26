@@ -59,32 +59,25 @@ export class DocumentListController extends ListController {
             {
                 onDrop: (ev) => this.onDrop(ev),
                 getFolderName: () => this.uploadFolderName,
-                getRecordName: () => this.linkRecord?.name || false,
+                getTarget: () => this.uploadTarget,
             },
             () => this.canUpload
         );
     }
 
-    /** A reader may not upload; the files of a record go by the right to change the record. */
+    /** A reader may not upload; a module that sends the files elsewhere says by what right. */
     get canUpload() {
-        return Boolean(this.linkRecord) || this.folderRights.write;
+        return Boolean(this.uploadTarget) || this.folderRights.write;
     }
 
     /**
-     * The record whose documents the list shows, when the action comes from its button (the keys
-     * of the context are set by `action_open_documents`); the files are linked to it.
-     * @returns {{model: String, id: Number, name: String}|false}
+     * Where the files go instead of the folder of the panel: nothing in the core. A module that
+     * does that (the files of a record, say) returns the text of the dropzone and what it adds
+     * to the form of the upload, which the controller of the route reads.
+     * @returns {{message: String, appendTo: Function}|false}
      */
-    get linkRecord() {
-        const context = this.props.context || {};
-        if (!context.int_filemanager_link_model) {
-            return false;
-        }
-        return {
-            model: context.int_filemanager_link_model,
-            id: context.int_filemanager_link_id,
-            name: context.int_filemanager_link_name,
-        };
+    get uploadTarget() {
+        return false;
     }
 
     /** @override "Move to..." is an item of the menu like "Export", so that it has an icon. */
@@ -224,7 +217,7 @@ export class DocumentListController extends ListController {
                 files.push(item.getAsFile());
             }
         }
-        if (directories.length && !this.linkRecord) {
+        if (directories.length && !this.uploadTarget) {
             const tree = await readDroppedFolders(directories);
             tree.files.push(...files.filter(Boolean).map((file) => ({ file, dir: "" })));
             await this.uploadTree(tree);
@@ -382,9 +375,9 @@ export class DocumentListController extends ListController {
         if (!files.length) {
             return;
         }
-        const record = this.linkRecord;
+        const target = this.uploadTarget;
         const folderId = this.uploadFolderId;
-        if (!record && !folderId) {
+        if (!target && !folderId) {
             this.notification.add(_t("Choose a folder in the panel on the left first."), {
                 type: "warning",
             });
@@ -393,9 +386,8 @@ export class DocumentListController extends ListController {
         for (const file of files) {
             const upload = await this.fileUploadService.upload(UPLOAD_ROUTE, [file], {
                 buildFormData: (formData) => {
-                    if (record) {
-                        formData.append("link_model", record.model);
-                        formData.append("link_id", record.id);
+                    if (target) {
+                        target.appendTo(formData);
                     } else {
                         formData.append("folder_id", folderId);
                     }

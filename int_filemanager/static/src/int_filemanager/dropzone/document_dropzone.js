@@ -9,14 +9,14 @@ export class DocumentDropzone extends Component {
     static props = {
         ...Dropzone.props,
         getFolderName: Function,
-        getRecordName: { type: Function, optional: true },
+        getTarget: { type: Function, optional: true },
     };
 
     /** @returns {String} */
     get message() {
-        const record = this.props.getRecordName?.();
-        if (record) {
-            return _t("Drop the files to attach them to %(record)s", { record });
+        const target = this.props.getTarget?.();
+        if (target) {
+            return target.message;
         }
         const folder = this.props.getFolderName();
         return folder

@@ -12,27 +12,25 @@
         <field name="name">Filemanager folder: open or allowed</field>
         <field name="model_id" ref="model_int_filemanager_folder" />
         <field name="domain_force">[
-            '|', '|', '|',
+            '|', '|',
             ('access_folder_id.access_mode', '=', 'open'),
             ('access_folder_id.access_user_ids', 'in', [user.id]),
             ('access_folder_id.access_group_ids', 'in', user.all_group_ids.ids),
-            ('access_folder_id.message_partner_ids', 'in', [user.partner_id.id]),
         ]</field>
         <field name="perm_create" eval="False" />
         <field name="groups" eval="[(4, ref('int_filemanager_group_reader'))]" />
     </record>
 
-    <!-- Creation is checked before the creator becomes a follower, so the rule above cannot apply. -->
+    <!-- Creation is checked before the creator is listed on the folder, so the rule above cannot apply. -->
     <record id="int_filemanager_folder_rule_user_create" model="ir.rule">
         <field name="name">Filemanager folder: create below a folder the user sees</field>
         <field name="model_id" ref="model_int_filemanager_folder" />
         <field name="domain_force">[
-            '|', '|', '|', '|',
+            '|', '|', '|',
             ('parent_id', '=', False),
             ('parent_id.access_folder_id.access_mode', '=', 'open'),
             ('parent_id.access_folder_id.access_user_ids', 'in', [user.id]),
             ('parent_id.access_folder_id.access_group_ids', 'in', user.all_group_ids.ids),
-            ('parent_id.access_folder_id.message_partner_ids', 'in', [user.partner_id.id]),
         ]</field>
         <field name="perm_read" eval="False" />
         <field name="perm_write" eval="False" />

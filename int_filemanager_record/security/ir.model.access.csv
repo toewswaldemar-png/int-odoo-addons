@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_int_filemanager_model_folder_admin,int.filemanager.model.folder.admin,model_int_filemanager_model_folder,int_filemanager.int_filemanager_group_admin,1,1,1,1
+access_int_filemanager_link_user,int.filemanager.link.user,model_int_filemanager_link,int_filemanager.int_filemanager_group_user,1,1,1,1
+access_int_filemanager_link_reader,int.filemanager.link.reader,model_int_filemanager_link,int_filemanager.int_filemanager_group_reader,1,0,0,0

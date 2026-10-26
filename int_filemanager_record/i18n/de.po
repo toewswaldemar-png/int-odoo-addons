@@ -1,0 +1,301 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* int_filemanager_record
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0-20260817\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-14 13:02+0000\n"
+"PO-Revision-Date: 2026-10-14 13:02+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/models/int_filemanager_link.py:0
+msgid "A document was linked."
+msgstr "Ein Dokument wurde verknüpft."
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/models/int_filemanager_link.py:0
+msgid "A document was unlinked."
+msgstr "Die Verknüpfung mit einem Dokument wurde gelöst."
+
+#. module: int_filemanager_record
+#: model_terms:ir.ui.view,arch_db:int_filemanager_record.res_config_settings_view_form
+msgid "Access"
+msgstr "Zugriff"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_res_config_settings__int_filemanager_access_via_record
+#: model_terms:ir.ui.view,arch_db:int_filemanager_record.res_config_settings_view_form
+msgid "Access through linked records"
+msgstr "Zugriff über verknüpfte Datensätze"
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/models/int_filemanager_link.py:0
+msgid "Choose the record that the document is linked to."
+msgstr "Wählen Sie den Datensatz, mit dem das Dokument verknüpft ist."
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_model_folder__company_id
+msgid "Company"
+msgstr "Unternehmen"
+
+#. module: int_filemanager_record
+#: model:ir.model,name:int_filemanager_record.model_res_config_settings
+msgid "Config Settings"
+msgstr "Konfigurationseinstellungen"
+
+#. module: int_filemanager_record
+#: model:ir.model,name:int_filemanager_record.model_res_partner
+msgid "Contact"
+msgstr "Kontakt"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_document__partner_ids
+msgid "Contacts"
+msgstr "Kontakte"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__create_uid
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_model_folder__create_uid
+msgid "Created by"
+msgstr "Erstellt von"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__create_date
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_model_folder__create_date
+msgid "Created on"
+msgstr "Erstellt am"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_document__display_name
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_folder__display_name
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__display_name
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_linkable__display_name
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_model_folder__display_name
+#: model:ir.model.fields,field_description:int_filemanager_record.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:int_filemanager_record.field_res_partner__display_name
+msgid "Display Name"
+msgstr "Anzeigename"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__document_id
+msgid "Document"
+msgstr "Dokument"
+
+#. module: int_filemanager_record
+#: model_terms:ir.ui.view,arch_db:int_filemanager_record.view_partner_form
+msgid "Documents"
+msgstr "Dokumente"
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/controllers/int_filemanager.py:0
+#: code:addons/int_filemanager_record/models/int_filemanager_link.py:0
+msgid "Documents cannot be linked to this kind of record."
+msgstr "Dokumente können mit dieser Art von Datensatz nicht verknüpft werden."
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/models/int_filemanager_linkable.py:0
+msgid "Documents of %(record)s"
+msgstr "Dokumente von %(record)s"
+
+#. module: int_filemanager_record
+#. odoo-javascript
+#: code:addons/int_filemanager_record/static/src/document_list_controller_patch.js:0
+msgid "Drop the files to attach them to %(record)s"
+msgstr "Dateien hier ablegen, um sie an %(record)s anzuhängen"
+
+#. module: int_filemanager_record
+#: model:ir.model,name:int_filemanager_record.model_int_filemanager_document
+msgid "Filemanager document"
+msgstr "Dateimanager-Dokument"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_linkable__document_count
+#: model:ir.model.fields,field_description:int_filemanager_record.field_res_partner__document_count
+#: model:ir.model.fields,field_description:int_filemanager_record.field_res_users__document_count
+msgid "Filemanager documents"
+msgstr "Dateimanager-Dokumente"
+
+#. module: int_filemanager_record
+#: model:ir.model,name:int_filemanager_record.model_int_filemanager_folder
+msgid "Filemanager folder"
+msgstr "Dateimanager-Ordner"
+
+#. module: int_filemanager_record
+#: model:ir.model,name:int_filemanager_record.model_int_filemanager_link
+msgid "Filemanager link"
+msgstr "Dateimanager-Verknüpfung"
+
+#. module: int_filemanager_record
+#: model:ir.model,name:int_filemanager_record.model_int_filemanager_model_folder
+msgid "Filemanager upload folder of a model"
+msgstr "Dateimanager-Ordner für Uploads einer Modellart"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_model_folder__folder_id
+msgid "Folder"
+msgstr "Ordner"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_document__id
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_folder__id
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__id
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_linkable__id
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_model_folder__id
+#: model:ir.model.fields,field_description:int_filemanager_record.field_res_config_settings__id
+#: model:ir.model.fields,field_description:int_filemanager_record.field_res_partner__id
+msgid "ID"
+msgstr "ID"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__write_uid
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_model_folder__write_uid
+msgid "Last Updated by"
+msgstr "Zuletzt aktualisiert von"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__write_date
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_model_folder__write_date
+msgid "Last Updated on"
+msgstr "Zuletzt aktualisiert am"
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/models/int_filemanager_link.py:0
+msgid "Linked to %(record)s."
+msgstr "Verknüpft mit %(record)s."
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_document__link_ids
+msgid "Links"
+msgstr "Verknüpfungen"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_linkable__link_ids
+#: model:ir.model.fields,field_description:int_filemanager_record.field_res_partner__link_ids
+#: model:ir.model.fields,field_description:int_filemanager_record.field_res_users__link_ids
+msgid "Links to documents"
+msgstr "Verknüpfungen zu Dokumenten"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__res_model_id
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_model_folder__res_model
+msgid "Model"
+msgstr "Modell"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__res_model
+msgid "Model name"
+msgstr "Modellname"
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/controllers/int_filemanager.py:0
+msgid ""
+"No folder is set for the files of this kind of record. Ask the administrator"
+" of the filemanager to choose an upload folder."
+msgstr "Für die Dateien dieser Art von Datensatz ist kein Ordner eingestellt. Bitten Sie den Administrator des Dateimanagers, einen Upload-Ordner festzulegen."
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/models/int_filemanager_link.py:0
+msgid "Only the record of a link can be changed."
+msgstr "Bei einer Verknüpfung kann nur der Datensatz geändert werden."
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__record_ref
+msgid "Record"
+msgstr "Datensatz"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_link__res_id
+msgid "Record ID"
+msgstr "Datensatz-ID"
+
+#. module: int_filemanager_record
+#: model:ir.model,name:int_filemanager_record.model_int_filemanager_linkable
+msgid "Record with documents of the filemanager"
+msgstr "Datensatz mit Dokumenten des Dateimanagers"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_document__access_via_record
+msgid "Seen through a linked record"
+msgstr "Über einen verknüpften Datensatz sichtbar"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,help:int_filemanager_record.field_int_filemanager_folder__model_folder_ids
+msgid ""
+"The kinds of record whose uploaded files go to this folder, for example "
+"contacts. Whoever may change such a record can upload files there, without "
+"access to the folder."
+msgstr ""
+"Die Arten von Datensätzen, deren hochgeladene Dateien in diesen Ordner "
+"kommen, zum Beispiel Kontakte. Wer einen solchen Datensatz ändern darf, kann "
+"dort Dateien hochladen, ohne Zugriff auf den Ordner."
+
+#. module: int_filemanager_record
+#: model:ir.model.constraint,message:int_filemanager_record.constraint_int_filemanager_model_folder_model_per_company
+msgid "There is a folder for this kind of record already."
+msgstr "Für diese Art von Datensatz gibt es schon einen Ordner."
+
+#. module: int_filemanager_record
+#: model:ir.model.constraint,message:int_filemanager_record.constraint_int_filemanager_link_document_record_uniq
+msgid "This document is already linked to this record."
+msgstr "Dieses Dokument ist mit diesem Datensatz bereits verknüpft."
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/controllers/int_filemanager.py:0
+msgid "This record does not exist."
+msgstr "Dieser Datensatz existiert nicht."
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/models/int_filemanager_link.py:0
+msgid "Unlinked from %(record)s."
+msgstr "Verknüpfung mit %(record)s gelöst."
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,field_description:int_filemanager_record.field_int_filemanager_folder__model_folder_ids
+#: model_terms:ir.ui.view,arch_db:int_filemanager_record.int_filemanager_folder_view_form
+msgid "Upload folder for"
+msgstr "Upload-Ordner für"
+
+#. module: int_filemanager_record
+#: model_terms:ir.ui.view,arch_db:int_filemanager_record.int_filemanager_folder_view_search
+msgid "Upload folders"
+msgstr "Upload-Ordner"
+
+#. module: int_filemanager_record
+#: model:ir.model.fields,help:int_filemanager_record.field_res_config_settings__int_filemanager_access_via_record
+#: model_terms:ir.ui.view,arch_db:int_filemanager_record.res_config_settings_view_form
+msgid ""
+"Whoever may read a record (a contact, say) may also read the documents "
+"linked to it, without a right on their folder. Off: only the folders decide,"
+" and a file uploaded to a record is seen by those who see its upload folder."
+msgstr ""
+"Wer einen Datensatz (etwa einen Kontakt) lesen darf, darf auch die mit ihm "
+"verknüpften Dokumente lesen, ohne ein Recht auf deren Ordner. Aus: nur die "
+"Ordner entscheiden, und eine Datei, die zu einem Datensatz hochgeladen wird, "
+"sehen alle, die den Upload-Ordner sehen."
+
+#. module: int_filemanager_record
+#. odoo-python
+#: code:addons/int_filemanager_record/models/int_filemanager_link.py:0
+msgid ""
+"You may only link a document that its folder shows to you, to a record that "
+"you may change."
+msgstr "Sie dürfen nur ein Dokument verknüpfen, das Ihnen sein Ordner zeigt, und nur mit einem Datensatz, den Sie ändern dürfen."

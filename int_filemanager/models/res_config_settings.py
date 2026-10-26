@@ -41,13 +41,6 @@ class ResConfigSettings(models.TransientModel):
         "in their preferences.",
     )
 
-    int_filemanager_access_via_record = fields.Boolean(
-        string="Access through linked records",
-        help="Whoever may read a record (a contact, say) may also read the documents linked to "
-        "it, without a right on their folder. Off: only the folders decide, and a file uploaded "
-        "to a record is seen by those who see its upload folder.",
-    )
-
     # Status of the previews of the office files (nothing is saved).
     int_filemanager_preview_state = fields.Char(
         string="Preview", compute="_compute_int_filemanager_preview_status"
@@ -75,16 +68,3 @@ class ResConfigSettings(models.TransientModel):
             settings.int_filemanager_preview_done = counts["done"]
             settings.int_filemanager_preview_waiting = counts[False]
             settings.int_filemanager_preview_failed = counts["failed"]
-
-    @api.model
-    def get_values(self):
-        res = super().get_values()
-        rule = self.env.ref("int_filemanager.int_filemanager_document_rule_record")
-        res["int_filemanager_access_via_record"] = rule.sudo().active
-        return res
-
-    def set_values(self):
-        super().set_values()
-        self.env["int.filemanager.link"]._toggle_access_via_record(
-            self.int_filemanager_access_via_record
-        )
