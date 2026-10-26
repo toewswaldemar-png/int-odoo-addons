@@ -5,13 +5,11 @@ import unicodedata
 from datetime import datetime, timezone
 
 import psycopg2
-from psycopg2 import IntegrityError
 from werkzeug.security import safe_join
 
 from odoo import fields, models
 from odoo.exceptions import UserError
-
-from odoo.addons.int_filemanager.tools.clash import NAME_TRIES
+from odoo.tools.sql import escape_psql
 
 # Files that are not read in (compared in lower case with the lower case name).
 EXCLUDED_NAMES = ("thumbs.db", "desktop.ini", ".ds_store", "~$*", "*.tmp", "*.part", "*.crdownload")
@@ -192,38 +190,17 @@ class IntFilemanagerImportLine(models.Model):
         Folder = self.env["int.filemanager.folder"].sudo().with_context(tracking_disable=True)
         parent = self._parent_folder()
         name = self.env["int.filemanager.document"]._clean_name(self.name)
-        taken = {
-            folder.name.lower(): folder
-            for folder in Folder.search_fetch([("parent_id", "=", parent.id)], ["name"])
-        }
-        existing = taken.get(name.lower())
+        existing = Folder.search_fetch(
+            [("parent_id", "=", parent.id), ("name", "=ilike", escape_psql(name))], ["name"], limit=1
+        )
         if existing and not self.search_count(
             [("import_id", "=", self.import_id.id), ("folder_id", "=", existing.id)]
         ):
             # A folder of this name is there, and no other folder of this order took it.
             return {"state": "done", "folder_id": existing.id, "message": self.env._("Folder used.")}
-        constraint = Folder._name_per_parent.full_name(Folder)
-        for number in range(1, NAME_TRIES + 1):
-            candidate = name if number == 1 else f"{name} ({number})"
-            if candidate.lower() in taken:
-                continue
-            try:
-                with self.env.cr.savepoint():
-                    folder = Folder.create(
-                        {
-                            "name": candidate,
-                            "parent_id": parent.id,
-                            "company_id": self.import_id.company_id.id,
-                        }
-                    )
-            except IntegrityError as error:
-                if error.diag.constraint_name != constraint:
-                    raise
-                taken[candidate.lower()] = None
-            else:
-                message = False if candidate == name else self.env._("Renamed, the name was taken.")
-                return {"state": "done", "folder_id": folder.id, "message": message}
-        raise UserError(self.env._("No free name for the folder %(name)s.", name=name))
+        folder = Folder._create_numbered(name, parent)
+        message = False if folder.name == name else self.env._("Renamed, the name was taken.")
+        return {"state": "done", "folder_id": folder.id, "message": message}
 
     def _read_in_file(self, source):
         Document = (

@@ -763,19 +763,13 @@ class IntFilemanagerText(models.Model):
     @api.model
     def _scan_page_counts(self, ids):
         """``{row id: number of scans (pages with a picture and (almost) no text)}``; rows without one are left out."""
-        self.env["int.filemanager.text.page"].flush_model()
-        return dict(
-            self.env.execute_query(
-                SQL(
-                    """
-                    SELECT text_id, count(*) FROM int_filemanager_text_page
-                     WHERE text_id IN %s AND scan
-                     GROUP BY text_id
-                    """,
-                    tuple(ids),
-                )
+        Page = self.env["int.filemanager.text.page"].sudo()
+        return {
+            text.id: count
+            for text, count in Page._read_group(
+                [("text_id", "in", list(ids)), ("scan", "=", True)], ["text_id"], ["__count"]
             )
-        )
+        }
 
     def _count_scan_pages(self):
         """The pages of this PDF that are scans. Other files have none."""

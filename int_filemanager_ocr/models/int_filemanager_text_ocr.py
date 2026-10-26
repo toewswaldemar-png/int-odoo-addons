@@ -12,7 +12,6 @@ import time
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessError
-from odoo.tools import SQL
 
 from odoo.addons.int_filemanager.models.int_filemanager_document import BLOB_FOLDER, PDF
 from odoo.addons.int_filemanager.tools.files import remove_file, remove_path
@@ -225,20 +224,13 @@ class IntFilemanagerText(models.Model):
         if self.mimetype in IMAGE_TYPES:
             last = self.page_count if limit is None else min(self.page_count, self.ocr_next_page + limit - 1)
             return list(range(self.ocr_next_page, last + 1))
-        self.env["int.filemanager.text.page"].flush_model()
-        rows = self.env.execute_query(
-            SQL(
-                """
-                SELECT page FROM int_filemanager_text_page
-                 WHERE text_id = %s AND scan AND page >= %s
-                 ORDER BY page LIMIT %s
-                """,
-                self.id,
-                self.ocr_next_page,
-                limit,
-            )
+        pages = self.env["int.filemanager.text.page"].sudo().search_fetch(
+            [("text_id", "=", self.id), ("scan", "=", True), ("page", ">=", self.ocr_next_page)],
+            ["page"],
+            order="page",
+            limit=limit,
         )
-        return [number for [number] in rows]
+        return pages.mapped("page")
 
     def _ocr_section(self, deadline):
         """Recognize the next section of the pages of this file, within the time.
