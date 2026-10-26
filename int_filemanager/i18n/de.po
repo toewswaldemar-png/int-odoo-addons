@@ -696,14 +696,14 @@ msgid "Properties"
 msgstr "Eigenschaften"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__ocr_checksum
-msgid "Recognized PDF"
-msgstr "Erkanntes PDF"
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__viewer_pdf_checksum
+msgid "PDF for the viewer"
+msgstr "PDF für den Viewer"
 
 #. module: int_filemanager
-#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__ocr_content
-msgid "Recognized PDF (file)"
-msgstr "Erkanntes PDF (Datei)"
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__viewer_pdf_content
+msgid "PDF for the viewer (file)"
+msgstr "PDF für den Viewer (Datei)"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_user_id
@@ -1179,12 +1179,10 @@ msgstr "Leser: Darf die Ordner und Dokumente lesen, die er sieht."
 
 #. module: int_filemanager
 #: model:res.groups,comment:int_filemanager.int_filemanager_group_user
-msgid ""
-"User: Can also upload, change and delete in the folders they see, and share "
-"them."
+msgid "User: Can also upload, change and delete in the folders they see."
 msgstr ""
 "Nutzer: Darf zusätzlich in den Ordnern, die er sieht, hochladen, ändern und "
-"löschen und sie freigeben."
+"löschen."
 
 #. module: int_filemanager
 #: model:res.groups,comment:int_filemanager.int_filemanager_group_admin

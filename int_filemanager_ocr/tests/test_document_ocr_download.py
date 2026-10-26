@@ -27,11 +27,11 @@ class RecognizedCase(DownloadCase):
             row.write(values)
         else:
             self.env["int.filemanager.text"].create({"checksum": document.checksum, **values})
-        document.invalidate_recordset(["ocr_checksum"])
+        document.invalidate_recordset(["viewer_pdf_checksum"])
         return stored["checksum"]
 
     def _ocr_url(self, document):
-        return f"/web/content/int.filemanager.document/{document.id}/ocr_content"
+        return f"/web/content/int.filemanager.document/{document.id}/viewer_pdf_content"
 
 
 @tagged("post_install", "-at_install")
@@ -46,7 +46,7 @@ class TestRecognizedStream(RecognizedCase, TransactionCase):
     def test_the_recognized_pdf_is_streamed_from_its_blob(self):
         document = self._document("scan.pdf", b"%PDF-1.4 the scan")
         checksum = self._recognized(document)
-        stream = self.env["ir.binary"]._get_stream_from(document, "ocr_content")
+        stream = self.env["ir.binary"]._get_stream_from(document, "viewer_pdf_content")
         self.assertEqual(stream.type, "path")
         self.assertEqual(stream.path, document._blob_path(checksum))
         self.assertEqual(stream.mimetype, "application/pdf")
@@ -63,40 +63,40 @@ class TestRecognizedStream(RecognizedCase, TransactionCase):
     def test_a_document_without_a_recognized_pdf_has_none_to_stream(self):
         document = self._document("scan.pdf", b"%PDF-1.4 the scan")
         with self.assertRaisesRegex(UserError, "no PDF"):
-            self.env["ir.binary"]._get_stream_from(document, "ocr_content")
+            self.env["ir.binary"]._get_stream_from(document, "viewer_pdf_content")
 
     def test_a_missing_recognized_blob_is_a_missing_record(self):
         document = self._document("scan.pdf", b"%PDF-1.4 the scan")
         checksum = self._recognized(document)
         os.unlink(document._blob_path(checksum))
         with self.assertRaisesRegex(UserError, "missing"):
-            self.env["ir.binary"]._get_stream_from(document, "ocr_content")
+            self.env["ir.binary"]._get_stream_from(document, "viewer_pdf_content")
 
     def test_the_checksum_is_known_to_the_documents_with_the_same_file(self):
         first = self._document("a.pdf", b"%PDF-1.4 same")
         second = self._document("b.pdf", b"%PDF-1.4 same")
         other = self._document("c.pdf", b"%PDF-1.4 other")
         checksum = self._recognized(first)
-        self.assertEqual((first + second + other).mapped("ocr_checksum"), [checksum, checksum, False])
+        self.assertEqual((first + second + other).mapped("viewer_pdf_checksum"), [checksum, checksum, False])
 
     def test_a_row_without_a_recognized_pdf_gives_no_checksum(self):
         document = self._document("a.pdf", b"%PDF-1.4 plain")
         self.env["int.filemanager.text"].create({"checksum": document.checksum})
-        self.assertFalse(document.ocr_checksum)
+        self.assertFalse(document.viewer_pdf_checksum)
 
     def test_the_field_holds_nothing_and_cannot_be_written(self):
         document = self._document("a.pdf", b"%PDF-1.4 plain")
-        self.assertFalse(document.ocr_content)
+        self.assertFalse(document.viewer_pdf_content)
         with self.assertRaises(UserError):
-            document.write({"ocr_content": "aGVsbG8="})
-        description = self.env["int.filemanager.document"].fields_get(["ocr_content", "ocr_checksum"])
-        self.assertFalse(description["ocr_content"]["exportable"])
-        self.assertFalse(description["ocr_checksum"]["exportable"])
+            document.write({"viewer_pdf_content": "aGVsbG8="})
+        description = self.env["int.filemanager.document"].fields_get(["viewer_pdf_content", "viewer_pdf_checksum"])
+        self.assertFalse(description["viewer_pdf_content"]["exportable"])
+        self.assertFalse(description["viewer_pdf_checksum"]["exportable"])
 
 
 @tagged("post_install", "-at_install")
 class TestRecognizedDownload(RecognizedCase, HttpCase):
-    """``/web/content/int.filemanager.document/<id>/ocr_content``: the core route, our hook."""
+    """``/web/content/int.filemanager.document/<id>/viewer_pdf_content``: the core route, our hook."""
 
     @classmethod
     def setUpClass(cls):

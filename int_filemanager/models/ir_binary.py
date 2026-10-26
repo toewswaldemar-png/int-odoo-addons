@@ -9,6 +9,6 @@ class IrBinary(models.AbstractModel):
         if record._name == "int.filemanager.document":
             if field_name == "content":
                 return record._to_http_stream()
-            if field_name == "ocr_content":
-                return record._to_ocr_http_stream()
+            if field_name == "viewer_pdf_content":
+                return record._to_viewer_pdf_http_stream()
         return super()._record_to_stream(record, field_name)

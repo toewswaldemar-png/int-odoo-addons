@@ -1,3 +1,4 @@
+from . import test_hooks
 from . import test_share
 from . import test_share_brake
 from . import test_share_buttons

@@ -26,7 +26,7 @@ Wer den Kern erweitert, überschreibt diese Stellen mit `super()`:
 | `int.filemanager.cron` (abstrakt: `_setting`, `_flag`, `_budget`, `_pass_deadline`) | Settings als Systemparameter und die Zeit eines Cron-Laufs; `_setting_defaults()` ergänzt Zahlen | Vorschau (Kern), `int.filemanager.text` (`_inherit`) |
 | `document._crons_after_preview()` | Welche Crons nach einer fertigen Vorschau geweckt werden | `ocr` (Text der alten Formate) |
 | `document._gc_lock_tables()` und `document._blobs_in_use(names)` | Der Blob-Cleaner sperrt diese Tabellen und kennt diese Prüfsummen als benutzt | `ocr` (erkannte PDFs) |
-| `document._compute_ocr_checksum` | Das PDF, das der Viewer statt der Datei zeigt (Vorschau; `ocr` ergänzt das erkannte PDF) | `ocr` |
+| `document._compute_viewer_pdf_checksum` | Das PDF, das der Viewer statt der Datei zeigt (Vorschau; `ocr` ergänzt das erkannte PDF) | `ocr` |
 | `controllers.IntFilemanager._upload_values(**kwargs)` | Felder, die das Formular des Uploads zum Dokument hinzufügt | `image_editor` |
 | Dienst `int_filemanager.image_editor` (JS, optional) | Knopf „Bearbeiten“ im Viewer und im Formular | `image_editor` |
 | `write()` | Jedes Modul wirft seine eigenen, nur vom Server gesetzten Felder für Nicht-Superuser weg (`STORAGE_FIELDS` im Kern, `EDIT_FIELDS`, `SHARE_FIELDS`) | alle |
@@ -43,4 +43,5 @@ Wer den Kern erweitert, überschreibt diese Stellen mit `super()`:
 
 - **Vorschau und Thumbnails bleiben im Kern.** Der Viewer für Office-Dateien braucht sie, und sie sind unabhängig von OCR.
 - **Der Kern hat keine Datenbank-Migration für die Aufteilung.** Die Tabellen und Spalten der verschobenen Modelle sind unverändert; bei einer bestehenden Datenbank mit Daten müssten vorher die externen IDs (`ir_model_data.module`) der verschobenen Modelle, Felder, Views, Crons, Regeln und Zugriffsrechte auf die neuen Module umgeschrieben werden, sonst löscht das Update des Kerns deren Tabellen. Gebaut wurde das nicht, weil die vorhandene Datenbank nur Testdaten hat.
+- **Die Tabelle der Freigaben gehört `int_filemanager_share`.** Die Migration des Kerns löscht nur die Tabellen der entfernten Modelle; die alten Spalten von `int_filemanager_share` (`node_id`, `expires_at`, `revoked_at`) räumt der `pre_init_hook` des Share-Moduls ab (Migrationsskripte laufen bei einer Installation nicht).
 - **Stand der Prüfung:** statisch geprüft (Syntax, externe IDs, Importe, Manifeste, Testpakete). Die Odoo-Tests und die Hoot-Tests sind nach der Aufteilung noch nicht gelaufen.

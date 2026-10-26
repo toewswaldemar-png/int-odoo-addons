@@ -49,7 +49,7 @@
                     <button name="action_download" type="object" string="Download" icon="fa-download" />
                 </header>
                 <field name="checksum" />
-                <field name="ocr_checksum" />
+                <field name="viewer_pdf_checksum" />
                 <templates>
                     <t t-name="menu">
                         <a role="menuitem" type="open" class="dropdown-item">Properties</a>
@@ -122,7 +122,7 @@
                     <group>
                         <field name="active" invisible="1" />
                         <field name="checksum" invisible="1" />
-                        <field name="ocr_checksum" invisible="1" />
+                        <field name="viewer_pdf_checksum" invisible="1" />
                         <field name="name" />
                         <field name="folder_id" string="Location" context="{'hierarchical_naming': True}" />
                         <field name="tag_ids" widget="many2many_tags" />

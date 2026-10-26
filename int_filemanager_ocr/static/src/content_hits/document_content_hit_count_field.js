@@ -57,7 +57,7 @@ export const documentContentHitCountField = {
         { name: "content_hits", type: "json" },
         { name: "mimetype", type: "char" },
         { name: "checksum", type: "char" },
-        { name: "ocr_checksum", type: "char" },
+        { name: "viewer_pdf_checksum", type: "char" },
         { name: "size", type: "float" },
     ],
 };

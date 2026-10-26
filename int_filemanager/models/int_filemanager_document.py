@@ -105,21 +105,22 @@ class IntFilemanagerDocument(models.Model):
         copy=False,
         exportable=False,
     )
-    # The same for the PDF that the text recognition made of a scan (it has a text layer, the
-    # viewer searches in it). Served by ``_to_ocr_http_stream`` for the viewer only: the
-    # download is the original.
-    ocr_content = fields.Binary(
-        string="Recognized PDF (file)",
-        compute="_compute_ocr_content",
+    # The same for the PDF that the viewer shows instead of the file: the preview of an office
+    # file, or a PDF that another module made of it (``int_filemanager_ocr``: a scan with a text
+    # layer). Served by ``_to_viewer_pdf_http_stream`` for the viewer only: the download is the
+    # original.
+    viewer_pdf_content = fields.Binary(
+        string="PDF for the viewer (file)",
+        compute="_compute_viewer_pdf_content",
         inverse="_inverse_content",
         copy=False,
         exportable=False,
     )
     # The checksum of that PDF, empty if there is none; the viewer asks for it to choose the
     # address, and it changes the address of the file when the PDF changes.
-    ocr_checksum = fields.Char(
-        string="Recognized PDF",
-        compute="_compute_ocr_checksum",
+    viewer_pdf_checksum = fields.Char(
+        string="PDF for the viewer",
+        compute="_compute_viewer_pdf_checksum",
         copy=False,
         exportable=False,
     )
@@ -141,15 +142,15 @@ class IntFilemanagerDocument(models.Model):
     def _inverse_content(self):
         raise UserError(self.env._("The file of a document is set by the upload only."))
 
-    def _compute_ocr_content(self):
-        self.ocr_content = False
+    def _compute_viewer_pdf_content(self):
+        self.viewer_pdf_content = False
 
     @api.depends("preview_checksum")
-    def _compute_ocr_checksum(self):
+    def _compute_viewer_pdf_checksum(self):
         # The PDF that the viewer shows instead of the file: the preview of an office file. A
         # module that recognizes the text of scans (``int_filemanager_ocr``) adds the PDF it made.
         for document in self:
-            document.ocr_checksum = document.preview_checksum
+            document.viewer_pdf_checksum = document.preview_checksum
 
     @api.depends("name")
     def _compute_extension(self):
@@ -334,16 +335,16 @@ class IntFilemanagerDocument(models.Model):
         if len(self) != 1:
             raise UserError(self.env._("Select exactly one document."))
 
-    def _to_ocr_http_stream(self):
+    def _to_viewer_pdf_http_stream(self):
         """The PDF of the file that is not the file as a stream, for the viewer.
 
-        That is the recognized PDF of a scan, or the preview of an office file.
-        ``ir.binary._record_to_stream`` calls it for the field ``ocr_content``: the way in is the
-        document, so the rights and rules of the document decide, as for ``content``. The
+        That is the preview of an office file, or the PDF that another module made of the file.
+        ``ir.binary._record_to_stream`` calls it for the field ``viewer_pdf_content``: the way in
+        is the document, so the rights and rules of the document decide, as for ``content``. The
         checksum of the PDF is the ETag.
         """
         self.ensure_one()
-        checksum = self.ocr_checksum
+        checksum = self.viewer_pdf_checksum
         if not checksum:
             raise MissingError(self.env._("There is no PDF version of this document."))
         path = self._blob_path(checksum)

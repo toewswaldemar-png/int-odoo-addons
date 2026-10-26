@@ -7,11 +7,11 @@ const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 
 describe("the hits of the text of a file", () => {
     test("the pages of the text are pages of the PDF, except for the blocks of the new formats", () => {
-        const docx = new DocumentFile({ id: 1, mimetype: DOCX, ocr_checksum: "a".repeat(64) });
+        const docx = new DocumentFile({ id: 1, mimetype: DOCX, viewer_pdf_checksum: "a".repeat(64) });
         const xls = new DocumentFile({
             id: 3,
             mimetype: "application/vnd.ms-excel",
-            ocr_checksum: "b".repeat(64),
+            viewer_pdf_checksum: "b".repeat(64),
         });
         const pdf = new DocumentFile({ id: 2, mimetype: "application/pdf" });
         expect(docx.hasTextPages).toBe(false);

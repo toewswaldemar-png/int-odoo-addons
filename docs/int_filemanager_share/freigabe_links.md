@@ -49,7 +49,7 @@ Modell, Routen und Gast-Oberfläche: Code (`models/int_filemanager_share.py`, `c
 - **`opening_info`:** `limit` wird ungeklemmt benutzt und `progressbar_domain` als ungeprüfte Domäne. Es gehen nur `value`, `folded`, `offset`, `limit` (auf 80 geklemmt) und `groups` (Tiefe 3) durch.
 - Gesperrt bleiben: Schreiben, `read`, `search_read`, `export_data`, Methoden außerhalb der Tabelle, Kontext vom Client (wird neu gebaut), Domänen über 20.000 Zeichen oder tiefer als 6, mehr als 80 Zeilen, `count_limit` über 1000. Das Gateway antwortet gar nicht ohne `can_view` oder `can_download` (ein Briefkasten-Link liest nichts).
 - Domänen werden mit `Domain(...)` zusammengesetzt, `not child_of` ist kein Operator (`~Domain`).
-- **Prüfsumme und `ocr_content`** fallen aus der Feld-Whitelist (auch für Gruppieren, Sortieren, Suchen); die Bildadresse bekommt `write_date` statt Prüfsumme.
+- **Prüfsumme und `viewer_pdf_content`** fallen aus der Feld-Whitelist (auch für Gruppieren, Sortieren, Suchen); die Bildadresse bekommt `write_date` statt Prüfsumme.
 
 **Passwort**
 - Der Schlüssel nach `unlock` ist `hash_sign` des Core mit `secret = database.secret + password_hash`. Der Hash steht nie in der lesbaren Nutzlast, und der Schlüssel verfällt, wenn das Passwort geändert wird. Vor `verify_hash_signed` Typ und Länge prüfen (Nicht-Strings werfen `AttributeError`).

@@ -41,12 +41,6 @@ def migrate(cr, version):
     """Drop what the removed models left: Odoo keeps the tables of a model that is gone."""
     for table in EARLIER_TABLES:
         cr.execute(SQL("DROP TABLE IF EXISTS %s CASCADE", SQL.identifier(table)))
-    cr.execute("""
-        ALTER TABLE IF EXISTS int_filemanager_share
-            DROP COLUMN IF EXISTS node_id,
-            DROP COLUMN IF EXISTS expires_at,
-            DROP COLUMN IF EXISTS revoked_at
-    """)
     cr.execute("DELETE FROM ir_model WHERE model = 'int_filemanager.tag'")
     cr.execute("""
         DELETE FROM ir_config_parameter

@@ -383,7 +383,7 @@ class TestLink(AccessCase, TransactionCase):
                 "mimetype": {},
                 "write_date": {},
                 "checksum": {},
-                "ocr_checksum": {},
+                "viewer_pdf_checksum": {},
                 "active": {},
                 "tag_ids": {"fields": {"display_name": {}, "color": {}}},
                 "partner_ids": {"fields": {"display_name": {}}},

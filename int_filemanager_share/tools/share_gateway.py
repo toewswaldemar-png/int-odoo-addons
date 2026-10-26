@@ -46,7 +46,7 @@ FIELDS = {
 # The widgets of the views ask for these two (they build the address of a picture from them). A
 # guest gets the field in the definitions and the value ``False`` in the answers, and cannot
 # filter, sort or group by them: the checksum would show which files are the same.
-MASKED = {DOCUMENT: ("checksum", "ocr_checksum")}
+MASKED = {DOCUMENT: ("checksum", "viewer_pdf_checksum")}
 OPERATORS = {
     "=", "!=", "in", "not in", "like", "not like", "ilike", "not ilike", "=like", "=ilike",
     "<", "<=", ">", ">=", "child_of", "any", "not any",

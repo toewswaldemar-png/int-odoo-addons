@@ -52,7 +52,7 @@ keinen Dienst. Alles geschieht in Schritten, die einzeln committet werden, und i
   gesetzt (häufige Wörter brauchen sonst Minuten: Trefferliste „lossy“), ohne parallele Arbeiter.
 - **Treffer-Spalte:** `content_hits` liefert je Datei bis zu drei Seiten mit Textauszug (Wörter aus dem Seitentext, mit Umlauten und Schreibweise der
   Datei), ein Klick öffnet den Viewer auf der Seite und markiert die Wörter (ganze Wörter, zentriert). Bei Bildern ohne Seitenlabel.
-- **Viewer:** PDFs mit erkanntem PDF zeigen dieses (Route `ocr_content`, gleiche Zugriffsprüfung wie `content`, ETag = Prüfsumme des erkannten PDFs);
+- **Viewer:** PDFs mit erkanntem PDF zeigen dieses (Route `viewer_pdf_content`, gleiche Zugriffsprüfung wie `content`, ETag = Prüfsumme des erkannten PDFs);
   der Download der Zeile liefert das Original.
 
 ## 6. Zeitbudget des Crons

@@ -6,6 +6,7 @@
     "author": "Waldemar Toews",
     "license": "LGPL-3",
     "depends": ["int_filemanager"],
+    "pre_init_hook": "pre_init_hook",
     "data": [
         "security/int_filemanager_share_security.xml",
         "security/ir.model.access.csv",

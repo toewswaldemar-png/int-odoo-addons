@@ -129,7 +129,7 @@ search("deep nested any (8 levels)", [("folder_id", "any", deep)])
 search("context active_test=False", [], context={"active_test": False})
 print("== read specification attacks ==")
 for field in ["create_uid", "message_ids", "origin_path", "content", "thumbnail", "activity_ids", "company_id",
-              "access_user_ids", "write_uid", "message_follower_ids", "checksum", "ocr_checksum", "share_id"]:
+              "access_user_ids", "write_uid", "message_follower_ids", "checksum", "viewer_pdf_checksum", "share_id"]:
     search(f"specification {field}", [], {field: {}})
 search("spec: folder_id.access_user_ids", [], {"folder_id": {"fields": {"access_user_ids": {}}}})
 search("spec: folder_id.parent_id (the parent of the root)", [], {"folder_id": {"fields": {"parent_id": {"fields": {"display_name": {}}}}}})

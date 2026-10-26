@@ -27,8 +27,8 @@ class TestHooksOfTheCore(BlobCase):
         document = self.Document.create(
             {"name": "a.pdf", "folder_id": self.folder.id, "checksum": "a" * 64, "preview_checksum": "b" * 64}
         )
-        self.assertEqual(document.ocr_checksum, "b" * 64)
+        self.assertEqual(document.viewer_pdf_checksum, "b" * 64)
         self.addCleanup(self._forget, "c" * 64)
         self.env["int.filemanager.text"].create({"checksum": "a" * 64, "ocr_checksum": "c" * 64})
-        document.invalidate_recordset(["ocr_checksum"])
-        self.assertEqual(document.ocr_checksum, "c" * 64)
+        document.invalidate_recordset(["viewer_pdf_checksum"])
+        self.assertEqual(document.viewer_pdf_checksum, "c" * 64)

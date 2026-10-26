@@ -130,7 +130,7 @@ class TestShareGateway(GatewayCase, TransactionCase):
     def test_fields_operators_and_values_outside_the_list_are_refused(self):
         for expression in (
             "folder_id.access_user_ids.login", "folder_id.access_user_ids", "create_uid", "create_uid.login",
-            "active", "origin_path", "content_search", "checksum", "ocr_checksum", "preview_checksum", "content", "company_id",
+            "active", "origin_path", "content_search", "checksum", "viewer_pdf_checksum", "preview_checksum", "content", "company_id",
             "message_ids", "folder_id.create_uid",
         ):  # fmt: skip
             with self.subTest(expression):
@@ -212,13 +212,13 @@ class TestShareGateway(GatewayCase, TransactionCase):
         self.assertEqual(len(records), 2)
 
     def test_the_checksum_is_asked_for_by_the_widgets_and_never_given(self):
-        spec = {"name": {}, "checksum": {}, "ocr_checksum": {}}
+        spec = {"name": {}, "checksum": {}, "viewer_pdf_checksum": {}}
         records = self._call(DOCUMENT, "web_search_read", domain=[], specification=spec)["records"]
         for record in records:
             self.assertIs(record["checksum"], False)
-            self.assertIs(record["ocr_checksum"], False)
+            self.assertIs(record["viewer_pdf_checksum"], False)
         records = self._call(DOCUMENT, "web_read", [self.in_root.id], specification=spec)
-        self.assertEqual((records[0]["checksum"], records[0]["ocr_checksum"]), (False, False))
+        self.assertEqual((records[0]["checksum"], records[0]["viewer_pdf_checksum"]), (False, False))
         self.assertIn("checksum", self._call(DOCUMENT, "fields_get"))
         self.assertIn(self.in_root.checksum, self.Document.search([]).mapped("checksum"))  # it is there; not given
         result = self._call(
@@ -332,7 +332,7 @@ class TestShareGateway(GatewayCase, TransactionCase):
 
     def test_fields_get_gives_the_list_and_nothing_else(self):
         names = set(self._call(DOCUMENT, "fields_get"))
-        self.assertEqual(names, share_gateway.FIELDS[DOCUMENT] | {"checksum", "ocr_checksum"})
+        self.assertEqual(names, share_gateway.FIELDS[DOCUMENT] | {"checksum", "viewer_pdf_checksum"})
         self.assertRefused(DOCUMENT, "fields_get", ["create_uid"])
 
     def test_the_views_are_those_of_the_guests_without_a_checksum(self):

@@ -64,7 +64,7 @@ class IntFilemanagerDocument(models.Model):
     )
 
     # The PDF that LibreOffice made of an office file for the viewer (a blob of the storage that
-    # no other record has): ``_cron_previews`` sets it, ``ocr_checksum`` hands it on. Empty while
+    # no other record has): ``_cron_previews`` sets it, ``viewer_pdf_checksum`` hands it on. Empty while
     # the file waits for it, and for every other type; a file that cannot be turned is "failed"
     # and is not tried again.
     preview_checksum = fields.Char(

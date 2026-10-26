@@ -5,7 +5,7 @@ export const MODEL = "int.filemanager.document";
 // Binary fields of the content route: the upload, and the PDF made by the text recognition or
 // the preview of an office file.
 const CONTENT_FIELD = "content";
-const OCR_FIELD = "ocr_content";
+const VIEWER_PDF_FIELD = "viewer_pdf_content";
 const THUMBNAIL_FIELD = "thumbnail";
 // The core's list without svg (stored as text here), tiff and ico (not shown by a browser).
 const IMAGE_MIMETYPES = ["image/bmp", "image/gif", "image/jpeg", "image/png", "image/webp"];
@@ -52,21 +52,21 @@ export class DocumentFile extends FileModelMixin(Object) {
 
     /** The recognized PDF or the preview if there is one, else the file. */
     get urlRoute() {
-        return contentRoute(this.id, this.ocr_checksum ? OCR_FIELD : CONTENT_FIELD);
+        return contentRoute(this.id, this.viewer_pdf_checksum ? VIEWER_PDF_FIELD : CONTENT_FIELD);
     }
 
     /** @override */
     get urlQueryParams() {
         const params = { ...super.urlQueryParams, ...addresses.params() };
-        if (this.ocr_checksum) {
-            params.unique = this.ocr_checksum;
+        if (this.viewer_pdf_checksum) {
+            params.unique = this.viewer_pdf_checksum;
         }
         return params;
     }
 
     /** @override An office file with a preview is shown as a PDF. */
     get isPdf() {
-        return Boolean(super.isPdf || this.ocr_checksum);
+        return Boolean(super.isPdf || this.viewer_pdf_checksum);
     }
 
     /** Whether the pages of the text are the pages of the PDF shown: not the blocks of an office file. */
@@ -112,14 +112,14 @@ export class DocumentFile extends FileModelMixin(Object) {
 
 /** @param {Object} [hit] the place the file shows, default: the first of the `content_hits` */
 export function documentFileFromRecord(record, hit) {
-    const { name, mimetype, checksum, size, ocr_checksum, content_hits, folder_id } = record.data;
+    const { name, mimetype, checksum, size, viewer_pdf_checksum, content_hits, folder_id } = record.data;
     return new DocumentFile({
         id: record.resId,
         name,
         mimetype,
         checksum,
         size,
-        ocr_checksum,
+        viewer_pdf_checksum,
         hit: hit || content_hits?.hits?.[0],
         folder_id: folder_id?.id,
     });
@@ -148,7 +148,7 @@ export async function readDocumentFile(orm, id) {
     const [values] = await orm.read(
         MODEL,
         [id],
-        ["name", "mimetype", "checksum", "size", "ocr_checksum"]
+        ["name", "mimetype", "checksum", "size", "viewer_pdf_checksum"]
     );
     return new DocumentFile(values);
 }

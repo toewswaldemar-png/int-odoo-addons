@@ -41,10 +41,10 @@ class IntFilemanagerDocument(models.Model):
     )
 
     @api.depends("checksum", "preview_checksum")
-    def _compute_ocr_checksum(self):
+    def _compute_viewer_pdf_checksum(self):
         # The text rows are for the administrators; the checksum of the PDF is no secret to
         # whoever may read the document it belongs to. An office file has the preview instead.
-        super()._compute_ocr_checksum()
+        super()._compute_viewer_pdf_checksum()
         Text = self.env["int.filemanager.text"].sudo()
         found = {
             row.checksum: row.ocr_checksum
@@ -54,7 +54,7 @@ class IntFilemanagerDocument(models.Model):
             )
         }
         for document in self:
-            document.ocr_checksum = found.get(document.checksum) or document.ocr_checksum
+            document.viewer_pdf_checksum = found.get(document.checksum) or document.viewer_pdf_checksum
 
     def _compute_content_search(self):
         self.content_search = False

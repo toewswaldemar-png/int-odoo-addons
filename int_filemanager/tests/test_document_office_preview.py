@@ -294,31 +294,31 @@ class TestOfficePreview(OfficeCase, TransactionCase):
         self._cron()
         Binary = self.env["ir.binary"]
         found = Binary.with_user(self.alice)._find_record(
-            res_model=document._name, res_id=document.id, field="ocr_content"
+            res_model=document._name, res_id=document.id, field="viewer_pdf_content"
         )
-        self.assertEqual(Binary._get_stream_from(found, "ocr_content").mimetype, "application/pdf")
+        self.assertEqual(Binary._get_stream_from(found, "viewer_pdf_content").mimetype, "application/pdf")
         with self.assertRaises(AccessError):
             Binary.with_user(self.bob)._find_record(
-                res_model=document._name, res_id=document.id, field="ocr_content"
+                res_model=document._name, res_id=document.id, field="viewer_pdf_content"
             )
 
     def test_the_viewer_gets_the_preview_and_the_download_stays_the_original(self):
         document = self._office()
         self._cron()
         Binary = self.env["ir.binary"]
-        preview = Binary._get_stream_from(document, "ocr_content")
+        preview = Binary._get_stream_from(document, "viewer_pdf_content")
         original = Binary._get_stream_from(document, "content")
         self.assertEqual(preview.path, self.Document._blob_path(document.preview_checksum))
         self.assertEqual((preview.mimetype, preview.etag), ("application/pdf", document.preview_checksum))
         self.assertEqual(original.path, self.Document._blob_path(document.checksum))
         self.assertEqual(original.mimetype, document.mimetype)
-        self.assertEqual(document.ocr_checksum, document.preview_checksum)
+        self.assertEqual(document.viewer_pdf_checksum, document.preview_checksum)
 
     def test_a_file_without_a_preview_has_none_to_stream(self):
         document = self._office()
-        self.assertFalse(document.ocr_checksum)
+        self.assertFalse(document.viewer_pdf_checksum)
         with self.assertRaisesRegex(UserError, "no PDF"):
-            self.env["ir.binary"]._get_stream_from(document, "ocr_content")
+            self.env["ir.binary"]._get_stream_from(document, "viewer_pdf_content")
 
     def test_the_preview_is_not_copied_and_not_exported(self):
         document = self._office()

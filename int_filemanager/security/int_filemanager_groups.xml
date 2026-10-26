@@ -20,7 +20,7 @@
         <field name="name">Filemanager User</field>
         <field
             name="comment"
-        >User: Can also upload, change and delete in the folders they see, and share them.</field>
+        >User: Can also upload, change and delete in the folders they see.</field>
         <field name="sequence">20</field>
         <field name="privilege_id" ref="privilege_int_filemanager" />
         <field name="implied_ids" eval="[(4, ref('int_filemanager_group_reader'))]" />
