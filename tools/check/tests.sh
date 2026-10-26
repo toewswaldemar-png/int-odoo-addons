@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Odoo test suite of one or more modules (default int_filemanager; TESTS_MODULE=int_blob, or a comma list such as
+# Odoo test suite of one or more modules (default int_filemanager; TESTS_MODULE takes a comma list such as
 # int_filemanager,int_filemanager_import) on the Tower test instance (fresh install + tests).
 #
 # Usage (from the repo, Git Bash):  tools/check/tests.sh [--test-tags TAGS]
