@@ -55,6 +55,53 @@ class TestMoveTarget(AccessCase, TransactionCase):
         document.write({"folder_id": self.inner.id})
         self.assertEqual(document.folder_id, self.inner)
 
+    def test_documents_are_put_into_a_folder_all_or_none(self):
+        first, second = self._document(self.deep, "a.txt"), self._document(self.deep, "b.txt", b"b")
+        both = (first + second).with_user(self.alice)
+        with self.assertRaises(AccessError):
+            both.write({"folder_id": self.inner.id})
+        self.assertEqual((first + second).folder_id, self.deep)
+        both.write({"folder_id": self.other.id})
+        self.assertEqual((first + second).folder_id, self.other)
+
+    def test_documents_of_which_one_is_hidden_move_none(self):
+        shown, hidden = self._document(self.deep, "a.txt"), self._document(self.inner, "b.txt", b"b")
+        with self.assertRaises(AccessError):
+            (shown + hidden).with_user(self.alice).write({"folder_id": self.other.id})
+        self.assertEqual((shown.folder_id, hidden.folder_id), (self.deep, self.inner))
+
+    def test_documents_from_several_folders_move_into_one(self):
+        first, second = self._document(self.deep, "a.txt"), self._document(self.other, "b.txt", b"b")
+        (first + second).with_user(self.alice).write({"folder_id": self.shared.id})
+        self.assertEqual((first + second).folder_id, self.shared)
+
+    # --- the context comes from the client: no key of it takes a check away ---
+
+    def test_a_key_of_the_context_does_not_switch_off_the_checks_of_the_target_of_a_folder(self):
+        self.Folder.create({"name": "Deep", "parent_id": self.other.id})
+        cascading = self.deep.with_user(self.alice).with_context(int_filemanager_cascade=True)
+        # the names of the target are checked (else the unique index would answer)
+        with self.assertRaisesRegex(UserError, "taken"):
+            cascading.write({"parent_id": self.other.id})
+        with self.assertRaises(AccessError):
+            cascading.write({"parent_id": self.inner.id})
+        self.assertEqual(self.deep.parent_id, self.shared)
+
+    def test_a_key_of_the_context_does_not_switch_off_the_restoring_of_a_folder(self):
+        self.shared.action_archive()
+        cascading = self.deep.with_user(self.alice).with_context(active_test=False, int_filemanager_cascade=True)
+        with self.assertRaises(UserError):
+            cascading.write({"active": True})
+        self.assertFalse(self.deep.active)
+
+    def test_a_key_of_the_context_does_not_switch_off_the_restoring_of_a_document(self):
+        document = self._document(self.deep)
+        self.shared.action_archive()
+        cascading = document.with_user(self.alice).with_context(active_test=False, int_filemanager_cascade=True)
+        with self.assertRaises(UserError):
+            cascading.write({"active": True})
+        self.assertFalse(document.active)
+
     # --- the rules of the tree, also for the superuser ------------------------
 
     def test_an_archived_folder_takes_nothing(self):

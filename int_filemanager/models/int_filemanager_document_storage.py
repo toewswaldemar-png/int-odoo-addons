@@ -231,12 +231,18 @@ class IntFilemanagerDocument(models.Model):
     def _create_from_stream(self, stream, name, folder, mimetype=None, check=None, **values):
         """Store a file and create its document: the one way a document comes to be.
 
-        Runs as superuser (the users cannot create documents), so the caller has to check
-        first that the user may write into ``folder``.
+        The document is made as superuser (the users cannot create documents: with a checksum
+        of their choice they could point a document at any blob). So the right to write into
+        ``folder`` is asked here, once, before a byte is stored, and not by each caller: the
+        user of ``folder.env`` must be allowed to write into it (``check_access``, which a
+        superuser passes). A caller that has checked the right another way hands over
+        ``folder.sudo()``: an upload at a record (the right to change the record), a share (the
+        right to upload of its link), the import (the administrators).
 
         :param stream: file-like object with ``read(size)``
         :param name: name of the document, also used to guess the type
-        :param folder: ``int.filemanager.folder`` record
+        :param folder: ``int.filemanager.folder`` record, in the environment of the one who
+            stores
         :param mimetype: type given by the client, if any
         :param check: called with the result of ``_store_stream`` (the size, the checksum, the
             type) after the file is measured and before the document is made and the blob is
@@ -245,6 +251,7 @@ class IntFilemanagerDocument(models.Model):
         :param values: more field values, e.g. ``tag_ids``
         :return: the document, with the environment of the caller
         """
+        folder.check_access("write")
         name = self._clean_name(name)
         stored = self._store_stream(stream, name, mimetype)
         try:

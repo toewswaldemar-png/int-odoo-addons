@@ -15,6 +15,10 @@ from ..tools.zip_stream import export_name, export_names, folder_entry
 # ``product.category``. It is off unless a view asks for it (the field that picks a folder): the
 # chatter, the messages and the guests keep the plain name.
 PATH_KEY = "hierarchical_naming"
+# The context key of the cascades (archive, restore, company down a tree): what they write below the
+# folder the user acted on was checked at that folder. Only a superuser is believed: the context is
+# sent by the client, and a key in it must not take a check away from a user.
+CASCADE_KEY = "int_filemanager_cascade"
 # The separator of the path, and what stands for the folders above that the user may not read.
 PATH_SEPARATOR = " / "
 PATH_HIDDEN = "…"
@@ -271,12 +275,11 @@ class IntFilemanagerFolder(models.Model):
         # Archiving or restoring a folder does it on everything below, like a project does it on
         # its tasks (project.project.write). The core's docstring of action_archive says to
         # override write for that.
-        cascade = "active" in vals and not self.env.context.get("int_filemanager_cascade")
+        in_cascade = self.env.su and self.env.context.get(CASCADE_KEY)
+        cascade = "active" in vals and not in_cascade
         if cascade and vals["active"]:
             self._check_restorable()
-        moving = not self.env.context.get("int_filemanager_cascade") and (
-            "parent_id" in vals or "company_id" in vals
-        )
+        moving = not in_cascade and ("parent_id" in vals or "company_id" in vals)
         if moving:
             vals = self._check_move(vals)
         # The name that the tracking keeps of a folder is the plain one, whatever the context.
@@ -342,7 +345,7 @@ class IntFilemanagerFolder(models.Model):
             tree = folders.search([("id", "child_of", folder.id)]) - folder
             tree = tree.filtered(lambda child: child.company_id != folder.company_id)
             # mail_notrack: the change is logged once, on the folder the user moved.
-            tree.with_context(int_filemanager_cascade=True, mail_notrack=True).write(
+            tree.with_context(**{CASCADE_KEY: True}, mail_notrack=True).write(
                 {"company_id": folder.company_id.id}
             )
 
@@ -486,10 +489,10 @@ class IntFilemanagerFolder(models.Model):
         # mail_notrack: the change is logged once, on the folder the user archived or restored;
         # not once more for each folder and document below it.
         below, documents = self._below(active)
-        below.with_context(int_filemanager_cascade=True, mail_notrack=True).write(
+        below.with_context(**{CASCADE_KEY: True}, mail_notrack=True).write(
             {"active": active}
         )
-        documents.with_context(int_filemanager_cascade=True, mail_notrack=True).write(
+        documents.with_context(**{CASCADE_KEY: True}, mail_notrack=True).write(
             {"active": active}
         )
 

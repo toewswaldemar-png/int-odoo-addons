@@ -8,6 +8,7 @@ from odoo.tools.mimetypes import get_extension
 
 from ..tools.clash import clash_summary, clashing_names
 from ..tools.zip_stream import ZipEntry, export_names
+from .int_filemanager_folder import CASCADE_KEY
 
 BLOB_FOLDER = "int_filemanager"
 # The most bytes of the files in one ZIP. The server stops a request after 30 minutes in our setup
@@ -165,7 +166,7 @@ class IntFilemanagerDocument(models.Model):
             vals = {key: value for key, value in vals.items() if key not in STORAGE_FIELDS}
         if "folder_id" in vals:
             self._check_move(vals["folder_id"])
-        if vals.get("active") and not self.env.context.get("int_filemanager_cascade"):
+        if vals.get("active") and not (self.env.su and self.env.context.get(CASCADE_KEY)):
             for document in self.filtered(lambda document: not document.active):
                 if not document.folder_id.active:
                     raise UserError(

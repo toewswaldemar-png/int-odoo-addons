@@ -1,10 +1,11 @@
 import io
+import os
 
 from odoo import Command, http
 from odoo.exceptions import AccessError
 from odoo.tests.common import HttpCase, TransactionCase, new_test_user, tagged
 
-from .test_folder_access import AccessCase
+from .test_folder_access import AccessCase, remove
 
 READER_GROUPS = "base.group_user,int_filemanager.int_filemanager_group_reader"
 
@@ -161,6 +162,31 @@ class TestRightsMatrix(AccessCase, TransactionCase):
             self.Document.with_user(self.alice).create(values)
         with self.assertRaises(AccessError):
             self.Document.with_user(self.boss).create(values)
+
+    def test_the_storage_refuses_a_user_who_may_not_write_into_the_folder_before_it_stores(self):
+        before = self.Document.search_count([])
+        upload_dir = self.Document._upload_dir()
+        stored = set(os.listdir(upload_dir)) if os.path.isdir(upload_dir) else set()
+        # a reader, a user who does not see the folder, and one without the group
+        for user, folder in ((self.reader, self.shared), (self.alice, self.inner), (self.outsider, self.shared)):
+            with self.subTest(user=user.login, folder=folder.name), self.assertRaises(AccessError):
+                self.Document.with_user(user)._create_from_stream(
+                    io.BytesIO(b"x"), "x.txt", folder.with_user(user)
+                )
+        self.assertEqual(self.Document.search_count([]), before)
+        self.assertEqual(set(os.listdir(upload_dir)) if os.path.isdir(upload_dir) else set(), stored)
+
+    def test_the_storage_takes_the_user_who_may_write_and_the_folder_handed_over_as_superuser(self):
+        mine = self.Document.with_user(self.alice)._create_from_stream(
+            io.BytesIO(b"mine"), "mine.txt", self.shared.with_user(self.alice)
+        )
+        # an upload at a record, a share and the import check another right and hand the folder over
+        handed = self.Document.with_user(self.alice)._create_from_stream(
+            io.BytesIO(b"handed"), "handed.txt", self.inner.sudo()
+        )
+        for document in (mine, handed):
+            self.addCleanup(remove, self.Document._blob_path(document.checksum))
+        self.assertEqual((mine.folder_id, handed.folder_id), (self.shared, self.inner))
 
     def test_a_user_who_does_not_see_the_folder_has_no_right_on_its_documents(self):
         hidden = self._document(self.inner, "hidden.txt")

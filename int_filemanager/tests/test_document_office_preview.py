@@ -2,6 +2,7 @@ import io
 import os
 import shutil
 import subprocess
+import time
 from unittest import skipUnless
 from unittest.mock import patch
 
@@ -105,6 +106,29 @@ class TestOfficePreview(OfficeCase, TransactionCase):
         self._office()
         self._cron()
         self.assertEqual(triggers.search_count([("cron_id", "in", crons.ids)]), before + 1)
+
+    def test_a_run_starts_no_further_file_when_its_time_is_short(self):
+        # The core's window (``cron_end_time``) is 10 s and says nothing of the limit that kills
+        # the worker: ``int.filemanager.cron._pass_deadline`` does, see its docstring.
+        documents = self._office("a.docx", text_files.docx(["one"])) + self._office("b.docx", text_files.docx(["two"]))
+        reported = []
+        cron_model = type(self.env["ir.cron"])
+        with (
+            # 3 s are left, one file may take 10: the first one is always started, the second is not
+            patch.object(
+                type(self.env["int.filemanager.cron"]), "_pass_deadline", lambda *_args: time.monotonic() + 3
+            ),
+            patch.object(
+                cron_model, "_commit_progress", lambda _self, *args, **kw: reported.append((args, kw)) or float("inf")
+            ),
+        ):
+            run = self._cron()
+        self.assertEqual(len(run.calls), 1)
+        self.assertEqual(len(documents.filtered("preview_state")), 1)
+        self.assertEqual(reported[-1], ((0,), {"remaining": 1}))
+        # the next run, with its own time, gets the other one
+        self._cron()
+        self.assertEqual(documents.mapped("preview_state"), ["done", "done"])
 
     def test_the_scheduled_action_makes_the_preview_from_a_link_that_has_the_ending(self):
         document = self._office("report.docx")

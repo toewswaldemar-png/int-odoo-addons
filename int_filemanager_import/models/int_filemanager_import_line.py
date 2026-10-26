@@ -249,8 +249,10 @@ class IntFilemanagerImportLine(models.Model):
         for _attempt in range(STABLE_TRIES):
             before = os.stat(real)
             with open(real, "rb") as stream:
+                # sudo: the import is the administrators' (the access rights of its models), the
+                # folder is not looked at again for each of its files.
                 document = Document._create_from_stream(
-                    stream, self.name, parent, origin_path=origin
+                    stream, self.name, parent.sudo(), origin_path=origin
                 )
             after = os.stat(real)
             if (before.st_size, before.st_mtime_ns) == (after.st_size, after.st_mtime_ns) and (

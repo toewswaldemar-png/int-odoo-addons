@@ -1,7 +1,8 @@
 import io
 import os
+from unittest.mock import patch
 
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import HttpCase, TransactionCase, new_test_user, tagged
 from odoo.tools import config
 
@@ -48,6 +49,24 @@ class TestDocumentStream(DownloadCase, TransactionCase):
         self.assertEqual(stream.download_name, "report.pdf")
         self.assertEqual(stream.size, len(b"%PDF-1.4 content"))
         self.assertEqual(stream.last_modified, document.write_date)
+
+    def test_the_rights_of_the_field_count_as_they_do_for_every_field_of_the_core(self):
+        document = self._document()
+        user = new_test_user(
+            self.env,
+            login="stream_user",
+            groups="base.group_user,int_filemanager.int_filemanager_group_user",
+        )
+        Binary = self.env["ir.binary"].with_user(user)
+        self.assertEqual(Binary._record_to_stream(document.with_user(user), "content").type, "path")
+        for name in ("content", "viewer_pdf_content"):
+            field = document._fields[name]
+            with (
+                self.subTest(field=name),
+                patch.object(field, "groups", "base.group_system"),
+                self.assertRaises(AccessError),
+            ):
+                Binary._record_to_stream(document.with_user(user), name)
 
     def test_the_path_lies_below_the_filestore_for_x_sendfile(self):
         document = self._document()

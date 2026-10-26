@@ -23,6 +23,15 @@ class IntFilemanagerCron(models.AbstractModel):
 
     A model that runs such an action (the previews of the office files here, the reading of the
     texts in ``int_filemanager_ocr``) inherits it, or asks the model for them.
+
+    Why this is not the core's budget: ``ir.cron`` calls a scheduled action again and again for
+    ``MIN_TIME_PER_JOB`` (10 s) and hands out ``cron_end_time`` (what ``_commit_progress``
+    returns), which is the end of that window, not the limit after which the server kills the
+    run (``limit_time_real_cron``, or ``limit_time_real``). A step here can take longer than the
+    window: LibreOffice has up to two minutes for one file. The step is started only if it can end
+    before the kill, which is what ``_pass_deadline`` works out. Tests: ``test_cron_budget.py`` (the
+    numbers) and ``test_document_office_preview.py`` (a run starts no further file when its time is
+    short). Look at it first when Odoo changes ``ir.cron``.
     """
 
     _name = "int.filemanager.cron"

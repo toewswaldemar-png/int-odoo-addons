@@ -102,8 +102,13 @@ class IntFilemanager(http.Controller):
         )
 
     def _upload_folder(self, folder_id, **kwargs):
-        """The folder that takes the file: the one of the form, if the user may write into it."""
-        return self._folder_to_write(folder_id)
+        """The folder that takes the file: the one of the form, as the user sees it.
+
+        Whether the user may write into it is asked by the storage (``_create_from_stream``)
+        of the folder as it is returned here. A module that takes the folder from somewhere else
+        and has checked another right (the record of an upload) returns it as superuser.
+        """
+        return self._find_folder(folder_id)
 
     def _upload_values(self, **kwargs):
         """The field values that the form of an upload adds to the document, none in the core."""
@@ -112,15 +117,14 @@ class IntFilemanager(http.Controller):
     def _after_upload(self, document, **kwargs):
         """What follows the storage of the file, nothing in the core."""
 
-    def _folder_to_write(self, folder_id):
-        """The folder, if the user may write into it (the storage runs as superuser)."""
+    def _find_folder(self, folder_id):
+        """The active folder with this id that the user sees, else 404 (the same for both)."""
         try:
             folder = request.env["int.filemanager.folder"].search([("id", "=", int(folder_id))])
         except (TypeError, ValueError):
             folder = None
         if not folder:
             raise _NotFound(request.env._("This folder does not exist."))
-        folder.check_access("write")
         return folder
 
     def _error(self, status, message):

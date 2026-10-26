@@ -33,7 +33,7 @@ Wer den Kern erweitert, überschreibt diese Stellen mit `super()`:
 | `document._compute_viewer_pdf_checksum` | Das PDF, das der Viewer statt der Datei zeigt (Vorschau; `ocr` ergänzt das erkannte PDF) | `ocr` |
 | `controllers.IntFilemanager._upload_values(**kwargs)` | Felder, die das Formular des Uploads zum Dokument hinzufügt | `image_editor` |
 | Dienst `int_filemanager.image_editor` (JS, optional) | Knopf „Bearbeiten“ im Viewer und im Formular | `image_editor` |
-| `controllers.IntFilemanager._upload_folder(folder_id, **kwargs)` und `_after_upload(document, **kwargs)` | Wohin die Datei des Uploads kommt (im Kern der Ordner, in den der Nutzer schreiben darf) und was danach folgt | `record` (Upload am Datensatz) |
+| `controllers.IntFilemanager._upload_folder(folder_id, **kwargs)` und `_after_upload(document, **kwargs)` | Wohin die Datei des Uploads kommt (im Kern der Ordner des Formulars, wie der Nutzer ihn sieht; das Schreibrecht prüft `_create_from_stream`, wer es anders geprüft hat, gibt den Ordner als Superuser zurück) und was danach folgt | `record` (Upload am Datensatz) |
 | `document._filtered_folder_access(operation)` | Die Dokumente, deren Ordner der Nutzer lesen darf, ohne andere Wege, ein Dokument zu sehen. Wer ein Dokument weitergibt (Verknüpfen, Freigabe), fragt dies, nicht `_filtered_access` | `share`, `record` |
 | `document._documents_referenced()` | Welche Dokumente etwas anderes noch braucht (im Kern keine); ein Gast der Freigabe nimmt sie nicht weg | `share` fragt, `record` antwortet |
 | `DocumentListController.uploadTarget` (JS) | Wohin die Dateien der Ablagefläche gehen, wenn nicht in den Ordner des Bereichs: Text und Formularfelder | `record` |
