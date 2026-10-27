@@ -244,6 +244,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_move__create_uid
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_uid
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Created by"
 msgstr ""
 
@@ -252,7 +253,13 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_move__create_date
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__create_date
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Created on"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Creation Month"
 msgstr ""
 
 #. module: int_filemanager
@@ -557,6 +564,11 @@ msgid "If checked, some messages have a delivery error."
 msgstr ""
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Images"
+msgstr ""
+
+#. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_is_follower
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__message_is_follower
 msgid "Is Follower"
@@ -655,6 +667,7 @@ msgstr ""
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Modified"
 msgstr ""
 
@@ -696,6 +709,11 @@ msgstr ""
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__my_activity_date_deadline
 msgid "My Activity Deadline"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "My Uploads"
 msgstr ""
 
 #. module: int_filemanager
@@ -787,6 +805,11 @@ msgid "Offer them for download only"
 msgstr ""
 
 #. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Office"
+msgstr ""
+
+#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
 msgid "Office files"
 msgstr ""
@@ -808,6 +831,11 @@ msgstr ""
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_users_settings__int_filemanager_open_mode_resolved
 msgid "Open documents with (resolved)"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "PDF"
 msgstr ""
 
 #. module: int_filemanager

@@ -152,6 +152,44 @@
                     string="Archived"
                     domain="[('active', '=', False)]"
                 />
+                <separator />
+                <filter
+                    name="filter_my_uploads"
+                    string="My Uploads"
+                    domain="[('create_uid', '=', uid)]"
+                />
+                <separator />
+                <!-- The kinds of file, side by side (a filter group is an OR). The office types are
+                     those that ``PREVIEW_EXTENSIONS`` lists; a test keeps both lists equal. -->
+                <filter
+                    name="filter_pdf"
+                    string="PDF"
+                    domain="[('mimetype', '=', 'application/pdf')]"
+                />
+                <filter
+                    name="filter_images"
+                    string="Images"
+                    domain="[('mimetype', '=like', 'image/%')]"
+                />
+                <filter
+                    name="filter_office"
+                    string="Office"
+                    domain="[('mimetype', 'in', [
+                        'application/msword',
+                        'application/rtf',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.oasis.opendocument.text',
+                        'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'application/vnd.oasis.opendocument.spreadsheet',
+                        'application/vnd.ms-powerpoint',
+                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                        'application/vnd.oasis.opendocument.presentation',
+                    ])]"
+                />
+                <separator />
+                <filter name="filter_create_date" string="Created on" date="create_date" />
+                <filter name="filter_write_date" string="Modified" date="write_date" />
                 <!-- Set by the activity menu (search_default_<name>), not offered in the filter menu. -->
                 <separator invisible="1" />
                 <filter
@@ -191,6 +229,16 @@
                         context="{'group_by': 'mimetype'}"
                     />
                     <filter name="group_by_tag" string="Tags" context="{'group_by': 'tag_ids'}" />
+                    <filter
+                        name="group_by_create_uid"
+                        string="Created by"
+                        context="{'group_by': 'create_uid'}"
+                    />
+                    <filter
+                        name="group_by_create_month"
+                        string="Creation Month"
+                        context="{'group_by': 'create_date:month'}"
+                    />
                 </group>
                 <!-- expand="1": all folders in one call; limit="0": the default 200 ends in an
                      error with more folders; no counters (they count all documents at every
