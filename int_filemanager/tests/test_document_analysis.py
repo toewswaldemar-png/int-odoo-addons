@@ -173,6 +173,28 @@ class TestDocumentAnalysis(TransactionCase):
         self._document("b.txt", b"same", self.open).action_archive()
         self.assertFalse(kept.is_duplicated)
 
+    def test_the_button_counts_the_other_documents_with_the_same_file(self):
+        first = self._document("a.txt", b"same", self.open)
+        second = self._document("b.txt", b"same", self.Folder.create({"name": "Other", "access_mode": "open"}))
+        third = self._document("c.txt", b"same", self.open)
+        single = self._document("d.txt", b"single", self.open)
+        self.assertEqual(first.duplicate_count, 2)
+        self.assertEqual(single.duplicate_count, 0)
+        action = first.action_open_duplicates()
+        self.assertEqual(self.Document.search(action["domain"]), second | third)
+        self.assertEqual(action["res_model"], "int.filemanager.document")
+        arch = self.Document.get_views([(False, "form")])["views"]["form"]["arch"]
+        self.assertIn('name="action_open_duplicates"', arch)
+
+    def test_the_button_counts_only_the_documents_the_user_may_read_and_not_the_trash(self):
+        shown = self._document("a.txt", b"same", self.open)
+        self._document("b.txt", b"same", self.hidden)
+        trashed = self._document("c.txt", b"same", self.open)
+        trashed.action_archive()
+        self.assertEqual(shown.duplicate_count, 1)  # the one in the hidden folder, not the trashed one
+        self.assertEqual(shown.with_user(self.user).duplicate_count, 0)
+        self.assertEqual(trashed.duplicate_count, 2)  # it is not among the active ones it counts
+
     def test_the_documents_with_the_same_file_make_one_group(self):
         self._document("a.txt", b"same", self.open)
         self._document("b.txt", b"same", self.Folder.create({"name": "Other", "access_mode": "open"}))

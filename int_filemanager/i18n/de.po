@@ -146,6 +146,11 @@ msgid "Allowed users"
 msgstr "Erlaubte Benutzer"
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__duplicate_count
+msgid "The other documents that you may read and that have the same file."
+msgstr "Die anderen Dokumente, die Sie lesen dürfen und die dieselbe Datei haben."
+
+#. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__is_duplicated
 msgid ""
 "Another document that you may read has the same file. The storage keeps "
@@ -391,9 +396,17 @@ msgid "Duplicate"
 msgstr "Dublette"
 
 #. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__duplicate_count
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Duplicates"
 msgstr "Dubletten"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_document.py:0
+msgid "Duplicates of %(name)s"
+msgstr "Dubletten von %(name)s"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__extension

@@ -141,6 +141,12 @@ class IntFilemanagerDocument(models.Model):
         help="Another document that you may read has the same file. The storage keeps one copy for "
         "both; the documents stay separate.",
     )
+    duplicate_count = fields.Integer(
+        string="Duplicates",
+        compute="_compute_duplicate_count",
+        exportable=False,
+        help="The other documents that you may read and that have the same file.",
+    )
 
     _name_per_folder = models.UniqueIndex(
         '(folder_id, lower(name COLLATE "und-x-icu")) WHERE active',
@@ -182,6 +188,18 @@ class IntFilemanagerDocument(models.Model):
             return NotImplemented
         groups = self._read_group([], ["checksum"], having=[("__count", ">", 1)])
         return [("checksum", "in", [checksum for [checksum] in groups])]
+
+    @api.depends_context("uid")
+    def _compute_duplicate_count(self):
+        # The documents the user reads, the active ones (as ``is_duplicated``); the document
+        # itself is among them unless it is in the trash.
+        counts = dict(
+            self._read_group(
+                [("checksum", "in", self.mapped("checksum"))], ["checksum"], ["__count"]
+            )
+        )
+        for document in self:
+            document.duplicate_count = max(counts.get(document.checksum, 0) - document.active, 0)
 
     @api.depends("active")
     def _compute_archived_date(self):
@@ -302,6 +320,18 @@ class IntFilemanagerDocument(models.Model):
             "url": f"/web/content/{self._name}/{self.id}/content?download=true",
             "target": "download",
         }
+
+    def action_open_duplicates(self):
+        """Show the other documents that have the same file."""
+        self.ensure_one()
+        action = self.env["ir.actions.act_window"]._for_xml_id(
+            "int_filemanager.int_filemanager_document_action"
+        )
+        action.update(
+            name=self.env._("Duplicates of %(name)s", name=self.name),
+            domain=[("checksum", "=", self.checksum), ("id", "!=", self.id)],
+        )
+        return action
 
     def _zip_url(self):
         """Return the address of the ZIP of these documents, after the checks that tell the user why not.
