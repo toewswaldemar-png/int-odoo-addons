@@ -89,6 +89,7 @@ class IntFilemanagerDocument(models.Model):
         "document_id",
         "tag_id",
         string="Tags",
+        tracking=True,
     )
     company_id = fields.Many2one(
         related="folder_id.company_id", store=True, index=True

@@ -85,6 +85,19 @@ class TestChatter(TransactionCase):
         document.folder_id = self.top
         self.assertEqual(self._changes(document), ["folder_id"])
 
+    def test_a_change_of_the_tags_is_shown_with_the_old_and_the_new_tags(self):
+        red, blue = self.env["int.filemanager.tag"].create([{"name": "Red"}, {"name": "Blue"}])
+        document = self._document()
+        document.tag_ids = red
+        self._flush_tracking()
+        document.tag_ids = red + blue
+        values = self._tracking_values(document).sorted("id")
+        self.assertEqual(values.field_id.mapped("name"), ["tag_ids", "tag_ids"])
+        self.assertEqual(
+            [(value.old_value_char, value.new_value_char) for value in values],
+            [("", "Red"), ("Red", "Blue, Red")],  # in the order of the tags (name)
+        )
+
     def test_archiving_a_document_is_shown(self):
         document = self._document()
         document.action_archive()
