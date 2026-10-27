@@ -23,6 +23,7 @@
                 />
                 <field name="size" widget="int_filemanager_size" optional="show" />
                 <field name="write_date" string="Modified" optional="show" />
+                <field name="archived_date" string="Archived on" optional="hide" />
                 <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show" />
                 <field
                     name="activity_ids"
@@ -275,6 +276,28 @@
         parent="menu_int_filemanager_root"
         action="int_filemanager_document_action"
         sequence="0"
+    />
+
+    <!-- The trash: the archived documents, same views. A domain on ``active`` shows them (the
+         search turns the filter of the archived off then); ``_gc_trash`` deletes them in time. -->
+    <record id="int_filemanager_document_trash_action" model="ir.actions.act_window">
+        <field name="name">Trash</field>
+        <field name="res_model">int.filemanager.document</field>
+        <field name="view_mode">list,kanban,pivot,graph,form</field>
+        <field name="domain">[('active', '=', False)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">The trash is empty</p>
+            <p>Archived documents are kept here. Unarchive a document to get it back; the settings say when the trash is emptied.</p>
+        </field>
+    </record>
+
+    <menuitem
+        id="int_filemanager_document_trash_menu"
+        name="Trash"
+        parent="menu_int_filemanager_root"
+        action="int_filemanager_document_trash_action"
+        groups="int_filemanager.int_filemanager_group_user"
+        sequence="10"
     />
 
 </odoo>

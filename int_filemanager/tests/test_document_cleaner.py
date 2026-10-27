@@ -1,8 +1,10 @@
 import io
 import os
 import time
+from datetime import timedelta
 from unittest.mock import patch
 
+from odoo import fields
 from odoo.sql_db import db_connect
 from odoo.tests.common import TransactionCase, tagged
 
@@ -195,3 +197,77 @@ class TestBlobCleaner(BlobCase):
         self.Document._gc_blob_uploads()
         self.assertTrue(os.path.exists(young))
         self.assertFalse(os.path.exists(old))
+
+
+@tagged("post_install", "-at_install")
+class TestTrash(BlobCase):
+    """An archived document is deleted when it has been in the trash for the time of the settings."""
+
+    def _trashed(self, name="a.txt", days=40, **kwargs):
+        """An archived document that has been archived ``days`` days ago."""
+        document = self._document(name, **kwargs)
+        document.action_archive()
+        document.write({"archived_date": fields.Datetime.now() - timedelta(days=days)})
+        return document
+
+    def test_archiving_starts_the_time_and_restoring_ends_it(self):
+        document = self._document()
+        self.assertFalse(document.archived_date)
+        document.action_archive()
+        self.assertTrue(document.archived_date)
+        document.action_unarchive()
+        self.assertFalse(document.archived_date)
+
+    def test_writing_to_an_archived_document_does_not_start_the_time_again(self):
+        document = self._trashed(days=40)
+        before = document.archived_date
+        document.sudo().write({"preview_state": "failed"})
+        self.assertEqual(document.archived_date, before)
+
+    def test_a_document_in_the_trash_longer_than_the_time_is_deleted(self):
+        old, young = self._trashed("old.txt", days=31), self._trashed("young.txt", days=29)
+        active = self._document("active.txt")
+        self.assertEqual(self.Document._gc_trash(), (1, 0))
+        self.assertFalse(old.exists())
+        self.assertTrue(young.exists())
+        self.assertTrue(active.exists())
+
+    def test_the_file_goes_with_the_document(self):
+        document = self._trashed()
+        checksum = document.checksum
+        self.Document._gc_trash()
+        self._gc()
+        self.assertFalse(os.path.exists(self._blob(checksum)))
+
+    def test_the_time_is_a_setting(self):
+        document = self._trashed(days=10)
+        self.Document._gc_trash()
+        self.assertTrue(document.exists())
+        self.env["ir.config_parameter"].set_param("int_filemanager.trash_days", "7")
+        self.Document._gc_trash()
+        self.assertFalse(document.exists())
+
+    def test_nothing_is_deleted_when_the_setting_says_never(self):
+        document = self._trashed(days=400)
+        self.env["ir.config_parameter"].set_param("int_filemanager.trash_enabled", "0")
+        self.assertEqual(self.Document._gc_trash(), (0, 0))
+        self.assertTrue(document.exists())
+
+    def test_the_documents_of_other_companies_are_deleted_too(self):
+        # The scheduled action has the companies of its user; the rules would hide the rest.
+        company = self.env["res.company"].create({"name": "Other company"})
+        folder = self.env["int.filemanager.folder"].create({"name": "Elsewhere", "company_id": company.id})
+        document = self.Document._create_from_stream(io.BytesIO(b"other"), "other.txt", folder)
+        self.addCleanup(self._forget, document.checksum)
+        document.action_archive()
+        document.write({"archived_date": fields.Datetime.now() - timedelta(days=40)})
+        bot = self.env.ref("base.user_root")
+        self.Document.with_user(bot).with_context(allowed_company_ids=[self.env.company.id])._gc_trash()
+        self.assertFalse(document.exists())
+
+    def test_it_works_in_batches_and_says_what_is_left(self):
+        documents = [self._trashed(f"{number}.txt", content=bytes([number])) for number in range(5)]
+        with patch(f"{MODULE}.GC_BATCH", 2):
+            results = [self.Document._gc_trash() for _ in range(3)]
+        self.assertEqual(results, [(2, 1), (2, 1), (1, 0)])
+        self.assertFalse(any(document.exists() for document in documents))

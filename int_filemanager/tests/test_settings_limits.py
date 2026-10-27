@@ -21,6 +21,8 @@ class TestSettingsLimits(TransactionCase):
         self.assertEqual(settings.int_filemanager_upload_max_gb, 20)
         self.assertEqual(settings.int_filemanager_upload_max_age_hours, 24)
         self.assertEqual(settings.int_filemanager_zip_max_gb, 10)
+        self.assertEqual(settings.int_filemanager_trash_enabled, "1")
+        self.assertEqual(settings.int_filemanager_trash_days, 30)
         self.assertEqual(self.Document._upload_max_size(), 20 * GIB)
         self.assertEqual(self.Document._zip_max_size(), 10 * GIB)
 
@@ -30,11 +32,15 @@ class TestSettingsLimits(TransactionCase):
                 "int_filemanager_upload_max_gb": 50,
                 "int_filemanager_upload_max_age_hours": 6,
                 "int_filemanager_zip_max_gb": 3,
+                "int_filemanager_trash_enabled": "0",
+                "int_filemanager_trash_days": 7,
             }
         ).execute()
         self.assertEqual(self.params.get_param("int_filemanager.upload_max_gb"), "50")
         self.assertEqual(self.params.get_param("int_filemanager.upload_max_age_hours"), "6")
         self.assertEqual(self.params.get_param("int_filemanager.zip_max_gb"), "3")
+        self.assertEqual(self.params.get_param("int_filemanager.trash_enabled"), "0")
+        self.assertEqual(self.params.get_param("int_filemanager.trash_days"), "7")
         self.assertEqual(self.Document._upload_max_size(), 50 * GIB)
         self.assertEqual(self.Document._zip_max_size(), 3 * GIB)
 

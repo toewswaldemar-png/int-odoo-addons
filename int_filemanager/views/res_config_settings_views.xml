@@ -46,6 +46,28 @@
                             </div>
                         </setting>
                     </block>
+                    <block title="Trash" name="int_filemanager_trash_block">
+                        <setting
+                            id="int_filemanager_trash_enabled"
+                            string="Archived documents"
+                            help="Archived documents are the trash: they can be restored until they are deleted. Deleting is final, the files go with the documents."
+                        >
+                            <field name="int_filemanager_trash_enabled" />
+                        </setting>
+                        <setting
+                            id="int_filemanager_trash_days"
+                            string="Time in the trash"
+                            help="The cleaning of the database deletes an archived document after this many days."
+                            invisible="int_filemanager_trash_enabled != '1'"
+                        >
+                            <div class="content-group">
+                                <div class="row mt8">
+                                    <label class="col-lg-4" for="int_filemanager_trash_days" />
+                                    <field name="int_filemanager_trash_days" />
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
                     <block title="Office files" name="int_filemanager_preview_block">
                         <setting
                             id="int_filemanager_preview_enabled"

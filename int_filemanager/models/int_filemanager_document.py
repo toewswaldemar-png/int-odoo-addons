@@ -83,6 +83,10 @@ class IntFilemanagerDocument(models.Model):
     size = fields.Float(readonly=True)
     mimetype = fields.Char(readonly=True)
     active = fields.Boolean(default=True, tracking=True)
+    # When the document went to the trash, for the cleaning of it (``_gc_trash``). Not
+    # ``write_date``: the scheduled actions write to archived documents too (previews, texts), which
+    # would start the time again and again.
+    archived_date = fields.Datetime(compute="_compute_archived_date", store=True, copy=False)
     tag_ids = fields.Many2many(
         "int.filemanager.tag",
         "int_filemanager_document_tag_rel",
@@ -149,6 +153,11 @@ class IntFilemanagerDocument(models.Model):
         # module that recognizes the text of scans (``int_filemanager_ocr``) adds the PDF it made.
         for document in self:
             document.viewer_pdf_checksum = document.preview_checksum
+
+    @api.depends("active")
+    def _compute_archived_date(self):
+        for document in self:
+            document.archived_date = False if document.active else fields.Datetime.now()
 
     @api.depends("name")
     def _compute_extension(self):

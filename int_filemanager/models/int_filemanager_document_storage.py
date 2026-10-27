@@ -1,4 +1,5 @@
-"""The storage of the files of the documents: the blobs in the filestore, their cleaner and the upload."""
+"""The storage of the files of the documents: the blobs in the filestore, their cleaner, the upload and
+the cleaning of the trash (the archived documents that nobody takes back)."""
 
 import hashlib
 import itertools
@@ -14,6 +15,7 @@ from odoo.tools import SQL
 
 from ..tools.files import remove_file
 from ..tools.filestore import check_contents, filestore, full_path
+from .int_filemanager_cron import TRASH_ENABLED_DEFAULT
 from .int_filemanager_document import BLOB_FOLDER, CHECKSUM_REGEX, PREVIEW_CRON_XMLID, PREVIEW_EXTENSIONS
 from .int_filemanager_named import NAME_MAX_LENGTH
 
@@ -212,6 +214,25 @@ class IntFilemanagerDocument(models.Model):
         for entry in os.scandir(upload_dir):
             if entry.is_file() and entry.stat().st_mtime < oldest_kept:
                 remove_file(entry.path)
+
+    @api.autovacuum
+    def _gc_trash(self):
+        """Delete the archived documents that stayed longer than the settings allow.
+
+        Their files follow by the cleaners of the blobs and of the texts. As superuser: the
+        scheduled action has the companies of its user only, and the rules would hide the
+        documents of the others. In batches: Odoo calls it again for as long as it says that
+        documents are left.
+        """
+        cron = self.env["int.filemanager.cron"]
+        if not cron._flag("trash_enabled", TRASH_ENABLED_DEFAULT):
+            return 0, 0
+        found = self.sudo().with_context(active_test=False).search(
+            [("active", "=", False), ("archived_date", "<=", f"-{cron._setting('trash_days')}d")],
+            limit=GC_BATCH + 1,
+        )
+        found[:GC_BATCH].unlink()
+        return len(found[:GC_BATCH]), int(len(found) > GC_BATCH)
 
     @api.model
     def _create_from_stream(self, stream, name, folder, mimetype=None, check=None, **values):

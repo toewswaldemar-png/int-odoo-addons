@@ -20,9 +20,12 @@ SETTINGS = {
     "upload_max_gb": (20, 1),  # the biggest upload request (the controller turns it into bytes)
     "upload_max_age_hours": (24, 1),  # age after which the leftover of an upload is deleted
     "zip_max_gb": (10, 1),  # the most bytes of the files in one ZIP
+    "trash_days": (30, 1),  # days an archived document stays before it is deleted
 }
 # Are the previews of office files made unless the parameter ``int_filemanager.preview_enabled`` says no?
 PREVIEW_ENABLED_DEFAULT = True
+# Are archived documents deleted unless the parameter ``int_filemanager.trash_enabled`` says no?
+TRASH_ENABLED_DEFAULT = True
 
 
 class IntFilemanagerCron(models.AbstractModel):

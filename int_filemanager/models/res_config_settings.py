@@ -4,7 +4,7 @@ import shutil
 from odoo import api, fields, models, tools
 
 from ..tools.programs import LIMIT_PROGRAMS, missing_programs, probe
-from .int_filemanager_cron import PREVIEW_ENABLED_DEFAULT, SETTINGS
+from .int_filemanager_cron import PREVIEW_ENABLED_DEFAULT, SETTINGS, TRASH_ENABLED_DEFAULT
 from .res_users_settings import OPEN_MODE_PARAMETER, OPEN_MODES
 
 
@@ -65,6 +65,22 @@ class ResConfigSettings(models.TransientModel):
         default=SETTINGS["zip_max_gb"][0],
         help="More files than this are refused: download them in parts. A slow line keeps a worker "
         "of the server busy for the whole download.",
+    )
+
+    # A selection, like the preview: Odoo does not save a False of a checkbox that is on by default.
+    int_filemanager_trash_enabled = fields.Selection(
+        [("1", "Delete them after some days"), ("0", "Keep them until someone deletes them")],
+        string="Archived documents",
+        config_parameter="int_filemanager.trash_enabled",
+        default="1" if TRASH_ENABLED_DEFAULT else "0",
+        help="Archived documents are the trash: everyone who may change them can restore them. "
+        "Deleting is final, the files go with the documents.",
+    )
+    int_filemanager_trash_days = fields.Integer(
+        string="Days in the trash",
+        config_parameter="int_filemanager.trash_days",
+        default=SETTINGS["trash_days"][0],
+        help="After this many days the cleaning of the database deletes an archived document.",
     )
 
     # Status of the previews of the office files (nothing is saved).
