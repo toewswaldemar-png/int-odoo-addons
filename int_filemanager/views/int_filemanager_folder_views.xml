@@ -41,6 +41,24 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
+                        <button
+                            name="action_open_documents"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-file-o"
+                            invisible="not id or not active"
+                        >
+                            <field name="document_count" widget="statinfo" string="Documents" />
+                        </button>
+                        <button
+                            name="action_open_children"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-folder-o"
+                            invisible="not id or not active"
+                        >
+                            <field name="child_count" widget="statinfo" string="Subfolders" />
+                        </button>
                     </div>
                     <widget
                         name="web_ribbon"

@@ -66,6 +66,11 @@ class IntFilemanagerFolder(models.Model):
     parent_path = fields.Char(index=True)
     child_ids = fields.One2many("int.filemanager.folder", "parent_id")
     document_ids = fields.One2many("int.filemanager.document", "folder_id")
+    # What the folder holds right in it (not below), as the list shows it: the panel of the folders
+    # does not add the subfolders either (``DocumentSearchModel``). Not stored: the numbers are those
+    # the user sees, and an upload would have to recompute them.
+    document_count = fields.Integer(string="Documents", compute="_compute_counts")
+    child_count = fields.Integer(string="Subfolders", compute="_compute_counts")
     active = fields.Boolean(default=True, tracking=True)
     company_id = fields.Many2one(
         "res.company", default=lambda self: self.env.company, index=True
@@ -126,6 +131,20 @@ class IntFilemanagerFolder(models.Model):
                 folder.complete_name = f"{folder.parent_id.complete_name}{PATH_SEPARATOR}{folder.name}"
             else:
                 folder.complete_name = folder.name
+
+    @api.depends("child_ids", "document_ids")
+    @api.depends_context("uid", "allowed_company_ids")
+    def _compute_counts(self):
+        # As the user: the record rules decide which documents and subfolders are counted, and the
+        # active ones only (an archived folder has nothing active in it; its buttons are hidden).
+        Document = self.env["int.filemanager.document"]
+        documents = {}
+        if Document.has_access("read"):
+            documents = dict(Document._read_group([("folder_id", "in", self.ids)], ["folder_id"], ["__count"]))
+        children = dict(self._read_group([("parent_id", "in", self.ids)], ["parent_id"], ["__count"]))
+        for folder in self:
+            folder.document_count = documents.get(folder, 0)
+            folder.child_count = children.get(folder, 0)
 
     @api.depends("access_mode", "parent_id.access_folder_id")
     def _compute_access_folder_id(self):
@@ -392,6 +411,31 @@ class IntFilemanagerFolder(models.Model):
                     made[key] = folders._find_or_make(made[key[:-1]], names[depth - 1])
             result[path] = made[tuple(name.lower() for name in names)].id
         return result
+
+    def action_open_documents(self):
+        """The documents right in this folder, in the list of the filemanager."""
+        self.ensure_one()
+        action = self.env["ir.actions.act_window"]._for_xml_id(
+            "int_filemanager.int_filemanager_document_action"
+        )
+        action.update(
+            name=self.env._("Documents of %(folder)s", folder=self.name),
+            domain=[("folder_id", "=", self.id)],
+        )
+        return action
+
+    def action_open_children(self):
+        """The subfolders of this folder (a new one starts in it)."""
+        self.ensure_one()
+        action = self.env["ir.actions.act_window"]._for_xml_id(
+            "int_filemanager.int_filemanager_folder_action"
+        )
+        action.update(
+            name=self.env._("Subfolders of %(folder)s", folder=self.name),
+            domain=[("parent_id", "=", self.id)],
+            context={"default_parent_id": self.id},
+        )
+        return action
 
     def action_download(self):
         """Let the browser download the folder, with what is below it, as one ZIP.

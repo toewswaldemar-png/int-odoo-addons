@@ -297,7 +297,9 @@ msgstr "Dokumentbild"
 #. module: int_filemanager
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_document_action
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_move__document_ids
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__document_count
 #: model:ir.ui.menu,name:int_filemanager.int_filemanager_document_menu
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_graph
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_pivot
 msgid "Documents"
@@ -1244,3 +1246,22 @@ msgstr "Filemanager: ein Datensatz mit einem Namen, der an seinem Ort eindeutig 
 #: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "Stopped: %(programs)s is missing on the server (GNU coreutils)."
 msgstr "Angehalten: %(programs)s fehlt auf dem Server (GNU coreutils)."
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "Documents of %(folder)s"
+msgstr "Dokumente von %(folder)s"
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "Subfolders of %(folder)s"
+msgstr "Unterordner von %(folder)s"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__child_count
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
+msgid "Subfolders"
+msgstr "Unterordner"
+
