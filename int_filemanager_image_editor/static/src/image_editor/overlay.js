@@ -33,7 +33,7 @@ export function drawOverlay(ctx, view, { region, zoom, grid, guides, shade, poly
     ctx.restore();
 }
 
-// A hairline around the part that is shown, so that a picture that has the colour of the ground
+// A hairline around the part that is shown, so that a picture that has the colour of the background
 // still has an edge.
 function drawFrame(ctx, { left, top, width, height }, zoom) {
     ctx.lineWidth = 1 / zoom;

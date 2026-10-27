@@ -62,12 +62,13 @@ class Encrypted(Exception):
 
 
 def clean(text):
-    """What a database text column takes: no NUL, no lone surrogates."""
+    """Return what a database text column takes: no NUL, no lone surrogates."""
     return text.replace("\x00", "").encode("utf-8", "ignore").decode("utf-8")
 
 
 def cut(text, size):
-    """Cut ``text`` to at most ``size`` bytes of UTF-8, at a character: ``(text, was_cut)``."""
+    """Cut ``text`` to at most ``size`` bytes of UTF-8, at a character, and return ``(text, was_cut)``.
+    """
     data = text.encode("utf-8")
     if len(data) <= size:
         return text, False
@@ -77,8 +78,8 @@ def cut(text, size):
 def blocks(pieces, size):
     """Join the pieces of text (paragraphs, lines) to blocks of at most ``size`` bytes of UTF-8.
 
-    A block ends where a piece ends if the next one does not fit; a piece above the size is cut
-    up at a character.
+    A block ends where a piece ends if the next one does not fit; a piece above the size is
+    cut up at a character.
     """
     size = max(size, 16)
     parts, used = [], 0
@@ -107,7 +108,8 @@ def blocks(pieces, size):
 
 
 def elements(stream, tags):
-    """The elements ``tags`` of an XML file, each when it ends; no entities, no network."""
+    """Iterate over the elements ``tags`` of an XML file, each when it ends; no entities, no network.
+    """
     return etree.iterparse(
         stream, events=("end",), tag=tags, resolve_entities=False, no_network=True
     )
@@ -129,7 +131,8 @@ def open_part(archive, name):
 
 
 def paragraphs(stream, paragraph_tag, text_tag, space_tags):
-    """The text of each paragraph: its ``text_tag`` elements, a blank for the ``space_tags``."""
+    """Yield the text of each paragraph: its ``text_tag`` elements, a blank for the ``space_tags``.
+    """
     for _event, paragraph in elements(stream, paragraph_tag):
         parts = []
         for node in paragraph.iter(text_tag, *space_tags):
@@ -234,7 +237,7 @@ def iter_zip(path, reader):
 
 
 def text_encoding(path):
-    """``utf-8-sig`` if the whole file is UTF-8, else ``latin-1`` (it takes every byte)."""
+    """Return ``utf-8-sig`` if the whole file is UTF-8, else ``latin-1`` (it takes every byte)."""
     decoder = codecs.getincrementaldecoder("utf-8-sig")(errors="strict")
     try:
         with open(path, "rb") as stream:
@@ -253,7 +256,7 @@ def iter_plain(path):
 
 
 def has_picture(page, resolve1):
-    """Whether the resources of a page name a picture or a form (``XObject``)."""
+    """Return whether the resources of a page name a picture or a form (``XObject``)."""
     try:
         return bool(resolve1(resolve1(page.resources).get("XObject")))
     except Exception:  # noqa: BLE001 (a broken page: it is no scan we know of)
@@ -263,7 +266,7 @@ def has_picture(page, resolve1):
 def iter_pdf(path, first_page, report_pages, pages=None):
     """Yield ``(page number, text, has a picture)`` from ``first_page`` to the end.
 
-    ``pages`` (a set of numbers) limits it to these pages. ``report_pages(n)`` gets the count
+    ``pages`` (a set of numbers) limits it to these pages. ``report_pages(n)`` gets the number
     of pages of the file.
     """
     from pdfminer.converter import TextConverter  # noqa: PLC0415

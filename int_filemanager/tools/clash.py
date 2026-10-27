@@ -9,14 +9,14 @@ from collections import Counter
 
 from odoo.tools import SQL
 
-# Names shown in the message, the rest is counted.
+# The most names a message lists; the rest is counted.
 CLASH_NAMES_SHOWN = 5
-# Names tried for one new folder or file ("a", "a (2)", ...) before giving up.
+# How many names are tried for one new folder or file ("a", "a (2)", ...) before giving up.
 NAME_TRIES = 1000
 
 
 def clashing_names(env, table, column, target_id, names, moving_ids):
-    """The ``names`` that are taken in the folder ``target_id`` (False: the top level).
+    """Return the ``names`` that are taken in the folder ``target_id`` (False: the top level).
 
     Two cases: a name that an active record of the target has already (the records that are
     moving are not counted, they leave their place), and a name that two of the moving records
@@ -48,7 +48,7 @@ def clashing_names(env, table, column, target_id, names, moving_ids):
 
 
 def clash_summary(names):
-    """The names for a message: the first few, then how many more there are."""
+    """Return the names for a message: the first few, then how many more there are."""
     shown = ", ".join(names[:CLASH_NAMES_SHOWN])
     more = len(names) - CLASH_NAMES_SHOWN
     return f"{shown} (+{more})" if more > 0 else shown

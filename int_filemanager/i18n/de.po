@@ -146,6 +146,15 @@ msgid "Allowed users"
 msgstr "Erlaubte Benutzer"
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__is_duplicated
+msgid ""
+"Another document that you may read has the same file. The storage keeps "
+"one copy for both; the documents stay separate."
+msgstr ""
+"Ein anderes Dokument, das Sie lesen dürfen, hat dieselbe Datei. Der "
+"Speicher hält eine Kopie für beide; die Dokumente bleiben getrennt."
+
+#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
@@ -222,6 +231,7 @@ msgstr "Konfiguration"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__content
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Content"
 msgstr "Inhalt"
 
@@ -359,6 +369,16 @@ msgstr "Dateien in %(folder)s ablegen"
 #: code:addons/int_filemanager/static/src/int_filemanager/file_viewer/document_file_viewer.xml:0
 msgid "Edit"
 msgstr "Bearbeiten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__is_duplicated
+msgid "Duplicate"
+msgstr "Dublette"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Duplicates"
+msgstr "Dubletten"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__extension
@@ -1011,6 +1031,15 @@ msgstr "Tags"
 #: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_tag_action
 msgid "No tags yet. Let's create one!"
 msgstr "Noch keine Tags. Legen Sie eines an!"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__extension
+msgid ""
+"The extension of the file name in lower case, for example mp3 for "
+"song.MP3."
+msgstr ""
+"Die Dateiendung des Namens in Kleinbuchstaben, zum Beispiel mp3 für "
+"song.MP3."
 
 #. module: int_filemanager
 #: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_tag_action

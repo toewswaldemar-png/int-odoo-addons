@@ -1,4 +1,4 @@
-"""Counts events per key in a window of time, in memory, for the brakes of the share links.
+"""Counts events per key in a window of time, in memory, as the rate limits of the share links.
 
 Built like the login cooldown of the core (``res.users._assert_can_auth``): the counters lie in
 the memory of the process, so they hold for one worker and are lost at a restart. They protect
@@ -11,14 +11,15 @@ import collections
 import threading
 import time
 
-# The most keys kept (the longest unused go first) and the most events kept per key. A limit is
-# always lower than the events kept per key, or it could never be reached.
+# The most keys kept (the longest unused go first) and the most events kept per key. A limit must
+# stay below the events kept per key, or it could never be reached.
 MAX_KEYS = 10_000
 MAX_EVENTS = 1_000
 
 
 class RequestBrake:
-    """Events per key within a window of seconds. The window slides: only the last events count."""
+    """Count events per key within a window of seconds. The window slides: only the last events count.
+    """
 
     def __init__(self, max_keys=MAX_KEYS, max_events=MAX_EVENTS, clock=time.monotonic):
         self._max_keys = max_keys
@@ -28,7 +29,8 @@ class RequestBrake:
         self._lock = threading.Lock()
 
     def hit(self, key, window):
-        """Count one event of the key; the number of events of the key within ``window`` seconds."""
+        """Count one event of the key and return the number of events of the key within ``window`` seconds.
+        """
         now = self._clock()
         with self._lock:
             events = self._events.pop(key, None)
@@ -42,7 +44,7 @@ class RequestBrake:
             return len(events)
 
     def count(self, key, window):
-        """The events of the key within ``window`` seconds, without counting one."""
+        """Return the events of the key within ``window`` seconds, without counting one."""
         now = self._clock()
         with self._lock:
             events = self._events.get(key)
@@ -52,7 +54,6 @@ class RequestBrake:
             return len(events)
 
     def clear(self, key):
-        """Forget the events of the key."""
         with self._lock:
             self._events.pop(key, None)
 

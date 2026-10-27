@@ -141,11 +141,13 @@
     </record>
 
     <!-- Configuration, like Odoo's product categories: the folder tree is the search panel of the
-         documents. -->
+         documents. The group is on the menu, as the core modules do it: the readers have nothing to
+         configure, they only read the folders. -->
     <menuitem
         id="menu_int_filemanager_configuration"
         name="Configuration"
         parent="menu_int_filemanager_root"
+        groups="int_filemanager.int_filemanager_group_user"
         sequence="99"
     />
     <menuitem

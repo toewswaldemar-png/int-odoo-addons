@@ -13,19 +13,19 @@ _logger = logging.getLogger(__name__)
 
 IMPORT_ROOT_PARAMETER = "int_filemanager.import_root"
 CRON_XMLID = "int_filemanager_import.int_filemanager_import_cron"
-# Why ``_run_order`` stopped working on an order.
+# Outcomes of ``_run_order`` for one order.
 ENDED, BUSY, TIME_UP = "ended", "busy", "time_up"
 
 
 class Source(NamedTuple):
-    """Where a reading in starts: the root of the settings and the folder below it."""
+    """The root folder of the settings and the folder below it that an import starts from."""
 
     root: str
     relative: str
 
 
 class IntFilemanagerImport(models.Model):
-    """An order to read a folder of the disk into a folder of the filemanager.
+    """An order to import a folder of the disk into a folder of the filemanager.
 
     Two steps, both done by the scheduled action in small batches that survive a restart:
     *checking* lists the folder (one line per folder, file and oddity, so the report shows what
@@ -73,8 +73,8 @@ class IntFilemanagerImport(models.Model):
     )
     message = fields.Char(string="Last problem", readonly=True, copy=False)
     line_ids = fields.One2many("int.filemanager.import.line", "import_id")
-    # The figures below are read from the lines when the state changes (and every time the
-    # form is loaded); a line is not watched, that would cost a recompute for each file.
+    # Computed from the lines when the state changes (and on every form load). The lines are not
+    # in the dependencies: that would recompute the figures for each file.
     line_count = fields.Integer(compute="_compute_counts")
     folder_count = fields.Integer(compute="_compute_counts")
     file_count = fields.Integer(compute="_compute_counts")
@@ -89,6 +89,7 @@ class IntFilemanagerImport(models.Model):
 
     @api.depends_context("uid")
     def _compute_root_path(self):
+        # sudo: ir.config_parameter: every user of the form may see the root folder
         root = self.env["ir.config_parameter"].sudo().get_param(IMPORT_ROOT_PARAMETER)
         for record in self:
             record.root_path = root or False
@@ -110,6 +111,7 @@ class IntFilemanagerImport(models.Model):
         ]
         counts = {record.id: dict.fromkeys(names, 0) for record in self}
         # The first line (no path) is the folder itself; it is not counted.
+        # sudo: int.filemanager.import.line: only the figures are read
         Line = self.env["int.filemanager.import.line"].sudo()
         for import_, kind, state, count, size in Line._read_group(
             [("import_id", "in", self.ids), ("path", "!=", "")],
@@ -141,34 +143,33 @@ class IntFilemanagerImport(models.Model):
         if self.filtered(lambda record: record.state in ("scanning", "running")):
             raise UserError(self.env._("Stop the reading in first."))
 
-    # ---- Buttons -----------------------------------------------------------------------
+    # === BUTTONS === #
 
     def action_scan(self):
-        """List the folder: one line for every folder and file (nothing is copied yet)."""
+        """List the folder: one line per folder and file. Nothing is copied yet."""
         for record in self:
             if record.state not in ("draft", "scanned"):
                 raise UserError(self.env._("The folder is being checked or read in already."))
-            record._source()  # a wrong folder is told now, not by the scheduled action
+            record._source()  # raise a wrong folder now, not in the scheduled action
         for record in self:
             record._restart_scan()
             record.message = False
         self._trigger_cron()
 
     def action_start(self):
-        """Copy what the check found."""
         if self.filtered(lambda record: record.state != "scanned"):
             raise UserError(self.env._("Check the folder first."))
         self.write({"state": "running", "message": False})
         self._trigger_cron()
 
     def action_stop(self):
-        """Stop where it is; "Read in" continues, "Check" starts again."""
+        """Stop where it is: "Read in" continues, "Check" starts again."""
         stopped = self.filtered(lambda record: record.state in ("scanning", "running"))
         stopped.filtered(lambda record: record.state == "scanning").write({"state": "draft"})
         stopped.filtered(lambda record: record.state == "running").write({"state": "scanned"})
 
     def action_retry_errors(self):
-        """Read in again the files that failed."""
+        # sudo: int.filemanager.import.line: the lines are written by the code, not by users
         self.env["int.filemanager.import.line"].sudo().search(
             [("import_id", "in", self.ids), ("state", "=", "error")]
         ).write({"state": "pending", "message": False})
@@ -186,11 +187,11 @@ class IntFilemanagerImport(models.Model):
         }
 
     def _trigger_cron(self):
-        # The scheduled action belongs to the superuser, the administrator only wakes it.
+        # sudo: ir.cron: the scheduled action belongs to the superuser, the administrator only
+        # triggers it
         self.env.ref(CRON_XMLID).sudo()._trigger()
 
     def _restart_scan(self):
-        """Throw away the lines and begin with the folder itself."""
         self.ensure_one()
         # SQL, not ``unlink``: an order has a line for every folder and file of the disk (many
         # thousands), which ``unlink`` would load and check one by one. Hence the flush before
@@ -200,7 +201,8 @@ class IntFilemanagerImport(models.Model):
             SQL("DELETE FROM int_filemanager_import_line WHERE import_id = %s", self.id)
         )
         self.env["int.filemanager.import.line"].invalidate_model()
-        # The first line stands for the folder itself: the folders and files in it hang below it.
+        # The first line stands for the folder itself; the other lines hang below it.
+        # sudo: int.filemanager.import.line: the lines are written by the code, not by users
         self.env["int.filemanager.import.line"].sudo().create(
             {
                 "import_id": self.id,
@@ -213,15 +215,17 @@ class IntFilemanagerImport(models.Model):
         )
         self.state = "scanning"
 
-    # ---- The disk ----------------------------------------------------------------------
+    # === THE DISK === #
 
     def _source(self):
-        """The root and the folder to read in, checked: both exist and the folder lies in the root.
+        """Return the root and the folder to import, after checking that both exist and that the
+        folder lies in the root.
 
         The settings are written by the system administrators only. A link inside the folder
         that leads out of the root is found by comparing real paths.
         """
         self.ensure_one()
+        # sudo: ir.config_parameter: the root folder is set by the system administrators only
         value = self.env["ir.config_parameter"].sudo().get_param(IMPORT_ROOT_PARAMETER)
         if not value or not os.path.isabs(value):
             raise UserError(
@@ -243,15 +247,15 @@ class IntFilemanagerImport(models.Model):
         relative = os.path.relpath(real, root).replace(os.sep, "/")
         return Source(root, "" if relative == "." else relative)
 
-    # ---- The scheduled action ----------------------------------------------------------
+    # === SCHEDULED ACTION === #
 
     @api.model
     def _cron_run(self):
-        """Check and read in the orders that were started, as long as the time of this run allows.
+        """Check and read in the started orders, as long as the time of this run allows.
 
         One step is one folder listed or one file copied, and each step is committed
         (``_commit_progress``): after a restart the work goes on where it stopped. When the time
-        is up it returns with work left, Odoo calls it again at once.
+        is up it returns with work left and Odoo calls it again at once.
         """
         assert self.env.context.get("cron_id") == self.env.ref(CRON_XMLID).id, (
             "Meant for cron usage only"
@@ -280,7 +284,7 @@ class IntFilemanagerImport(models.Model):
                 return BUSY
             scanning = self.state == "scanning"
             if not scanning and self.state != "running":
-                return ENDED  # stopped meanwhile
+                return ENDED  # stopped in the meantime
             try:
                 source = self._source()
             except UserError as error:
@@ -299,7 +303,6 @@ class IntFilemanagerImport(models.Model):
                 return TIME_UP
 
     def _scan_step(self, source):
-        """List one more folder; return how many were listed (0: all are)."""
         self.ensure_one()
         line = self.env["int.filemanager.import.line"].search(
             [("import_id", "=", self.id), ("kind", "=", "folder"), ("listed", "=", False)],
@@ -312,7 +315,6 @@ class IntFilemanagerImport(models.Model):
         return 1
 
     def _copy_step(self, source):
-        """Read in one more line; return how many were done (0: none is left)."""
         self.ensure_one()
         line = self.env["int.filemanager.import.line"].search(
             [("import_id", "=", self.id), ("state", "=", "pending")], order="id", limit=1

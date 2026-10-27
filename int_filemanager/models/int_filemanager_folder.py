@@ -11,13 +11,13 @@ from ..tools.clash import CLASH_NAMES_SHOWN
 from ..tools.zip_stream import export_name, export_names, folder_entry
 from .int_filemanager_named import NAME_MAX_LENGTH
 
-# The context key that makes the name of a folder its path ("Club / 2026 / Invoices"), as the core
-# does for ``product.category`` and ``hr.department``: on unless the context says ``False``. The
-# search panel of the core asks for the plain name; the chatter keeps it too (see ``write``).
+# The context key that makes the name of a folder its path ("Club / 2026 / Invoices"), as
+# ``product.category`` and ``hr.department`` do: on unless the context says ``False``. The search
+# panel of Odoo asks for the plain name; the chatter keeps it too (see ``write``).
 PATH_KEY = "hierarchical_naming"
 # The context key of the cascades (archive, restore, company down a tree): what they write below the
-# folder the user acted on was checked at that folder. Only a superuser is believed: the context is
-# sent by the client, and a key in it must not take a check away from a user.
+# folder the user acted on was checked at that folder. Only a superuser is trusted with it: the
+# context is sent by the client, and a key in it must not take a check away from a user.
 CASCADE_KEY = "int_filemanager_cascade"
 # The separator of the path, and what stands for the folders above that the user may not read.
 PATH_SEPARATOR = " / "
@@ -36,9 +36,9 @@ class IntFilemanagerFolder(models.Model):
     Who sees a folder (and its documents) is decided by record rules: a folder is open to all
     filemanager users, or only to the users and groups listed on it (the creator of a top
     folder is listed). Followers (``mail.thread``) only get its notices; whoever may invite
-    people to a folder is the administrator, who edits the lists.
-    A subfolder takes over what its parent says, unless it says otherwise itself.
-    Filemanager administrators see everything.
+    people to a folder is the administrator, who edits the lists. A subfolder inherits what
+    its parent says, unless it says otherwise itself. Filemanager administrators see
+    everything.
     """
 
     _name = "int.filemanager.folder"
@@ -51,9 +51,9 @@ class IntFilemanagerFolder(models.Model):
     _order = "complete_name, id"
 
     name = fields.Char(tracking=True)
-    # Only there to sort: it names every folder above, also the ones the user may not read. So only
-    # the administrators read, search or group by it; ordering by it is open to all
-    # (``_order_field_to_sql``), as it gives no name away. The path that is shown is ``display_name``.
+    # Only there to sort: it names every folder above, also the ones the user may not read, so only
+    # the administrators can read, search or group by it. Ordering by it is open to all
+    # (``_order_field_to_sql``) as it gives no name away. The path that is shown is ``display_name``.
     complete_name = fields.Char(
         compute="_compute_complete_name",
         recursive=True,
@@ -118,7 +118,7 @@ class IntFilemanagerFolder(models.Model):
 
     # Names are unique per folder regardless of case, like on Windows. COALESCE: otherwise two top
     # folders (parent_id IS NULL) would never collide, and NULLS NOT DISTINCT needs PostgreSQL 15,
-    # where Odoo 19 runs on 13 (``MIN_PG_VERSION``).
+    # while Odoo 19 supports 13 (``MIN_PG_VERSION``).
     _name_per_parent = models.UniqueIndex(
         '(COALESCE(parent_id, 0), lower(name COLLATE "und-x-icu")) WHERE active',
         "A folder with this name already exists here.",
@@ -156,8 +156,8 @@ class IntFilemanagerFolder(models.Model):
     def _create_numbered(self, name, parent, **values):
         """Create the folder under ``name`` below ``parent``, or under the first free ``name (2)``.
 
-        No message in the chatter for it, like the folders of ``action_make_paths``: an import
-        makes a lot of them.
+        No chatter message for it, like the folders of ``action_make_paths``: an import creates a
+        lot of them.
         """
         folders = self.with_context(mail_create_nolog=True)
         return self._create_numbered_name(
@@ -169,7 +169,7 @@ class IntFilemanagerFolder(models.Model):
 
     @api.model
     def _path_names(self, path):
-        """The names of the folders of a path of the browser, cleaned; refuses a path that is none.
+        """Return the names of the folders of a path of the browser, cleaned; refuse a path that is none.
 
         A path leads down from a folder: no slash at the start, no ``.`` or ``..``, no empty part.
         The names are cleaned like every name (``_normalize_name``).
@@ -186,12 +186,12 @@ class IntFilemanagerFolder(models.Model):
         return names
 
     def _find_or_make(self, parent, name):
-        """The folder ``name`` of ``parent`` that the user sees, made if there is none.
+        """Return the folder ``name`` of ``parent`` that the user sees, created if there is none.
 
-        Two uploads that make the same folder at once: the second one runs into the unique index
-        when the first has committed. Odoo's transactions see the data as of their start, so a
-        new search here would not find the folder. ``ConcurrencyError`` makes Odoo roll back, take
-        a new view of the data and call ``action_make_paths`` again (``service.model.retrying``).
+        Two uploads that create the same folder at once: the second one runs into the unique index
+        when the first has committed. The transactions of Odoo see the data as of their start, so
+        a new search here would not find the folder. ``ConcurrencyError`` makes Odoo roll back,
+        take a new view of the data and call ``action_make_paths`` again (``service.model.retrying``).
         """
         domain = [("parent_id", "=", parent.id), ("name", "=ilike", escape_psql(name))]
         found = self.search(domain, limit=1)
@@ -203,8 +203,9 @@ class IntFilemanagerFolder(models.Model):
         except IntegrityError as error:
             if error.diag.constraint_name != self._name_per_parent.full_name(self):
                 raise
+        # sudo: the user cannot see the other folder; only its existence is checked
         if self.sudo().search_count(domain):
-            # A folder of that name is there that the user does not see: no word of what it is.
+            # A folder of that name exists that the user cannot see: say nothing about it.
             raise UserError(self.env._("The name %(name)s is not available here.", name=name))
         raise ConcurrencyError(f"The folder {name} was made by another transaction")
 
@@ -220,14 +221,14 @@ class IntFilemanagerFolder(models.Model):
     @api.depends("name", "parent_path")
     @api.depends_context(PATH_KEY, "uid", "allowed_company_ids")
     def _compute_display_name(self):
-        """The path, or with ``hierarchical_naming`` off the name, as far as the user may read it.
+        """Compute the path, or with ``hierarchical_naming`` off the name, as far as the user may read it.
 
         Which folders above are named is the user's to see (the record rules): the path stops at
-        the first one the user may not read and starts with "…", so a name is never given away.
-        A folder can be seen though its parent is not (the rules look at ``access_folder_id``).
-        The core reads the name of a Many2one as superuser, so the rules are asked as the user and
-        not as the environment of the call. (The name of the direct parent that a visible folder
-        points to is shown with that Many2one, as the core does for every record.)
+        the first one the user may not read and starts with "…", so a name is never given away. A
+        folder can be seen though its parent is not (the rules look at ``access_folder_id``).
+        Odoo reads the name of a Many2one as superuser, so the rules are asked as the user and not
+        as the environment of the call. (The name of the direct parent that a visible folder points
+        to is shown with that Many2one, as for every record.)
         """
         if not self.env.context.get(PATH_KEY, True):
             return super()._compute_display_name()
@@ -242,7 +243,7 @@ class IntFilemanagerFolder(models.Model):
                 folder.id: folder.name for folder in viewer.search_fetch([("id", "in", list(above))], ["name"])
             }
         except AccessError:
-            # No right to folders at all (a document that is seen through a record): none above is named.
+            # No right on folders at all (a document seen through a record): none above is named.
             readable = {}
         for folder, chain in chains.items():
             parts = [folder.name]
@@ -255,17 +256,18 @@ class IntFilemanagerFolder(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """A subfolder has the company of its parent, and the parent has to be in use.
+        """Give a subfolder the company of its parent, and require the parent to be in use.
 
-        A folder that decides for itself (a top folder) lists whoever made it: the lists are the
-        administrators' to edit, so without this the creator would not see the folder again. A
-        subfolder is seen as its parent is.
+        A folder that decides for itself (a top folder) lists whoever created it: only
+        administrators edit the lists, so without this the creator would not see the folder again.
+        A subfolder is seen as its parent is.
         """
         vals_list = [dict(vals) for vals in vals_list]
         for vals in vals_list:
             # The default of the parent (the list puts the folder of its panel there) counts too.
             parent_id = vals.get("parent_id") if "parent_id" in vals else self.env.context.get("default_parent_id")
             if parent_id:
+                # sudo: the parent is checked and read whether or not the user sees it
                 parent = self.browse(parent_id).sudo()
                 parent._check_active_target()
                 vals["company_id"] = parent.company_id.id
@@ -274,22 +276,19 @@ class IntFilemanagerFolder(models.Model):
         return folders
 
     def _list_current_user(self):
-        """List the user on the folders that decide for themselves and are not open to all.
-
-        As superuser: the user may not read the folder yet (it was just made, or put at the top),
-        and that is what is being fixed. Not done for the superuser, who sees everything.
-        """
         if self.env.su:
             return
+        # sudo: the user may not read the folder yet (it was just created, or put at the top), which
+        # is what is being fixed
         own = self.sudo().filtered(
             lambda folder: folder.access_folder_id == folder and folder.access_mode != "open"
         )
         own.with_context(tracking_disable=True).write({"access_user_ids": [Command.link(self.env.uid)]})
 
     def write(self, vals):
-        # Archiving or restoring a folder does it on everything below, like a project does it on
-        # its tasks (project.project.write). The core's docstring of action_archive says to
-        # override write for that.
+        # Archiving or restoring a folder does it on everything below, like a project does it on its
+        # tasks (``project.project.write``). The docstring of ``action_archive`` in Odoo says to
+        # override ``write`` for that.
         in_cascade = self.env.su and self.env.context.get(CASCADE_KEY)
         cascade = "active" in vals and not in_cascade
         if cascade and vals["active"]:
@@ -297,11 +296,12 @@ class IntFilemanagerFolder(models.Model):
         moving = not in_cascade and ("parent_id" in vals or "company_id" in vals)
         if moving:
             vals = self._check_move(vals)
-        # A subfolder put at the top no longer takes over its parent: it decides for itself, and
-        # the lists are the administrators' to edit, so the one who moved it would not see it again.
+        # A subfolder moved to the top no longer inherits from its parent: it decides for itself. Only
+        # administrators edit the lists, so without this the user who moved it would not see it any more.
         lifted = self.browse()
         if moving and "parent_id" in vals and not vals["parent_id"]:
-            # sudo: ``access_mode`` is the administrators' to read; the records keep the user's env
+            # sudo: int.filemanager.folder: ``access_mode`` is readable by administrators only; the
+            # records keep the env of the user
             lifted = self.browse(
                 self.sudo().filtered(lambda folder: folder.parent_id and folder.access_mode == "inherit").ids
             )
@@ -316,7 +316,6 @@ class IntFilemanagerFolder(models.Model):
         return result
 
     def _check_active_target(self):
-        """Refuse a folder that is archived as the place for something."""
         for folder in self:
             if not folder.active:
                 raise UserError(
@@ -326,14 +325,14 @@ class IntFilemanagerFolder(models.Model):
                 )
 
     def _check_move(self, vals):
-        """Check where the folders go, and give back the values with the company of the target.
+        """Check where the folders go and return the values with the company of the target.
 
-        Two layers. The rights of the user (not asked of the superuser, whose acts the storage
-        and the cascades are): the target has to be one the user may write into, as for an
-        upload. The rules of the tree, which hold for the superuser too: the target is in use,
-        no name is taken twice, and a subfolder has the company of its parent. Where the folders
-        are put below a parent, the company of the whole tree below comes along
-        (``_cascade_company``); a subfolder cannot have another company on its own.
+        Two layers. The rights of the user (not asked of the superuser, whose acts the storage and
+        the cascades are): the target has to be one the user may write into, as for an upload. The
+        rules of the tree, which hold for the superuser too: the target is in use, no name is
+        taken twice, and a subfolder has the company of its parent. Where the folders are put below
+        a parent, the company of the whole tree below comes along (``_cascade_company``); a
+        subfolder cannot have another company on its own.
         """
         if "parent_id" in vals:
             moved = self.filtered(lambda folder: folder.parent_id.id != (vals["parent_id"] or False))
@@ -341,6 +340,7 @@ class IntFilemanagerFolder(models.Model):
             if moved and target:
                 if not self.env.su:
                     target.check_access("write")
+                # sudo: the user may not read the target; its state and company are used
                 target.sudo()._check_active_target()
                 vals = {**vals, "company_id": target.sudo().company_id.id}
             taken = moved._names_taken("parent_id", target)
@@ -355,7 +355,7 @@ class IntFilemanagerFolder(models.Model):
         return vals
 
     def _cascade_company(self):
-        """Give what lies below these folders their company (the documents follow their folder)."""
+        # sudo: the company is set below all folders, also those the user does not see
         folders = self.sudo().with_context(active_test=False)
         for folder in folders:
             tree = folders.search([("id", "child_of", folder.id)]) - folder
@@ -382,14 +382,12 @@ class IntFilemanagerFolder(models.Model):
                 )
 
     def action_make_paths(self, paths):
-        """Make the folders of these paths below this folder, as far as they are not there.
+        """Create the folders of these paths below this folder, as far as they do not exist.
 
-        What the browser does before it uploads a folder of the disk: the folders come first, in
-        a package, and the files follow one by one to the folder that each path gives. A folder
-        that is there (the case of the name aside, as the unique index sees it) is used, so the
-        folders of an upload grow into the ones that exist. Everything runs as the user: the
-        folders are made by ``create`` under the rules for a new folder, and a folder is found
-        only if the user sees it.
+        This is what the browser does before it uploads a folder of the disk: the folders come
+        first, in a package, and the files follow one by one. A folder that exists (the case
+        aside, as the unique index sees it) is used. Everything runs as the user: the folders
+        are created by ``create`` under the rules for a new folder.
 
         :param paths: ``["Photos/2025/June", "Photos/empty"]``, relative to this folder
         :return: ``{path: id of its last folder}``
@@ -399,7 +397,7 @@ class IntFilemanagerFolder(models.Model):
         self._check_active_target()
         if len(paths) > MAKE_PATHS_MAX:
             raise UserError(self.env._("Too many folders at once."))
-        # Nobody needs a message in the chatter for each of the folders of an upload.
+        # No chatter message for each folder that an upload creates.
         folders = self.with_context(mail_create_nolog=True)
         made = {(): folders}
         result = {}
@@ -413,7 +411,6 @@ class IntFilemanagerFolder(models.Model):
         return result
 
     def action_open_documents(self):
-        """The documents right in this folder, in the list of the filemanager."""
         self.ensure_one()
         action = self.env["ir.actions.act_window"]._for_xml_id(
             "int_filemanager.int_filemanager_document_action"
@@ -425,7 +422,6 @@ class IntFilemanagerFolder(models.Model):
         return action
 
     def action_open_children(self):
-        """The subfolders of this folder (a new one starts in it)."""
         self.ensure_one()
         action = self.env["ir.actions.act_window"]._for_xml_id(
             "int_filemanager.int_filemanager_folder_action"
@@ -441,9 +437,9 @@ class IntFilemanagerFolder(models.Model):
         """Let the browser download the folder, with what is below it, as one ZIP.
 
         The route makes the list again when the browser asks. Here the user is told at once what
-        cannot work, instead of getting an error page in a new tab: a folder that is archived,
-        or more bytes than one ZIP may hold. The list of the files is not made here, the size
-        is added up by the database.
+        cannot work, instead of getting an error page in a new tab: a folder that is archived, or
+        more bytes than one ZIP may hold. The list of the files is not made here, the database
+        adds up the size.
         """
         self.ensure_one()
         self._check_active_target()
@@ -453,12 +449,13 @@ class IntFilemanagerFolder(models.Model):
         return {"type": "ir.actions.act_url", "url": f"{FOLDER_ZIP_PATH}{self.id}", "target": "download"}
 
     def _zip_tree(self):
-        """The folders of the ZIP of this folder: ``{id: [subfolders]}``, this one and what lies below.
+        """Return the folders of the ZIP of this folder, ``{id: [subfolders]}``.
 
-        A subfolder is in it if the user sees it and every folder between it and this one: the
-        chain is walked from here downwards, so a hidden folder takes everything below it with
-        it, whatever the rules say of that. (``child_of`` would not do: it ignores the rules of
-        the folders.) A folder that is archived is not in it.
+        The tree holds this folder and what lies below it. A subfolder is in it if the user sees it
+        and every folder between it and this one: the chain is walked from here downwards, so a
+        hidden folder takes everything below it with it, whatever the rules say of that.
+        (``child_of`` would not do: it ignores the rules of the folders.) A folder that is archived
+        is not in it.
         """
         self.ensure_one()
         below = self.search_fetch(
@@ -476,11 +473,11 @@ class IntFilemanagerFolder(models.Model):
         return tree
 
     def _zip_entries(self):
-        """The entries of the ZIP of this folder, with its structure.
+        """Return the entries of the ZIP of this folder, with its structure.
 
-        The files of the documents that the user reads in the folders of ``_zip_tree``, each
-        in its folder; a folder with nothing in it is an entry of its own. The folder itself is
-        the top of the archive. Folders keep their names, a file that has the name of a folder
+        These are the files of the documents that the user reads in the folders of ``_zip_tree``,
+        each in its folder; a folder with nothing in it is an entry of its own. The folder itself
+        is the top of the archive. Folders keep their names, a file that has the name of a folder
         or of another file is numbered (``_zip_files`` refuses a file that is gone, and
         ``_check_zip_size`` too many bytes).
         """
@@ -512,10 +509,7 @@ class IntFilemanagerFolder(models.Model):
         return sorted(entries + empty, key=lambda entry: entry.name.lower())
 
     def _below(self, active):
-        """The folders and documents below these folders (they included) that are not yet ``active``.
-
-        Superuser: archiving is one act for the whole tree, also for what the user does not see.
-        """
+        # sudo: archiving is one act for the whole tree, also for what the user does not see
         folders = self.sudo().with_context(active_test=False)
         below = folders.search([("id", "child_of", self.ids), ("active", "!=", active)])
         documents = (
@@ -538,8 +532,10 @@ class IntFilemanagerFolder(models.Model):
         )
 
     def _check_restorable(self):
-        """Refuse to restore what cannot come back: below an archived folder, or with a name
-        that is taken (the names are unique among the active ones, case aside)."""
+        """Refuse to restore what cannot come back: below an archived folder, or with a name that is taken.
+
+        The names are unique among the active ones, case aside.
+        """
         for folder in self:
             if folder.parent_id and not folder.parent_id.active:
                 raise UserError(

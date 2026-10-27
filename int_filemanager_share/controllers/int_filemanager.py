@@ -28,23 +28,24 @@ from ..models.int_filemanager_share import (
 
 _lt = LazyTranslate(__name__)
 
-# The password and the receipts are small: the core would read up to 128 MiB of a request.
+# Requests with a password or receipts are small; without this limit the core would take up to
+# 128 MiB.
 SMALL_REQUEST = 64 * 1024
 # The key of the password lives in a cookie of its own for each share, as the guests of the discuss
-# channels keep theirs (``mail.guest``); the addresses carry no secret but the token. Its path is
-# ``/``: a page in another language comes with a prefix (``/de/int_filemanager/...``, the pages are
-# frontend routes like those of the portal), and the cookie of a narrower path would not go along.
+# channels keep theirs (``mail.guest``); the addresses carry nothing secret but the token. The cookie
+# path is ``/``: a page in another language comes with a prefix (``/de/int_filemanager/...``, the
+# pages are frontend routes like those of the portal), and a cookie with a narrower path would not
+# be sent.
 KEY_COOKIE_PREFIX = "int_filemanager_share_key_"
 
 
 def key_cookie(token):
-    """The name of the cookie that holds the key of the share with this token."""
     return f"{KEY_COOKIE_PREFIX}{token}"
 
 
-# What the browser shows by itself (the guests with the right to see only get these inline), and
-# which sizes of a picture they may ask for. A picture is read into memory to be made smaller:
-# above this size of the file the guest gets the placeholder.
+# What a browser shows by itself (guests with the right to see get only these inline), and the
+# picture sizes they may ask for. A picture is read into memory to be made smaller: above this
+# file size the guest gets the placeholder.
 INLINE_TYPES = {"application/pdf", "text/plain"}
 INLINE_PREFIXES = ("image/", "audio/", "video/")
 NOT_INLINE = {"image/svg+xml"}
@@ -53,8 +54,8 @@ IMAGE_SOURCE_MAX = 25 * 1024 * 1024
 ETAG_SCOPE = "int_filemanager.share_etag"
 DOCUMENT = "int.filemanager.document"
 FOLDER = "int.filemanager.folder"
-# The list of a folder, as the lists of the portal: files per page, the sortings (folders come before
-# the files in all of them; the size sorts the files only), the longest search text.
+# The list of a folder works like the lists of the portal: page size, the sort orders (folders come
+# before the files in all of them; the size sorts the files only) and the longest search text.
 PAGE_SIZE = 30
 SEARCH_MAX_LENGTH = 100
 SORTINGS = {
@@ -62,7 +63,7 @@ SORTINGS = {
     "date": {"label": _lt("Modified"), "order": "write_date desc, id"},
     "size": {"label": _lt("Size"), "order": "size desc, id"},
 }
-# The symbol of a file in the list, by the start of its type.
+# The icon of a file in the list, by the start of its mimetype.
 ICONS = (
     ("application/pdf", "fa-file-pdf-o"),
     ("image/", "fa-file-image-o"),
@@ -77,9 +78,10 @@ ICONS = (
 
 
 def upload_limit(controller):
-    """The most that the body of an upload to a share may be (the ``max_content_length`` of the
-    route). Odoo calls it before it reads the body, so a body that is too big is turned away with
-    a 413 at once, and what the share allows decides, not a limit for all. The address of the
+    """Return the most that the body of an upload to a share may be (``max_content_length`` of the route).
+
+    Odoo calls it before it reads the body, so a body that is too big is turned away with a 413
+    at once, and what the share allows decides, not a limit for all. The address of the
     request names the share (``.../share/<token>/upload``), the cookie carries the key of its
     password.
     """
@@ -90,11 +92,12 @@ def upload_limit(controller):
 class IntFilemanagerShareController(http.Controller):
     """What a guest reaches with the address of a share: no account, no session.
 
-    The pages are made on the server and shown in the layout of the portal, as ``project`` and
+    The pages are rendered on the server in the layout of the portal, as ``project`` and
     ``sale`` show a record to whoever has its ``access_token`` (``portal.mixin``,
     ``CustomerPortal._document_check_access``): the token of the share is checked, then the
-    records are read as superuser, but only those that ``share._scope_domain`` names, and only the
-    fields that go into the template as plain values. Nothing of the ORM is open to the guest.
+    records are read as superuser, but only those that ``share._scope_domain`` names, and only
+    the fields that go into the template as plain values. Nothing of the ORM is open to the
+    guest.
 
     Every route carries the token in the path and sets ``save_session=False``: without it Odoo
     would give each guest a session cookie and keep a session file for it. A guest is the
@@ -102,12 +105,10 @@ class IntFilemanagerShareController(http.Controller):
     """
 
     def _guest(self):
-        """From here on the environment of the request is the one of the public user."""
         request.update_env(user=request.env.ref("base.public_user"))
 
     @staticmethod
     def _key(token):
-        """The key that the password gave, from the cookie of the share (``None``: there is none)."""
         return request.httprequest.cookies.get(key_cookie(token))
 
     def _resolve(self, token, **kwargs):
@@ -119,18 +120,20 @@ class IntFilemanagerShareController(http.Controller):
 
     @staticmethod
     def _guest_headers(response):
-        """The address is a secret: it is not passed on to other sites (``Referer``), the search
-        engines are told to leave it, and the answer is not kept by the browser, so that a share
-        that is blocked later does not live on in its cache."""
+        """Add the headers that protect the address: it is a secret.
+
+        It is not passed on to other sites (``Referer``), search engines are told to skip it, and
+        the browser does not keep the answer, so that a share that is blocked later does not live
+        on in its cache.
+        """
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
         response.headers["Cache-Control"] = "private, no-cache"
         return response
 
-    # --- the password -------------------------------------------------------------------------
+    # === PASSWORD === #
 
     def _password_page(self, token, error=None, status=200):
-        """The page that asks for the password: nothing of the share is on it, not even its name."""
         return self._guest_headers(
             request.render(
                 "int_filemanager_share.share_password_page",
@@ -150,13 +153,14 @@ class IntFilemanagerShareController(http.Controller):
         max_content_length=SMALL_REQUEST,
     )
     def unlock(self, token, password=None, **kwargs):
-        """The form of the password page: a right password sets the cookie with the key of the share
-        (see ``int.filemanager.share._unlock``) and leads on to the share.
+        """Check the password of the password page.
 
-        A wrong password is an answer, not an error: an error would roll the transaction back, and
-        the page would have nothing to say but a status. The tries are counted in a transaction of
-        their own, so the brake holds either way. No token for the CSRF: the route only sets the
-        cookie for this share, to whoever knows its password, and counts every try.
+        A right password sets the cookie with the key of the share (see
+        ``int.filemanager.share._unlock``). A wrong password is an answer, not an error: an error
+        would roll the transaction back, and the page would have nothing to say but a status. The
+        tries are counted in a transaction of their own, so the rate limit holds either way. There
+        is no CSRF token: the route only sets the cookie for this share, for whoever knows its
+        password, and counts every try.
         """
         share = self._resolve(token, needs_key=False, braked=False)
         page = f"{SHARE_PATH}/{share.token}"
@@ -180,7 +184,7 @@ class IntFilemanagerShareController(http.Controller):
         )
         return response
 
-    # --- the files ----------------------------------------------------------------------------
+    # === FILES === #
 
     @staticmethod
     def _inline(mimetype):
@@ -190,7 +194,8 @@ class IntFilemanagerShareController(http.Controller):
 
     @staticmethod
     def _document(share, document_id):
-        """The file, if the share reaches it (the same scope as the lists, not only the id)."""
+        """Return the file, if the share reaches it (the same scope as the lists, not only the id).
+        """
         document = share.env[DOCUMENT].search(
             Domain("id", "=", document_id) & share._scope_domain(DOCUMENT), limit=1
         )
@@ -200,9 +205,12 @@ class IntFilemanagerShareController(http.Controller):
 
     @staticmethod
     def _guest_etag(share, stream):
-        """The checksum of the file is the ETag of the user's download; for a guest it is not:
-        it would show which files are the same, in any share. A signed value of the share and the
-        checksum changes with the content, is another one per share, and says nothing."""
+        """Replace the ETag of the stream by one that is safe for guests.
+
+        The checksum of the file is the ETag of a user's download, but for a guest it would show
+        which files are the same, in any share. A signed value of the share and the checksum
+        changes with the content, is another one per share, and says nothing.
+        """
         if stream.etag:
             stream.etag = hmac(share.env, ETAG_SCOPE, f"{share.id}:{stream.etag}")
         return stream
@@ -222,9 +230,11 @@ class IntFilemanagerShareController(http.Controller):
         save_session=False,
     )
     def content(self, token, document_id, download=None, **kwargs):
-        """The file: shown in the browser (the right to see, and only what a browser shows), or
-        as a download (the right to download; with a limit of downloads only by ``POST``, see
-        ``download``)."""
+        """Send the file: shown in the browser or as a download.
+
+        Showing needs the right to see, and only what a browser shows. A download needs the right
+        to download. With a limit of downloads it is only allowed by ``POST``, see ``download``.
+        """
         share = self._resolve(token, right=("view", "download"))
         document = self._document(share, document_id)
         if download:
@@ -252,13 +262,16 @@ class IntFilemanagerShareController(http.Controller):
         max_content_length=SMALL_REQUEST,
     )
     def download(self, token, document_id, **kwargs):
-        """The download that is counted, and ends the share at its limit (the button of the page
-        is a form). Only a ``POST``: a link checker that calls an address with ``GET`` would use
-        up a limit of one, and a ``Range`` header would get the file without being counted."""
+        """Send the file as a counted download, which ends the share at its limit.
+
+        Only a ``POST`` (the button of the page is a form): a link checker that calls an address
+        with ``GET`` would use up a limit of one, and a ``Range`` header would get the file without
+        being counted.
+        """
         share = self._resolve(token, right="download")
         document = self._document(share, document_id)
         stream = self._file_stream(share, document)
-        # last, right before the file goes out: what was refused above must not use up a download
+        # Last, right before the file is sent: a request refused above must not use up a download
         if not share._count_download():
             raise ShareGone(request.env._("This link has reached its limit of downloads."))
         return self._guest_headers(stream.get_response(as_attachment=True))
@@ -271,7 +284,7 @@ class IntFilemanagerShareController(http.Controller):
         save_session=False,
     )
     def thumbnail(self, token, document_id, **kwargs):
-        """The picture of the first page of a PDF (the placeholder where there is none)."""
+        """Send the picture of the first page of a PDF (the placeholder if there is none)."""
         share = self._resolve(token, right="view")
         document = self._document(share, document_id)
         stream = share.env["ir.binary"]._get_image_stream_from(document, "thumbnail")
@@ -285,12 +298,12 @@ class IntFilemanagerShareController(http.Controller):
         save_session=False,
     )
     def image(self, token, document_id, size, **kwargs):
-        """A picture made smaller, of one of the sizes in ``IMAGE_SIZES``.
+        """Send a picture made smaller, of one of the sizes in ``IMAGE_SIZES``.
 
-        The core reads the whole file to make it smaller and does not look at the number of
-        pixels: a small file can be a picture of hundreds of megapixels. So the file is looked at
-        first (its size, then its resolution by ``ImageProcess`` with ``verify_resolution``);
-        what is too much gets the placeholder, like a file that is not a picture.
+        The core reads the whole file to make it smaller and does not check the number of pixels:
+        a small file can be a picture of hundreds of megapixels. So the file is checked first (its
+        size, then its resolution by ``ImageProcess`` with ``verify_resolution``); what is too much
+        gets the placeholder, like a file that is not a picture.
         """
         share = self._resolve(token, right="view")
         if size not in IMAGE_SIZES:
@@ -303,12 +316,12 @@ class IntFilemanagerShareController(http.Controller):
                 with open(document._blob_path(document.checksum), "rb") as blob:
                     ImageProcess(blob.read(), verify_resolution=True)
                 stream = binary._get_image_stream_from(document, "content", width=size, height=size)
-            except (OSError, UserError):  # a file that is not there, or not a picture, or too big
+            except (OSError, UserError):  # a file that is not there, not a picture, or too big
                 stream = None
         stream = stream or binary._get_placeholder_stream()
         return self._guest_headers(self._guest_etag(share, stream).get_response())
 
-    # --- the pages ----------------------------------------------------------------------------
+    # === PAGES === #
 
     @http.route(
         [
@@ -323,10 +336,10 @@ class IntFilemanagerShareController(http.Controller):
         website=True,
     )
     def page(self, token, folder_id=None, page=1, sortby=None, search=None, **kwargs):
-        """The page of a share: the file, or a folder with what lies in it.
+        """Render the page of a share: the file, or a folder with what lies in it.
 
-        For a share with a password and no key only a page that asks for it, with nothing of the
-        share on it (not its name).
+        For a share with a password and no key it renders only the page that asks for it, with
+        nothing of the share on it (not its name).
         """
         share = self._resolve(token, needs_key=False)
         if share.has_password and not share._key_is_valid(self._key(token)):
@@ -344,7 +357,6 @@ class IntFilemanagerShareController(http.Controller):
         return self._guest_headers(request.render(template, values))
 
     def _file_values(self, share):
-        """What the page of a file shows: plain values, no records."""
         document = share.document_id
         base = f"{SHARE_PATH}/{share.token}"
         picture_url = None
@@ -367,7 +379,6 @@ class IntFilemanagerShareController(http.Controller):
 
     @staticmethod
     def _upload_hint(share):
-        """The line under the button: how large a file may be, and which endings are taken."""
         hints = [request.env._("Up to %(size)s per file.", size=human_size(share.upload_max_file_mb * MEBIBYTE))]
         extensions = ", ".join(sorted(share._upload_extensions()))
         if extensions:
@@ -379,11 +390,12 @@ class IntFilemanagerShareController(http.Controller):
         return next((icon for start, icon in ICONS if (mimetype or "").startswith(start)), "fa-file-o")
 
     def _folder_values(self, share, folder_id, page, sortby, search):
-        """What the page of a folder shows: the way down from the shared folder, the folders and the
-        files in it (or, for a search, the ones below it), a page of them, and the rights.
+        """Return what the page of a folder shows: plain values, no records.
 
-        Everything that is read is asked together with the scope of the share, and the folder of
-        the address must be in it too: one that is hidden, or lies outside, does not exist.
+        These are the way down from the shared folder, the folders and files in it (or, for a
+        search, the ones below it), a page of them, and the rights. Everything that is read is
+        read together with the scope of the share, and the folder of the address must be in it
+        too: one that is hidden, or lies outside, does not exist.
         """
         env, base = share.env, f"{SHARE_PATH}/{share.token}"
         can_upload = share.can_upload and share._upload_folder_usable()
@@ -413,7 +425,7 @@ class IntFilemanagerShareController(http.Controller):
         order = SORTINGS[sortby]["order"]
         folder_order = SORTINGS["name"]["order"] if sortby == "size" else order
         if search:
-            # ``ilike`` takes % and _ as they are; the text of the guest is text, not a pattern
+            # ``ilike`` treats % and _ as wildcards: escape them, the text of the guest is not a pattern
             pattern = escape_psql(search)
             folder_domain = (
                 Domain("id", "child_of", current.id)
@@ -499,8 +511,11 @@ class IntFilemanagerShareController(http.Controller):
 
     @staticmethod
     def _breadcrumbs(share, current, base):
-        """The way from the shared folder down to this one, ``[{"name", "url"}]``; the last has no
-        address. The folders above the shared one are not on it: the guest does not learn them."""
+        """Return the way from the shared folder down to this one, ``[{"name", "url"}]``.
+
+        The last item has no address. The folders above the shared one are not on it: the guest
+        does not learn them.
+        """
         chain = [int(folder_id) for folder_id in current.parent_path.split("/") if folder_id]
         chain = chain[chain.index(share.folder_id.id) :]
         names = {
@@ -512,11 +527,10 @@ class IntFilemanagerShareController(http.Controller):
         crumbs[-1]["url"] = None
         return crumbs
 
-    # --- the uploads --------------------------------------------------------------------------
+    # === UPLOADS === #
 
     @staticmethod
     def _json_body():
-        """The body of a call as the dictionary that it has to be."""
         try:
             data = request.get_json_data()
         except ValueError:
@@ -526,8 +540,6 @@ class IntFilemanagerShareController(http.Controller):
         return data
 
     def _upload_error(self, status, message):
-        """What the page of the guests shows: the text of ``{"error": {"message": ...}}`` (the uploads
-        of the users answer the same way)."""
         return self._guest_headers(request.make_json_response({"error": {"message": message}}, status=status))
 
     @http.route(
@@ -569,10 +581,10 @@ class IntFilemanagerShareController(http.Controller):
         head = upload.stream.read(UPLOAD_HEAD_SIZE)
         upload.stream.seek(0)
         share._check_upload(name, head)
-        # The type is not the one the browser says (``None``): it is made from the name and the
-        # start of the file, so a guest cannot give his file a harmless one. A savepoint holds
-        # what the request writes together: the limits are taken before the file is kept, and a
-        # failure later must give them back.
+        # The type is not the one the browser sends (``None``): it is derived from the name and the
+        # start of the file, so a guest cannot give a file a harmless type. The savepoint groups
+        # what the request writes: the limits are taken before the file is kept, and a later
+        # failure must give them back.
         with request.env.cr.savepoint():
             document = (
                 share.env["int.filemanager.document"]
@@ -607,7 +619,7 @@ class IntFilemanagerShareController(http.Controller):
         max_content_length=SMALL_REQUEST,
     )
     def uploads(self, token, **kwargs):
-        """The files that the guest uploaded, from the receipts that his browser kept.
+        """Return the files that the guest uploaded, from the receipts that their browser kept.
 
         The body is ``{"receipts": [{"id": ..., "receipt": ...}, ...]}``. What the receipts do not
         prove is left out without a word.
@@ -644,10 +656,10 @@ class IntFilemanagerShareController(http.Controller):
         max_content_length=SMALL_REQUEST,
     )
     def uploads_delete(self, token, **kwargs):
-        """Take away a file that the guest uploaded, if the receipt is his and no user has taken
-        the file over. The limits of the share get it back.
+        """Remove a file that the guest uploaded, if the receipt is theirs.
 
-        The body is ``{"id": ..., "receipt": ...}``.
+        The file must not have been taken over by a user. The limits of the share get it back. The
+        body is ``{"id": ..., "receipt": ...}``.
         """
         data = self._json_body()
         share = self._resolve(token, right="upload")

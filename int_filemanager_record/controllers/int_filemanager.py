@@ -5,10 +5,10 @@ from odoo.addons.int_filemanager.controllers.int_filemanager import IntFilemanag
 
 
 class IntFilemanagerRecord(IntFilemanager):
-    """The upload at a record: ``link_model`` and ``link_id`` of the form name the record.
+    """Upload a file at a record: ``link_model`` and ``link_id`` of the form name the record.
 
     The file goes to the folder that the settings name for the model of the record and is linked
-    to the record. Whoever may change the record may do that, the folders are not looked at.
+    to the record. Whoever may change the record may do that, the folders are not checked.
     """
 
     def _upload_folder(self, folder_id, link_model=None, link_id=None, **kwargs):
@@ -24,8 +24,8 @@ class IntFilemanagerRecord(IntFilemanager):
         if not link_model:
             return
         record = self._record_to_link(link_model, link_id)
-        # The storage and the link run as superuser: the right to change the record was
-        # checked, the uploader need not see the folder.
+        # sudo: int.filemanager.link: the right to change the record was checked, so the
+        # uploader need not see the folder
         request.env["int.filemanager.link"].sudo().create(
             {
                 "document_id": document.id,
@@ -35,7 +35,6 @@ class IntFilemanagerRecord(IntFilemanager):
         )
 
     def _record_to_link(self, link_model, link_id):
-        """The record that the file is uploaded at, if the user may change it."""
         env = request.env
         if link_model not in env["int.filemanager.link"]._linkable_models():
             raise UserError(env._("Documents cannot be linked to this kind of record."))

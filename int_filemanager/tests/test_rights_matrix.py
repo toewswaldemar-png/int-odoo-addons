@@ -266,6 +266,15 @@ class TestRightsMatrix(AccessCase, TransactionCase):
                 visible = self.env["ir.ui.menu"].with_user(user)._visible_menu_ids()
                 self.assertEqual(menu.id in visible, shown)
 
+    def test_the_configuration_is_for_the_users_and_up(self):
+        # the folders hang below it: without the parent in the menu, they are out of reach
+        configuration = self.env.ref("int_filemanager.menu_int_filemanager_configuration")
+        self.assertEqual(configuration.group_ids, self.env.ref("int_filemanager.int_filemanager_group_user"))
+        for user, shown in ((self.reader, False), (self.alice, True), (self.boss, True)):
+            with self.subTest(user=user.login):
+                visible = self.env["ir.ui.menu"].with_user(user)._visible_menu_ids()
+                self.assertEqual(configuration.id in visible, shown)
+
     # --- moves are the user's ---------------------------------------------------------------
 
     def test_a_reader_moves_nothing(self):

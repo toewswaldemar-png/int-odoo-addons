@@ -5,8 +5,8 @@
         t-inherit="web.FileViewer"
         t-inherit-mode="primary"
     >
-        <!-- The whole ground of the viewer is the surface of a picture: the wheel zooms, a press
-             moves it, wherever the pointer is (the core binds these to the image only). -->
+        <!-- The whole background of the viewer is the surface of a picture: the wheel zooms, a press
+             moves it, wherever the pointer is (Odoo binds these to the image only). -->
         <xpath expr="//div[hasclass('o-FileViewer-main')]" position="attributes">
             <attribute name="t-ref">main</attribute>
             <attribute name="t-on-click.stop">onClickMain</attribute>

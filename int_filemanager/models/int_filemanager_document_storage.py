@@ -1,5 +1,7 @@
-"""The storage of the files of the documents: the blobs in the filestore, their cleaner, the upload and
-the cleaning of the trash (the archived documents that nobody takes back)."""
+"""The storage of the files of the documents.
+
+It holds the blobs in the filestore, their garbage collector, the upload and the cleaning of
+the trash (the archived documents that nobody takes back)."""
 
 import hashlib
 import itertools
@@ -21,16 +23,17 @@ from .int_filemanager_named import NAME_MAX_LENGTH
 
 
 UPLOAD_FOLDER = ".upload"
-# The blobs to look at: one empty file per checksum, like the core's "checklist" for attachments
-# (its cleaner would delete our blobs, so the lists must stay apart).
+# The blobs to check: one empty file per checksum, like the checklist of ``ir.attachment`` (its
+# garbage collector would delete our blobs, so the lists must stay apart).
 CHECKLIST_FOLDER = ".checklist"
-# Blobs looked at per run of the cleaner; each run holds the lock of the table (see _gc_blobs).
+# Blobs checked per run of the garbage collector; each run holds the lock of the table (see
+# ``_gc_blobs``).
 GC_BATCH = 1000
 GC_LOCK_TIMEOUT = "10s"
 # First key of the advisory lock that publishers of one checksum take (see _publish_blob).
 BLOB_LOCK_NAME = "int_filemanager.blob"
 CHUNK_SIZE = 1024 * 1024
-# The head of a file is enough for ``guess_mimetype`` (it reads no more than this).
+# The start of a file is enough for ``guess_mimetype`` (it reads no more than this).
 HEAD_SIZE = 2048
 
 
@@ -39,7 +42,6 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _blob_path(self, checksum):
-        """The absolute path of the blob with this SHA-256 checksum."""
         if not CHECKSUM_REGEX.fullmatch(checksum or ""):
             raise ValueError("A checksum is 64 lowercase hexadecimal characters.")
         return full_path(self.env, f"{BLOB_FOLDER}/{checksum[:2]}/{checksum}")
@@ -49,8 +51,8 @@ class IntFilemanagerDocument(models.Model):
         """Write ``stream`` block by block to a temporary file and measure it.
 
         The temporary file lies next to the blobs (same file system, so ``_publish_blob`` can
-        rename it). It is removed again if this fails or the transaction is rolled back.
-        Nothing is held in memory but one block.
+        rename it). It is removed again if this fails or the transaction is rolled back. Nothing
+        is held in memory but one block.
 
         :param stream: file-like object with ``read(size)``
         :param name: file name, to guess the type
@@ -76,9 +78,9 @@ class IntFilemanagerDocument(models.Model):
         finally:
             if not written:
                 remove_file(tmp_path)
-        # The core's rules: client type, then file name, then the head; html, svg and xml
-        # become text/plain (office formats excepted), for every user. A client that sends
-        # "any binary" says nothing: the core would skip the file name for it.
+        # The rules of Odoo: client type, then file name, then the start of the file; html, svg and
+        # xml become text/plain (office formats excepted), for every user. A client that sends
+        # "any binary" says nothing: Odoo would skip the file name for it.
         if mimetype == "application/octet-stream":
             mimetype = None
         values = check_contents(self.env, name, mimetype, head)
@@ -93,11 +95,11 @@ class IntFilemanagerDocument(models.Model):
     def _publish_blob(self, tmp_path, checksum):
         """Move the temporary file of ``_store_stream`` to its place among the blobs.
 
-        Call it after the document is created and flushed: the cleaner of the blobs
-        (it waits for this transaction) then sees the document. A blob that exists already has
-        the same content and stays: it is never replaced, a reader that has it open or is about
-        to open it must not find a gap (``os.replace`` over a name can fail a reader on a
-        network share).
+        Call it after the document is created and flushed: the garbage collector of the blobs (it
+        waits for this transaction) then sees the document. A blob that exists already has the
+        same content and stays: it is never replaced, as a reader that has it open or is about to
+        open it must not find a gap (``os.replace`` over a name can fail a reader on a network
+        share).
 
         Two transactions that publish the same checksum at once take turns: the first places the
         blob, the second finds it after the lock and only removes its own temporary file.
@@ -106,18 +108,18 @@ class IntFilemanagerDocument(models.Model):
         if os.path.exists(path):
             remove_file(tmp_path)
             return
-        # One publisher per checksum, until this transaction ends (a blob placed by a
-        # transaction that is rolled back stays on the disk, the cleaner sees to it). Look again
-        # after the lock: the transaction we waited for may have placed it. The two-key form is
-        # a key space of its own, the core's one-key locks (``mail_thread``) cannot clash.
+        # One publisher per checksum, until this transaction ends (a blob placed by a transaction
+        # that is rolled back stays on the disk, the garbage collector removes it). Look again after
+        # the lock: the transaction we waited for may have placed it. The two-key form is a key
+        # space of its own, so the one-key locks of Odoo (``mail_thread``) cannot clash.
         self.env.cr.execute(
             SQL("SELECT pg_advisory_xact_lock(hashtext(%s), hashtext(%s))", BLOB_LOCK_NAME, checksum)
         )
         if os.path.exists(path):
             remove_file(tmp_path)
             return
-        # Before the blob exists, put it on the checklist: if this transaction is rolled back,
-        # the cleaner finds the blob without a document and deletes it (like the core does).
+        # Before the blob exists, put it on the checklist: if this transaction is rolled back, the
+        # garbage collector finds the blob without a document and deletes it (as ``ir.attachment`` does).
         self._mark_blob_for_gc(checksum)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         os.replace(tmp_path, path)
@@ -132,7 +134,6 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _mark_blob_for_gc(self, checksum):
-        """Put the blob on the checklist: the cleaner deletes it if no document uses it."""
         self._blob_path(checksum)  # only a checksum goes into a path
         folder = os.path.join(self._checklist_dir(), checksum[:2])
         os.makedirs(folder, exist_ok=True)
@@ -141,7 +142,6 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _checklist_entries(self):
-        """The checksums on the checklist (a generator, the list may be long)."""
         for folder, _subfolders, names in os.walk(self._checklist_dir()):
             for name in names:
                 if CHECKSUM_REGEX.fullmatch(name):
@@ -149,12 +149,14 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _gc_lock_tables(self):
-        """The tables that hold checksums of blobs, in the order the cleaner locks them."""
+        """Return the tables that hold checksums of blobs, in the order the garbage collector locks them.
+        """
         return [self._table]
 
     @api.model
     def _blobs_in_use(self, names):
-        """Which of these checksums a document uses, as its file or as its preview."""
+        """Return those of these checksums that a document uses, as its file or as its preview."""
+        # sudo: the garbage collector asks about the documents of all users and companies
         documents = self.sudo().with_context(active_test=False)
         return {
             checksum for [checksum] in documents._read_group([("checksum", "in", names)], ["checksum"])
@@ -167,17 +169,16 @@ class IntFilemanagerDocument(models.Model):
     def _gc_blobs(self):
         """Delete the blobs on the checklist that no document uses (any more).
 
-        Like ``ir.attachment._gc_file_store``: the table of the documents is locked against
-        writers while the rows are looked at, so a document that is being created (its row
-        is made before its blob) is either seen or waits until the cleaner is done. Unlike the
-        core, one run takes a batch only: the lock must not be held for a long time, and
-        ``(done, remaining)`` makes Odoo call it again.
-
-        A blob counts as used if a *document* has its checksum or its preview (``_blobs_in_use``).
-        Whoever lets another model keep blobs of this storage must add that model's checksums
-        there and its table to ``_gc_lock_tables``, or the cleaner deletes them. The tables are
-        locked in a fixed order (the documents first).
+        A blob counts as used if a *document* has its checksum or its preview
+        (``_blobs_in_use``). Whoever lets another model keep blobs of this storage must add
+        that model's checksums there and its table to ``_gc_lock_tables``, or the blobs are
+        deleted. The tables are locked in a fixed order (the documents first).
         """
+        # Like ``ir.attachment._gc_file_store``, lock the table of the documents against writers
+        # while the rows are checked, so a document that is being created (its row is made before
+        # its blob) is either seen or waits until the run is done. Unlike Odoo, one run takes a
+        # batch only: the lock must not be held for long, and ``(done, remaining)`` makes Odoo
+        # call it again.
         cr = self.env.cr
         if not os.path.isdir(self._checklist_dir()):
             return 0, 0
@@ -205,7 +206,6 @@ class IntFilemanagerDocument(models.Model):
 
     @api.autovacuum
     def _gc_blob_uploads(self):
-        """Delete the temporary files of uploads that never ended (a crash leaves them)."""
         upload_dir = self._upload_dir()
         if not os.path.isdir(upload_dir):
             return
@@ -219,14 +219,14 @@ class IntFilemanagerDocument(models.Model):
     def _gc_trash(self):
         """Delete the archived documents that stayed longer than the settings allow.
 
-        Their files follow by the cleaners of the blobs and of the texts. As superuser: the
-        scheduled action has the companies of its user only, and the rules would hide the
-        documents of the others. In batches: Odoo calls it again for as long as it says that
-        documents are left.
+        Their files follow by the garbage collectors of the blobs and of the texts. Deleted in
+        batches: Odoo calls it again for as long as it reports that documents are left.
         """
         cron = self.env["int.filemanager.cron"]
         if not cron._flag("trash_enabled", TRASH_ENABLED_DEFAULT):
             return 0, 0
+        # sudo: the scheduled action has the companies of its user only, and the rules would hide the
+        # documents of the others
         found = self.sudo().with_context(active_test=False).search(
             [("active", "=", False), ("archived_date", "<=", f"-{cron._setting('trash_days')}d")],
             limit=GC_BATCH + 1,
@@ -238,23 +238,18 @@ class IntFilemanagerDocument(models.Model):
     def _create_from_stream(self, stream, name, folder, mimetype=None, check=None, **values):
         """Store a file and create its document: the one way a document comes to be.
 
-        The document is made as superuser (the users cannot create documents: with a checksum
-        of their choice they could point a document at any blob). So the right to write into
-        ``folder`` is asked here, once, before a byte is stored, and not by each caller: the
-        user of ``folder.env`` must be allowed to write into it (``check_access``, which a
-        superuser passes). A caller that has checked the right another way hands over
-        ``folder.sudo()``: an upload at a record (the right to change the record), a share (the
-        right to upload of its link), the import (the administrators).
+        The right to write into ``folder`` is checked here, once, before a byte is stored:
+        the user of ``folder.env`` must be allowed to write into it (``check_access``, which
+        a superuser passes). A caller that has checked the right another way passes
+        ``folder.sudo()``: an upload at a record, a share, the import.
 
         :param stream: file-like object with ``read(size)``
         :param name: name of the document, also used to guess the type
-        :param folder: ``int.filemanager.folder`` record, in the environment of the one who
-            stores
+        :param folder: ``int.filemanager.folder`` record, in the environment of the one who stores
         :param mimetype: type given by the client, if any
-        :param check: called with the result of ``_store_stream`` (the size, the checksum, the
-            type) after the file is measured and before the document is made and the blob is
-            kept. It refuses the file by raising. Then only the temporary file is there, and it is
-            removed: a blob that was kept cannot be taken back by a rollback.
+        :param check: called with the result of ``_store_stream`` (size, checksum, type)
+            before the document is made; it refuses the file by raising. Only the temporary
+            file exists then and is removed (a kept blob cannot be taken back by a rollback).
         :param values: more field values, e.g. ``tag_ids``
         :return: the document, with the environment of the caller
         """
@@ -264,18 +259,21 @@ class IntFilemanagerDocument(models.Model):
         try:
             if check:
                 check(stored)
+            # The document is made as superuser: users cannot create documents, as with a checksum of
+            # their choice they could point a document at any blob
             document = self._create_numbered(stored, name, folder, **values)
             self._publish_blob(stored["tmp_path"], stored["checksum"])
         finally:
-            # Nothing is left of a failed attempt.
+            # A failed attempt leaves nothing behind.
             remove_file(stored["tmp_path"])
         if stored["mimetype"] in PREVIEW_EXTENSIONS:
+            # sudo: ir.cron: the scheduled action belongs to the superuser
             self.env.ref(PREVIEW_CRON_XMLID).sudo()._trigger()
         return document
 
     @api.model
     def _clean_name(self, name):
-        """A name as the browser or the disk gives it, made fit for a document.
+        """Return a name as the browser or the disk gives it, made fit for a document.
 
         Only the last part of a path stays, the characters are cleaned like every name
         (``_normalize_name``), and a name that is too long loses the end of its stem.
@@ -296,6 +294,7 @@ class IntFilemanagerDocument(models.Model):
         does not follow the document (20,000 files of a folder would be 20,000 messages and
         follower rows). What is done to it later is logged as usual.
         """
+        # sudo: users cannot create documents (see the class docstring)
         documents = self.sudo().with_context(mail_create_nolog=True, mail_create_nosubscribe=True)
 
         def create(candidate):
@@ -309,7 +308,7 @@ class IntFilemanagerDocument(models.Model):
                     "mimetype": stored["mimetype"],
                 }
             )
-            # The row must exist before the blob does: the cleaner looks at the rows.
+            # The row must exist before the blob does: the blob garbage collector looks at the rows.
             document.flush_recordset(["checksum"])
             return document.with_env(self.env)
 
@@ -319,6 +318,5 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _numbered_name(self, name, number):
-        """``stem (2).ext``: the number goes before the ending."""
         stem, extension = os.path.splitext(name)
         return f"{stem} ({number}){extension}"

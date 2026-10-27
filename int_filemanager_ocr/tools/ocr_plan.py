@@ -45,7 +45,7 @@ FAIL = "fail"  # the file is given up for good
 BLOCK = "block"  # the recognition as a whole stops: the setup is wrong
 PAUSE = "pause"  # not now: the disk is full
 
-# What the shell commands say when the program is not there.
+# The exit code of a shell when the program is not found.
 NOT_FOUND = 127
 
 # What can be added to a section that failed, once each.
@@ -66,11 +66,12 @@ class Timeout(NamedTuple):
 
 
 def section_pages(seconds_left, seconds_per_page, pages_left, fair=MIN_COUNTING_SECONDS):
-    """How many pages the next section has: 0 if there is no time for even one.
+    """Return how many pages the next section has: 0 if there is no time for even one.
 
-    ``(time left - fixed time) * safety / time per page``, at least one page, at most
-    ``MAX_SECTION_PAGES``, and for a file nothing is measured of yet (``seconds_per_page`` 0)
-    at most ``FIRST_SECTION_PAGES`` and with a guessed time per page. Never more than are left.
+    That is ``(time left - fixed time) * safety / time per page``, at least one page, at most
+    ``MAX_SECTION_PAGES``, and never more than are left. For a file with nothing measured yet
+    (``seconds_per_page`` 0) it is at most ``FIRST_SECTION_PAGES``, with a guessed time per
+    page.
 
     If the time per page is so high that not even one page fits, but the time left is a fair
     time for a single page (``fair``, see ``after_timeout``), that page is tried all the same:
@@ -85,32 +86,34 @@ def section_pages(seconds_left, seconds_per_page, pages_left, fair=MIN_COUNTING_
 
 
 def fair_seconds(window):
-    """The time a single page must have had to count against its file.
+    """Return the time a single page must have had to count against its file.
 
-    ``MIN_COUNTING_SECONDS``, or in a run shorter than that most of the ``window`` (the time the
-    run gives the program): the page must be able to have it, or a file whose page needs more
-    than the run gives would never be tried again and never be given up.
+    That is ``MIN_COUNTING_SECONDS``, or in a run shorter than that most of the ``window`` (the
+    time the run gives the program): the page must be able to have it, or a file whose page
+    needs more than the run gives would never be tried again and never be given up.
     """
     return min(MIN_COUNTING_SECONDS, max(window, 0) * FAIR_SHARE)
 
 
 def measured_seconds_per_page(pages, seconds):
-    """The time per page of a section that took ``seconds`` for ``pages`` (the fixed time off)."""
+    """Return the time per page of a section that took ``seconds`` for ``pages`` (without the fixed time).
+    """
     return max((seconds - FIXED_SECONDS) / pages, MIN_SECONDS_PER_PAGE)
 
 
 def smoothed(old, measured):
-    """The new average time per page: the old one (0 if none) and the last section."""
+    """Return the new average time per page from the old one (0 if none) and the last section."""
     if not old:
         return measured
     return (1 - SMOOTHING) * old + SMOOTHING * measured
 
 
 def after_timeout(pages, seconds_per_page, seconds, fair=MIN_COUNTING_SECONDS):
-    """A section of ``pages`` was stopped after ``seconds`` because the time was up.
+    """Return what to learn from a section of ``pages`` that was stopped by the time.
 
-    ``fair`` is the time a single page must have had to count against the file (a run that is
-    shorter than that lowers it, or the file could never be given up).
+    The section ran for ``seconds``. ``fair`` is the time a single page must have had to count
+    against the file (a run that is shorter than that lowers it, or the file could never be
+    given up).
 
     :return: ``Timeout(pages, seconds_per_page, counts)``: the next section has half the pages
         (one at least), the time per page doubles, and ``counts`` says whether this is a try
@@ -133,10 +136,10 @@ def classify(
     max_attempts=3,
     empty_result=False,
 ):
-    """What to do now that ``ocrmypdf`` has ended.
+    """Decide what to do now that ``ocrmypdf`` has ended.
 
     :param exit_code: of the program; negative if a signal ended it
-    :param stderr: what it wrote as errors (text)
+    :param stderr: what it wrote to stderr (text)
     :param tried: what was added to this section already (``DPI``, ``FORCE``, ``DOWNSAMPLE``)
     :param attempts: tries of this file that count, so far
     :param max_attempts: the tries after which the file is given up
@@ -152,8 +155,8 @@ def classify(
             return Outcome(DONE, None, None, attempts)
         return _once(FORCE, tried, attempts, "empty_result")
     if exit_code == 2:
-        # The program refuses what it was told (an option it does not know): code 2 as well, and
-        # its message names the options, ``--image-dpi`` among them. That is our fault, not the file's.
+        # The program refuses what it was told (an option it does not know): code 2 as well, and its
+        # message names the options, ``--image-dpi`` among them. That is our fault, not the file's.
         if "usage: ocrmypdf" in text:
             return Outcome(BLOCK, "bad_setup", None, attempts)
         if "resolution (dpi)" in text:
@@ -178,19 +181,20 @@ def classify(
 
 
 def _once(add, tried, attempts, reason):
-    """The same section again with ``add`` - or the end if that was tried already."""
     if add in tried:
         return Outcome(FAIL, reason, None, attempts)
     return Outcome(AGAIN, reason, add, attempts)
 
 
 def estimate_dpi(width_pixels):
-    """The resolution of an image of unknown resolution, taking its width for an A4 page's."""
+    """Return the resolution of an image of unknown resolution, taking its width for an A4 page's.
+    """
     return max(round(width_pixels / A4_WIDTH_INCHES), 1)
 
 
 def page_ranges(numbers):
-    """The pages as ``ocrmypdf --pages`` takes them: ``[3, 7, 12, 13, 14]`` is ``"3,7,12-14"``."""
+    """Return the pages as ``ocrmypdf --pages`` takes them: ``[3, 7, 12, 13, 14]`` is ``"3,7,12-14"``.
+    """
     parts = []
     for number in sorted(set(numbers)):
         if parts and number == parts[-1][1] + 1:
@@ -213,10 +217,11 @@ def section_command(
     add=frozenset(),
     image_dpi=None,
 ):
-    """The command line for one section: ``ocrmypdf`` on the page numbers in ``pages``.
+    """Return the command line for one section: ``ocrmypdf`` on the page numbers in ``pages``.
 
-    The other pages of the file are taken over as they are. Without ``FORCE`` pages that have text are left alone (``--skip-text``); with it every page
-    is rasterized and read. Deskew and rotation are left out where the caller says so.
+    The other pages of the file are taken over as they are. Without ``FORCE`` pages that have
+    text are left alone (``--skip-text``); with it every page is rasterized and read. Deskew
+    and rotation are left out where the caller says so.
 
     :param add: what an earlier try of this section added, see ``classify``
     :param image_dpi: the resolution, for the try that has ``DPI`` in ``add``

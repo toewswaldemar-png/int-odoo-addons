@@ -26,20 +26,20 @@ _logger = logging.getLogger(__name__)
 
 # The folder of the sections of the files that are being recognized, next to the blobs.
 OCR_FOLDER = ".ocr"
-# The setup (a missing language, a full disk) keeps the recognition from starting for this long.
+# A fault of the setup (a missing language, a full disk) keeps the recognition from starting for this long.
 OCR_BLOCK_PARAMETER = "int_filemanager.ocr_blocked"
 OCR_BLOCK_SECONDS = 3600
-# What the programs are asked for their version and languages: kept for this long.
+# The versions and languages of the programs are cached for this long.
 TOOLS_CACHE_SECONDS = 300
-# The last bytes of what the recognition wrote as errors, kept for the decision and the message.
+# The last bytes of what the recognition wrote to stderr, kept for the decision and the message.
 STDERR_BYTES = 4000
-# A process that was told to stop gets this long before it is killed.
+# A process that was told to stop has this long before it is killed.
 KILL_GRACE_SECONDS = 5
 # A section stopped after less than this teaches nothing: it had no time to speak of.
 MIN_TEACH_SECONDS = 5
-# The reading of a finished section gets at least this long, whatever is left of the run.
+# Reading a finished section takes at least this long, whatever is left of the run.
 MIN_READ_SECONDS = 10
-# Files in a job folder younger than this are left to the cleaner (a section may be writing).
+# Files in a job folder younger than this are left to the garbage collector (a section may be writing).
 JOB_MIN_AGE_SECONDS = 600
 OCR_LANGUAGES = re.compile(r"[A-Za-z0-9_]+(\+[A-Za-z0-9_]+)*")
 DEFAULT_LANGUAGES = "deu+eng"
@@ -83,7 +83,7 @@ class IntFilemanagerText(models.Model):
     ocr_seconds_per_page = fields.Float(string="Seconds per page", readonly=True)
 
     # The PDF the recognition made (a blob of the storage, no document has it): its checksum
-    # keeps it from the cleaner of the blobs, and its size is for the status in the settings.
+    # keeps it from the blob garbage collector, and its size is for the status in the settings.
     ocr_checksum = fields.Char(string="Recognized PDF (checksum)", readonly=True, index="btree_not_null")
 
     ocr_size = fields.Float(string="Recognized PDF (size)", readonly=True)
@@ -99,7 +99,7 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_options(self):
-        """What the settings say about the recognition."""
+        # sudo: ir.config_parameter: the settings are read by the scheduled action and the administrators
         params = self.env["ir.config_parameter"].sudo()
         languages = params.get_param("int_filemanager.ocr_languages") or DEFAULT_LANGUAGES
         output_type = params.get_param("int_filemanager.ocr_output_type")
@@ -114,10 +114,10 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_tools(self):
-        """The programs of the recognition: ``{"program", "version", "tesseract", "languages"}``.
+        """Return the programs of the recognition: ``{"program", "version", "tesseract", "languages"}``.
 
-        ``program`` and ``tesseract`` are the paths, or ``False`` where the program is missing.
-        Kept for a few minutes: asking costs two starts of a process.
+        ``program`` and ``tesseract`` are paths, or ``False`` where the program is missing.
+        The result is cached for a few minutes: asking costs two process starts.
         """
         cached = _tools_cache.get("tools")
         if cached and time.monotonic() - cached[0] < TOOLS_CACHE_SECONDS:
@@ -140,7 +140,7 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_blocked(self):
-        """``(code, detail)`` while a fault of the setup keeps the recognition from starting."""
+        # sudo: ir.config_parameter: the block is kept by the code, not by a user
         value = self.env["ir.config_parameter"].sudo().get_param(OCR_BLOCK_PARAMETER)
         if not value:
             return None
@@ -154,14 +154,15 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_block(self, code, detail=""):
-        """Keep the recognition from starting for a while (a full disk, a wrong setup)."""
+        # sudo: ir.config_parameter: the block is kept by the code, not by a user
         self.env["ir.config_parameter"].sudo().set_param(
             OCR_BLOCK_PARAMETER, f"{time.time()}|{code}|{detail[:200].replace('|', '/')}"
         )
 
     @api.model
     def _ocr_ready(self):
-        """Whether the recognition can run: ``(yes, reason)``; the reason is a short code."""
+        """Return ``(ready, reason)``: whether the recognition can run, and a short reason code if not.
+        """
         options = self._ocr_options()
         if not options["enabled"]:
             return False, "off"
@@ -177,14 +178,17 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_step(self, deadline):
-        """Recognize a section of the next scan that waits: ``OCR_PROGRESS``, ``OCR_IDLE`` or ``OCR_NO_TIME``."""
+        """Recognize a section of the next scan that waits.
+
+        :return: ``OCR_PROGRESS``, ``OCR_IDLE`` or ``OCR_NO_TIME``
+        """
         if not self._ocr_ready()[0]:
             return OCR_IDLE
         row = self.search([("ocr_state", "=", "wait")], order="id", limit=1)
         if not row:
             return OCR_IDLE
         if not row.try_lock_for_update():
-            # Somebody holds it (the cleaner); the next run tries again.
+            # Locked by someone else (the garbage collector): the next run tries again.
             return OCR_NO_TIME
         return row._ocr_section(deadline)
 
@@ -193,12 +197,10 @@ class IntFilemanagerText(models.Model):
         return os.path.join(filestore(self.env), BLOB_FOLDER, OCR_FOLDER)
 
     def _job_dir(self):
-        """The folder of the sections of this file."""
         self.ensure_one()
         return os.path.join(self._ocr_dir(), str(self.id))
 
     def _ocr_section_path(self):
-        """The last finished section if it is there and whole, else ``False``."""
         self.ensure_one()
         if not self.ocr_file:
             return False
@@ -210,21 +212,17 @@ class IntFilemanagerText(models.Model):
         return path if whole else False
 
     def _ocr_pages_left(self):
-        """How many pages the recognition has still to do: the scans from ``ocr_next_page`` on.
-
-        A picture has its frames (no rows of pages); a PDF has the pages that are scans.
-        """
         self.ensure_one()
         if self.mimetype in IMAGE_TYPES:
             return max(self.page_count - self.ocr_next_page + 1, 0)
         return len(self._ocr_pages(None))
 
     def _ocr_pages(self, limit):
-        """The numbers of the next ``limit`` pages to recognize, in order (``None``: all)."""
         self.ensure_one()
         if self.mimetype in IMAGE_TYPES:
             last = self.page_count if limit is None else min(self.page_count, self.ocr_next_page + limit - 1)
             return list(range(self.ocr_next_page, last + 1))
+        # sudo: int.filemanager.text.page: users have no access right to the pages
         pages = self.env["int.filemanager.text.page"].sudo().search_fetch(
             [("text_id", "=", self.id), ("scan", "=", True), ("page", ">=", self.ocr_next_page)],
             ["page"],
@@ -236,9 +234,9 @@ class IntFilemanagerText(models.Model):
     def _ocr_section(self, deadline):
         """Recognize the next section of the pages of this file, within the time.
 
-        The row says ``running`` (committed) while the program runs, so a crash is counted at
-        the next run. Sections build on each other: each reads the file the last one made, and
-        the row points to the new file in the same commit that saves the text of its pages.
+        The row says ``running`` (committed) while the program runs, so a crash is counted at the
+        next run. Sections build on each other: each reads the file the last one made, and the
+        row points to the new file in the same commit that saves the text of its pages.
 
         :return: ``OCR_PROGRESS`` (a step was done and is to be committed) or ``OCR_NO_TIME``
         """
@@ -247,7 +245,7 @@ class IntFilemanagerText(models.Model):
         source = self._ocr_section_path()
         if self.ocr_file and not source:
             # The file the row points to is gone (or not whole): start again from the original.
-            # It is the fault of a crash or the cleaner, not of the file: no try is used up.
+            # A crash or the garbage collector is to blame, not the file: no try is used up.
             self.write({"ocr_file": False, "ocr_file_size": 0, "ocr_next_page": 1})
         if not source:
             source = self.env["int.filemanager.document"]._blob_path(self.checksum)
@@ -264,7 +262,7 @@ class IntFilemanagerText(models.Model):
         if left < 1:
             self._ocr_finish()
             return OCR_PROGRESS
-        # The program gets the run up to the time that the reading of the new pages needs.
+        # The program may run until the time that reading the new pages needs.
         run_until = deadline - MIN_READ_SECONDS
         fair = ocr_plan.fair_seconds(self._budget()[2] - MIN_READ_SECONDS)
         pages = ocr_plan.section_pages(run_until - time.monotonic(), self.ocr_seconds_per_page, left, fair)
@@ -317,7 +315,7 @@ class IntFilemanagerText(models.Model):
                     tried.add(outcome.add)
                     continue
                 break
-            # The cleaner may have deleted the row while the program ran; it is then not needed.
+            # The garbage collector may have deleted the row while the program ran: nothing is left to do then
             row = self.browse(row_id).exists().try_lock_for_update()
             if not row:
                 shutil.rmtree(job, ignore_errors=True)
@@ -332,12 +330,12 @@ class IntFilemanagerText(models.Model):
         return OCR_PROGRESS
 
     def _ocr_io_failed(self, row_id, error):
-        """The disk or its folder failed after the row was set to ``running``.
+        """Handle a failure of the disk or its folder after the row was set to ``running``.
 
-        A full disk (or a quota) is the setup, not the file: the recognition pauses for a while
-        and the file waits as it was. Any other fault counts as a failed try. Told here because
-        nothing else would: the exception would roll the step back and leave the row
-        ``running``, to be counted as a crash at the next run.
+        A full disk (or a quota) is the setup, not the file: the recognition pauses for a while and
+        the file waits as it was. Any other fault counts as a failed try. The handling is here
+        because otherwise the exception would roll the step back and leave the row ``running``, to
+        be counted as a crash at the next run.
         """
         row = self.browse(row_id).exists().try_lock_for_update()
         if not row:
@@ -357,7 +355,7 @@ class IntFilemanagerText(models.Model):
         ``nice`` is the absolute priority of the settings; a lower number than the one of this
         process needs a right we do not have, so the priority stays as it is then.
 
-        :return: ``(exit code, what it wrote as errors, was stopped)``
+        :return: ``(exit code, what it wrote to stderr, was stopped)``
         """
         if seconds <= 0:
             return None, "", True
@@ -380,17 +378,20 @@ class IntFilemanagerText(models.Model):
             errors.seek(0, os.SEEK_END)
             errors.seek(max(errors.tell() - STDERR_BYTES, 0))
             text = errors.read().decode(errors="replace")
-        # 124: the time was up. -9: ``timeout`` had to kill it, or the machine did (its memory):
-        # only the time tells.
+        # 124: the time was up. -9: ``timeout`` had to kill it, or the machine did (memory): only
+        # the elapsed time tells which.
         code = done.returncode
         return code, text, code == 124 or (code == -signal.SIGKILL and time.monotonic() - started >= seconds)
 
     def _ocr_timed_out(self, pages, used, fair):
-        """A section was stopped by the time: the next one is smaller; a lone page may count."""
+        """Handle a section that the time stopped.
+
+        The next section is smaller, and a lone page may count as a try.
+        """
         self.ensure_one()
         self._ocr_clean_job(keep=self.ocr_file)
         if used < MIN_TEACH_SECONDS:
-            # It got no time worth the name: no lesson for the file.
+            # It had no time worth speaking of: nothing to learn for the file.
             self.write({"ocr_state": "wait"})
             return
         lesson = ocr_plan.after_timeout(pages, self.ocr_seconds_per_page, used, fair)
@@ -473,17 +474,18 @@ class IntFilemanagerText(models.Model):
         )
         if not self._ocr_pages_left():
             self._ocr_finish()
-        # Last: this is done once the transaction is committed, whatever happens until then.
+        # Last: it runs after the commit of the transaction, whatever happens until then.
         if old and old != name:
             self._ocr_forget(os.path.join(self._job_dir(), old))
 
     def _ocr_finish(self):
-        """All pages are done: keep the recognized PDF if it gave text, and say so.
+        """Finish the recognition when all pages are done: keep the recognized PDF if it gave text.
 
         The PDF goes to the storage like an upload (``_store_stream``, ``_publish_blob``). It is
-        kept only if the recognition gave text to some page (``ocr_found_pages``): otherwise it
-        is a second copy of the file for nothing. The row is saved first, then the file is placed: the cleaner of the blobs waits
-        for this transaction and then sees the checksum (it is on its checklist before).
+        kept only if the recognition gave text to some page (``ocr_found_pages``): otherwise it is
+        a second copy of the file for nothing. The row is saved first, then the file is placed:
+        the blob garbage collector waits for this transaction and then sees the checksum (it is on
+        its checklist before).
         """
         self.ensure_one()
         Document = self.env["int.filemanager.document"]
@@ -518,7 +520,6 @@ class IntFilemanagerText(models.Model):
         self._ocr_drop_job()
 
     def _ocr_after_failure(self, reason):
-        """The recognition did not finish: try again, or give up after the tries are used up."""
         self.ensure_one()
         attempts = self.ocr_attempts + 1
         if attempts >= self._setting("max_attempts"):
@@ -553,7 +554,6 @@ class IntFilemanagerText(models.Model):
         self._ocr_drop_job()
 
     def _ocr_clean_job(self, keep=None):
-        """Remove what a stopped program left in the job folder (the file ``keep`` stays)."""
         self.ensure_one()
         job = self._job_dir()
         if not os.path.isdir(job):
@@ -563,7 +563,8 @@ class IntFilemanagerText(models.Model):
                 remove_path(entry.path)
 
     def _ocr_drop_job(self):
-        """Remove the job folder once this transaction is committed (it may be used until then)."""
+        """Remove the job folder after the commit of this transaction (it may be in use until then).
+        """
         path = self._job_dir()
         self.env.cr.postcommit.add(lambda: shutil.rmtree(path, ignore_errors=True))
 
@@ -573,7 +574,6 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_restart_values(self):
-        """The recognition of a file put back to the start (its state is left to the caller)."""
         return {
             "ocr_message": False,
             "ocr_next_page": 1,
@@ -589,10 +589,11 @@ class IntFilemanagerText(models.Model):
     def action_recognize_again(self):
         """Throw away the recognition and the text, and begin again with the original.
 
-        Public (the button calls it): it checks the right itself.
+        Public (the button calls it), so it checks the right itself.
         """
         if not self.env.user.has_group("int_filemanager.int_filemanager_group_admin"):
             raise AccessError(self.env._("Only a Filemanager administrator can do that."))
+        # sudo: int.filemanager.text: the administrators have no right to write the rows
         rows = self.sudo().filtered(lambda row: row.state not in ("pending", "running") and row.ocr_state != "running")
         for row in rows:
             row._ocr_drop_job()
@@ -600,16 +601,17 @@ class IntFilemanagerText(models.Model):
         rows._reset()
         cron = self.env.ref(TEXT_CRON_XMLID, raise_if_not_found=False)
         if cron:
+            # sudo: ir.cron: the scheduled action belongs to the superuser
             cron.sudo()._trigger()
 
-    # ---- Cleaning up the job folders -------------------------------------------
+    # === CLEANING UP THE JOB FOLDERS === #
 
     @api.autovacuum
     def _gc_ocr_jobs(self):
         """Delete what is left in the job folders: files of rows that are gone or have finished.
 
-        A row that is ``running`` is left alone, and so is everything younger than a few
-        minutes (a section may just be writing). A row that waits keeps the file it points to.
+        A row that is ``running`` is left alone, and so is everything younger than a few minutes
+        (a section may be writing). A row that waits keeps the file it points to.
         """
         base = self._ocr_dir()
         if not os.path.isdir(base):

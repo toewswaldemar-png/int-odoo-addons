@@ -19,25 +19,24 @@ UPLOAD_GROUP = "int_filemanager.int_filemanager_group_user"
 
 
 def max_upload_size(controller):
-    """The limit of one upload request in bytes, from the setting ``upload_max_gb``.
+    """Return the limit of one upload request in bytes, from the setting ``upload_max_gb``.
 
-    The core's own limit (128 MiB, or ``web.max_file_upload_size``) stops every upload route that
-    does not set its own. Odoo calls this after the sign-in, so the database is at hand. The body
-    is read before the controller runs, so only whoever may upload gets the large limit: every
-    other user (a portal user, a reader) keeps the limit that the core has just set on the
-    request, and is refused by the storage afterwards.
-
-    Werkzeug takes the body of a form into a temporary file before the controller runs: ``TMPDIR``
-    of the server needs the room of the biggest upload that may come at the same time, besides the
-    filestore (see docs/int_filemanager/betrieb.md).
+    The own limit of Odoo (128 MiB, or ``web.max_file_upload_size``) stops every upload route
+    that does not set its own. Odoo calls this after the sign-in, so the database is at hand.
+    The body is read before the controller runs, so only whoever may upload gets the large
+    limit: every other user keeps the limit that Odoo has just set on the request, and is
+    refused by the storage afterwards.
     """
+    # Werkzeug takes the body of a form into a temporary file before the controller runs, so
+    # ``TMPDIR`` of the server needs room for the biggest upload that may come at the same time
+    # (besides the filestore).
     if not request.env.user.has_group(UPLOAD_GROUP):
         return request.httprequest.max_content_length
     return request.env["int.filemanager.document"]._upload_max_size()
 
 
 def logged_chunks(entries, tag):
-    """The bytes of the ZIP, with a line in the log of how the stream ended.
+    """Yield the bytes of the ZIP and log how the stream ended.
 
     The answer is sent after Odoo has closed its cursor: nothing here may touch the database or
     the request, only the plain entries.
@@ -72,8 +71,8 @@ class IntFilemanager(http.Controller):
         Modules that keep more with the file (``_upload_values``), or send it somewhere else than
         a folder (``_upload_folder``, ``_after_upload``), read what they need from the form.
 
-        The answer is JSON; an error carries ``{"error": {"message": ...}}`` and a status that
-        Odoo's ``file_upload`` service shows to the user.
+        The answer is JSON; an error carries ``{"error": {"message": ...}}`` and a status that the
+        ``file_upload`` service of Odoo shows to the user.
         """
         files = request.httprequest.files.getlist("ufile")
         if len(files) != 1:
@@ -105,23 +104,23 @@ class IntFilemanager(http.Controller):
         )
 
     def _upload_folder(self, folder_id, **kwargs):
-        """The folder that takes the file: the one of the form, as the user sees it.
+        """Return the folder that takes the file: the one of the form, as the user sees it.
 
-        Whether the user may write into it is asked by the storage (``_create_from_stream``)
-        of the folder as it is returned here. A module that takes the folder from somewhere else
-        and has checked another right (the record of an upload) returns it as superuser.
+        Whether the user may write into it is asked by the storage (``_create_from_stream``) of the
+        folder as it is returned here. A module that takes the folder from somewhere else and has
+        checked another right (the record of an upload) returns it as superuser.
         """
         return self._find_folder(folder_id)
 
     def _upload_values(self, **kwargs):
-        """The field values that the form of an upload adds to the document, none in the core."""
+        """Return the field values that the form of an upload adds to the document, none in ``int_filemanager``.
+        """
         return {}
 
     def _after_upload(self, document, **kwargs):
-        """What follows the storage of the file, nothing in the core."""
+        """Do what follows the storage of the file, nothing in ``int_filemanager``."""
 
     def _find_folder(self, folder_id):
-        """The active folder with this id that the user sees, else 404 (the same for both)."""
         try:
             folder = request.env["int.filemanager.folder"].search([("id", "=", int(folder_id))])
         except (TypeError, ValueError):
@@ -135,7 +134,7 @@ class IntFilemanager(http.Controller):
 
     @http.route(f"{DOCUMENTS_ZIP_PATH}<string:ids>", type="http", auth="user", methods=["GET"])
     def zip(self, ids):
-        """The files of these documents as one ZIP, flat, sent as it is written.
+        """Send the files of these documents as one ZIP, flat, as it is written.
 
         The address comes from ``action_download``, but nothing there counts: the companies of the
         list (the cookie of the web client) are checked against the user, and every document is
@@ -161,11 +160,11 @@ class IntFilemanager(http.Controller):
 
     @http.route(f"{FOLDER_ZIP_PATH}<int:folder_id>", type="http", auth="user", methods=["GET"])
     def folder_zip(self, folder_id):
-        """A folder with everything below it that the user sees, as one ZIP.
+        """Send a folder with everything below it that the user sees, as one ZIP.
 
         The checks are those of ``zip``: the companies of the list from the cookie, the folder read
         as the user, now. What lies below is what the user sees on the way down from this folder
-        (``_zip_tree``): the name of a folder that is hidden is nowhere in the archive.
+        (``_zip_tree``): the name of a hidden folder is nowhere in the archive.
         """
         companies = self._list_companies()
         folder = request.env["int.filemanager.folder"].with_context(allowed_company_ids=companies).browse(folder_id)
@@ -179,7 +178,6 @@ class IntFilemanager(http.Controller):
         return self._zip_response(entries, f"{export_name(folder.name)}-{fields.Date.context_today(folder)}.zip")
 
     def _list_companies(self):
-        """The companies that the list of the web client shows (its cookie), as ids; 400 if broken."""
         try:
             return [
                 int(company_id)
@@ -189,7 +187,6 @@ class IntFilemanager(http.Controller):
             raise BadRequest() from None
 
     def _zip_refused(self, error):
-        """The answer to what cannot be a ZIP: 409 with the reason, which the user reads in the tab."""
         return request.make_response(error.args[0], headers=[("Content-Type", "text/plain; charset=utf-8")], status=409)
 
     def _zip_response(self, entries, name):

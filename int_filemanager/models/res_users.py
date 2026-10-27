@@ -26,12 +26,15 @@ class ResUsers(models.Model):
     @api.depends("res_users_settings_id.int_filemanager_open_mode")
     def _compute_int_filemanager_open_mode(self):
         for user in self:
-            # sudo: the settings of a user are no one else's business, but the user reads theirs
+            # sudo: res.users.settings: the settings of a user are no one else's business, but the
+            # user reads theirs
             user.int_filemanager_open_mode = (
                 user.sudo().res_users_settings_id.int_filemanager_open_mode or "default"
             )
 
     def _inverse_int_filemanager_open_mode(self):
         for user in self.filtered(lambda user: user._is_internal()):
+            # sudo: res.users.settings: the field is in the preferences of the user, who may not
+            # create the settings record
             settings = self.env["res.users.settings"].sudo()._find_or_create_for_user(user)
             settings.int_filemanager_open_mode = user.int_filemanager_open_mode

@@ -10,14 +10,14 @@ from ..tools.zip_stream import ZipEntry, export_names
 from .int_filemanager_folder import CASCADE_KEY
 
 BLOB_FOLDER = "int_filemanager"
-# The ids of a ZIP go into the address, and the proxy takes 8 KB of the request line.
+# The ids of a ZIP go into the address, and the proxy accepts 8 KB of request line.
 ZIP_PATH_MAX_LENGTH = 7000
 DOCUMENTS_ZIP_PATH = "/int_filemanager/zip/"
-# Names of missing files shown in a message.
+# The most names of missing files that a message lists.
 MISSING_NAMES_SHOWN = 5
 CHECKSUM_REGEX = re.compile(r"[0-9a-f]{64}")
-# Set by the storage only (see ``write``), like the core does for ``ir.attachment``. The picture
-# of a PDF and its state are made by the scheduled action alone.
+# Set by the storage only (see ``write``), like ``ir.attachment`` does. The picture of a PDF, the
+# preview and their states are made by the scheduled actions alone.
 STORAGE_FIELDS = (
     "checksum",
     "size",
@@ -29,9 +29,9 @@ STORAGE_FIELDS = (
 )
 PDF = "application/pdf"
 THUMBNAIL_CRON_XMLID = "int_filemanager.int_filemanager_thumbnail_cron"
-# The office files that LibreOffice turns into a PDF for the viewer (``_cron_previews``), with the
-# ending it needs to know the format (a blob has none).
 PREVIEW_CRON_XMLID = "int_filemanager.int_filemanager_preview_cron"
+# The office files that LibreOffice turns into a PDF for the viewer (``_cron_previews``), with the
+# extension it needs to know the format (a blob has none).
 PREVIEW_EXTENSIONS = {
     "application/msword": "doc",
     "application/rtf": "rtf",
@@ -47,7 +47,6 @@ PREVIEW_EXTENSIONS = {
 
 
 def _files_in(directory):
-    """The names of the files in a directory, none if it is not there."""
     try:
         with os.scandir(directory) as listing:
             return {entry.name for entry in listing}
@@ -61,7 +60,7 @@ class IntFilemanagerDocument(models.Model):
     The bytes lie in ``<filestore>/int_filemanager/<sha256[:2]>/<sha256>``, not in
     ``ir.attachment`` (its size field is an int4, and it holds a whole file in memory).
     Documents are only created by the storage (``_create_from_stream``), which runs as
-    superuser: the users have no right to create them.
+    superuser: users have no right to create them.
     """
 
     _name = "int.filemanager.document"
@@ -83,9 +82,9 @@ class IntFilemanagerDocument(models.Model):
     size = fields.Float(readonly=True)
     mimetype = fields.Char(readonly=True)
     active = fields.Boolean(default=True, tracking=True)
-    # When the document went to the trash, for the cleaning of it (``_gc_trash``). Not
-    # ``write_date``: the scheduled actions write to archived documents too (previews, texts), which
-    # would start the time again and again.
+    # When the document went to the trash, used by ``_gc_trash``. Not ``write_date``: the scheduled
+    # actions write to archived documents too (previews, texts), which would restart the clock
+    # again and again.
     archived_date = fields.Datetime(compute="_compute_archived_date", store=True, copy=False)
     tag_ids = fields.Many2many(
         "int.filemanager.tag",
@@ -118,16 +117,27 @@ class IntFilemanagerDocument(models.Model):
         copy=False,
         exportable=False,
     )
-    # The checksum of that PDF, empty if there is none; the viewer asks for it to choose the
-    # address, and it changes the address of the file when the PDF changes.
+    # The checksum of that PDF, empty if there is none. The viewer puts it in the address, so the
+    # address changes when the PDF changes.
     viewer_pdf_checksum = fields.Char(
         string="PDF for the viewer",
         compute="_compute_viewer_pdf_checksum",
         copy=False,
         exportable=False,
     )
-    # "mp3" for "song.MP3": the kind of file as the user knows it; the mimetype says "audio/mpeg".
-    extension = fields.Char(compute="_compute_extension", exportable=False)
+    extension = fields.Char(
+        compute="_compute_extension",
+        exportable=False,
+        help="The extension of the file name in lower case, for example mp3 for song.MP3.",
+    )
+    is_duplicated = fields.Boolean(
+        string="Duplicate",
+        compute="_compute_is_duplicated",
+        search="_search_is_duplicated",
+        exportable=False,
+        help="Another document that you may read has the same file. The storage keeps one copy for "
+        "both; the documents stay separate.",
+    )
 
     _name_per_folder = models.UniqueIndex(
         '(folder_id, lower(name COLLATE "und-x-icu")) WHERE active',
@@ -153,6 +163,22 @@ class IntFilemanagerDocument(models.Model):
         # module that recognizes the text of scans (``int_filemanager_ocr``) adds the PDF it made.
         for document in self:
             document.viewer_pdf_checksum = document.preview_checksum
+
+    def _compute_is_duplicated(self):
+        groups = self._read_group(
+            [("checksum", "in", self.mapped("checksum"))],
+            ["checksum"],
+            having=[("__count", ">", 1)],
+        )
+        duplicated = {checksum for [checksum] in groups}
+        for document in self:
+            document.is_duplicated = document.checksum in duplicated
+
+    def _search_is_duplicated(self, operator, value):
+        if operator != "in":
+            return NotImplemented
+        groups = self._read_group([], ["checksum"], having=[("__count", ">", 1)])
+        return [("checksum", "in", [checksum for [checksum] in groups])]
 
     @api.depends("active")
     def _compute_archived_date(self):
@@ -198,31 +224,32 @@ class IntFilemanagerDocument(models.Model):
         plain = self.with_context(hierarchical_naming=False)
         result = super(IntFilemanagerDocument, plain).write(vals)
         if old_checksums:
-            # Another file: the blob it had may be free now (the cleaner looks).
+            # Another file: the old blob may be unused now, so mark it for the garbage collector.
             for checksum in old_checksums - {vals["checksum"]} | old_previews - {False}:
                 self._mark_blob_for_gc(checksum)
         return result
 
     def _filtered_folder_access(self, operation="read"):
-        """The documents whose folder the user may ``operation``.
+        """Return the documents whose folder the user may ``operation``.
 
         A document is seen by the rules of its folder, so this is ``_filtered_access`` as far as
-        the folders go. A module that shows a document by another way (a record it is linked to)
+        the folders go. A module that shows a document another way (a record it is linked to)
         does not change the answer: it is what the folders show, for whoever may not pass on a
-        document that they see only by that other way. As ``ir.attachment`` asks the record it
+        document that they see only the other way. As ``ir.attachment`` asks the record it
         belongs to, here the folder is asked.
         """
-        # The ids as superuser (the user may not read the document), the check as the user.
+        # sudo: the user may not read the document, so only the ids of the folders are taken here;
+        # the check itself runs as the user
         folders = self.env["int.filemanager.folder"].browse(self.sudo().folder_id.ids)
         allowed = set(folders._filtered_access(operation).ids)
         return self.filtered(lambda document: document.sudo().folder_id.id in allowed)
 
     def _documents_referenced(self):
-        """Of these documents, those that something else points to; none in the core.
+        """Return those of these documents that something else points to; none in ``int_filemanager``.
 
         A module that keeps a reference to a document (a link to a record, say) returns them with
-        ``super()``, so that whoever may take a file away (a guest of a share, for its own
-        uploads) leaves them alone.
+        ``super()``, so that whoever may remove a file (a guest of a share, for their own uploads)
+        leaves them alone.
         """
         return self.browse()
 
@@ -240,6 +267,8 @@ class IntFilemanagerDocument(models.Model):
             return
         if not self.env.su:
             folder.check_access("write")
+        # sudo: int.filemanager.folder: only the state of the target is checked, the rights were
+        # checked above
         folder.sudo()._check_active_target()
         taken = moved._names_taken("folder_id", folder)
         if taken:
@@ -249,7 +278,7 @@ class IntFilemanagerDocument(models.Model):
 
     def unlink(self):
         # First delete the rows, then mark the blobs, like ir.attachment.unlink. A blob that
-        # another document uses (or an archived one) is kept by the cleaner.
+        # another document uses (or an archived one) is kept by the garbage collector.
         checksums = set(self.mapped("checksum")) | set(self.mapped("preview_checksum")) - {False}
         result = super().unlink()
         for checksum in checksums:
@@ -257,7 +286,7 @@ class IntFilemanagerDocument(models.Model):
         return result
 
     def action_download(self):
-        """Let the browser download the file (the route is the core's, see ``_to_http_stream``).
+        """Let the browser download the file (the route is that of Odoo, see ``_to_http_stream``).
 
         Several documents come as one ZIP from the route of the filemanager (``_zip_url``).
         """
@@ -272,11 +301,11 @@ class IntFilemanagerDocument(models.Model):
         }
 
     def _zip_url(self):
-        """The address of the ZIP of these documents, after the checks that tell the user why not.
+        """Return the address of the ZIP of these documents, after the checks that tell the user why not.
 
         The route checks everything again when the browser asks: the rights and the companies
-        count at that moment, not at this one. Here the user gets a message at once instead of
-        an error page in a new tab.
+        count at that moment, not at this one. Here the user gets a message at once instead of an
+        error page in a new tab.
         """
         path = DOCUMENTS_ZIP_PATH + ",".join(str(document_id) for document_id in self.ids)
         if len(path) > ZIP_PATH_MAX_LENGTH:
@@ -287,10 +316,10 @@ class IntFilemanagerDocument(models.Model):
         return path
 
     def _zip_entries(self):
-        """The entries of the ZIP of these documents, flat, in the order of their ids.
+        """Return the entries of the ZIP of these documents, flat, in the order of their ids.
 
-        Refuses what cannot be a ZIP: a file whose blob is missing (the message names them, a ZIP
-        without them would look complete), or more bytes than the system parameter allows.
+        It refuses what cannot be a ZIP: a file whose blob is missing (the message names them, a
+        ZIP without them would look complete), or more bytes than the system parameter allows.
         """
         names = export_names((document.id, document.name) for document in self)
         entries = self._zip_files(names)
@@ -298,13 +327,13 @@ class IntFilemanagerDocument(models.Model):
         return entries
 
     def _zip_files(self, names):
-        """The entries of these documents, each under its name in the archive (``{id: name}``).
+        """Return the entries of these documents, each under its name in the archive (``{id: name}``).
 
-        Which blobs are there is read from their directories, one listing for each (the filestore
-        is a network file system on our server: a ``stat`` for each of 300,000 files took 90
-        seconds, the proxy gives up after that). The size is the one that was measured when the
-        file was stored; the blob is named by its checksum, so it does not change. A file that is
-        not as big as that breaks the stream (see ``zip_chunks``), it cannot look complete.
+        Which blobs exist is read from their directories, one listing for each: a ``stat`` per
+        file is slow on a network file system with many files. The size is the one measured when
+        the file was stored; the blob is named by its checksum, so it does not change. A file
+        that is not as big as that breaks the stream (see ``zip_chunks``), so it cannot look
+        complete.
         """
         entries, missing = [], []
         listings = {}
@@ -333,7 +362,6 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _check_zip_size(self, total):
-        """Refuse more bytes than one ZIP may hold (the system parameter)."""
         limit = self._zip_max_size()
         if total > limit:
             raise UserError(
@@ -347,16 +375,14 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _zip_max_size(self):
-        """The most bytes of the files in one ZIP (the setting ``zip_max_gb``).
+        """Return the most bytes of the files in one ZIP (the setting ``zip_max_gb``).
 
-        The server stops a request after 30 minutes in our setup (``limit_time_real``), and a slow
-        line keeps it that long: see docs/int_filemanager/erkenntnisse.md.
+        The server stops a request after ``limit_time_real``, and a slow line keeps it that long.
         """
         return self.env["int.filemanager.cron"]._setting("zip_max_gb") * 1024**3
 
     @api.model
     def _upload_max_size(self):
-        """The most bytes of one upload request (the setting ``upload_max_gb``)."""
         return self.env["int.filemanager.cron"]._setting("upload_max_gb") * 1024**3
 
     def _check_one_selected(self):
@@ -365,7 +391,7 @@ class IntFilemanagerDocument(models.Model):
             raise UserError(self.env._("Select exactly one document."))
 
     def _to_viewer_pdf_http_stream(self):
-        """The PDF of the file that is not the file as a stream, for the viewer.
+        """Return the PDF of the file that is not the file, as a stream for the viewer.
 
         That is the preview of an office file, or the PDF that another module made of the file.
         ``ir.binary._record_to_stream`` calls it for the field ``viewer_pdf_content``: the way in
@@ -392,12 +418,11 @@ class IntFilemanagerDocument(models.Model):
         )
 
     def _to_http_stream(self):
-        """The blob as a stream for the download.
+        """Return the blob as a stream for the download.
 
-        ``ir.binary._record_to_stream`` calls it. The stream is a path, so with
-        ``--x-sendfile`` the proxy delivers the file and Odoo's thread is free. The checksum is
-        the ETag (the blob never changes), the request is cached and answered with 304 or a range
-        by the core.
+        ``ir.binary._record_to_stream`` calls it. The stream is a path, so with ``--x-sendfile``
+        the proxy delivers the file and the thread of Odoo is free. The checksum is the ETag (the
+        blob never changes), so the core answers with 304 or a range.
         """
         self.ensure_one()
         path = self._blob_path(self.checksum)

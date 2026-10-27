@@ -774,6 +774,15 @@ msgid "The secret part of the address. Whoever has the address has the share."
 msgstr "Der geheime Teil der Adresse. Wer die Adresse hat, hat die Freigabe."
 
 #. module: int_filemanager_share
+#: model:ir.model.fields,help:int_filemanager_share.field_int_filemanager_document__share_id
+msgid ""
+"The share (link for guests) that a guest uploaded the file through. Empty "
+"for all other files."
+msgstr ""
+"Die Freigabe (Link für Gäste), über die ein Gast die Datei hochgeladen "
+"hat. Leer bei allen anderen Dateien."
+
+#. module: int_filemanager_share
 #. odoo-python
 #: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
 msgid "The target of a share cannot be changed. Make a new share."

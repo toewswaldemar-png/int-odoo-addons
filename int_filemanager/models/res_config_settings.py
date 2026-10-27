@@ -103,9 +103,11 @@ class ResConfigSettings(models.TransientModel):
     @api.model
     @tools.ormcache("program")
     def _int_filemanager_program_version(self, program):
-        """What the program says to ``--version``. It starts a process, and the screen asks again
-        at every change of a field: the answer is kept until the cache of the registry is cleared
-        (a restart, an update of a module)."""
+        """Return what the program says to ``--version``.
+
+        It starts a process, and the screen asks again at every change of a field, so the answer
+        is cached until the cache of the registry is cleared (a restart, an update of a module).
+        """
         return probe([program, "--version"]).strip()
 
     @api.depends_context("uid")

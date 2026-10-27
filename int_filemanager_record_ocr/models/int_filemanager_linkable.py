@@ -15,7 +15,7 @@ class IntFilemanagerLinkable(models.AbstractModel):
         self.document_search = False
 
     def _search_document_search(self, operator, value):
-        """Records with a document whose file has these words in it (``content_search``).
+        """Search the records with a document whose file contains these words (``content_search``).
 
         Only the documents that the user sees take part: ``any`` applies the rules of the link
         and of the document.

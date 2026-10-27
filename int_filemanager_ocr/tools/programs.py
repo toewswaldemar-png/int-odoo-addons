@@ -11,10 +11,10 @@ IMAGE_INFO = os.path.join(os.path.dirname(__file__), "image_info.py")
 
 
 def image_info(path):
-    """``(number of pictures, width in pixels)`` of an image file, from its header; ``None`` if it is none.
+    """Return ``(number of pictures, width in pixels)`` of an image file, or ``None`` if it is none.
 
-    A child process answers (``tools/image_info.py``): the Odoo process loads only some of the
-    formats of Pillow, and TIFF and WebP are not among them.
+    The numbers come from the header. A child process answers (``tools/image_info.py``): the
+    Odoo process loads only some of the formats of Pillow, and TIFF and WebP are not among them.
     """
     try:
         done = subprocess.run(  # noqa: S603 (own script, own interpreter, no shell)

@@ -235,6 +235,11 @@ msgid "Seen through a linked record"
 msgstr ""
 
 #. module: int_filemanager_record
+#: model:ir.model.fields,help:int_filemanager_record.field_int_filemanager_document__partner_ids
+msgid "The contacts that the document is linked to."
+msgstr ""
+
+#. module: int_filemanager_record
 #: model:ir.model.fields,help:int_filemanager_record.field_int_filemanager_folder__model_folder_ids
 msgid ""
 "The kinds of record whose uploaded files go to this folder, for example "

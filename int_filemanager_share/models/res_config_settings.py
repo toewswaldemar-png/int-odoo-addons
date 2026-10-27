@@ -116,7 +116,8 @@ class ResConfigSettings(models.TransientModel):
 
     @api.constrains(*SHARE_NUMBERS)
     def _check_int_filemanager_share_numbers(self):
-        """At least 1, and a new share must not start above what a share may be."""
+        """Check that every number is at least 1 and that a new share does not start above what a share may be.
+        """
         pairs = (
             ("int_filemanager_share_default_file_mb", "int_filemanager_share_max_file_mb"),
             ("int_filemanager_share_default_total_mb", "int_filemanager_share_max_total_mb"),

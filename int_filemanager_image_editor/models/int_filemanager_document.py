@@ -1,6 +1,6 @@
 from odoo import fields, models
 
-# Set by the upload only, like the storage fields of the core (see ``write``).
+# Set by the upload only, like the storage fields of ``int_filemanager`` (see ``write``).
 EDIT_FIELDS = ("edit_source_id", "edit_state")
 
 
@@ -30,16 +30,16 @@ class IntFilemanagerDocument(models.Model):
 
     def write(self, vals):
         # ``readonly`` holds in the interface only: through RPC a user could give a picture the
-        # state of another one. As in the core, drop such values; the storage runs as superuser.
+        # state of another one. As in ``int_filemanager``, drop such values; the storage runs as superuser.
         if not self.env.su:
             vals = {key: value for key, value in vals.items() if key not in EDIT_FIELDS}
         return super().write(vals)
 
     def get_edit_session(self):
-        """What the picture editor needs to go on with a picture that it stored before.
+        """Return what the picture editor needs to go on with a picture that it stored before.
 
-        The state of the editor and the picture that it was made on. The picture is handed out
-        only if the user may read it (their rules, and not archived): the one who may read the
+        That is the state of the editor and the picture that it was made on. The picture is handed
+        out only if the user may read it (their rules, and not archived): the one who may read the
         edited picture need not see where it came from. The editor then starts with the flat
         picture.
 
@@ -48,6 +48,7 @@ class IntFilemanagerDocument(models.Model):
         """
         self.ensure_one()
         self.check_access("read")
+        # sudo: int.filemanager.document: the editor fields are readable by system administrators only
         stored = self.sudo()
         if not stored.edit_state or not stored.edit_source_id:
             return {}

@@ -250,4 +250,5 @@ class ResConfigSettings(models.TransientModel):
             settings.int_filemanager_text_failed = counts["failed"]
             settings.int_filemanager_text_budget = budget
             settings.int_filemanager_text_reader = reader
+            # sudo: ir.cron: every administrator sees when the scheduled action last ran
             settings.int_filemanager_text_lastcall = cron.sudo().lastcall if cron else False

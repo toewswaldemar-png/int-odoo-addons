@@ -38,19 +38,20 @@ class IntFilemanagerLinkable(models.AbstractModel):
     def unlink(self):
         ids = self.ids
         result = super().unlink()
+        # sudo: int.filemanager.link: the links of a deleted record go with it, whoever deletes it
         self.env["int.filemanager.link"].sudo().search(
             [("res_model", "=", self._name), ("res_id", "in", ids)]
         ).unlink()
         return result
 
     def action_open_documents(self):
-        """Show the documents of this record in the list of the filemanager."""
         self.ensure_one()
         action = self.env["ir.actions.act_window"]._for_xml_id(
             "int_filemanager.int_filemanager_document_action"
         )
         # Without the panel of the folders: the user of the record may not see the folders. The
         # keys of the context tell the list where an upload goes (the record, not a folder).
+        # sudo: ir.ui.view: only the id and the name of the view are read
         search_view = self.env.ref(
             "int_filemanager_record.int_filemanager_document_view_search_record"
         ).sudo()

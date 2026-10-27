@@ -15,6 +15,7 @@ class ResConfigSettings(models.TransientModel):
     def get_values(self):
         res = super().get_values()
         rule = self.env.ref("int_filemanager_record.int_filemanager_document_rule_record")
+        # sudo: ir.rule: the rule is read to show the setting
         res["int_filemanager_access_via_record"] = rule.sudo().active
         return res
 

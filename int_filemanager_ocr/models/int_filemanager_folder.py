@@ -11,8 +11,8 @@ class IntFilemanagerFolder(models.Model):
             ("off", "Off"),
         ],
         string="Text recognition in images",
-        # The administrators only: a field that is only left out of the view could be written
-        # through RPC by every user of the filemanager, and would start the recognition of images.
+        # Administrators only: a field that is only left out of the view could be written through
+        # RPC by every user of the filemanager, and would start the recognition of images.
         groups="int_filemanager.int_filemanager_group_admin",
         required=True,
         default="inherit",

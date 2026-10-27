@@ -9,8 +9,8 @@ class IntFilemanagerMove(models.TransientModel):
 
     Built like ``crm.lead.lost``: the records come in through the context of the action
     (``default_document_ids`` / ``default_folder_ids``) and the button acts on them. Nothing is
-    checked here: ``write`` of the document and of the folder checks the target (the rights of the
-    user, the target in use, the names, the company, the cycle), all or nothing.
+    checked here: ``write`` of the document and of the folder checks the target (the rights of
+    the user, the target in use, the names, the company, the cycle), all or nothing.
     """
 
     _name = "int.filemanager.move"
@@ -38,7 +38,6 @@ class IntFilemanagerMove(models.TransientModel):
                 move.summary = False
 
     def action_move(self):
-        """Put the documents (or the folders) into the target folder, then reload the view."""
         self.ensure_one()
         if not (self.document_ids or self.folder_ids):
             raise UserError(self.env._("Select at least one document or folder."))

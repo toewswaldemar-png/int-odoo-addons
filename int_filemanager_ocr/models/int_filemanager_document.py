@@ -5,12 +5,13 @@ from odoo.tools import SQL
 from .int_filemanager_text import TEXT_CRON_XMLID
 from .int_filemanager_text_page import folded
 
-# The context key with the words of the full text search (see ``content_hits``), and how many
-# of them, and how long, are looked at.
+# The context key with the words of the full text search (see ``content_hits``), the most words
+# and the longest word that are used.
 CONTENT_WORDS_KEY = "int_filemanager_words"
 CONTENT_WORDS_MAX = 10
 CONTENT_WORD_LENGTH = 200
-# The hits that the list loads at a time for one file (``get_content_hits``), and the most a call may ask for.
+# The hits that the list loads at a time for one file (``get_content_hits``), and the most that
+# one call may ask for.
 CONTENT_BLOCK = 20
 CONTENT_BLOCK_MAX = 50
 
@@ -42,9 +43,10 @@ class IntFilemanagerDocument(models.Model):
 
     @api.depends("checksum", "preview_checksum")
     def _compute_viewer_pdf_checksum(self):
-        # The text rows are for the administrators; the checksum of the PDF is no secret to
-        # whoever may read the document it belongs to. An office file has the preview instead.
+        # An office file has the preview instead.
         super()._compute_viewer_pdf_checksum()
+        # sudo: int.filemanager.text: users cannot read the text rows; the checksum of the PDF is no
+        # secret to whoever may read the document it belongs to
         Text = self.env["int.filemanager.text"].sudo()
         found = {
             row.checksum: row.ocr_checksum
@@ -61,7 +63,6 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _content_words(self, words):
-        """The words of a search as the search takes them: texts only, cut in length and in number."""
         if isinstance(words, str):
             words = [words]
         elif not isinstance(words, (list, tuple)):
@@ -71,7 +72,7 @@ class IntFilemanagerDocument(models.Model):
 
     @api.depends_context(CONTENT_WORDS_KEY)
     def _compute_content_hits(self):
-        """The first page of the files that have the words of the search, with an excerpt, and the count.
+        """Compute the first page with a hit of each file, with an excerpt, and the number of hits.
 
         The words come from the context: the search view sets them from what was typed in the
         field "Full text". Whoever sets them by hand only gets excerpts of files they can read
@@ -86,7 +87,7 @@ class IntFilemanagerDocument(models.Model):
             document.content_hit_count = entry["total"] if entry else 0
 
     def get_content_hits(self, words, offset=0, limit=CONTENT_BLOCK):
-        """A block of the pages of this file that have the words, for the list that shows all of them.
+        """Return a block of the pages of this file that have the words, for the list that shows all of them.
 
         Public (the list calls it), so it checks the right itself: only a file that the user may
         read gives hits, and no more than the search would find.
@@ -106,14 +107,15 @@ class IntFilemanagerDocument(models.Model):
         return found.get(self.checksum, {"hits": [], "total": 0})
 
     def _search_content_search(self, operator, value):
-        """Documents whose file has these words in it (``websearch`` syntax: quotes, ``-``, ``or``).
+        """Search the documents whose file has these words in it.
 
-        Words, not letters: ``Mueller`` finds ``Müller`` and the other way round, ``Rechnung`` finds
-        ``Rechnungen``, ``Rechn`` finds nothing. A plural with an umlaut is another word: ``Haus``
-        does not find ``Häuser`` (the folding makes ``haeuser``, the stemmer cuts ``haeus``). A text belongs to a blob, so every document with the
-        checksum is found; the rules of the folders still decide which of them the user sees,
-        as the search runs over the documents. Equal checksum means equal content, nothing
-        is given away by a hit in a folder the user cannot see.
+        The syntax is ``websearch`` (quotes, ``-``, ``or``). It matches words, not letters:
+        ``Mueller`` finds ``Müller`` and the other way round, ``Rechnung`` finds ``Rechnungen``,
+        ``Rechn`` finds nothing. A plural with an umlaut is another word: ``Haus`` does not find
+        ``Häuser`` (the folding makes ``haeuser``, the stemmer cuts ``haeus``). A text belongs to a
+        blob, so every document with the checksum is found; the rules of the folders still decide
+        which of them the user sees, as the search runs over the documents. Equal checksum means
+        equal content, so a hit in a folder the user cannot see gives nothing away.
         """
         if operator == "ilike" and isinstance(value, str):
             values = [value]
@@ -151,7 +153,7 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _gc_lock_tables(self):
-        # The recognized PDFs are blobs of the storage too: the cleaner locks their table as well.
+        # The recognized PDFs are blobs of the storage too: the garbage collector locks their table as well.
         return [*super()._gc_lock_tables(), self.env["int.filemanager.text"]._table]
 
     @api.model

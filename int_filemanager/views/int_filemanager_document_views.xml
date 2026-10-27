@@ -24,6 +24,7 @@
                 <field name="size" widget="int_filemanager_size" optional="show" />
                 <field name="write_date" string="Modified" optional="show" />
                 <field name="archived_date" string="Archived on" optional="hide" />
+                <field name="is_duplicated" optional="hide" />
                 <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show" />
                 <field
                     name="activity_ids"
@@ -153,6 +154,11 @@
                     string="Archived"
                     domain="[('active', '=', False)]"
                 />
+                <filter
+                    name="filter_duplicates"
+                    string="Duplicates"
+                    domain="[('is_duplicated', '=', True)]"
+                />
                 <separator />
                 <filter
                     name="filter_my_uploads"
@@ -230,6 +236,8 @@
                         context="{'group_by': 'mimetype'}"
                     />
                     <filter name="group_by_tag" string="Tags" context="{'group_by': 'tag_ids'}" />
+                    <!-- The documents with the same file side by side (with "Duplicates"). -->
+                    <filter name="group_by_checksum" string="Content" context="{'group_by': 'checksum'}" />
                     <filter
                         name="group_by_create_uid"
                         string="Created by"

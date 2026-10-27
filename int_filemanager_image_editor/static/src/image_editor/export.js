@@ -4,7 +4,7 @@ import { FORMATS } from "./constants";
 
 /**
  * Draws `source` onto a canvas of the size asked, if it has not that size already. A JPEG has no
- * transparency: it gets a white ground.
+ * transparency: it gets a white background.
  */
 function sized(source, width, height, opaque) {
     if (source.width === width && source.height === height && !opaque) {

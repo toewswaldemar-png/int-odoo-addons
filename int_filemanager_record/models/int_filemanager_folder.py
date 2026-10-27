@@ -8,9 +8,9 @@ class IntFilemanagerFolder(models.Model):
         "int.filemanager.model.folder",
         "folder_id",
         string="Upload folder for",
-        # The administrators only, like the settings themselves: they are the ones who have a
-        # right on the model, and a field that is only left out of the view could be written
-        # through RPC by every user of the filemanager.
+        # Administrators only, like the settings themselves: they are the ones with a right on
+        # the model, and a field that is only left out of the view could be written through
+        # RPC by every user of the filemanager.
         groups="int_filemanager.int_filemanager_group_admin",
         help="The kinds of record whose uploaded files go to this folder, for example "
         "contacts. Whoever may change such a record can upload files there, without access to "

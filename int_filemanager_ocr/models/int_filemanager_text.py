@@ -22,7 +22,7 @@ TEXT_CRON_XMLID = "int_filemanager_ocr.int_filemanager_text_cron"
 
 _logger = logging.getLogger(__name__)
 
-# Whoever changes how the text is read raises this: the texts are read again.
+# Raise this when the reading of the text changes: all texts are read again.
 ENGINE_VERSION = 2
 
 OFFICE_TYPES = (
@@ -33,9 +33,9 @@ OFFICE_TYPES = (
     "application/vnd.oasis.opendocument.spreadsheet",
     "application/vnd.oasis.opendocument.presentation",
 )
-# Pictures that the text recognition reads (what ``ocrmypdf`` takes as an image). A picture has no
-# text to read: its row exists only in a folder that has the recognition of images switched on,
-# and the recognition is its reading. No PDF is kept of it, the viewer shows the picture.
+# Pictures that the text recognition reads (what ``ocrmypdf`` accepts as an image). A picture has
+# no text to read: its row exists only in a folder with the recognition of images switched on,
+# and the recognition is its reading. No PDF is kept for it, the viewer shows the picture.
 IMAGE_TYPES = (
     "image/bmp",
     "image/gif",
@@ -48,17 +48,17 @@ IMAGE_TYPES = (
 # would stay "a document without a row" for ever.
 TEXT_PREFIX = "text/%"
 READER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "extract_text.py")
-# What a run of the recognition says: it did a step, it has nothing to do, it has no time left.
+# What a run of the recognition returns: it did a step, it has nothing to do, it has no time left.
 OCR_PROGRESS, OCR_IDLE, OCR_NO_TIME = "progress", "idle", "no_time"
-# A page with a picture and less text than this (letters, without white space) counts as a scan;
-# only the start of the page is looked at.
+# A page with a picture and fewer letters than this (without white space) counts as a scan; only
+# the start of the page is checked.
 SCAN_PAGE_CHARS = 20
 SCAN_PAGE_LOOK = 2000
 
-# Rows made and requeued per step; rows deleted per run of the cleaner.
+# Rows created and requeued per step; rows deleted per run of the garbage collector.
 BATCH = 500
 GC_BATCH = 1000
-# The reader gets no less time than this to count as having had a try.
+# A run of the reader counts as a try only if it had at least this much time.
 MIN_ATTEMPT_SECONDS = 20
 # Time left below which no new file is started.
 MIN_START_SECONDS = 2
@@ -66,27 +66,26 @@ MIN_START_SECONDS = 2
 MESSAGE_LENGTH = 1000
 
 SETTINGS = {
-    # name: (default, least); the numbers of the previews and the time reserve are in the core
-    "memory_mib": (1024, 64),  # what the reader may grow by
-    "text_block_kib": (64, 1),  # block of text of a file without pages
+    # name: (default, least); the numbers of the previews and the time reserve are in ``int_filemanager``
+    "memory_mib": (1024, 64),  # memory the reader may use
+    "text_block_kib": (64, 1),  # size of a block of text of a file without pages
     "text_cut_bytes": (650000, 1000),  # the most bytes of a page of a PDF
-    "work_mem_mib": (128, 4),  # for the full text search
+    "work_mem_mib": (128, 4),  # work_mem for the full text search
     "max_attempts": (3, 1),  # tries of a file that crashes or is too slow
     "ocr_jobs": (1, 1),  # cores of one text recognition (-j)
-    "ocr_nice": (19, 0),  # priority of the text recognition (19: the lowest)
+    "ocr_nice": (19, 0),  # nice value of the text recognition (19: the lowest priority)
 }
 
 
 def _is_scan_text(text):
-    """Whether this is (almost) no text: the start of the page, without white space, is short."""
     return len("".join(text[:SCAN_PAGE_LOOK].split())) < SCAN_PAGE_CHARS
 
 
 class IntFilemanagerText(models.Model):
     """The text of a file: one row per blob (checksum), shared by all documents with it.
 
-    Made and filled by the scheduled action (``_cron_ocr``); the pages are in
-    ``int.filemanager.text.page``. Not readable by the users, see the search of the document.
+    Created and filled by the scheduled action (``_cron_ocr``); the pages are in
+    ``int.filemanager.text.page``. Users cannot read it, see the search of the document.
     """
 
     _name = "int.filemanager.text"
@@ -135,6 +134,8 @@ class IntFilemanagerText(models.Model):
 
     @api.depends("checksum")
     def _compute_documents(self):
+        # sudo: int.filemanager.document: the administrators see how many documents have this
+        # text, whatever the rules of the folders
         documents = self.env["int.filemanager.document"].sudo().with_context(active_test=False)
         found = {
             checksum: (first, count)
@@ -150,7 +151,7 @@ class IntFilemanagerText(models.Model):
             row.document_count = count
 
     def write(self, vals):
-        # A recognized PDF that the row lets go of may be free: the cleaner of the blobs looks.
+        # A recognized PDF that the row lets go of may be unused now: the blob garbage collector checks it
         old_checksums = set(self.mapped("ocr_checksum")) if "ocr_checksum" in vals else set()
         result = super().write(vals)
         self._mark_ocr_blobs(old_checksums - {vals.get("ocr_checksum")})
@@ -171,50 +172,57 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _used_ocr_checksums(self, checksums):
-        """Of these checksums those that a row keeps as its recognized PDF.
+        """Return those of these checksums that a row keeps as its recognized PDF.
 
-        The cleaner of the blobs asks (see ``int.filemanager.document._gc_blobs``).
+        The garbage collector of the blobs asks (see ``int.filemanager.document._gc_blobs``).
         """
+        # sudo: the garbage collector asks about all rows
         return {
             checksum
             for [checksum] in self.sudo()._read_group([("ocr_checksum", "in", list(checksums))], ["ocr_checksum"])
         }
 
-    # ---- For the administrator ----------------------------------------------------------
+    # === ADMINISTRATION === #
 
     def action_read_again(self):
         """Throw the text away and read the file again (failed, skipped, empty or done rows).
 
         Public (the button calls it), so it checks the right itself: the administrators of the
-        filemanager have no right to write the rows, the reset runs as superuser.
+        filemanager have no right to write the rows, so the reset runs as superuser.
         """
         if not self.env.user.has_group("int_filemanager.int_filemanager_group_admin"):
             raise AccessError(self.env._("Only a Filemanager administrator can do that."))
+        # sudo: int.filemanager.text: the administrators have no right to write the rows
         self.sudo().filtered(lambda row: row.state not in ("pending", "running"))._reset()
         # Wake the scheduled action; if it is running already, it finds the rows by itself.
         cron = self.env.ref(TEXT_CRON_XMLID, raise_if_not_found=False)
         if cron:
+            # sudo: ir.cron: the scheduled action belongs to the superuser
             cron.sudo()._trigger()
 
     @api.model
     def _status(self):
-        """The numbers for the status in the settings: rows per state, and files without a row.
+        """Return the numbers for the status in the settings: rows per state, and files without a row.
 
         :return: ``{"pending": n, ..., "missing": n}``
         """
         counts = dict.fromkeys(("pending", "running", "done", "empty", "skipped", "failed"), 0)
+        # sudo: int.filemanager.text: the rows are not readable by users; the status is shown to
+        # the administrators
         counts.update(self.sudo()._read_group([], ["state"], ["__count"]))
         counts["missing"] = self._count_missing()
         return counts
 
     @api.model
     def _ocr_status(self):
-        """The numbers for the status of the text recognition in the settings.
+        """Return the numbers for the status of the text recognition in the settings.
 
         :return: ``{"counts": {state: n}, "pages_left", "seconds_left", "pdf_size", "ready",
             "reason", "detail", "tools", "lc_ctype"}``; ``reason`` is why it cannot run (the
             codes of ``_ocr_ready``), ``detail`` what the fault said (a stopped recognition)
         """
+        # sudo: int.filemanager.text: the rows are not readable by users; the status is shown to
+        # the administrators
         Text = self.sudo()
         Text.flush_model()
         counts = dict.fromkeys(("wait", "running", "done", "skipped", "failed"), 0)
@@ -262,13 +270,12 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _tools(self):
-        """The version of the PDF reader, or ``False`` if it is not installed."""
         try:
             return importlib.metadata.version("pdfminer.six")
         except importlib.metadata.PackageNotFoundError:
             return False
 
-    # ---- Settings and time --------------------------------------------------------------
+    # === SETTINGS AND TIME === #
 
     @api.model
     def _setting_defaults(self):
@@ -276,11 +283,11 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _use_search_memory(self):
-        """More memory for the full text search, in this transaction only.
+        """Give the full text search more memory, in this transaction only.
 
         A word that is on most pages makes the list of hits so long that PostgreSQL, with the
-        small standard memory, works it out again and again (minutes instead of seconds). No
-        parallel workers either (each would take that much again).
+        small standard memory, works it out again and again (minutes instead of seconds). Parallel
+        workers are switched off too (each would take that much again).
         """
         self.env.cr.execute(
             SQL(
@@ -290,11 +297,11 @@ class IntFilemanagerText(models.Model):
             )
         )
 
-    # ---- The scheduled action -----------------------------------------------------------
+    # === SCHEDULED ACTION === #
 
     @api.model
     def _cron_ocr(self):
-        """Make the rows for new files, read their text, recognize the text of scans, in the time.
+        """Create the rows for new files, read their text and recognize the text of scans, in the time.
 
         One step is one file (or one section of the pages of a scan), committed
         (``_commit_progress``). The reading and the new rows come first, the recognition
@@ -315,7 +322,7 @@ class IntFilemanagerText(models.Model):
             row = self.search([("state", "=", "pending")], order="id", limit=1)
             if row:
                 if not row.try_lock_for_update():
-                    # Somebody holds it (the cleaner); the next run tries again.
+                    # Locked by someone else (the garbage collector): the next run tries again.
                     cron._commit_progress(0, remaining=1)
                     return
                 row._read_text(deadline)
@@ -334,7 +341,6 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _work_left(self):
-        """The rows that wait for the reading, and for the recognition if it can run."""
         waiting = self.search_count([("state", "=", "pending")])
         # Cheap on purpose: this is asked when the time is up, so no program is started to look
         # at the tools (``_ocr_ready`` would).
@@ -344,7 +350,6 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _supported_types(self):
-        """The types that get a row: PDF if the reader can read it, office files, text."""
         types = list(OFFICE_TYPES)
         if importlib.util.find_spec("pdfminer"):
             types.append(PDF)
@@ -352,7 +357,7 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _preview_read_types(self):
-        """The types that the reader cannot open (Word, Excel, PowerPoint of before 2007, RTF).
+        """Return the types that the reader cannot open (Word, Excel, PowerPoint before 2007, RTF).
 
         Their text is read from the PDF that LibreOffice made for the preview, once it is there.
         """
@@ -362,13 +367,12 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _missing_where(self):
-        """Documents that are not archived, of a type with text, and have no row yet.
+        """Return the SQL condition for documents that have no row yet.
 
-        The files of the old formats count when their preview is made.
-
-        Pictures count only if the recognition is on and the document lies in a folder where
-        the recognition of images is on (``ocr_images_active``): a row for each photo would
-        have them all recognized.
+        It selects documents that are not archived and have a type with text. The files of the old
+        formats count when their preview is made. Pictures count only if the recognition is on and
+        the document lies in a folder where the recognition of images is on (``ocr_images_active``):
+        a row for each photo would have them all recognized.
         """
         preview_types = self._preview_read_types()
         return SQL(
@@ -395,7 +399,7 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _flush_for_missing(self):
-        # Raw SQL: what is not written yet (a document just archived) must be, first.
+        # Raw SQL: flush first what is not written yet (a document that was just archived).
         self.env["int.filemanager.document"].flush_model(
             ["checksum", "mimetype", "active", "folder_id", "preview_checksum"]
         )
@@ -404,7 +408,6 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _count_missing(self):
-        """How many different files have no row yet."""
         self._flush_for_missing()
         [[count]] = self.env.execute_query(
             SQL(
@@ -417,10 +420,10 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _create_rows(self, limit):
-        """Make a row for the checksums of files of a supported type that have none.
+        """Create a row for the checksums of files of a supported type that have none.
 
         Archived documents get none (they come back as soon as one is restored).
-        :return: how many were made
+        :return: how many were created
         """
         self._flush_for_missing()
         found = self.env.execute_query(
@@ -441,7 +444,6 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _new_row_values(self, checksum, mimetype):
-        """The values of a new row. A picture has nothing to read: the recognition is its reading."""
         values = {"checksum": checksum, "mimetype": mimetype}
         if mimetype in IMAGE_TYPES:
             values.update(
@@ -454,9 +456,9 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _requeue_stale(self):
-        """A row that is ``running`` at the start of a run was cut off by a crash or a kill.
+        """Requeue a row that is ``running`` at the start of a run: a crash or a kill cut it off.
 
-        Odoo never runs two of the same action at the same time. It counts as a try.
+        Odoo never runs two of the same action at the same time. The cut-off counts as a try.
         """
         for row in self.search([("state", "=", "running")]):
             row._after_failure(self.env._("The reader did not come back, the server was stopped."))
@@ -490,7 +492,7 @@ class IntFilemanagerText(models.Model):
     def _reset(self):
         """Throw the text away and put the row back to the start.
 
-        A picture is read by the recognition: it starts again from there. Its state stays
+        A picture is read by the recognition, so it starts again from there. Its state stays
         ``empty``, so it gets the engine version here, like a new row, or ``_requeue`` would take
         it again at every step.
         """
@@ -524,7 +526,7 @@ class IntFilemanagerText(models.Model):
             }
         )
 
-    # ---- Reading one file ---------------------------------------------------------------
+    # === READING ONE FILE === #
 
     def _read_text(self, deadline):
         """Read the text of this file until it is done or the deadline comes.
@@ -545,18 +547,18 @@ class IntFilemanagerText(models.Model):
         self.env["ir.cron"]._commit_progress()
         seconds = deadline - time.monotonic()
         result = self._run_reader(path, mimetype, first_page, seconds)
-        # The cleaner may have deleted the row while the reader ran; it is then not needed.
+        # The garbage collector may have deleted the row while the reader ran: nothing is left to do then
         row = self.browse(row_id).exists().try_lock_for_update()
         if row:
             row._apply_result(result, seconds)
 
     def _text_source(self):
-        """The file the text is read from.
+        """Return the file the text is read from.
 
-        The last finished section of a recognition that is under way, else the recognized PDF,
-        else the original: the text of the scans is only in the first two (reading the original
-        again would lose it, and have the scans recognized a second time). A file of an old
-        format is read from its preview; ``""`` if that is gone.
+        This is the last finished section of a recognition that is under way, else the recognized
+        PDF, else the original: the text of the scans is only in the first two (reading the
+        original again would lose it, and have the scans recognized a second time). A file of an
+        old format is read from its preview; ``""`` if that is gone.
         """
         self.ensure_one()
         section = self._ocr_section_path()
@@ -570,8 +572,8 @@ class IntFilemanagerText(models.Model):
         return Document._blob_path(self.checksum)
 
     def _preview_checksum(self):
-        """The preview PDF of a file of an old format, from a document that has the file."""
         self.ensure_one()
+        # sudo: int.filemanager.document: any document with this file will do
         document = (
             self.env["int.filemanager.document"]
             .sudo()
@@ -640,7 +642,7 @@ class IntFilemanagerText(models.Model):
             try:
                 data = json.loads(line)
             except ValueError:
-                continue  # the last line of a reader that was killed
+                continue  # the last line of a killed reader
             if "page" in data:
                 result["pages"].append((data["page"], data["text"], bool(data.get("cut")), data.get("image")))
             elif "pages" in data:
@@ -652,7 +654,6 @@ class IntFilemanagerText(models.Model):
         return result
 
     def _apply_result(self, result, seconds):
-        """Save what the reader gave and set the state of the row."""
         self.ensure_one()
         notes = self._store_pages(result["pages"])
         if result["count"] is not None:
@@ -679,7 +680,7 @@ class IntFilemanagerText(models.Model):
                 }
             )
         elif result["timeout"]:
-            # A short time left is no fair try for a slow page.
+            # A short remaining time is not a fair try for a slow page.
             self._after_failure(
                 self.env._("A page takes longer than the time of one run."),
                 counts=not result["pages"] and seconds >= MIN_ATTEMPT_SECONDS,
@@ -691,7 +692,6 @@ class IntFilemanagerText(models.Model):
             )
 
     def _after_failure(self, reason, counts=True):
-        """The reader did not finish: try again, or give up after the tries are used up."""
         self.ensure_one()
         attempts = self.attempts + (1 if counts else 0)
         if attempts >= self._setting("max_attempts"):
@@ -712,11 +712,12 @@ class IntFilemanagerText(models.Model):
         return bool(rows)
 
     def _store_pages(self, pages):
-        """Write the pages. One that PostgreSQL cannot index is cut until it fits.
+        """Write the pages. A page that PostgreSQL cannot index is cut until it fits.
 
-        An entry for the search is limited to 1 MB; it is not the size of the text that decides
-        but the number of different words, so the limit in bytes cannot rule it out. The
-        pages are written together, and one by one only if that failed.
+        An entry for the search is limited to 1 MB. The number of different words decides, not
+        the size of the text, so a limit in bytes cannot rule it out. The pages are written
+        together, and one by one only if that failed.
+
         :param pages: ``[(number, text, was_cut, has_picture)]``
         :return: notes for the row, for pages that were cut
         """
@@ -758,11 +759,11 @@ class IntFilemanagerText(models.Model):
                 )
         return notes
 
-    # ---- Scans and the text recognition -------------------------------------------------
+    # === SCANS AND TEXT RECOGNITION === #
 
     @api.model
     def _scan_page_counts(self, ids):
-        """``{row id: number of scans (pages with a picture and (almost) no text)}``; rows without one are left out."""
+        # sudo: int.filemanager.text.page: users have no access right to the pages
         Page = self.env["int.filemanager.text.page"].sudo()
         return {
             text.id: count
@@ -772,7 +773,6 @@ class IntFilemanagerText(models.Model):
         }
 
     def _count_scan_pages(self):
-        """The pages of this PDF that are scans. Other files have none."""
         self.ensure_one()
         if self.mimetype != PDF:
             return 0
@@ -780,7 +780,7 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _ocr_queue(self, limit):
-        """Count the scans of rows read before the recognition existed, and queue rows that need it.
+        """Count the scans of rows read before the recognition existed, and queue the rows that need it.
 
         :return: how many rows were changed
         """
@@ -805,14 +805,14 @@ class IntFilemanagerText(models.Model):
             queued.write({"ocr_state": "wait"})
         return len(counted) + len(queued)
 
-    # ---- Cleaning up --------------------------------------------------------------------
+    # === CLEANING UP === #
 
     @api.autovacuum
     def _gc_texts(self):
         """Delete the texts of files that no document has any more (archived ones count).
 
-        The pages go with their text (``ondelete="cascade"``). In batches: Odoo calls it again
-        for as long as it says that rows are left.
+        The pages go with their text (``ondelete="cascade"``). Deleted in batches: Odoo calls it
+        again for as long as it reports that rows are left.
         """
         self.env["int.filemanager.document"].flush_model(["checksum"])
         self.flush_model(["checksum"])

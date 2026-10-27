@@ -22,8 +22,8 @@ from ..tools.request_brake import RequestBrake
 
 # The path of the page of a share; the token follows.
 SHARE_PATH = "/int_filemanager/share"
-# What the settings say when they are not saved. The names are those of the parameters
-# (``int_filemanager.<name>``), the types those of the values.
+# The default of each setting, used while it is not saved. The keys are the names of the
+# parameters (``int_filemanager.<name>``), the types are those of the values.
 SHARE_DEFAULTS = {
     "share_creators": "user",
     "share_default_file_mb": 25,
@@ -35,8 +35,8 @@ SHARE_DEFAULTS = {
     "share_max_files": 1000,
     "share_password_length": 8,
     "share_unlock_hours": 12,
-    # The brakes: "1" on, "0" off (a selection: Odoo does not save a 0 of a number, and a boolean
-    # that is on by default can never be switched off). The brake on passwords has no switch.
+    # The rate limits: "1" on, "0" off (a selection: Odoo does not save a 0 of a number, and a
+    # boolean that is on by default can never be switched off). The limit on passwords has no switch.
     "share_brake": "1",
     "share_invalid_tokens": 20,
     "share_password_tries_ip": 5,
@@ -44,25 +44,25 @@ SHARE_DEFAULTS = {
     "share_requests_per_minute": 120,
     "share_uploads_per_minute": 10,
 }
-# What a request that uploads may be bigger than the largest file: the form around the file. A
-# request to a share that takes no file (any more) may be no bigger than this.
+# How much bigger than the largest file an upload request may be: the form around the file. A
+# request to a share that takes no file (any more) may not exceed this.
 UPLOAD_FRAME = 64 * 1024
 MEBIBYTE = 1024 * 1024
-# How much of the start of a file is looked at to see what it is.
+# Bytes from the start of a file that are inspected to find its type.
 UPLOAD_HEAD_SIZE = 2048
-# The receipt a guest gets for a file he uploaded: the proof, kept in his browser, that the file
-# is his (``ir.attachment`` of ``mail`` does the same with its ownership token). It ends with the
-# share, at the latest after 90 days. The pattern is checked before the token is verified, which
-# does not look at what it is given.
+# The receipt a guest gets for an uploaded file: proof, kept in their browser, that the file is
+# theirs (``ir.attachment`` of ``mail`` does the same with its ownership token). It ends with the
+# share, after 90 days at the latest. The pattern is checked before the token is verified,
+# because the verification does not validate what it is given.
 RECEIPT_SCOPE = "int_filemanager.share_receipt"
 RECEIPT_DAYS = 90
 RECEIPT_PATTERN = re.compile(r"[0-9a-f]{64}o0x[0-9a-f]{1,12}")
 RECEIPT_MAX_LENGTH = 128
 RECEIPTS_MAX = 100
-# Endings that a guest never uploads, whatever the maker of the share allows: what runs as a
-# program or a script, what a browser or an office program runs by itself (pages, scripts, macros,
-# shortcuts, installers, images of disks). The list is in the code, not in the settings: a slip
-# there must not open a hole.
+# Extensions that a guest can never upload, whatever the creator of the share allows: programs and
+# scripts, and files that a browser or an office program runs by itself (pages, scripts, macros,
+# shortcuts, installers, disk images). The list is in the code, not in the settings: a slip there
+# must not open a hole.
 BLOCKED_EXTENSIONS = frozenset(
     [
         "exe",
@@ -177,9 +177,9 @@ BLOCKED_EXTENSIONS = frozenset(
         "searchconnector-ms",
     ]
 )
-# Endings whose files have a known start: the start has to say the same (a ``.pdf`` that is a page
-# or a program is refused). The values are what ``guess_mimetype`` answers for them. Other
-# endings are not checked this way (the answer is not reliable for them: ``guess_mimetype``
+# Extensions whose files have a known start: the start has to match (a ``.pdf`` that is a page or
+# a program is refused). The values are what ``guess_mimetype`` answers for them. Other
+# extensions are not checked this way, as the answer is not reliable for them (``guess_mimetype``
 # takes noise for a picture).
 CONTENT_TYPES_OF = {
     "pdf": {"application/pdf"},
@@ -205,9 +205,9 @@ CONTENT_TYPES_OF = {
     "ods": {"application/zip", "application/vnd.oasis.opendocument.spreadsheet"},
     "odp": {"application/zip", "application/vnd.oasis.opendocument.presentation"},
 }
-# Text endings: a file with these that holds binary data is something else.
+# Text extensions: a file with one of these that holds binary data is something else.
 TEXT_EXTENSIONS = frozenset(["txt", "csv", "tsv", "md", "log", "rtf", "json"])
-# What ``guess_mimetype`` says of a program, under any ending.
+# What ``guess_mimetype`` answers for a program, whatever its extension.
 EXECUTABLE_TYPES = frozenset(
     [
         "application/x-dosexec",
@@ -218,24 +218,24 @@ EXECUTABLE_TYPES = frozenset(
         "application/x-mach-binary",
     ]
 )
-# The longest password: the hash is made of all of it.
+# The longest password: the hash is computed over all of it.
 PASSWORD_MAX_LENGTH = 128
-# What the guests of a folder share reach, per model: the field that names the folder.
+# For each model that the guests of a folder share reach: the field that names the folder.
 SCOPE_FOLDER_FIELD = {
     "int.filemanager.folder": "id",
     "int.filemanager.document": "folder_id",
 }
-# The key that opens a share with a password (``hash_sign``): its scope, and how long a key may
-# be before it is not looked at (a real one is about 100 characters).
+# The key that opens a share with a password (``hash_sign``): its scope, and the length above
+# which a key is not even checked (a real one has about 100 characters).
 UNLOCK_SCOPE = "int_filemanager.share_unlock"
 UNLOCK_KEY_MAX_LENGTH = 512
-# Seconds that the brakes look back: wrong passwords and made-up tokens within ten minutes,
-# requests within a minute.
+# Seconds that the rate limits look back: wrong passwords and made-up tokens within ten
+# minutes, requests within a minute.
 BRAKE_WINDOW = 600
 REQUEST_WINDOW = 60
-# What the code alone sets, never a user through RPC (``readonly`` holds in the interface only):
-# a token that is guessable, a counter that is set back, an upload folder that is not the one made
-# for the share.
+# Set by the code only, never by a user through RPC (``readonly`` holds in the interface only):
+# a guessable token, a counter that is set back, an upload folder that is not the one made for
+# the share.
 SERVER_FIELDS = (
     "token",
     "view_count",
@@ -248,8 +248,11 @@ SERVER_FIELDS = (
 
 
 class ShareDenied(UserError):
-    """A guest is turned away. Odoo answers a ``UserError`` of a route of type ``http`` with its
-    ``http_status`` and its text only, no traceback; the text is meant for the guest."""
+    """A guest is turned away.
+
+    Odoo answers a ``UserError`` of a route of type ``http`` with its ``http_status`` and its
+    text only, no traceback; the text is meant for the guest.
+    """
 
 
 class ShareBadRequest(ShareDenied):
@@ -287,9 +290,9 @@ class ShareNoSpace(ShareDenied):
 class IntFilemanagerShare(models.Model):
     """A link that gives a file or a folder to whoever has it, with no account.
 
-    What the guest may do is set on the link (see, download, upload), not taken from the user who
-    made it. The link ends at its expiration date, at its limit of downloads, or when it is
-    blocked (archived). The password is kept as a hash that no user can read.
+    What the guest may do is set on the link (see, download, upload), not taken from the user
+    who made it. The link ends at its expiration date, at its limit of downloads, or when it
+    is blocked (archived). The password is kept as a hash that no user can read.
     """
 
     _name = "int.filemanager.share"
@@ -457,10 +460,10 @@ class IntFilemanagerShare(models.Model):
                         maximum=PASSWORD_MAX_LENGTH,
                     )
                 )
-            # sudo: only the hash is written, in a field that no user may write.
+            # sudo: int.filemanager.share: only the hash is written, in a field that no user may write
             share.sudo().password_hash = crypt_context.hash(share.password)
             share.message_post(body=self.env._("The password was set."))
-        # What was typed is not kept: the screen that saved it does not get it back.
+        # What was typed is not kept: the screen that saved it does not get it back
         self.invalidate_recordset(["password"])
 
     @api.depends("password_hash")
@@ -539,9 +542,9 @@ class IntFilemanagerShare(models.Model):
 
     @api.model
     def _check_may_share(self, vals_list):
-        """Who may make a share, and of what: whatever the folders show to the user.
+        """Check who may make a share, and of what: whatever the folders show to the user.
 
-        A file that a user sees by another way than its folder (a record it is linked to, in
+        A file that a user sees another way than through its folder (a record it is linked to, in
         ``int_filemanager_record``) is not theirs to pass on: the folder has to show it.
         """
         if self._setting("share_creators") == "admin" and not self.env.user.has_group(
@@ -590,8 +593,8 @@ class IntFilemanagerShare(models.Model):
         return result
 
     def action_show_address(self):
-        """After the dialog of the button "Share" saved the share: the same dialog again, now of
-        the saved share, with the address to copy."""
+        """Open the dialog of the button "Share" again for the saved share, with the address to copy.
+        """
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",
@@ -603,17 +606,16 @@ class IntFilemanagerShare(models.Model):
         }
 
     def action_remove_password(self):
-        """Let the link work without a password."""
         self.check_access("write")
+        # sudo: int.filemanager.share: password_hash is readable by system administrators only
         shares = self.sudo().filtered("password_hash")
         shares.password_hash = False
         for share in shares:
             share.with_env(self.env).message_post(body=self.env._("The password was removed."))
 
     def _upload_folder_usable(self):
-        """Whether the guests can still upload: the folder is there, is active and below the target."""
         self.ensure_one()
-        # sudo: how the folders lie is not what the user sees.
+        # sudo: int.filemanager.share: the position of the folders is checked, not what the user sees
         share = self.sudo()
         folder = share.upload_folder_id
         return bool(
@@ -626,11 +628,13 @@ class IntFilemanagerShare(models.Model):
     def _ensure_upload_folder(self):
         """Make the folder for the uploads of the guests, below the shared folder.
 
-        When the share is saved, not at the first upload: two guests that upload at once would
-        both make it. Only the user who made the share, and the administrators, see it (as a
-        folder is restricted to its allowed users); the guests do not see each other's files.
-        An upload folder that is still there and below the target is used again.
+        It is made when the share is saved, not at the first upload: two guests who upload at once
+        would both make it. Only the user who made the share and the administrators see it (the
+        folder is restricted to its allowed users); the guests do not see each other's files. An
+        upload folder that still exists below the target is used again.
         """
+        # sudo: int.filemanager.folder: the upload folder is made for the share, whatever the
+        # folder rights of its creator
         Folder = self.env["int.filemanager.folder"].sudo().with_context(mail_create_nosubscribe=True)
         for share in self.filtered(lambda share: share.active and share.can_upload and share.folder_id):
             if share._upload_folder_usable():
@@ -643,20 +647,20 @@ class IntFilemanagerShare(models.Model):
                 access_user_ids=[Command.set(share.create_uid.ids)],
                 company_id=parent.company_id.id,
             )
+            # sudo: int.filemanager.share: upload_folder_id is set by the code only (``SERVER_FIELDS``)
             share.sudo().upload_folder_id = folder
 
     @api.model
     def _setting(self, key):
-        """The value of a setting of the shares (``SHARE_DEFAULTS`` says which type it has)."""
         default = SHARE_DEFAULTS[key]
+        # sudo: ir.config_parameter: the settings are read for every user and for guests
         value = self.env["ir.config_parameter"].sudo().get_param(f"int_filemanager.{key}", default)
         return type(default)(value)
 
-    # --- the guest: finding the share, the password, the brakes --------------------------------
+    # === GUEST ACCESS === #
 
     @api.model
     def _brake(self):
-        """The counters of the brakes in memory (one per registry, so one per database)."""
         registry = self.env.registry
         brake = getattr(registry, "_int_filemanager_share_brake", None)
         if brake is None:
@@ -668,8 +672,6 @@ class IntFilemanagerShare(models.Model):
         return self._setting("share_brake") == "1"
 
     def _check_upload_brake(self, ip):
-        """Turn the address away that sends more files to this share in a minute than the
-        settings allow (the limits of the share itself are kept by ``_reserve_upload``)."""
         self.ensure_one()
         if self._brake_is_on():
             limit = self._setting("share_uploads_per_minute")
@@ -678,21 +680,19 @@ class IntFilemanagerShare(models.Model):
 
     @api.model
     def _resolve(self, token, ip, right=None, key=None, needs_key=True, braked=True):
-        """The share (as superuser) that a guest comes to with the token, or why not.
+        """Return the share (as superuser) that a guest comes to with the token, or raise why not.
 
-        The order is part of what it promises: what is cheap to check comes first, and what the
-        guest may learn grows with each step. A made-up token says nothing but "not found" (and
-        counts toward the brake of the address); a share that is blocked or over says so before
-        it asks for the password; the password comes before the right, so that nobody without it
-        learns what the share allows.
+        The order is part of the contract: cheap checks come first, and the guest learns more
+        with each step. A made-up token says only "not found" (and counts toward the rate
+        limit of the address); a blocked or over share says so before it asks for the
+        password; the password comes before the right, so nobody without it learns what the
+        share allows.
 
-        :param ip: the address of the guest, for the brakes
-        :param right: ``"view"``, ``"download"`` or ``"upload"``, or several of them (one of them
-            is enough); empty: any
+        :param ip: the address of the guest, for the rate limits
+        :param right: ``"view"``, ``"download"`` or ``"upload"``, or several (one is enough)
         :param key: the key that ``_unlock`` gave, for a share with a password
-        :param needs_key: ``False`` for the calls that come before the password: the page that
-            asks for it, and the call that checks it
-        :param braked: ``False`` for the call that checks the password (its brake is its own)
+        :param needs_key: ``False`` for the calls that come before the password
+        :param braked: ``False`` for the call that checks the password (own rate limit)
         """
         share = self._find_by_token(token, ip)
         if braked and self._brake_is_on():
@@ -716,20 +716,26 @@ class IntFilemanagerShare(models.Model):
 
     @api.model
     def _lookup(self, token):
-        """The share of the token (as superuser), also a blocked one, or nothing. Nothing is
-        counted and nothing is raised: for the places that must not have a side effect."""
+        """Return the share of the token (as superuser), also a blocked one, or nothing.
+
+        Nothing is counted and nothing is raised: use it where a side effect is not wanted.
+        """
         # A token is a uuid: 36 characters. Anything else is not looked up.
         if not (isinstance(token, str) and len(token) == 36):
             return self.browse()
+        # sudo: int.filemanager.share: guests have no rights; the token is the proof
         share = self.sudo().with_context(active_test=False).search([("token", "=", token)], limit=1)
-        # active_test=False was for the search; what the share leads to is looked up as usual
+        # active_test=False was for the search only; what the share leads to is looked up as usual
         return share.with_context(active_test=True)
 
     @api.model
     def _find_by_token(self, token, ip):
-        """The share of the token, also a blocked one (``active_test=False``): the guest is told
-        that it is blocked, which is not what "not found" says. Any token that does not lead to
-        a share counts toward the brake of the address; one that does is let through."""
+        """Return the share of the token, also a blocked one (``active_test=False``).
+
+        The guest is told that it is blocked, which is not what "not found" says. Any token that
+        does not lead to a share counts toward the rate limit of the address; one that does is
+        let through.
+        """
         share = self._lookup(token)
         if share:
             return share
@@ -740,15 +746,18 @@ class IntFilemanagerShare(models.Model):
         raise ShareNotFound(self.env._("This link does not exist."))
 
     def _unlock_secret(self):
-        """The secret of the key of this share: the one of the database and the hash of the
-        password. A key does not outlive a change of the password."""
+        """Return the secret of the key of this share: the database secret and the password hash.
+
+        A key does not outlive a change of the password.
+        """
         self.ensure_one()
+        # sudo: ir.config_parameter: the database secret is read for guests
         secret = self.env["ir.config_parameter"].sudo().get_param("database.secret")
         return f"{secret}:{self.password_hash}"
 
     def _unlock_key(self):
-        """The key that a guest who knew the password keeps, for the hours of the settings."""
         self.ensure_one()
+        # sudo: ``hash_sign`` reads the database secret
         return hash_sign(
             self.sudo().env,
             UNLOCK_SCOPE,
@@ -758,25 +767,25 @@ class IntFilemanagerShare(models.Model):
         )
 
     def _key_is_valid(self, key):
-        """Whether the key is one that ``_unlock_key`` made for this share, and is still good."""
         self.ensure_one()
         if not self.password_hash or not isinstance(key, str) or len(key) > UNLOCK_KEY_MAX_LENGTH:
             return False
+        # sudo: ``verify_hash_signed`` reads the database secret
         try:
             values = verify_hash_signed(
                 self.sudo().env, UNLOCK_SCOPE, key, secret=self._unlock_secret()
             )
-        except ValueError:  # not base64, not text, not JSON: the errors of all three are ValueErrors
+        except ValueError:  # not base64, not text, not JSON: all three raise ValueError
             return False
         return values == [self.id]
 
     def _unlock(self, password, ip):
-        """The key for the password, or ``False`` if it is wrong.
+        """Return the key for the password, or ``False`` if it is wrong.
 
         Every try is kept in the database (``int.filemanager.share.attempt``) and counts toward the
-        brake, per address and for the share as a whole; the hash takes about half a second to
-        check, so the brake comes first. A right password clears the tries of its address. The
-        brake on passwords has no switch.
+        rate limit, per address and for the share as a whole; the hash takes about half a second
+        to check, so the rate limit comes first. A right password clears the tries of its
+        address. The rate limit on passwords has no switch.
         """
         self.ensure_one()
         if not self.password_hash:
@@ -795,15 +804,14 @@ class IntFilemanagerShare(models.Model):
     def _take_a_try(self, ip):
         """Take one of the tries of the address for this share, or turn it away (``ShareBusy``).
 
-        The try is written before the password is looked at, and in a transaction of its own that
-        holds a lock on the table of the tries: the guests that come at the same moment queue up,
-        and each one counts what the ones before it have committed. Without that, any number of
-        them would count the same few tries, all run the hash (half a second of the processor
-        each) and all be let through: under ``REPEATABLE READ`` the request has its view of the
-        table from the first thing it read, so it cannot see the tries that others write meanwhile.
-        The lock is the first statement of the transaction, so its view is taken after the lock is
-        granted. It is held for the count and one ``INSERT`` only, not for the hash.
+        The try is written before the password is checked, in a transaction of its own.
         """
+        # A lock on the table of the tries makes guests who come at the same moment queue up, and
+        # each one counts what the ones before it committed. Without it they would all count the
+        # same few tries, all run the hash (half a second of CPU each) and all be let through:
+        # under REPEATABLE READ the request sees the table as of its first read. The lock is the
+        # first statement of the transaction, so its snapshot is taken after the lock is granted.
+        # It is held for the count and one INSERT, not for the hash.
         with self.env.registry.cursor() as cr:
             Attempt = self.env(cr=cr, su=True)["int.filemanager.share.attempt"]
             cr.execute(SQL("LOCK TABLE %s IN SHARE ROW EXCLUSIVE MODE", SQL.identifier(Attempt._table)))
@@ -820,8 +828,6 @@ class IntFilemanagerShare(models.Model):
             Attempt.env.flush_all()
 
     def _clear_tries(self, ip):
-        """A right password: the tries of its address are forgotten (in a transaction of its own,
-        as the tries were written)."""
         with self.env.registry.cursor() as cr:
             env = self.env(cr=cr, su=True)
             env["int.filemanager.share.attempt"].search(
@@ -829,17 +835,19 @@ class IntFilemanagerShare(models.Model):
             ).unlink()
             env.flush_all()
 
-    # --- what the guests reach -----------------------------------------------------------------
+    # === SCOPE OF THE GUESTS === #
 
     def _hidden_folders(self):
-        """The folders below the shared folder that the guests do not see, and what lies below them.
+        """Return the folders below the shared folder that the guests do not see, and what lies below them.
 
-        Those that say "only the users and groups allowed" (also if a folder below them is open
-        again: it lies in a hidden tree), and the folders for the uploads of **every** share, also
-        if somebody opened one: what a guest sent through one share is never seen by the guests of
-        another (the folder of this share, and those of shares of folders below this one).
+        These are the folders that say "only the users and groups allowed" (also if a folder below
+        them is open again: it lies in a hidden tree), and the folders for the uploads of
+        **every** share, even if somebody opened one: what a guest sent through one share is never
+        seen by the guests of another (the folder of this share, and those of shares of folders
+        below this one).
         """
         self.ensure_one()
+        # sudo: int.filemanager.folder: the guests have no rights; the share decides what they reach
         folders = self.env["int.filemanager.folder"].sudo().with_context(active_test=False)
         hidden = folders.search(
             [
@@ -857,14 +865,14 @@ class IntFilemanagerShare(models.Model):
         return hidden | self.sudo().upload_folder_id | uploads
 
     def _scope_domain(self, model):
-        """The domain on ``model`` (folders or documents) of everything that the guests may reach.
+        """Return the domain on ``model`` (folders or documents) of everything that the guests may reach.
 
-        The guests have no rights on the records: the pages read them as superuser, after the token
+        The guests have no rights on the records: the pages read them as superuser after the token
         of the share has been checked, so this domain is all that bounds the reading. It is joined
-        to every search of a page by ``&`` and used to check every id of an address. The shared
-        folder and the folders below
-        it, without the hidden ones; for a file, the file; only what is active (the search
-        takes care of it); only the company of the share, if it has one.
+        to every search of a page by ``&`` and used to check every id of an address. It holds the
+        shared folder and the folders below it without the hidden ones; for a file, the file;
+        only what is active (the search takes care of it); only the company of the share, if it
+        has one.
         """
         self.ensure_one()
         if self.document_id:
@@ -880,7 +888,7 @@ class IntFilemanagerShare(models.Model):
             domain &= Domain("company_id", "in", [False, self.company_id.id])
         return domain
 
-    # --- the counters --------------------------------------------------------------------------
+    # === COUNTERS === #
 
     def _count_visit(self):
         """Count a visit of the page: at most one a minute, which is what ``view_count`` means.
@@ -911,11 +919,10 @@ class IntFilemanagerShare(models.Model):
         return bool(updated)
 
     def _count_download(self):
-        """Count a download; ``False`` if the limit of the share is reached by then.
+        """Count a download; return ``False`` if the limit of the share is reached by then.
 
-        Exact: the condition is in the statement, so two guests that download at the same time
-        cannot both take the last one (the second one is run again after the first and sees the
-        new count).
+        The condition is in the statement, so two guests who download at the same time cannot both
+        take the last one (the second is run again after the first and sees the new count).
         """
         self.ensure_one()
         self.flush_recordset(["max_downloads", "download_count", "last_access"])
@@ -936,23 +943,21 @@ class IntFilemanagerShare(models.Model):
         return bool(updated)
 
     def _after_counting(self, names):
-        """What the ORM has to know after a counter was changed in SQL: the cache, and the state
-        that depends on the download count."""
         self.invalidate_recordset(names)
         self.modified(names)
 
-    # --- the uploads ---------------------------------------------------------------------------
+    # === UPLOADS === #
 
     @api.model
     def _upload_body_limit(self, token, key):
-        """The most that a request to the upload route of this token may carry, in bytes.
+        """Return the most that a request to the upload route of this token may carry, in bytes.
 
         Odoo asks for it (the ``max_content_length`` of the route) before it reads the body, so a
-        body that is too big is turned away with a 413 before a byte of it is kept. It looks at the
-        whole state of the share, without a side effect and without an error: a share that is
-        blocked, over, full, locked by a password the request does not have the key of, or that
-        does not take files may be sent no more than the frame of a form. What a valid share takes
-        is the largest file it allows, or what is left of its total if that is less.
+        body that is too big is turned away with a 413 before a byte of it is kept. It looks at
+        the whole state of the share, without a side effect and without an error: a share that
+        is blocked, over, full, locked by a password the request has no key for, or that takes no
+        files may be sent no more than the frame of a form. A valid share takes the largest file
+        it allows, or what is left of its total if that is less.
         """
         share = self._lookup(token)
         if not share or share.state != "valid" or not share.can_upload:
@@ -967,7 +972,6 @@ class IntFilemanagerShare(models.Model):
         return min(share.upload_max_file_mb * MEBIBYTE, room) + UPLOAD_FRAME
 
     def _upload_extensions(self):
-        """The endings that the maker of the share allows (lower case, no dot); empty: all."""
         self.ensure_one()
         return {
             part.strip().lstrip(".").lower()
@@ -977,20 +981,22 @@ class IntFilemanagerShare(models.Model):
 
     @api.model
     def _upload_name(self, name):
-        """The name a guest's file gets: as ``_clean_name`` of the documents makes it, and without
-        the format characters (a right-to-left mark turns ``cod<mark>gpj.exe`` into what looks like
-        a picture) and without the dots and spaces at the end (Windows does not see them, so
-        ``a.exe.`` is a program there)."""
+        """Return the name that a guest's file gets.
+
+        It is what ``_clean_name`` of the documents makes of it, without the format characters (a
+        right-to-left mark turns ``cod<mark>gpj.exe`` into what looks like a picture) and without
+        the dots and spaces at the end (Windows does not see them, so ``a.exe.`` is a program there).
+        """
         name = "".join(char for char in (name or "") if unicodedata.category(char) != "Cf")
         return self.env["int.filemanager.document"]._clean_name(name.rstrip(". "))
 
     def _check_upload(self, name, head):
-        """Refuse the file if its ending or its start do not fit. Nothing is stored yet.
+        """Refuse the file if its extension or its start do not fit. Nothing is stored yet.
 
-        ``name`` is the clean name, ``head`` the first bytes of the file. The endings of the block
-        list are never taken; of the others only those that the maker of the share named (all, if
-        none). A file that is a program is refused whatever its name says. For the endings whose
-        start is known the start has to say the same, and a text file has no binary data.
+        ``name`` is the clean name, ``head`` the first bytes of the file. The extensions of the
+        block list are never taken; of the others only those that the creator of the share named
+        (all, if none). A file that is a program is refused whatever its name says. For the
+        extensions whose start is known the start has to match, and a text file has no binary data.
         """
         self.ensure_one()
         extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
@@ -1012,11 +1018,10 @@ class IntFilemanagerShare(models.Model):
     def _reserve_upload(self, size):
         """Take one file of ``size`` bytes from the limits of the share, or refuse the upload.
 
-        One ``UPDATE`` with the limits in its condition: two guests that upload at once cannot
-        both take the last place (the second one is run again after the first and sees the new
-        count, see ``_count_download``). Called by the storage after the file is measured and
-        before it is kept (the ``check`` of ``_create_from_stream``): a refused file leaves no blob
-        behind, which a rollback could not take back.
+        One ``UPDATE`` with the limits in its condition: two guests who upload at once cannot both
+        take the last place (see ``_count_download``). The storage calls it after the file is
+        measured and before it is kept (the ``check`` of ``_create_from_stream``): a refused file
+        leaves no blob behind, which a rollback could not take back.
         """
         self.ensure_one()
         if size <= 0:
@@ -1046,7 +1051,7 @@ class IntFilemanagerShare(models.Model):
         self._after_counting(["upload_count", "upload_size"])
 
     def _release_upload(self, size):
-        """Give back what ``_reserve_upload`` took, for a file that the guest took away again."""
+        """Give back what ``_reserve_upload`` took, for a file that the guest removed again."""
         self.ensure_one()
         self.flush_recordset(["upload_count", "upload_size"])
         self.env.execute_query(
@@ -1064,9 +1069,11 @@ class IntFilemanagerShare(models.Model):
         self._after_counting(["upload_count", "upload_size"])
 
     def _receipt(self, document):
-        """The receipt of a file that was uploaded through this share: it proves, to the share,
-        that the guest who holds it uploaded the file. Valid for the file only, until the share
-        ends or 90 days have passed."""
+        """Return the receipt of a file that was uploaded through this share.
+
+        It proves to the share that the guest who holds it uploaded the file. It is valid for that
+        file only, until the share ends or 90 days have passed.
+        """
         self.ensure_one()
         end = time.time() + RECEIPT_DAYS * 86400
         if self.expiration_date:
@@ -1076,13 +1083,12 @@ class IntFilemanagerShare(models.Model):
         )
 
     def _own_uploads(self, entries):
-        """The files of this share that the receipts in ``entries`` belong to.
+        """Return the files of this share that the receipts in ``entries`` belong to.
 
         ``entries`` is whatever the guest sent: a list of ``{"id", "receipt"}``. What is not in
-        that form is left out, and so is every receipt that is not right (not for this file,
-        not for this share, not valid any more), without a word: the guest learns nothing about
-        other files. The form is checked first because the check of the token does not look at
-        what it gets.
+        that form is left out, and so is every receipt that is not right (not for this file, not
+        for this share, not valid any more), without a word: the guest learns nothing about other
+        files. The form is checked first because the check of the token does not validate its input.
         """
         self.ensure_one()
         receipts = {}
@@ -1099,6 +1105,7 @@ class IntFilemanagerShare(models.Model):
                 and RECEIPT_PATTERN.fullmatch(receipt)
             ):
                 receipts[document_id] = receipt
+        # sudo: int.filemanager.document: the guests have no rights; the receipt proves the ownership
         documents = (
             self.env["int.filemanager.document"]
             .sudo()
@@ -1111,18 +1118,21 @@ class IntFilemanagerShare(models.Model):
                 valid = verify_limited_field_access_token(
                     document, "id", receipts[document.id], scope=RECEIPT_SCOPE
                 )
-            except (ValueError, OverflowError, OSError):  # a time that is not one
+            except (ValueError, OverflowError, OSError):  # an expiry time that cannot be converted
                 continue
             if valid:
                 own |= document
         return own
 
     def _removable_uploads(self, documents):
-        """Of these files, those that the guest may still take away: they lie in the folder of the
-        uploads, are not archived, and nothing refers to them (a user linked it to a record, say:
-        so, a user took it over)."""
+        """Return those of these files that the guest may still remove.
+
+        They lie in the folder of the uploads, are not archived, and nothing refers to them (a
+        user linked one to a record, say: a user took it over).
+        """
         self.ensure_one()
         referenced = documents._documents_referenced()
+        # sudo: int.filemanager.share: the upload folder is not readable for guests
         return documents.filtered(
             lambda document: document.active
             and document.folder_id == self.sudo().upload_folder_id

@@ -5,13 +5,14 @@ from itertools import accumulate
 from odoo import api, fields, models
 from odoo.tools import SQL
 
-# The hit that the list shows in the row of a file; the others are loaded in blocks (see the document).
+# Hits shown in the row of a file; the others are loaded in blocks (see the document).
 HITS_PER_FILE = 1
 SNIPPET_RADIUS = 70
-# Words of a page handed to the PDF viewer to mark, and the longest one.
+# The most words of a page handed to the PDF viewer to mark, and the longest word.
 TERMS_PER_PAGE = 8
 TERM_LENGTH = 60
-# Around a hit word in ``ts_headline``: control characters, so a page with them gets no excerpt.
+# Markers around a hit word in ``ts_headline``: control characters, so a page that contains them gets
+# no excerpt.
 MARK_START, MARK_END = "\x02", "\x03"
 MARKED = re.compile(f"{MARK_START}(.*?){MARK_END}", re.DOTALL)
 FOLDED_CAPITALS = {"Ä": "Ae", "Ö": "Oe", "Ü": "Ue"}
@@ -19,7 +20,8 @@ FOLDED_SMALL = (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss"))
 
 
 def folded(expression):
-    """Fold umlauts in SQL for index and search alike; capitals first as ``lower`` follows ``LC_CTYPE``."""
+    """Fold umlauts in SQL for index and search alike; capitals first, as ``lower`` follows ``LC_CTYPE``.
+    """
     capitals = f"replace(replace(replace({expression}, 'Ä', 'Ae'), 'Ö', 'Oe'), 'Ü', 'Ue')"
     return (
         f"replace(replace(replace(replace(lower({capitals}), 'ä', 'ae'), 'ö', 'oe'), 'ü', 'ue'),"
@@ -28,7 +30,6 @@ def folded(expression):
 
 
 def _folded_length(char):
-    """How many characters ``folded`` makes of one character, in Python."""
     text = FOLDED_CAPITALS.get(char, char).lower()
     for small, plain in FOLDED_SMALL:
         text = text.replace(small, plain)
@@ -36,7 +37,6 @@ def _folded_length(char):
 
 
 def _strip_marks(headline):
-    """The text of a headline without the marks, and ``[(start, end)]`` of the marked words in it."""
     pieces, spans, length, last = [], [], 0, 0
     for match in MARKED.finditer(headline):
         before, word = headline[last : match.start()], match.group(1)
@@ -49,7 +49,9 @@ def _strip_marks(headline):
 
 
 def _excerpt(content, headline):
-    """The page text and the places of the found words in it (the headline's are of the folded text).
+    """Return the page text and the places of the found words in it.
+
+    The places of the headline are those of the folded text.
 
     :return: ``(text, [(start, end)])``; the folded text if the foldings of database and Python
         differ, no spans if the marks cannot be told from the text
@@ -65,7 +67,8 @@ def _excerpt(content, headline):
 
 
 def _snippet(text, spans):
-    """The part of ``text`` around its first marked word, as ``[[string, is_match], ...]``."""
+    """Return the part of ``text`` around its first marked word, as ``[[string, is_match], ...]``.
+    """
     if not spans:
         return []
     first_start, first_end = spans[0]
@@ -90,7 +93,6 @@ def _snippet(text, spans):
 
 
 def _terms(text, spans):
-    """The marked words as they are written, once each: what the PDF viewer is asked to mark."""
     terms, seen = [], set()
     for start, end in spans:
         word = text[start:end]
@@ -109,7 +111,7 @@ class IntFilemanagerTextPage(models.Model):
     _name = "int.filemanager.text.page"
     _description = "Filemanager text of a page"
     _order = "text_id, page"
-    # Millions of rows.
+    # The table holds millions of rows: no access log columns.
     _log_access = False
 
     text_id = fields.Many2one("int.filemanager.text", required=True, ondelete="cascade")
@@ -126,9 +128,10 @@ class IntFilemanagerTextPage(models.Model):
 
     @api.model
     def _content_hits(self, checksums, words, offset=0, limit=HITS_PER_FILE):
-        """Pages with a hit, with an excerpt of each, for the words (as the document search finds them).
+        """Return the pages with a hit, with an excerpt of each, for the words.
 
-        Does not check access: the caller passes the checksums of the files the user may read.
+        The pages are those that the document search finds. This does not check access: the caller
+        passes the checksums of the files the user may read.
 
         :param words: what the user typed; each is a ``websearch`` expression
         :param offset: how many of the pages with a hit (by page number) are skipped
@@ -152,7 +155,7 @@ class IntFilemanagerTextPage(models.Model):
             ),
         )
         # For a word on nearly every page PostgreSQL prefers a table scan to the index (20 s for
-        # 50,000 pages instead of 0.3 s); keep this query off it.
+        # 50,000 pages instead of 0.3 s); switch table scans off for this query.
         cr = self.env.cr
         cr.execute(SQL("SELECT current_setting('enable_seqscan')"))
         [[seqscan]] = cr.fetchall()
@@ -172,7 +175,8 @@ class IntFilemanagerTextPage(models.Model):
 
     @api.model
     def _execute_hits(self, checksums, query, offset, limit):
-        """The rows of ``_content_hits``: ``(checksum, page, pages with a hit, text, headline)``."""
+        """Return the rows of ``_content_hits``: ``(checksum, page, pages with a hit, text, headline)``.
+        """
         return self.env.execute_query(
             SQL(
                 """

@@ -32,9 +32,11 @@ class IntFilemanagerShareable(models.AbstractModel):
             record.share_count = counts.get(record, 0)
 
     def action_share(self):
-        """The dialog of a new share for this folder or file: it starts with what most shares are
-        (see and download, no end, no password); "Create the link" saves it and shows the
-        address."""
+        """Open the dialog of a new share for this folder or file.
+
+        It starts with what most shares are (see and download, no end, no password); "Create the
+        link" saves it and shows the address.
+        """
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",
@@ -46,7 +48,6 @@ class IntFilemanagerShareable(models.AbstractModel):
         }
 
     def action_open_shares(self):
-        """The shares of this folder or file."""
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",

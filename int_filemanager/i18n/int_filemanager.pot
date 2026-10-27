@@ -155,6 +155,13 @@ msgid "Allowed users"
 msgstr ""
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__is_duplicated
+msgid ""
+"Another document that you may read has the same file. The storage keeps "
+"one copy for both; the documents stay separate."
+msgstr ""
+
+#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
@@ -236,6 +243,7 @@ msgstr ""
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__content
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Content"
 msgstr ""
 
@@ -371,6 +379,16 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/file_viewer/document_file_viewer.xml:0
 msgid "Edit"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__is_duplicated
+msgid "Duplicate"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Duplicates"
 msgstr ""
 
 #. module: int_filemanager
@@ -1061,6 +1079,13 @@ msgstr ""
 #. module: int_filemanager
 #: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_tag_action
 msgid "No tags yet. Let's create one!"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__extension
+msgid ""
+"The extension of the file name in lower case, for example mp3 for "
+"song.MP3."
 msgstr ""
 
 #. module: int_filemanager

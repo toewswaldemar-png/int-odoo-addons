@@ -9,7 +9,7 @@ class IntFilemanagerDocument(models.Model):
     """The second way to see a document: through a record it is linked to.
 
     The folder rule stays as it is. A second rule of the group of all internal users says
-    "``access_via_record``"; the rules of one group add up, so a document is seen when the
+    "``access_via_record``". The rules of one group add up, so a document is seen when the
     folder shows it **or** a linked record may be read, and the rule for the companies still
     cuts both. The field exists for this rule only.
     """
@@ -30,12 +30,13 @@ class IntFilemanagerDocument(models.Model):
         compute="_compute_partner_ids",
         inverse="_inverse_partner_ids",
         search="_search_partner_ids",
+        help="The contacts that the document is linked to.",
     )
 
     @api.depends("link_ids.res_model", "link_ids.res_id")
     @api.depends_context("uid")
     def _compute_access_via_record(self):
-        """The Python side of the rule.
+        """Compute the Python side of the rule.
 
         ``_check_access`` evaluates the rules with ``filtered_domain`` on ``sudo()`` records, the
         search below builds the same as a query. The user is put back in both: the records of
@@ -56,7 +57,7 @@ class IntFilemanagerDocument(models.Model):
             )
 
     def _search_access_via_record(self, operator, value):
-        """Documents linked to a record that the user reads, as ``ir.attachment`` searches.
+        """Search the documents linked to a record that the user reads, as ``ir.attachment`` does.
 
         Odoo optimizes the domain of a rule with ``self.sudo()`` (``_search`` in ``models.py``):
         the records of the other model are searched as the user again, or the records of other
@@ -113,7 +114,7 @@ class IntFilemanagerDocument(models.Model):
         self.env["int.filemanager.link"].create(to_create)
 
     def _search_partner_ids(self, operator, value):
-        """The documents linked to a contact, or to none (``False`` among the ids).
+        """Search the documents linked to a contact, or to none (``False`` among the ids).
 
         The ORM turns a typed name into ``any`` and ``= False`` into ``in {False}`` before it gets
         here, and answers the negative operators from these. As in the core, ``False`` among
@@ -136,7 +137,7 @@ class IntFilemanagerDocument(models.Model):
         return domain
 
     def _linked_partners(self):
-        """The contacts that the user reads and the document is linked to.
+        """Return the contacts that the user reads and the document is linked to.
 
         :return: the contacts by id of the document
         :rtype: dict
@@ -151,6 +152,7 @@ class IntFilemanagerDocument(models.Model):
         return {document_id: Partner.browse(ids) & readable for document_id, ids in res_ids.items()}
 
     def _documents_referenced(self):
-        """The documents that are linked to a record, besides what the core names."""
+        """Add the documents that are linked to a record."""
+        # sudo: int.filemanager.link: any link counts, also one to a record that the user cannot read
         linked = self.env["int.filemanager.link"].sudo().search([("document_id", "in", self.ids)])
         return super()._documents_referenced() | self.browse(linked.document_id.ids)

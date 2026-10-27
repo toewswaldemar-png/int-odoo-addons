@@ -37,7 +37,7 @@ export class DocumentFileViewer extends FileViewer {
     setup() {
         super.setup();
         this.minScale = MIN_SCALE;
-        // The ground of the viewer (`t-ref="main"` in the template): the surface of a picture.
+        // The main area of the viewer (`t-ref="main"` in the template): it acts as the surface of a picture.
         this.mainRef = useRef("main");
         this.dragMoved = false;
         useFileViewerSwipe(this);
@@ -242,9 +242,9 @@ export class DocumentFileViewer extends FileViewer {
     }
 
     /**
-     * @override A click on the ground of the viewer closes it (the core's), unless it is the end of
-     * the drag of a picture: that press began and ended on the ground, so the browser sends the click
-     * there.
+     * @override A click on the background of the viewer closes it (as in Odoo), unless it is the end
+     * of the drag of a picture: that press began and ended on the background, so the browser sends
+     * the click there.
      */
     onClickMain() {
         if (this.dragMoved) {
@@ -254,7 +254,7 @@ export class DocumentFileViewer extends FileViewer {
         this.close();
     }
 
-    /** @override A press anywhere on the ground takes the picture; only a picture can be taken. */
+    /** @override A press anywhere on the background grabs the picture; only a picture can be grabbed. */
     onMousedownImage(ev) {
         if (!this.state.file.isImage) {
             return;
@@ -272,7 +272,7 @@ export class DocumentFileViewer extends FileViewer {
         super.onMousemoveView(ev);
     }
 
-    /** @override Anywhere on the ground, for a picture. */
+    /** @override Anywhere on the background, for a picture. */
     onWheelImage(ev) {
         if (!this.state.file.isImage) {
             return;
@@ -342,7 +342,7 @@ export class DocumentFileViewer extends FileViewer {
         const translate = this.translate;
         translate.x = keep(translate.x, limit.x);
         translate.y = keep(translate.y, limit.y);
-        // While the image is dragged, `dx` and `dy` are the way of the drag so far.
+        // While the image is dragged, `dx` and `dy` are the distance dragged so far.
         translate.dx = keep(translate.x + translate.dx, limit.x) - translate.x;
         translate.dy = keep(translate.y + translate.dy, limit.y) - translate.y;
         this.shift = { x: translate.x + translate.dx, y: translate.y + translate.dy };

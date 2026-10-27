@@ -11,19 +11,18 @@ from odoo import fields, models
 from odoo.exceptions import UserError
 from odoo.tools.sql import escape_psql
 
-# Files that are not read in (compared in lower case with the lower case name).
+# Files that are not imported (compared in lower case with the lower case name).
 EXCLUDED_NAMES = ("thumbs.db", "desktop.ini", ".ds_store", "~$*", "*.tmp", "*.part", "*.crdownload")
-# A file that changes while it is copied is copied again, this often.
+# A file that changes while it is copied is copied again, at most this often.
 STABLE_TRIES = 3
 
 
 def _clash_key(name):
-    """What the filemanager takes for the same name: composed, trimmed, case aside."""
     return unicodedata.normalize("NFC", name).strip().lower()
 
 
 class IntFilemanagerImportLine(models.Model):
-    """A folder or file of an order: the queue of the reading in and its protocol."""
+    """A folder or file of an import order: the queue of the import and its protocol."""
 
     _name = "int.filemanager.import.line"
     _description = "Filemanager import line"
@@ -72,13 +71,13 @@ class IntFilemanagerImportLine(models.Model):
     )
     _import_state = models.Index("(import_id, state)")
 
-    # ---- Check -------------------------------------------------------------------------
+    # === CHECK === #
 
     def _list_directory(self, source):
         """Make a line for everything in the folder of this line.
 
         A link, a file of an odd kind, a name that is not valid and an excluded file get a
-        line too, so the report shows them; they are not read in.
+        line too, so the report shows them. They are not imported.
         """
         self.ensure_one()
         relative = posixpath.join(source.relative, self.path)
@@ -133,7 +132,6 @@ class IntFilemanagerImportLine(models.Model):
         self.listed = True
 
     def _describe_entry(self, entry):
-        """The values of a line for an entry of the disk."""
         try:
             if entry.is_symlink():
                 return {"state": "skipped", "message": self.env._("A symbolic link.")}
@@ -157,10 +155,10 @@ class IntFilemanagerImportLine(models.Model):
         except (OSError, OverflowError, ValueError):
             return False
 
-    # ---- Reading in --------------------------------------------------------------------
+    # === IMPORT === #
 
     def _read_in(self, source):
-        """Make the folder or document of this line, or say why not; one line, one savepoint.
+        """Make the folder or document of this line, or record why not: one line, one savepoint.
 
         The result is written with the document, so both are committed together.
         """
@@ -180,13 +178,14 @@ class IntFilemanagerImportLine(models.Model):
             self.write(vals)
 
     def _parent_folder(self):
-        """The folder of the filemanager for the folder this line lies in."""
         folder = self.parent_id.folder_id
         if not folder:
             raise UserError(self.env._("The folder above could not be read in."))
         return folder
 
     def _read_in_folder(self):
+        # sudo: int.filemanager.folder: the right to import is the administrators' (the access
+        # rights of the models)
         Folder = self.env["int.filemanager.folder"].sudo().with_context(tracking_disable=True)
         parent = self._parent_folder()
         name = self.env["int.filemanager.document"]._clean_name(self.name)
@@ -203,6 +202,8 @@ class IntFilemanagerImportLine(models.Model):
         return {"state": "done", "folder_id": folder.id, "message": message}
 
     def _read_in_file(self, source):
+        # sudo: int.filemanager.document: the right to import is the administrators' (the access
+        # rights of the models)
         Document = (
             self.env["int.filemanager.document"].sudo().with_context(tracking_disable=True)
         )
@@ -226,8 +227,8 @@ class IntFilemanagerImportLine(models.Model):
         for _attempt in range(STABLE_TRIES):
             before = os.stat(real)
             with open(real, "rb") as stream:
-                # sudo: the import is the administrators' (the access rights of its models), the
-                # folder is not looked at again for each of its files.
+                # sudo: int.filemanager.folder: the import is the administrators' (the access rights
+                # of its models), so the folder is not checked again for each of its files
                 document = Document._create_from_stream(
                     stream, self.name, parent.sudo(), origin_path=origin
                 )
@@ -242,5 +243,6 @@ class IntFilemanagerImportLine(models.Model):
                     "message": False if document.name == self.name else self.env._("Renamed."),
                 }
             # Changed while it was copied: the copy is wrong, try again.
+            # sudo: int.filemanager.document: the document was made by this import
             document.sudo().unlink()
         raise UserError(self.env._("The file keeps changing while it is copied."))

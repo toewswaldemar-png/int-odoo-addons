@@ -27,9 +27,9 @@ from .int_filemanager_document import (
 _logger = logging.getLogger(__name__)
 
 
-# The picture of the first page of a PDF (``_cron_thumbnails``): the longer side in pixels, the
-# files drawn per run, the time and the memory one page may take. A child process draws it
-# (``tools/pdf_thumbnail.py``): a broken file may crash the PDF library.
+# The thumbnail of the first page of a PDF (``_cron_thumbnails``): the longer side in pixels, the
+# files drawn per run, and the time and the memory one page may take. A child process draws it
+# (``tools/pdf_thumbnail.py``), as a broken file may crash the PDF library.
 THUMBNAIL_SIZE = 256
 THUMBNAIL_BATCH = 100
 THUMBNAIL_SECONDS = 60
@@ -37,7 +37,7 @@ THUMBNAIL_MEMORY_MIB = 1024
 PDF_THUMBNAIL = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "pdf_thumbnail.py")
 PREVIEW_BATCH = 20
 PREVIEW_NICE = 19
-# A process that was told to stop gets this long before it is killed.
+# A process that was told to stop has this long before it is killed.
 PREVIEW_KILL_SECONDS = 5
 
 
@@ -45,8 +45,8 @@ class IntFilemanagerDocument(models.Model):
     _inherit = "int.filemanager.document"
 
     # The first page of a PDF as a small picture for the list and the kanban. Made by the
-    # scheduled action ``_cron_thumbnails`` on the server: the core's ``thumbnail`` of the
-    # attachments of a message is made by the browser and only when somebody looks at the file.
+    # scheduled action ``_cron_thumbnails`` on the server: the ``thumbnail`` of the attachments of a
+    # message in Odoo is made by the browser, and only when somebody looks at the file.
     thumbnail = fields.Image(
         max_width=THUMBNAIL_SIZE,
         max_height=THUMBNAIL_SIZE,
@@ -83,12 +83,12 @@ class IntFilemanagerDocument(models.Model):
         copy=False,
     )
 
-    # The PDFs that wait for their picture: the scheduled action looks only at these.
+    # Partial index for the PDFs that wait for their picture: the scheduled action looks only at these.
     _thumbnail_work_index = models.Index(
         "(id) WHERE thumbnail_state IS NULL AND mimetype = 'application/pdf'"
     )
 
-    # The same for the office files that wait for their preview.
+    # Partial index for the office files that wait for their preview.
     _preview_work_index = models.Index(
         "(id) WHERE preview_state IS NULL AND mimetype IN ("
         + ", ".join(f"'{mimetype}'" for mimetype in PREVIEW_EXTENSIONS)
@@ -106,14 +106,13 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _thumbnail_domain(self):
-        """The PDFs, and the office files with a preview, that wait for their picture (one that failed is not tried again)."""
         return Domain("thumbnail_state", "=", False) & (
             Domain("mimetype", "=", PDF) | Domain("preview_checksum", "!=", False)
         )
 
     @api.model
     def _crons_after_preview(self):
-        """The scheduled actions to start when a preview is there: the picture of its first page.
+        """Return the scheduled actions to start when a preview is there: the picture of its first page.
 
         A module that reads the file from the preview (the text of the old formats) adds its own.
         """
@@ -123,9 +122,10 @@ class IntFilemanagerDocument(models.Model):
     def _cron_thumbnails(self, limit=THUMBNAIL_BATCH):
         """Draw the first page of the PDFs that have no picture yet, one blob at a time.
 
-        An office file is drawn from its preview. Documents with the same PDF share one drawing. Every blob is committed
-        (``_commit_progress``), so a stop loses no more than the file that was being drawn; when
-        the time is up with PDFs left, the report of what remains makes Odoo call it again.
+        An office file is drawn from its preview. Documents with the same PDF share one drawing.
+        Every blob is committed (``_commit_progress``), so a stop loses no more than the file that
+        was being drawn; when the time is up with PDFs left, the report of what remains makes Odoo
+        call it again.
 
         :param limit: the documents looked at in one call
         """
@@ -139,7 +139,7 @@ class IntFilemanagerDocument(models.Model):
         domain = self._thumbnail_domain()
         documents = self.with_context(active_test=False).search(domain, limit=limit)
         for checksum, same in documents.grouped(lambda document: document.preview_checksum or document.checksum).items():
-            # Another transaction holds a row (the cleaner, a rename): the next call gets it.
+            # Another transaction holds a row (the garbage collector, a rename): the next call gets it.
             same = same.try_lock_for_update(allow_referencing=True).filtered_domain(domain)
             if same:
                 same._make_thumbnail(checksum)
@@ -148,20 +148,20 @@ class IntFilemanagerDocument(models.Model):
         cron._commit_progress(0, remaining=self.with_context(active_test=False).search_count(domain))
 
     def _make_thumbnail(self, checksum):
-        """Draw the blob ``checksum`` and give the picture to these documents, or mark them failed."""
         picture = self._draw_first_page(checksum)
         values = {"thumbnail_state": "failed"}
         if picture:
             values = {"thumbnail": base64.b64encode(picture), "thumbnail_state": "done"}
-        # The users cannot write these fields (see ``write``); the job runs as superuser anyway.
+        # sudo: int.filemanager.document: users cannot write these fields (see ``write``); the job
+        # runs as superuser
         self.sudo().with_context(tracking_disable=True).write(values)
 
     @api.model
     def _draw_first_page(self, checksum):
-        """The first page of the PDF blob as a JPEG, or ``None`` if it cannot be drawn.
+        """Return the first page of the PDF blob as a JPEG, or ``None`` if it cannot be drawn.
 
-        The program that cannot be started is no fault of the file: that error goes up (Odoo stops
-        a scheduled action that fails again and again and tells the administrator).
+        A program that cannot be started is no fault of the file: that error goes up (Odoo stops a
+        scheduled action that fails again and again and tells the administrator).
         """
         command = [
             sys.executable,
@@ -186,14 +186,13 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _preview_domain(self):
-        """The office files that wait for their preview (one that failed is not tried again)."""
         return Domain([("mimetype", "in", list(PREVIEW_EXTENSIONS)), ("preview_state", "=", False)])
 
     @api.model
     def _preview_counts(self):
-        """How many office files wait for their preview, have it, or failed (for the settings)."""
         counts = dict.fromkeys((False, "done", "failed"), 0)
         counts.update(
+            # sudo: the settings show the numbers of all documents
             self.sudo()
             .with_context(active_test=False)
             ._read_group([("mimetype", "in", list(PREVIEW_EXTENSIONS))], ["preview_state"], ["__count"])
@@ -205,9 +204,9 @@ class IntFilemanagerDocument(models.Model):
         """Turn the office files that have no preview yet into PDFs, one blob at a time.
 
         Documents with the same checksum share one preview. Every blob is committed
-        (``_commit_progress``), and a file gets the time of its setting at most, or the whole
-        run if that is shorter: it is started only if that time is left. With files left the
-        report of what remains makes Odoo call it again.
+        (``_commit_progress``), and a file gets the time of its setting at most, or the whole run
+        if that is shorter: it is started only if that time is left. With files left, the report
+        of what remains makes Odoo call it again.
 
         :param limit: the documents looked at in one call
         """
@@ -229,10 +228,10 @@ class IntFilemanagerDocument(models.Model):
         domain = self._preview_domain()
         documents = self.with_context(active_test=False).search(domain, limit=limit)
         for index, (checksum, same) in enumerate(documents.grouped("checksum").items()):
-            # The first file has the whole run: its time is at most that.
+            # The first file may use the whole run: its time is at most that.
             if index and deadline - time.monotonic() < seconds:
                 break
-            # Another transaction holds a row (the cleaner, a rename): the next call gets it.
+            # Another transaction holds a row (the garbage collector, a rename): the next call gets it.
             same = same.try_lock_for_update(allow_referencing=True).filtered_domain(domain)
             if same:
                 same._make_preview(checksum, seconds)
@@ -243,8 +242,8 @@ class IntFilemanagerDocument(models.Model):
     def _make_preview(self, checksum, seconds):
         """Give the blob ``checksum`` its preview PDF, or mark the documents failed.
 
-        A document with the same file that has its outcome already hands it on (also a failure:
-        the same bytes fail again).
+        A document with the same file that has an outcome already hands it on (also a failure: the
+        same bytes fail again).
         """
         done = self.search([("checksum", "=", checksum), ("preview_state", "!=", False)], limit=1)
         stored = None
@@ -256,14 +255,16 @@ class IntFilemanagerDocument(models.Model):
             if stored:
                 values = {"preview_checksum": stored["checksum"], "preview_state": "done"}
         try:
-            # The users cannot write these fields (see ``write``); the job runs as superuser anyway.
+            # sudo: int.filemanager.document: users cannot write these fields (see ``write``); the job
+            # runs as superuser
             self.sudo().with_context(tracking_disable=True).write(values)
             if stored:
-                # The row first, then the file: the cleaner of the blobs looks at the rows.
+                # The row first, then the file: the blob garbage collector looks at the rows.
                 self.sudo().flush_recordset(["preview_checksum"])
                 self._publish_blob(stored["tmp_path"], stored["checksum"])
             if values["preview_state"] == "done":
                 for xmlid in self._crons_after_preview():
+                    # sudo: ir.cron: the scheduled actions belong to the superuser
                     self.env.ref(xmlid).sudo()._trigger()
         finally:
             if stored:
@@ -271,13 +272,13 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _convert_to_pdf(self, checksum, extension, seconds):
-        """The PDF that LibreOffice makes of the blob ``checksum`` as stored, or ``None``.
+        """Return the PDF that LibreOffice makes of the blob ``checksum`` as stored, or ``None``.
 
-        The result of ``_store_stream``: the caller publishes the file or removes it. The blob has
-        no ending, so LibreOffice gets a link to it that has one. The program that cannot be
-        started is no fault of the file; the other faults are, and are told in the log.
+        The result is that of ``_store_stream``: the caller publishes the file or removes it. The
+        blob has no extension, so LibreOffice gets a link to it that has one. A program that cannot
+        be started is no fault of the file; the other faults are, and are logged.
 
-        :param extension: the ending that tells LibreOffice the format (see ``PREVIEW_EXTENSIONS``)
+        :param extension: the extension that tells LibreOffice the format (see ``PREVIEW_EXTENSIONS``)
         :param seconds: how long the program may take
         """
         path = self._blob_path(checksum)
@@ -300,7 +301,7 @@ class IntFilemanagerDocument(models.Model):
                 _logger.warning("No preview of %s: %s", checksum, reason)
                 return None
             with open(target, "rb") as stream:
-                # A name without an ending: the head of the file tells what it is.
+                # A name without an extension: the start of the file tells what it is.
                 stored = self._store_stream(stream, "preview")
         if stored["mimetype"] != PDF:
             remove_file(stored["tmp_path"])
@@ -315,7 +316,7 @@ class IntFilemanagerDocument(models.Model):
         Each run has a profile of its own in ``job``: LibreOffice runs only once for one profile.
         The priority is the lowest, the web pages come first.
 
-        :return: ``(exit code, the last line it wrote as errors)``; 124: the time was up
+        :return: ``(exit code, the last line it wrote to stderr)``; 124: the time was up
         """
         done = subprocess.run(  # noqa: S603 (fixed program names, list arguments, no shell)
             limited(

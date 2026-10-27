@@ -49,17 +49,16 @@ class ZipEntry(NamedTuple):
 
 
 def folder_entry(name, date):
-    """The entry of a folder with nothing in it (``name`` is the path in the archive)."""
     return ZipEntry(f"{name}/", None, 0, date)
 
 
 def export_name(name):
-    """The name of a file as it goes into the archive: one that opens everywhere.
+    """Return the name of a file as it goes into the archive: one that opens everywhere.
 
-    Unicode in the composed form (a ZIP made on a Mac holds the decomposed one), no slash and no
-    control character, the characters of Windows made ``_``, no space or dot at the end, no
-    device name, and no longer than Windows allows with the extension kept. The stored name of
-    the document does not change.
+    The name is in the composed Unicode form (a ZIP made on a Mac holds the decomposed one),
+    without slash and control character, with the characters of Windows made ``_``, without
+    space or dot at the end, without device name, and no longer than Windows allows with the
+    extension kept. The stored name of the document does not change.
     """
     name = unicodedata.normalize("NFC", name)
     name = "".join(char for char in name if unicodedata.category(char) != "Cc" and char not in "/\\")
@@ -81,7 +80,7 @@ def _shortened(name, length):
 
 
 def export_names(items, taken=(), folders=False):
-    """``{key: name in the archive}`` for ``(key, name)`` pairs, all names different.
+    """Return ``{key: name in the archive}`` for ``(key, name)`` pairs, all names different.
 
     Names that are equal after the cleaning (case aside, as Windows and macOS see them) get a
     number: ``a.txt``, ``a (2).txt``. The pairs are taken in the order of their keys, so the
@@ -105,14 +104,16 @@ def export_names(items, taken=(), folders=False):
 
 
 def date_time(date):
-    """The date of a ZIP entry (a tuple) from a ``datetime`` or a ``date``, not before 1980."""
+    """Return the date of a ZIP entry (a tuple) from a ``datetime`` or a ``date``, not before 1980.
+    """
     if not isinstance(date, datetime.datetime):
         date = datetime.datetime.combine(date, datetime.time())
     return max(date.timetuple()[:6], EARLIEST_DATE)
 
 
 def zip_length(entries):
-    """The exact number of bytes of the archive that ``zip_chunks`` writes for these entries."""
+    """Return the exact number of bytes of the archive that ``zip_chunks`` writes for these entries.
+    """
     total = central = 0
     for name, _path, size, _date in entries:
         name_length = len(name.encode())
@@ -156,7 +157,7 @@ class _Sink:
 
 
 def zip_chunks(entries):
-    """The bytes of the archive, a piece at a time.
+    """Yield the bytes of the archive, a piece at a time.
 
     A file that is not as big as its entry says (it changed, or it is gone) breaks the stream:
     an archive that does not fit the length that was announced must not look complete.

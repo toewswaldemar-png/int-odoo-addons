@@ -94,6 +94,7 @@ class TestDocumentAnalysis(TransactionCase):
             "group_by_tag",
             "group_by_create_uid",
             "group_by_create_month",
+            "group_by_checksum",
         ):
             self.assertIn(f'name="{name}"', views["search"]["arch"])
         # The core shows the search panel in the list and the kanban only.
@@ -147,3 +148,36 @@ class TestDocumentAnalysis(TransactionCase):
                     [("id", "in", self.documents.ids)], [groupby], ["__count"]
                 )
                 self.assertEqual(sum(group["__count"] for group in groups), 1)
+
+    # --- the duplicates -------------------------------------------------------
+
+    def test_the_filter_for_duplicates_finds_the_documents_with_the_same_file(self):
+        first = self._document("a.txt", b"same", self.open)
+        second = self._document("b.txt", b"same", self.Folder.create({"name": "Other", "access_mode": "open"}))
+        single = self._document("c.txt", b"single", self.open)
+        self.assertEqual(self.documents.filtered_domain(self._filter_domain("filter_duplicates")), first | second)
+        self.assertEqual(self.Document.search([("is_duplicated", "=", True)]) & self.documents, first | second)
+        self.assertEqual(self.Document.search([("is_duplicated", "=", False)]) & self.documents, single)
+        self.assertTrue(first.is_duplicated and second.is_duplicated)
+        self.assertFalse(single.is_duplicated)
+
+    def test_a_user_sees_a_duplicate_only_among_the_documents_the_user_may_read(self):
+        shown = self._document("a.txt", b"same", self.open)
+        self._document("b.txt", b"same", self.hidden)
+        as_user = self.Document.with_user(self.user)
+        self.assertFalse(as_user.browse(shown.id).is_duplicated)
+        self.assertFalse(as_user.search([("is_duplicated", "=", True)]))
+
+    def test_a_document_in_the_trash_is_no_duplicate(self):
+        kept = self._document("a.txt", b"same", self.open)
+        self._document("b.txt", b"same", self.open).action_archive()
+        self.assertFalse(kept.is_duplicated)
+
+    def test_the_documents_with_the_same_file_make_one_group(self):
+        self._document("a.txt", b"same", self.open)
+        self._document("b.txt", b"same", self.Folder.create({"name": "Other", "access_mode": "open"}))
+        self._document("c.txt", b"single", self.open)
+        groups = self.Document._read_group(
+            [("id", "in", self.documents.ids), ("is_duplicated", "=", True)], ["checksum"], ["__count"]
+        )
+        self.assertEqual([count for _checksum, count in groups], [2])
