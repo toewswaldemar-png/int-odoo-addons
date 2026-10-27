@@ -30,7 +30,7 @@ class TestTranslationFiles(TransactionCase):
         # the Owl templates); an entry that has the term for a view only leaves it in English.
         folder = os.path.join(get_module_path("int_filemanager"), "i18n")
         rows = list(PoFileReader(os.path.join(folder, "de.po")))
-        for term in ("Move to...", "Properties", "View", "New folder"):
+        for term in ("Move to...", "Properties", "View", "New folder", "New subfolder", "Rename", "Archive"):
             with self.subTest(term=term):
                 self.assertTrue(
                     any(row["src"] == term and row["type"] == "code" for row in rows),

@@ -15,6 +15,7 @@ from . import test_folder_access
 from . import test_folder_archive
 from . import test_folder_counts
 from . import test_folder_make_paths
+from . import test_folder_menu
 from . import test_folder_path
 from . import test_folder_zip
 from . import test_move_target

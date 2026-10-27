@@ -19,3 +19,10 @@ class TestTranslationFiles(TransactionCase):
                 rows = list(PoFileReader(path))
                 self.assertTrue(rows)
                 self.assertEqual({row["module"] for row in rows}, {"int_filemanager_share"})
+
+    def test_the_item_of_the_menu_of_a_folder_is_marked_for_the_web_client(self):
+        # The web client takes only the entries with a ``code:`` reference; the term "Share" was
+        # a term of the server and of the views before the menu of a folder in the search panel.
+        folder = os.path.join(get_module_path("int_filemanager_share"), "i18n")
+        rows = list(PoFileReader(os.path.join(folder, "de.po")))
+        self.assertTrue(any(row["src"] == "Share" and row["type"] == "code" for row in rows))

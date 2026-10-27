@@ -2,7 +2,7 @@ import { onWillStart, useState } from "@odoo/owl";
 import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
 
-const FOLDER_MODEL = "int.filemanager.folder";
+export const FOLDER_MODEL = "int.filemanager.folder";
 
 /** @returns {{create: Boolean, write: Boolean}} what the user may do with folders (a reader may not) */
 export function useFolderRights() {

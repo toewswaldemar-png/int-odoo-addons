@@ -155,12 +155,26 @@ msgstr ""
 "Speicher hält eine Kopie für beide; die Dokumente bleiben getrennt."
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
+msgid "Archive"
+msgstr "Archivieren"
+
+#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_search
 msgid "Archived"
 msgstr "Archiviert"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
+msgid ""
+"Are you sure that you want to archive %(folder)s? The folders and documents in it are archived too."
+msgstr ""
+"Möchten Sie %(folder)s wirklich archivieren? Die Ordner und Dokumente darin werden mit archiviert."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_attachment_count
@@ -345,6 +359,7 @@ msgstr "Doppelklick"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/form/document_form_controller.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
@@ -675,6 +690,7 @@ msgstr "Verschieben nach"
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_move_document_action
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_move_folder_action
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_list
@@ -722,6 +738,12 @@ msgstr "Neu"
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action_new
 msgid "New folder"
 msgstr "Neuer Ordner"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
+msgid "New subfolder"
+msgstr "Neuer Unterordner"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
@@ -899,6 +921,17 @@ msgstr "Bilder von PDFs"
 #: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "Ready. %(version)s"
 msgstr "Bereit. %(version)s"
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
+msgid "Rename"
+msgstr "Umbenennen"
+
+#. module: int_filemanager
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action_rename
+msgid "Rename folder"
+msgstr "Ordner umbenennen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_user_id

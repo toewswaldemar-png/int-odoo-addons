@@ -17,6 +17,10 @@
         "views/res_config_settings_views.xml",
     ],
     "assets": {
+        # The item "Share" in the menu of a folder in the search panel of the documents.
+        "web.assets_backend": [
+            "int_filemanager_share/static/src/backend/**/*",
+        ],
         # The upload area of the page of a shared folder: one interaction, loaded with the frontend.
         "web.assets_frontend": [
             "int_filemanager_share/static/src/interactions/**/*",

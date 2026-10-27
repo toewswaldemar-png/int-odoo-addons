@@ -111,6 +111,12 @@ CORE_PARTS = {
     # core takes ``child_of`` there; the module takes ``=``). If it is renamed, the override is
     # never called and a folder shows the documents of the folders below it again.
     "@web/search/search_model": ("_getCategoryDomain(", "child_of", "parentField"),
+    # The menus of the right click (a row of the list, a folder of the panel): the dropdown that
+    # opens by hand (`state`), whose toggler is a point without size moved to the pointer.
+    "@web/core/dropdown/dropdown": ("manual", "noClasses", "bottomSheet", "focusToggleOnClosed"),
+    # DocumentSearchPanel: the dialog of a folder that exists (the action of "Rename") gets its
+    # `resId` from the `props` of `doAction`; the view takes it before the `res_id` of the action.
+    "@web/webclient/actions/action_service": ("options.props", "action.res_id"),
     # DocumentListController: the menu "New" restores the view after the dialog of the new
     # folder (the client action of the core; the panel does not reload its tree).
     "@web/webclient/actions/client_actions": ("soft_reload",),
@@ -238,7 +244,9 @@ class TestAssets(TransactionCase):
             ),
             # The folders of the search panel get the mark of a drop (the place of the xpath); the
             # rows of the list and the cards of the kanban carry `data-id` (the drag finds them).
-            ("web.SearchPanel.Category", ("<header", "t-on-click")),
+            # The menu of a folder sits beside the list of the top level: the template calls itself
+            # for the subfolders (`isChildList`) and loops over `values`.
+            ("web.SearchPanel.Category", ("<header", "t-on-click", "isChildList", 't-foreach="values"')),
             ("web.ListRenderer.RecordRow", ("o_data_row", "t-att-data-id")),
             ("web.KanbanRecord", ("t-att-data-id",)),
             ("web.FormView", ("control-panel-additional-actions", "props.Renderer", "<Layout")),

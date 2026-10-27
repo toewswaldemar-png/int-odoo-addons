@@ -8,6 +8,34 @@
         <xpath expr="//header" position="attributes">
             <attribute name="t-att-data-drop-folder">section.fieldName === 'folder_id' ? value.id : false</attribute>
             <attribute name="t-attf-class">{{ drag.over === value.id and section.fieldName === 'folder_id' ? 'o_int_filemanager_drop_target' : '' }}</attribute>
+            <attribute name="t-on-contextmenu">(ev) => this.onFolderContextMenu(ev, section, value)</attribute>
+        </xpath>
+        <!-- One menu for all folders, beside the list of the top level (the template calls itself
+             for the subfolders, `isChildList`). -->
+        <xpath expr="//t[@t-foreach='values']" position="after">
+            <Dropdown
+                t-if="!isChildList and !env.isSmall and section.fieldName === 'folder_id'"
+                manual="true"
+                noClasses="true"
+                bottomSheet="false"
+                focusToggleOnClosed="false"
+                position="'bottom-start'"
+                state="menuState"
+            >
+                <li class="o_int_filemanager_context_menu_anchor" t-ref="contextMenuAnchor" />
+                <t t-set-slot="content">
+                    <div class="dropdown-header text-truncate" t-out="menu.title" />
+                    <t t-foreach="menu.sections" t-as="menuSection" t-key="menuSection_index">
+                        <div t-if="menuSection_index" role="separator" class="dropdown-divider" />
+                        <t t-foreach="menuSection" t-as="item" t-key="item.key">
+                            <DropdownItem class="'o_menu_item'" onSelected="item.onSelected">
+                                <i t-if="item.icon" t-att-class="item.icon + ' me-1 fa-fw oi-fw'" />
+                                <t t-out="item.description" />
+                            </DropdownItem>
+                        </t>
+                    </t>
+                </t>
+            </Dropdown>
         </xpath>
     </t>
 </templates>

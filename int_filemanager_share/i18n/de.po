@@ -622,9 +622,11 @@ msgstr ""
 "Programm oder Seite laufen können."
 
 #. module: int_filemanager_share
+#. odoo-javascript
 #. odoo-python
 #: code:addons/int_filemanager_share/models/int_filemanager_share.py:0
 #: code:addons/int_filemanager_share/models/int_filemanager_shareable.py:0
+#: code:addons/int_filemanager_share/static/src/backend/document_search_panel_patch.js:0
 #: model:ir.model.fields,field_description:int_filemanager_share.field_int_filemanager_share_attempt__share_id
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager_share.int_filemanager_document_view_list

@@ -162,11 +162,24 @@ msgid ""
 msgstr ""
 
 #. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
+msgid "Archive"
+msgstr ""
+
+#. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_search
 msgid "Archived"
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
+msgid ""
+"Are you sure that you want to archive %(folder)s? The folders and documents in it are archived too."
 msgstr ""
 
 #. module: int_filemanager
@@ -356,6 +369,7 @@ msgstr ""
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/form/document_form_controller.xml:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_kanban
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
@@ -702,6 +716,7 @@ msgstr ""
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_move_document_action
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_move_folder_action
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_list
@@ -754,6 +769,12 @@ msgstr ""
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.xml:0
 #: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action_new
 msgid "New folder"
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
+msgid "New subfolder"
 msgstr ""
 
 #. module: int_filemanager
@@ -930,6 +951,17 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "Ready. %(version)s"
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/search_panel/document_search_panel.js:0
+msgid "Rename"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_folder_action_rename
+msgid "Rename folder"
 msgstr ""
 
 #. module: int_filemanager

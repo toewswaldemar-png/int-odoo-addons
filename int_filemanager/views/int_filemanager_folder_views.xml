@@ -134,6 +134,16 @@
         <field name="target">new</field>
     </record>
 
+    <!-- The same dialog for a folder that exists: the menu of the folder in the search panel passes
+         its id as `resId` (`props` of `doAction`). -->
+    <record id="int_filemanager_folder_action_rename" model="ir.actions.act_window">
+        <field name="name">Rename folder</field>
+        <field name="res_model">int.filemanager.folder</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="int_filemanager_folder_view_form_dialog" />
+        <field name="target">new</field>
+    </record>
+
     <record id="int_filemanager_folder_action" model="ir.actions.act_window">
         <field name="name">Folders</field>
         <field name="res_model">int.filemanager.folder</field>
