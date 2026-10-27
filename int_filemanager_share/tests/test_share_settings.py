@@ -1,5 +1,5 @@
-from odoo.exceptions import ValidationError
-from odoo.tests.common import TransactionCase, tagged
+from odoo.exceptions import AccessError, ValidationError
+from odoo.tests.common import TransactionCase, new_test_user, tagged
 
 
 @tagged("post_install", "-at_install")
@@ -47,6 +47,18 @@ class TestShareSettings(TransactionCase):
 
     def test_what_is_saved_is_what_the_shares_use(self):
         Share = self.env["int.filemanager.share"]
+        sharer = new_test_user(self.env, "sharer", groups="base.group_user,int_filemanager.int_filemanager_group_user")
+        fields = ["upload_max_file_mb", "upload_max_total_mb", "upload_max_files", "upload_extensions"]
+        self.assertEqual(
+            Share.default_get(fields),
+            {
+                "upload_max_file_mb": 25,
+                "upload_max_total_mb": 500,
+                "upload_max_files": 100,
+                "upload_extensions": False,
+            },
+        )
+        Share.with_user(sharer)._check_may_share([])
         settings = self._settings(
             creators="admin",
             default_file_mb=30,
@@ -55,10 +67,10 @@ class TestShareSettings(TransactionCase):
             password_length=12,
         )
         settings.set_values()
-        self.assertEqual(Share._setting("share_creators"), "admin")
-        self.assertEqual(Share._setting("share_default_file_mb"), 30)
-        self.assertEqual(Share._setting("share_max_file_mb"), 60)
-        self.assertEqual(Share._setting("share_default_extensions"), "pdf, jpg")
-        self.assertEqual(Share._setting("share_password_length"), 12)
+        defaults = Share.default_get(fields)
+        self.assertEqual(defaults["upload_max_file_mb"], 30)
+        self.assertEqual(defaults["upload_extensions"], "pdf, jpg")
+        with self.assertRaises(AccessError):
+            Share.with_user(sharer)._check_may_share([])
         self._settings(creators="user").set_values()
-        self.assertEqual(Share._setting("share_creators"), "user")
+        Share.with_user(sharer)._check_may_share([])

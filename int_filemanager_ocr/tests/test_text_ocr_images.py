@@ -100,7 +100,7 @@ class TestPictureRows(PicturesCase, OcrCase):
         self.assertEqual(len(self._rows()), 1)
 
     def test_nothing_is_made_when_the_recognition_is_off(self):
-        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", "0")
+        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", False)
         self._document("a.png", picture([["Hello"]], width=400), folder=self._folder("On", "on"))
         self.assertFalse(self._rows())
         self.assertEqual(self.Text._count_missing(), 0)

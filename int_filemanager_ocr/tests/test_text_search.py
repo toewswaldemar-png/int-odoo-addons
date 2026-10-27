@@ -9,7 +9,7 @@ from odoo.sql_db import db_connect
 from odoo.tests.common import TransactionCase, new_test_user, tagged
 from odoo.tools import SQL
 
-from odoo.addons.int_filemanager_ocr.models.int_filemanager_text import ENGINE_VERSION, SETTINGS
+from odoo.addons.int_filemanager_ocr.models.int_filemanager_text import ENGINE_VERSION
 from odoo.addons.int_filemanager_ocr.models.int_filemanager_text_page import folded
 
 from odoo.addons.int_filemanager.tests import text_files
@@ -260,8 +260,8 @@ class TestTextRows(TextCase):
         )
         document = self._document("a.txt", words.encode())
         other = self._document("b.txt", b"harmless")
-        with patch.dict(SETTINGS, {"text_block_kib": (2000, 1)}):
-            self._read_all()
+        self.env["ir.config_parameter"].set_param("int_filemanager.text_block_kib", "2000")
+        self._read_all()
         row = self._text_of(document)
         self.assertEqual(row.state, "done")
         self.assertIn("different words", row.message)
@@ -313,15 +313,14 @@ class TestTextRows(TextCase):
         self.assertEqual(self.Text._requeue(100), 1)
         self.assertEqual(row.state, "pending")
 
-    def test_the_settings_work_at_once_and_a_wrong_value_falls_back(self):
+    def test_the_settings_work_at_once(self):
         Params = self.env["ir.config_parameter"]
-        self.assertEqual(self.Text._setting("memory_mib"), 1024)
+        self.assertEqual(self.Text._memory_mib(), 1024)
         Params.set_param("int_filemanager.memory_mib", "300")
-        self.assertEqual(self.Text._setting("memory_mib"), 300)
-        Params.set_param("int_filemanager.memory_mib", "1")
-        self.assertEqual(self.Text._setting("memory_mib"), 64)
-        Params.set_param("int_filemanager.memory_mib", "lots")
-        self.assertEqual(self.Text._setting("memory_mib"), 1024)
+        self.assertEqual(self.Text._memory_mib(), 300)
+        self.assertEqual(self.Text._max_attempts(), 3)
+        Params.set_param("int_filemanager.max_attempts", "5")
+        self.assertEqual(self.Text._max_attempts(), 5)
 
     # --- the reader that is stopped ----------------------------------------------
 

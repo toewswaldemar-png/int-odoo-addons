@@ -13,6 +13,9 @@ BLOB_FOLDER = "int_filemanager"
 # The ids of a ZIP go into the address, and the proxy accepts 8 KB of request line.
 ZIP_PATH_MAX_LENGTH = 7000
 DOCUMENTS_ZIP_PATH = "/int_filemanager/zip/"
+# The defaults of the settings ``int_filemanager.zip_max_gb`` and ``int_filemanager.upload_max_gb``.
+ZIP_MAX_GB = 10
+UPLOAD_MAX_GB = 20
 # The most names of missing files that a message lists.
 MISSING_NAMES_SHOWN = 5
 CHECKSUM_REGEX = re.compile(r"[0-9a-f]{64}")
@@ -379,11 +382,15 @@ class IntFilemanagerDocument(models.Model):
 
         The server stops a request after ``limit_time_real``, and a slow line keeps it that long.
         """
-        return self.env["int.filemanager.cron"]._setting("zip_max_gb") * 1024**3
+        # sudo: ir.config_parameter: the settings are read for every user
+        params = self.env["ir.config_parameter"].sudo()
+        return int(params.get_param("int_filemanager.zip_max_gb", ZIP_MAX_GB)) * 1024**3
 
     @api.model
     def _upload_max_size(self):
-        return self.env["int.filemanager.cron"]._setting("upload_max_gb") * 1024**3
+        # sudo: ir.config_parameter: the settings are read for every user
+        params = self.env["ir.config_parameter"].sudo()
+        return int(params.get_param("int_filemanager.upload_max_gb", UPLOAD_MAX_GB)) * 1024**3
 
     def _check_one_selected(self):
         # The buttons in the head of the list act on every ticked row; these act on one.

@@ -16,7 +16,6 @@ from odoo.fields import Domain
 
 from ..tools.files import remove_file
 from ..tools.programs import LIMIT_PROGRAMS, limited, missing_programs
-from .int_filemanager_cron import PREVIEW_ENABLED_DEFAULT
 from .int_filemanager_document import (
     PDF,
     PREVIEW_CRON_XMLID,
@@ -36,6 +35,11 @@ THUMBNAIL_SECONDS = 60
 THUMBNAIL_MEMORY_MIB = 1024
 PDF_THUMBNAIL = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "pdf_thumbnail.py")
 PREVIEW_BATCH = 20
+# The defaults of the settings ``int_filemanager.preview_enabled`` ("1": the previews are made),
+# ``preview_seconds`` and ``preview_max_size_mib``.
+PREVIEW_ENABLED = "1"
+PREVIEW_SECONDS = 120
+PREVIEW_MAX_SIZE_MIB = 500
 PREVIEW_NICE = 19
 # A process that was told to stop has this long before it is killed.
 PREVIEW_KILL_SECONDS = 5
@@ -213,8 +217,9 @@ class IntFilemanagerDocument(models.Model):
         assert self.env.context.get("cron_id") == self.env.ref(PREVIEW_CRON_XMLID).id, (
             "Meant for cron usage only"
         )
-        Budget = self.env["int.filemanager.cron"]
-        if not Budget._flag("preview_enabled", PREVIEW_ENABLED_DEFAULT):
+        # sudo: ir.config_parameter: the settings are read by the scheduled action
+        params = self.env["ir.config_parameter"].sudo()
+        if params.get_param("int_filemanager.preview_enabled", PREVIEW_ENABLED) != "1":
             return
         if not shutil.which("soffice"):
             _logger.warning("LibreOffice is not installed: the previews of office files are not made.")
@@ -223,8 +228,10 @@ class IntFilemanagerDocument(models.Model):
             _logger.warning("%s not found: the previews of office files are not made.", ", ".join(missing))
             return
         cron = self.env["ir.cron"]
+        Budget = self.env["int.filemanager.cron"]
         deadline = Budget._pass_deadline()
-        seconds = max(min(Budget._setting("preview_seconds"), Budget._budget()[2]), 1)
+        preview_seconds = int(params.get_param("int_filemanager.preview_seconds", PREVIEW_SECONDS))
+        seconds = max(min(preview_seconds, Budget._budget()[2]), 1)
         domain = self._preview_domain()
         documents = self.with_context(active_test=False).search(domain, limit=limit)
         for index, (checksum, same) in enumerate(documents.grouped("checksum").items()):
@@ -287,7 +294,9 @@ class IntFilemanagerDocument(models.Model):
         except FileNotFoundError:
             _logger.warning("No preview of %s: the file is missing.", checksum)
             return None
-        limit = self.env["int.filemanager.cron"]._setting("preview_max_size_mib")
+        # sudo: ir.config_parameter: the settings are read by the scheduled action
+        params = self.env["ir.config_parameter"].sudo()
+        limit = int(params.get_param("int_filemanager.preview_max_size_mib", PREVIEW_MAX_SIZE_MIB))
         if size > limit * 1024**2:
             _logger.warning("No preview of %s: the file is bigger than %s MiB.", checksum, limit)
             return None

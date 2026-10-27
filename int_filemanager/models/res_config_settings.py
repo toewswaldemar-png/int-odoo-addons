@@ -4,8 +4,21 @@ import shutil
 from odoo import api, fields, models, tools
 
 from ..tools.programs import LIMIT_PROGRAMS, missing_programs, probe
-from .int_filemanager_cron import PREVIEW_ENABLED_DEFAULT, SETTINGS, TRASH_ENABLED_DEFAULT
+from .int_filemanager_document import UPLOAD_MAX_GB, ZIP_MAX_GB
+from .int_filemanager_document_rendition import PREVIEW_ENABLED, PREVIEW_MAX_SIZE_MIB, PREVIEW_SECONDS
+from .int_filemanager_document_storage import TRASH_DAYS, TRASH_ENABLED, UPLOAD_MAX_AGE_HOURS
 from .res_users_settings import OPEN_MODE_PARAMETER, OPEN_MODES
+
+# The least value of the numbers: Odoo does not save a 0 of a number field, and the field would show
+# its default again.
+LEAST = {
+    "int_filemanager_preview_seconds": 5,
+    "int_filemanager_preview_max_size_mib": 1,
+    "int_filemanager_upload_max_gb": 1,
+    "int_filemanager_upload_max_age_hours": 1,
+    "int_filemanager_zip_max_gb": 1,
+    "int_filemanager_trash_days": 1,
+}
 
 
 class ResConfigSettings(models.TransientModel):
@@ -16,21 +29,21 @@ class ResConfigSettings(models.TransientModel):
         [("1", "Show them as PDF"), ("0", "Offer them for download only")],
         string="Word, Excel and PowerPoint files",
         config_parameter="int_filemanager.preview_enabled",
-        default="1" if PREVIEW_ENABLED_DEFAULT else "0",
+        default=PREVIEW_ENABLED,
         help="LibreOffice makes a PDF of each file in the background, and the preview shows "
         "it. The files themselves are not changed; the download is the original.",
     )
     int_filemanager_preview_seconds = fields.Integer(
         string="Time per file (seconds)",
         config_parameter="int_filemanager.preview_seconds",
-        default=SETTINGS["preview_seconds"][0],
+        default=PREVIEW_SECONDS,
         help="A file that takes longer gets no preview. A run of the scheduled action is as long "
         "as the limit of Odoo for it (limit_time_real_cron); a file never gets more than that.",
     )
     int_filemanager_preview_max_size_mib = fields.Integer(
         string="Largest file (MiB)",
         config_parameter="int_filemanager.preview_max_size_mib",
-        default=SETTINGS["preview_max_size_mib"][0],
+        default=PREVIEW_MAX_SIZE_MIB,
         help="A bigger file gets no preview.",
     )
 
@@ -43,26 +56,24 @@ class ResConfigSettings(models.TransientModel):
         "in their preferences.",
     )
 
-    # The numbers are at least 1 (see ``SETTINGS``): Odoo does not save a 0 of a number field, and
-    # the field would show its default again.
     int_filemanager_upload_max_gb = fields.Integer(
         string="Largest upload (GB)",
         config_parameter="int_filemanager.upload_max_gb",
-        default=SETTINGS["upload_max_gb"][0],
+        default=UPLOAD_MAX_GB,
         help="Only users of the filemanager may send this much; every other user keeps the limit of "
         "Odoo. The server holds the file twice while it arrives (see the notes for the operator).",
     )
     int_filemanager_upload_max_age_hours = fields.Integer(
         string="Hours a failed upload is kept",
         config_parameter="int_filemanager.upload_max_age_hours",
-        default=SETTINGS["upload_max_age_hours"][0],
+        default=UPLOAD_MAX_AGE_HOURS,
         help="An upload that never ended leaves a temporary file. The cleaning of the database "
         "deletes it after this many hours.",
     )
     int_filemanager_zip_max_gb = fields.Integer(
         string="Largest download as ZIP (GB)",
         config_parameter="int_filemanager.zip_max_gb",
-        default=SETTINGS["zip_max_gb"][0],
+        default=ZIP_MAX_GB,
         help="More files than this are refused: download them in parts. A slow line keeps a worker "
         "of the server busy for the whole download.",
     )
@@ -72,14 +83,14 @@ class ResConfigSettings(models.TransientModel):
         [("1", "Delete them after some days"), ("0", "Keep them until someone deletes them")],
         string="Archived documents",
         config_parameter="int_filemanager.trash_enabled",
-        default="1" if TRASH_ENABLED_DEFAULT else "0",
+        default=TRASH_ENABLED,
         help="Archived documents are the trash: everyone who may change them can restore them. "
         "Deleting is final, the files go with the documents.",
     )
     int_filemanager_trash_days = fields.Integer(
         string="Days in the trash",
         config_parameter="int_filemanager.trash_days",
-        default=SETTINGS["trash_days"][0],
+        default=TRASH_DAYS,
         help="After this many days the cleaning of the database deletes an archived document.",
     )
 
@@ -99,6 +110,13 @@ class ResConfigSettings(models.TransientModel):
     int_filemanager_preview_failed = fields.Integer(
         string="Files failed", compute="_compute_int_filemanager_preview_status"
     )
+
+    @api.onchange(*LEAST)
+    def _onchange_int_filemanager_least(self):
+        """Raise a number that is below its least value."""
+        for settings in self:
+            for name, least in LEAST.items():
+                settings[name] = max(settings[name], least)
 
     @api.model
     @tools.ormcache("program")

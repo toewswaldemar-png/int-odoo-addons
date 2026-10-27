@@ -10,29 +10,15 @@ from odoo.addons.base.models.ir_cron import MIN_TIME_PER_JOB
 # What a run may take if Odoo has no limit for it.
 NO_LIMIT_SECONDS = 300
 
-# The numeric settings and their defaults: the one place that knows them (the settings screen takes
-# them from here too). The values are stored in the system parameters ``int_filemanager.<name>``.
-SETTINGS = {
-    # name: (default, least)
-    "time_reserve": (15, 0),  # seconds kept free below the limit of Odoo
-    "preview_seconds": (120, 5),  # time LibreOffice has for one office file
-    "preview_max_size_mib": (500, 1),  # the biggest office file that gets a preview
-    "upload_max_gb": (20, 1),  # the biggest upload request (the controller turns it into bytes)
-    "upload_max_age_hours": (24, 1),  # age after which the leftover of an upload is deleted
-    "zip_max_gb": (10, 1),  # the most bytes of the files in one ZIP
-    "trash_days": (30, 1),  # days an archived document stays before it is deleted
-}
-# Previews of office files are made unless the parameter ``int_filemanager.preview_enabled`` says no.
-PREVIEW_ENABLED_DEFAULT = True
-# Archived documents are deleted unless the parameter ``int_filemanager.trash_enabled`` says no.
-TRASH_ENABLED_DEFAULT = True
+# Seconds kept free below the limit of Odoo (the setting ``int_filemanager.time_reserve``).
+TIME_RESERVE = 15
 
 
 class IntFilemanagerCron(models.AbstractModel):
-    """The settings and the time of the scheduled actions of the filemanager.
+    """The time of the scheduled actions of the filemanager.
 
     A model that runs such an action (the previews of the office files here, the reading of
-    the texts in ``int_filemanager_ocr``) inherits it, or asks the model for them.
+    the texts in ``int_filemanager_ocr``) inherits it, or asks the model for it.
 
     ``ir.cron`` calls a scheduled action again and again until at least ``MIN_RUNS_PER_JOB``
     runs and ``MIN_TIME_PER_JOB`` (10 s) are done, and hands out ``cron_end_time`` (what
@@ -44,30 +30,14 @@ class IntFilemanagerCron(models.AbstractModel):
     """
 
     _name = "int.filemanager.cron"
-    _description = "Settings and time of the scheduled actions of the filemanager"
+    _description = "Time of the scheduled actions of the filemanager"
 
     @api.model
-    def _setting_defaults(self):
-        """Return the numeric settings as ``{name: (default, least)}``. A module adds its own."""
-        return SETTINGS
-
-    @api.model
-    def _setting(self, name):
-        default, least = self._setting_defaults()[name]
+    def _time_reserve(self):
+        """Return the seconds that a run keeps free below the time limit of Odoo."""
         # sudo: ir.config_parameter: the settings are read for every user and by the scheduled actions
-        value = self.env["ir.config_parameter"].sudo().get_param(f"int_filemanager.{name}")
-        try:
-            return max(int(value), least) if value else default
-        except ValueError:
-            return default
-
-    @api.model
-    def _flag(self, name, default):
-        # sudo: ir.config_parameter: the settings are read for every user and by the scheduled actions
-        value = self.env["ir.config_parameter"].sudo().get_param(f"int_filemanager.{name}")
-        if not value:
-            return default
-        return value.strip().lower() not in ("0", "false", "no", "off")
+        params = self.env["ir.config_parameter"].sudo()
+        return int(params.get_param("int_filemanager.time_reserve", TIME_RESERVE))
 
     @api.model
     def _limit_seconds(self):
@@ -90,7 +60,7 @@ class IntFilemanagerCron(models.AbstractModel):
     @api.model
     def _budget(self):
         limit, bounded = self._limit_seconds()
-        reserve = self._setting("time_reserve")
+        reserve = self._time_reserve()
         prefork = bool(config["workers"])
         sleep = SLEEP_INTERVAL + 10 if prefork and bounded else 0
         return ("prefork" if prefork else "threaded", limit, max(limit - sleep - reserve, 0), bounded)
@@ -105,7 +75,7 @@ class IntFilemanagerCron(models.AbstractModel):
         calls the action at least ten times in a row, and a later call must find the budget used up.
         """
         limit, bounded = self._limit_seconds()
-        reserve = self._setting("time_reserve")
+        reserve = self._time_reserve()
         now = time.monotonic()
         end_time = self.env.context.get("cron_end_time")
         job_start = end_time - MIN_TIME_PER_JOB if end_time else now

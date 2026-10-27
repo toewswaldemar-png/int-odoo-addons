@@ -176,7 +176,7 @@ class IntFilemanagerShareController(http.Controller):
         response.set_cookie(
             key_cookie(share.token),
             key,
-            max_age=share._setting("share_unlock_hours") * 3600,
+            max_age=share._unlock_hours() * 3600,
             path="/",
             secure=request.httprequest.is_secure,
             httponly=True,

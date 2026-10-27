@@ -191,13 +191,6 @@ class TestBlobCleaner(BlobCase):
         self.Document._gc_blob_uploads()
         self.assertFalse(os.path.exists(young))
 
-    def test_a_wrong_age_falls_back_to_a_day(self):
-        young, old = self._upload_file("young", 2), self._upload_file("old", 30)
-        self.env["ir.config_parameter"].set_param("int_filemanager.upload_max_age_hours", "soon")
-        self.Document._gc_blob_uploads()
-        self.assertTrue(os.path.exists(young))
-        self.assertFalse(os.path.exists(old))
-
 
 @tagged("post_install", "-at_install")
 class TestTrash(BlobCase):

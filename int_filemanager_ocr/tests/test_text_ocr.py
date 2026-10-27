@@ -159,7 +159,7 @@ class TestScans(OcrCase):
         self.assertEqual((row.state, row.scan_pages, row.ocr_state), ("empty", 3, "wait"))
 
     def test_nothing_is_queued_when_the_recognition_is_off(self):
-        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", "0")
+        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", False)
         _document, row = self._scan()
         self.assertFalse(row.ocr_state)
 
@@ -204,7 +204,7 @@ class TestScans(OcrCase):
     def test_why_the_recognition_cannot_run(self):
         Params = self.env["ir.config_parameter"]
         self.assertEqual(self.Text._ocr_ready(), (True, None))
-        Params.set_param("int_filemanager.ocr_enabled", "0")
+        Params.set_param("int_filemanager.ocr_enabled", False)
         self.assertEqual(self.Text._ocr_ready(), (False, "off"))
         Params.set_param("int_filemanager.ocr_enabled", "1")
         Params.set_param("int_filemanager.ocr_languages", "deu+fra")
@@ -406,7 +406,7 @@ class TestRecognition(OcrCase):
 
     def test_a_stopped_recognition_does_not_start(self):
         _document, row = self._scan(2)
-        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", "0")
+        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", False)
         self.assertEqual(self._step(), OCR_IDLE)
         self.assertEqual(row.ocr_state, "wait")
 

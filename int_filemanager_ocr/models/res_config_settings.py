@@ -1,6 +1,35 @@
 from odoo import api, fields, models
 from odoo.tools.misc import format_duration, human_size
 
+from odoo.addons.int_filemanager.models.int_filemanager_cron import TIME_RESERVE
+
+from .int_filemanager_text import (
+    MAX_ATTEMPTS,
+    MEMORY_MIB,
+    TEXT_BLOCK_KIB,
+    TEXT_CUT_BYTES,
+    WORK_MEM_MIB,
+)
+from .int_filemanager_text_ocr import (
+    DEFAULT_LANGUAGES,
+    OCR_DESKEW,
+    OCR_JOBS,
+    OCR_NICE,
+    OCR_OUTPUT_TYPE,
+)
+
+# The least value of the numbers: Odoo does not save a 0 of a number field, and the field would show
+# its default again.
+LEAST = {
+    "int_filemanager_time_reserve": 0,
+    "int_filemanager_memory_mib": 64,
+    "int_filemanager_text_block_kib": 1,
+    "int_filemanager_text_cut_bytes": 1000,
+    "int_filemanager_work_mem_mib": 4,
+    "int_filemanager_max_attempts": 1,
+    "int_filemanager_ocr_jobs": 1,
+}
+
 
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
@@ -8,41 +37,41 @@ class ResConfigSettings(models.TransientModel):
     int_filemanager_time_reserve = fields.Integer(
         string="Time reserve (seconds)",
         config_parameter="int_filemanager.time_reserve",
-        default=15,
+        default=TIME_RESERVE,
         help="The text of the files is read in runs of the scheduled action. A run stops this "
         "long before Odoo's own time limit for it would stop (and restart) the server.",
     )
     int_filemanager_memory_mib = fields.Integer(
         string="Memory per file (MiB)",
         config_parameter="int_filemanager.memory_mib",
-        default=1024,
+        default=MEMORY_MIB,
         help="How much memory the reading of one file may use. A file that needs more is "
         "skipped, and read again if this is raised.",
     )
     int_filemanager_text_block_kib = fields.Integer(
         string="Text block (KiB)",
         config_parameter="int_filemanager.text_block_kib",
-        default=64,
+        default=TEXT_BLOCK_KIB,
         help="The text of files without pages (Word, Excel, plain text) is saved in blocks of "
         "this size.",
     )
     int_filemanager_text_cut_bytes = fields.Integer(
         string="Largest page (bytes)",
         config_parameter="int_filemanager.text_cut_bytes",
-        default=650000,
+        default=TEXT_CUT_BYTES,
         help="The most text kept of one page of a PDF (in bytes, not letters). More is cut off.",
     )
     int_filemanager_work_mem_mib = fields.Integer(
         string="Memory of the search (MiB)",
         config_parameter="int_filemanager.work_mem_mib",
-        default=128,
+        default=WORK_MEM_MIB,
         help="The database may use this much memory for one search in the text of the files "
         "(for this search only). A word that is on very many pages needs it, or takes minutes.",
     )
     int_filemanager_max_attempts = fields.Integer(
         string="Tries per file",
         config_parameter="int_filemanager.max_attempts",
-        default=3,
+        default=MAX_ATTEMPTS,
         help="A file that stops the reading or is too slow is tried this many times.",
     )
 
@@ -56,13 +85,13 @@ class ResConfigSettings(models.TransientModel):
     int_filemanager_ocr_languages = fields.Char(
         string="Recognition languages",
         config_parameter="int_filemanager.ocr_languages",
-        default="deu+eng",
+        default=DEFAULT_LANGUAGES,
         help="The languages of the text, as Tesseract names them, joined by +: deu+eng.",
     )
     int_filemanager_ocr_jobs = fields.Integer(
         string="Cores",
         config_parameter="int_filemanager.ocr_jobs",
-        default=1,
+        default=OCR_JOBS,
         help="How many processor cores one text recognition may use.",
     )
     # A selection: Odoo does not save a 0 of a number field, and 0 is a priority.
@@ -75,21 +104,21 @@ class ResConfigSettings(models.TransientModel):
         ],
         string="Priority",
         config_parameter="int_filemanager.ocr_nice",
-        default="19",
+        default=OCR_NICE,
         help="How much of the processor the recognition takes when the server is busy.",
     )
     int_filemanager_ocr_deskew = fields.Selection(
         [("1", "Straighten and turn the pages"), ("0", "Leave the pages as they are")],
         string="Pages",
         config_parameter="int_filemanager.ocr_deskew",
-        default="1",
+        default=OCR_DESKEW,
         help="Straightening and turning make the recognition better and the time longer.",
     )
     int_filemanager_ocr_output_type = fields.Selection(
         [("pdf", "PDF"), ("pdfa", "PDF/A (archive)")],
         string="Type of the new PDF",
         config_parameter="int_filemanager.ocr_output_type",
-        default="pdf",
+        default=OCR_OUTPUT_TYPE,
         help="PDF/A takes longer and makes the file bigger.",
     )
 
@@ -153,6 +182,13 @@ class ResConfigSettings(models.TransientModel):
     int_filemanager_text_lastcall = fields.Datetime(
         string="Last run", compute="_compute_int_filemanager_text_status"
     )
+
+    @api.onchange(*LEAST)
+    def _onchange_int_filemanager_ocr_least(self):
+        """Raise a number that is below its least value."""
+        for settings in self:
+            for name, least in LEAST.items():
+                settings[name] = max(settings[name], least)
 
     @api.depends_context("uid")
     def _compute_int_filemanager_ocr_status(self):

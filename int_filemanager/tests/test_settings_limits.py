@@ -8,7 +8,7 @@ GIB = 1024**3
 @tagged("post_install", "-at_install")
 class TestSettingsLimits(TransactionCase):
     """The limits of the uploads and the ZIPs are fields of the settings page (in GB and hours),
-    with their defaults and least values from ``SETTINGS``."""
+    with their defaults and least values."""
 
     @classmethod
     def setUpClass(cls):
@@ -44,11 +44,29 @@ class TestSettingsLimits(TransactionCase):
         self.assertEqual(self.Document._upload_max_size(), 50 * GIB)
         self.assertEqual(self.Document._zip_max_size(), 3 * GIB)
 
-    def test_a_value_below_the_least_or_not_a_number_does_not_count(self):
-        self.params.set_param("int_filemanager.zip_max_gb", "-4")
-        self.assertEqual(self.Document._zip_max_size(), 1 * GIB)
-        self.params.set_param("int_filemanager.upload_max_gb", "plenty")
-        self.assertEqual(self.Document._upload_max_size(), 20 * GIB)
+    def test_the_page_raises_a_number_below_the_least(self):
+        names = [
+            "int_filemanager_upload_max_gb",
+            "int_filemanager_upload_max_age_hours",
+            "int_filemanager_zip_max_gb",
+            "int_filemanager_preview_seconds",
+            "int_filemanager_preview_max_size_mib",
+            "int_filemanager_trash_days",
+        ]
+        result = self.env["res.config.settings"].onchange(
+            dict.fromkeys(names, -4), names, {name: {} for name in names}
+        )
+        self.assertEqual(
+            result["value"],
+            {
+                "int_filemanager_upload_max_gb": 1,
+                "int_filemanager_upload_max_age_hours": 1,
+                "int_filemanager_zip_max_gb": 1,
+                "int_filemanager_preview_seconds": 5,
+                "int_filemanager_preview_max_size_mib": 1,
+                "int_filemanager_trash_days": 1,
+            },
+        )
 
     def test_the_status_says_when_pypdfium2_is_missing(self):
         with patch("importlib.util.find_spec", return_value=None):

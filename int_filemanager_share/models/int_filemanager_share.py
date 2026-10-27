@@ -22,28 +22,26 @@ from ..tools.request_brake import RequestBrake
 
 # The path of the page of a share; the token follows.
 SHARE_PATH = "/int_filemanager/share"
-# The default of each setting, used while it is not saved. The keys are the names of the
-# parameters (``int_filemanager.<name>``), the types are those of the values.
-SHARE_DEFAULTS = {
-    "share_creators": "user",
-    "share_default_file_mb": 25,
-    "share_default_total_mb": 500,
-    "share_default_files": 100,
-    "share_default_extensions": "",
-    "share_max_file_mb": 200,
-    "share_max_total_mb": 5 * 1024,
-    "share_max_files": 1000,
-    "share_password_length": 8,
-    "share_unlock_hours": 12,
-    # The rate limits: "1" on, "0" off (a selection: Odoo does not save a 0 of a number, and a
-    # boolean that is on by default can never be switched off). The limit on passwords has no switch.
-    "share_brake": "1",
-    "share_invalid_tokens": 20,
-    "share_password_tries_ip": 5,
-    "share_password_tries_share": 30,
-    "share_requests_per_minute": 120,
-    "share_uploads_per_minute": 10,
-}
+# The default of each setting, used while it is not saved: the constant ``SHARE_<NAME>`` belongs to
+# the parameter ``int_filemanager.share_<name>``.
+SHARE_CREATORS = "user"
+SHARE_DEFAULT_FILE_MB = 25
+SHARE_DEFAULT_TOTAL_MB = 500
+SHARE_DEFAULT_FILES = 100
+SHARE_DEFAULT_EXTENSIONS = ""
+SHARE_MAX_FILE_MB = 200
+SHARE_MAX_TOTAL_MB = 5 * 1024
+SHARE_MAX_FILES = 1000
+SHARE_PASSWORD_LENGTH = 8
+SHARE_UNLOCK_HOURS = 12
+# The rate limits: "1" on, "0" off (a selection: Odoo does not save a 0 of a number, and a boolean
+# that is on by default can never be switched off). The limit on passwords has no switch.
+SHARE_BRAKE = "1"
+SHARE_INVALID_TOKENS = 20
+SHARE_PASSWORD_TRIES_IP = 5
+SHARE_PASSWORD_TRIES_SHARE = 30
+SHARE_REQUESTS_PER_MINUTE = 120
+SHARE_UPLOADS_PER_MINUTE = 10
 # How much bigger than the largest file an upload request may be: the form around the file. A
 # request to a share that takes no file (any more) may not exceed this.
 UPLOAD_FRAME = 64 * 1024
@@ -363,24 +361,11 @@ class IntFilemanagerShare(models.Model):
     view_count = fields.Integer(string="Visits", default=0, readonly=True, copy=False)
     download_count = fields.Integer(string="Downloads", default=0, readonly=True, copy=False)
     last_access = fields.Datetime(readonly=True, copy=False)
-    upload_max_file_mb = fields.Integer(
-        string="Largest file (MB)",
-        default=lambda self: self._setting("share_default_file_mb"),
-        tracking=True,
-    )
-    upload_max_total_mb = fields.Integer(
-        string="All files together (MB)",
-        default=lambda self: self._setting("share_default_total_mb"),
-        tracking=True,
-    )
-    upload_max_files = fields.Integer(
-        string="Number of files",
-        default=lambda self: self._setting("share_default_files"),
-        tracking=True,
-    )
+    upload_max_file_mb = fields.Integer(string="Largest file (MB)", tracking=True)
+    upload_max_total_mb = fields.Integer(string="All files together (MB)", tracking=True)
+    upload_max_files = fields.Integer(string="Number of files", tracking=True)
     upload_extensions = fields.Char(
         string="Allowed endings",
-        default=lambda self: self._setting("share_default_extensions") or False,
         tracking=True,
         help="Separated by commas: pdf, jpg. Empty: every ending, except those that can run "
         "as a program or a page.",
@@ -447,7 +432,9 @@ class IntFilemanagerShare(models.Model):
         self.password = False
 
     def _inverse_password(self):
-        minimum = self._setting("share_password_length")
+        # sudo: ir.config_parameter: the settings are read for every user
+        params = self.env["ir.config_parameter"].sudo()
+        minimum = int(params.get_param("int_filemanager.share_password_length", SHARE_PASSWORD_LENGTH))
         crypt_context = self.env["res.users"]._crypt_context()
         for share in self:
             if not share.password:
@@ -524,13 +511,15 @@ class IntFilemanagerShare(models.Model):
     @api.constrains("upload_max_file_mb", "upload_max_total_mb", "upload_max_files")
     def _check_upload_ceilings(self):
         ceilings = {
-            "upload_max_file_mb": "share_max_file_mb",
-            "upload_max_total_mb": "share_max_total_mb",
-            "upload_max_files": "share_max_files",
+            "upload_max_file_mb": ("share_max_file_mb", SHARE_MAX_FILE_MB),
+            "upload_max_total_mb": ("share_max_total_mb", SHARE_MAX_TOTAL_MB),
+            "upload_max_files": ("share_max_files", SHARE_MAX_FILES),
         }
+        # sudo: ir.config_parameter: the settings are read for every user
+        params = self.env["ir.config_parameter"].sudo()
         for share in self:
-            for field, key in ceilings.items():
-                ceiling = self._setting(key)
+            for field, (key, default) in ceilings.items():
+                ceiling = int(params.get_param(f"int_filemanager.{key}", default))
                 if share[field] > ceiling:
                     raise ValidationError(
                         self.env._(
@@ -547,8 +536,10 @@ class IntFilemanagerShare(models.Model):
         A file that a user sees another way than through its folder (a record it is linked to, in
         ``int_filemanager_record``) is not theirs to pass on: the folder has to show it.
         """
-        if self._setting("share_creators") == "admin" and not self.env.user.has_group(
-            "int_filemanager.int_filemanager_group_admin"
+        # sudo: ir.config_parameter: the settings are read for every user
+        params = self.env["ir.config_parameter"].sudo()
+        if params.get_param("int_filemanager.share_creators", SHARE_CREATORS) == "admin" and not (
+            self.env.user.has_group("int_filemanager.int_filemanager_group_admin")
         ):
             raise AccessError(self.env._("Only the filemanager administrators may make shares."))
         folders = (
@@ -565,6 +556,28 @@ class IntFilemanagerShare(models.Model):
             raise AccessError(
                 self.env._("You may only share a folder or a file that the folders show to you.")
             )
+
+    @api.model
+    def default_get(self, fields_list):
+        """Start the limits of the uploads of a new share with the values of the settings."""
+        values = super().default_get(fields_list)
+        # sudo: ir.config_parameter: the settings are read for every user
+        params = self.env["ir.config_parameter"].sudo()
+        extensions = params.get_param("int_filemanager.share_default_extensions", SHARE_DEFAULT_EXTENSIONS)
+        defaults = {
+            "upload_max_file_mb": int(
+                params.get_param("int_filemanager.share_default_file_mb", SHARE_DEFAULT_FILE_MB)
+            ),
+            "upload_max_total_mb": int(
+                params.get_param("int_filemanager.share_default_total_mb", SHARE_DEFAULT_TOTAL_MB)
+            ),
+            "upload_max_files": int(params.get_param("int_filemanager.share_default_files", SHARE_DEFAULT_FILES)),
+            "upload_extensions": extensions or False,
+        }
+        for name, value in defaults.items():
+            if name in fields_list and name not in values:
+                values[name] = value
+        return values
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -651,11 +664,11 @@ class IntFilemanagerShare(models.Model):
             share.sudo().upload_folder_id = folder
 
     @api.model
-    def _setting(self, key):
-        default = SHARE_DEFAULTS[key]
-        # sudo: ir.config_parameter: the settings are read for every user and for guests
-        value = self.env["ir.config_parameter"].sudo().get_param(f"int_filemanager.{key}", default)
-        return type(default)(value)
+    def _unlock_hours(self):
+        """Return how long a guest who typed the password of a share does not type it again."""
+        # sudo: ir.config_parameter: the settings are read for guests
+        params = self.env["ir.config_parameter"].sudo()
+        return int(params.get_param("int_filemanager.share_unlock_hours", SHARE_UNLOCK_HOURS))
 
     # === GUEST ACCESS === #
 
@@ -669,12 +682,16 @@ class IntFilemanagerShare(models.Model):
 
     @api.model
     def _brake_is_on(self):
-        return self._setting("share_brake") == "1"
+        # sudo: ir.config_parameter: the settings are read for guests
+        params = self.env["ir.config_parameter"].sudo()
+        return params.get_param("int_filemanager.share_brake", SHARE_BRAKE) == "1"
 
     def _check_upload_brake(self, ip):
         self.ensure_one()
         if self._brake_is_on():
-            limit = self._setting("share_uploads_per_minute")
+            # sudo: ir.config_parameter: the settings are read for guests
+            params = self.env["ir.config_parameter"].sudo()
+            limit = int(params.get_param("int_filemanager.share_uploads_per_minute", SHARE_UPLOADS_PER_MINUTE))
             if self._brake().hit(("uploads", self.id, ip), REQUEST_WINDOW) > limit:
                 raise ShareBusy(self.env._("Too many files at once. Try again in a minute."))
 
@@ -696,7 +713,9 @@ class IntFilemanagerShare(models.Model):
         """
         share = self._find_by_token(token, ip)
         if braked and self._brake_is_on():
-            limit = self._setting("share_requests_per_minute")
+            # sudo: ir.config_parameter: the settings are read for guests
+            params = self.env["ir.config_parameter"].sudo()
+            limit = int(params.get_param("int_filemanager.share_requests_per_minute", SHARE_REQUESTS_PER_MINUTE))
             if self._brake().hit(("requests", share.id, ip), REQUEST_WINDOW) > limit:
                 raise ShareBusy(self.env._("Too many requests. Try again in a minute."))
         messages = {
@@ -740,7 +759,9 @@ class IntFilemanagerShare(models.Model):
         if share:
             return share
         if self._brake_is_on():
-            limit = self._setting("share_invalid_tokens")
+            # sudo: ir.config_parameter: the settings are read for guests
+            params = self.env["ir.config_parameter"].sudo()
+            limit = int(params.get_param("int_filemanager.share_invalid_tokens", SHARE_INVALID_TOKENS))
             if self._brake().hit(("tokens", ip), BRAKE_WINDOW) > limit:
                 raise ShareBusy(self.env._("Too many wrong addresses. Try again later."))
         raise ShareNotFound(self.env._("This link does not exist."))
@@ -762,7 +783,7 @@ class IntFilemanagerShare(models.Model):
             self.sudo().env,
             UNLOCK_SCOPE,
             [self.id],
-            expiration_hours=self._setting("share_unlock_hours"),
+            expiration_hours=self._unlock_hours(),
             secret=self._unlock_secret(),
         )
 
@@ -820,9 +841,13 @@ class IntFilemanagerShare(models.Model):
             by_ip = Attempt.search_count(
                 [("share_id", "=", self.id), ("ip", "=", ip), ("create_date", ">", since)]
             )
-            if by_ip >= self._setting("share_password_tries_ip") or by_share >= self._setting(
-                "share_password_tries_share"
-            ):
+            # sudo: ir.config_parameter: the settings are read for guests
+            params = self.env["ir.config_parameter"].sudo()
+            tries_ip = int(params.get_param("int_filemanager.share_password_tries_ip", SHARE_PASSWORD_TRIES_IP))
+            tries_share = int(
+                params.get_param("int_filemanager.share_password_tries_share", SHARE_PASSWORD_TRIES_SHARE)
+            )
+            if by_ip >= tries_ip or by_share >= tries_share:
                 raise ShareBusy(self.env._("Too many wrong passwords. Try again later."))
             Attempt.create({"share_id": self.id, "ip": ip})
             Attempt.env.flush_all()

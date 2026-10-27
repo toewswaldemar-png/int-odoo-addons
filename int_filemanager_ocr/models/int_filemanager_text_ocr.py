@@ -42,8 +42,14 @@ MIN_READ_SECONDS = 10
 # Files in a job folder younger than this are left to the garbage collector (a section may be writing).
 JOB_MIN_AGE_SECONDS = 600
 OCR_LANGUAGES = re.compile(r"[A-Za-z0-9_]+(\+[A-Za-z0-9_]+)*")
-DEFAULT_LANGUAGES = "deu+eng"
 OCR_OUTPUT_TYPES = ("pdf", "pdfa")
+# The defaults of the settings ``int_filemanager.ocr_languages``, ``ocr_jobs``, ``ocr_nice``,
+# ``ocr_deskew`` ("1": straighten the pages) and ``ocr_output_type``.
+DEFAULT_LANGUAGES = "deu+eng"
+OCR_JOBS = 1
+OCR_NICE = "19"  # the lowest priority
+OCR_DESKEW = "1"
+OCR_OUTPUT_TYPE = "pdf"
 _tools_cache = {}
 
 
@@ -101,15 +107,17 @@ class IntFilemanagerText(models.Model):
     def _ocr_options(self):
         # sudo: ir.config_parameter: the settings are read by the scheduled action and the administrators
         params = self.env["ir.config_parameter"].sudo()
-        languages = params.get_param("int_filemanager.ocr_languages") or DEFAULT_LANGUAGES
-        output_type = params.get_param("int_filemanager.ocr_output_type")
+        languages = params.get_param("int_filemanager.ocr_languages", DEFAULT_LANGUAGES)
+        output_type = params.get_param("int_filemanager.ocr_output_type", OCR_OUTPUT_TYPE)
+        # The priority goes to a process (``nice``): keep it in the range that the command takes.
+        nice = int(params.get_param("int_filemanager.ocr_nice", OCR_NICE))
         return {
-            "enabled": self._flag("ocr_enabled", False),
+            "enabled": bool(params.get_param("int_filemanager.ocr_enabled")),
             "languages": languages if OCR_LANGUAGES.fullmatch(languages) else DEFAULT_LANGUAGES,
-            "jobs": self._setting("ocr_jobs"),
-            "nice": min(self._setting("ocr_nice"), 19),
-            "deskew": self._flag("ocr_deskew", True),
-            "output_type": output_type if output_type in OCR_OUTPUT_TYPES else "pdf",
+            "jobs": int(params.get_param("int_filemanager.ocr_jobs", OCR_JOBS)),
+            "nice": min(max(nice, 0), 19),
+            "deskew": params.get_param("int_filemanager.ocr_deskew", OCR_DESKEW) == "1",
+            "output_type": output_type if output_type in OCR_OUTPUT_TYPES else OCR_OUTPUT_TYPE,
         }
 
     @api.model
@@ -270,7 +278,7 @@ class IntFilemanagerText(models.Model):
             return OCR_NO_TIME
         numbers = self._ocr_pages(pages)
         last = numbers[-1]
-        row_id, max_attempts = self.id, self._setting("max_attempts")
+        row_id, max_attempts = self.id, self._max_attempts()
         self.write({"ocr_state": "running"})
         self.env["ir.cron"]._commit_progress()
         job = self._job_dir()
@@ -396,7 +404,7 @@ class IntFilemanagerText(models.Model):
             return
         lesson = ocr_plan.after_timeout(pages, self.ocr_seconds_per_page, used, fair)
         attempts = self.ocr_attempts + (1 if lesson.counts else 0)
-        if attempts >= self._setting("max_attempts"):
+        if attempts >= self._max_attempts():
             self._ocr_fail("too_slow")
         else:
             self.write(
@@ -522,7 +530,7 @@ class IntFilemanagerText(models.Model):
     def _ocr_after_failure(self, reason):
         self.ensure_one()
         attempts = self.ocr_attempts + 1
-        if attempts >= self._setting("max_attempts"):
+        if attempts >= self._max_attempts():
             self.write({"ocr_attempts": attempts})
             self._ocr_fail("gave_up", reason)
         else:

@@ -10,6 +10,42 @@ ADMIN_GROUPS = "base.group_user,int_filemanager.int_filemanager_group_admin"
 
 
 @tagged("post_install", "-at_install")
+class TestOcrNumbers(OcrCase):
+    """The numbers of the settings page."""
+
+    def test_the_page_raises_a_number_below_the_least(self):
+        names = [
+            "int_filemanager_memory_mib",
+            "int_filemanager_text_block_kib",
+            "int_filemanager_text_cut_bytes",
+            "int_filemanager_work_mem_mib",
+            "int_filemanager_max_attempts",
+            "int_filemanager_ocr_jobs",
+        ]
+        result = self.env["res.config.settings"].onchange(
+            dict.fromkeys(names, -4), names, {name: {} for name in names}
+        )
+        self.assertEqual(
+            result["value"],
+            {
+                "int_filemanager_memory_mib": 64,
+                "int_filemanager_text_block_kib": 1,
+                "int_filemanager_text_cut_bytes": 1000,
+                "int_filemanager_work_mem_mib": 4,
+                "int_filemanager_max_attempts": 1,
+                "int_filemanager_ocr_jobs": 1,
+            },
+        )
+
+    def test_the_page_shows_the_defaults_of_the_code(self):
+        settings = self.env["res.config.settings"].create({})
+        self.assertEqual(settings.int_filemanager_time_reserve, 15)
+        self.assertEqual(settings.int_filemanager_memory_mib, 1024)
+        self.assertEqual(settings.int_filemanager_ocr_languages, "deu+eng")
+        self.assertEqual(settings.int_filemanager_ocr_nice, "19")
+
+
+@tagged("post_install", "-at_install")
 class TestOcrStatus(OcrCase):
     """The numbers and the words of the status of the text recognition."""
 
@@ -55,7 +91,7 @@ class TestOcrStatus(OcrCase):
 
     def test_it_says_when_it_is_ready_and_why_not(self):
         self.assertTrue(self.Text._ocr_status()["ready"])
-        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", "0")
+        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", False)
         status = self.Text._ocr_status()
         self.assertEqual((status["ready"], status["reason"]), (False, "off"))
         self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", "1")
@@ -87,7 +123,7 @@ class TestOcrSettings(OcrCase):
         self.assertIn("limit_time_real_cron", settings.int_filemanager_ocr_notes)
 
     def test_the_reasons_it_does_not_run_are_told(self):
-        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", "0")
+        self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", False)
         self.assertEqual(self._settings().int_filemanager_ocr_state, "Off.")
         self.env["ir.config_parameter"].set_param("int_filemanager.ocr_enabled", "1")
         self.env["ir.config_parameter"].set_param("int_filemanager.ocr_languages", "deu+fra")
@@ -130,7 +166,7 @@ class TestOcrSettings(OcrCase):
 
     def test_saving_changes_what_the_recognition_does(self):
         Params = self.env["ir.config_parameter"]
-        Params.set_param("int_filemanager.ocr_enabled", "0")
+        Params.set_param("int_filemanager.ocr_enabled", False)
         settings = self._settings(
             int_filemanager_ocr_enabled=True,
             int_filemanager_ocr_languages="eng",

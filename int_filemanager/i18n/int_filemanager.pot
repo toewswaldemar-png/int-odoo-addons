@@ -992,7 +992,7 @@ msgstr ""
 
 #. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_int_filemanager_cron
-msgid "Settings and time of the scheduled actions of the filemanager"
+msgid "Time of the scheduled actions of the filemanager"
 msgstr ""
 
 #. module: int_filemanager

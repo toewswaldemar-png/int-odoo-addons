@@ -65,16 +65,12 @@ MIN_START_SECONDS = 2
 # The longest message kept on a row.
 MESSAGE_LENGTH = 1000
 
-SETTINGS = {
-    # name: (default, least); the numbers of the previews and the time reserve are in ``int_filemanager``
-    "memory_mib": (1024, 64),  # memory the reader may use
-    "text_block_kib": (64, 1),  # size of a block of text of a file without pages
-    "text_cut_bytes": (650000, 1000),  # the most bytes of a page of a PDF
-    "work_mem_mib": (128, 4),  # work_mem for the full text search
-    "max_attempts": (3, 1),  # tries of a file that crashes or is too slow
-    "ocr_jobs": (1, 1),  # cores of one text recognition (-j)
-    "ocr_nice": (19, 0),  # nice value of the text recognition (19: the lowest priority)
-}
+# The defaults of the settings ``int_filemanager.<name>`` (the name in lowercase).
+MEMORY_MIB = 1024  # memory the reader may use
+TEXT_BLOCK_KIB = 64  # size of a block of text of a file without pages
+TEXT_CUT_BYTES = 650000  # the most bytes of a page of a PDF
+WORK_MEM_MIB = 128  # work_mem for the full text search
+MAX_ATTEMPTS = 3  # tries of a file that crashes or is too slow
 
 
 def _is_scan_text(text):
@@ -278,8 +274,18 @@ class IntFilemanagerText(models.Model):
     # === SETTINGS AND TIME === #
 
     @api.model
-    def _setting_defaults(self):
-        return {**super()._setting_defaults(), **SETTINGS}
+    def _memory_mib(self):
+        """Return the memory in MiB that the reading of one file may use."""
+        # sudo: ir.config_parameter: the settings are read by the scheduled action
+        params = self.env["ir.config_parameter"].sudo()
+        return int(params.get_param("int_filemanager.memory_mib", MEMORY_MIB))
+
+    @api.model
+    def _max_attempts(self):
+        """Return how often a file that crashes the reader or is too slow is tried."""
+        # sudo: ir.config_parameter: the settings are read by the scheduled action
+        params = self.env["ir.config_parameter"].sudo()
+        return int(params.get_param("int_filemanager.max_attempts", MAX_ATTEMPTS))
 
     @api.model
     def _use_search_memory(self):
@@ -289,11 +295,14 @@ class IntFilemanagerText(models.Model):
         small standard memory, works it out again and again (minutes instead of seconds). Parallel
         workers are switched off too (each would take that much again).
         """
+        # sudo: ir.config_parameter: the settings are read by the search of every user
+        params = self.env["ir.config_parameter"].sudo()
+        work_mem_mib = int(params.get_param("int_filemanager.work_mem_mib", WORK_MEM_MIB))
         self.env.cr.execute(
             SQL(
                 "SELECT set_config('work_mem', %s, true),"
                 " set_config('max_parallel_workers_per_gather', '0', true)",
-                f"{self._setting('work_mem_mib')}MB",
+                f"{work_mem_mib}MB",
             )
         )
 
@@ -473,7 +482,7 @@ class IntFilemanagerText(models.Model):
 
         :return: how many rows were put back
         """
-        memory = self._setting("memory_mib")
+        memory = self._memory_mib()
         rows = self.search(
             [
                 "|",
@@ -588,6 +597,8 @@ class IntFilemanagerText(models.Model):
 
     @api.model
     def _reader_command(self, path, mimetype, first_page, pages=()):
+        # sudo: ir.config_parameter: the settings are read by the scheduled action
+        params = self.env["ir.config_parameter"].sudo()
         return [
             sys.executable,
             "-I",
@@ -595,9 +606,9 @@ class IntFilemanagerText(models.Model):
             path,
             mimetype,
             str(first_page),
-            str(self._setting("text_block_kib") * 1024),
-            str(self._setting("text_cut_bytes")),
-            str(self._setting("memory_mib")),
+            str(int(params.get_param("int_filemanager.text_block_kib", TEXT_BLOCK_KIB)) * 1024),
+            str(int(params.get_param("int_filemanager.text_cut_bytes", TEXT_CUT_BYTES))),
+            str(self._memory_mib()),
             ",".join(str(number) for number in pages),
         ]
 
@@ -664,7 +675,7 @@ class IntFilemanagerText(models.Model):
             self.write(
                 {
                     "state": "skipped",
-                    "memory_limit_mib": self._setting("memory_mib"),
+                    "memory_limit_mib": self._memory_mib(),
                     "message": self.env._("The file needs more memory than the budget allows."),
                 }
             )
@@ -694,7 +705,7 @@ class IntFilemanagerText(models.Model):
     def _after_failure(self, reason, counts=True):
         self.ensure_one()
         attempts = self.attempts + (1 if counts else 0)
-        if attempts >= self._setting("max_attempts"):
+        if attempts >= self._max_attempts():
             self.write({"state": "failed", "attempts": attempts, "message": reason})
         else:
             self.write({"state": "pending", "attempts": attempts})

@@ -17,7 +17,6 @@ from odoo.tools import SQL
 
 from ..tools.files import remove_file
 from ..tools.filestore import check_contents, filestore, full_path
-from .int_filemanager_cron import TRASH_ENABLED_DEFAULT
 from .int_filemanager_document import BLOB_FOLDER, CHECKSUM_REGEX, PREVIEW_CRON_XMLID, PREVIEW_EXTENSIONS
 from .int_filemanager_named import NAME_MAX_LENGTH
 
@@ -35,6 +34,11 @@ BLOB_LOCK_NAME = "int_filemanager.blob"
 CHUNK_SIZE = 1024 * 1024
 # The start of a file is enough for ``guess_mimetype`` (it reads no more than this).
 HEAD_SIZE = 2048
+# The defaults of the settings ``int_filemanager.upload_max_age_hours``, ``trash_enabled`` ("1": the
+# archived documents are deleted after some days) and ``trash_days``.
+UPLOAD_MAX_AGE_HOURS = 24
+TRASH_ENABLED = "1"
+TRASH_DAYS = 30
 
 
 class IntFilemanagerDocument(models.Model):
@@ -209,7 +213,9 @@ class IntFilemanagerDocument(models.Model):
         upload_dir = self._upload_dir()
         if not os.path.isdir(upload_dir):
             return
-        hours = self.env["int.filemanager.cron"]._setting("upload_max_age_hours")
+        # sudo: ir.config_parameter: the settings are read by the garbage collector
+        params = self.env["ir.config_parameter"].sudo()
+        hours = int(params.get_param("int_filemanager.upload_max_age_hours", UPLOAD_MAX_AGE_HOURS))
         oldest_kept = time.time() - hours * 3600
         for entry in os.scandir(upload_dir):
             if entry.is_file() and entry.stat().st_mtime < oldest_kept:
@@ -222,13 +228,15 @@ class IntFilemanagerDocument(models.Model):
         Their files follow by the garbage collectors of the blobs and of the texts. Deleted in
         batches: Odoo calls it again for as long as it reports that documents are left.
         """
-        cron = self.env["int.filemanager.cron"]
-        if not cron._flag("trash_enabled", TRASH_ENABLED_DEFAULT):
+        # sudo: ir.config_parameter: the settings are read by the garbage collector
+        params = self.env["ir.config_parameter"].sudo()
+        if params.get_param("int_filemanager.trash_enabled", TRASH_ENABLED) != "1":
             return 0, 0
+        days = int(params.get_param("int_filemanager.trash_days", TRASH_DAYS))
         # sudo: the scheduled action has the companies of its user only, and the rules would hide the
         # documents of the others
         found = self.sudo().with_context(active_test=False).search(
-            [("active", "=", False), ("archived_date", "<=", f"-{cron._setting('trash_days')}d")],
+            [("active", "=", False), ("archived_date", "<=", f"-{days}d")],
             limit=GC_BATCH + 1,
         )
         found[:GC_BATCH].unlink()

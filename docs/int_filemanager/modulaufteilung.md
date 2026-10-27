@@ -27,7 +27,7 @@ Wer den Kern erweitert, überschreibt diese Stellen mit `super()`:
 
 | Stelle | Zweck | Benutzt von |
 |---|---|---|
-| `int.filemanager.cron` (abstrakt: `_setting`, `_flag`, `_budget`, `_pass_deadline`) | Settings als Systemparameter und die Zeit eines Cron-Laufs; `_setting_defaults()` ergänzt Zahlen | Vorschau (Kern), `int.filemanager.text` (`_inherit`) |
+| `int.filemanager.cron` (abstrakt: `_time_reserve`, `_budget`, `_pass_deadline`) | Die Zeit eines Cron-Laufs | Vorschau (Kern), `int.filemanager.text` (`_inherit`) |
 | `document._crons_after_preview()` | Welche Crons nach einer fertigen Vorschau geweckt werden | `ocr` (Text der alten Formate) |
 | `document._gc_lock_tables()` und `document._blobs_in_use(names)` | Der Blob-Cleaner sperrt diese Tabellen und kennt diese Prüfsummen als benutzt | `ocr` (erkannte PDFs) |
 | `document._compute_viewer_pdf_checksum` | Das PDF, das der Viewer statt der Datei zeigt (Vorschau; `ocr` ergänzt das erkannte PDF) | `ocr` |
@@ -43,6 +43,7 @@ Wer den Kern erweitert, überschreibt diese Stellen mit `super()`:
 
 - Externe IDs, Vorlagen, Bundles und Hoot-Modulnamen tragen den Namen des Moduls, das sie definiert (`int_filemanager_share.share_folder_page`, `@int_filemanager_ocr/content_hits/...`). Systemparameter und Routen blieben bei `int_filemanager.*` und `/int_filemanager/...`.
 - Ein Erweiterungsmodul fügt Felder zu Views per `xpath` hinzu (Settings-Blöcke: `//block[@name=...]`).
+- Settings sind Systemparameter `int_filemanager.<name>` und werden wie im Odoo-Kern gelesen: `get_param(key, KONSTANTE)` am Ort der Verwendung, ein kleiner Getter am Modell, wenn mehrere Stellen dieselbe Einstellung brauchen. Der Default steht einmal als Modul-Konstante und dient dem Feld in `res.config.settings` als `default=` (Muster `cloud_storage`). Mindestwerte der Zahlen erzwingt ein `@api.onchange` an der Maske (Muster `auth_password_policy`); Share prüft sie als `@api.constrains`. Es gibt keinen eigenen Helfer.
 - Tests eines Moduls liegen im Modul. Gemeinsame Bausteine der Tests (`AccessCase`, `BlobCase`, `text_files`) stehen im Kern und werden mit `odoo.addons.int_filemanager.tests...` importiert.
 - Übersetzungen: jedes Modul hat `i18n/<modul>.pot` und `de.po`; Begriffe stehen in dem Modul, das sie definiert.
 - Tests auf der Test-Instanz: `TESTS_MODULE=int_filemanager,int_filemanager_share,... tools/check/tests.sh` (Komma-Liste; liefert auch alle `int_filemanager*`-Ordner mit).
