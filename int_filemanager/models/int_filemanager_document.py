@@ -10,10 +10,6 @@ from ..tools.zip_stream import ZipEntry, export_names
 from .int_filemanager_folder import CASCADE_KEY
 
 BLOB_FOLDER = "int_filemanager"
-# The most bytes of the files in one ZIP. The server stops a request after 30 minutes in our setup
-# (limit_time_real), and a slow line keeps it that long: see docs/int_filemanager/erkenntnisse.md.
-ZIP_MAX_SIZE_PARAMETER = "int_filemanager.zip_max_size"
-DEFAULT_ZIP_MAX_SIZE = 10 * 1024**3
 # The ids of a ZIP go into the address, and the proxy takes 8 KB of the request line.
 ZIP_PATH_MAX_LENGTH = 7000
 DOCUMENTS_ZIP_PATH = "/int_filemanager/zip/"
@@ -341,11 +337,17 @@ class IntFilemanagerDocument(models.Model):
 
     @api.model
     def _zip_max_size(self):
-        value = self.env["ir.config_parameter"].sudo().get_param(ZIP_MAX_SIZE_PARAMETER, DEFAULT_ZIP_MAX_SIZE)
-        try:
-            return int(value)
-        except ValueError:
-            return DEFAULT_ZIP_MAX_SIZE
+        """The most bytes of the files in one ZIP (the setting ``zip_max_gb``).
+
+        The server stops a request after 30 minutes in our setup (``limit_time_real``), and a slow
+        line keeps it that long: see docs/int_filemanager/erkenntnisse.md.
+        """
+        return self.env["int.filemanager.cron"]._setting("zip_max_gb") * 1024**3
+
+    @api.model
+    def _upload_max_size(self):
+        """The most bytes of one upload request (the setting ``upload_max_gb``)."""
+        return self.env["int.filemanager.cron"]._setting("upload_max_gb") * 1024**3
 
     def _check_one_selected(self):
         # The buttons in the head of the list act on every ticked row; these act on one.

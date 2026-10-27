@@ -1,7 +1,9 @@
 from odoo.exceptions import AccessError
-from odoo.tests.common import TransactionCase, tagged
+from odoo.tests.common import TransactionCase, new_test_user, tagged
 
 from odoo.addons.int_filemanager.tests.test_folder_access import AccessCase
+
+READER_GROUPS = "base.group_user,int_filemanager.int_filemanager_group_reader"
 
 
 @tagged("post_install", "-at_install")
@@ -46,3 +48,11 @@ class TestLinkRights(AccessCase, TransactionCase):
             as_alice.model_folder_ids  # noqa: B018
         with self.assertRaises(AccessError):
             as_alice.write({"model_folder_ids": False})
+
+    def test_the_list_of_the_upload_folders_is_for_the_administrators(self):
+        reader = new_test_user(self.env, login="access_reader", groups=READER_GROUPS)
+        Setting = self.env["int.filemanager.model.folder"]
+        Setting.with_user(self.boss).check_access("read")
+        for user in (reader, self.alice, self.outsider):
+            with self.assertRaises(AccessError):
+                Setting.with_user(user).check_access("read")

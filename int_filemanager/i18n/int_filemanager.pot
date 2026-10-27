@@ -754,7 +754,7 @@ msgstr ""
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
-msgid "Nothing is converted while LibreOffice is not installed."
+msgid "Nothing is converted while LibreOffice is not installed, and no pictures of PDFs are made without the Python package pypdfium2."
 msgstr ""
 
 #. module: int_filemanager
@@ -861,6 +861,23 @@ msgstr ""
 #. module: int_filemanager
 #: model:res.groups,comment:int_filemanager.int_filemanager_group_reader
 msgid "Reader: Can read the folders and documents they see."
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Ready."
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/res_config_settings.py:0
+msgid "Stopped: the Python package pypdfium2 is not installed on the server."
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_thumbnail_state
+msgid "Pictures of PDFs"
 msgstr ""
 
 #. module: int_filemanager
@@ -1007,8 +1024,20 @@ msgstr ""
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__tag_ids
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_tag_action
+#: model:ir.ui.menu,name:int_filemanager.int_filemanager_tag_menu
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "Tags"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_tag_action
+msgid "No tags yet. Let's create one!"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_tag_action
+msgid "Use tags to categorize your documents."
 msgstr ""
 
 #. module: int_filemanager

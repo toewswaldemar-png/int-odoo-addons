@@ -7,7 +7,6 @@ from odoo import fields
 from odoo.exceptions import UserError
 from odoo.tests.common import HttpCase, new_test_user, tagged
 
-from ..models.int_filemanager_document import ZIP_MAX_SIZE_PARAMETER
 from .test_document_download import DownloadCase
 
 ROUTE = "/int_filemanager/zip/"
@@ -76,11 +75,12 @@ class TestDocumentZip(DownloadCase, HttpCase):
 
     def test_more_bytes_than_the_parameter_allows_are_refused(self):
         documents = self._document("a.txt", b"x" * 100) + self._document("b.txt", b"y" * 100)
-        self.env["ir.config_parameter"].set_param(ZIP_MAX_SIZE_PARAMETER, "150")
-        with self.assertRaisesRegex(UserError, "in parts"):
+        # The setting counts in GB; the method gives the bytes, so the test makes them small.
+        with patch.object(type(self.Document), "_zip_max_size", return_value=150):
+            with self.assertRaisesRegex(UserError, "in parts"):
+                documents.action_download()
+        with patch.object(type(self.Document), "_zip_max_size", return_value=200):
             documents.action_download()
-        self.env["ir.config_parameter"].set_param(ZIP_MAX_SIZE_PARAMETER, "200")
-        documents.action_download()
 
     # --- the route -------------------------------------------------------------------------
 
@@ -141,8 +141,8 @@ class TestDocumentZip(DownloadCase, HttpCase):
 
     def test_more_bytes_than_the_parameter_allows_answer_without_a_zip(self):
         documents = (self._document("a.txt", b"x" * 100), self._document("b.txt", b"y" * 100))
-        self.env["ir.config_parameter"].set_param(ZIP_MAX_SIZE_PARAMETER, "150")
-        response = self.url_open(self._url_of(*documents))
+        with patch.object(type(self.Document), "_zip_max_size", return_value=150):
+            response = self.url_open(self._url_of(*documents))
         self.assertEqual(response.status_code, 409)
         self.assertIn("in parts", response.text)
 

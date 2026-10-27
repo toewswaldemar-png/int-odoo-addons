@@ -1,12 +1,12 @@
 import io
 import os
 import zipfile
+from unittest.mock import patch
 
 from odoo import Command, fields
 from odoo.exceptions import UserError
 from odoo.tests.common import HttpCase, new_test_user, tagged
 
-from ..models.int_filemanager_document import ZIP_MAX_SIZE_PARAMETER
 from .test_folder_access import USER_GROUPS, remove
 
 ROUTE = "/int_filemanager/folder_zip/"
@@ -67,12 +67,13 @@ class TestFolderZip(HttpCase):
     def test_more_bytes_than_the_parameter_allows_are_refused_before_the_tab_opens(self):
         self._document(self.invoices, "a.txt", b"x" * 100)
         self._document(self.year, "b.txt", b"y" * 100)
-        self.env["ir.config_parameter"].set_param(ZIP_MAX_SIZE_PARAMETER, "150")
-        with self.assertRaisesRegex(UserError, "in parts"):
-            self.club.with_user(self.user).action_download()
+        # The setting counts in GB; the method gives the bytes, so the test makes them small.
+        with patch.object(type(self.Document), "_zip_max_size", return_value=150):
+            with self.assertRaisesRegex(UserError, "in parts"):
+                self.club.with_user(self.user).action_download()
         # what the user does not see does not count
-        self.env["ir.config_parameter"].set_param(ZIP_MAX_SIZE_PARAMETER, "250")
-        self.club.with_user(self.user).action_download()
+        with patch.object(type(self.Document), "_zip_max_size", return_value=250):
+            self.club.with_user(self.user).action_download()
 
     def test_the_form_and_the_menu_have_the_button(self):
         view = self.env.ref("int_filemanager.int_filemanager_folder_view_form")
@@ -246,8 +247,8 @@ class TestFolderZip(HttpCase):
     def test_more_bytes_than_the_parameter_allows_answer_without_a_zip(self):
         self._document(self.invoices, "a.txt", b"x" * 100)
         self._document(self.club, "b.txt", b"y" * 100)
-        self.env["ir.config_parameter"].set_param(ZIP_MAX_SIZE_PARAMETER, "150")
-        response = self.url_open(f"{ROUTE}{self.club.id}")
+        with patch.object(type(self.Document), "_zip_max_size", return_value=150):
+            response = self.url_open(f"{ROUTE}{self.club.id}")
         self.assertEqual(response.status_code, 409)
         self.assertIn("in parts", response.text)
 

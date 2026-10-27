@@ -33,5 +33,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         fonts-liberation fonts-crosextra-carlito fonts-crosextra-caladea \
     && rm -rf /var/lib/apt/lists/*
 # pykeepass: liest die .kdbx-Datei fuer int_keepass (reines Python plus argon2/pycryptodomex).
-RUN pip3 install --break-system-packages --ignore-installed --no-cache-dir pyjwt mutagen==1.47.0 "pyopenssl>=24" pdfplumber ocrmypdf pykeepass
+# pypdfium2: zeichnet die Vorschaubilder der PDFs fuer int_filemanager (optional; ohne bleiben sie aus).
+RUN pip3 install --break-system-packages --ignore-installed --no-cache-dir pyjwt mutagen==1.47.0 "pyopenssl>=24" pdfplumber ocrmypdf pykeepass pypdfium2
 USER odoo

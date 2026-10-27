@@ -23,6 +23,7 @@ from . import test_query_count
 from . import test_rights_matrix
 from . import test_document_office_preview
 from . import test_open_mode
+from . import test_settings_limits
 from . import test_tile_size
 from . import test_tools_programs
 from . import test_uninstall

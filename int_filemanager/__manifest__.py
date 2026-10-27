@@ -14,6 +14,7 @@
         "views/int_filemanager_menus.xml",
         "wizard/int_filemanager_move_views.xml",
         "views/int_filemanager_folder_views.xml",
+        "views/int_filemanager_tag_views.xml",
         "views/int_filemanager_document_views.xml",
         "views/res_config_settings_views.xml",
         "views/res_users_views.xml",

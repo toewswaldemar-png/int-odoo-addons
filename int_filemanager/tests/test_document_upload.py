@@ -1,5 +1,6 @@
 import io
 import os
+from unittest.mock import patch
 
 from odoo import http
 from odoo.tests.common import HttpCase, new_test_user, tagged
@@ -123,10 +124,11 @@ class TestDocumentUpload(HttpCase):
         self.authenticate("upload_user", "upload_user")
         self.assertEqual(self._upload(bytes(5000), "big.bin").status_code, 200)
 
-    def test_the_limit_is_a_system_parameter(self):
-        self.env["ir.config_parameter"].set_param("int_filemanager.max_upload_size", "1000")
+    def test_the_limit_is_a_setting(self):
+        # The setting counts in GB; the method gives the bytes, so the test makes them small.
         before = self.Document.search_count([])
-        response = self._upload(bytes(5000), "too-big.bin")
+        with patch.object(type(self.Document), "_upload_max_size", return_value=1000):
+            response = self._upload(bytes(5000), "too-big.bin")
         self.assertEqual(response.status_code, 413)
         self.assertEqual(self.Document.search_count([]), before)
         self.assertFalse(self._leftovers())

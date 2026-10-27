@@ -17,6 +17,9 @@ SETTINGS = {
     "time_reserve": (15, 0),  # seconds kept free below the limit of Odoo
     "preview_seconds": (120, 5),  # time LibreOffice has for one office file
     "preview_max_size_mib": (500, 1),  # the biggest office file that gets a preview
+    "upload_max_gb": (20, 1),  # the biggest upload request (the controller turns it into bytes)
+    "upload_max_age_hours": (24, 1),  # age after which the leftover of an upload is deleted
+    "zip_max_gb": (10, 1),  # the most bytes of the files in one ZIP
 }
 # Are the previews of office files made unless the parameter ``int_filemanager.preview_enabled`` says no?
 PREVIEW_ENABLED_DEFAULT = True

@@ -16,12 +16,10 @@ _logger = logging.getLogger(__name__)
 
 # The group that may write into folders, and so upload (see ``ir.model.access.csv``).
 UPLOAD_GROUP = "int_filemanager.int_filemanager_group_user"
-MAX_UPLOAD_SIZE_PARAMETER = "int_filemanager.max_upload_size"
-DEFAULT_MAX_UPLOAD_SIZE = 20 * 1024**3
 
 
 def max_upload_size(controller):
-    """The limit of one upload request in bytes, from the system parameter.
+    """The limit of one upload request in bytes, from the setting ``upload_max_gb``.
 
     The core's own limit (128 MiB, or ``web.max_file_upload_size``) stops every upload route that
     does not set its own. Odoo calls this after the sign-in, so the database is at hand. The body
@@ -35,15 +33,7 @@ def max_upload_size(controller):
     """
     if not request.env.user.has_group(UPLOAD_GROUP):
         return request.httprequest.max_content_length
-    value = (
-        request.env["ir.config_parameter"]
-        .sudo()
-        .get_param(MAX_UPLOAD_SIZE_PARAMETER, DEFAULT_MAX_UPLOAD_SIZE)
-    )
-    try:
-        return int(value)
-    except ValueError:
-        return DEFAULT_MAX_UPLOAD_SIZE
+    return request.env["int.filemanager.document"]._upload_max_size()
 
 
 def logged_chunks(entries, tag):

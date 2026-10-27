@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="int_filemanager_tag_view_list" model="ir.ui.view">
+        <field name="name">int.filemanager.tag.view.list</field>
+        <field name="model">int.filemanager.tag</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name" />
+                <field name="color" widget="color_picker" />
+            </list>
+        </field>
+    </record>
+
+    <record id="int_filemanager_tag_view_form" model="ir.ui.view">
+        <field name="name">int.filemanager.tag.view.form</field>
+        <field name="model">int.filemanager.tag</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name" />
+                        <field name="color" widget="color_picker" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_filemanager_tag_view_search" model="ir.ui.view">
+        <field name="name">int.filemanager.tag.view.search</field>
+        <field name="model">int.filemanager.tag</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+            </search>
+        </field>
+    </record>
+
+    <record id="int_filemanager_tag_action" model="ir.actions.act_window">
+        <field name="name">Tags</field>
+        <field name="res_model">int.filemanager.tag</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No tags yet. Let's create one!</p>
+            <p>Use tags to categorize your documents.</p>
+        </field>
+    </record>
+
+    <menuitem
+        id="int_filemanager_tag_menu"
+        name="Tags"
+        parent="menu_int_filemanager_configuration"
+        action="int_filemanager_tag_action"
+        groups="int_filemanager.int_filemanager_group_admin"
+        sequence="2"
+    />
+</odoo>

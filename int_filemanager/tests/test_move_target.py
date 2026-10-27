@@ -133,6 +133,19 @@ class TestMoveTarget(AccessCase, TransactionCase):
         with self.assertRaises(UserError):
             self.Folder.create({"name": "Below", "parent_id": archived.id})
 
+    def test_a_folder_cannot_be_put_below_itself_or_below_what_is_in_it(self):
+        # No constraint of our own: ``_parent_store_update`` of the core refuses the loop and
+        # leaves the ``parent_path`` of the whole tree as it was.
+        grandchild = self.Folder.create({"name": "Grandchild", "parent_id": self.deep.id})
+        paths = (self.shared + self.deep + grandchild).mapped("parent_path")
+        for folder, target in ((self.shared, self.shared), (self.shared, self.deep), (self.shared, grandchild)):
+            with self.subTest(folder=folder.name, target=target.name):
+                with self.assertRaises(UserError):
+                    folder.write({"parent_id": target.id})
+        self.assertFalse(self.shared.parent_id)
+        self.assertEqual(self.deep.parent_id, self.shared)
+        self.assertEqual((self.shared + self.deep + grandchild).mapped("parent_path"), paths)
+
     def test_the_names_that_are_taken_are_named(self):
         self._document(self.other, "Report.pdf")
         moving = self._document(self.deep, "report.PDF")

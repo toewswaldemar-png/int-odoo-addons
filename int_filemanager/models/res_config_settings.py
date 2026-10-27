@@ -1,3 +1,4 @@
+import importlib.util
 import shutil
 
 from odoo import api, fields, models, tools
@@ -42,9 +43,36 @@ class ResConfigSettings(models.TransientModel):
         "in their preferences.",
     )
 
+    # The numbers are at least 1 (see ``SETTINGS``): Odoo does not save a 0 of a number field, and
+    # the field would show its default again.
+    int_filemanager_upload_max_gb = fields.Integer(
+        string="Largest upload (GB)",
+        config_parameter="int_filemanager.upload_max_gb",
+        default=SETTINGS["upload_max_gb"][0],
+        help="Only users of the filemanager may send this much; every other user keeps the limit of "
+        "Odoo. The server holds the file twice while it arrives (see the notes for the operator).",
+    )
+    int_filemanager_upload_max_age_hours = fields.Integer(
+        string="Hours a failed upload is kept",
+        config_parameter="int_filemanager.upload_max_age_hours",
+        default=SETTINGS["upload_max_age_hours"][0],
+        help="An upload that never ended leaves a temporary file. The cleaning of the database "
+        "deletes it after this many hours.",
+    )
+    int_filemanager_zip_max_gb = fields.Integer(
+        string="Largest download as ZIP (GB)",
+        config_parameter="int_filemanager.zip_max_gb",
+        default=SETTINGS["zip_max_gb"][0],
+        help="More files than this are refused: download them in parts. A slow line keeps a worker "
+        "of the server busy for the whole download.",
+    )
+
     # Status of the previews of the office files (nothing is saved).
     int_filemanager_preview_state = fields.Char(
         string="Preview", compute="_compute_int_filemanager_preview_status"
+    )
+    int_filemanager_thumbnail_state = fields.Char(
+        string="Pictures of PDFs", compute="_compute_int_filemanager_preview_status"
     )
     int_filemanager_preview_done = fields.Integer(
         string="Files with preview", compute="_compute_int_filemanager_preview_status"
@@ -77,8 +105,13 @@ class ResConfigSettings(models.TransientModel):
             )
         else:
             state = self.env._("Ready. %(version)s", version=self._int_filemanager_program_version(program))
+        if importlib.util.find_spec("pypdfium2"):
+            thumbnails = self.env._("Ready.")
+        else:
+            thumbnails = self.env._("Stopped: the Python package pypdfium2 is not installed on the server.")
         for settings in self:
             settings.int_filemanager_preview_state = state
+            settings.int_filemanager_thumbnail_state = thumbnails
             settings.int_filemanager_preview_done = counts["done"]
             settings.int_filemanager_preview_waiting = counts[False]
             settings.int_filemanager_preview_failed = counts["failed"]

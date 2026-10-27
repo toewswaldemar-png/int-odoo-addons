@@ -27,8 +27,6 @@ GC_BATCH = 1000
 GC_LOCK_TIMEOUT = "10s"
 # First key of the advisory lock that publishers of one checksum take (see _publish_blob).
 BLOB_LOCK_NAME = "int_filemanager.blob"
-UPLOAD_AGE_PARAMETER = "int_filemanager.upload_max_age_hours"
-DEFAULT_UPLOAD_MAX_AGE_HOURS = 24
 CHUNK_SIZE = 1024 * 1024
 # The head of a file is enough for ``guess_mimetype`` (it reads no more than this).
 HEAD_SIZE = 2048
@@ -209,11 +207,7 @@ class IntFilemanagerDocument(models.Model):
         upload_dir = self._upload_dir()
         if not os.path.isdir(upload_dir):
             return
-        value = self.env["ir.config_parameter"].sudo().get_param(UPLOAD_AGE_PARAMETER)
-        try:
-            hours = int(value) if value else DEFAULT_UPLOAD_MAX_AGE_HOURS
-        except ValueError:
-            hours = DEFAULT_UPLOAD_MAX_AGE_HOURS
+        hours = self.env["int.filemanager.cron"]._setting("upload_max_age_hours")
         oldest_kept = time.time() - hours * 3600
         for entry in os.scandir(upload_dir):
             if entry.is_file() and entry.stat().st_mtime < oldest_kept:

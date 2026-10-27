@@ -256,16 +256,15 @@ class TestRightsMatrix(AccessCase, TransactionCase):
         with self.assertRaises(AccessError):
             self.Tag.with_user(self.outsider).search([])
 
-    # --- what only the administrators open --------------------------------------------------
-
-    def test_the_list_of_the_upload_folders_is_for_the_administrators(self):
-        for model in (
-            "int.filemanager.model.folder",
-        ):
-            self.env[model].with_user(self.boss).check_access("read")
-            for user in (self.reader, self.alice, self.outsider):
-                with self.assertRaises(AccessError):
-                    self.env[model].with_user(user).check_access("read")
+    def test_the_tags_are_kept_in_the_configuration_by_the_administrators_only(self):
+        menu = self.env.ref("int_filemanager.int_filemanager_tag_menu")
+        self.assertEqual(menu.parent_id, self.env.ref("int_filemanager.menu_int_filemanager_configuration"))
+        self.assertEqual(menu.action.res_model, "int.filemanager.tag")
+        self.assertEqual(menu.group_ids, self.env.ref("int_filemanager.int_filemanager_group_admin"))
+        for user, shown in ((self.reader, False), (self.alice, False), (self.boss, True)):
+            with self.subTest(user=user.login):
+                visible = self.env["ir.ui.menu"].with_user(user)._visible_menu_ids()
+                self.assertEqual(menu.id in visible, shown)
 
     # --- moves are the user's ---------------------------------------------------------------
 

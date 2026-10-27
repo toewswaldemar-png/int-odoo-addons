@@ -16,6 +16,36 @@
                             <field name="int_filemanager_default_open_mode" />
                         </setting>
                     </block>
+                    <block title="Limits" name="int_filemanager_limits_block">
+                        <setting
+                            id="int_filemanager_upload_limits"
+                            string="Upload"
+                            help="Only users of the filemanager may send this much; every other user keeps the limit of Odoo."
+                        >
+                            <div class="content-group">
+                                <div class="row mt8">
+                                    <label class="col-lg-4" for="int_filemanager_upload_max_gb" />
+                                    <field name="int_filemanager_upload_max_gb" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_upload_max_age_hours" />
+                                    <field name="int_filemanager_upload_max_age_hours" />
+                                </div>
+                            </div>
+                        </setting>
+                        <setting
+                            id="int_filemanager_zip_limits"
+                            string="Download"
+                            help="The files of one ZIP, from documents or from a folder."
+                        >
+                            <div class="content-group">
+                                <div class="row mt8">
+                                    <label class="col-lg-4" for="int_filemanager_zip_max_gb" />
+                                    <field name="int_filemanager_zip_max_gb" />
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
                     <block title="Office files" name="int_filemanager_preview_block">
                         <setting
                             id="int_filemanager_preview_enabled"
@@ -44,12 +74,16 @@
                         <setting
                             id="int_filemanager_preview_status"
                             string="Status"
-                            help="Nothing is converted while LibreOffice is not installed."
+                            help="Nothing is converted while LibreOffice is not installed, and no pictures of PDFs are made without the Python package pypdfium2."
                         >
                             <div class="content-group">
                                 <div class="row mt8">
                                     <label class="col-lg-4" for="int_filemanager_preview_state" />
                                     <field name="int_filemanager_preview_state" />
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-4" for="int_filemanager_thumbnail_state" />
+                                    <field name="int_filemanager_thumbnail_state" />
                                 </div>
                                 <div class="row">
                                     <label class="col-lg-4" for="int_filemanager_preview_done" />

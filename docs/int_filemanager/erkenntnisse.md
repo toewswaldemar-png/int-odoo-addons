@@ -5,7 +5,7 @@ Diese Datei hält nur, was nicht aus dem Code ersichtlich ist: gemessene Werte, 
 ## 1. Übertragung großer Dateien und vieler Dateien
 
 - Odoo prüft `limit_time_real` nur im 60-s-Takt und wartet danach bis zu 60 s auf andere Anfragen. Wirksam sind also Limit plus 0 bis 120 s, auch bei langen Einzel-Downloads.
-- Ein Reverse-Proxy nimmt etwa 1 GB der Antwort schnell auf und bremst Odoo darüber auf das Tempo des Clients; der Thread bleibt belegt. Belegung ≈ (Größe − 1 GB) / Client-Tempo. Darum die Obergrenze 10 GB (`int_filemanager.zip_max_size`) für alle ZIPs.
+- Ein Reverse-Proxy nimmt etwa 1 GB der Antwort schnell auf und bremst Odoo darüber auf das Tempo des Clients; der Thread bleibt belegt. Belegung ≈ (Größe − 1 GB) / Client-Tempo. Darum die Obergrenze 10 GB (Einstellung `int_filemanager.zip_max_gb`) für alle ZIPs.
 - Schweigt Odoo vor dem ersten Byte, antwortet der Proxy nach seinem Timeout mit 504. Ein ZIP erst ganz zu bauen und dann zu senden trägt nicht; darum ein **Strom mit vorab berechneter `Content-Length`**. Ohne `Content-Length` kürzt der Prefork-Betrieb (HTTP/1.0) den Strom still, der Client meldet Erfolg bei einer Teil-Datei.
 - Die Länge eines `ZIP_STORED`-Archivs ist vorab auf das Byte berechenbar (auch ZIP64); `zipfile` schreibt auf einen nicht rückspulbaren Ausgang mit Datendeskriptoren. Leere Ordner: Eintrag mit `/` am Ende, `CRC`, `compress_size`, `file_size` auf 0. Belege: `tests/test_zip_stream.py`.
 - Beim Senden ist der Cursor geschlossen: der Generator darf weder ORM noch `request` benutzen, nur fertige Einträge; vor dem Senden `request.env.invalidate_all()`.
