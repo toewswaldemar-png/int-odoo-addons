@@ -16,6 +16,7 @@
                         groups="int_filemanager.int_filemanager_group_user"
                     />
                 </header>
+                <field name="is_favorite" widget="boolean_favorite" nolabel="1" />
                 <field name="name" />
                 <field name="parent_id" />
                 <field name="access_mode" groups="int_filemanager.int_filemanager_group_admin" />
@@ -69,6 +70,7 @@
                     <group>
                         <field name="active" invisible="1" />
                         <field name="name" />
+                        <field name="is_favorite" widget="boolean_favorite" options="{'autosave': False}" />
                         <field name="parent_id" />
                         <field name="access_mode" groups="int_filemanager.int_filemanager_group_admin" />
                         <field
@@ -99,6 +101,11 @@
                 <field name="name" />
                 <field name="parent_id" />
                 <separator />
+                <filter
+                    name="filter_my_favorites"
+                    string="My Favorites"
+                    domain="[('is_favorite', '=', True)]"
+                />
                 <filter
                     name="filter_archived"
                     string="Archived"

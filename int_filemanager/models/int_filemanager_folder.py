@@ -43,7 +43,8 @@ class IntFilemanagerFolder(models.Model):
 
     _name = "int.filemanager.folder"
     _description = "Filemanager folder"
-    _inherit = ["mail.thread", "int.filemanager.named"]
+    _inherit = ["int.filemanager.favorite", "mail.thread", "int.filemanager.named"]
+    _favorite_field = "int_filemanager_favorite_folder_ids"
     _parent_store = True
     # The full path, like ``product.category`` and ``stock.location``: a folder stands right below
     # its parent in every list and every picker (by ``name`` alone "Root / Hallo" would come before

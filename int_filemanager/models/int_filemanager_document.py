@@ -68,7 +68,8 @@ class IntFilemanagerDocument(models.Model):
 
     _name = "int.filemanager.document"
     _description = "Filemanager document"
-    _inherit = ["mail.thread", "mail.activity.mixin", "int.filemanager.named"]
+    _inherit = ["int.filemanager.favorite", "mail.thread", "mail.activity.mixin", "int.filemanager.named"]
+    _favorite_field = "int_filemanager_favorite_document_ids"
     _order = "name"
 
     name = fields.Char(tracking=True)

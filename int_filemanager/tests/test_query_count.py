@@ -37,15 +37,19 @@ class TestQueryCount(AccessCase, TransactionCase):
     def _lists(self):
         folders = self.Folder.with_user(self.alice)
         documents = self.Document.with_user(self.alice)
-        found = documents.web_search_read([], {"name": {}, "folder_id": {"fields": NAME}}, limit=200)
+        found = documents.web_search_read(
+            [], {"name": {}, "is_favorite": {}, "folder_id": {"fields": NAME}}, limit=200
+        )
         self.assertTrue(found["records"])
-        folders.web_search_read([], {"name": {}, "parent_id": {"fields": NAME}}, limit=200)
+        folders.web_search_read([], {"name": {}, "is_favorite": {}, "parent_id": {"fields": NAME}}, limit=200)
         documents.search_panel_select_range("folder_id")
 
     def test_the_lists_of_a_user_cost_the_same_for_a_small_and_a_big_tree(self):
         self.grown = 0
         self._grow(3)
-        self._lists()  # the caches of the rules and the rights are filled by the first call
+        # The caches of the rules and the rights are filled by the first call (made like the ones that
+        # are counted: the rules of the users that the star reads load after the caches are emptied).
+        self._queries(self._lists)
         small = self._queries(self._lists)
         self._grow(30)
         big = self._queries(self._lists)

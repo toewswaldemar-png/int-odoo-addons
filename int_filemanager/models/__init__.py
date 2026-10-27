@@ -1,4 +1,5 @@
 from . import int_filemanager_named
+from . import int_filemanager_favorite
 from . import int_filemanager_tag
 from . import int_filemanager_cron
 from . import int_filemanager_folder

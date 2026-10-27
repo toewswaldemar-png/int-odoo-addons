@@ -15,6 +15,25 @@ class ResUsers(models.Model):
         inverse="_inverse_int_filemanager_open_mode",
     )
 
+    # The other side of ``favorite_user_ids`` (``int.filemanager.favorite``): the same table with the
+    # columns the other way round, since the mixin names the table after the model it is in.
+    int_filemanager_favorite_folder_ids = fields.Many2many(
+        "int.filemanager.folder",
+        "int_filemanager_folder_res_users_rel",
+        "res_users_id",
+        "int_filemanager_folder_id",
+        string="Favorite folders",
+        copy=False,
+    )
+    int_filemanager_favorite_document_ids = fields.Many2many(
+        "int.filemanager.document",
+        "int_filemanager_document_res_users_rel",
+        "res_users_id",
+        "int_filemanager_document_id",
+        string="Favorite documents",
+        copy=False,
+    )
+
     @property
     def SELF_READABLE_FIELDS(self):
         return super().SELF_READABLE_FIELDS + ["int_filemanager_open_mode"]
