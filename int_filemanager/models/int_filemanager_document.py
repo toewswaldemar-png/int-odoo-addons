@@ -30,6 +30,9 @@ STORAGE_FIELDS = (
     "preview_checksum",
     "preview_state",
 )
+# Derived from the folder and from ``active``. Users read them (the list shows when a document went
+# to the trash), so they cannot be left to administrators; ``write`` drops them like the above.
+DERIVED_FIELDS = ("company_id", "archived_date")
 PDF = "application/pdf"
 THUMBNAIL_CRON_XMLID = "int_filemanager.int_filemanager_thumbnail_cron"
 PREVIEW_CRON_XMLID = "int_filemanager.int_filemanager_preview_cron"
@@ -217,7 +220,8 @@ class IntFilemanagerDocument(models.Model):
         # at another blob or give it another type. Like ``ir.attachment``, drop such values;
         # the storage runs as superuser. Creating is closed by the missing access right.
         if not self.env.su:
-            vals = {key: value for key, value in vals.items() if key not in STORAGE_FIELDS}
+            dropped = STORAGE_FIELDS + DERIVED_FIELDS
+            vals = {key: value for key, value in vals.items() if key not in dropped}
         if "folder_id" in vals:
             self._check_move(vals["folder_id"])
         if vals.get("active") and not (self.env.su and self.env.context.get(CASCADE_KEY)):

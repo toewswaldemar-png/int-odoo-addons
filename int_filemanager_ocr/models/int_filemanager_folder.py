@@ -20,10 +20,14 @@ class IntFilemanagerFolder(models.Model):
         "so that the search finds it. A top folder that says 'like the parent folder' is off. "
         "Nothing is recognized unless the text recognition is switched on in the settings.",
     )
-    # What ``ocr_images`` comes to for this folder after the parent is looked at.
+    # What ``ocr_images`` comes to for this folder after the parent is looked at. Administrators
+    # only, like ``ocr_images``: otherwise a user could switch the recognition on through RPC.
     ocr_images_active = fields.Boolean(
         string="Images are recognized here",
-        compute="_compute_ocr_images_active", store=True, recursive=True
+        compute="_compute_ocr_images_active",
+        store=True,
+        recursive=True,
+        groups="int_filemanager.int_filemanager_group_admin",
     )
 
     @api.depends("ocr_images", "parent_id.ocr_images_active")

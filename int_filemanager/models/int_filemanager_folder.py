@@ -108,13 +108,15 @@ class IntFilemanagerFolder(models.Model):
         groups="int_filemanager.int_filemanager_group_admin",
     )
     # The folder whose ``access_mode`` and lists decide for this one: itself, or the
-    # nearest parent that does not say "like the parent". The record rules look at it.
+    # nearest parent that does not say "like the parent". The record rules look at it. Administrators
+    # only, like ``access_mode`` it comes from: a derived field is written through RPC as well.
     access_folder_id = fields.Many2one(
         "int.filemanager.folder",
         compute="_compute_access_folder_id",
         store=True,
         recursive=True,
         index=True,
+        groups="int_filemanager.int_filemanager_group_admin",
     )
 
     # Names are unique per folder regardless of case, like on Windows. COALESCE: otherwise two top

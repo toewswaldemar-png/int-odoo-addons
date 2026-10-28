@@ -124,7 +124,7 @@ class TestRightsMatrix(AccessCase, TransactionCase):
         folder = self.Folder.with_user(self.alice).create({"name": "Mine"})
         self.assertEqual(folder.sudo().access_mode, "inherit")
         sub = self.Folder.with_user(self.alice).create({"name": "Sub", "parent_id": folder.id})
-        self.assertEqual(sub.access_folder_id, folder)
+        self.assertEqual(sub.sudo().access_folder_id, folder)
 
     def test_a_reader_may_not_invite_others(self):
         self._invite(self.secret, self.reader)

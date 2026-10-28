@@ -192,6 +192,28 @@ class TestFolderAccess(AccessCase, TransactionCase):
             as_alice.write({"access_user_ids": [Command.link(self.bob.id)]})
         self.assertNotIn(self.secret, self._seen_by(self.bob))
 
+    def test_a_listed_user_cannot_open_a_folder_by_writing_the_access_folder(self):
+        self._invite(self.secret, self.alice)
+        as_alice = self.Folder.with_user(self.alice)
+        for folder in (self.secret, self.inner):
+            with self.assertRaises(AccessError):
+                as_alice.browse(folder.id).write({"access_folder_id": self.shared.id})
+        self.assertEqual(self.secret.access_folder_id, self.secret)
+        self.assertEqual(self.inner.access_folder_id, self.secret)
+        self.assertFalse((self.secret | self.inner) & self._seen_by(self.bob))
+
+    def test_a_listed_user_cannot_make_a_folder_that_names_its_own_access_folder(self):
+        self._invite(self.secret, self.alice)
+        with self.assertRaises(AccessError):
+            self.Folder.with_user(self.alice).create(
+                {"name": "Sub", "parent_id": self.secret.id, "access_folder_id": self.shared.id}
+            )
+
+    def test_the_access_folder_is_for_the_administrators_to_read(self):
+        with self.assertRaises(AccessError):
+            self.shared.with_user(self.alice).access_folder_id
+        self.assertEqual(self.shared.with_user(self.boss).access_folder_id, self.shared)
+
     def test_the_creator_of_a_folder_sees_it(self):
         mine = self.Folder.with_user(self.alice).create({"name": "Mine"})
         self.assertIn(mine, self._seen_by(self.alice))

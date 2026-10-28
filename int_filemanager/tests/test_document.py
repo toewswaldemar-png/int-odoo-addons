@@ -3,6 +3,7 @@ import os
 
 from psycopg2 import IntegrityError
 
+from odoo import fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import Form
 from odoo.tests.common import TransactionCase, new_test_user, tagged
@@ -240,6 +241,15 @@ class TestFolderAndDocument(TransactionCase):
         )
         self.assertEqual(document.name, "b.txt")
         self.assertEqual((document.checksum, document.size, document.mimetype), before)
+
+    def test_a_user_cannot_change_the_company_or_the_archive_date(self):
+        document = self._document("a.txt", b"hello")
+        other = self.env["res.company"].create({"name": "Other company"})
+        before = (document.company_id, document.archived_date)
+        document.with_user(self.user).write(
+            {"company_id": other.id, "archived_date": fields.Datetime.now()}
+        )
+        self.assertEqual((document.company_id, document.archived_date), before)
 
     def test_the_storage_may_change_checksum_size_and_type(self):
         document = self._document("a.txt", b"hello")

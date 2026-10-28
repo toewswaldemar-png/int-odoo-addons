@@ -27,6 +27,14 @@ class TestFolderOcrImages(TransactionCase):
         top = self._folder("Top", mode="on")
         self.assertFalse(self._folder("Off", top, "off").ocr_images_active)
 
+    def test_a_user_cannot_switch_the_recognition_on_by_writing_the_derived_field(self):
+        user = new_test_user(self.env, login="ocr_images_user", groups=USER_GROUPS)
+        folder = self._folder("Open")
+        folder.access_mode = "open"
+        with self.assertRaises(AccessError):
+            folder.with_user(user).write({"ocr_images_active": True})
+        self.assertFalse(folder.ocr_images_active)
+
     def test_a_subfolder_takes_over_its_parent_by_default(self):
         top = self._folder("Top", mode="on")
         middle = self._folder("Middle", top)
