@@ -30,7 +30,12 @@ msgid ""
 "there already is filled up, a file whose name is taken gets a number (2); "
 "nothing is overwritten. If you stop and start again, what was saved is saved"
 " a second time."
-msgstr "%(files)s Dateien in %(folders)s Ordnern kommen nach %(target)s. Ein Ordner, den es schon gibt, wird aufgefüllt, eine Datei mit vergebenem Namen bekommt eine Nummer (2); nichts wird überschrieben. Wenn Sie anhalten und neu starten, wird das schon Gespeicherte ein zweites Mal gespeichert."
+msgstr ""
+"%(files)s Dateien in %(folders)s Ordnern werden in %(target)s abgelegt. "
+"Bereits vorhandene Ordner werden ergänzt. Ist ein Dateiname schon vergeben, "
+"wird eine Nummer angehängt, z. B. (2); es wird nichts überschrieben. Wird "
+"der Vorgang abgebrochen und neu gestartet, werden bereits gespeicherte "
+"Dateien erneut gespeichert."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -41,18 +46,18 @@ msgstr "%(stored)s von %(total)s Dateien gespeichert."
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_preview_max_size_mib
 msgid "A bigger file gets no preview."
-msgstr "Eine größere Datei bekommt keine Vorschau."
+msgstr "Für größere Dateien wird keine Vorschau erstellt."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_document_name_per_folder
 msgid "A document with this name already exists in this folder."
-msgstr "Ein Dokument mit diesem Namen existiert in diesem Ordner bereits."
+msgstr "In diesem Ordner ist bereits ein Dokument mit diesem Namen vorhanden."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document_storage.py:0
 msgid "A file needs a name."
-msgstr "Eine Datei braucht einen Namen."
+msgstr "Eine Datei muss einen Namen haben."
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_preview_seconds
@@ -60,29 +65,34 @@ msgid ""
 "A file that takes longer gets no preview. A run of the scheduled action is "
 "as long as the limit of Odoo for it (limit_time_real_cron); a file never "
 "gets more than that."
-msgstr "Eine Datei, die länger braucht, bekommt keine Vorschau. Ein Lauf der geplanten Aktion ist höchstens so lang wie das Limit von Odoo dafür (limit_time_real_cron); eine Datei bekommt nie mehr als das."
+msgstr ""
+"Für Dateien, die länger brauchen, wird keine Vorschau erstellt. Ein Lauf "
+"der geplanten Aktion dauert höchstens so lange wie das Odoo-Limit dafür "
+"(limit_time_real_cron); eine einzelne Datei erhält nie mehr Zeit."
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
 msgid ""
 "A file that takes longer or is bigger gets no preview and is not tried "
 "again."
-msgstr "Eine Datei, die länger braucht oder größer ist, bekommt keine Vorschau und wird nicht noch einmal versucht."
+msgstr ""
+"Für Dateien, die zu lange brauchen oder zu groß sind, wird keine Vorschau "
+"erstellt; ein erneuter Versuch erfolgt nicht."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_folder_name_per_parent
 msgid "A folder with this name already exists here."
-msgstr "Ein Ordner mit diesem Namen existiert hier bereits."
+msgstr "Hier ist bereits ein Ordner mit diesem Namen vorhanden."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_tag_name_uniq
 msgid "A tag with this name already exists."
-msgstr "Ein Tag mit diesem Namen existiert bereits."
+msgstr "Ein Tag mit diesem Namen ist bereits vorhanden."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_folder_id
 msgid "Access Folder"
-msgstr "Bestimmender Ordner"
+msgstr "Maßgeblicher Ordner"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_mode
@@ -127,13 +137,22 @@ msgid ""
 "Administrator: Can see all folders, decide who sees them and configure the "
 "filemanager."
 msgstr ""
-"Administrator: Darf alle Ordner sehen, festlegen, wer sie sieht, und den "
-"Dateimanager einrichten."
+"Administrator: Kann alle Ordner sehen, die Sichtbarkeit festlegen und den "
+"Dateimanager konfigurieren."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_trash_days
+msgid ""
+"After this many days the cleaning of the database deletes an archived "
+"document."
+msgstr ""
+"Nach dieser Anzahl von Tagen löscht die Datenbankbereinigung ein "
+"archiviertes Dokument."
 
 #. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__open
 msgid "All filemanager users"
-msgstr "Alle Dateimanager-Nutzer"
+msgstr "Alle Dateimanager-Benutzer"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_group_ids
@@ -144,6 +163,177 @@ msgstr "Erlaubte Gruppen"
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_user_ids
 msgid "Allowed users"
 msgstr "Erlaubte Benutzer"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_upload_max_age_hours
+msgid ""
+"An upload that never ended leaves a temporary file. The cleaning of the "
+"database deletes it after this many hours."
+msgstr ""
+"Ein nicht beendeter Upload hinterlässt eine temporäre Datei. Die "
+"Datenbankbereinigung löscht sie nach dieser Anzahl von Stunden."
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_trash_enabled
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Archived documents"
+msgstr "Archivierte Dokumente"
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_document_trash_action
+msgid ""
+"Archived documents are kept here. Unarchive a document to get it back; the "
+"settings say when the trash is emptied."
+msgstr ""
+"Archivierte Dokumente werden hier aufbewahrt. Heben Sie die Archivierung "
+"eines Dokuments auf, um es wiederherzustellen. In den Einstellungen legen "
+"Sie fest, wann der Papierkorb geleert wird."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_trash_enabled
+msgid ""
+"Archived documents are the trash: everyone who may change them can restore "
+"them. Deleting is final, the files go with the documents."
+msgstr ""
+"Archivierte Dokumente bilden den Papierkorb: Jeder, der sie ändern darf, "
+"kann sie wiederherstellen. Das Löschen ist endgültig, die Dateien werden "
+"mit den Dokumenten gelöscht."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"Archived documents are the trash: they can be restored until they are "
+"deleted. Deleting is final, the files go with the documents."
+msgstr ""
+"Archivierte Dokumente bilden den Papierkorb: Sie können wiederhergestellt "
+"werden, bis sie gelöscht werden. Das Löschen ist endgültig, die Dateien "
+"werden mit den Dokumenten gelöscht."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+msgid "Archived on"
+msgstr "Archiviert am"
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_document_action
+msgid ""
+"Choose a folder in the panel on the left. Files are added with \"New\" or "
+"by dragging them onto the page."
+msgstr ""
+"Wählen Sie links einen Ordner aus. Dateien fügen Sie über „Neu“ hinzu oder "
+"indem Sie sie auf die Seite ziehen."
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_folder_action
+msgid "Create folders to organize your documents."
+msgstr "Erstellen Sie Ordner, um Ihre Dokumente zu strukturieren."
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_trash_days
+msgid "Days in the trash"
+msgstr "Tage im Papierkorb"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_trash_enabled__1
+msgid "Delete them after some days"
+msgstr "Nach einigen Tagen löschen"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Future Activities"
+msgstr "Geplante Aktivitäten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_upload_max_age_hours
+msgid "Hours a failed upload is kept"
+msgstr "Aufbewahrung abgebrochener Uploads (Stunden)"
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_trash_enabled__0
+msgid "Keep them until someone deletes them"
+msgstr "Behalten, bis sie manuell gelöscht werden"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_zip_max_gb
+msgid "Largest download as ZIP (GB)"
+msgstr "Maximale ZIP-Größe beim Download (GB)"
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_upload_max_gb
+msgid "Largest upload (GB)"
+msgstr "Maximale Upload-Größe (GB)"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Late Activities"
+msgstr "Überfällige Aktivitäten"
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_zip_max_gb
+msgid ""
+"More files than this are refused: download them in parts. A slow line keeps "
+"a worker of the server busy for the whole download."
+msgstr ""
+"Größere Mengen werden abgelehnt; laden Sie sie in Teilen herunter. Bei "
+"langsamer Verbindung belegt ein Download einen Server-Worker für die "
+"gesamte Dauer."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "My Activities"
+msgstr "Meine Aktivitäten"
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_document_action
+msgid "No documents yet"
+msgstr "Keine Dokumente vorhanden"
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_folder_action
+msgid "No folders yet"
+msgstr "Keine Ordner vorhanden"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"Only users of the filemanager may send this much; every other user keeps "
+"the limit of Odoo."
+msgstr ""
+"Dieses Limit gilt nur für Benutzer des Dateimanagers; für alle anderen "
+"Benutzer gilt das Odoo-Limit."
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_upload_max_gb
+msgid ""
+"Only users of the filemanager may send this much; every other user keeps "
+"the limit of Odoo. The server holds the file twice while it arrives (see "
+"the notes for the operator)."
+msgstr ""
+"Dieses Limit gilt nur für Benutzer des Dateimanagers; für alle anderen "
+"Benutzer gilt das Odoo-Limit. Der Server hält die Datei während des Uploads "
+"doppelt vor (siehe Hinweise für den Betrieb)."
+
+#. module: int_filemanager
+#. odoo-javascript
+#: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
+msgid "Stop"
+msgstr "Abbrechen"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"The cleaning of the database deletes an archived document after this many "
+"days."
+msgstr ""
+"Die Datenbankbereinigung löscht ein archiviertes Dokument nach dieser "
+"Anzahl von Tagen."
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "The files of one ZIP, from documents or from a folder."
+msgstr ""
+"Gilt für die Dateien eines ZIP-Archivs, das aus Dokumenten oder aus einem "
+"Ordner erstellt wird."
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__duplicate_count
@@ -157,7 +347,7 @@ msgid ""
 "one copy for both; the documents stay separate."
 msgstr ""
 "Ein anderes Dokument, das Sie lesen dürfen, hat dieselbe Datei. Der "
-"Speicher hält eine Kopie für beide; die Dokumente bleiben getrennt."
+"Speicher legt die Datei nur einmal ab; die Dokumente bleiben getrennt."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -214,18 +404,18 @@ msgstr "Unterordner"
 #: code:addons/int_filemanager/static/src/int_filemanager/dropzone/document_dropzone.js:0
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
 msgid "Choose a folder in the panel on the left first."
-msgstr "Wählen Sie zuerst im Bereich links einen Ordner."
+msgstr "Wählen Sie zuerst links in der Seitenleiste einen Ordner aus."
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_move_view_form
 msgid "Choose a folder..."
-msgstr "Ordner wählen ..."
+msgstr "Ordner auswählen …"
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/wizard/int_filemanager_move.py:0
 msgid "Choose the folder to move the documents to."
-msgstr "Wählen Sie den Ordner, in den die Dokumente kommen."
+msgstr "Wählen Sie den Zielordner für die Dokumente aus."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_tag__color
@@ -281,7 +471,7 @@ msgstr "Erstellungsmonat"
 #: model:ir.model.fields.selection,name:int_filemanager.selection__res_users__int_filemanager_open_mode__default
 #: model:ir.model.fields.selection,name:int_filemanager.selection__res_users_settings__int_filemanager_open_mode__default
 msgid "Default"
-msgstr "Vorgabe"
+msgstr "Standard"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -352,7 +542,7 @@ msgstr "Dokumente (%(count)s): %(names)s"
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_document__preview_state__done
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_document__thumbnail_state__done
 msgid "Done"
-msgstr "Erledigt"
+msgstr "Erstellt"
 
 #. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_default_open_mode__double
@@ -465,17 +655,17 @@ msgstr "Dateimanager"
 #. module: int_filemanager
 #: model:res.groups,name:int_filemanager.int_filemanager_group_admin
 msgid "Filemanager Administrator"
-msgstr "Dateimanager Administrator"
+msgstr "Dateimanager: Administrator"
 
 #. module: int_filemanager
 #: model:res.groups,name:int_filemanager.int_filemanager_group_reader
 msgid "Filemanager Reader"
-msgstr "Dateimanager Leser"
+msgstr "Dateimanager: Leser"
 
 #. module: int_filemanager
 #: model:res.groups,name:int_filemanager.int_filemanager_group_user
 msgid "Filemanager User"
-msgstr "Dateimanager Nutzer"
+msgstr "Dateimanager: Benutzer"
 
 #. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_int_filemanager_document
@@ -495,12 +685,12 @@ msgstr "Dateimanager-Tag"
 #. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_int_filemanager_favorite
 msgid "Filemanager: a record that a user marks as favorite"
-msgstr "Dateimanager: Ein Datensatz, den ein Nutzer als Favorit markiert"
+msgstr "Dateimanager: Datensatz, den ein Benutzer als Favorit markiert hat"
 
 #. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.int_filemanager_thumbnail_cron_ir_actions_server
 msgid "Filemanager: draw the first page of the PDFs"
-msgstr "Dateimanager: erste Seite der PDFs zeichnen"
+msgstr "Dateimanager: Vorschaubilder der PDF-Dateien erstellen"
 
 #. module: int_filemanager
 #: model:ir.actions.server,name:int_filemanager.int_filemanager_preview_cron_ir_actions_server
@@ -515,12 +705,12 @@ msgstr "Dateimanager: In einen Ordner verschieben"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_failed
 msgid "Files failed"
-msgstr "Dateien fehlgeschlagen"
+msgstr "Dateien mit Fehler"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_waiting
 msgid "Files waiting"
-msgstr "Dateien wartend"
+msgstr "Wartende Dateien"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_done
@@ -568,7 +758,7 @@ msgstr "Follower (Partner)"
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr "FontAwesome-Icon, z. B. fa-tasks"
+msgstr "Font-Awesome-Symbol, z. B. fa-tasks"
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -599,12 +789,12 @@ msgstr "ID"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__activity_exception_icon
 msgid "Icon"
-msgstr "Icon"
+msgstr "Symbol"
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__activity_exception_icon
 msgid "Icon to indicate an exception activity."
-msgstr "Icon, um eine Ausnahmeaktivität anzuzeigen."
+msgstr "Symbol, um eine Ausnahmeaktivität anzuzeigen."
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__message_needaction
@@ -663,7 +853,11 @@ msgid ""
 "LibreOffice makes a PDF of each Word, Excel, PowerPoint and OpenDocument "
 "file in the background, and the preview shows it. The files themselves are "
 "not changed; the download is the original."
-msgstr "LibreOffice erstellt im Hintergrund von jeder Word-, Excel-, PowerPoint- und OpenDocument-Datei ein PDF, und die Vorschau zeigt es. Die Dateien selbst werden nicht verändert; der Download ist das Original."
+msgstr ""
+"LibreOffice erstellt im Hintergrund von jeder Word-, Excel-, PowerPoint- "
+"und OpenDocument-Datei eine PDF-Fassung, die in der Vorschau angezeigt "
+"wird. Die Originaldateien bleiben unverändert; beim Herunterladen erhalten "
+"Sie das Original."
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_preview_enabled
@@ -671,7 +865,10 @@ msgid ""
 "LibreOffice makes a PDF of each file in the background, and the preview "
 "shows it. The files themselves are not changed; the download is the "
 "original."
-msgstr "LibreOffice erstellt im Hintergrund von jeder Datei ein PDF, und die Vorschau zeigt es. Die Dateien selbst werden nicht verändert; der Download ist das Original."
+msgstr ""
+"LibreOffice erstellt im Hintergrund von jeder Datei eine PDF-Fassung, die "
+"in der Vorschau angezeigt wird. Die Originaldateien bleiben unverändert; "
+"beim Herunterladen erhalten Sie das Original."
 
 #. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__inherit
@@ -681,7 +878,7 @@ msgstr "Wie der übergeordnete Ordner"
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
 msgid "Limits"
-msgstr "Grenzen"
+msgstr "Limits"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_form
@@ -750,7 +947,7 @@ msgstr "Verschoben nach %(folder)s"
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_move_view_form
 msgid "Moving"
-msgstr "Es wird verschoben"
+msgstr "Zu verschiebende Elemente"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__my_activity_date_deadline
@@ -766,7 +963,7 @@ msgstr "Meine Favoriten"
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
 msgid "My Uploads"
-msgstr "Meine Uploads"
+msgstr "Von mir hochgeladen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__name
@@ -820,7 +1017,7 @@ msgstr "Nächster Aktivitätstyp"
 #: code:addons/int_filemanager/models/int_filemanager_document_storage.py:0
 #: code:addons/int_filemanager/models/int_filemanager_folder.py:0
 msgid "No free name for %(name)s in this folder."
-msgstr "Für %(name)s ist in diesem Ordner kein freier Name übrig."
+msgstr "Für „%(name)s“ ist in diesem Ordner kein freier Name verfügbar."
 
 #. module: int_filemanager
 #. odoo-javascript
@@ -831,7 +1028,10 @@ msgstr "Nicht gespeichert: %(names)s"
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
 msgid "Nothing is converted while LibreOffice is not installed, and no pictures of PDFs are made without the Python package pypdfium2."
-msgstr "Solange LibreOffice nicht installiert ist, wird nichts umgewandelt, und ohne das Python-Paket pypdfium2 entstehen keine Bilder von PDFs."
+msgstr ""
+"Ohne installiertes LibreOffice werden keine Office-Dateien umgewandelt. "
+"Ohne das Python-Paket pypdfium2 werden keine Vorschaubilder von PDF-Dateien "
+"erstellt."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__message_needaction_counter
@@ -899,17 +1099,17 @@ msgstr "PDF"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__viewer_pdf_checksum
 msgid "PDF for the viewer"
-msgstr "PDF für den Viewer"
+msgstr "PDF für die Anzeige"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__viewer_pdf_content
 msgid "PDF for the viewer (file)"
-msgstr "PDF für den Viewer (Datei)"
+msgstr "PDF für die Anzeige (Datei)"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_id
 msgid "Parent"
-msgstr "Oberordner"
+msgstr "Übergeordneter Ordner"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__parent_path
@@ -919,7 +1119,7 @@ msgstr "Übergeordneter Pfad"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__thumbnail_state
 msgid "Picture state"
-msgstr "Bildstatus"
+msgstr "Status des Vorschaubilds"
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_state
@@ -947,7 +1147,7 @@ msgstr "Eigenschaften"
 #. module: int_filemanager
 #: model:res.groups,comment:int_filemanager.int_filemanager_group_reader
 msgid "Reader: Can read the folders and documents they see."
-msgstr "Leser: Darf die Ordner und Dokumente lesen, die er sieht."
+msgstr "Leser: Kann die sichtbaren Ordner und Dokumente lesen."
 
 #. module: int_filemanager
 #. odoo-python
@@ -959,12 +1159,14 @@ msgstr "Bereit."
 #. odoo-python
 #: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "Stopped: the Python package pypdfium2 is not installed on the server."
-msgstr "Angehalten: Das Python-Paket pypdfium2 ist auf dem Server nicht installiert."
+msgstr ""
+"Nicht verfügbar: Das Python-Paket pypdfium2 ist auf dem Server nicht "
+"installiert."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_thumbnail_state
 msgid "Pictures of PDFs"
-msgstr "Bilder von PDFs"
+msgstr "Vorschaubilder von PDFs"
 
 #. module: int_filemanager
 #. odoo-python
@@ -992,19 +1194,23 @@ msgstr "Verantwortlicher Benutzer"
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "Restore the folder %(folder)s first, it contains %(name)s."
-msgstr "Stellen Sie zuerst den Ordner %(folder)s wieder her, er enthält %(name)s."
+msgstr ""
+"Stellen Sie zuerst den Ordner %(folder)s wieder her; er enthält %(name)s."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_folder.py:0
 msgid "Restore the folder %(parent)s first, it contains %(name)s."
-msgstr "Stellen Sie zuerst den Ordner %(parent)s wieder her, er enthält %(name)s."
+msgstr ""
+"Stellen Sie zuerst den Ordner %(parent)s wieder her; er enthält %(name)s."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_folder.py:0
 msgid "Restoring is not possible, these names are taken: %(names)s"
-msgstr "Wiederherstellen ist nicht möglich, diese Namen sind vergeben: %(names)s"
+msgstr ""
+"Die Wiederherstellung ist nicht möglich, da diese Namen bereits vergeben "
+"sind: %(names)s"
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form_dialog
@@ -1015,7 +1221,7 @@ msgstr "Speichern"
 #. odoo-python
 #: code:addons/int_filemanager/wizard/int_filemanager_move.py:0
 msgid "Select at least one document or folder."
-msgstr "Wählen Sie mindestens ein Dokument oder einen Ordner."
+msgstr "Wählen Sie mindestens ein Dokument oder einen Ordner aus."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1090,12 +1296,16 @@ msgid ""
 "Today: Activity date is today\n"
 "Planned: Future activities."
 msgstr ""
+"Status basierend auf Aktivitäten\n"
+"Überfällig: Fälligkeitsdatum bereits überschritten\n"
+"Heute: Aktivitätsdatum ist heute\n"
+"Geplant: Zukünftige Aktivitäten."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "Stopped: LibreOffice is not installed on the server."
-msgstr "Angehalten: LibreOffice ist auf dem Server nicht installiert."
+msgstr "Nicht verfügbar: LibreOffice ist auf dem Server nicht installiert."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_move__summary
@@ -1113,7 +1323,7 @@ msgstr "Tags"
 #. module: int_filemanager
 #: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_tag_action
 msgid "No tags yet. Let's create one!"
-msgstr "Noch keine Tags. Legen Sie eines an!"
+msgstr "Noch keine Tags vorhanden"
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__extension
@@ -1121,13 +1331,35 @@ msgid ""
 "The extension of the file name in lower case, for example mp3 for "
 "song.MP3."
 msgstr ""
-"Die Dateiendung des Namens in Kleinbuchstaben, zum Beispiel mp3 für "
+"Die Dateiendung des Dateinamens in Kleinbuchstaben, zum Beispiel mp3 für "
 "song.MP3."
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_document_trash_action
+msgid "The trash is empty"
+msgstr "Der Papierkorb ist leer"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Time in the trash"
+msgstr "Dauer im Papierkorb"
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_search
+msgid "Today Activities"
+msgstr "Heutige Aktivitäten"
+
+#. module: int_filemanager
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_document_trash_action
+#: model:ir.ui.menu,name:int_filemanager.int_filemanager_document_trash_menu
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Trash"
+msgstr "Papierkorb"
 
 #. module: int_filemanager
 #: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_tag_action
 msgid "Use tags to categorize your documents."
-msgstr "Mit Tags ordnen Sie Dokumente Kategorien zu."
+msgstr "Mit Tags können Sie Ihre Dokumente kategorisieren."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1138,32 +1370,38 @@ msgstr "Die PDF-Fassung dieses Dokuments fehlt."
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_document_checksum_is_sha256
 msgid "The checksum must be a SHA-256 in lowercase hexadecimal."
-msgstr "Die Prüfsumme muss ein SHA-256 in Kleinbuchstaben-Hexadezimal sein."
+msgstr ""
+"Die Prüfsumme muss ein SHA-256-Hashwert in hexadezimaler Schreibweise mit "
+"Kleinbuchstaben sein."
 
 #. module: int_filemanager
 #: model:ir.model.constraint,message:int_filemanager.constraint_int_filemanager_document_preview_checksum_is_sha256
 msgid ""
 "The checksum of the preview must be a SHA-256 in lowercase hexadecimal."
-msgstr "Die Prüfsumme der Vorschau muss ein SHA-256 in Kleinbuchstaben-Hexadezimal sein."
+msgstr ""
+"Die Prüfsumme der Vorschau muss ein SHA-256-Hashwert in hexadezimaler "
+"Schreibweise mit Kleinbuchstaben sein."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_folder.py:0
 msgid ""
 "The company of a subfolder is the one of its parent. Change the top folder."
-msgstr "Die Firma eines Unterordners ist die seines übergeordneten Ordners. Ändern Sie den obersten Ordner."
+msgstr ""
+"Das Unternehmen eines Unterordners entspricht dem des übergeordneten "
+"Ordners. Ändern Sie den obersten Ordner."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "The file of a document is set by the upload only."
-msgstr "Die Datei eines Dokuments wird nur durch das Hochladen gesetzt."
+msgstr "Die Datei eines Dokuments kann nur durch Hochladen festgelegt werden."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_document.py:0
 msgid "The file of these documents is missing: %(names)s"
-msgstr "Die Dateien dieser Dokumente fehlen: %(names)s"
+msgstr "Die Dateien folgender Dokumente fehlen: %(names)s"
 
 #. module: int_filemanager
 #. odoo-python
@@ -1177,7 +1415,9 @@ msgstr "Die Datei dieses Dokuments fehlt."
 msgid ""
 "The files are %(size).1f GB together, more than the %(limit).1f GB that one "
 "ZIP may hold. Download them in parts."
-msgstr "Die Dateien sind zusammen %(size).1f GB groß, mehr als die %(limit).1f GB, die ein ZIP enthalten darf. Laden Sie sie in Teilen herunter."
+msgstr ""
+"Die Dateien umfassen zusammen %(size).1f GB. Das Limit je ZIP-Archiv "
+"beträgt %(limit).1f GB. Laden Sie die Dateien in mehreren Teilen herunter."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1189,29 +1429,31 @@ msgstr "Der Ordner %(name)s ist archiviert. Stellen Sie ihn zuerst wieder her."
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_folder.py:0
 msgid "The folder %(name)s is not empty. Move or delete what is in it first."
-msgstr "Der Ordner %(name)s ist nicht leer. Verschieben oder löschen Sie zuerst, was darin liegt."
+msgstr ""
+"Der Ordner %(name)s ist nicht leer. Verschieben oder löschen Sie zuerst den "
+"Inhalt."
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_move__target_folder_id
 msgid "The folder that takes them. For folders, none is the top level."
-msgstr "Der Ordner, der sie aufnimmt. Bei Ordnern ist keiner die oberste Ebene."
+msgstr "Der Zielordner. Bei Ordnern bedeutet keine Auswahl die oberste Ebene."
 
 #. module: int_filemanager
 #: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
 msgid "The folder with everything in it that you see, as one ZIP."
-msgstr "Der Ordner mit allem, was Sie darin sehen, als ein ZIP."
+msgstr "Der Ordner mit allen sichtbaren Inhalten als ZIP-Archiv."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_folder.py:0
 msgid "The name %(name)s is not available here."
-msgstr "Der Name %(name)s ist hier nicht verfügbar."
+msgstr "Der Name %(name)s ist hier nicht zulässig."
 
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_controller.js:0
 msgid "The upload was stopped."
-msgstr "Das Hochladen wurde angehalten."
+msgstr "Der Upload wurde abgebrochen."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1229,7 +1471,7 @@ msgstr "Für diesen Dateityp gibt es keine Vorschau."
 #. odoo-python
 #: code:addons/int_filemanager/controllers/int_filemanager.py:0
 msgid "There is no space left to store the file."
-msgstr "Es ist kein Speicherplatz mehr für die Datei vorhanden."
+msgstr "Auf dem Server ist nicht genügend Speicherplatz vorhanden."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1247,7 +1489,7 @@ msgstr "Diese Namen sind im Ordner %(folder)s schon vergeben: %(names)s"
 #. odoo-python
 #: code:addons/int_filemanager/controllers/int_filemanager.py:0
 msgid "This folder does not exist."
-msgstr "Dieser Ordner existiert nicht."
+msgstr "Der Ordner ist nicht vorhanden."
 
 #. module: int_filemanager
 #. odoo-python
@@ -1259,7 +1501,9 @@ msgstr "Das ist kein gültiger Ordnerpfad: %(path)s"
 #. odoo-python
 #: code:addons/int_filemanager/hooks.py:0
 msgid "This module needs a PostgreSQL built with ICU: the collation %(collation)s is missing."
-msgstr "Dieses Modul braucht ein PostgreSQL mit ICU: die Sortierung %(collation)s fehlt."
+msgstr ""
+"Dieses Modul benötigt PostgreSQL mit ICU-Unterstützung. Die Sortierung "
+"%(collation)s fehlt."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_document__thumbnail
@@ -1269,7 +1513,7 @@ msgstr "Vorschaubild"
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_seconds
 msgid "Time per file (seconds)"
-msgstr "Zeit je Datei (Sekunden)"
+msgstr "Zeitlimit je Datei (Sekunden)"
 
 #. module: int_filemanager
 #. odoo-python
@@ -1277,13 +1521,15 @@ msgstr "Zeit je Datei (Sekunden)"
 msgid ""
 "Too many documents are selected for one download. Select fewer and download "
 "in parts."
-msgstr "Es sind zu viele Dokumente für einen Download ausgewählt. Wählen Sie weniger aus und laden Sie in Teilen herunter."
+msgstr ""
+"Für einen Download sind zu viele Dokumente ausgewählt. Wählen Sie weniger "
+"Dokumente aus und laden Sie sie in mehreren Teilen herunter."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_folder.py:0
 msgid "Too many folders at once."
-msgstr "Zu viele Ordner auf einmal."
+msgstr "Es wurden zu viele Ordner gleichzeitig ausgewählt."
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_document__activity_exception_decoration
@@ -1311,6 +1557,11 @@ msgid "Uploading a folder."
 msgstr "Ein Ordner wird hochgeladen."
 
 #. module: int_filemanager
+#: model:ir.model,name:int_filemanager.model_res_users
+msgid "User"
+msgstr "Benutzer"
+
+#. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_res_users_settings
 msgid "User Settings"
 msgstr "Benutzereinstellungen"
@@ -1319,14 +1570,14 @@ msgstr "Benutzereinstellungen"
 #: model:res.groups,comment:int_filemanager.int_filemanager_group_user
 msgid "User: Can also upload, change and delete in the folders they see."
 msgstr ""
-"Nutzer: Darf zusätzlich in den Ordnern, die er sieht, hochladen, ändern und "
+"Benutzer: Kann zusätzlich in den sichtbaren Ordnern hochladen, ändern und "
 "löschen."
 
 #. module: int_filemanager
 #. odoo-javascript
 #: code:addons/int_filemanager/static/src/int_filemanager/views/list/document_list_context_menu_renderer.js:0
 msgid "View"
-msgstr "Ansehen"
+msgstr "Anzeigen"
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_default_open_mode
@@ -1334,14 +1585,20 @@ msgstr "Ansehen"
 msgid ""
 "What opens a document in the list and the kanban. Every user can choose "
 "otherwise in their preferences."
-msgstr "Was ein Dokument in der Liste und im Kanban öffnet. Jeder Benutzer kann es in den eigenen Einstellungen anders wählen."
+msgstr ""
+"Legt fest, wodurch ein Dokument in der Liste und in der Kanban-Ansicht "
+"geöffnet wird. Jeder Benutzer kann dies in den eigenen Einstellungen "
+"abweichend festlegen."
 
 #. module: int_filemanager
 #: model:ir.model.fields,help:int_filemanager.field_int_filemanager_folder__access_mode
 msgid ""
 "Who sees this folder and its documents. A top folder that is not open to all"
 " is seen by the users and groups listed on it (and by the administrators)."
-msgstr "Wer diesen Ordner und seine Dokumente sieht. Ein Ordner oberster Ebene, der nicht für alle offen ist, ist für die aufgeführten Benutzer und Gruppen sichtbar (und für die Administratoren)."
+msgstr ""
+"Legt fest, wer diesen Ordner und seine Dokumente sehen kann. Ein Ordner der "
+"obersten Ebene, der nicht für alle geöffnet ist, ist nur für die "
+"aufgeführten Benutzer und Gruppen sowie die Administratoren sichtbar."
 
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_preview_enabled
@@ -1368,24 +1625,24 @@ msgstr "Zeit der geplanten Aktionen des Dateimanagers"
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_named.py:0
 msgid "A name has %(limit)s characters at most."
-msgstr "Ein Name hat höchstens %(limit)s Zeichen."
+msgstr "Ein Name darf höchstens %(limit)s Zeichen lang sein."
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/int_filemanager_named.py:0
 msgid "A name is not empty, and not . or ..: %(name)s"
-msgstr "Ein Name ist nicht leer und weder . noch ..: %(name)s"
+msgstr "Der Name darf nicht leer sein und nicht „.“ oder „..“ lauten: %(name)s"
 
 #. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_int_filemanager_named
 msgid "Filemanager: a record with a name that is unique where it lies"
-msgstr "Filemanager: ein Datensatz mit einem Namen, der an seinem Ort eindeutig ist"
+msgstr "Dateimanager: Datensatz mit einem am jeweiligen Ort eindeutigen Namen"
 
 #. module: int_filemanager
 #. odoo-python
 #: code:addons/int_filemanager/models/res_config_settings.py:0
 msgid "Stopped: %(programs)s is missing on the server (GNU coreutils)."
-msgstr "Angehalten: %(programs)s fehlt auf dem Server (GNU coreutils)."
+msgstr "Nicht verfügbar: %(programs)s fehlt auf dem Server (GNU coreutils)."
 
 #. module: int_filemanager
 #. odoo-python

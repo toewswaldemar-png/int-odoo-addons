@@ -140,6 +140,13 @@ msgid ""
 msgstr ""
 
 #. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_trash_days
+msgid ""
+"After this many days the cleaning of the database deletes an archived "
+"document."
+msgstr ""
+
+#. module: int_filemanager
 #: model:ir.model.fields.selection,name:int_filemanager.selection__int_filemanager_folder__access_mode__open
 msgid "All filemanager users"
 msgstr ""
@@ -152,6 +159,149 @@ msgstr ""
 #. module: int_filemanager
 #: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__access_user_ids
 msgid "Allowed users"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_upload_max_age_hours
+msgid ""
+"An upload that never ended leaves a temporary file. The cleaning of the "
+"database deletes it after this many hours."
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_trash_enabled
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Archived documents"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_document_trash_action
+msgid ""
+"Archived documents are kept here. Unarchive a document to get it back; the "
+"settings say when the trash is emptied."
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_trash_enabled
+msgid ""
+"Archived documents are the trash: everyone who may change them can restore "
+"them. Deleting is final, the files go with the documents."
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"Archived documents are the trash: they can be restored until they are "
+"deleted. Deleting is final, the files go with the documents."
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_document_view_list
+msgid "Archived on"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_document_action
+msgid ""
+"Choose a folder in the panel on the left. Files are added with \"New\" or "
+"by dragging them onto the page."
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_folder_action
+msgid "Create folders to organize your documents."
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_trash_days
+msgid "Days in the trash"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_trash_enabled__1
+msgid "Delete them after some days"
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "Documents of %(folder)s"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_upload_max_age_hours
+msgid "Hours a failed upload is kept"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields.selection,name:int_filemanager.selection__res_config_settings__int_filemanager_trash_enabled__0
+msgid "Keep them until someone deletes them"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_zip_max_gb
+msgid "Largest download as ZIP (GB)"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_res_config_settings__int_filemanager_upload_max_gb
+msgid "Largest upload (GB)"
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_zip_max_gb
+msgid ""
+"More files than this are refused: download them in parts. A slow line keeps "
+"a worker of the server busy for the whole download."
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_document_action
+msgid "No documents yet"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_folder_action
+msgid "No folders yet"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"Only users of the filemanager may send this much; every other user keeps "
+"the limit of Odoo."
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,help:int_filemanager.field_res_config_settings__int_filemanager_upload_max_gb
+msgid ""
+"Only users of the filemanager may send this much; every other user keeps "
+"the limit of Odoo. The server holds the file twice while it arrives (see "
+"the notes for the operator)."
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.model.fields,field_description:int_filemanager.field_int_filemanager_folder__child_count
+#: model_terms:ir.ui.view,arch_db:int_filemanager.int_filemanager_folder_view_form
+msgid "Subfolders"
+msgstr ""
+
+#. module: int_filemanager
+#. odoo-python
+#: code:addons/int_filemanager/models/int_filemanager_folder.py:0
+msgid "Subfolders of %(folder)s"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid ""
+"The cleaning of the database deletes an archived document after this many "
+"days."
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "The files of one ZIP, from documents or from a folder."
 msgstr ""
 
 #. module: int_filemanager
@@ -1073,6 +1223,16 @@ msgid "Settings"
 msgstr ""
 
 #. module: int_filemanager
+#: model_terms:ir.actions.act_window,help:int_filemanager.int_filemanager_document_trash_action
+msgid "The trash is empty"
+msgstr ""
+
+#. module: int_filemanager
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Time in the trash"
+msgstr ""
+
+#. module: int_filemanager
 #: model:ir.model,name:int_filemanager.model_int_filemanager_cron
 msgid "Time of the scheduled actions of the filemanager"
 msgstr ""
@@ -1168,6 +1328,13 @@ msgstr ""
 msgid ""
 "The extension of the file name in lower case, for example mp3 for "
 "song.MP3."
+msgstr ""
+
+#. module: int_filemanager
+#: model:ir.actions.act_window,name:int_filemanager.int_filemanager_document_trash_action
+#: model:ir.ui.menu,name:int_filemanager.int_filemanager_document_trash_menu
+#: model_terms:ir.ui.view,arch_db:int_filemanager.res_config_settings_view_form
+msgid "Trash"
 msgstr ""
 
 #. module: int_filemanager
