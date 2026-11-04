@@ -30,13 +30,15 @@ Die Werte kommen durch Abfragen alle 2,5 bis 10 s. Der Ereignisstrom des Dienste
 Das Modul läuft nur, wenn der Browser den Dienst unter der eingetragenen Adresse erreicht. Heute geht das so:
 
 1. **Gleicher Ursprung über einen Reverse-Proxy.** Den Dienst unter einem Pfad der Odoo-Adresse veröffentlichen (zum Beispiel `/regler`) und diesen Pfad als Adresse eintragen. Kein CORS nötig.
-2. **Anderer Ursprung:** der Dienst kennt noch **kein CORS**. Ohne es lehnt der Browser den Aufruf ab, die Seite zeigt dann „The controller service cannot be reached“ mit der Adresse. Das muss im Dienst ergänzt werden (erlaubte Herkunft als Einstellung).
+2. **Anderer Ursprung mit CORS im Dienst.** Der Dienst wird mit der Herkunft der Odoo-Seite gestartet: `service.exe … -erlaubte-herkunft https://odoo.example.com` (genau, ohne Platzhalter; geht nicht mit `-ohne-token`). Ohne diese Freigabe lehnt der Browser den Aufruf ab, die Seite zeigt dann „The controller service cannot be reached“ mit der Adresse. Im Browser geprüft: Aufruf mit Token, Vorabanfrage, lesbare Fehlerantworten (401), Ablehnung ohne Freigabe.
+
+   **Grenze:** Eine `https`-Seite (Odoo hinter einem Proxy) darf aus Sicherheitsgründen keine `http`-Adresse im Netz aufrufen, nur `localhost` und `127.0.0.1`. Ruft der Techniker Odoo am Laptop beim Regler auf, trägt er `http://127.0.0.1:8085` ein und das geht. Von einem anderen Rechner aus braucht der Dienst `https` oder den Reverse-Proxy aus Weg 1.
 
 Der Dienst weist außerdem im Betrieb `-ohne-token` Anfragen mit fremdem `Origin` ab; für den Einsatz mit Odoo läuft er mit Anmeldung.
 
 ## Offen
 
-- CORS im Dienst, oder die Entscheidung für den Reverse-Proxy (Entscheidung 4 und 7 in `micserv-rekonstruktion/PLAN.md`).
+- `https` am Dienst oder Reverse-Proxy für Techniker an anderen Rechnern als dem Laptop beim Regler (`micserv-rekonstruktion/PLAN.md`, Teil E).
 - Kurzlebiges Token von Odoo statt eigener Anmeldung am Dienst; Zuordnung von Odoo-Gruppen zu den Rollen des Dienstes.
 - Verknüpfung mit dem Reparaturauftrag (Fehler und Klemmungen als Datensätze), falls Odoo das Produktivsystem der Werkstatt wird.
 - Konsole, Prüfprogramm und Programmieren (der Dienst kann sie, die Seite zeigt sie nicht).
