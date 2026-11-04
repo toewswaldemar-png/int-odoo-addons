@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="int_regler_device_view_list" model="ir.ui.view">
+        <field name="name">int.regler.device.list</field>
+        <field name="model">int.regler.device</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="core_url"/>
+                <field name="device_ref"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_regler_device_view_form" model="ir.ui.view">
+        <field name="name">int.regler.device.form</field>
+        <field name="model">int.regler.device</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <field name="name"/>
+                        <field name="core_url"/>
+                        <field name="device_ref"/>
+                        <field name="active" invisible="1"/>
+                    </group>
+                    <field name="note" placeholder="Note"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_regler_device_view_search" model="ir.ui.view">
+        <field name="name">int.regler.device.search</field>
+        <field name="model">int.regler.device</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="core_url"/>
+                <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_regler_device_action" model="ir.actions.act_window">
+        <field name="name">Controllers</field>
+        <field name="res_model">int.regler.device</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- the page itself, implemented in the browser (static/src/regler_app.js) -->
+    <record id="int_regler_app_action" model="ir.actions.client">
+        <field name="name">Controller</field>
+        <field name="tag">int_regler.app</field>
+    </record>
+
+    <menuitem id="int_regler_menu_root" name="Controller" sequence="35" groups="group_regler_user"/>
+    <menuitem id="int_regler_app_menu" name="Monitor" parent="int_regler_menu_root"
+              action="int_regler_app_action" sequence="10"/>
+    <menuitem id="int_regler_device_menu" name="Controllers" parent="int_regler_menu_root"
+              action="int_regler_device_action" sequence="20" groups="group_regler_manager"/>
+</odoo>

@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_int_regler_device_user,int.regler.device.user,model_int_regler_device,group_regler_user,1,0,0,0
+access_int_regler_device_manager,int.regler.device.manager,model_int_regler_device,group_regler_manager,1,1,1,1
