@@ -3,7 +3,7 @@ import re
 from odoo.tests.common import TransactionCase, tagged
 
 DEFINE_REGEX = re.compile(r"odoo\.define\(\s*'([^']+)'\s*,\s*\[([^\]]*)\]")
-MODULES = ("core_client", "regler_poll", "regler_views", "regler_app")
+MODULES = ("regler_client", "regler_poll", "regler_views", "regler_app")
 
 
 @tagged("post_install", "-at_install")
@@ -37,8 +37,10 @@ class TestAssets(TransactionCase):
                 self.assertIn(dependency, self.modules, f"{name} imports {dependency}, which is not in the bundle")
 
     def test_the_templates_are_in_the_bundle(self):
-        for template in ("App", "Overview", "Values", "Errors", "Clamps"):
+        for template in ("App", "Overview", "Errors", "ClampField"):
             self.assertIn(f"int_regler.{template}", self.script)
+        # the process values and the clamps are the list of int.regler.parameter, not a part of the page
+        self.assertNotIn("int_regler.Values", self.script)
 
     def test_the_page_is_registered_as_the_client_action(self):
         self.assertIn('"int_regler.app"', self.script.replace("'", '"'))

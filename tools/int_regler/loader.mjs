@@ -1,7 +1,7 @@
 // Hooks for the module loader of Node: the sources of int_regler run unchanged.
 //   - `./name` is `name.js` of the module,
 //   - `@odoo/owl` is the real Owl (globalThis.owl, loaded by the check),
-//   - `@web/...` are small stand-ins for what the sources use: the action registry, the service hook, `_t`.
+//   - `@web/...` are small stand-ins for what the sources use: the action registry, the service hook, `_t`, the user.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -12,7 +12,23 @@ const SRC = MODULE_SRC.replaceAll("\\", "/");
 const STUBS = {
     "@odoo/owl": `
         const o = globalThis.owl;
-        export const { Component, onMounted, onWillStart, onWillUnmount, useState } = o;
+        export const { Component, onMounted, onPatched, onWillDestroy, onWillStart, onWillUnmount, useState } = o;
+    `,
+    // the list of Odoo and what the list of process values takes from it: only the parts it uses
+    "@web/views/list/list_controller": `export const ListController = globalThis.__ListController;`,
+    "@web/views/list/list_view": `export const listView = { type: "list", Controller: globalThis.__ListController };`,
+    "@web/views/fields/standard_field_props": `
+        export const standardFieldProps = { name: String, record: Object, readonly: { type: Boolean, optional: true } };
+    `,
+    "@web/core/utils/timing": `
+        export function useDebounced(callback, delay) {
+            let timer = null;
+            globalThis.owl.onWillDestroy(() => clearTimeout(timer));
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => callback(...args), delay);
+            };
+        }
     `,
     "@web/core/registry": `
         export const registry = {
@@ -21,6 +37,10 @@ const STUBS = {
     `,
     "@web/core/utils/hooks": `
         export const useService = (name) => globalThis.__services[name];
+    `,
+    // the user of Odoo: only the groups are asked
+    "@web/core/user": `
+        export const user = { hasGroup: (group) => globalThis.__user.hasGroup(group) };
     `,
     // like the _t of Odoo: %s in order, or %(name)s from an object
     "@web/core/l10n/translation": `

@@ -6,17 +6,19 @@
             <div t-if="!state.devices.length" class="p-5 text-center text-muted">
                 <i class="fa fa-plug fa-3x mb-3 d-block" />
                 <p class="mb-1">No controller is set up yet.</p>
-                <p>A manager adds one under Controller / Controllers: a name and the address of the controller service.</p>
+                <p>A manager adds one under Controller / Controllers: a name, its id in the controller service and the service user.</p>
             </div>
             <t t-else="">
                 <div class="d-flex flex-wrap align-items-center gap-3 px-3 py-2 border-bottom bg-view">
                     <select class="form-select w-auto" t-on-change="(ev) => this.selectDevice(ev.target.value)">
                         <option t-foreach="state.devices" t-as="dev" t-key="dev.id" t-att-value="dev.id" t-att-selected="dev.id === state.deviceId" t-esc="dev.name" />
                     </select>
-                    <span t-if="status.state.data" t-attf-class="badge rounded-pill text-bg-#{connected ? 'success' : 'danger'}">
+                    <span t-if="status.state.data or serviceUnreachable" t-attf-class="badge rounded-pill text-bg-#{connected ? 'success' : 'danger'}">
                         <t t-if="connected">Connected</t>
+                        <t t-elif="serviceUnreachable">No report</t>
                         <t t-else="">Not connected</t>
                     </span>
+                    <span t-if="reportAgeText" class="text-muted small" t-esc="reportAgeText" />
                     <ul class="nav nav-pills">
                         <li class="nav-item" t-foreach="tabs" t-as="tab" t-key="tab.id">
                             <a href="#" t-attf-class="nav-link py-1 #{state.tab === tab.id ? 'active' : ''}"
@@ -25,50 +27,19 @@
                             </a>
                         </li>
                     </ul>
-                    <div class="ms-auto d-flex align-items-center gap-2">
-                        <t t-if="loggedIn">
-                            <span class="text-muted small">
-                                <i class="fa fa-user me-1" /><t t-esc="state.me.name" />
-                                (<t t-esc="state.me.roles.join(', ')" />)
-                            </span>
-                            <button class="btn btn-sm btn-outline-secondary" t-on-click="logout">Sign out</button>
-                        </t>
-                        <button t-else="" class="btn btn-sm btn-outline-primary" t-on-click="openLogin">
-                            <i class="fa fa-sign-in me-1" />Sign in at the service
-                        </button>
-                    </div>
                 </div>
 
-                <form t-if="state.showLogin and !loggedIn" class="d-flex flex-wrap align-items-end gap-2 px-3 py-2 border-bottom bg-100"
-                      t-on-submit.prevent="submitLogin">
-                    <div>
-                        <label class="form-label small mb-0" for="int_regler_name">User</label>
-                        <input id="int_regler_name" class="form-control form-control-sm" autocomplete="username" t-model="state.loginName" />
-                    </div>
-                    <div>
-                        <label class="form-label small mb-0" for="int_regler_password">Password</label>
-                        <input id="int_regler_password" type="password" class="form-control form-control-sm" autocomplete="current-password" t-model="state.loginPassword" />
-                    </div>
-                    <button type="submit" class="btn btn-sm btn-primary" t-att-disabled="state.busy or !state.loginName or !state.loginPassword">Sign in</button>
-                    <button type="button" class="btn btn-sm btn-link" t-on-click="() => state.showLogin = false">Cancel</button>
-                    <span t-if="state.loginError" class="text-danger small" t-esc="state.loginError" />
-                    <span class="text-muted small ms-auto">This is the sign-in of the controller service, not of Odoo.</span>
-                </form>
-
                 <div t-if="serviceUnreachable" class="alert alert-danger m-3" role="alert">
-                    <p class="mb-1"><strong>The controller service cannot be reached.</strong> <t t-esc="status.state.error" /></p>
+                    <p class="mb-1"><strong>No report from the controller service.</strong> <t t-esc="status.state.error" /></p>
                     <p class="mb-0 small">
-                        Address in use: <code t-esc="device.core_url" />. The service must be running, and it must be reachable from this
-                        browser under that address (the same origin as Odoo, for example through a reverse proxy, or an address that the
-                        service allows).
+                        The service on the computer at the controller must be running with the connection to Odoo, and this controller
+                        (id <code t-esc="device.device_ref" />) must be assigned to the user of its API key.
                     </p>
                 </div>
 
                 <div class="flex-grow-1 p-3">
-                    <ReglerOverview t-key="state.deviceId" t-if="state.tab === 'overview' and client" client="client" me="state.me" />
-                    <ReglerValues t-key="state.deviceId" t-elif="state.tab === 'values' and client" client="client" me="state.me" />
-                    <ReglerErrors t-key="state.deviceId" t-elif="state.tab === 'errors' and client" client="client" me="state.me" />
-                    <ReglerClamps t-key="state.deviceId" t-elif="state.tab === 'clamps' and client" client="client" me="state.me" login="() => this.openLogin()" />
+                    <ReglerOverview t-key="state.deviceId" t-if="state.tab === 'overview' and client" client="client" />
+                    <ReglerErrors t-key="state.deviceId" t-elif="state.tab === 'errors' and client" client="client" />
                 </div>
             </t>
         </div>

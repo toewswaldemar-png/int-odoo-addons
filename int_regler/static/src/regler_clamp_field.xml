@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="int_regler.ClampField">
+        <!-- a click must not open or select the row; a row that cannot be clamped shows nothing -->
+        <div t-if="data.can_clamp" class="o_int_regler_clamp d-flex align-items-center gap-2" t-on-click.stop="">
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn o_int_regler_auto" t-att-class="isAuto ? 'btn-primary' : 'btn-outline-secondary'"
+                        t-att-disabled="!canUse" t-on-click="auto">Auto</button>
+                <t t-if="!data.analog">
+                    <button type="button" class="btn o_int_regler_zero" t-att-class="isClampedTo(0) ? 'btn-warning' : 'btn-outline-secondary'"
+                            t-att-disabled="!canUse" t-on-click="() => this.pick(0)">0</button>
+                    <button type="button" class="btn o_int_regler_one" t-att-class="isClampedTo(1) ? 'btn-warning' : 'btn-outline-secondary'"
+                            t-att-disabled="!canUse" t-on-click="() => this.pick(1)">1</button>
+                </t>
+            </div>
+            <input t-if="data.analog" type="number" step="any" class="form-control form-control-sm o_int_regler_number"
+                   t-att-class="data.clamped ? 'border-warning' : ''" t-att-value="number" t-att-disabled="!canUse"
+                   t-on-input="onInput" t-on-blur="onBlur" t-on-change="onNumber"/>
+        </div>
+    </t>
+</templates>

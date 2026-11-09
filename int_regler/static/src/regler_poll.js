@@ -6,7 +6,8 @@ import { onWillUnmount, useState } from "@odoo/owl";
  * The timer stops with the component; a read that is overtaken by a newer one is dropped.
  */
 export function usePoll(getClient) {
-    const state = useState({ data: null, error: null, loading: false });
+    // errorStatus: the HTTP status of the failed read (401: the service wants a sign-in), 0 if it could not be reached
+    const state = useState({ data: null, error: null, errorStatus: null, loading: false });
     let path = null;
     let watched = null; // the client of the last watch: another one means another service, the old answer is not its answer
     let every = 2500;
@@ -21,6 +22,11 @@ export function usePoll(getClient) {
         if (!alive || !path || !client) {
             return;
         }
+        if (typeof document !== "undefined" && document.hidden) {
+            // a tab that nobody sees does not read: the service is not asked for reports for nobody
+            timer = setTimeout(run, every);
+            return;
+        }
         const mine = ++latest;
         controller?.abort();
         controller = new AbortController();
@@ -29,6 +35,7 @@ export function usePoll(getClient) {
             if (alive && mine === latest) {
                 state.data = data;
                 state.error = null;
+                state.errorStatus = null;
             }
         } catch (error) {
             if (error.name === "AbortError") {
@@ -36,6 +43,7 @@ export function usePoll(getClient) {
             }
             if (alive && mine === latest) {
                 state.error = error.message;
+                state.errorStatus = error.status ?? null;
             }
         }
         if (alive && mine === latest) {
@@ -58,6 +66,7 @@ export function usePoll(getClient) {
             if (newPath !== path || client !== watched) {
                 state.data = null;
                 state.error = null;
+                state.errorStatus = null;
             }
             path = newPath;
             watched = client;

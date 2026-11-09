@@ -12,13 +12,30 @@
     <record id="group_regler_user" model="res.groups">
         <field name="name">User</field>
         <field name="privilege_id" ref="privilege_int_regler"/>
-        <field name="comment">Opens the controller page and reads the controllers. What a user may do at a controller is decided by the controller service, after a sign-in there.</field>
+        <field name="comment">Opens the controller page and reads the controllers and the log of the clamp requests.</field>
+    </record>
+
+    <record id="group_regler_operator" model="res.groups">
+        <field name="name">Operator</field>
+        <field name="privilege_id" ref="privilege_int_regler"/>
+        <field name="implied_ids" eval="[(4, ref('group_regler_user'))]"/>
+        <field name="comment">Clamps and releases rows of a controller. Every request is kept with the name of the user.</field>
     </record>
 
     <record id="group_regler_manager" model="res.groups">
         <field name="name">Manager</field>
         <field name="privilege_id" ref="privilege_int_regler"/>
         <field name="implied_ids" eval="[(4, ref('group_regler_user'))]"/>
-        <field name="comment">Creates and edits the controllers (the address of the service).</field>
+        <field name="comment">Creates and edits the controllers (name, id in the service, service user).</field>
+    </record>
+
+    <!-- A technical group for the user whose API key a controller service uses. It reports and fetches requests through
+         int.regler.device.service_sync and has no other right on the models. -->
+    <record id="group_regler_service" model="res.groups">
+        <field name="name">Service</field>
+        <field name="privilege_id" ref="privilege_int_regler"/>
+        <!-- the key of a service has to last: the default of Odoo is one day -->
+        <field name="api_key_duration">365</field>
+        <field name="comment">For the user of a controller service (API key). Can only call service_sync for the controllers assigned to it.</field>
     </record>
 </odoo>
