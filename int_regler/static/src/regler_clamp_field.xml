@@ -24,13 +24,15 @@
                             <t t-else="">1</t>
                         </button>
                     </t>
+                    <!-- the number of an analog row: shows the value now (or the clamp) and opens the popover where it is entered; there is
+                         no input in the list, so the rows are of one height -->
+                    <button t-else="" type="button" class="btn o_int_regler_number"
+                            t-att-class="data.clamped ? 'btn-warning' : 'btn-outline-secondary'"
+                            t-att-disabled="!canUse" t-on-click="openNumber" title="Enter a number">
+                        <i t-if="state.pending === 'set'" class="fa fa-spinner fa-spin"/>
+                        <t t-else=""><t t-esc="numberText"/><i class="fa fa-pencil ms-2 opacity-50"/></t>
+                    </button>
                 </div>
-                <!-- like the input of the float field of Odoo: text with a decimal keyboard, no spinner arrows, only the line below -->
-                <input t-if="data.analog" type="text" inputmode="decimal" autocomplete="off" t-ref="numpadDecimal"
-                       class="o_input o_int_regler_number" t-att-class="data.clamped ? 'border-warning' : ''"
-                       t-att-value="number" t-att-placeholder="placeholder" t-att-disabled="!canUse"
-                       t-on-input="onInput" t-on-keydown="onKeydown" t-on-blur="onBlur" t-on-change="onNumber"/>
-                <i t-if="state.pending === 'set'" class="fa fa-spinner fa-spin"/>
             </t>
             <!-- who cannot press sees the state as text, as a read-only field of Odoo shows it -->
             <t t-else="">

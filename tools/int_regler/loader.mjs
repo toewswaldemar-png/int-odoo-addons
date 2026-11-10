@@ -12,7 +12,7 @@ const SRC = MODULE_SRC.replaceAll("\\", "/");
 const STUBS = {
     "@odoo/owl": `
         const o = globalThis.owl;
-        export const { Component, onMounted, onPatched, onWillDestroy, onWillStart, onWillUnmount, useState } = o;
+        export const { Component, onMounted, onPatched, onWillDestroy, onWillStart, onWillUnmount, useRef, useState } = o;
     `,
     // the list of Odoo and what the list of process values takes from it: only the parts it uses
     "@web/views/list/list_controller": `export const ListController = globalThis.__ListController;`,
@@ -40,6 +40,38 @@ const STUBS = {
                 throw new InvalidNumberError(value + " is not a correct number");
             }
             return Number(text);
+        }
+    `,
+    // the popover of Odoo: the component is mounted into the page with the props it is given and a close() (the core adds the position,
+    // Escape and the click away, which a check without a browser does not play). The templates are those of the popover.
+    "@web/core/popover/popover_hook": `
+        export function usePopover(Component, options = {}) {
+            let current = null;
+            const close = () => {
+                if (current) {
+                    current.app.destroy();
+                    current.root.remove();
+                    current = null;
+                }
+            };
+            globalThis.owl.onWillDestroy(close);
+            return {
+                open(target, props) {
+                    close();
+                    const root = document.createElement("div");
+                    root.className = "o_popover";
+                    document.body.appendChild(root);
+                    const app = new globalThis.owl.App(Component, { env: {}, props: { ...props, close }, dev: true });
+                    app.addTemplates(globalThis.__popoverTemplates);
+                    current = { app, root, target, options };
+                    globalThis.__popoverOpened.push({ target, props, options });
+                    return app.mount(root);
+                },
+                close,
+                get isOpen() {
+                    return !!current;
+                },
+            };
         }
     `,
     // the decimal key of the numpad: nothing to do without a browser keyboard
