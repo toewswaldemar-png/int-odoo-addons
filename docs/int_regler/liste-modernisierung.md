@@ -1,6 +1,7 @@
 # int_regler: Liste "Process values" modernisieren
 
-Stand: 2026-11-09. Nur Prüfung, nichts umgesetzt, nichts im Browser getestet (Funde aus Screenshot + Code).
+Stand: 2026-11-10. **Paket A umgesetzt** (Widget, Ansicht, SCSS, README; Prüfskripte unter `tools/int_regler` laufen: `npm test`). **Nicht im Browser gesehen:** Zeilenhöhe (`--o-int-regler-clamp-height: 1.5rem`), Farben von `btn-secondary active` und die Spaltenbreiten sind aus dem Code gewählt, nicht gemessen. Nicht umgesetzt aus Paket A: das Zahlenfeld ist die Variante "Core-Vorbild" in der Zeile, nicht das Popover. Paket B offen.
+Befunde (2026-11-09) aus Screenshot + Code.
 Grundsatz: so nah wie möglich an Odoo 19 (Core-Muster, Bootstrap-Klassen, Standard-Listenattribute).
 
 Betroffene Dateien:

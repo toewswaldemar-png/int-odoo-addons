@@ -20,6 +20,30 @@ const STUBS = {
     "@web/views/fields/standard_field_props": `
         export const standardFieldProps = { name: String, record: Object, readonly: { type: Boolean, optional: true } };
     `,
+    // the number of the user: the decimal point is a comma here, so that the check shows that the widget uses the format of the user and
+    // not the point of JavaScript
+    "@web/views/fields/formatters": `
+        export function formatFloat(value, options = {}) {
+            const digits = options.digits ? options.digits[1] : 2;
+            let text = (Math.round(value * 10 ** digits) / 10 ** digits).toFixed(digits);
+            if (options.trailingZeros === false && text.includes(".")) {
+                text = text.replace(/0+$/, "").replace(/[.]$/, "");
+            }
+            return text.replace(".", ",");
+        }
+    `,
+    "@web/views/fields/parsers": `
+        export class InvalidNumberError extends Error {}
+        export function parseFloat(value) {
+            const text = String(value).trim().replace(",", ".");
+            if (!/^-?[0-9]+([.][0-9]+)?$/.test(text)) {
+                throw new InvalidNumberError(value + " is not a correct number");
+            }
+            return Number(text);
+        }
+    `,
+    // the decimal key of the numpad: nothing to do without a browser keyboard
+    "@web/views/fields/numpad_decimal_hook": `export function useNumpadDecimal() {}`,
     "@web/core/utils/timing": `
         export function useDebounced(callback, delay) {
             let timer = null;

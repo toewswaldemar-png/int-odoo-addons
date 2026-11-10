@@ -1,17 +1,37 @@
-// The clamp column of the list of process values: a segmented control and a narrow number, in the height of an ordinary row.
+// The clamp column of the list of process values: a segmented control and a narrow number, all of one height, so that the rows with a
+// number are not taller than the rows with buttons.
 .o_int_regler_clamp {
+    --o-int-regler-clamp-height: 1.5rem;
+
+    // the place of the lock: as wide as the icon, there in every row
+    .o_int_regler_lock {
+        flex: 0 0 auto;
+        width: 1rem;
+        text-align: center;
+    }
+
     .btn-group .btn {
         --btn-padding-y: 0;
-        line-height: 1.6;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: var(--o-int-regler-clamp-height);
+        line-height: 1;
         min-width: 2.25rem;
     }
 
-    // a form-control is as wide as its cell; the number of a row is some digits
+    // the input of the float field: only the line below (o_input); the number of a row is some digits wide
     .o_int_regler_number {
         flex: 0 0 auto;
         width: 5.5rem;
-        height: auto;
+        height: var(--o-int-regler-clamp-height);
         padding-top: 0;
         padding-bottom: 0;
+        text-align: end;
+    }
+
+    // what a user sees who cannot press
+    .o_int_regler_state {
+        min-width: 2.25rem;
     }
 }

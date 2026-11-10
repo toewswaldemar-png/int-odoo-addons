@@ -229,7 +229,8 @@ const buttons = (stage) => [...stage.querySelectorAll("button")].map((b) => text
 
 state.operator = true;
 const seg = (stage, name) => stage.querySelector(".o_int_regler_" + name);
-const filled = (el) => el.classList.contains("btn-primary") || el.classList.contains("btn-warning");
+// a segment that is the state of the row: Auto is quiet (grey, active), a clamp is yellow
+const filled = (el) => el.classList.contains("btn-secondary") || el.classList.contains("btn-warning");
 const last = () => JSON.stringify(state.clampCalls[state.clampCalls.length - 1]);
 
 let w = await field({ can_clamp: true, analog: false, clamped: false, value: 0 });
@@ -242,8 +243,9 @@ seg(w.stage, "one").click();
 await wait(40);
 ok("a click on 1 makes a request for that row of that controller", last() === JSON.stringify([1, "0016", "set", 1]), last());
 ok("while it is waited for, the buttons cannot be pressed again", [...w.stage.querySelectorAll("button")].every((b) => b.disabled));
+ok("the segment that waits shows a spinner, the others their label", !!seg(w.stage, "one").querySelector(".fa-spinner") && !seg(w.stage, "zero").querySelector(".fa-spinner") && text(seg(w.stage, "zero")) === "0");
 await wait(150);
-ok("afterwards they can", [...w.stage.querySelectorAll("button")].every((b) => !b.disabled));
+ok("afterwards they can, and the spinner is gone", [...w.stage.querySelectorAll("button")].every((b) => !b.disabled) && !w.stage.querySelector(".fa-spinner"));
 ok("a confirmed request says nothing", state.notes.length === 0);
 state.answer = { confirmed: false, error: "No confirmation" };
 seg(w.stage, "zero").click();
@@ -255,6 +257,7 @@ state.answer = { confirmed: true, error: "" };
 w = await field({ can_clamp: true, analog: false, clamped: true, clamp_value: 1, value: 0 });
 ok("a row clamped to 1 has 1 filled and Auto open", filled(seg(w.stage, "one")) && seg(w.stage, "one").classList.contains("btn-warning") && !filled(seg(w.stage, "auto")) && !filled(seg(w.stage, "zero")), buttons(w.stage).join());
 ok("there is no extra Release button and no badge", !buttons(w.stage).includes("Release") && !w.stage.querySelector(".badge"));
+ok("a clamped row has the lock, Auto in the same place of a row that is not clamped has none", !!w.stage.querySelector(".o_int_regler_lock .fa-lock") && !seg(w.stage, "auto").classList.contains("btn-secondary"));
 const calls = state.clampCalls.length;
 seg(w.stage, "one").click();
 await wait(40);
@@ -267,7 +270,8 @@ w.fieldApp.destroy();
 
 w = await field({ can_clamp: true, analog: true, clamped: false, value: 22.5 });
 const input = w.stage.querySelector("input");
-ok("an analog row is [Auto] and a number that starts with the value now", buttons(w.stage).join() === "Auto" && input && input.value === "22.5" && filled(seg(w.stage, "auto")), buttons(w.stage).join() + " " + (input && input.value));
+ok("an analog row is [Auto] and a number: empty on Auto, the value now grey as placeholder, in the format of the user", buttons(w.stage).join() === "Auto" && input && input.value === "" && input.placeholder === "22,5" && filled(seg(w.stage, "auto")), buttons(w.stage).join() + " " + (input && input.value) + " " + (input && input.placeholder));
+ok("the input is the one of the float field: text with a decimal keyboard and no spinner arrows", input.type === "text" && input.getAttribute("inputmode") === "decimal" && input.classList.contains("o_input") && !w.stage.querySelector(".o_int_regler_lock .fa-lock"));
 ok("there is no Set button", !buttons(w.stage).includes("Set"));
 // the user types, the row changes (a temperature does): the input keeps the text
 const record = w.fieldApp.root.props.record;
@@ -280,18 +284,33 @@ await wait(40);
 ok("while the user types, a change of the row does not replace the input", input.value === "3", input.value);
 input.dispatchEvent(new window.Event("blur", { bubbles: true }));
 await wait(40);
-ok("after leaving the input it shows the row again", input.value === "23.1", input.value);
+ok("after leaving the input it shows the row again (Auto: empty, the value now as placeholder)", input.value === "" && input.placeholder === "23,1", input.value + " " + input.placeholder);
+input.value = "7";
+input.dispatchEvent(new window.Event("input", { bubbles: true }));
+await wait(20);
+let escapeReached = false;
+w.stage.addEventListener("keydown", () => { escapeReached = true; });
+input.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+await wait(20);
+ok("Escape drops what was typed, and the list does not see the key", input.value === "" && !escapeReached, input.value);
 input.value = "30";
 input.dispatchEvent(new window.Event("input", { bubbles: true }));
 await wait(20);
 input.dispatchEvent(new window.Event("change", { bubbles: true }));
 await wait(40);
 ok("the number is clamped when the input is ended", last() === JSON.stringify([1, "0016", "set", 30]), last());
+ok("while it is waited for, the number shows a spinner", !!w.stage.querySelector(".fa-spinner"));
+await wait(150);
+input.value = "21,5";
+input.dispatchEvent(new window.Event("input", { bubbles: true }));
+input.dispatchEvent(new window.Event("change", { bubbles: true }));
+await wait(40);
+ok("a number with the decimal comma of the user is read as a number", last() === JSON.stringify([1, "0016", "set", 21.5]), last());
 await wait(150);
 input.value = "abc";
 input.dispatchEvent(new window.Event("change", { bubbles: true }));
 await wait(40);
-ok("something that is no number clamps nothing", last() === JSON.stringify([1, "0016", "set", 30]));
+ok("something that is no number clamps nothing", last() === JSON.stringify([1, "0016", "set", 21.5]));
 w.fieldApp.destroy();
 
 w = await field({ can_clamp: true, analog: true, clamped: true, clamp_value: 30, value: 22.5 });
@@ -310,7 +329,13 @@ w.fieldApp.destroy();
 
 state.operator = false;
 w = await field({ can_clamp: true, analog: false, clamped: true, clamp_value: 1, value: 0 });
-ok("a user who is not an operator sees the state, with the buttons off", filled(seg(w.stage, "one")) && [...w.stage.querySelectorAll("button")].every((b) => b.disabled), buttons(w.stage).join());
+ok("a user who is not an operator sees the state as text, no buttons: the lock and the clamp value", buttons(w.stage).length === 0 && !w.stage.querySelector("input") && !!w.stage.querySelector(".fa-lock") && text(w.stage.querySelector(".o_int_regler_state")) === "1", text(w.stage));
+w.fieldApp.destroy();
+w = await field({ can_clamp: true, analog: true, clamped: true, clamp_value: 21.5, value: 22.5 });
+ok("an analog clamp is shown with the number of the user", text(w.stage.querySelector(".o_int_regler_state")) === "21,5", text(w.stage));
+w.fieldApp.destroy();
+w = await field({ can_clamp: true, analog: false, clamped: false, value: 1 });
+ok("a row that is not clamped says Auto, quietly", buttons(w.stage).length === 0 && text(w.stage.querySelector(".o_int_regler_state")) === "Auto" && !w.stage.querySelector(".fa-lock"), text(w.stage));
 w.fieldApp.destroy();
 state.operator = true;
 

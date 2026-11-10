@@ -111,16 +111,20 @@
                 <field name="is_favorite" widget="boolean_favorite" nolabel="1" string="Favorite"/>
                 <!-- with one controller the name would stand in every row: the column picker brings it back -->
                 <!-- widths: the user can drag the edge of a header, but Odoo does not keep that; these are the widths a list starts with.
-                     The name takes what is left; the clamp column has room for [Auto | 0 | 1] and for [Auto] and a number. -->
+                     The clamp column has room for the lock and [Auto | 0 | 1], or for [Auto] and a number; it stands next to the value,
+                     so that the eye does not travel across the list from the name to the buttons. -->
                 <field name="device_id" optional="hide" width="160px"/>
                 <field name="code" width="80px"/>
-                <field name="name"/>
-                <field name="text" string="Value" class="fw-bold" width="120px"/>
+                <field name="name" width="280px"/>
+                <!-- a clamped row is the exception: its value is marked (the clamp column shows the lock and the yellow segment) -->
+                <field name="text" string="Value" class="fw-bold" decoration-warning="clamped" width="120px"/>
                 <field name="unit" optional="hide" width="80px"/>
                 <field name="value" optional="hide" width="90px"/>
-                <field name="status" widget="badge" decoration-success="status == 'ok'" decoration-danger="status != 'ok'" optional="show" width="110px"/>
-                <field name="pages" optional="hide" width="90px"/>
                 <field name="clamped" string="Clamp" widget="int_regler.clamp" width="240px"/>
+                <!-- how the read went (ok, no_value, out_of_range, error ...) is a diagnosis for the administrator, not for the one who
+                     operates: hidden, the column picker brings it back; the filter "Problems" and the grouping by status stay in the search -->
+                <field name="status" widget="badge" decoration-success="status == 'ok'" decoration-danger="status != 'ok'" optional="hide" width="110px"/>
+                <field name="pages" optional="hide" width="90px"/>
                 <field name="can_clamp" column_invisible="1"/>
                 <field name="analog" column_invisible="1"/>
                 <field name="clamp_value" column_invisible="1"/>
