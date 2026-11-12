@@ -3,7 +3,7 @@ import re
 from odoo import models
 
 # What the page asks for: the bus channel of one controller ("int.workbench.device_17"), like "discuss.channel_17" of Discuss.
-DEVICE_CHANNEL = re.compile(r"int\.regler\.device_(\d+)")
+DEVICE_CHANNEL = re.compile(r"int\.workbench\.device_(\d+)")
 
 
 class IrWebsocket(models.AbstractModel):

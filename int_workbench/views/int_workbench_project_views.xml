@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="int_workbench_project_view_list" model="ir.ui.view">
+        <field name="name">int.workbench.project.list</field>
+        <field name="model">int.workbench.project</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" decoration-danger="not loadable">
+                <field name="vehicle"/>
+                <field name="project"/>
+                <field name="short_id"/>
+                <field name="rows"/>
+                <field name="loadable"/>
+                <field name="load_error"/>
+                <field name="origins" optional="hide"/>
+                <field name="added_at" optional="show"/>
+                <field name="device_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_workbench_project_view_form" model="ir.ui.view">
+        <field name="name">int.workbench.project.form</field>
+        <field name="model">int.workbench.project</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="vehicle"/>
+                            <field name="project"/>
+                            <field name="checksum"/>
+                            <field name="device_id"/>
+                        </group>
+                        <group>
+                            <field name="loadable"/>
+                            <field name="load_error" invisible="loadable"/>
+                            <field name="rows"/>
+                            <field name="file_count"/>
+                            <field name="size"/>
+                            <field name="added_at"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="origins"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_workbench_project_view_search" model="ir.ui.view">
+        <field name="name">int.workbench.project.search</field>
+        <field name="model">int.workbench.project</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="project" string="Vehicle or project" filter_domain="['|', ('project', 'ilike', self), ('vehicle', 'ilike', self)]"/>
+                <field name="checksum"/>
+                <field name="device_id"/>
+                <filter name="loadable" string="Loadable" domain="[('loadable', '=', True)]"/>
+                <filter name="not_loadable" string="Not loadable" domain="[('loadable', '=', False)]"/>
+                <group>
+                    <filter name="by_vehicle" string="Vehicle" context="{'group_by': 'vehicle'}"/>
+                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_workbench_project_action" model="ir.actions.act_window">
+        <field name="name">Projects</field>
+        <field name="res_model">int.workbench.project</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

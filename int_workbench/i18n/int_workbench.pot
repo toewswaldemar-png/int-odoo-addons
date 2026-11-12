@@ -1,0 +1,1394 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* int_workbench
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0-20260817\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-12 20:10+0000\n"
+"PO-Revision-Date: 2026-11-12 20:10+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
+msgid "%(total)s folders, %(created)s new versions, %(failed)s turned away."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid ""
+"%s is not in the group Workbench / Service, so its API key cannot serve a "
+"controller."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "%s request(s) sent to the service. The result shows in the clamp log."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_capability_code_unique
+msgid "A capability with this code exists already."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_device_name_unique
+msgid "A controller with this name exists already."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_family.py:0
+msgid "A family needs a name of letters, digits, dot, minus and underscore."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_family_name_unique
+msgid "A family with this name exists already."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_parameter_device_code_unique
+msgid "A row exists once per controller."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_project_device_checksum_unique
+msgid "A version exists once per service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__name
+msgid "Account"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_user
+msgid "Account of the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__action
+msgid "Action"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__active
+msgid "Active"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_error
+msgid "Active error of a controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__added_at
+msgid "Added in the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_user_device_name_unique
+msgid "An account exists once per service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_log_device_entry_unique
+msgid "An entry exists once per service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_error_device_word_bit_unique
+msgid "An error exists once per controller."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__analog
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__analog
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Analog"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
+msgid "Archived"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__text
+msgid "As the controller shows it, for example 22.3°C."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__bit
+msgid "Bit"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_project_import
+msgid "Bring the new project folders of the service into its library"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__can_clamp
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Can be clamped"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_flash
+msgid "Can be programmed"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_clamps
+msgid "Can clamp"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_error_memory
+msgid "Can clear the error memory"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_can_control
+msgid "Can control the CAN bus"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_error_files
+msgid "Can evaluate error files"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_clock
+msgid "Can set the clock"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_line_switch
+msgid "Can switch the line"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_clamp_view_form
+msgid "Cancel"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__capability_ids
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__capability_ids
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Capabilities"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_capability
+msgid "Capability of a controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__changed_at
+msgid "Changed in the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__checksum
+msgid "Checksum"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__set
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_clamp_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Clamp"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "Clamp %s"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_value
+msgid "Clamp Value"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_parameter_clamp
+msgid "Clamp a process value of a controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_clamps
+msgid "Clamp and release values"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_command_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_command_menu
+msgid "Clamp log"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid "Clamp request"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_command
+msgid "Clamp request for a controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__command_ids
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__command_ids
+msgid "Clamp requests"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamped
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Clamped"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Clamped to"
+msgstr ""
+
+#. module: int_workbench
+#: model:res.groups,comment:int_workbench.int_workbench_group_operator
+msgid ""
+"Clamps and releases rows of a controller. Every request is kept with the "
+"name of the user."
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_error_memory
+msgid "Clear the error memory"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_import_view_form
+msgid "Close"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__code
+msgid "Code"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_menu_configuration
+msgid "Configuration"
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_console
+msgid "Console"
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_can_control
+msgid "Control the CAN bus"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__device_id
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
+msgid "Controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_cap_clamps
+msgid "Controller can clamp"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__device_ref
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_ref
+msgid "Controller id"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_device
+msgid "Controller reached through the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_device_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__device_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_device_menu
+msgid "Controllers"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__created_at
+msgid "Created in the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: int_workbench
+#: model:res.groups,comment:int_workbench.int_workbench_group_manager
+msgid ""
+"Creates and edits the controllers (name, id in the service, service user, "
+"service address), reads the accounts and the log of the service and brings "
+"new project folders into its library."
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
+msgid "Day"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__detail
+msgid "Detail"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__disabled
+msgid "Disabled"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_ir_websocket__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__done
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_import__state__done
+msgid "Done"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__done_at
+msgid "Done At"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_log__user
+msgid ""
+"Empty if nobody was signed in; in brackets for the shared token or the local"
+" page."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__rows
+msgid "Entries"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__entry_id
+msgid "Entry"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_log
+msgid "Entry of the write log of the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__text
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
+msgid "Error"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__word
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
+msgid "Error word"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_error_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_error_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Errors"
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_error_files
+msgid "Evaluate error files"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_family__capability_ids
+msgid "Everything the family can do. A single controller can do less."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__expired
+msgid "Expired"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__failed
+msgid "Failed"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_family_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_family_menu
+msgid "Families"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__family_id
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_family_view_search
+msgid "Family"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_family
+msgid "Family of controllers"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__is_favorite
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Favorite"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__favorite_user_ids
+msgid "Favorite of"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Favorites"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Fetch log"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Fetch projects"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Fetch users"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__file_count
+msgid "Files"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__finished_at
+msgid "Finished At"
+msgstr ""
+
+#. module: int_workbench
+#: model:res.groups,comment:int_workbench.int_workbench_group_service
+msgid ""
+"For the user of a service (API key). Can only call service_sync and "
+"service_register for the controllers assigned to it."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__status
+msgid "HTTP status"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__sent
+msgid "Handed to the service"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid ""
+"Handed to the service, but no result came back: it may or may not have been "
+"carried out."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_console
+msgid "Has a console"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_intermediate
+msgid "Has intermediate values"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__status
+msgid "How the read went: ok, or what is wrong with the row."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__id
+#: model:ir.model.fields,field_description:int_workbench.field_ir_websocket__id
+msgid "ID"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__short_id
+msgid "Id"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__input
+msgid "Input"
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_intermediate
+msgid "Intermediate values"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__kind
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
+msgid "Kind"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__label
+msgid "Label"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__viewer_at
+msgid "Last looked at"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__snapshot_at
+msgid "Last report"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__loadable
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
+msgid "Loadable"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_user_view_search
+msgid "Locked"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_log_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_log_menu
+msgid "Log"
+msgstr ""
+
+#. module: int_workbench
+#: model:res.groups,name:int_workbench.int_workbench_group_manager
+msgid "Manager"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__message
+msgid "Message"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__name
+msgid "Name"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "No controller with the id %s is assigned to this service user."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "Nobody carried it out in time."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "None of the rows is clamped."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__unconfirmed
+msgid "Not confirmed"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
+msgid "Not loadable"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__note
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Note"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__value
+msgid "Number"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "Only a user of the group Workbench / Service may call this."
+msgstr ""
+
+#. module: int_workbench
+#: model:res.groups,name:int_workbench.int_workbench_group_operator
+msgid "Operator"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__origins
+msgid "Origin"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__outcome
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
+msgid "Outcome"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__pages
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Pages"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Problems"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__parameter_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__parameter_id
+msgid "Process value"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_parameter
+msgid "Process value of a controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_parameter_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_parameter_menu
+msgid "Process values"
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_flash
+msgid "Program the controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__project
+msgid "Project"
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_project_files
+msgid "Project files from the library"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_project_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_project_menu
+msgid "Projects"
+msgstr ""
+
+#. module: int_workbench
+#: model:res.groups,comment:int_workbench.int_workbench_group_user
+msgid ""
+"Reads the controllers, their process values, errors, projects and the log of"
+" the clamp requests."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_import__state__draft
+msgid "Ready"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__release
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Release"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__remote
+msgid "Remote"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__report_age
+msgid "Report Age"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_list
+msgid "Requested"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__user_id
+msgid "Requested by"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__result
+msgid "Result"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__unknown
+msgid "Result not reported"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__roles
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__roles
+msgid "Roles"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__route
+msgid "Route"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__code
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__code
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Row"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__report_age
+msgid ""
+"Seconds since the last report, by the clock of the server, so that a page "
+"does not depend on the clock of its computer."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__seen_age
+msgid "Seconds since the service last asked, -1 if it never did."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__seen_age
+msgid "Seen Age"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__sent_at
+msgid "Sent At"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__sequence
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__sequence
+msgid "Sequence"
+msgstr ""
+
+#. module: int_workbench
+#: model:res.groups,name:int_workbench.int_workbench_group_service
+msgid "Service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__service_url
+msgid "Service address"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__seen_at
+msgid "Service last seen"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__service_token
+msgid "Service token"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__service_user_id
+msgid "Service user"
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_clock
+msgid "Set the clock"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__size
+msgid "Size (bytes)"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__snapshot
+msgid "Snapshot"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__watched
+msgid ""
+"Somebody looks at this controller now: the service asks and reports faster."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__stale
+msgid "Stale"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__started_at
+msgid "Started At"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__state
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__state
+msgid "State"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__status
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Status"
+msgstr ""
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_line_switch
+msgid "Switch the line"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_import_view_form
+msgid "Take over new folders"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_family.py:0
+msgid "The %s must be a list of capability names."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_user__disabled
+msgid "The account is locked in the service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project__checksum
+msgid ""
+"The checksum of the definition files; it names the version in the library of"
+" the service."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The controller %s cannot be clamped."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "The controller %s has no service address."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The controller %s is archived."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid ""
+"The controller id %s may contain only letters, digits, minus and underscore."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_family.py:0
+msgid "The families must be a list."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_family.py:0
+msgid "The family %s is neither reported nor known."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_family.py:0
+msgid "The family %s is not a family name."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project__vehicle
+msgid ""
+"The folders above the project, from the place the version was first brought "
+"in from."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project__origins
+msgid ""
+"The folders the version was brought in from, below the root folder of the "
+"service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__device_ref
+msgid "The id of the controller in the configuration of the service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__family_id
+msgid "The kind of controller. The service tells it when it signs on."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_family__transports
+msgid "The kinds of line the family can use, for example com, tcp."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__stale
+msgid "The last read of the row did not succeed in time."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__viewer_at
+msgid ""
+"The last time the list of process values said that somebody looks at this "
+"controller."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project__rows
+msgid "The monitor entries of the project; 0 if it does not load."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_family__label
+msgid "The name shown to people."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_capability__code
+msgid "The name the service uses for the capability, for example clamps."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_family__name
+msgid "The name the service uses for the family, for example micserv."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_log__entry_id
+msgid "The number of the entry in the log of the service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__sequence
+msgid ""
+"The order of the rows in the list; changed by dragging (Operator, Manager)."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__pages
+msgid "The pages of the controller the row is shown on."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "The results must be a list."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_user__roles
+msgid "The roles of the account in the service, for example read, clamp."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The row %s is not a row code."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_command__parameter_id
+msgid ""
+"The row of the controller this request is about, if the service has reported"
+" it. The service works with the code."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "The service address %s must start with http:// or https://."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project__loadable
+msgid "The service can load the version."
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_import_view_form
+msgid ""
+"The service looks through its project folders and brings every folder that "
+"is not in its library yet into it. Folders that do not load are brought in "
+"as well, marked with the reason. Nothing is written into the project "
+"folders."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "The service of %s does not answer: %s"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "The service of %s refused (%s): %s"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "The service of %s sent no JSON."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "The snapshot is too large."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "The snapshot must be an object."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__service_token
+msgid ""
+"The token with which Odoo signs in to the service when it asks for users, "
+"log and projects."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_family.py:0
+msgid "The transports of the family %s must be a list of names."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__service_user_id
+msgid ""
+"The user whose API key the service uses to report this controller and to "
+"fetch its clamp requests. The user must be in the group Workbench / Service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__value
+msgid "The value as a number; 0 where the row has none."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__clamp_value
+msgid "The value the row is clamped to."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_command__value
+msgid "The value to clamp the row to (only for Clamp)."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter_clamp__value
+msgid "The value to clamp the row to. A digital row takes 0 or 1."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
+msgid "There are no new folders."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__transports
+msgid "Transports"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__unit
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Unit"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__user
+#: model:res.groups,name:int_workbench.int_workbench_group_user
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
+msgid "User"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_user_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_user_menu
+msgid "Users"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_project_files
+msgid "Uses project files"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__value
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__text
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__value
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Value"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__vehicle
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
+msgid "Vehicle"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
+msgid "Vehicle or project"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_project
+msgid "Version in the project library of the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__pending
+msgid "Waiting for the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__watched
+msgid "Watched"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__snapshot
+msgid ""
+"What the service last reported: state, clock. Written by the service only. "
+"The process values, the clamps and the errors are rows of their own."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__capability_ids
+msgid ""
+"What this controller may be asked to do now. It can be less than its family "
+"can do."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_log__input
+msgid ""
+"What was asked for. The service keeps no password and no file content in it."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__service_url
+msgid ""
+"Where Odoo reaches the service, for example http://workbench:8080. Needed "
+"only for what Odoo asks of the service (users, log, projects); the reports "
+"and the clamp requests go the other way and need no address."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__load_error
+msgid "Why not"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project__load_error
+msgid "Why the version does not load."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.module.category,name:int_workbench.module_category_int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_menu_root
+#: model:res.groups.privilege,name:int_workbench.privilege_int_workbench
+msgid "Workbench"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
+msgid "brought in, does not load"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_log__outcome
+msgid "running, done, not_confirmed, failed, rejected, denied or unknown."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
+msgid "turned away"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_ir_websocket
+msgid "websocket message handling"
+msgstr ""

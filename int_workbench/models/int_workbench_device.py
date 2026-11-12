@@ -2,31 +2,35 @@ import json
 import re
 from datetime import timedelta
 
+import requests
+
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
 # What the service accepts as the id of a controller: letters, digits, minus and underscore.
 DEVICE_REF_PATTERN = re.compile(r"[A-Za-z0-9_-]+")
-SERVICE_GROUP = "int_workbench.group_workbench_service"
+SERVICE_GROUP = "int_workbench.int_workbench_group_service"
+MANAGER_GROUP = "int_workbench.int_workbench_group_manager"
 # What a service may report in one call. A snapshot of a controller with all pages is some 100 kB.
 MAX_SNAPSHOT_BYTES = 2_000_000
-# What of a report is not kept in the Json of the controller: the process values, the clamps and the pages are the rows of int.workbench.parameter.
-ROW_PARTS = ("values", "clamps", "pages")
-# A clamp request that was not carried out this long after it was made is not carried out any more. The page waits longer than this
-# (workbench_client.js), so it always gets an answer from Odoo, never a request that runs after the page has given up.
+# What of a report is not kept in the Json of the controller: the process values and the clamps are the rows of int.workbench.parameter,
+# the active errors the rows of int.workbench.error, and the pages are not kept at all.
+ROW_PARTS = ("values", "clamps", "pages", "errors")
+# A clamp request that was not carried out this long after it was made is not carried out any more. The list waits longer than this
+# (parameter_list.js), so it always gets an answer from Odoo, never a request that runs after the list has given up.
 COMMAND_TTL = timedelta(seconds=15)
 # A request that was handed out and has no result yet is handed out again after this long (the answer to the call may have been lost).
 # Clamping and releasing can be repeated; the service recognizes the id and does not do it twice.
 REDELIVER_AFTER = timedelta(seconds=3)
 # How many requests one call of the service takes along.
 COMMAND_BATCH = 20
-# A message about changed rows names them up to this many; beyond that the page loads the whole list.
+# A message about changed rows names them up to this many; beyond that the list loads everything afresh.
 VALUES_MESSAGE_IDS = 30
 RESULT_STATES = ("done", "failed", "unconfirmed", "unknown", "expired")
 # The call of the service and the look of a person are written down at most this often (a write per call would be the load again).
 SEEN_REFRESH = timedelta(seconds=5)
 WATCH_REFRESH = timedelta(seconds=5)
-# Somebody looks at the controller if the page said so this recently (the page says it every 10 s while it is open).
+# Somebody looks at the controller if the list said so this recently (the list says it every 10 s while it is open).
 WATCHED_FOR = timedelta(seconds=30)
 # How often the service asks and reports, by whether somebody looks. System parameters "int_workbench.<name>" change them.
 DEFAULT_SETTINGS = {"poll_fast_ms": 250, "poll_idle_ms": 2000, "report_fast_ms": 2000, "report_idle_ms": 60000}
@@ -36,12 +40,14 @@ SETTING_LIMITS = {
     "report_fast_ms": (500, 60000),
     "report_idle_ms": (2000, 3600000),
 }
+# How long Odoo waits for the service when it calls it (the lists of users, log and projects, the import of project folders).
+SERVICE_TIMEOUT = 120
 
 
-class IntReglerDevice(models.Model):
+class IntWorkbenchDevice(models.Model):
     _name = "int.workbench.device"
     _inherit = ["bus.listener.mixin"]
-    _description = "Controller reached through the controller service"
+    _description = "Controller reached through the service"
     _order = "name, id"
 
     name = fields.Char(required=True, index=True)
@@ -56,20 +62,33 @@ class IntReglerDevice(models.Model):
         string="Service user",
         required=True,
         ondelete="restrict",
-        help="The user whose API key the controller service uses to report this controller and to fetch its clamp requests. "
-        "The user must be in the group Controller / Service.",
+        help="The user whose API key the service uses to report this controller and to fetch its clamp requests. "
+        "The user must be in the group Workbench / Service.",
     )
     active = fields.Boolean(default=True)
     note = fields.Text()
+    # === SERVICE ADDRESS === #
+    service_url = fields.Char(
+        string="Service address",
+        help="Where Odoo reaches the service, for example http://workbench:8080. Needed only for what Odoo asks of the service "
+        "(users, log, projects); the reports and the clamp requests go the other way and need no address.",
+    )
+    service_token = fields.Char(
+        string="Service token",
+        groups="int_workbench.int_workbench_group_manager",
+        copy=False,
+        help="The token with which Odoo signs in to the service when it asks for users, log and projects.",
+    )
+    # === REPORT === #
     snapshot = fields.Json(
         readonly=True,
         copy=False,
-        help="What the service last reported: state, errors, clock. Written by the service only. The process values and the clamps are in the rows (int.workbench.parameter).",
+        help="What the service last reported: state, clock. Written by the service only. The process values, the clamps and the errors are rows of their own.",
     )
     snapshot_at = fields.Datetime(string="Last report", readonly=True, copy=False)
     seen_at = fields.Datetime(string="Service last seen", readonly=True, copy=False)
     viewer_at = fields.Datetime(
-        string="Last looked at", readonly=True, copy=False, help="The last time the page said that somebody looks at this controller."
+        string="Last looked at", readonly=True, copy=False, help="The last time the list of process values said that somebody looks at this controller."
     )
     report_age = fields.Float(
         compute="_compute_ages",
@@ -77,7 +96,39 @@ class IntReglerDevice(models.Model):
     )
     seen_age = fields.Float(compute="_compute_ages", help="Seconds since the service last asked, -1 if it never did.")
     watched = fields.Boolean(compute="_compute_ages", help="Somebody looks at this controller now: the service asks and reports faster.")
+    # === FAMILY AND CAPABILITIES === #
+    family_id = fields.Many2one(
+        "int.workbench.family",
+        string="Family",
+        readonly=True,
+        copy=False,
+        ondelete="restrict",
+        index=True,
+        help="The kind of controller. The service tells it when it signs on.",
+    )
+    capability_ids = fields.Many2many(
+        "int.workbench.capability",
+        "int_workbench_device_capability_rel",
+        "device_id",
+        "capability_id",
+        string="Capabilities",
+        readonly=True,
+        copy=False,
+        help="What this controller may be asked to do now. It can be less than its family can do.",
+    )
+    cap_clamps = fields.Boolean(compute="_compute_capabilities", string="Can clamp")
+    cap_clock = fields.Boolean(compute="_compute_capabilities", string="Can set the clock")
+    cap_console = fields.Boolean(compute="_compute_capabilities", string="Has a console")
+    cap_can_control = fields.Boolean(compute="_compute_capabilities", string="Can control the CAN bus")
+    cap_flash = fields.Boolean(compute="_compute_capabilities", string="Can be programmed")
+    cap_line_switch = fields.Boolean(compute="_compute_capabilities", string="Can switch the line")
+    cap_error_memory = fields.Boolean(compute="_compute_capabilities", string="Can clear the error memory")
+    cap_error_files = fields.Boolean(compute="_compute_capabilities", string="Can evaluate error files")
+    cap_intermediate = fields.Boolean(compute="_compute_capabilities", string="Has intermediate values")
+    cap_project_files = fields.Boolean(compute="_compute_capabilities", string="Uses project files")
+    # === RECORDS OF THE CONTROLLER === #
     command_ids = fields.One2many("int.workbench.command", "device_id", string="Clamp requests")
+    error_ids = fields.One2many("int.workbench.error", "device_id", string="Errors")
 
     _name_unique = models.Constraint(
         "UNIQUE (name)",
@@ -91,6 +142,20 @@ class IntReglerDevice(models.Model):
             device.report_age = (now - device.snapshot_at).total_seconds() if device.snapshot_at else -1.0
             device.seen_age = (now - device.seen_at).total_seconds() if device.seen_at else -1.0
             device.watched = bool(device.viewer_at and now - device.viewer_at <= WATCHED_FOR)
+
+    @api.depends("family_id", "capability_ids.code")
+    def _compute_capabilities(self):
+        """Set one flag per capability, for the views to show or hide what a controller cannot do.
+
+        A controller whose service has not signed on yet (an older service) has no family: it keeps the one thing the module
+        did before families existed, clamping.
+        """
+        for device in self:
+            codes = set(device.capability_ids.mapped("code"))
+            for code in self.env["int.workbench.capability"].CODES:
+                device[f"cap_{code}"] = code in codes
+            if not device.family_id:
+                device.cap_clamps = True
 
     @api.constrains("device_ref")
     def _check_device_ref(self):
@@ -109,10 +174,16 @@ class IntReglerDevice(models.Model):
             if not device.service_user_id.has_group(SERVICE_GROUP):
                 raise ValidationError(
                     self.env._(
-                        "%s is not in the group Controller / Service, so its API key cannot serve a controller.",
+                        "%s is not in the group Workbench / Service, so its API key cannot serve a controller.",
                         device.service_user_id.display_name,
                     )
                 )
+
+    @api.constrains("service_url")
+    def _check_service_url(self):
+        for device in self:
+            if device.service_url and not re.match(r"https?://[^\s/]+", device.service_url):
+                raise ValidationError(self.env._("The service address %s must start with http:// or https://.", device.service_url))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -126,28 +197,47 @@ class IntReglerDevice(models.Model):
         vals = dict(vals)
         if isinstance(vals.get("device_ref"), str):
             vals["device_ref"] = vals["device_ref"].strip()
+        if isinstance(vals.get("service_url"), str):
+            vals["service_url"] = vals["service_url"].strip().rstrip("/")
         return vals
 
-    # ---- the page: somebody looks ----
+    # === THE LIST: SOMEBODY LOOKS === #
 
     def watch(self):
-        """The page says that somebody looks at these controllers now; it says so every 10 s while it is open.
+        """Tell that somebody looks at these controllers now; the list of process values says so every 10 s while it is open.
 
         While somebody looks, the service asks and reports often (see service_sync); otherwise it keeps quiet. The time is written
         down at most every 5 s, however many people look.
         """
         self.check_access("read")
         now = fields.Datetime.now()
+        # sudo: int.workbench.device: a reader writes only the time of the look, not a record they may change
         for device in self.sudo():
             if not device.viewer_at or now - device.viewer_at >= WATCH_REFRESH:
                 device.write({"viewer_at": now})
         return True
 
-    # ---- the controller service (JSON-2: POST /json/2/int.workbench.device/service_sync) ----
+    # === THE SERVICE (JSON-2: POST /json/2/int.workbench.device/service_sync) === #
+
+    @api.model
+    def _service_device(self, device_ref):
+        """Return the controller that the service user of this call may serve, or raise.
+
+        Only a user in the group Workbench / Service can call the service methods, and only for the controllers assigned to that
+        user: the key of a service is the key of its controllers and nothing else.
+        """
+        user = self.env.user
+        if not user.has_group(SERVICE_GROUP):
+            raise AccessError(self.env._("Only a user of the group Workbench / Service may call this."))
+        # sudo: int.workbench.device: the service user has no right on the model, only on the calls of the service
+        device = self.sudo().search([("device_ref", "=", device_ref), ("service_user_id", "=", user.id)])
+        if len(device) != 1:
+            raise UserError(self.env._("No controller with the id %s is assigned to this service user.", device_ref))
+        return device
 
     @api.model
     def service_sync(self, device_ref, snapshot=None, results=None):
-        """The one call of the controller service: report, hand in results, fetch the new clamp requests.
+        """Take the one call of the service: the report, the results, and hand out the new clamp requests.
 
         :param str device_ref: the id of the controller in the service (field "Controller id")
         :param dict|None snapshot: what the service has read from the controller; the service sends it as often as the answer
@@ -159,18 +249,8 @@ class IntReglerDevice(models.Model):
             came back within a few seconds, as long as it is valid (``expires_in_ms``): the service carries out each id once. ``poll_ms``
             says when to ask the next time and ``report_ms`` how often to send a snapshot: often while somebody looks at the controller
             in Odoo (``watched``), rarely otherwise.
-
-        Only a user in the group Controller / Service can call it, and only for the controllers assigned to that user: the key of a
-        service is the key of its controllers and nothing else.
         """
-        user = self.env.user
-        if not user.has_group(SERVICE_GROUP):
-            raise AccessError(self.env._("Only a user of the group Controller / Service may call this."))
-        device = self.sudo().search([("device_ref", "=", device_ref), ("service_user_id", "=", user.id)])
-        if len(device) != 1:
-            raise UserError(
-                self.env._("No controller with the id %s is assigned to this service user.", device_ref)
-            )
+        device = self._service_device(device_ref)
         device._service_touch()
         device._service_apply_results(results or [])
         if snapshot is not None:
@@ -180,6 +260,7 @@ class IntReglerDevice(models.Model):
 
     @api.model
     def _service_settings(self):
+        # sudo: ir.config_parameter: the settings of the module are read for the service user, who has no right on parameters
         params = self.env["ir.config_parameter"].sudo()
         out = {}
         for key, default in DEFAULT_SETTINGS.items():
@@ -206,9 +287,12 @@ class IntReglerDevice(models.Model):
         now = fields.Datetime.now()
         kept = {key: part for key, part in snapshot.items() if key not in ROW_PARTS}
         self.write({"snapshot": kept, "snapshot_at": now, "seen_at": now})
+        # sudo: int.workbench.parameter: the rows are written by the report of the service, which has no right on them
         changed, structure = self.env["int.workbench.parameter"].sudo()._sync(self, snapshot)
+        # sudo: int.workbench.error: the rows are written by the report of the service, which has no right on them
+        self.env["int.workbench.error"].sudo()._sync(self, snapshot)
         # Telling the pages costs a NOTIFY after the commit (some 15 ms): only while somebody looks, and only if something changed.
-        # The message names the rows that changed, so that a page loads these and not the whole list; if rows were created or removed,
+        # The message names the rows that changed, so that a list loads these and not everything; if rows were created or removed,
         # or very many changed, it says that the list has to be loaded afresh.
         if (changed or structure) and self.watched:
             reload = structure or len(changed) > VALUES_MESSAGE_IDS
@@ -218,6 +302,7 @@ class IntReglerDevice(models.Model):
         self.ensure_one()
         if not isinstance(results, list):
             raise ValidationError(self.env._("The results must be a list."))
+        # sudo: int.workbench.command: the service settles the requests of its own controller, as a user it has no right on them
         Command = self.env["int.workbench.command"].sudo()
         now = fields.Datetime.now()
         for result in results:
@@ -231,10 +316,14 @@ class IntReglerDevice(models.Model):
             self._service_notify(command)
 
     def _service_expire_commands(self):
-        """A request that is too old is not carried out any more: one that was never handed out has expired, one that was handed out and
-        has no result is unknown (it may have been carried out). Both are told to the page."""
+        """Settle the requests that are too old: they are not carried out any more.
+
+        One that was never handed out has expired, one that was handed out and has no result is unknown (it may have been carried
+        out). Both are told to the list.
+        """
         self.ensure_one()
         now = fields.Datetime.now()
+        # sudo: int.workbench.command: see _service_apply_results
         Command = self.env["int.workbench.command"].sudo()
         old = [("device_id", "=", self.id), ("create_date", "<", now - COMMAND_TTL)]
         never = Command.search(old + [("state", "=", "pending")])
@@ -252,6 +341,7 @@ class IntReglerDevice(models.Model):
     def _service_take_commands(self):
         self.ensure_one()
         now = fields.Datetime.now()
+        # sudo: int.workbench.command: see _service_apply_results
         commands = self.env["int.workbench.command"].sudo().search(
             [
                 ("device_id", "=", self.id),
@@ -292,7 +382,73 @@ class IntReglerDevice(models.Model):
         }
 
     def _service_notify(self, commands):
-        """Tell the pages that look at this controller how requests ended (a small message; the page does not poll for it)."""
+        """Tell the lists that look at this controller how requests ended (a small message; the list does not poll for it)."""
         self.ensure_one()
         for command in commands:
             self._bus_send("int_workbench/command", {"id": command.id, "state": command.state, "message": command.message or ""})
+
+    # === ODOO ASKS THE SERVICE === #
+
+    def _service_request(self, method, path, payload=None, params=None):
+        """Call a route of the service and return its answer as parsed JSON.
+
+        The service signs Odoo in by the token of the controller. A failure of any kind becomes a UserError with the reason the
+        service gave, so that it shows in the dialog of the button that asked.
+        """
+        self.ensure_one()
+        if not self.service_url:
+            raise UserError(self.env._("The controller %s has no service address.", self.name))
+        # sudo: int.workbench.device: the token is read for the call only; it is shown to managers only
+        token = self.sudo().service_token
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+        try:
+            response = requests.request(
+                method, self.service_url + path, json=payload, params=params, headers=headers, timeout=SERVICE_TIMEOUT
+            )
+        except requests.RequestException as error:
+            raise UserError(self.env._("The service of %s does not answer: %s", self.name, error)) from error
+        if response.status_code >= 400:
+            try:
+                reason = response.json().get("error") or response.text
+            except ValueError:
+                reason = response.text
+            raise UserError(self.env._("The service of %s refused (%s): %s", self.name, response.status_code, reason[:300]))
+        try:
+            return response.json()
+        except ValueError as error:
+            raise UserError(self.env._("The service of %s sent no JSON.", self.name)) from error
+
+    def action_fetch_users(self):
+        """Fetch the accounts of the service into the list of users."""
+        self.check_access("write")
+        self.env["int.workbench.user"]._fetch(self)
+        return self._open_list("int.workbench.user", self.env._("Users"))
+
+    def action_fetch_log(self):
+        """Fetch the newest entries of the write log of the service."""
+        self.check_access("write")
+        self.env["int.workbench.log"]._fetch(self)
+        return self._open_list("int.workbench.log", self.env._("Log"))
+
+    def action_fetch_projects(self):
+        """Fetch the versions of the project library of the service."""
+        self.check_access("write")
+        self.env["int.workbench.project"]._fetch(self)
+        return self._open_list("int.workbench.project", self.env._("Projects"))
+
+    def action_import_projects(self):
+        """Open the dialog that brings the new project folders of the service into its library."""
+        self.ensure_one()
+        wizard = self.env["int.workbench.project.import"].create({"device_id": self.id})
+        return wizard._reopen()
+
+    def _open_list(self, model, name):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": name,
+            "res_model": model,
+            "view_mode": "list,form",
+            "domain": [("device_id", "=", self.id)],
+            "context": {"default_device_id": self.id},
+        }

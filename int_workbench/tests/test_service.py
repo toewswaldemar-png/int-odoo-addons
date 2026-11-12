@@ -12,16 +12,16 @@ KEPT = {"status": {"connected": True}}
 
 
 @tagged("post_install", "-at_install")
-class TestIntReglerService(TransactionCase):
+class TestIntWorkbenchService(TransactionCase):
     """What the controller service does through int.workbench.device.service_sync, and what the page does with the clamp requests."""
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.operator = new_test_user(cls.env, login="regler_operator", groups="base.group_user,int_workbench.group_workbench_operator")
-        cls.reader = new_test_user(cls.env, login="regler_reader", groups="base.group_user,int_workbench.group_workbench_user")
-        cls.service = new_test_user(cls.env, login="regler_svc", groups="int_workbench.group_workbench_service")
-        cls.other_service = new_test_user(cls.env, login="regler_svc2", groups="int_workbench.group_workbench_service")
+        cls.operator = new_test_user(cls.env, login="regler_operator", groups="base.group_user,int_workbench.int_workbench_group_operator")
+        cls.reader = new_test_user(cls.env, login="regler_reader", groups="base.group_user,int_workbench.int_workbench_group_user")
+        cls.service = new_test_user(cls.env, login="regler_svc", groups="int_workbench.int_workbench_group_service")
+        cls.other_service = new_test_user(cls.env, login="regler_svc2", groups="int_workbench.int_workbench_group_service")
         Device = cls.env["int.workbench.device"]
         cls.device = Device.create({"name": "Bench", "device_ref": "main", "service_user_id": cls.service.id})
         cls.other_device = Device.create({"name": "Other", "device_ref": "main", "service_user_id": cls.other_service.id})

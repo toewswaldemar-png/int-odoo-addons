@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="int_workbench_log_view_list" model="ir.ui.view">
+        <field name="name">int.workbench.log.list</field>
+        <field name="model">int.workbench.log</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" decoration-danger="outcome in ('failed', 'not_confirmed', 'denied', 'rejected')">
+                <field name="started_at"/>
+                <field name="device_id" optional="hide"/>
+                <field name="user"/>
+                <field name="kind"/>
+                <field name="route" optional="hide"/>
+                <field name="device_ref" optional="show"/>
+                <field name="outcome" widget="badge"/>
+                <field name="detail"/>
+                <field name="entry_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_workbench_log_view_form" model="ir.ui.view">
+        <field name="name">int.workbench.log.form</field>
+        <field name="model">int.workbench.log</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="entry_id"/>
+                            <field name="device_id"/>
+                            <field name="device_ref"/>
+                            <field name="started_at"/>
+                            <field name="finished_at"/>
+                        </group>
+                        <group>
+                            <field name="user"/>
+                            <field name="roles"/>
+                            <field name="remote"/>
+                            <field name="route"/>
+                            <field name="kind"/>
+                            <field name="outcome"/>
+                            <field name="status"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="detail"/>
+                        <field name="input"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_workbench_log_view_search" model="ir.ui.view">
+        <field name="name">int.workbench.log.search</field>
+        <field name="model">int.workbench.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="user"/>
+                <field name="kind"/>
+                <field name="route"/>
+                <field name="device_id"/>
+                <filter name="problems" string="Problems" domain="[('outcome', 'in', ('failed', 'not_confirmed', 'denied', 'rejected'))]"/>
+                <group>
+                    <filter name="by_user" string="User" context="{'group_by': 'user'}"/>
+                    <filter name="by_kind" string="Kind" context="{'group_by': 'kind'}"/>
+                    <filter name="by_outcome" string="Outcome" context="{'group_by': 'outcome'}"/>
+                    <filter name="by_day" string="Day" context="{'group_by': 'started_at:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_workbench_log_action" model="ir.actions.act_window">
+        <field name="name">Log</field>
+        <field name="res_model">int.workbench.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

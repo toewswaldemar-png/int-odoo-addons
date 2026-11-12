@@ -1,6 +1,7 @@
 from collections.abc import Collection
 
 from odoo import Command, api, fields, models
+from odoo.exceptions import UserError
 from odoo.fields import Domain
 
 # What of a reported row is kept, and how it is compared. ``time`` (when the service read the row) is left out on purpose: it changes
@@ -11,7 +12,7 @@ VALUE_DIGITS = 3
 # dragging, see write): room for this many rows per controller.
 SEQUENCE_PER_DEVICE = 1000
 # Who may arrange the rows. It is the same order for everybody, so it is not left to every reader of the list.
-ARRANGE_GROUPS = ("int_workbench.group_workbench_operator", "int_workbench.group_workbench_manager")
+ARRANGE_GROUPS = ("int_workbench.int_workbench_group_operator", "int_workbench.int_workbench_group_manager")
 
 
 def _number(value):
@@ -21,7 +22,7 @@ def _number(value):
         return 0.0
 
 
-class IntReglerParameter(models.Model):
+class IntWorkbenchParameter(models.Model):
     _name = "int.workbench.parameter"
     _description = "Process value of a controller"
     _order = "sequence, device_id, code"
@@ -40,6 +41,7 @@ class IntReglerParameter(models.Model):
     clamped = fields.Boolean(readonly=True, index=True)
     clamp_value = fields.Float(digits=(16, VALUE_DIGITS), help="The value the row is clamped to.", readonly=True)
     command_ids = fields.One2many("int.workbench.command", "parameter_id", string="Clamp requests")
+    device_cap_clamps = fields.Boolean(related="device_id.cap_clamps", string="Controller can clamp")
     sequence = fields.Integer(help="The order of the rows in the list; changed by dragging (Operator, Manager).", index=True)
     # A star of the user, as Project has it for projects: who marked the row is kept in a table, is_favorite is what the current user did.
     favorite_user_ids = fields.Many2many(
@@ -70,8 +72,9 @@ class IntReglerParameter(models.Model):
         return Domain.TRUE if wanted else Domain.FALSE
 
     def _set_favorite(self, is_favorite):
-        """Marks or unmarks the rows for the current user. Done with sudo: whoever reads the rows may mark them, as in Project."""
+        """Mark or unmark the rows for the current user: whoever reads the rows may mark them, as in Project."""
         command = Command.link if is_favorite else Command.unlink
+        # sudo: int.workbench.parameter: the star is the user's own, a reader has no right to write the row
         self.sudo().favorite_user_ids = [command(self.env.uid)]
 
     def write(self, vals):
@@ -82,7 +85,8 @@ class IntReglerParameter(models.Model):
                 return True
         # dragging rows in the list writes the sequence and nothing else: that is allowed for those who arrange the rows, not more
         if set(vals) == {"sequence"} and any(self.env.user.has_group(group) for group in ARRANGE_GROUPS):
-            return super(IntReglerParameter, self.sudo()).write(vals)
+            # sudo: int.workbench.parameter: the order is the same for everybody, so it is written for them
+            return super(IntWorkbenchParameter, self.sudo()).write(vals)
         return super().write(vals)
 
     @api.depends("code", "name")
@@ -154,3 +158,41 @@ class IntReglerParameter(models.Model):
                 "clamp_value": _number(state.get("value")) if clamped else 0.0,
             }
         return rows
+
+    # === CLAMPING (the buttons of the list) === #
+
+    def action_clamp(self):
+        """Open the dialog that asks for the value to clamp the row to."""
+        self.ensure_one()
+        wizard = self.env["int.workbench.parameter.clamp"].create({"parameter_id": self.id})
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Clamp %s", self.display_name),
+            "res_model": "int.workbench.parameter.clamp",
+            "res_id": wizard.id,
+            "view_mode": "form",
+            "target": "new",
+        }
+
+    def action_release(self):
+        """Ask the service to release the clamp of these rows (the clamped ones among them)."""
+        clamped = self.filtered("clamped")
+        if not clamped:
+            raise UserError(self.env._("None of the rows is clamped."))
+        self.env["int.workbench.command"].create(
+            [{"device_id": row.device_id.id, "code": row.code, "action": "release"} for row in clamped]
+        )
+        return self._requested_notification(len(clamped))
+
+    def _requested_notification(self, count):
+        """Return the message that tells that the request is on its way; the result shows in the list and in the log."""
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": self.env._("Requested"),
+                "message": self.env._("%s request(s) sent to the service. The result shows in the clamp log.", count),
+                "type": "info",
+                "sticky": False,
+            },
+        }

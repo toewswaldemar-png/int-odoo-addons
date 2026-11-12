@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="int_workbench_project_import_view_form" model="ir.ui.view">
+        <field name="name">int.workbench.project.import.form</field>
+        <field name="model">int.workbench.project.import</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="state" invisible="1"/>
+                <group>
+                    <field name="device_id" readonly="state == 'done'"/>
+                </group>
+                <div class="text-muted" invisible="state == 'done'">
+                    The service looks through its project folders and brings every folder that is not in its library yet into it. Folders that do not load are brought in as well, marked with the reason. Nothing is written into the project folders.
+                </div>
+                <field name="result" invisible="state == 'draft'"/>
+                <footer>
+                    <button name="action_import" type="object" string="Take over new folders" class="btn-primary" data-hotkey="q" invisible="state == 'done'"/>
+                    <button special="cancel" string="Close" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

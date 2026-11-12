@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The capabilities a service reports (drivers.Capability in the service). The code is the name the service uses. -->
+    <record id="int_workbench_capability_clamps" model="int.workbench.capability">
+        <field name="code">clamps</field>
+        <field name="name">Clamp and release values</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="int_workbench_capability_clock" model="int.workbench.capability">
+        <field name="code">clock</field>
+        <field name="name">Set the clock</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="int_workbench_capability_console" model="int.workbench.capability">
+        <field name="code">console</field>
+        <field name="name">Console</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="int_workbench_capability_can_control" model="int.workbench.capability">
+        <field name="code">can_control</field>
+        <field name="name">Control the CAN bus</field>
+        <field name="sequence">40</field>
+    </record>
+    <record id="int_workbench_capability_flash" model="int.workbench.capability">
+        <field name="code">flash</field>
+        <field name="name">Program the controller</field>
+        <field name="sequence">50</field>
+    </record>
+    <record id="int_workbench_capability_line_switch" model="int.workbench.capability">
+        <field name="code">line_switch</field>
+        <field name="name">Switch the line</field>
+        <field name="sequence">60</field>
+    </record>
+    <record id="int_workbench_capability_error_memory" model="int.workbench.capability">
+        <field name="code">error_memory</field>
+        <field name="name">Clear the error memory</field>
+        <field name="sequence">70</field>
+    </record>
+    <record id="int_workbench_capability_error_files" model="int.workbench.capability">
+        <field name="code">error_files</field>
+        <field name="name">Evaluate error files</field>
+        <field name="sequence">80</field>
+    </record>
+    <record id="int_workbench_capability_intermediate" model="int.workbench.capability">
+        <field name="code">intermediate</field>
+        <field name="name">Intermediate values</field>
+        <field name="sequence">90</field>
+    </record>
+    <record id="int_workbench_capability_project_files" model="int.workbench.capability">
+        <field name="code">project_files</field>
+        <field name="name">Project files from the library</field>
+        <field name="sequence">100</field>
+    </record>
+</odoo>

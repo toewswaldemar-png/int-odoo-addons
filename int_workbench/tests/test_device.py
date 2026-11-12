@@ -7,16 +7,16 @@ from odoo.tools import mute_logger
 
 
 @tagged("post_install", "-at_install")
-class TestIntReglerDevice(TransactionCase):
+class TestIntWorkbenchDevice(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = new_test_user(cls.env, login="regler_user", groups="base.group_user,int_workbench.group_workbench_user")
+        cls.user = new_test_user(cls.env, login="regler_user", groups="base.group_user,int_workbench.int_workbench_group_user")
         cls.manager = new_test_user(
-            cls.env, login="regler_manager", groups="base.group_user,int_workbench.group_workbench_manager"
+            cls.env, login="regler_manager", groups="base.group_user,int_workbench.int_workbench_group_manager"
         )
         cls.outsider = new_test_user(cls.env, login="regler_outsider", groups="base.group_user")
-        cls.service = new_test_user(cls.env, login="regler_service", groups="int_workbench.group_workbench_service")
+        cls.service = new_test_user(cls.env, login="regler_service", groups="int_workbench.int_workbench_group_service")
         cls.Device = cls.env["int.workbench.device"]
         cls.device = cls.Device.create({"name": "Bench", "device_ref": "main", "service_user_id": cls.service.id})
 
@@ -72,17 +72,17 @@ class TestIntReglerDevice(TransactionCase):
             self.device.with_user(self.outsider).read(["name"])
 
     def test_the_groups(self):
-        operator = self.env.ref("int_workbench.group_workbench_operator")
-        manager = self.env.ref("int_workbench.group_workbench_manager")
-        user = self.env.ref("int_workbench.group_workbench_user")
-        service = self.env.ref("int_workbench.group_workbench_service")
+        operator = self.env.ref("int_workbench.int_workbench_group_operator")
+        manager = self.env.ref("int_workbench.int_workbench_group_manager")
+        user = self.env.ref("int_workbench.int_workbench_group_user")
+        service = self.env.ref("int_workbench.int_workbench_group_service")
         self.assertIn(user, manager.all_implied_ids)
         self.assertIn(user, operator.all_implied_ids)
         self.assertNotIn(operator, manager.all_implied_ids, "clamping is not part of managing the list of controllers")
         self.assertFalse(service.all_implied_ids & (user | operator | manager), "the service user has nothing else")
 
-    def test_the_page_is_in_the_menu_of_the_users_only(self):
+    def test_the_menu_is_for_the_users_and_the_configuration_for_the_managers(self):
         menu = self.env.ref("int_workbench.int_workbench_menu_root")
-        self.assertIn(self.env.ref("int_workbench.group_workbench_user"), menu.group_ids)
-        action = self.env.ref("int_workbench.int_workbench_app_action")
-        self.assertEqual(action.tag, "int_workbench.app")
+        self.assertIn(self.env.ref("int_workbench.int_workbench_group_user"), menu.group_ids)
+        configuration = self.env.ref("int_workbench.int_workbench_menu_configuration")
+        self.assertIn(self.env.ref("int_workbench.int_workbench_group_manager"), configuration.group_ids)

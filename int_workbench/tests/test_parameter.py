@@ -23,14 +23,14 @@ def clamp_row(code, held=False, value=0, analog=False):
 
 
 @tagged("post_install", "-at_install")
-class TestIntReglerParameter(TransactionCase):
+class TestIntWorkbenchParameter(TransactionCase):
     """The rows of a controller are ordinary records, brought to each report of the service; only what changed is written."""
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.service = new_test_user(cls.env, login="regler_svc", groups="int_workbench.group_workbench_service")
-        cls.reader = new_test_user(cls.env, login="regler_reader", groups="base.group_user,int_workbench.group_workbench_user")
+        cls.service = new_test_user(cls.env, login="regler_svc", groups="int_workbench.int_workbench_group_service")
+        cls.reader = new_test_user(cls.env, login="regler_reader", groups="base.group_user,int_workbench.int_workbench_group_user")
         cls.device = cls.env["int.workbench.device"].create({"name": "Bench", "device_ref": "main", "service_user_id": cls.service.id})
         cls.other = cls.env["int.workbench.device"].create({"name": "Other", "device_ref": "second", "service_user_id": cls.service.id})
         cls.Parameter = cls.env["int.workbench.parameter"]
@@ -100,7 +100,10 @@ class TestIntReglerParameter(TransactionCase):
 
     def test_the_call_of_the_service_keeps_the_rows_and_tells_the_page(self):
         Device = self.env["int.workbench.device"]
-        sync = lambda entries: Device.with_user(self.service).service_sync(device_ref="main", snapshot=report(entries))
+
+        def sync(entries):
+            return Device.with_user(self.service).service_sync(device_ref="main", snapshot=report(entries))
+
         with mock.patch.object(type(Device), "_bus_send", autospec=True) as bus:
             sync([entry("0001", "0", 0)])
             self.assertEqual(bus.call_count, 0, "nobody looks, so nobody is told")
@@ -156,7 +159,7 @@ class TestIntReglerParameter(TransactionCase):
 
     def test_a_clamp_request_points_to_its_row(self):
         self.sync([entry("0016")])
-        operator = new_test_user(self.env, login="regler_operator", groups="base.group_user,int_workbench.group_workbench_operator")
+        operator = new_test_user(self.env, login="regler_operator", groups="base.group_user,int_workbench.int_workbench_group_operator")
         Command = self.env["int.workbench.command"].with_user(operator)
         known = Command.create({"device_id": self.device.id, "code": "0016", "action": "set", "value": 1})
         unknown = Command.create({"device_id": self.device.id, "code": "0099", "action": "release"})
@@ -175,7 +178,7 @@ class TestIntReglerParameter(TransactionCase):
 
     def test_a_star_is_the_users_own(self):
         self.sync([entry("0001"), entry("0002")])
-        other = new_test_user(self.env, login="regler_reader2", groups="base.group_user,int_workbench.group_workbench_user")
+        other = new_test_user(self.env, login="regler_reader2", groups="base.group_user,int_workbench.int_workbench_group_user")
         Mine = self.Parameter.with_user(self.reader)
         scope = [("device_id", "=", self.device.id)]
         mine = Mine.search(scope + [("code", "=", "0001")])
@@ -213,7 +216,7 @@ class TestIntReglerParameter(TransactionCase):
 
     def test_an_operator_arranges_the_rows_a_reader_does_not(self):
         self.sync([entry("0001"), entry("0002"), entry("0003")])
-        operator = new_test_user(self.env, login="regler_operator2", groups="base.group_user,int_workbench.group_workbench_operator")
+        operator = new_test_user(self.env, login="regler_operator2", groups="base.group_user,int_workbench.int_workbench_group_operator")
         rows = self.Parameter.with_user(operator).search([("device_id", "=", self.device.id)])
         # what the list does when a row is dragged: web_resequence, which writes the sequence of each row
         rows.sorted(key=lambda r: r.code, reverse=True).web_resequence({"code": {}}, "sequence", 0)
@@ -224,8 +227,11 @@ class TestIntReglerParameter(TransactionCase):
             rows.write({"sequence": 1, "text": "x"})
 
     def test_the_list_can_be_starred_by_a_reader_and_dragged_by_an_operator(self):
-        operator = new_test_user(self.env, login="regler_operator3", groups="base.group_user,int_workbench.group_workbench_operator")
-        arch = lambda user: self.Parameter.with_user(user).get_views([(False, "list")])["views"]["list"]["arch"]
+        operator = new_test_user(self.env, login="regler_operator3", groups="base.group_user,int_workbench.int_workbench_group_operator")
+
+        def arch(user):
+            return self.Parameter.with_user(user).get_views([(False, "list")])["views"]["list"]["arch"]
+
         reader_arch, operator_arch = arch(self.reader), arch(operator)
         # nobody may write the model, and the server would make the list read-only: the view says edit="1", so the star is not grey
         self.assertIn('edit="1"', reader_arch)
@@ -233,5 +239,6 @@ class TestIntReglerParameter(TransactionCase):
         self.assertNotIn('widget="handle"', reader_arch, "a reader cannot arrange the rows, so there is no handle")
         self.assertIn('widget="handle"', operator_arch)
         self.assertIn('edit="1"', operator_arch)
-        # the clamp column starts wide enough for its controls (the user may change widths, Odoo does not keep them)
-        self.assertRegex(operator_arch, r'widget="int_workbench.clamp"[^>]*width="\d+px"|width="\d+px"[^>]*widget="int_workbench.clamp"')
+        # the clamp buttons are standard buttons, for the operator only
+        self.assertIn('name="action_clamp"', operator_arch)
+        self.assertNotIn('name="action_clamp"', reader_arch)

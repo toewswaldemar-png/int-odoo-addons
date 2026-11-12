@@ -3,12 +3,12 @@ import re
 from odoo.tests.common import TransactionCase, tagged
 
 DEFINE_REGEX = re.compile(r"odoo\.define\(\s*'([^']+)'\s*,\s*\[([^\]]*)\]")
-MODULES = ("workbench_client", "workbench_poll", "workbench_views", "workbench_app", "workbench_numbers", "workbench_clamp_popover", "workbench_clamp_field")
+MODULES = ("views/parameter_list",)
 
 
 @tagged("post_install", "-at_install")
 class TestAssets(TransactionCase):
-    """The scripts are built into the backend bundle and import what exists.
+    """The script is built into the backend bundle and imports what exists.
 
     There is no browser in the test run, so this is what can be checked here: a wrong path in an
     import is no error of the build, the module is just never loaded.
@@ -36,11 +36,10 @@ class TestAssets(TransactionCase):
                     continue
                 self.assertIn(dependency, self.modules, f"{name} imports {dependency}, which is not in the bundle")
 
-    def test_the_templates_are_in_the_bundle(self):
-        for template in ("App", "Overview", "Errors", "ClampField", "ClampPopover"):
-            self.assertIn(f"int_workbench.{template}", self.script)
-        # the process values and the clamps are the list of int.workbench.parameter, not a part of the page
-        self.assertNotIn("int_workbench.Values", self.script)
+    def test_there_is_nothing_but_the_list(self):
+        """The module adds no page and no field widget: the views are made of what Odoo has, and the list controller is the one exception."""
+        ours = [name for name in self.modules if name.startswith("@int_workbench/")]
+        self.assertEqual(ours, [f"@int_workbench/{name}" for name in MODULES])
 
-    def test_the_page_is_registered_as_the_client_action(self):
-        self.assertIn('"int_workbench.app"', self.script.replace("'", '"'))
+    def test_the_list_is_registered_as_a_view(self):
+        self.assertIn("int_workbench.parameter_list", self.script)

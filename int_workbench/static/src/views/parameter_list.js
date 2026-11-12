@@ -1,6 +1,7 @@
 import { onMounted, onPatched, onWillDestroy } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useDebounced } from "@web/core/utils/timing";
+import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { ListController } from "@web/views/list/list_controller";
 import { listView } from "@web/views/list/list_view";
@@ -13,30 +14,30 @@ export const RELOAD_DEBOUNCE_MS = 300;
  * a change either; here the rows change without the user doing anything, so a filter such as "Clamped" would go stale.)
  */
 export const MOVING_FIELDS = ["status", "clamped", "can_clamp"];
-/** How often the list tells Odoo that somebody looks (Odoo counts a look for 30 s), as the page of the module does. */
+/** How often the list tells Odoo that somebody looks (Odoo counts a look for 30 s), as the service expects. */
 export const WATCH_EVERY_MS = 10000;
 
 const channelOf = (deviceId) => `int.workbench.device_${deviceId}`;
 
 /**
  * The list of the process values of controllers. The rows are ordinary records; what is special is only that the list keeps itself
- * current like the page of the module: while it is open and visible it tells Odoo which controllers it shows (then their service asks
+ * current like a page of its own would: while it is open and visible it tells Odoo which controllers it shows (then their service asks
  * and reports often), and when the bus says that a report changed rows it loads these rows again, in place (record.load(), as Live Chat
  * does for the tags of a channel). The rows stay the same records, so ticked rows, the focus and the scroll position stay. Only if rows
  * came or went, or the list is filtered or grouped by what a report changes, the whole list is loaded afresh (as Live Chat does too).
  */
-export class ReglerParameterListController extends ListController {
+export class ParameterListController extends ListController {
     setup() {
         super.setup(...arguments);
         this.bus = useService("bus_service");
         this.orm = useService("orm");
-        this.clamping = useService("int_workbench_clamping");
+        this.notification = useService("notification");
         this.reloadDebounced = useDebounced(() => this.model.load(), RELOAD_DEBOUNCE_MS);
         this.refreshDebounced = useDebounced(() => this.refreshRows(), RELOAD_DEBOUNCE_MS);
         this.changedRows = new Set(); // the ids of the rows that the bus said changed and that are not loaded again yet
         this.devices = new Set(); // the controllers whose rows are on the screen: what is watched and listened to
         this.onValues = (message) => this.valuesChanged(message);
-        this.onCommand = (payload) => this.clamping.settle(payload);
+        this.onCommand = (payload) => this.commandSettled(payload);
         this.onVisible = () => {
             if (!document.hidden) {
                 this.watch();
@@ -71,6 +72,13 @@ export class ReglerParameterListController extends ListController {
         const grouped = (root.groupBy || []).some((name) => MOVING_FIELDS.includes(String(name).split(":")[0]));
         const filter = JSON.stringify(root.domain || []);
         return grouped || MOVING_FIELDS.some((name) => filter.includes(`"${name}"`));
+    }
+
+    /** The bus says how a clamp request ended; the ones that did not work out are told to the user (the clamp log has them all). */
+    commandSettled({ state, message } = {}) {
+        if (state && state !== "done") {
+            this.notification.add(message || state, { title: _t("Clamp request"), type: "warning" });
+        }
     }
 
     /** The bus says which rows changed: {ids, reload}. */
@@ -140,6 +148,6 @@ export class ReglerParameterListController extends ListController {
     }
 }
 
-export const reglerParameterListView = { ...listView, Controller: ReglerParameterListController };
+export const parameterListView = { ...listView, Controller: ParameterListController };
 
-registry.category("views").add("int_workbench.parameter_list", reglerParameterListView);
+registry.category("views").add("int_workbench.parameter_list", parameterListView);

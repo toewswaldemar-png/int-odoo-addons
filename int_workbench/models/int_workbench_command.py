@@ -9,7 +9,7 @@ ROW_CODE_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,20}")
 CLIENT_FIELDS = ("device_id", "code", "action", "value")
 
 
-class IntReglerCommand(models.Model):
+class IntWorkbenchCommand(models.Model):
     _name = "int.workbench.command"
     _description = "Clamp request for a controller"
     _order = "id desc"
@@ -60,6 +60,7 @@ class IntReglerCommand(models.Model):
             vals = {key: value for key, value in vals.items() if key in CLIENT_FIELDS}
             vals["user_id"] = self.env.uid
             cleaned.append(vals)
+        # sudo: int.workbench.parameter: the row is looked up by its code, whoever asks may not read every row
         Parameter = self.env["int.workbench.parameter"].sudo()
         for vals in cleaned:
             if vals.get("device_id") and vals.get("code"):
@@ -68,4 +69,7 @@ class IntReglerCommand(models.Model):
         for command in commands:
             if not command.device_id.active:
                 raise UserError(self.env._("The controller %s is archived.", command.device_id.name))
+            # a controller whose service has not signed on has no family yet and is not refused
+            if command.device_id.family_id and not command.device_id.cap_clamps:
+                raise UserError(self.env._("The controller %s cannot be clamped.", command.device_id.name))
         return commands

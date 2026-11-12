@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="int_workbench_menu_root" name="Workbench" sequence="35" groups="int_workbench_group_user"/>
+
+    <menuitem id="int_workbench_parameter_menu" name="Process values" parent="int_workbench_menu_root"
+              action="int_workbench_parameter_action" sequence="10"/>
+    <menuitem id="int_workbench_error_menu" name="Errors" parent="int_workbench_menu_root"
+              action="int_workbench_error_action" sequence="20"/>
+    <menuitem id="int_workbench_command_menu" name="Clamp log" parent="int_workbench_menu_root"
+              action="int_workbench_command_action" sequence="30"/>
+    <menuitem id="int_workbench_project_menu" name="Projects" parent="int_workbench_menu_root"
+              action="int_workbench_project_action" sequence="40"/>
+
+    <menuitem id="int_workbench_menu_configuration" name="Configuration" parent="int_workbench_menu_root"
+              sequence="90" groups="int_workbench_group_manager"/>
+    <menuitem id="int_workbench_device_menu" name="Controllers" parent="int_workbench_menu_configuration"
+              action="int_workbench_device_action" sequence="10"/>
+    <menuitem id="int_workbench_family_menu" name="Families" parent="int_workbench_menu_configuration"
+              action="int_workbench_family_action" sequence="20"/>
+    <menuitem id="int_workbench_user_menu" name="Users" parent="int_workbench_menu_configuration"
+              action="int_workbench_user_action" sequence="30"/>
+    <menuitem id="int_workbench_log_menu" name="Log" parent="int_workbench_menu_configuration"
+              action="int_workbench_log_action" sequence="40"/>
+</odoo>

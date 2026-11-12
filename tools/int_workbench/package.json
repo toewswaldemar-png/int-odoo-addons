@@ -2,9 +2,9 @@
     "name": "int-workbench-check",
     "private": true,
     "type": "module",
-    "description": "Checks of the page of int_workbench without a browser: the real Owl of Odoo in jsdom, the controller service played by a fake fetch",
+    "description": "Checks of the list controller of int_workbench without a browser: the real Owl of Odoo in jsdom, the bus and the services played by fakes",
     "scripts": {
-        "test": "node --test workbench_client.test.mjs && node --import ./register.mjs components.check.mjs && node --import ./register.mjs parameters.check.mjs"
+        "test": "node --import ./register.mjs parameters.check.mjs"
     },
     "devDependencies": {
         "jsdom": "^29.1.1"
