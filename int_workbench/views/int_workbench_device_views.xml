@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="int_workbench_device_view_list" model="ir.ui.view">
+        <field name="name">int.workbench.device.list</field>
+        <field name="model">int.workbench.device</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="device_ref"/>
+                <field name="service_user_id"/>
+                <field name="seen_at"/>
+                <field name="snapshot_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_workbench_device_view_form" model="ir.ui.view">
+        <field name="name">int.workbench.device.form</field>
+        <field name="model">int.workbench.device</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <field name="name"/>
+                        <field name="device_ref"/>
+                        <field name="service_user_id"/>
+                        <field name="seen_at"/>
+                        <field name="snapshot_at"/>
+                        <field name="viewer_at"/>
+                        <field name="active" invisible="1"/>
+                    </group>
+                    <field name="note" placeholder="Note"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_workbench_device_view_search" model="ir.ui.view">
+        <field name="name">int.workbench.device.search</field>
+        <field name="model">int.workbench.device</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="device_ref"/>
+                <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_workbench_device_action" model="ir.actions.act_window">
+        <field name="name">Controllers</field>
+        <field name="res_model">int.workbench.device</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="int_workbench_command_view_list" model="ir.ui.view">
+        <field name="name">int.workbench.command.list</field>
+        <field name="model">int.workbench.command</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" decoration-danger="state in ('failed', 'unconfirmed', 'unknown', 'expired')">
+                <field name="create_date" string="Requested"/>
+                <field name="device_id"/>
+                <field name="user_id"/>
+                <field name="code"/>
+                <field name="parameter_id" optional="hide"/>
+                <field name="action"/>
+                <field name="value"/>
+                <field name="state"/>
+                <field name="message"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_workbench_command_view_search" model="ir.ui.view">
+        <field name="name">int.workbench.command.search</field>
+        <field name="model">int.workbench.command</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="device_id"/>
+                <field name="user_id"/>
+                <field name="code"/>
+                <filter name="problems" string="Problems" domain="[('state', 'in', ('failed', 'unconfirmed', 'unknown', 'expired'))]"/>
+                <group>
+                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_user" string="User" context="{'group_by': 'user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_workbench_command_action" model="ir.actions.act_window">
+        <field name="name">Clamp log</field>
+        <field name="res_model">int.workbench.command</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- the process values of the controllers: ordinary records, filtered and grouped like any list; the list reloads when the service
+         reports a change and says to the service that somebody looks (static/src/workbench_parameters.js) -->
+    <record id="int_workbench_parameter_view_list" model="ir.ui.view">
+        <field name="name">int.workbench.parameter.list</field>
+        <field name="model">int.workbench.parameter</field>
+        <field name="arch" type="xml">
+            <!-- A list is read-only for everybody if nobody may write the model: the server then sets edit="False" (ir.ui.view,
+                 _postprocess_access_rights), and the star and the handle would be grey. An edit="1" of the view is left as it is. The rows are not
+                 edited by it: the list has no "editable", the fields are written by the service only, and the star and the order are written
+                 by write(), which lets through only these and only for those who may (models/int_workbench_parameter.py). The handle is there for
+                 those who may arrange the rows only. -->
+            <list js_class="int_workbench.parameter_list" create="0" edit="1" delete="0" default_order="sequence, device_id, code">
+                <field name="sequence" widget="handle" groups="int_workbench.group_workbench_operator,int_workbench.group_workbench_manager"/>
+                <field name="is_favorite" widget="boolean_favorite" nolabel="1" string="Favorite"/>
+                <!-- with one controller the name would stand in every row: the column picker brings it back -->
+                <!-- widths: the user can drag the edge of a header, but Odoo does not keep that; these are the widths a list starts with.
+                     The clamp column has room for the lock and [Auto | 0 | 1], or for [Auto] and a number; it stands next to the value,
+                     so that the eye does not travel across the list from the name to the buttons. -->
+                <field name="device_id" optional="hide" width="160px"/>
+                <field name="code" width="80px"/>
+                <field name="name" width="280px"/>
+                <!-- a clamped row is the exception: its value is marked (the clamp column shows the lock and the yellow segment) -->
+                <field name="text" string="Value" class="fw-bold" decoration-warning="clamped" width="120px"/>
+                <field name="unit" optional="hide" width="80px"/>
+                <field name="value" optional="hide" width="90px"/>
+                <field name="clamped" string="Clamp" widget="int_workbench.clamp" width="240px"/>
+                <!-- how the read went (ok, no_value, out_of_range, error ...) is a diagnosis for the administrator, not for the one who
+                     operates: hidden, the column picker brings it back; the filter "Problems" and the grouping by status stay in the search -->
+                <field name="status" widget="badge" decoration-success="status == 'ok'" decoration-danger="status != 'ok'" optional="hide" width="110px"/>
+                <field name="pages" optional="hide" width="90px"/>
+                <field name="can_clamp" column_invisible="1"/>
+                <field name="analog" column_invisible="1"/>
+                <field name="clamp_value" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_workbench_parameter_view_search" model="ir.ui.view">
+        <field name="name">int.workbench.parameter.search</field>
+        <field name="model">int.workbench.parameter</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Row" filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]"/>
+                <field name="device_id"/>
+                <field name="unit"/>
+                <filter name="favorites" string="Favorites" domain="[('is_favorite', '=', True)]"/>
+                <filter name="clamped" string="Clamped" domain="[('clamped', '=', True)]"/>
+                <filter name="can_clamp" string="Can be clamped" domain="[('can_clamp', '=', True)]"/>
+                <filter name="analog" string="Analog" domain="[('analog', '=', True)]"/>
+                <filter name="problems" string="Problems" domain="[('status', '!=', 'ok')]"/>
+                <group>
+                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_status" string="Status" context="{'group_by': 'status'}"/>
+                    <filter name="by_unit" string="Unit" context="{'group_by': 'unit'}"/>
+                    <filter name="by_pages" string="Pages" context="{'group_by': 'pages'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_workbench_parameter_action" model="ir.actions.act_window">
+        <field name="name">Process values</field>
+        <field name="res_model">int.workbench.parameter</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- the page itself, implemented in the browser (static/src/workbench_app.js) -->
+    <record id="int_workbench_app_action" model="ir.actions.client">
+        <field name="name">Controller</field>
+        <field name="tag">int_workbench.app</field>
+    </record>
+
+    <menuitem id="int_workbench_menu_root" name="Controller" sequence="35" groups="group_workbench_user"/>
+    <menuitem id="int_workbench_app_menu" name="Monitor" parent="int_workbench_menu_root"
+              action="int_workbench_app_action" sequence="10"/>
+    <menuitem id="int_workbench_parameter_menu" name="Process values" parent="int_workbench_menu_root"
+              action="int_workbench_parameter_action" sequence="12"/>
+    <menuitem id="int_workbench_command_menu" name="Clamp log" parent="int_workbench_menu_root"
+              action="int_workbench_command_action" sequence="15"/>
+    <menuitem id="int_workbench_device_menu" name="Controllers" parent="int_workbench_menu_root"
+              action="int_workbench_device_action" sequence="20" groups="group_workbench_manager"/>
+</odoo>

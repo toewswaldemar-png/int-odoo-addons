@@ -1,6 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_int_regler_device_user,int.regler.device.user,model_int_regler_device,group_regler_user,1,0,0,0
-access_int_regler_device_manager,int.regler.device.manager,model_int_regler_device,group_regler_manager,1,1,1,1
-access_int_regler_parameter_user,int.regler.parameter.user,model_int_regler_parameter,group_regler_user,1,0,0,0
-access_int_regler_command_user,int.regler.command.user,model_int_regler_command,group_regler_user,1,0,0,0
-access_int_regler_command_operator,int.regler.command.operator,model_int_regler_command,group_regler_operator,1,0,1,0

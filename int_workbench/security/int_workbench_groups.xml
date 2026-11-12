@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_int_workbench" model="ir.module.category">
+        <field name="name">Controller</field>
+    </record>
+
+    <record id="privilege_int_workbench" model="res.groups.privilege">
+        <field name="name">Controller</field>
+        <field name="category_id" ref="module_category_int_workbench"/>
+    </record>
+
+    <record id="group_workbench_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="privilege_id" ref="privilege_int_workbench"/>
+        <field name="comment">Opens the controller page and reads the controllers and the log of the clamp requests.</field>
+    </record>
+
+    <record id="group_workbench_operator" model="res.groups">
+        <field name="name">Operator</field>
+        <field name="privilege_id" ref="privilege_int_workbench"/>
+        <field name="implied_ids" eval="[(4, ref('group_workbench_user'))]"/>
+        <field name="comment">Clamps and releases rows of a controller. Every request is kept with the name of the user.</field>
+    </record>
+
+    <record id="group_workbench_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="privilege_id" ref="privilege_int_workbench"/>
+        <field name="implied_ids" eval="[(4, ref('group_workbench_user'))]"/>
+        <field name="comment">Creates and edits the controllers (name, id in the service, service user).</field>
+    </record>
+
+    <!-- A technical group for the user whose API key a controller service uses. It reports and fetches requests through
+         int.workbench.device.service_sync and has no other right on the models. -->
+    <record id="group_workbench_service" model="res.groups">
+        <field name="name">Service</field>
+        <field name="privilege_id" ref="privilege_int_workbench"/>
+        <!-- the key of a service has to last: the default of Odoo is one day -->
+        <field name="api_key_duration">365</field>
+        <field name="comment">For the user of a controller service (API key). Can only call service_sync for the controllers assigned to it.</field>
+    </record>
+</odoo>

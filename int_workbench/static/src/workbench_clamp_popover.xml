@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="int_workbench.ClampPopover">
+        <div class="o_int_workbench_popover p-3 d-flex flex-column gap-2" t-on-keydown="onKeydown">
+            <div class="fw-bold" t-esc="props.title"/>
+            <div t-if="props.now" class="text-muted small">Now: <t t-esc="props.now"/></div>
+            <div class="d-flex align-items-baseline gap-2">
+                <!-- like the input of the float field of Odoo: text with a decimal keyboard, no spinner arrows, only the line below -->
+                <input type="text" inputmode="decimal" autocomplete="off" t-ref="numpadDecimal"
+                       class="o_input o_int_workbench_popover_input" t-att-class="state.invalid ? 'is-invalid' : ''"
+                       t-att-value="state.text" t-on-input="onInput"/>
+                <span t-if="props.unit" class="text-muted" t-esc="props.unit"/>
+            </div>
+            <div t-if="state.invalid" class="text-danger small o_int_workbench_invalid">This is not a number.</div>
+            <div class="btn-group btn-group-sm w-100" role="group">
+                <button t-foreach="steps" t-as="step" t-key="step" type="button" class="btn btn-outline-secondary o_int_workbench_step"
+                        t-on-click="() => this.step(step)" t-esc="stepLabel(step)"/>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-light o_int_workbench_cancel" t-on-click="() => this.props.close()">Cancel</button>
+                <button type="button" class="btn btn-primary o_int_workbench_confirm" t-on-click="confirm">Clamp</button>
+            </div>
+        </div>
+    </t>
+</templates>
