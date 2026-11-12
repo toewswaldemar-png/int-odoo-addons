@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<record id="repair_form_worksheet" model="ir.ui.view">
+ <field name="name">repair.order.form.be01412</field><field name="model">repair.order</field>
+ <field name="inherit_id" ref="repair.view_repair_order_form"/>
+ <field name="arch" type="xml"><xpath expr="//form/header" position="inside">
+  <button name="action_open_be01412" type="object" string="Arbeitsblatt ausfüllen" groups="stock.group_stock_user"/>
+ </xpath></field>
+</record>
+<record id="worksheet_list" model="ir.ui.view"><field name="name">repair.worksheet.list</field><field name="model">repair.worksheet</field>
+ <field name="arch" type="xml"><list create="0"><field name="name"/><field name="variant"/><field name="serial_number"/><field name="inspector"/><field name="write_date"/><button name="action_open_editor" type="object" string="Ausfüllen"/></list></field>
+</record>
+<record id="worksheet_form" model="ir.ui.view"><field name="name">repair.worksheet.form</field><field name="model">repair.worksheet</field>
+ <field name="arch" type="xml"><form create="0" edit="0"><header><button name="action_open_editor" type="object" string="Arbeitsblatt ausfüllen" class="oe_highlight"/></header><sheet><group><field name="repair_id"/><field name="variant"/><field name="serial_number"/><field name="inspection_date"/><field name="inspector"/><field name="write_date"/></group><field name="notes"/></sheet></form></field>
+</record>
+<record id="worksheet_action" model="ir.actions.act_window"><field name="name">Arbeitsblätter BE01412</field><field name="res_model">repair.worksheet</field><field name="view_mode">list,form</field></record>
+<menuitem id="worksheet_menu" name="Arbeitsblätter BE01412" parent="repair.menu_repair_order" action="worksheet_action" sequence="91" groups="stock.group_stock_user"/>
+</odoo>

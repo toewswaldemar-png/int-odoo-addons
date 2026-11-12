@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_worksheet_test_form" model="ir.ui.view">
+        <field name="name">repair.worksheet.test.form</field>
+        <field name="model">repair.worksheet.test</field>
+        <field name="arch" type="xml">
+            <form string="BE01412 – QWeb-Layouttest">
+                <div class="alert alert-info" role="alert">Testassistent: Eingaben werden vorübergehend gespeichert. Keine Reparaturfreigabe und keine Lagerbuchung.</div>
+                <group>
+                    <group><field name="repair_id"/><field name="company_id" groups="base.group_multi_company"/><field name="variant"/><field name="serial_number"/><field name="rb_reference"/></group>
+                    <group><field name="inspection_date"/><field name="inspector"/><field name="document_revision"/></group>
+                </group>
+                <notebook>
+                    <page string="Eingangsprüfung und Reparatur">
+                        <p>Leeres Ergebnis bleibt im Ausdruck unmarkiert. Maßnahme bedeutet je nach Zeile: erneuert, gereinigt, gebohrt oder auf Stand gebracht.</p>
+                        <field name="line_ids">
+                            <list editable="bottom" create="0" delete="0">
+                                <field name="sequence" column_invisible="True"/><field name="section" readonly="1"/>
+                                <field name="name" readonly="1"/><field name="hm_number"/><field name="result"/>
+                                <field name="performed"/><field name="operator"/>
+                            </list>
+                        </field>
+                    </page>
+                    <page string="Material und Bemerkungen">
+                        <field name="material_ids"><list editable="bottom"><field name="description"/><field name="old_reference"/><field name="new_reference"/></list></field>
+                        <field name="notes" placeholder="Bemerkungen für das Folgeblatt …"/>
+                    </page>
+                </notebook>
+                <footer>
+                    <button name="action_print_pdf" type="object" string="Arbeitsblatt als PDF" class="btn-primary"/>
+                    <button name="action_preview_html" type="object" string="HTML-Vorschau"/>
+                    <button string="Schließen" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_worksheet_test" model="ir.actions.act_window">
+        <field name="name">BE01412 Arbeitsblatt testen</field>
+        <field name="res_model">repair.worksheet.test</field>
+        <field name="view_mode">form</field><field name="target">new</field>
+        <field name="binding_model_id" ref="repair.model_repair_order"/>
+        <field name="binding_view_types">form</field>
+    </record>
+    <menuitem id="menu_worksheet_test" name="BE01412 Layouttest" parent="repair.menu_repair_order" action="action_worksheet_test" sequence="90" groups="stock.group_stock_user"/>
+</odoo>

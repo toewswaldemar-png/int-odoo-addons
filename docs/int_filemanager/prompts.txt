@@ -1,0 +1,27 @@
+Arbeite Odoo-nah, aber ohne unnötigen Eigenbau. Prüfe in dieser Reihenfolge: (1) Gibt es das Problem nachweislich (Code, Messung, Test)? Wenn nicht, nichts bauen. (2) Hat Odoo einen Mechanismus dafür? Dann nutzen. (3) Löst ein vergleichbares Core-Modul es in docs/odoo? Dann dessen Form übernehmen. (4) Nur sonst: so wenig Eigenes wie möglich, an einer Stelle, in Odoos Form (kein eigener Decorator oder Framework), mit Begründung und Contract-Test für genutzte private Core-APIs. Core-Code vor Doku, die Doku kann falsch sein (docs/odoo19_abweichungen.md). Nenne Belege mit Fundstelle und trenne Gelesenes von Getestetem.
+
+
+
+
+
+---
+Arbeitsweise (gilt für diese Aufgabe):
+
+Vorgehen:
+- Behandle Befunde und Lösungsvorschläge im Prompt als ungeprüfte Hypothesen. Prüfe sie im Code, per Messung oder Test, bevor du etwas baust.
+- Prüfe in dieser Reihenfolge: (1) Gibt es das Problem nachweislich? Wenn nicht, nichts bauen. (2) Hat Odoo einen Mechanismus dafür? Dann nutzen. (3) Löst ein vergleichbares Core-Modul es in docs/odoo? Dann dessen Form übernehmen. (4) Nur sonst: so wenig Eigenes wie möglich, an einer Stelle, in Odoos Form, mit Begründung und Contract-Test für genutzte private Core-APIs.
+- Core-Code geht vor Doku. Nenne Belege mit Fundstelle (Datei:Zeile) und trenne „gelesen“ von „getestet“.
+- Widerspricht der Code dem Prompt, sag es und richte dich nach dem Code.
+
+Selbstständig arbeiten:
+- Setze um, was die Prüfung besteht, halte die Zeilenenden pro Datei ein und lass Tests laufen, soweit möglich.
+- Messungen und Test-Installationen darfst du ohne Rückfrage in einer temporären Umgebung im Scratchpad machen, nicht im Projekt.
+- Stelle keine Rückfragen. Entscheide bei Unsicherheit nach bester Datenlage und begründe das in einem Satz. Ausgenommen sind Aktionen, die nicht rückgängig zu machen oder nach außen sichtbar sind.
+
+Abschlussformat, genau so:
+**Ergebnis in einem Satz:** …
+**Belege:** gelesen: … / getestet: …
+**Schritte nach Priorität:**
+1. [ERLEDIGT / OFFEN / VERWORFEN] Maßnahme, Datei:Zeile, ein Satz Begründung.
+2. …
+**Was Sie jetzt tun müssen:** nummerierte, konkrete Handgriffe (Befehl oder Klick) oder „nichts“.

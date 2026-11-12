@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_worksheet_test,worksheet.test,model_repair_worksheet_test,stock.group_stock_user,1,1,1,1
+access_worksheet_test_line,worksheet.test.line,model_repair_worksheet_test_line,stock.group_stock_user,1,1,1,1
+access_worksheet_test_material,worksheet.test.material,model_repair_worksheet_test_material,stock.group_stock_user,1,1,1,1

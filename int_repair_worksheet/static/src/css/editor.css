@@ -1,0 +1,73 @@
+
+.be01412 { font-family: Arial, sans-serif; color: #000; font-size: 10px; line-height: 1.18; }
+.be01412 * { box-sizing: border-box; }
+.be01412 .sheet { width: 194mm; margin: 0 auto; page-break-after: always; }
+.be01412 .sheet:last-child { page-break-after: auto; }
+.be01412 table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0; color: #000; }
+.be01412 td, .be01412 th { border: .22mm solid #000; padding: 1mm 1.3mm; vertical-align: middle; overflow-wrap: anywhere; word-wrap: break-word; }
+.be01412 tr { page-break-inside: avoid; }
+.be01412 .dochead { font-size: 8.6px; margin-bottom: 2mm; }
+.be01412 .dochead td { padding: .7mm 1.1mm; }
+.be01412 .label { display: block; font-size: 8px; margin-bottom: .6mm; }
+.be01412 .title { font-size: 15px; font-weight: bold; }
+.be01412 .docno { text-align: center; font-size: 17px; font-weight: bold; }
+.be01412 .logo { width: 36mm; max-width: 100%; height: auto; }
+.be01412 .status { font-weight: bold; }
+.be01412 .variants td { height: 7mm; font-size: 10px; }
+.be01412 .variants { margin-bottom: 1.4mm; }
+.be01412 .sectionhead { background: #e5e5e5; font-weight: bold; }
+.be01412 .checks td { height: 5.6mm; }
+.be01412 .incoming td { height: 5.5mm; }
+.be01412 .checks .sectionhead td { height: 6.7mm; }
+.be01412 .option { display: inline-block; margin-right: 1mm; white-space: nowrap; font-size: 9px; }
+.be01412 .mark { display: inline-block; width: 2.2mm; height: 2.2mm; line-height: 1.9mm; border: .22mm solid #000; border-radius: 50%; text-align: center; vertical-align: middle; margin-right: .7mm; font-size: 10px; font-weight: bold; }
+.be01412 .center { text-align: center; }
+.be01412 .small { font-size: 8.5px; }
+.be01412 .sectiongap { height: 2.4mm; }
+.be01412 .testnote { border-top: .22mm solid #000; margin-top: 2.3mm; padding-top: 1mm; font-size: 8px; }
+.be01412 .materials td { height: 9.5mm; }
+.be01412 .materials th { height: 7mm; background: #e5e5e5; text-align: left; }
+.be01412 .free-notes { border: .22mm solid #000; padding: 2mm; min-height: 24mm; white-space: pre-wrap; margin-top: 3mm; }
+@media screen { body { margin: 0; background: #d9d9d9; } .be01412 .sheet { box-sizing: content-box; padding: 8mm; margin: 12px auto; background: white; min-height: 281mm; box-shadow: 0 2px 8px #aaa; } }
+@media print { @page { size: A4; margin: 8mm; } html, body { margin: 0 !important; padding: 0 !important; } .be01412 .sheet { margin: 0; padding: 0; } }
+
+html { color-scheme: light; } body { margin:0; background:#eef0f3; }
+.be01412.editor { font-size:12px; line-height:1.3; }
+.editor .sheet { min-height:0; margin:18px auto; }
+.editor .toolbar { position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid #c7cbd2; padding:12px 20px; box-shadow:0 2px 6px #0001; }
+.editor .bar-inner { max-width:1000px; margin:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.editor .toolbar strong { margin-right:auto; font-size:15px; }
+.editor button, .editor .button { font:inherit; border:1px solid #b4bac3; border-radius:5px; background:#fff; color:#263449; padding:8px 12px; cursor:pointer; text-decoration:none; }
+.editor button.primary { background:#2164a4; border-color:#2164a4; color:white; }
+.editor button:focus-visible, .editor input:focus-visible, .editor select:focus-visible, .editor textarea:focus-visible, .editor a:focus-visible { outline:3px solid #68a7e7; outline-offset:2px; }
+.editor .save-status { font-size:12px; color:#526074; flex-basis:100%; }
+.editor .notice { max-width:790px; margin:12px auto; padding:10px 14px; background:#fff8de; border:1px solid #dccf9a; border-radius:5px; }
+.editor .notice.error { background:#fff0f0; border-color:#d78686; color:#8a1c1c; }
+.editor .notice.success { background:#eaf6ec; border-color:#98c39e; }
+.editor .paper-scroll { overflow-x:auto; padding:0 12px; }
+.editor input[type=text], .editor input[type=date], .editor select, .editor textarea { font:inherit; color:#172c42; background:#f3f8ff; border:1px solid #c4d5e6; border-radius:3px; padding:3px 4px; width:100%; min-width:0; }
+.editor input[type=radio], .editor input[type=checkbox] { accent-color:#2164a4; width:14px; height:14px; vertical-align:middle; margin:0 3px 0 0; }
+.editor label { cursor:pointer; }
+.editor .field-label { display:block; font-size:10px; margin:0 0 2px; }
+.editor .inline { display:inline-flex; align-items:center; white-space:nowrap; gap:2px; }
+.editor .checks .line-title { font-size:11px; }
+.editor .checks td { height:7mm; }
+.editor .result-editor { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.editor .result-editor select { width:65px; font-size:10px; }
+.editor .result-editor label { font-size:10px; }
+.editor .clear-result { border:0; padding:1px 3px; margin-left:2px; color:#606b79; font-size:12px; }
+.editor .line-na { background:#f0f1f3; color:#5f6876; }
+.editor .line-na input, .editor .line-na select { background:#e8eaed; color:#7e8793; }
+.editor .compact { font-size:10px; }
+.editor .material-heading { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:0 0 10px; }
+.editor h2 { font-size:15px; margin:10px 0; }
+.editor .material-table textarea { resize:vertical; min-height:30px; }
+.editor .material-table .remove-material { padding:3px 7px; font-size:11px; }
+.editor .free-notes textarea { min-height:100px; resize:vertical; margin-top:6px; }
+.editor .notes-caption { font-size:11px; color:#57687a; margin-top:5px; }
+.editor .progress { font-size:11px; color:#526074; margin:8px 0; }
+.editor .print-only { display:none; }
+@media (max-width:650px) { .editor .toolbar { padding:10px; } .editor .bar-inner {gap:6px;} .editor .toolbar strong{flex-basis:100%;} .editor .notice {margin:8px 10px;} }
+@media print { .editor .toolbar, .editor .notice, .editor .no-print {display:none !important;} .editor .paper-scroll {padding:0;overflow:visible;} .editor .sheet{box-shadow:none;margin:0;padding:0;min-height:0;} .editor input[type=text], .editor input[type=date], .editor select, .editor textarea{border:0;background:none;color:black;} .editor .print-only {display:block;} }
+
+.editor .work td:nth-child(2) input { font-size:9px; padding-left:2px; padding-right:2px; }

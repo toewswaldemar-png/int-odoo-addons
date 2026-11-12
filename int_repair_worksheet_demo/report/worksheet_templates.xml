@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="worksheet_header">
+        <table class="dochead">
+            <colgroup><col style="width:29%"/><col style="width:39%"/><col style="width:14%"/><col style="width:18%"/></colgroup>
+            <tr>
+                <td><span class="label">Urheber:</span><strong>Herrmann GmbH</strong><br/>Gewerbestraße 4, 6<br/>55483 Heinzenbach<br/>FON: 06763/30997-0, FAX: -20</td>
+                <td><span class="label">Dok.-Art:</span><span class="title">Arbeitsschritte Reparatur</span></td>
+                <td><span class="label">Dok.-Status:</span><span class="status">LAYOUTTEST</span><br/><br/>Zust. Stelle:<br/>Reparatur</td>
+                <td class="center"><img class="logo" src="/int_repair_worksheet_demo/static/src/img/herrmann.png" alt="Herrmann"/></td>
+            </tr>
+            <tr>
+                <td><span class="label">Erstellt / geprüft (Quellvorlage):</span>25.04.2012 · IBH/mk / IBH/om</td>
+                <td rowspan="2">HM: 60598 · 3EGM 090800R0001 / R0002 · 185.2<br/><br/>HM: 60649 · 3EGM 092066R0001 / R0002 · ATC</td>
+                <td colspan="2" rowspan="2" class="docno">BE 01412</td>
+            </tr>
+            <tr><td><span class="label">Freigabe der Quellvorlage:</span>25.04.2012 · IBH/mb</td></tr>
+            <tr>
+                <td><span class="label">Testausgabe:</span>Odoo 19 Community · QWeb</td>
+                <td><span class="label">Dateiname:</span>Arbeitsschritte Reparatur</td>
+                <td><span class="label">Änderung / Sprache:</span><t t-out="sheet['revision']"/> / de</td>
+                <td><span class="label">Seite:</span><t t-out="page_number"/> / <t t-out="sheet['page_count']"/></td>
+            </tr>
+        </table>
+    </template>
+    <template id="worksheet_identity">
+        <table class="variants"><colgroup><col style="width:73%"/><col style="width:27%"/></colgroup>
+            <tr><td><span class="mark"><t t-out="'×' if sheet['variant'] == 'atc' else ''"/></span>ATC · 3EGM 092 066 R0001 / R0002 · Ser.-Nr.: <strong t-out="sheet['serial'] if sheet['variant'] == 'atc' else ''"/></td><td rowspan="2">RB: <strong t-out="sheet['rb']"/></td></tr>
+            <tr><td><span class="mark"><t t-out="'×' if sheet['variant'] == 'br185' else ''"/></span>BR185.2 · 3EGM 090 800 R0001 / R0002 · Ser.-Nr.: <strong t-out="sheet['serial'] if sheet['variant'] == 'br185' else ''"/></td></tr>
+        </table>
+    </template>
+    <template id="worksheet_document">
+        <div class="be01412">
+            <style>
+.be01412 { font-family: Arial, sans-serif; color: #000; font-size: 10px; line-height: 1.18; }
+.be01412 * { box-sizing: border-box; }
+.be01412 .sheet { width: 194mm; margin: 0 auto; page-break-after: always; }
+.be01412 .sheet:last-child { page-break-after: auto; }
+.be01412 table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0; color: #000; }
+.be01412 td, .be01412 th { border: .22mm solid #000; padding: 1mm 1.3mm; vertical-align: middle; overflow-wrap: anywhere; word-wrap: break-word; }
+.be01412 tr { page-break-inside: avoid; }
+.be01412 .dochead { font-size: 8.6px; margin-bottom: 2mm; }
+.be01412 .dochead td { padding: .7mm 1.1mm; }
+.be01412 .label { display: block; font-size: 8px; margin-bottom: .6mm; }
+.be01412 .title { font-size: 15px; font-weight: bold; }
+.be01412 .docno { text-align: center; font-size: 17px; font-weight: bold; }
+.be01412 .logo { width: 36mm; max-width: 100%; height: auto; }
+.be01412 .status { font-weight: bold; }
+.be01412 .variants td { height: 7mm; font-size: 10px; }
+.be01412 .variants { margin-bottom: 1.4mm; }
+.be01412 .sectionhead { background: #e5e5e5; font-weight: bold; }
+.be01412 .checks td { height: 5.6mm; }
+.be01412 .incoming td { height: 5.5mm; }
+.be01412 .checks .sectionhead td { height: 6.7mm; }
+.be01412 .option { display: inline-block; margin-right: 1mm; white-space: nowrap; font-size: 9px; }
+.be01412 .mark { display: inline-block; width: 2.2mm; height: 2.2mm; line-height: 1.9mm; border: .22mm solid #000; border-radius: 50%; text-align: center; vertical-align: middle; margin-right: .7mm; font-size: 10px; font-weight: bold; }
+.be01412 .center { text-align: center; }
+.be01412 .small { font-size: 8.5px; }
+.be01412 .sectiongap { height: 2.4mm; }
+.be01412 .testnote { border-top: .22mm solid #000; margin-top: 2.3mm; padding-top: 1mm; font-size: 8px; }
+.be01412 .materials td { height: 9.5mm; }
+.be01412 .materials th { height: 7mm; background: #e5e5e5; text-align: left; }
+.be01412 .free-notes { border: .22mm solid #000; padding: 2mm; min-height: 24mm; white-space: pre-wrap; margin-top: 3mm; }
+@media screen { body { margin: 0; background: #d9d9d9; } .be01412 .sheet { box-sizing: content-box; padding: 8mm; margin: 12px auto; background: white; min-height: 281mm; box-shadow: 0 2px 8px #aaa; } }
+@media print { @page { size: A4; margin: 8mm; } html, body { margin: 0 !important; padding: 0 !important; } .be01412 .sheet { margin: 0; padding: 0; } }
+</style>
+            <div class="page sheet">
+                <t t-set="page_number" t-value="1"/>
+                <t t-call="int_repair_worksheet_demo.worksheet_header"/>
+                <t t-call="int_repair_worksheet_demo.worksheet_identity"/>
+                <table class="checks incoming">
+                    <colgroup><col style="width:72%"/><col style="width:14%"/><col style="width:14%"/></colgroup>
+                    <tbody>
+                        <tr class="sectionhead"><td>Eingangsprüfung / Datum: <span t-out="sheet['date']"/></td><td colspan="2">Name: <span t-out="sheet['inspector']"/></td></tr>
+                        <tr t-foreach="sheet['incoming']" t-as="line">
+                            <td t-out="line['name']"/>
+                            <td class="center"><span class="option"><span class="mark"><t t-out="'×' if line['result'] == 'pass' else ''"/></span>OK</span></td>
+                            <td class="center"><span class="option"><span class="mark"><t t-out="'×' if line['result'] == 'fail' else ''"/></span>nicht OK</span><span t-if="line['result'] == 'na'" class="small">n. a.</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="sectiongap"/>
+                <table class="checks work">
+                    <colgroup><col style="width:57%"/><col style="width:9%"/><col style="width:12%"/><col style="width:22%"/></colgroup>
+                    <tbody>
+                        <tr class="sectionhead"><td>Checkliste:</td><td>HM-Nr.:</td><td>Name:</td><td>Ergebnis / Maßnahme</td></tr>
+                        <tr t-foreach="sheet['work']" t-as="line">
+                            <td t-out="line['name']"/><td class="small" t-out="line['hm']"/><td class="small" t-out="line['operator']"/>
+                            <td>
+                                <span t-if="line['result'] == 'na'" class="small">nicht anwendbar</span>
+                                <t t-if="line['result'] != 'na'">
+                                    <span t-if="line['mode'] not in ['clean', 'mandatory_replace']" class="option"><span class="mark"><t t-out="'×' if line['result'] == 'pass' else ''"/></span><t t-out="'vorhanden' if line['mode'] == 'drill' else 'OK'"/></span>
+                                    <span t-if="line['mode'] != 'inspect'" class="option"><span class="mark"><t t-out="'×' if line['performed'] else ''"/></span><t t-out="{'clean': 'gereinigt', 'drill': 'gebohrt', 'version': 'auf Stand gebracht'}.get(line['mode'], 'erneuert')"/></span>
+                                    <span t-if="line['result'] == 'fail'" class="small">nicht OK</span>
+                                </t>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="testnote">TESTAUSDRUCK · Historische Arbeitsanweisung als Layoutvorlage. Keine Reparaturfreigabe.</div>
+            </div>
+            <div class="page sheet" t-foreach="sheet['material_pages']" t-as="material_page">
+                <t t-set="page_number" t-value="material_page_index + 2"/>
+                <t t-call="int_repair_worksheet_demo.worksheet_header"/>
+                <t t-call="int_repair_worksheet_demo.worksheet_identity"/>
+                <table class="materials">
+                    <colgroup><col style="width:64%"/><col style="width:18%"/><col style="width:18%"/></colgroup>
+                    <thead><tr><th>Bemerkung / erneuertes Material</th><th>Alt</th><th>Neu</th></tr></thead>
+                    <tbody><tr t-foreach="material_page" t-as="material"><td t-out="material['description']"/><td t-out="material['old']"/><td t-out="material['new']"/></tr></tbody>
+                </table>
+                <div class="free-notes" t-if="material_page_index == 0"><strong>Bemerkungen:</strong><br/><span t-out="sheet['notes']"/></div>
+                <div class="testnote">TESTAUSDRUCK · Angaben „Alt / Neu“ dienen im Test nur der Darstellung. Keine Lagerbuchung.</div>
+            </div>
+        </div>
+    </template>
+    <template id="report_worksheet">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <div class="article" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id">
+                    <t t-set="sheet" t-value="o._worksheet_data()"/>
+                    <t t-call="int_repair_worksheet_demo.worksheet_document"/>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

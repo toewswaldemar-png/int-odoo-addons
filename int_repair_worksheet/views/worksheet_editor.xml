@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+ <template id="worksheet_editor">
+  <t t-call="web.layout">
+   <t t-set="title" t-value="'BE01412 Arbeitsblatt ausfüllen'"/>
+   <t t-set="head"><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/int_repair_worksheet/static/src/css/editor.css"/><script defer="defer" src="/int_repair_worksheet/static/src/js/editor.js"/></t>
+   <t t-call="int_repair_worksheet.editor_body"/>
+  </t>
+ </template>
+ <template id="editor_body">
+  <div class="be01412 editor">
+   <form id="worksheet-form" method="post" t-att-action="'/be01412/%s/save' % record.id" t-att-data-local-preview="'1' if local_preview else '0'">
+    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+    <input type="hidden" name="edit_token" t-att-value="form.get('edit_token', '')"/>
+    <input type="hidden" name="material_count" id="material-count" t-att-value="len(material_indices)"/>
+    <div class="toolbar"><div class="bar-inner">
+      <strong>BE01412 · Arbeitsblatt ausfüllen</strong>
+      <button type="submit" name="intent" value="save" class="primary">Speichern</button>
+      <button type="submit" name="intent" value="pdf" data-pdf-button="1">Speichern &amp; PDF</button>
+      <a class="button" t-att-href="'/be01412/%s' % record.id" data-reload="1">Neuen Stand laden</a>
+      <span class="save-status" role="status" aria-live="polite"><t t-out="'In Odoo gespeichert.' if saved else 'Eingaben werden mit Speichern übernommen.'"/></span>
+    </div></div>
+    <div t-if="error" class="notice error" role="alert"><strong>Speichern nicht möglich:</strong> <span t-out="error"/> Die Eingaben bleiben unten erhalten.</div>
+    <div t-if="local_preview" class="notice">Lokale Vorschau: Speichern sichert die Eingaben nur in diesem Browser. Im installierten Odoo-Modul werden sie am Reparaturauftrag gespeichert.</div>
+    <div class="paper-scroll">
+     <section class="sheet">
+      <t t-set="page_number" t-value="1"/><t t-call="int_repair_worksheet.worksheet_header"/>
+      <table class="variants"><colgroup><col style="width:65%"/><col style="width:35%"/></colgroup><tbody>
+       <tr><td><label class="inline"><input type="radio" name="variant" value="atc" t-att-checked="form.get('variant') == 'atc'"/>ATC · HM 60649 · 3EGM 092 066 R0001 / R0002</label></td><td><label class="field-label" for="serial-number">Seriennummer</label><input id="serial-number" type="text" name="serial_number" maxlength="250" t-att-value="form.get('serial_number', '')"/></td></tr>
+       <tr><td><label class="inline"><input type="radio" name="variant" value="br185" t-att-checked="form.get('variant') == 'br185'"/>BR185.2 · HM 60598 · 3EGM 090 800 R0001 / R0002</label></td><td><label class="field-label" for="rb-reference">RB / Reparaturauftrag</label><input id="rb-reference" type="text" name="rb_reference" maxlength="250" t-att-value="form.get('rb_reference', '')"/></td></tr>
+      </tbody></table>
+      <div class="progress" aria-live="polite">0 / 27 Zeilen bearbeitet</div>
+      <table class="checks incoming"><colgroup><col style="width:64%"/><col style="width:16%"/><col style="width:20%"/></colgroup><tbody>
+       <tr class="sectionhead"><td><label class="field-label" for="inspection-date">Eingangsprüfung / Datum</label><input id="inspection-date" name="inspection_date" type="date" t-att-value="form.get('inspection_date', '')"/></td><td colspan="2"><label class="field-label" for="inspector">Name Prüfer</label><input id="inspector" type="text" name="inspector" maxlength="80" t-att-value="form.get('inspector', '')"/></td></tr>
+       <tr t-foreach="sheet['incoming']" t-as="line" t-att-data-code="line['code']" class="check-row">
+        <td class="line-title" t-out="line['name']"/>
+        <td><label class="inline"><input type="radio" t-att-name="'result_' + line['code']" value="pass" t-att-checked="form.get('result_' + line['code']) == 'pass'"/>OK</label></td>
+        <td><label class="inline"><input type="radio" t-att-name="'result_' + line['code']" value="fail" t-att-checked="form.get('result_' + line['code']) == 'fail'"/>nicht OK</label><button type="button" class="clear-result no-print" t-att-data-clear="line['code']" t-att-aria-label="'Ergebnis zurücksetzen: ' + line['name']">↺</button></td>
+       </tr>
+      </tbody></table>
+      <div class="sectiongap"/>
+      <table class="checks work"><colgroup><col style="width:53%"/><col style="width:10%"/><col style="width:13%"/><col style="width:24%"/></colgroup><tbody>
+       <tr class="sectionhead"><td>Checkliste</td><td>HM-Nr.</td><td>Name</td><td>Ergebnis / Maßnahme</td></tr>
+       <tr t-foreach="sheet['work']" t-as="line" class="check-row" t-att-data-code="line['code']" t-att-data-br-only="'1' if line['br_only'] else '0'">
+        <td class="line-title" t-out="line['name']"/>
+        <td><input type="text" maxlength="80" class="compact" t-att-name="'hm_' + line['code']" t-att-value="form.get('hm_' + line['code'], line['hm'])" t-att-aria-label="'HM-Nummer: ' + line['name']"/></td>
+        <td><input type="text" maxlength="80" class="compact" t-att-name="'operator_' + line['code']" t-att-value="form.get('operator_' + line['code'], '')" t-att-aria-label="'Bearbeiter: ' + line['name']"/></td>
+        <td><div class="result-editor">
+         <select t-att-name="'result_' + line['code']" t-att-aria-label="'Ergebnis: ' + line['name']">
+          <option value="" t-att-selected="not form.get('result_' + line['code'])">offen</option>
+          <option value="pass" t-att-selected="form.get('result_' + line['code']) == 'pass'">OK</option>
+          <option value="fail" t-att-selected="form.get('result_' + line['code']) == 'fail'">nicht OK</option>
+          <option value="na" t-att-selected="form.get('result_' + line['code']) == 'na'">n. a.</option>
+         </select>
+         <label t-if="line['mode'] != 'inspect'" class="inline"><input type="checkbox" value="1" t-att-name="'performed_' + line['code']" t-att-checked="form.get('performed_' + line['code']) == '1'"/><span t-out="{'clean': 'gereinigt', 'drill': 'gebohrt', 'version': 'auf Stand gebracht'}.get(line['mode'], 'erneuert')"/></label>
+        </div></td>
+       </tr>
+      </tbody></table>
+      <div class="testnote">ENTWURF · Eingaben dokumentieren die Bearbeitung. Keine automatische Reparaturfreigabe.</div>
+     </section>
+     <section class="sheet">
+      <t t-set="page_number" t-value="2"/><t t-call="int_repair_worksheet.worksheet_header"/>
+      <div class="material-heading"><h2>Bemerkung / erneuertes Material</h2><button type="button" id="add-material" class="no-print">+ Materialzeile</button></div>
+      <table class="material-table"><colgroup><col style="width:53%"/><col style="width:20%"/><col style="width:20%"/><col style="width:7%"/></colgroup><thead><tr class="sectionhead"><th>Beschreibung</th><th>Alt</th><th>Neu</th><th class="no-print">Leeren</th></tr></thead><tbody id="material-rows">
+       <tr t-foreach="material_indices" t-as="index">
+        <td><textarea rows="1" maxlength="500" t-att-name="'material_description_%s' % index" t-att-aria-label="'Materialbeschreibung Zeile %s' % (index + 1)"><t t-out="form.get('material_description_%s' % index, '')"/></textarea></td>
+        <td><input type="text" maxlength="150" t-att-name="'material_old_%s' % index" t-att-value="form.get('material_old_%s' % index, '')" t-att-aria-label="'Alt Zeile %s' % (index + 1)"/></td>
+        <td><input type="text" maxlength="150" t-att-name="'material_new_%s' % index" t-att-value="form.get('material_new_%s' % index, '')" t-att-aria-label="'Neu Zeile %s' % (index + 1)"/></td>
+        <td class="no-print"><button type="button" class="remove-material" t-att-aria-label="'Materialzeile %s leeren' % (index + 1)">×</button></td>
+       </tr>
+      </tbody></table>
+      <div class="free-notes"><label for="worksheet-notes"><strong>Weitere Bemerkungen</strong></label><textarea id="worksheet-notes" name="notes" maxlength="10000"><t t-out="form.get('notes', '')"/></textarea></div>
+      <div class="notes-caption">Alt/Neu sind Dokumentationsfelder. Ersatzteil- und Lagerbuchungen erfolgen über den Reparaturauftrag.</div>
+     </section>
+    </div>
+   </form>
+  </div>
+ </template>
+</odoo>
