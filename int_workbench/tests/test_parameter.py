@@ -262,6 +262,13 @@ class TestIntWorkbenchParameter(TransactionCase):
             self.assertIn('widget="many2many_tags"', arch_of_user)
         self.assertRegex(reader_arch, r'name="tag_ids"[^>]*readonly="1"')
         self.assertNotRegex(operator_arch, r'name="tag_ids"[^>]*readonly="1"')
+        # a row with 0 and 1 is shown in words and coloured; the operator sets it in the list, everybody sees it
+        for arch_of_user in (operator_arch, reader_arch):
+            self.assertRegex(arch_of_user, r'name="text_shown"[^>]*decoration-success="display_tone == \'good\'"')
+        self.assertIn('name="display_kind"', operator_arch)
+        # editing it must not ask the server first (onchange): that wants the right to write, which an operator has only through write()
+        self.assertNotRegex(operator_arch, r'name="display_kind"[^>]*on_change')
+        self.assertNotIn('name="display_kind"', reader_arch)
         # the tags are the last column and take what is left: they have no width, the others have
         for arch_of_user in (operator_arch, reader_arch):
             self.assertNotRegex(arch_of_user, r'name="tag_ids"[^>]*width=')
@@ -269,8 +276,37 @@ class TestIntWorkbenchParameter(TransactionCase):
         self.assertGreater(operator_arch.index('name="tag_ids"'), operator_arch.index('name="clamp_input"'))
         self.assertGreater(reader_arch.index('name="tag_ids"'), reader_arch.index('name="clamp_value"'))
 
-    # === tags ===
+    # === how a digital row is shown ===
 
+    def test_a_digital_row_is_shown_in_words_as_set_and_the_setting_is_the_operators(self):
+        operator = new_test_user(self.env, login="regler_operator_kind", groups="base.group_user,int_workbench.int_workbench_group_operator")
+        self.sync([entry("0001", "1", 1), entry("0002", "0", 0), entry("0003", "22.3C", 22.3)], clamps=[clamp_row("0001"), clamp_row("0002"), clamp_row("0003", analog=True)])
+        rows = self.Parameter.with_user(operator).search([("device_id", "=", self.device.id)], order="code")
+        # as long as nothing is set, the number is shown
+        self.assertEqual(rows.mapped("text_shown"), ["1", "0", "22.3C"])
+        self.assertEqual(rows.mapped("display_tone"), [False, False, False])
+        # an operator sets it as the list does (web_save), for several rows at once; it is the same for everybody
+        saved = rows[:1].web_save({"display_kind": "ok"}, {"display_kind": {}, "text_shown": {}, "display_tone": {}})
+        self.assertEqual((saved[0]["text_shown"], saved[0]["display_tone"]), ("OK", "good"))
+        rows[:2].write({"display_kind": "ok"})
+        self.assertEqual(self.Parameter.with_user(self.reader).search([("code", "=", "0001")]).text_shown, "OK")
+        self.assertEqual(rows.mapped("text_shown")[:2], ["OK", "not OK"])
+        self.assertEqual(rows.mapped("display_tone")[:2], ["good", "bad"])
+        # a fault is the other way round, on and off have no colour
+        rows[:2].write({"display_kind": "fault"})
+        self.assertEqual((rows[0].text_shown, rows[0].display_tone, rows[1].text_shown, rows[1].display_tone), ("Fault", "bad", "OK", "good"))
+        rows[:2].write({"display_kind": "on"})
+        self.assertEqual((rows[0].text_shown, rows[0].display_tone, rows[1].text_shown), ("On", False, "Off"))
+        # an analog row is shown as it is, whatever is set
+        rows[2].write({"display_kind": "ok"})
+        self.assertEqual((rows[2].text_shown, rows[2].display_tone), ("22.3C", False))
+        # a report keeps the setting; a reader may not set it
+        self.sync([entry("0001", "0", 0), entry("0002", "0", 0), entry("0003", "22.3C", 22.3)], clamps=[clamp_row("0001"), clamp_row("0002"), clamp_row("0003", analog=True)])
+        self.assertEqual(self.rows()["0001"].display_kind, "on")
+        with self.assertRaises(AccessError):
+            self.Parameter.with_user(self.reader).search([("code", "=", "0001")]).write({"display_kind": "ok"})
+
+    # === tags ===
     def test_an_operator_tags_rows_and_a_report_keeps_the_tags(self):
         operator = new_test_user(self.env, login="regler_operator_tags", groups="base.group_user,int_workbench.int_workbench_group_operator")
         self.sync([entry("0001"), entry("0002"), entry("0003")])

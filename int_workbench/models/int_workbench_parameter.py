@@ -11,6 +11,8 @@ from .int_workbench_device import COMMAND_TTL
 # with every read, so a row would count as changed in every report.
 SYNCED_FIELDS = ("name", "status", "text", "value", "unit", "stale", "can_clamp", "analog", "clamped", "clamp_value", "last_clamp_value", "was_clamped", "clamp_step", "auto_text")
 VALUE_DIGITS = 3
+# How a digital row (0 or 1) is shown: what 1 and what 0 mean differs from row to row ("Heating chain OK": 1 is OK; "Fault CAN": 1 is a fault).
+DISPLAY_WORDS = ("ok", "on", "open", "fault")
 # New rows are put in the order of the report, a controller after the other (the list is ordered by "sequence"; a user changes it by
 # dragging, see write): room for this many rows per controller.
 SEQUENCE_PER_DEVICE = 1000
@@ -43,8 +45,19 @@ class IntWorkbenchParameter(models.Model):
     name = fields.Char(string="Description", readonly=True, index="trigram")
     status = fields.Char(help="How the read went: ok, or what is wrong with the row.", readonly=True)
     text = fields.Char(
-        string="Process value", help="The value the controller works with, as it shows it, for example 22.3°C. A clamped row shows the clamp.", readonly=True
+        string="Process text", help="The value the controller works with, as it shows it, for example 22.3°C. A clamped row shows the clamp.", readonly=True
     )
+    # How a digital row is shown, set by hand (an operator) and the same for everybody; a report never touches it.
+    display_kind = fields.Selection(
+        [("number", "Number"), ("ok", "OK / not OK"), ("on", "On / Off"), ("open", "Open / Closed"), ("fault", "Fault / OK")],
+        string="Display",
+        default="number",
+        required=True,
+        help="How a row with 0 and 1 is shown: as the number, or in words that say what 0 and 1 mean for this row. Not for analog rows.",
+    )
+    # What the list shows as the process value, and how it is coloured (green: good, red: bad).
+    text_shown = fields.Char(string="Process value", compute="_compute_text_shown", help="The value the controller works with, as the row is set to show it.")
+    display_tone = fields.Selection([("good", "Good"), ("bad", "Bad")], compute="_compute_text_shown")
     value = fields.Float(string="Number", digits=(16, VALUE_DIGITS), help="The process value as a number; 0 where the row has none.", readonly=True)
     # Only some families have a value of their own for a clamped row (Micserv: what the control logic gives without the clamp).
     auto_text = fields.Char(
@@ -119,6 +132,28 @@ class IntWorkbenchParameter(models.Model):
         # sudo: int.workbench.parameter: the star is the user's own, a reader has no right to write the row
         self.sudo().favorite_user_ids = [command(self.env.uid)]
 
+    # Not depending on display_kind on purpose: a field that others depend on makes the list ask the server (onchange) when it is
+    # edited, and that asks for the right to write the model, which an operator has only through write() below. write() clears
+    # what was computed instead.
+    @api.depends("text", "value", "analog")
+    def _compute_text_shown(self):
+        for row in self:
+            if row.display_kind not in DISPLAY_WORDS or row.analog:
+                row.text_shown, row.display_tone = row.text, False
+            else:
+                row.text_shown, row.display_tone = self._digital_words(row.display_kind, bool(row.value))
+
+    def _digital_words(self, kind, on):
+        """The words for 0 or 1 of a row and the tone of them: (text, "good" | "bad" | False)."""
+        _ = self.env._
+        if kind == "ok":
+            return (_("OK"), "good") if on else (_("not OK"), "bad")
+        if kind == "fault":
+            return (_("Fault"), "bad") if on else (_("OK"), "good")
+        if kind == "open":
+            return (_("Open"), False) if on else (_("Closed"), False)
+        return (_("On"), False) if on else (_("Off"), False)
+
     @api.depends("clamped", "clamp_value", "value", "last_clamp_value", "was_clamped", "clamp_step", "command_ids.state", "command_ids.action", "command_ids.value")
     def _compute_clamp_request(self):
         on_their_way = self._clamp_requests_on_their_way()
@@ -182,10 +217,12 @@ class IntWorkbenchParameter(models.Model):
         if set(vals) == {"sequence"} and any(self.env.user.has_group(group) for group in ARRANGE_GROUPS):
             # sudo: int.workbench.parameter: the order is the same for everybody, so it is written for them
             return super(IntWorkbenchParameter, self.sudo()).write(vals)
-        # tagging rows writes the tags and nothing else: that is for operators
-        if set(vals) == {"tag_ids"} and self.env.user.has_group(OPERATOR_GROUP):
-            # sudo: int.workbench.parameter: the tags are the same for everybody, so they are written for them
-            return super(IntWorkbenchParameter, self.sudo()).write(vals)
+        # tagging rows and setting how they are shown write those and nothing else: that is for operators
+        if vals and set(vals) <= {"tag_ids", "display_kind"} and self.env.user.has_group(OPERATOR_GROUP):
+            # sudo: int.workbench.parameter: both are the same for everybody, so they are written for them
+            result = super(IntWorkbenchParameter, self.sudo()).write(vals)
+            self.invalidate_recordset(["text_shown", "display_tone"])
+            return result
         return super().write(vals)
 
     @api.depends("code", "name")

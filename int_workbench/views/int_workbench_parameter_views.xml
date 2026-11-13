@@ -27,7 +27,9 @@
                 <field name="device_id" optional="hide" width="140px"/>
                 <field name="code" width="80px"/>
                 <field name="name" width="260px"/>
-                <field name="text" class="fw-bold" width="110px"/>
+                <!-- a row with 0 and 1 can be shown in words, green or red (Display, set by an operator) -->
+                <field name="text_shown" class="fw-bold" width="110px" decoration-success="display_tone == 'good'"
+                       decoration-danger="display_tone == 'bad'"/>
                 <field name="auto_text" optional="hide" width="110px"/>
                 <field name="unit" optional="hide" width="70px"/>
                 <field name="value" optional="hide" width="90px" options="{'hide_trailing_zeros': true}"/>
@@ -49,6 +51,8 @@
                        groups="int_workbench.int_workbench_group_operator"/>
                 <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" readonly="1"
                        groups="!int_workbench.int_workbench_group_operator"/>
+                <field name="display_kind" optional="hide" width="140px" groups="int_workbench.int_workbench_group_operator"/>
+                <field name="display_tone" column_invisible="1"/>
                 <field name="can_clamp" column_invisible="1"/>
                 <field name="analog" column_invisible="1"/>
                 <field name="device_cap_clamps" column_invisible="1"/>
@@ -74,6 +78,7 @@
                     <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
                     <filter name="by_status" string="Status" context="{'group_by': 'status'}"/>
                     <filter name="by_tag" string="Tags" context="{'group_by': 'tag_ids'}"/>
+                    <filter name="by_display" string="Display" context="{'group_by': 'display_kind'}"/>
                     <filter name="by_unit" string="Unit" context="{'group_by': 'unit'}"/>
                 </group>
                 <searchpanel>

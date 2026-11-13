@@ -141,6 +141,11 @@ msgid "Automatic value"
 msgstr "Automatikwert"
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_tone__bad
+msgid "Bad"
+msgstr "Schlecht"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__bit
 msgid "Bit"
 msgstr ""
@@ -303,6 +308,12 @@ msgid "Close"
 msgstr "Schließen"
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "Closed"
+msgstr "Zu"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__code
 msgid "Code"
 msgstr "Kürzel"
@@ -437,6 +448,12 @@ msgid "Disabled"
 msgstr "Gesperrt"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_kind
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Display"
+msgstr "Darstellung"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__display_name
@@ -451,6 +468,11 @@ msgstr "Gesperrt"
 #: model:ir.model.fields,field_description:int_workbench.field_ir_websocket__display_name
 msgid "Display Name"
 msgstr "Anzeigename"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_tone
+msgid "Display Tone"
+msgstr "Farbton der Darstellung"
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__done
@@ -546,6 +568,17 @@ msgid "Family of controllers"
 msgstr "Reglerfamilie"
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "Fault"
+msgstr "Fehler"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_kind__fault
+msgid "Fault / OK"
+msgstr "Fehler / i.O."
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__is_favorite
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Favorite"
@@ -596,6 +629,11 @@ msgstr ""
 "service_register nur für die ihm zugewiesenen Regler aufrufen."
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_tone__good
+msgid "Good"
+msgstr "Gut"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__status
 msgid "HTTP status"
 msgstr "HTTP-Status"
@@ -624,6 +662,14 @@ msgstr "Hat eine Konsole"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_intermediate
 msgid "Has intermediate values"
 msgstr "Hat Zwischenwerte"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__display_kind
+msgid ""
+"How a row with 0 and 1 is shown: as the number, or in words that say what 0 "
+"and 1 mean for this row. Not for analog rows."
+msgstr ""
+"Wie eine Zeile mit 0 und 1 gezeigt wird: als Zahl oder in Worten, die sagen, was 0 und 1 für diese Zeile bedeuten. Nicht für analoge Zeilen."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__status
@@ -790,8 +836,37 @@ msgstr "Notiz"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__value
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_kind__number
 msgid "Number"
 msgstr "Zahl"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "OK"
+msgstr "i.O."
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_kind__ok
+msgid "OK / not OK"
+msgstr "i.O. / n.i.O."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "Off"
+msgstr "Aus"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "On"
+msgstr "Ein"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_kind__on
+msgid "On / Off"
+msgstr "Ein / Aus"
 
 #. module: int_workbench
 #. odoo-python
@@ -804,6 +879,17 @@ msgstr "Das darf nur ein Benutzer der Gruppe Workbench / Dienst aufrufen."
 #: code:addons/int_workbench/models/int_workbench_parameter.py:0
 msgid "Only an operator may clamp rows."
 msgstr "Nur ein Bediener darf Zeilen klemmen."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "Open"
+msgstr "Auf"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_kind__open
+msgid "Open / Closed"
+msgstr "Auf / Zu"
 
 #. module: int_workbench
 #: model:res.groups,name:int_workbench.int_workbench_group_operator
@@ -829,8 +915,13 @@ msgid "Problems"
 msgstr "Probleme"
 
 #. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__parameter_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__text
+msgid "Process text"
+msgstr "Prozesstext"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__parameter_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__text_shown
 msgid "Process value"
 msgstr "Prozesswert"
 
@@ -1365,6 +1456,12 @@ msgstr ""
 "Der Wert, mit dem der Regler arbeitet, so wie er ihn anzeigt, zum Beispiel 22,3°C. Eine geklemmte Zeile zeigt die Klemmung."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__text_shown
+msgid "The value the controller works with, as the row is set to show it."
+msgstr ""
+"Der Wert, mit dem der Regler arbeitet, so wie die Zeile eingestellt ist."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__clamp_value
 msgid "The value the row is clamped to."
 msgstr "Der Wert, auf den die Zeile geklemmt ist."
@@ -1529,6 +1626,12 @@ msgstr ""
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 msgid "brought in, does not load"
 msgstr "übernommen, lädt nicht"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "not OK"
+msgstr "n.i.O."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_log__outcome
