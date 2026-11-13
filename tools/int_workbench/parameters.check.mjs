@@ -121,6 +121,9 @@ ok("a request that worked says nothing", state.notes.length === 0);
 emit("int_workbench/command", { id: 8, state: "failed", message: "No confirmation" });
 emit("int_workbench/command", { id: 9, state: "expired", message: "" });
 ok("a request that did not work out is told, with the reason if there is one", state.notes.length === 2 && state.notes[0].message === "No confirmation" && state.notes[0].type === "warning" && state.notes[1].message === "expired", JSON.stringify(state.notes));
+await wait(450);
+ok("and the list is read again (once), so the switch shows what the controller has", model.loads === 1, `${model.loads}`);
+model.loads = 0;
 
 // ---- what a message about changed rows does ----
 const settle = () => wait(450); // the refresh waits a little for more messages

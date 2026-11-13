@@ -1,4 +1,5 @@
 from collections.abc import Collection
+from math import floor
 
 from odoo import Command, api, fields, models
 from odoo.exceptions import AccessError, UserError
@@ -8,7 +9,7 @@ from .int_workbench_device import COMMAND_TTL
 
 # What of a reported row is kept, and how it is compared. ``time`` (when the service read the row) is left out on purpose: it changes
 # with every read, so a row would count as changed in every report.
-SYNCED_FIELDS = ("name", "pages", "status", "text", "value", "unit", "stale", "can_clamp", "analog", "clamped", "clamp_value", "last_clamp_value", "was_clamped")
+SYNCED_FIELDS = ("name", "pages", "status", "text", "value", "unit", "stale", "can_clamp", "analog", "clamped", "clamp_value", "last_clamp_value", "was_clamped", "clamp_step")
 VALUE_DIGITS = 3
 # New rows are put in the order of the report, a controller after the other (the list is ordered by "sequence"; a user changes it by
 # dragging, see write): room for this many rows per controller.
@@ -23,6 +24,13 @@ def _number(value):
         return round(float(value), VALUE_DIGITS)
     except (TypeError, ValueError):
         return 0.0
+
+
+def _to_step(value, step):
+    """The value as a multiple of the step the controller takes for the row (21.7 in steps of 1 is 22). A row without a step takes it as it is."""
+    if not step:
+        return value
+    return _number(floor(value / step + 0.5) * step)
 
 
 class IntWorkbenchParameter(models.Model):
@@ -46,6 +54,9 @@ class IntWorkbenchParameter(models.Model):
     # What the switch of the list clamps a row to the next time. The report fills it whenever the row is clamped; it stays when the clamp
     # is released. A row that was never clamped has none, and the switch takes the value the row has.
     last_clamp_value = fields.Float(digits=(16, VALUE_DIGITS), help="The value the row was clamped to last.", readonly=True)
+    clamp_step = fields.Float(
+        digits=(16, VALUE_DIGITS), help="The steps the controller takes a clamp value in (1: whole degrees); 0 where the row has none.", readonly=True
+    )
     was_clamped = fields.Boolean(help="The row has been clamped at least once (then the last clamp value says to what).", readonly=True)
     command_ids = fields.One2many("int.workbench.command", "parameter_id", string="Clamp requests")
     device_cap_clamps = fields.Boolean(related="device_id.cap_clamps", string="Controller can clamp")
@@ -101,13 +112,14 @@ class IntWorkbenchParameter(models.Model):
         # sudo: int.workbench.parameter: the star is the user's own, a reader has no right to write the row
         self.sudo().favorite_user_ids = [command(self.env.uid)]
 
-    @api.depends("clamped", "clamp_value", "value", "last_clamp_value", "was_clamped", "command_ids.state", "command_ids.action", "command_ids.value")
+    @api.depends("clamped", "clamp_value", "value", "last_clamp_value", "was_clamped", "clamp_step", "command_ids.state", "command_ids.action", "command_ids.value")
     def _compute_clamp_request(self):
         on_their_way = self._clamp_requests_on_their_way()
         for row in self:
             request = on_their_way.get(row.id)
-            # what the switch would clamp the row to: the value it was clamped to last, or the value it has if it never was
-            next_value = row.last_clamp_value if row.was_clamped else row.value
+            # what the switch would clamp the row to: the value it was clamped to last, or the value it has if it never was (in the
+            # steps the controller takes: it refuses 21.7 degrees)
+            next_value = row.last_clamp_value if row.was_clamped else _to_step(row.value, row.clamp_step)
             if request is None:
                 row.clamp_toggle, row.clamp_input = row.clamped, (row.clamp_value if row.clamped else next_value)
             elif request.action == "set":
@@ -201,7 +213,7 @@ class IntWorkbenchParameter(models.Model):
 
     @staticmethod
     def _differs(name, old, new):
-        if name in ("value", "clamp_value", "last_clamp_value"):
+        if name in ("value", "clamp_value", "last_clamp_value", "clamp_step"):
             return _number(old) != new
         return (old or "") != (new or "") if isinstance(new, str) else bool(old) != bool(new)
 
@@ -232,6 +244,7 @@ class IntWorkbenchParameter(models.Model):
                 "analog": bool(clamp_row and clamp_row.get("analog")),
                 "clamped": clamped,
                 "clamp_value": _number(state.get("value")) if clamped else 0.0,
+                "clamp_step": _number((clamp_row or {}).get("step")),
             }
             if clamped:
                 # kept when the clamp is released: the switch of the list clamps the row to it again

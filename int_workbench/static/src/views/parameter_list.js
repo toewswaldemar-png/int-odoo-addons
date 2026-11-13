@@ -78,6 +78,8 @@ export class ParameterListController extends ListController {
     commandSettled({ state, message } = {}) {
         if (state && state !== "done") {
             this.notification.add(message || state, { title: _t("Clamp request"), type: "warning" });
+            // the list showed what was asked for (the switch is on): it is read again and shows what the controller has
+            this.reloadDebounced();
         }
     }
 

@@ -215,6 +215,11 @@ msgid "Clamp"
 msgstr "Klemmen"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_step
+msgid "Clamp Step"
+msgstr "Klemmschritt"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_value
 msgid "Clamp Value"
 msgstr "Klemmwert"
@@ -1272,6 +1277,14 @@ msgstr "Der Bericht ist zu groß."
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid "The snapshot must be an object."
 msgstr "Der Bericht muss ein Objekt sein."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__clamp_step
+msgid ""
+"The steps the controller takes a clamp value in (1: whole degrees); 0 where "
+"the row has none."
+msgstr ""
+"Die Schritte, in denen der Regler einen Klemmwert annimmt (1: ganze Grad); 0, wenn die Zeile keine hat."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__service_token

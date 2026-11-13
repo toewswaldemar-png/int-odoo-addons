@@ -259,6 +259,19 @@ class TestIntWorkbenchServiceData(TransactionCase):
         row.write({"clamp_toggle": True})
         self.assertEqual(self.requests().mapped(lambda r: (r.action, r.value)), [("set", 0.0)], "the last clamp value, not the value of now")
 
+    def test_the_switch_asks_in_the_steps_the_controller_takes(self):
+        Parameter = self.env["int.workbench.parameter"]
+        entries = [{"code": "0007", "text": "21.7C", "value": 21.7}, {"code": "0019", "text": "4.04", "value": 4.04}]
+        clamps = [
+            {"code": "0007", "held": False, "analog": True, "step": 1, "state": {}},
+            {"code": "0019", "held": False, "analog": True, "step": 0.1, "state": {}},
+        ]
+        Parameter.sudo()._sync(self.device, {"values": {"entries": entries}, "clamps": {"rows": clamps}})
+        rows = Parameter.with_user(self.operator).search([("device_id", "=", self.device.id)], order="code")
+        self.assertEqual(rows.mapped("clamp_input"), [22.0, 4.0], "21.7 in whole degrees is 22, 4.04 in tenths is 4.0")
+        rows.write({"clamp_toggle": True})
+        self.assertEqual(self.requests().mapped("value"), [22.0, 4.0])
+
     def test_the_list_shows_what_was_asked_for_until_the_service_has_reported(self):
         row = self.clampable("0016", "0017", held=("0017",))
         rows = {r.code: r for r in row}
