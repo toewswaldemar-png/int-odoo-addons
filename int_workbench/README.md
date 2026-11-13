@@ -30,7 +30,7 @@ Regler  <-COM/TCP->  Service Workbench (Go)  --JSON-2-->  Odoo  <-- Bus + ORM --
 | `int.workbench.device` | Regler: Name, Kennung im Dienst, Dienst-Benutzer, Dienstadresse und -token, Familie, Fähigkeiten, Bericht (Json: Zustand, Uhr) | Manager legt an; Familie und Fähigkeiten setzt der Dienst |
 | `int.workbench.family` | Familie: Name, Bezeichnung, Transporte, Fähigkeiten | `service_register` |
 | `int.workbench.capability` | Fähigkeit (`clamps`, `clock`, `console`, `can_control`, `flash`, `line_switch`, `error_memory`, `error_files`, `intermediate`, `project_files`; unbekannte kommen mit ihrem Kürzel als Namen dazu) | Daten des Moduls, `service_register` |
-| `int.workbench.parameter` | Prozesswert (`p`, was der Regler benutzt), Automatikwert (`aw`, nur wo die Familie ihn hat) und Klemme einer Zeile; Stern und Reihenfolge je Benutzer bzw. für alle | Bericht (`service_sync`) |
+| `int.workbench.parameter` | Prozesswert (`p`, was der Regler benutzt), Automatikwert (`aw`, nur wo die Familie ihn hat) und Klemme einer Zeile; Stern je Benutzer; Reihenfolge und Marken (`tag_ids`, von Hand gesetzt, vom Bericht nicht berührt) für alle | Bericht (`service_sync`) |
 | `int.workbench.command` | Klemmauftrag und sein Ausgang (Klemmprotokoll) | Bediener, Ergebnis vom Dienst |
 | `int.workbench.error` | aktive Fehler (Fehlerwort, Bit, Text) | Bericht |
 | `int.workbench.log` | Schreibprotokoll des Dienstes (die neuesten 1000 Einträge) | Knopf *Fetch log* |

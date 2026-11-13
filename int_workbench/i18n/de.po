@@ -69,6 +69,11 @@ msgid "A row exists once per controller."
 msgstr "Eine Zeile gibt es je Regler nur einmal."
 
 #. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_parameter_tag_name_unique
+msgid "A tag exists once."
+msgstr "Ein Tag gibt es nur einmal."
+
+#. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_project_device_checksum_unique
 msgid "A version exists once per service."
 msgstr "Einen Stand gibt es je Dienst nur einmal."
@@ -308,6 +313,11 @@ msgid "Code or description"
 msgstr "Code oder Bezeichnung"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__color
+msgid "Color"
+msgstr "Farbe"
+
+#. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_menu_configuration
 msgid "Configuration"
 msgstr "Konfiguration"
@@ -368,6 +378,7 @@ msgstr "Regler"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_uid
@@ -387,6 +398,7 @@ msgstr "Im Dienst erstellt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_date
@@ -432,6 +444,7 @@ msgstr "Gesperrt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__display_name
@@ -625,6 +638,7 @@ msgstr "Wie das Lesen verlief: ok, oder was mit der Zeile nicht stimmt."
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__id
@@ -671,6 +685,7 @@ msgstr "Letzter Klemmwert"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_uid
@@ -685,6 +700,7 @@ msgstr "Zuletzt aktualisiert von"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_date
@@ -734,6 +750,7 @@ msgstr "Meldung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__name
 msgid "Name"
 msgstr ""
 
@@ -1029,6 +1046,17 @@ msgstr ""
 #: model:int.workbench.capability,name:int_workbench.int_workbench_capability_line_switch
 msgid "Switch the line"
 msgstr "Leitung umschalten"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_parameter_tag
+msgid "Tag of a process value"
+msgstr "Tag eines Prozesswerts"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__tag_ids
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Tags"
+msgstr "Tags"
 
 #. module: int_workbench
 #. odoo-python

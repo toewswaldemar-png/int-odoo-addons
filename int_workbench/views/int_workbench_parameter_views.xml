@@ -20,13 +20,14 @@
                 </header>
                 <field name="sequence" widget="handle" groups="int_workbench.int_workbench_group_operator,int_workbench.int_workbench_group_manager"/>
                 <field name="is_favorite" widget="boolean_favorite" nolabel="1" string="Favorite"/>
-                <field name="device_id" optional="hide"/>
+                <!-- every column has its width, so that they stand close together; only the tags, the last column, take what is left -->
+                <field name="device_id" optional="hide" width="140px"/>
                 <field name="code" width="80px"/>
-                <field name="name"/>
+                <field name="name" width="260px"/>
                 <field name="text" class="fw-bold" width="110px"/>
                 <field name="auto_text" optional="hide" width="110px"/>
-                <field name="unit" optional="hide"/>
-                <field name="value" optional="hide" options="{'hide_trailing_zeros': true}"/>
+                <field name="unit" optional="hide" width="70px"/>
+                <field name="value" optional="hide" width="90px" options="{'hide_trailing_zeros': true}"/>
                 <!-- the operator: the switch, then the value it clamps to (trailing zeros left out: 1, not 1,000). Only rows the controller
                      can clamp, and only if its family can clamp at all -->
                 <field name="clamp_toggle" widget="boolean_toggle" groups="int_workbench.int_workbench_group_operator" width="90px"
@@ -38,7 +39,13 @@
                 <field name="clamp_value" string="Clamp value" invisible="not clamped" groups="!int_workbench.int_workbench_group_operator"
                        width="110px" options="{'hide_trailing_zeros': true}" optional="show"/>
                 <!-- how the read went is a diagnosis for the administrator, not for the one who operates: hidden, the column picker brings it back -->
-                <field name="status" widget="badge" decoration-success="status == 'ok'" decoration-danger="status != 'ok'" optional="hide"/>
+                <field name="status" widget="badge" decoration-success="status == 'ok'" decoration-danger="status != 'ok'" optional="hide"
+                       width="100px"/>
+                <!-- the operator tags rows in the list (and several ticked rows at once); everybody else sees the tags -->
+                <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"
+                       groups="int_workbench.int_workbench_group_operator"/>
+                <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" readonly="1"
+                       groups="!int_workbench.int_workbench_group_operator"/>
                 <field name="can_clamp" column_invisible="1"/>
                 <field name="analog" column_invisible="1"/>
                 <field name="device_cap_clamps" column_invisible="1"/>
@@ -53,6 +60,7 @@
             <search>
                 <field name="name" string="Code or description" filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]"/>
                 <field name="device_id"/>
+                <field name="tag_ids"/>
                 <field name="unit"/>
                 <filter name="favorites" string="Favorites" domain="[('is_favorite', '=', True)]"/>
                 <filter name="clamped" string="Clamped" domain="[('clamped', '=', True)]"/>
@@ -62,6 +70,7 @@
                 <group>
                     <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
                     <filter name="by_status" string="Status" context="{'group_by': 'status'}"/>
+                    <filter name="by_tag" string="Tags" context="{'group_by': 'tag_ids'}"/>
                     <filter name="by_unit" string="Unit" context="{'group_by': 'unit'}"/>
                 </group>
                 <searchpanel>

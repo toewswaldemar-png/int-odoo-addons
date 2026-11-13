@@ -3,6 +3,7 @@ from unittest import mock
 from odoo.exceptions import AccessError
 from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
+from odoo.tools import mute_logger
 
 from odoo.addons.int_workbench.models.int_workbench_device import VALUES_MESSAGE_IDS
 from odoo.addons.int_workbench.models.int_workbench_parameter import SEQUENCE_PER_DEVICE
@@ -253,3 +254,45 @@ class TestIntWorkbenchParameter(TransactionCase):
             self.assertIn('editable="bottom"', arch_of_user)
             self.assertIn('multi_edit="1"', arch_of_user)
         self.assertNotIn('name="action_clamp"', operator_arch, "the dialog is gone")
+        # the tags: tagged by the operator in the list, seen by everybody else
+        for arch_of_user in (operator_arch, reader_arch):
+            self.assertIn('widget="many2many_tags"', arch_of_user)
+        self.assertRegex(reader_arch, r'name="tag_ids"[^>]*readonly="1"')
+        self.assertNotRegex(operator_arch, r'name="tag_ids"[^>]*readonly="1"')
+        # the tags are the last column and take what is left: they have no width, the others have
+        for arch_of_user in (operator_arch, reader_arch):
+            self.assertNotRegex(arch_of_user, r'name="tag_ids"[^>]*width=')
+            self.assertRegex(arch_of_user, r'name="name"[^>]*width="260px"')
+        self.assertGreater(operator_arch.index('name="tag_ids"'), operator_arch.index('name="clamp_input"'))
+        self.assertGreater(reader_arch.index('name="tag_ids"'), reader_arch.index('name="clamp_value"'))
+
+    # === tags ===
+
+    def test_an_operator_tags_rows_and_a_report_keeps_the_tags(self):
+        operator = new_test_user(self.env, login="regler_operator_tags", groups="base.group_user,int_workbench.int_workbench_group_operator")
+        self.sync([entry("0001"), entry("0002"), entry("0003")])
+        rows = self.Parameter.with_user(operator).search([("device_id", "=", self.device.id)], order="code")
+        # several ticked rows get a new tag at once (multi_edit), another row gets a second one
+        rows[:2].write({"tag_ids": [(0, 0, {"name": "Heating"})]})
+        heating = self.env["int.workbench.parameter.tag"].search([("name", "=", "Heating")])
+        self.assertEqual(rows[:2].mapped("tag_ids"), heating)
+        self.assertFalse(rows[2].tag_ids)
+        # the same report again, and one with other values: the tags stay
+        self.sync([entry("0001", "1", 1), entry("0002"), entry("0003")])
+        self.assertEqual(self.rows()["0001"].tag_ids, heating)
+        # searched and grouped like any tags
+        found = self.Parameter.search([("device_id", "=", self.device.id), ("tag_ids", "in", heating.ids)])
+        self.assertEqual(sorted(found.mapped("code")), ["0001", "0002"])
+        groups = self.Parameter.read_group([("device_id", "=", self.device.id)], ["tag_ids"], ["tag_ids"])
+        self.assertEqual({(g["tag_ids"] or ("", ""))[1]: g["tag_ids_count"] for g in groups}, {"Heating": 2, "": 1})
+
+    def test_a_reader_cannot_tag_rows_and_a_tag_exists_once(self):
+        self.sync([entry("0001")])
+        row = self.Parameter.with_user(self.reader).search([("device_id", "=", self.device.id)])
+        with self.assertRaises(AccessError):
+            row.write({"tag_ids": [(0, 0, {"name": "Cooling"})]})
+        self.assertFalse(self.env["int.workbench.parameter.tag"].search([("name", "=", "Cooling")]))
+        Tag = self.env["int.workbench.parameter.tag"]
+        Tag.create({"name": "Air"})
+        with self.assertRaises(Exception), mute_logger("odoo.sql_db"), self.cr.savepoint():
+            Tag.create({"name": "Air"})

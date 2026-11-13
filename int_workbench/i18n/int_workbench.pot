@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 08:12+0000\n"
-"PO-Revision-Date: 2026-11-13 08:12+0000\n"
+"POT-Creation-Date: 2026-11-13 08:18+0000\n"
+"PO-Revision-Date: 2026-11-13 08:18+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -59,6 +59,11 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_parameter_device_code_unique
 msgid "A row exists once per controller."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_parameter_tag_name_unique
+msgid "A tag exists once."
 msgstr ""
 
 #. module: int_workbench
@@ -298,6 +303,11 @@ msgid "Code or description"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__color
+msgid "Color"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_menu_configuration
 msgid "Configuration"
 msgstr ""
@@ -358,6 +368,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_uid
@@ -377,6 +388,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_date
@@ -419,6 +431,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__display_name
@@ -606,6 +619,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__id
@@ -652,6 +666,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_uid
@@ -666,6 +681,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_date
@@ -715,6 +731,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__name
 msgid "Name"
 msgstr ""
 
@@ -1002,6 +1019,17 @@ msgstr ""
 #. module: int_workbench
 #: model:int.workbench.capability,name:int_workbench.int_workbench_capability_line_switch
 msgid "Switch the line"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_parameter_tag
+msgid "Tag of a process value"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__tag_ids
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Tags"
 msgstr ""
 
 #. module: int_workbench

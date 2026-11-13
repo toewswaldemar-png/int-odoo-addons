@@ -63,6 +63,8 @@ class IntWorkbenchParameter(models.Model):
         digits=(16, VALUE_DIGITS), help="The steps the controller takes a clamp value in (1: whole degrees); 0 where the row has none.", readonly=True
     )
     was_clamped = fields.Boolean(help="The row has been clamped at least once (then the last clamp value says to what).", readonly=True)
+    # The rows are tagged by hand (heating, cooling, ...), the same for everybody, as the order is. A report never touches them.
+    tag_ids = fields.Many2many("int.workbench.parameter.tag", string="Tags")
     command_ids = fields.One2many("int.workbench.command", "parameter_id", string="Clamp requests")
     device_cap_clamps = fields.Boolean(related="device_id.cap_clamps", string="Controller can clamp")
     sequence = fields.Integer(help="The order of the rows in the list; changed by dragging (Operator, Manager).", index=True)
@@ -179,6 +181,10 @@ class IntWorkbenchParameter(models.Model):
         # dragging rows in the list writes the sequence and nothing else: that is allowed for those who arrange the rows, not more
         if set(vals) == {"sequence"} and any(self.env.user.has_group(group) for group in ARRANGE_GROUPS):
             # sudo: int.workbench.parameter: the order is the same for everybody, so it is written for them
+            return super(IntWorkbenchParameter, self.sudo()).write(vals)
+        # tagging rows writes the tags and nothing else: that is for operators
+        if set(vals) == {"tag_ids"} and self.env.user.has_group(OPERATOR_GROUP):
+            # sudo: int.workbench.parameter: the tags are the same for everybody, so they are written for them
             return super(IntWorkbenchParameter, self.sudo()).write(vals)
         return super().write(vals)
 

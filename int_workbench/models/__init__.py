@@ -2,6 +2,7 @@ from . import int_workbench_capability
 from . import int_workbench_family
 from . import int_workbench_device
 from . import int_workbench_command
+from . import int_workbench_parameter_tag
 from . import int_workbench_parameter
 from . import int_workbench_error
 from . import int_workbench_log
