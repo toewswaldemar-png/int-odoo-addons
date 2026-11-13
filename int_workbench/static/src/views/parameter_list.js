@@ -53,6 +53,8 @@ export class ParameterListController extends ListController {
         this.devices = new Set(); // the controllers whose rows are on the screen: what is watched and listened to
         this.onValues = (message) => this.valuesChanged(message);
         this.onCommand = (payload) => this.commandSettled(payload);
+        this.onErrors = () => this.reloadDebounced();
+        this.listeners = this.messages();
         this.onVisible = () => {
             if (!document.hidden) {
                 this.watch();
@@ -61,8 +63,9 @@ export class ParameterListController extends ListController {
         this.watchTimer = null;
 
         onMounted(() => {
-            this.bus.subscribe("int_workbench/values", this.onValues);
-            this.bus.subscribe("int_workbench/command", this.onCommand);
+            for (const [type, callback] of Object.entries(this.listeners)) {
+                this.bus.subscribe(type, callback);
+            }
             document.addEventListener("visibilitychange", this.onVisible);
             this.watchTimer = setInterval(this.onVisible, WATCH_EVERY_MS);
             this.syncDevices();
@@ -70,8 +73,9 @@ export class ParameterListController extends ListController {
         // what is on the screen changes with a search, a filter, a page: the controllers are looked at again afterwards
         onPatched(() => this.syncDevices());
         onWillDestroy(() => {
-            this.bus.unsubscribe("int_workbench/values", this.onValues);
-            this.bus.unsubscribe("int_workbench/command", this.onCommand);
+            for (const [type, callback] of Object.entries(this.listeners)) {
+                this.bus.unsubscribe(type, callback);
+            }
             for (const id of this.devices) {
                 this.bus.deleteChannel(channelOf(id));
             }
@@ -81,9 +85,26 @@ export class ParameterListController extends ListController {
         });
     }
 
+    /**
+     * The messages of the bus this list listens to, {type: callback}. They come by controller, not by list, so each list takes only
+     * those about its own rows: the ids of changed process values mean nothing to a list of errors.
+     */
+    messages() {
+        return { "int_workbench/values": this.onValues, "int_workbench/command": this.onCommand };
+    }
+
+    /** The requests whose end this list tells (the same message goes to every list that looks at the controller). */
+    handlesAction(action) {
+        return action !== "clear_errors";
+    }
+
     /** The class of this list: the style sheet next to this file (parameter_list.scss) is for the rows of this list and no other. */
     get className() {
-        return `${super.className || ""} o_int_workbench_parameter_list`.trim();
+        return `${super.className || ""} ${this.styleClass}`.trim();
+    }
+
+    get styleClass() {
+        return "o_int_workbench_parameter_list";
     }
 
     /** Does the list show rows by something that a report changes? Then a changed row may belong to another group, or not to the list. */
@@ -94,10 +115,16 @@ export class ParameterListController extends ListController {
         return grouped || MOVING_FIELDS.some((name) => filter.includes(`"${name}"`));
     }
 
-    /** The bus says how a clamp request ended; the ones that did not work out are told to the user (the clamp log has them all). */
-    commandSettled({ state, message } = {}) {
-        if (state && state !== "done") {
-            this.notification.add(message || state, { title: _t("Clamp request"), type: "warning" });
+    /** The bus says how a request ended; the ones that did not work out are told to the user (the clamp log has them all). */
+    commandSettled({ action, state, message } = {}) {
+        if (!this.handlesAction(action)) {
+            return;
+        }
+        if (state === "done" && action === "clear_errors") {
+            this.notification.add(_t("The error memory is cleared."), { title: _t("Clear error memory"), type: "success" });
+        } else if (state && state !== "done") {
+            const title = action === "clear_errors" ? _t("Clear error memory") : _t("Clamp request");
+            this.notification.add(message || state, { title, type: "warning" });
             // the list showed what was asked for (the switch is on): it is read again and shows what the controller has
             this.reloadDebounced();
         }
@@ -197,6 +224,27 @@ export class ParameterListController extends ListController {
     }
 }
 
+/**
+ * The list of the errors that are active. It keeps itself current in the same way (it tells Odoo which controllers it shows and listens
+ * to their channels), but it is small and has no rows to keep in place: when the bus says that the errors changed, it is loaded afresh.
+ * It tells how a request to clear the error memory ended, and nothing of the clamps.
+ */
+export class ErrorListController extends ParameterListController {
+    messages() {
+        return { "int_workbench/errors": this.onErrors, "int_workbench/command": this.onCommand };
+    }
+
+    handlesAction(action) {
+        return action === "clear_errors";
+    }
+
+    get styleClass() {
+        return ""; // the style sheet is for the process values
+    }
+}
+
 export const parameterListView = { ...listView, Controller: ParameterListController };
+export const errorListView = { ...listView, Controller: ErrorListController };
 
 registry.category("views").add("int_workbench.parameter_list", parameterListView);
+registry.category("views").add("int_workbench.error_list", errorListView);

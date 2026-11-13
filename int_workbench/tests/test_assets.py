@@ -48,3 +48,10 @@ class TestAssets(TransactionCase):
 
     def test_the_list_is_registered_as_a_view(self):
         self.assertIn("int_workbench.parameter_list", self.script)
+
+    def test_the_list_of_errors_is_registered_as_a_view_too(self):
+        self.assertIn("int_workbench.error_list", self.script)
+
+    def test_the_list_of_errors_takes_its_controller_from_the_same_script(self):
+        """It is one script with two lists, not a second one: the module still adds no more than the list controller."""
+        self.assertEqual(self.script.count("@int_workbench/views/parameter_list'"), 1)

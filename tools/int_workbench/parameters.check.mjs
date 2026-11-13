@@ -254,5 +254,47 @@ app.destroy();
 await wait(30);
 ok("when the list is left, the channels and the subscriptions are given up", state.channels.size === 0 && (state.subscribers.get("int_workbench/values") || []).length === 0 && (state.subscribers.get("int_workbench/command") || []).length === 0, [...state.channels].join());
 
+// ---- the list of errors: the same controller, but it listens to the errors and to the end of clearing, not to the clamps ----
+const { ErrorListController, errorListView } = await import("../../int_workbench/static/src/views/parameter_list.js");
+ok("the list of errors is registered as a view with its own controller", globalThis.__registered.some((r) => r.category === "views" && r.key === "int_workbench.error_list" && r.value === errorListView) && errorListView.Controller === ErrorListController);
+state.notes.length = 0;
+model.loads = 0;
+rowLoads.length = 0;
+model.root.records = [row(11, 1, "F1"), row(12, 2, "F2")];
+const errorApp = new owl.App(ErrorListController, { env: {}, props: {}, dev: true, warnIfNoStaticProps: false });
+await errorApp.mount(target);
+await wait(30);
+ok("it listens to the errors and to how requests end, and not to the process values", (state.subscribers.get("int_workbench/errors") || []).length === 1 && (state.subscribers.get("int_workbench/command") || []).length === 1 && (state.subscribers.get("int_workbench/values") || []).length === 0);
+ok("it tells Odoo which controllers it shows, as the other list does", JSON.stringify(state.watches[state.watches.length - 1]) === "[1,2]", JSON.stringify(state.watches));
+ok("its style sheet class is not the one of the process values", !errorApp.root.component.className.includes("o_int_workbench_parameter_list"), errorApp.root.component.className);
+emit("int_workbench/errors", {});
+await wait(50);
+ok("when the errors changed the list is loaded afresh at once, no row alone", model.loads === 1 && rowLoads.length === 0, `${model.loads} ${rowLoads}`);
+await settle();
+emit("int_workbench/command", { id: 1, action: "set", state: "failed", message: "No confirmation" });
+await settle();
+ok("a clamp that failed is not the business of the list of errors", state.notes.length === 0 && model.loads === 1, `${JSON.stringify(state.notes)} ${model.loads}`);
+emit("int_workbench/command", { id: 2, action: "clear_errors", state: "done", message: "confirmed by the controller" });
+await settle();
+ok("the end of clearing is told, with its own title, and the list waits for the report that follows", state.notes.length === 1 && state.notes[0].type === "success" && state.notes[0].title === "Clear error memory" && model.loads === 1, JSON.stringify(state.notes));
+emit("int_workbench/command", { id: 3, action: "clear_errors", state: "failed", message: "403: clearing the error memory is not released" });
+await settle();
+ok("a clearing that did not work out is told with the reason, and the list is read again", state.notes.length === 2 && state.notes[1].type === "warning" && state.notes[1].title === "Clear error memory" && state.notes[1].message.includes("not released") && model.loads === 2, JSON.stringify(state.notes));
+errorApp.destroy();
+await wait(30);
+ok("when the list of errors is left, its subscriptions and channels are given up", (state.subscribers.get("int_workbench/errors") || []).length === 0 && (state.subscribers.get("int_workbench/command") || []).length === 0 && state.channels.size === 0, [...state.channels].join());
+
+// and the list of the process values does not tell the end of clearing (the same message goes to both)
+const again = new owl.App(ParameterListController, { env: {}, props: {}, dev: true, warnIfNoStaticProps: false });
+state.notes.length = 0;
+await again.mount(target);
+await wait(30);
+emit("int_workbench/command", { id: 4, action: "clear_errors", state: "failed", message: "x" });
+emit("int_workbench/command", { id: 5, action: "clear_errors", state: "done", message: "" });
+await settle();
+ok("the list of process values leaves the end of clearing to the list of errors", state.notes.length === 0, JSON.stringify(state.notes));
+again.destroy();
+await wait(30);
+
 console.log(fails ? `${fails} FAILED` : "ALL PASSED");
 process.exit(fails ? 1 : 0);

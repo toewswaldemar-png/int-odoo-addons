@@ -245,7 +245,8 @@ class IntWorkbenchDevice(models.Model):
         :param list|None results: how the requests fetched earlier ended: [{"id": 7, "state": "done" | "failed" | "unconfirmed" |
             "unknown" | "expired", "message": "..."}]
         :return: ``{"commands": [...], "watched": bool, "poll_ms": int, "report_ms": int}``. ``commands`` are the clamp requests to carry
-            out: ``{"id", "code", "action": "set" | "release", "value", "user", "expires_in_ms"}``. A request is handed out again if no result
+            out: ``{"id", "code", "action": "set" | "release" | "clear_errors", "value", "user", "expires_in_ms"}`` (``clear_errors`` is about the
+            controller, its ``code`` is "errors" and its ``value`` 0). A request is handed out again if no result
             came back within a few seconds, as long as it is valid (``expires_in_ms``): the service carries out each id once. ``poll_ms``
             says when to ask the next time and ``report_ms`` how often to send a snapshot: often while somebody looks at the controller
             in Odoo (``watched``), rarely otherwise.
@@ -290,13 +291,16 @@ class IntWorkbenchDevice(models.Model):
         # sudo: int.workbench.parameter: the rows are written by the report of the service, which has no right on them
         changed, structure = self.env["int.workbench.parameter"].sudo()._sync(self, snapshot)
         # sudo: int.workbench.error: the rows are written by the report of the service, which has no right on them
-        self.env["int.workbench.error"].sudo()._sync(self, snapshot)
+        errors_changed = self.env["int.workbench.error"].sudo()._sync(self, snapshot)
         # Telling the pages costs a NOTIFY after the commit (some 15 ms): only while somebody looks, and only if something changed.
         # The message names the rows that changed, so that a list loads these and not everything; if rows were created or removed,
         # or very many changed, it says that the list has to be loaded afresh.
         if (changed or structure) and self.watched:
             reload = structure or len(changed) > VALUES_MESSAGE_IDS
             self._bus_send("int_workbench/values", {"ids": [] if reload else changed.ids, "reload": reload})
+        # the list of errors loads itself afresh (it is small and has no rows to keep in place)
+        if errors_changed and self.watched:
+            self._bus_send("int_workbench/errors", {})
 
     def _service_apply_results(self, results):
         self.ensure_one()
@@ -385,7 +389,9 @@ class IntWorkbenchDevice(models.Model):
         """Tell the lists that look at this controller how requests ended (a small message; the list does not poll for it)."""
         self.ensure_one()
         for command in commands:
-            self._bus_send("int_workbench/command", {"id": command.id, "state": command.state, "message": command.message or ""})
+            self._bus_send(
+                "int_workbench/command", {"id": command.id, "action": command.action, "state": command.state, "message": command.message or ""}
+            )
 
     # === ODOO ASKS THE SERVICE === #
 

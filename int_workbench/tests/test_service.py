@@ -1,7 +1,7 @@
 from datetime import timedelta
 from unittest import mock
 
-from odoo import fields
+from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
@@ -268,7 +268,7 @@ class TestIntWorkbenchService(TransactionCase):
         self.assertEqual(sendone.call_count, 1)
         target, kind, message = sendone.call_args.args
         self.assertEqual((target, kind), (self.device, "int_workbench/command"))
-        self.assertEqual(message, {"id": command.id, "state": "done", "message": "confirmed by the controller"})
+        self.assertEqual(message, {"id": command.id, "action": "set", "state": "done", "message": "confirmed by the controller"})
 
     def test_an_expired_request_is_told_too(self):
         command = self.ask()
@@ -277,6 +277,92 @@ class TestIntWorkbenchService(TransactionCase):
             self.sync()
         self.assertEqual(sendone.call_count, 1)
         self.assertEqual(sendone.call_args.args[2]["state"], "expired")
+
+    def test_the_pages_hear_that_the_errors_changed_and_only_then(self):
+        self.device.with_user(self.reader).watch()
+        report = {"errors": {"active": [{"word": "F1", "bit": 3, "text": "Sensor"}]}}
+        with mock.patch.object(type(self.env["bus.bus"]), "_sendone") as sendone:
+            self.sync(snapshot=report)
+            self.assertEqual([call.args[1:] for call in sendone.call_args_list], [("int_workbench/errors", {})])
+            sendone.reset_mock()
+            self.sync(snapshot=report)
+            self.assertEqual(sendone.call_count, 0, "the same errors are no news")
+            self.sync(snapshot={"errors": {"active": []}})
+            self.assertEqual([call.args[1] for call in sendone.call_args_list], ["int_workbench/errors"], "errors that are gone are news")
+
+    def test_nobody_is_told_about_errors_while_nobody_looks(self):
+        with mock.patch.object(type(self.env["bus.bus"]), "_sendone") as sendone:
+            self.sync(snapshot={"errors": {"active": [{"word": "F1", "bit": 3, "text": "Sensor"}]}})
+        self.assertEqual(sendone.call_count, 0)
+
+    # ---- clearing the error memory ----
+
+    def give_error_memory(self, *devices):
+        """The service of these controllers was started with the release for clearing the error memory, so they say they can."""
+        capability = self.env.ref("int_workbench.int_workbench_capability_error_memory")
+        for device in devices or (self.device,):
+            device.capability_ids = [Command.link(capability.id)]
+
+    def error_on(self, device, word="F1", bit=3):
+        # sudo: int.workbench.error: the rows are written by the report of the service, which a test does not need to play here
+        return self.env["int.workbench.error"].sudo().create({"device_id": device.id, "word": word, "bit": bit, "text": "Sensor"})
+
+    def test_clearing_the_error_memory_is_a_request_about_the_controller(self):
+        self.give_error_memory()
+        command = self.ask(code="0099", action="clear_errors", value=5)
+        self.assertEqual((command.code, command.action, command.state), ("errors", "clear_errors", "pending"))
+        self.assertFalse(command.parameter_id, "it is about no row")
+        taken = self.sync()
+        self.assertEqual([(c["code"], c["action"], c["user"]) for c in taken], [("errors", "clear_errors", "regler_operator")])
+
+    def test_a_controller_that_cannot_clear_its_error_memory_takes_no_such_request(self):
+        with self.assertRaises(UserError):
+            self.ask(action="clear_errors")
+
+    def test_a_controller_that_can_only_clear_the_errors_still_takes_clamps_as_before(self):
+        self.give_error_memory()
+        self.assertTrue(self.ask("0016", "set", 1.0))
+
+    def test_the_result_of_clearing_is_told_with_its_action(self):
+        self.give_error_memory()
+        command = self.ask(action="clear_errors")
+        self.sync()
+        with mock.patch.object(type(self.env["bus.bus"]), "_sendone") as sendone:
+            self.sync(results=[{"id": command.id, "state": "failed", "message": "not released"}])
+        self.assertEqual(sendone.call_args.args[2], {"id": command.id, "action": "clear_errors", "state": "failed", "message": "not released"})
+
+    def test_the_button_asks_for_the_controllers_whose_errors_are_shown(self):
+        self.give_error_memory(self.device, self.other_device)
+        self.error_on(self.device)
+        self.error_on(self.other_device)
+        Error = self.env["int.workbench.error"].with_user(self.operator)
+        action = Error.with_context(active_domain=[("device_id", "=", self.device.id)]).action_clear_memory()
+        self.assertEqual(action["tag"], "display_notification")
+        asked = self.Command.search([("action", "=", "clear_errors")])
+        self.assertEqual((asked.device_id, asked.user_id, asked.state), (self.device, self.operator, "pending"))
+        Error.with_context(active_domain=[]).action_clear_memory()
+        self.assertEqual(self.Command.search([("action", "=", "clear_errors")]).device_id, self.device | self.other_device)
+
+    def test_the_button_has_nothing_to_clear_for_when_no_errors_are_shown(self):
+        self.give_error_memory()
+        with self.assertRaises(UserError):
+            self.env["int.workbench.error"].with_user(self.operator).with_context(active_domain=[]).action_clear_memory()
+        self.assertFalse(self.Command.search([]))
+
+    def test_the_button_is_for_operators(self):
+        self.give_error_memory()
+        self.error_on(self.device)
+        manager = new_test_user(self.env, login="regler_manager2", groups="base.group_user,int_workbench.int_workbench_group_manager")
+        for user in (self.reader, manager):
+            with self.subTest(user.login), self.assertRaises(AccessError):
+                self.env["int.workbench.error"].with_user(user).with_context(active_domain=[]).action_clear_memory()
+        self.assertFalse(self.Command.search([]))
+
+    def test_the_button_does_not_ask_a_controller_that_cannot_clear(self):
+        self.error_on(self.device)
+        with self.assertRaises(UserError):
+            self.env["int.workbench.error"].with_user(self.operator).with_context(active_domain=[]).action_clear_memory()
+        self.assertFalse(self.Command.search([]))
 
     @staticmethod
     def without_the_channels_of_odoo():

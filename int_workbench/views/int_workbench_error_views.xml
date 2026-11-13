@@ -4,7 +4,15 @@
         <field name="name">int.workbench.error.list</field>
         <field name="model">int.workbench.error</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0">
+            <!-- the list loads itself afresh when the service reports other errors and says that somebody looks (static/src/views/parameter_list.js) -->
+            <list js_class="int_workbench.error_list" create="0" edit="0" delete="0">
+                <header>
+                    <!-- always at the top, next to the title, for the controllers of the errors shown; clearing cannot be undone -->
+                    <button name="action_clear_memory" type="object" string="Clear error memory" icon="fa-eraser" display="always"
+                            title="Clear the error memory of the controllers shown"
+                            confirm="Clear the error memory of the controllers whose errors are shown?"
+                            groups="int_workbench.int_workbench_group_operator"/>
+                </header>
                 <field name="device_id"/>
                 <field name="word"/>
                 <field name="bit"/>

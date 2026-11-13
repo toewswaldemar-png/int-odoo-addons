@@ -1001,6 +1001,7 @@ msgstr "Alter des Berichts"
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_error.py:0
 #: code:addons/int_workbench/models/int_workbench_parameter.py:0
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_list
 msgid "Requested"
@@ -1649,3 +1650,50 @@ msgstr "abgewiesen"
 msgid "websocket message handling"
 msgstr "Websocket-Nachrichtbearbeitung"
 
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__clear_errors
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_list
+msgid "Clear error memory"
+msgstr "Fehlerspeicher löschen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_list
+msgid "Clear the error memory of the controllers shown"
+msgstr "Fehlerspeicher der angezeigten Regler löschen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_list
+msgid "Clear the error memory of the controllers whose errors are shown?"
+msgstr "Fehlerspeicher der Regler löschen, deren Fehler angezeigt werden?"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_error.py:0
+msgid "Only an operator may clear the error memory."
+msgstr "Nur ein Bediener darf den Fehlerspeicher löschen."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_error.py:0
+msgid "The error memory of %s is being cleared."
+msgstr "Der Fehlerspeicher von %s wird gelöscht."
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid "The error memory is cleared."
+msgstr "Der Fehlerspeicher ist gelöscht."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The controller %s cannot clear its error memory."
+msgstr "Der Regler %s kann seinen Fehlerspeicher nicht löschen."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_error.py:0
+msgid "The list shows no errors, so there is no controller whose error memory it could clear."
+msgstr "Die Liste zeigt keine Fehler, also gibt es keinen Regler, dessen Fehlerspeicher gelöscht werden könnte."
