@@ -23,6 +23,11 @@ class TestAssets(TransactionCase):
             name: re.findall(r"'([^']+)'", dependencies) for name, dependencies in DEFINE_REGEX.findall(cls.script)
         }
 
+    def test_the_style_sheet_is_built_into_the_bundle_and_is_for_the_list_only(self):
+        css = self.env["ir.qweb"]._get_asset_bundle("web.assets_backend", css=True, js=False).css().raw.decode()
+        # the rules start with the class of the list: nothing else in Odoo changes
+        self.assertIn(".o_int_workbench_parameter_list .o_list_table .o_list_number", css)
+
     def test_the_modules_are_in_the_bundle(self):
         for name in MODULES:
             self.assertIn(f"@int_workbench/{name}", self.modules)

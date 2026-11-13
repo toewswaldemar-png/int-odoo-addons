@@ -203,6 +203,7 @@ globalThis.__rowLoadFails = false;
 
 // the screen shows other rows (a filter): the controller that is gone is left, nothing new is said
 const comp = app.root.component;
+ok("the list carries its own class, for its style sheet", comp.className.split(" ").includes("o_int_workbench_parameter_list"), comp.className);
 model.root.records = [row(1, 1, "0001")];
 comp.render();
 await wait(60);

@@ -1,0 +1,10 @@
+// The numbers of this list stand to the left, like the process value beside them (Odoo aligns numbers to the right: the clamp value
+// would stand at the other end of its column). The class is the one the list controller sets (parameter_list.js).
+.o_int_workbench_parameter_list .o_list_table {
+    .o_list_number_th,
+    .o_list_number,
+    .o_list_number .o_input {
+        /*rtl:ignore*/
+        text-align: left !important;
+    }
+}

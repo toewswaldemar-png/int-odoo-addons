@@ -66,6 +66,11 @@ export class ParameterListController extends ListController {
         });
     }
 
+    /** The class of this list: the style sheet next to this file (parameter_list.scss) is for the rows of this list and no other. */
+    get className() {
+        return `${super.className || ""} o_int_workbench_parameter_list`.trim();
+    }
+
     /** Does the list show rows by something that a report changes? Then a changed row may belong to another group, or not to the list. */
     dependsOnChangingFields() {
         const root = this.model.root;
