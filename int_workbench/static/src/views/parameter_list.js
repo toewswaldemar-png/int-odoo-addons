@@ -6,8 +6,17 @@ import { useService } from "@web/core/utils/hooks";
 import { ListController } from "@web/views/list/list_controller";
 import { listView } from "@web/views/list/list_view";
 
-/** The list is refreshed this long after the last message of the bus (the messages of one report come close together). */
+/**
+ * The first message of the bus refreshes the list at once; messages that come within this time after it (a clamp result next to a
+ * report) are taken together and refreshed once, this long after the last of them. Also the pause before a refresh is tried again
+ * while a row is being edited.
+ */
 export const RELOAD_DEBOUNCE_MS = 300;
+/**
+ * Up to this many changed rows are loaded again one by one (in place: ticked rows, focus and scroll position stay). Every one is a call
+ * to Odoo, and the model lets them run one after the other; from more rows on the whole list is loaded with a single call.
+ */
+export const ROWS_ONE_BY_ONE = 5;
 /**
  * The fields a report changes that can move a row out of a filter or into another group. A list that is filtered or grouped by one of
  * them is loaded afresh when a row changes; any other list only refreshes the rows that changed. (Odoo does not regroup a row after
@@ -24,7 +33,8 @@ const channelOf = (deviceId) => `int.workbench.device_${deviceId}`;
  * current like a page of its own would: while it is open and visible it tells Odoo which controllers it shows (then their service asks
  * and reports often), and when the bus says that a report changed rows it loads these rows again, in place (record.load(), as Live Chat
  * does for the tags of a channel). The rows stay the same records, so ticked rows, the focus and the scroll position stay. Only if rows
- * came or went, or the list is filtered or grouped by what a report changes, the whole list is loaded afresh (as Live Chat does too).
+ * came or went, many rows changed at once (ROWS_ONE_BY_ONE), or the list is filtered or grouped by what a report changes, the whole list
+ * is loaded afresh (as Live Chat does too).
  */
 export class ParameterListController extends ListController {
     setup() {
@@ -32,8 +42,13 @@ export class ParameterListController extends ListController {
         this.bus = useService("bus_service");
         this.orm = useService("orm");
         this.notification = useService("notification");
-        this.reloadDebounced = useDebounced(() => this.reloadUnlessEdited(), RELOAD_DEBOUNCE_MS);
-        this.refreshDebounced = useDebounced(() => this.refreshRows(), RELOAD_DEBOUNCE_MS);
+        // The first call of a message runs at once, the ones close behind it once more afterwards. The retries while a row is edited
+        // are separate (they only wait): a retry that ran at once would call itself again without end.
+        const atOnce = { immediate: true, trailing: true };
+        this.reloadDebounced = useDebounced(() => this.reloadUnlessEdited(), RELOAD_DEBOUNCE_MS, atOnce);
+        this.refreshDebounced = useDebounced(() => this.refreshRows(), RELOAD_DEBOUNCE_MS, atOnce);
+        this.reloadLater = useDebounced(() => this.reloadUnlessEdited(), RELOAD_DEBOUNCE_MS);
+        this.refreshLater = useDebounced(() => this.refreshRows(), RELOAD_DEBOUNCE_MS);
         this.changedRows = new Set(); // the ids of the rows that the bus said changed and that are not loaded again yet
         this.devices = new Set(); // the controllers whose rows are on the screen: what is watched and listened to
         this.onValues = (message) => this.valuesChanged(message);
@@ -109,21 +124,27 @@ export class ParameterListController extends ListController {
 
     reloadUnlessEdited() {
         if (this.model.root.records.some((record) => this.isEdited(record))) {
-            this.reloadDebounced();
+            this.reloadLater();
             return undefined;
         }
         return this.model.load();
     }
 
-    /** Loads again the rows that changed and are on the screen; the others are read when they come on the screen. */
+    /**
+     * Loads again the rows that changed and are on the screen; the others are read when they come on the screen. Many rows at once are
+     * not read one by one (a call each, one after the other) but with the whole list in one call.
+     */
     async refreshRows() {
         const ids = new Set(this.changedRows);
         this.changedRows.clear();
         const shown = this.model.root.records.filter((record) => ids.has(record.resId));
+        if (shown.length > ROWS_ONE_BY_ONE) {
+            return this.reloadUnlessEdited(); // waits while a row is edited, as the whole list does
+        }
         const waiting = shown.filter((record) => this.isEdited(record));
         if (waiting.length) {
             waiting.forEach((record) => this.changedRows.add(record.resId));
-            this.refreshDebounced();
+            this.refreshLater();
         }
         try {
             await Promise.all(shown.filter((record) => !this.isEdited(record) && !waiting.includes(record)).map((record) => record.load()));

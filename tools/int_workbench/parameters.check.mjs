@@ -122,18 +122,20 @@ emit("int_workbench/command", { id: 8, state: "failed", message: "No confirmatio
 emit("int_workbench/command", { id: 9, state: "expired", message: "" });
 ok("a request that did not work out is told, with the reason if there is one", state.notes.length === 2 && state.notes[0].message === "No confirmation" && state.notes[0].type === "warning" && state.notes[1].message === "expired", JSON.stringify(state.notes));
 await wait(450);
-ok("and the list is read again (once), so the switch shows what the controller has", model.loads === 1, `${model.loads}`);
+ok("and the list is read again (at once for the first, once more for the one close behind it), so the switch shows what the controller has", model.loads === 2, `${model.loads}`);
 model.loads = 0;
 
 // ---- what a message about changed rows does ----
-const settle = () => wait(450); // the refresh waits a little for more messages
+const settle = () => wait(450); // the messages that come close behind the first are taken together after a little wait
 emit("int_workbench/values", { ids: [1], reload: false });
+await wait(50);
+ok("the first message loads its row at once, in place", rowLoads.join() === "1" && model.loads === 0, `${model.loads} ${rowLoads}`);
 emit("int_workbench/values", { ids: [3], reload: false });
 emit("int_workbench/values", { ids: [1], reload: false });
 await wait(50);
-ok("nothing is loaded at once", model.loads === 0 && rowLoads.length === 0, `${model.loads} ${rowLoads.length}`);
+ok("the ones close behind it wait", rowLoads.join() === "1", `${rowLoads}`);
 await settle();
-ok("messages that come close together refresh the rows that changed, each once, in place", rowLoads.slice().sort().join() === "1,3" && model.loads === 0, `${rowLoads} / list loads ${model.loads}`);
+ok("and are taken together: the rows that changed, each once, in place", rowLoads.slice().sort().join() === "1,1,3" && model.loads === 0, `${rowLoads} / list loads ${model.loads}`);
 
 rowLoads.length = 0;
 emit("int_workbench/values", { ids: [999], reload: false });
@@ -168,6 +170,27 @@ for (const [group, expectLoads] of [["status", 4], ["device_id", 4], ["clamped",
     ok(`grouped by ${group}: ${expectLoads === 4 && group === "device_id" ? "rows are refreshed in place" : "the list is loaded afresh"}`, model.loads === expectLoads && rowLoads.length === (group === "device_id" ? 1 : 0), `${model.loads} ${rowLoads}`);
 }
 model.root.groupBy = [];
+
+// many rows at once are not read one by one: one call with the whole list
+const shownBefore = model.root.records;
+model.root.records = [1, 2, 3, 4, 5, 6, 7].map((id) => row(id, 1, `00${id}`));
+rowLoads.length = 0;
+const loadsMany = model.loads;
+emit("int_workbench/values", { ids: [1, 2, 3, 4, 5], reload: false });
+await settle();
+ok("up to five rows that changed are loaded one by one, in place", rowLoads.slice().sort().join() === "1,2,3,4,5" && model.loads === loadsMany, `${model.loads} ${rowLoads}`);
+rowLoads.length = 0;
+emit("int_workbench/values", { ids: [1, 2, 3, 4, 5, 6], reload: false });
+await settle();
+ok("more than five: the list is loaded with one call, no row alone", rowLoads.length === 0 && model.loads === loadsMany + 1, `${model.loads} ${rowLoads}`);
+model.root.records[0].dirty = true;
+emit("int_workbench/values", { ids: [1, 2, 3, 4, 5, 6], reload: false });
+await settle();
+ok("more than five while a row is edited: nothing is loaded", rowLoads.length === 0 && model.loads === loadsMany + 1, `${model.loads} ${rowLoads}`);
+model.root.records[0].dirty = false;
+await settle();
+ok("and the list is loaded when the change is saved", model.loads === loadsMany + 2, `${model.loads}`);
+model.root.records = shownBefore;
 
 // a value that is typed into a row and not saved yet is not taken away by a report
 rowLoads.length = 0;

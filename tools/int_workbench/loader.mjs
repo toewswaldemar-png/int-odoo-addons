@@ -17,13 +17,28 @@ const STUBS = {
     // the list of Odoo and what the list of process values takes from it: only the parts it uses
     "@web/views/list/list_controller": `export const ListController = globalThis.__ListController;`,
     "@web/views/list/list_view": `export const listView = { type: "list", Controller: globalThis.__ListController };`,
+    // like debounce / useDebounced of web/static/src/core/utils/timing.js: the options immediate (leading) and trailing are the same;
+    // with both, the call at the end is made only if there was a call during the wait
     "@web/core/utils/timing": `
-        export function useDebounced(callback, delay) {
-            let timer = null;
-            globalThis.owl.onWillDestroy(() => clearTimeout(timer));
+        export function useDebounced(callback, delay, { immediate = false, trailing = !immediate } = {}) {
+            let handle = null;
+            let lastArgs = null;
+            globalThis.owl.onWillDestroy(() => clearTimeout(handle));
             return (...args) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => callback(...args), delay);
+                if (immediate && !handle) {
+                    callback(...args);
+                } else {
+                    lastArgs = args;
+                }
+                clearTimeout(handle);
+                handle = setTimeout(() => {
+                    handle = null;
+                    if (trailing && lastArgs) {
+                        const last = lastArgs;
+                        lastArgs = null;
+                        callback(...last);
+                    }
+                }, delay);
             };
         }
     `,
