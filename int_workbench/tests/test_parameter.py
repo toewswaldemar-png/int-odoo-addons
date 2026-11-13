@@ -254,6 +254,9 @@ class TestIntWorkbenchParameter(TransactionCase):
             self.assertIn('editable="bottom"', arch_of_user)
             self.assertIn('multi_edit="1"', arch_of_user)
         self.assertNotIn('name="action_clamp"', operator_arch, "the dialog is gone")
+        # the release of all clamps is a button at the top, always there, for the operator
+        self.assertRegex(operator_arch, r'name="action_release_all"[^>]*display="always"')
+        self.assertNotIn('name="action_release_all"', reader_arch)
         # the tags: tagged by the operator in the list, seen by everybody else
         for arch_of_user in (operator_arch, reader_arch):
             self.assertIn('widget="many2many_tags"', arch_of_user)

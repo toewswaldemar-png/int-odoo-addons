@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 08:18+0000\n"
-"PO-Revision-Date: 2026-11-13 08:18+0000\n"
+"POT-Creation-Date: 2026-11-13 08:37+0000\n"
+"PO-Revision-Date: 2026-11-13 08:37+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -865,6 +865,16 @@ msgstr ""
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__release
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Release"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Release all"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Release the clamps of all rows shown"
 msgstr ""
 
 #. module: int_workbench

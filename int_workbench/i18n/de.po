@@ -889,6 +889,16 @@ msgid "Release"
 msgstr "Lösen"
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Release all"
+msgstr "Alle lösen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Release the clamps of all rows shown"
+msgstr "Alle Klemmungen der angezeigten Zeilen lösen"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__remote
 msgid "Remote"
 msgstr "Gegenstelle"

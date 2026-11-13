@@ -321,6 +321,25 @@ class TestIntWorkbenchServiceData(TransactionCase):
         with self.assertRaises(UserError):
             rows.filtered(lambda row: not row.clamped).action_release()
 
+    def test_the_button_at_the_top_releases_the_clamps_of_the_rows_shown_without_ticked_rows(self):
+        Parameter = self.env["int.workbench.parameter"]
+        other = self.env["int.workbench.device"].create({"name": "Other", "device_ref": "second", "service_user_id": self.service.id})
+        clamps = {"rows": [{"code": "0016", "held": True, "analog": False, "state": {"clamped": True, "value": 1}}, {"code": "0017", "held": False, "state": {}}]}
+        entries = [{"code": "0016", "text": "1", "value": 1}, {"code": "0017", "text": "0", "value": 0}]
+        for device in (self.device, other):
+            Parameter.sudo()._sync(device, {"values": {"entries": entries}, "clamps": clamps})
+        nothing = Parameter.with_user(self.operator)  # the button gives no rows
+        # as the list says: the controller in the search panel is the one shown
+        nothing.with_context(active_domain=[("device_id", "=", self.device.id)]).action_release_all()
+        commands = self.env["int.workbench.command"].search([])
+        self.assertEqual(commands.mapped(lambda c: (c.device_id, c.code, c.action)), [(self.device, "0016", "release")])
+        # without a search: every clamp
+        nothing.action_release_all()
+        self.assertEqual(self.env["int.workbench.command"].search([("device_id", "=", other.id)]).mapped("code"), ["0016"])
+        # nothing clamped in what is shown: the same message as for ticked rows
+        with self.assertRaises(UserError):
+            nothing.with_context(active_domain=[("code", "=", "0017")]).action_release_all()
+
     def test_a_reader_cannot_ask_for_a_clamp(self):
         self.env["int.workbench.parameter"].sudo()._sync(self.device, {"values": {"entries": [{"code": "0016", "text": "0", "value": 0}]}})
         row = self.env["int.workbench.parameter"].with_user(self.reader).search([("device_id", "=", self.device.id)])

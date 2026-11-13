@@ -17,6 +17,9 @@
                   decoration-warning="clamped" decoration-danger="status != 'ok'" decoration-muted="stale">
                 <header>
                     <button name="action_release" type="object" string="Release" groups="int_workbench.int_workbench_group_operator"/>
+                    <!-- always at the top, next to the title, for the clamps of all rows shown -->
+                    <button name="action_release_all" type="object" string="Release all" icon="fa-unlock" display="always"
+                            title="Release the clamps of all rows shown" groups="int_workbench.int_workbench_group_operator"/>
                 </header>
                 <field name="sequence" widget="handle" groups="int_workbench.int_workbench_group_operator,int_workbench.int_workbench_group_manager"/>
                 <field name="is_favorite" widget="boolean_favorite" nolabel="1" string="Favorite"/>

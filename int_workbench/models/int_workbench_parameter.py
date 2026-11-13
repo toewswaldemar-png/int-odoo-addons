@@ -278,6 +278,12 @@ class IntWorkbenchParameter(models.Model):
         )
         return self._requested_notification(len(clamped))
 
+    def action_release_all(self):
+        """The button at the top of the list, which needs no ticked rows: ask the service to release every clamp of the rows the list
+        shows (its search and its controller; the list tells it as active_domain). The button gives no rows, so they are looked up."""
+        domain = Domain.AND([self.env.context.get("active_domain") or [], [("clamped", "=", True)]])
+        return self.search(domain).action_release()
+
     def _requested_notification(self, count):
         """Return the message that tells that the request is on its way; the result shows in the list and in the log."""
         return {
