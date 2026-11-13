@@ -244,8 +244,8 @@ class TestIntWorkbenchParameter(TransactionCase):
             self.assertIn(part, operator_arch)
             self.assertNotIn(part, reader_arch)
         # (the state field itself stays in both: the value is marked by it)
-        self.assertIn('string="Clamped to"', reader_arch)
-        self.assertNotIn('string="Clamped to"', operator_arch)
+        self.assertIn('string="Clamp value"', reader_arch)
+        self.assertNotIn('string="Clamp value"', operator_arch)
         for arch_of_user in (operator_arch, reader_arch):
             # the row says how it stands: clamped, could not be read, out of date
             for part in ('decoration-warning="clamped"', "decoration-danger=\"status != 'ok'\"", 'decoration-muted="stale"'):

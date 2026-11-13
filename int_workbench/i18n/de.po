@@ -131,9 +131,9 @@ msgid "Archived"
 msgstr "Archiviert"
 
 #. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__text
-msgid "As the controller shows it, for example 22.3°C."
-msgstr "So, wie der Regler es zeigt, zum Beispiel 22,3 °C."
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__auto_text
+msgid "Automatic value"
+msgstr "Automatikwert"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__bit
@@ -209,7 +209,6 @@ msgid "Checksum"
 msgstr "Prüfsumme"
 
 #. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_toggle
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__set
 msgid "Clamp"
 msgstr "Klemmen"
@@ -254,20 +253,15 @@ msgstr "Klemmaufträge"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_input
-msgid "Clamp to"
-msgstr "Klemmen auf"
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Clamp value"
+msgstr "Klemmwert"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamped
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 msgid "Clamped"
 msgstr "Geklemmt"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
-msgid "Clamped to"
-msgstr "Geklemmt auf"
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__clamp_toggle
@@ -277,6 +271,12 @@ msgid ""
 "releases it."
 msgstr ""
 "Geklemmt oder zum Klemmen angefordert. Einschalten klemmt die Zeile auf den Wert, auf den sie zuletzt geklemmt war (auf den aktuellen Wert, wenn sie noch nie geklemmt war), Ausschalten löst die Klemmung."
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_toggle
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Clamping"
+msgstr "Klemmung"
 
 #. module: int_workbench
 #: model:res.groups,comment:int_workbench.int_workbench_group_operator
@@ -301,6 +301,11 @@ msgstr "Schließen"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__code
 msgid "Code"
 msgstr "Kürzel"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Code or description"
+msgstr "Code oder Bezeichnung"
 
 #. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_menu_configuration
@@ -403,6 +408,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "Day"
 msgstr "Tag"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__name
+msgid "Description"
+msgstr "Bezeichnung"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__detail
@@ -724,7 +734,6 @@ msgstr "Meldung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__name
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__name
 msgid "Name"
 msgstr ""
 
@@ -810,6 +819,7 @@ msgstr "Probleme"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__parameter_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__text
 msgid "Process value"
 msgstr "Prozesswert"
 
@@ -912,10 +922,13 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__code
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__code
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 msgid "Row"
 msgstr "Zeile"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__code
+msgid "Row code"
+msgstr "Code"
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__report_age
@@ -1185,6 +1198,11 @@ msgid "The pages of the controller the row is shown on."
 msgstr "Die Seiten des Reglers, auf denen die Zeile steht."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__value
+msgid "The process value as a number; 0 where the row has none."
+msgstr "Der Prozesswert als Zahl; 0, wenn die Zeile keinen hat."
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid "The results must be a list."
@@ -1312,9 +1330,12 @@ msgstr ""
 "Dienst sein."
 
 #. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__value
-msgid "The value as a number; 0 where the row has none."
-msgstr "Der Wert als Zahl; 0, wo die Zeile keine hat."
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__text
+msgid ""
+"The value the controller works with, as it shows it, for example 22.3°C. A "
+"clamped row shows the clamp."
+msgstr ""
+"Der Wert, mit dem der Regler arbeitet, so wie er ihn anzeigt, zum Beispiel 22,3°C. Eine geklemmte Zeile zeigt die Klemmung."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__clamp_value
@@ -1380,8 +1401,6 @@ msgstr "Nutzt Projektdateien"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__value
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__text
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Value"
 msgstr "Wert"
 
@@ -1415,6 +1434,14 @@ msgstr "War geklemmt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__watched
 msgid "Watched"
 msgstr "Angesehen"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__auto_text
+msgid ""
+"What the controller's own logic gives for the row, without a clamp. Only "
+"some families report it."
+msgstr ""
+"Was die Regelung des Reglers für die Zeile selbst ergibt, ohne Klemmung. Nur einige Familien melden ihn."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__snapshot

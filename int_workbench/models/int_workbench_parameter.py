@@ -9,7 +9,7 @@ from .int_workbench_device import COMMAND_TTL
 
 # What of a reported row is kept, and how it is compared. ``time`` (when the service read the row) is left out on purpose: it changes
 # with every read, so a row would count as changed in every report.
-SYNCED_FIELDS = ("name", "pages", "status", "text", "value", "unit", "stale", "can_clamp", "analog", "clamped", "clamp_value", "last_clamp_value", "was_clamped", "clamp_step")
+SYNCED_FIELDS = ("name", "pages", "status", "text", "value", "unit", "stale", "can_clamp", "analog", "clamped", "clamp_value", "last_clamp_value", "was_clamped", "clamp_step", "auto_text")
 VALUE_DIGITS = 3
 # New rows are put in the order of the report, a controller after the other (the list is ordered by "sequence"; a user changes it by
 # dragging, see write): room for this many rows per controller.
@@ -39,12 +39,18 @@ class IntWorkbenchParameter(models.Model):
     _order = "sequence, device_id, code"
 
     device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
-    code = fields.Char(string="Row", required=True, readonly=True)
-    name = fields.Char(readonly=True, index="trigram")
+    code = fields.Char(string="Row code", required=True, readonly=True)
+    name = fields.Char(string="Description", readonly=True, index="trigram")
     pages = fields.Char(help="The pages of the controller the row is shown on.", readonly=True)
     status = fields.Char(help="How the read went: ok, or what is wrong with the row.", readonly=True)
-    text = fields.Char(string="Value", help="As the controller shows it, for example 22.3°C.", readonly=True)
-    value = fields.Float(string="Number", digits=(16, VALUE_DIGITS), help="The value as a number; 0 where the row has none.", readonly=True)
+    text = fields.Char(
+        string="Process value", help="The value the controller works with, as it shows it, for example 22.3°C. A clamped row shows the clamp.", readonly=True
+    )
+    value = fields.Float(string="Number", digits=(16, VALUE_DIGITS), help="The process value as a number; 0 where the row has none.", readonly=True)
+    # Only some families have a value of their own for a clamped row (Micserv: what the control logic gives without the clamp).
+    auto_text = fields.Char(
+        string="Automatic value", help="What the controller's own logic gives for the row, without a clamp. Only some families report it.", readonly=True
+    )
     unit = fields.Char(readonly=True)
     stale = fields.Boolean(help="The last read of the row did not succeed in time.", readonly=True)
     can_clamp = fields.Boolean(string="Can be clamped", readonly=True)
@@ -73,7 +79,7 @@ class IntWorkbenchParameter(models.Model):
     clamp_toggle = fields.Boolean(
         compute="_compute_clamp_request",
         readonly=False,
-        string="Clamp",
+        string="Clamping",
         help="Clamped, or asked to be. Switching it on clamps the row to the value it was clamped to last (to the value it has, if it "
         "never was), switching it off releases it.",
     )
@@ -81,7 +87,7 @@ class IntWorkbenchParameter(models.Model):
         compute="_compute_clamp_request",
         readonly=False,
         digits=(16, VALUE_DIGITS),
-        string="Clamp to",
+        string="Clamp value",
         help="The value the row is clamped to; while it is not, the value it was clamped to last (the value it has, if it never was). "
         "Writing it clamps the row to the value.",
     )
@@ -231,13 +237,18 @@ class IntWorkbenchParameter(models.Model):
                 continue
             clamp_row = clamp_rows.get(entry["code"])
             state = (clamp_row or {}).get("state") or {}
+            # the value the controller works with ("p") and, where the family has one, what its logic gives without a clamp ("aw");
+            # a family that reports neither is read from the entry itself
+            process = entry.get("p") if isinstance(entry.get("p"), dict) else entry
+            automatic = entry.get("aw") if isinstance(entry.get("aw"), dict) else None
             clamped = bool(clamp_row and (clamp_row.get("held") or state.get("clamped")))
             rows[entry["code"]] = {
                 "name": str(entry.get("name") or ""),
                 "pages": ",".join(str(page) for page in entry.get("pages") or []),
                 "status": str(entry.get("status") or ""),
-                "text": str(entry.get("text") or ""),
-                "value": _number(entry.get("value")),
+                "text": str(process.get("text") or ""),
+                "value": _number(process.get("value")),
+                "auto_text": str(automatic.get("text") or "") if automatic else "",
                 "unit": str(entry.get("unit") or ""),
                 "stale": bool(entry.get("stale")),
                 "can_clamp": clamp_row is not None,

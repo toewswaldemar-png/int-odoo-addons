@@ -272,6 +272,19 @@ class TestIntWorkbenchServiceData(TransactionCase):
         rows.write({"clamp_toggle": True})
         self.assertEqual(self.requests().mapped("value"), [22.0, 4.0])
 
+    def test_the_process_value_is_what_the_controller_works_with_and_the_automatic_value_is_kept_apart(self):
+        Parameter = self.env["int.workbench.parameter"]
+        entries = [
+            # a clamped row: the logic gives 0, the process works with the clamp, 1
+            {"code": "0013", "text": "0", "value": 0, "aw": {"text": "0", "value": 0}, "p": {"text": "1", "value": 1}},
+            # a family without the two: the entry itself is the value
+            {"code": "0014", "text": "7", "value": 7},
+        ]
+        Parameter.sudo()._sync(self.device, {"values": {"entries": entries}})
+        rows = {r.code: r for r in Parameter.search([("device_id", "=", self.device.id)])}
+        self.assertEqual((rows["0013"].text, rows["0013"].value, rows["0013"].auto_text), ("1", 1.0, "0"))
+        self.assertEqual((rows["0014"].text, rows["0014"].value, rows["0014"].auto_text), ("7", 7.0, ""))
+
     def test_the_list_shows_what_was_asked_for_until_the_service_has_reported(self):
         row = self.clampable("0016", "0017", held=("0017",))
         rows = {r.code: r for r in row}

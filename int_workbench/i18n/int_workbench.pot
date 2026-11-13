@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 07:29+0000\n"
-"PO-Revision-Date: 2026-11-13 07:29+0000\n"
+"POT-Creation-Date: 2026-11-13 07:59+0000\n"
+"PO-Revision-Date: 2026-11-13 07:59+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -124,8 +124,8 @@ msgid "Archived"
 msgstr ""
 
 #. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__text
-msgid "As the controller shows it, for example 22.3°C."
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__auto_text
+msgid "Automatic value"
 msgstr ""
 
 #. module: int_workbench
@@ -202,7 +202,6 @@ msgid "Checksum"
 msgstr ""
 
 #. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_toggle
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__set
 msgid "Clamp"
 msgstr ""
@@ -247,19 +246,14 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_input
-msgid "Clamp to"
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Clamp value"
 msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamped
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 msgid "Clamped"
-msgstr ""
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
-msgid "Clamped to"
 msgstr ""
 
 #. module: int_workbench
@@ -268,6 +262,12 @@ msgid ""
 "Clamped, or asked to be. Switching it on clamps the row to the value it was "
 "clamped to last (to the value it has, if it never was), switching it off "
 "releases it."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_toggle
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
+msgid "Clamping"
 msgstr ""
 
 #. module: int_workbench
@@ -290,6 +290,11 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__code
 msgid "Code"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+msgid "Code or description"
 msgstr ""
 
 #. module: int_workbench
@@ -389,6 +394,11 @@ msgstr ""
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "Day"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__name
+msgid "Description"
 msgstr ""
 
 #. module: int_workbench
@@ -705,7 +715,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__name
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__name
 msgid "Name"
 msgstr ""
 
@@ -791,6 +800,7 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__parameter_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__text
 msgid "Process value"
 msgstr ""
 
@@ -891,9 +901,12 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__code
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__code
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 msgid "Row"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__code
+msgid "Row code"
 msgstr ""
 
 #. module: int_workbench
@@ -1144,6 +1157,11 @@ msgid "The pages of the controller the row is shown on."
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__value
+msgid "The process value as a number; 0 where the row has none."
+msgstr ""
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid "The results must be a list."
@@ -1258,8 +1276,10 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__value
-msgid "The value as a number; 0 where the row has none."
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__text
+msgid ""
+"The value the controller works with, as it shows it, for example 22.3°C. A "
+"clamped row shows the clamp."
 msgstr ""
 
 #. module: int_workbench
@@ -1325,8 +1345,6 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__value
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__text
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Value"
 msgstr ""
 
@@ -1359,6 +1377,13 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__watched
 msgid "Watched"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__auto_text
+msgid ""
+"What the controller's own logic gives for the row, without a clamp. Only "
+"some families report it."
 msgstr ""
 
 #. module: int_workbench
