@@ -50,7 +50,7 @@ class TestIntWorkbenchParameter(TransactionCase):
         self.sync([entry("0001", "1", 1), entry("0005", "22.3°C", 22.3, unit="°C", pages=(6, 7))])
         rows = self.rows()
         self.assertEqual(set(rows), {"0001", "0005"})
-        self.assertEqual((rows["0005"].text, rows["0005"].value, rows["0005"].unit, rows["0005"].pages), ("22.3°C", 22.3, "°C", "6,7"))
+        self.assertEqual((rows["0005"].text, rows["0005"].value, rows["0005"].unit), ("22.3°C", 22.3, "°C"))
 
     def test_the_same_report_again_writes_nothing(self):
         self.sync([entry("0001", "1", 1), entry("0002", "0", 0)])

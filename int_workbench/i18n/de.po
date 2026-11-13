@@ -805,12 +805,6 @@ msgid "Outcome"
 msgstr "Ausgang"
 
 #. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__pages
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
-msgid "Pages"
-msgstr "Seiten"
-
-#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
@@ -1191,11 +1185,6 @@ msgid ""
 msgstr ""
 "Die Reihenfolge der Zeilen in der Liste; wird durch Ziehen geändert "
 "(Bediener, Verwalter)."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__pages
-msgid "The pages of the controller the row is shown on."
-msgstr "Die Seiten des Reglers, auf denen die Zeile steht."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__value
