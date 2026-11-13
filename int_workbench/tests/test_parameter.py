@@ -247,6 +247,9 @@ class TestIntWorkbenchParameter(TransactionCase):
         self.assertIn('string="Clamped to"', reader_arch)
         self.assertNotIn('string="Clamped to"', operator_arch)
         for arch_of_user in (operator_arch, reader_arch):
+            # the row says how it stands: clamped, could not be read, out of date
+            for part in ('decoration-warning="clamped"', "decoration-danger=\"status != 'ok'\"", 'decoration-muted="stale"'):
+                self.assertIn(part, arch_of_user)
             self.assertIn('editable="bottom"', arch_of_user)
             self.assertIn('multi_edit="1"', arch_of_user)
         self.assertNotIn('name="action_clamp"', operator_arch, "the dialog is gone")

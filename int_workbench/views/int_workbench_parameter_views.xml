@@ -11,29 +11,31 @@
                  written by write(), which lets through only these and only for those who may. The list is edited in place: the switch
                  clamps a row to the value it has or releases it, the value is typed into the cell, and a value changed in one of several
                  ticked rows can be taken over for all of them (multi_edit, as Odoo asks). -->
+            <!-- the row says how it stands: a clamped row is yellow, a row that could not be read red, a value that is out of date grey -->
             <list js_class="int_workbench.parameter_list" create="0" edit="1" delete="0" editable="bottom" multi_edit="1"
-                  default_order="sequence, device_id, code">
+                  default_order="sequence, device_id, code"
+                  decoration-warning="clamped" decoration-danger="status != 'ok'" decoration-muted="stale">
                 <header>
                     <button name="action_release" type="object" string="Release" groups="int_workbench.int_workbench_group_operator"/>
                 </header>
                 <field name="sequence" widget="handle" groups="int_workbench.int_workbench_group_operator,int_workbench.int_workbench_group_manager"/>
                 <field name="is_favorite" widget="boolean_favorite" nolabel="1" string="Favorite"/>
                 <field name="device_id" optional="hide"/>
-                <field name="code"/>
+                <field name="code" width="80px"/>
                 <field name="name"/>
-                <!-- a clamped row is the exception: its value is marked -->
-                <field name="text" string="Value" class="fw-bold" decoration-warning="clamped"/>
+                <field name="text" string="Value" class="fw-bold" width="110px"/>
                 <field name="unit" optional="hide"/>
-                <field name="value" optional="hide"/>
-                <!-- the operator: only rows the controller can clamp, and only if its family can clamp at all -->
-                <field name="clamp_toggle" widget="boolean_toggle" groups="int_workbench.int_workbench_group_operator"
+                <field name="value" optional="hide" options="{'hide_trailing_zeros': true}"/>
+                <!-- the operator: the switch, then the value it clamps to (trailing zeros left out: 1, not 1,000). Only rows the controller
+                     can clamp, and only if its family can clamp at all -->
+                <field name="clamp_toggle" widget="boolean_toggle" groups="int_workbench.int_workbench_group_operator" width="90px"
                        readonly="not can_clamp or not device_cap_clamps"/>
-                <field name="clamp_input" groups="int_workbench.int_workbench_group_operator" decoration-muted="not clamp_toggle"
-                       readonly="not can_clamp or not device_cap_clamps" optional="show"/>
+                <field name="clamp_input" groups="int_workbench.int_workbench_group_operator" decoration-muted="not clamp_toggle" width="110px"
+                       options="{'hide_trailing_zeros': true}" readonly="not can_clamp or not device_cap_clamps" optional="show"/>
                 <!-- everybody else sees it as it is -->
-                <field name="clamped" string="Clamped" widget="boolean" groups="!int_workbench.int_workbench_group_operator"/>
+                <field name="clamped" string="Clamped" widget="boolean" groups="!int_workbench.int_workbench_group_operator" width="90px"/>
                 <field name="clamp_value" string="Clamped to" invisible="not clamped" groups="!int_workbench.int_workbench_group_operator"
-                       optional="show"/>
+                       width="110px" options="{'hide_trailing_zeros': true}" optional="show"/>
                 <!-- how the read went is a diagnosis for the administrator, not for the one who operates: hidden, the column picker brings it back -->
                 <field name="status" widget="badge" decoration-success="status == 'ok'" decoration-danger="status != 'ok'" optional="hide"/>
                 <field name="pages" optional="hide"/>
