@@ -239,6 +239,14 @@ class TestIntWorkbenchParameter(TransactionCase):
         self.assertNotIn('widget="handle"', reader_arch, "a reader cannot arrange the rows, so there is no handle")
         self.assertIn('widget="handle"', operator_arch)
         self.assertIn('edit="1"', operator_arch)
-        # the clamp buttons are standard buttons, for the operator only
-        self.assertIn('name="action_clamp"', operator_arch)
-        self.assertNotIn('name="action_clamp"', reader_arch)
+        # the operator edits the list in place (switch, value, several ticked rows); the reader sees the state of the clamp
+        for part in ('name="clamp_toggle"', 'name="clamp_input"', 'widget="boolean_toggle"'):
+            self.assertIn(part, operator_arch)
+            self.assertNotIn(part, reader_arch)
+        # (the state field itself stays in both: the value is marked by it)
+        self.assertIn('string="Clamped to"', reader_arch)
+        self.assertNotIn('string="Clamped to"', operator_arch)
+        for arch_of_user in (operator_arch, reader_arch):
+            self.assertIn('editable="bottom"', arch_of_user)
+            self.assertIn('multi_edit="1"', arch_of_user)
+        self.assertNotIn('name="action_clamp"', operator_arch, "the dialog is gone")

@@ -25,7 +25,6 @@
         "views/int_workbench_log_views.xml",
         "views/int_workbench_user_views.xml",
         "views/int_workbench_project_views.xml",
-        "wizard/int_workbench_parameter_clamp_views.xml",
         "wizard/int_workbench_project_import_views.xml",
         "views/int_workbench_menus.xml",
     ],

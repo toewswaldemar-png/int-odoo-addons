@@ -166,6 +166,30 @@ for (const [group, expectLoads] of [["status", 4], ["device_id", 4], ["clamped",
 }
 model.root.groupBy = [];
 
+// a value that is typed into a row and not saved yet is not taken away by a report
+rowLoads.length = 0;
+const edited = model.root.records[0];
+edited.dirty = true;
+emit("int_workbench/values", { ids: [1], reload: false });
+await settle();
+ok("a row with an unsaved change is not loaded again", rowLoads.length === 0, `${rowLoads}`);
+const listLoads = model.loads;
+emit("int_workbench/values", { ids: [], reload: true });
+await settle();
+ok("the list is not loaded afresh while a change is typed", model.loads === listLoads, `${model.loads} ${listLoads}`);
+edited.dirty = false;
+await settle();
+ok("when the change is saved, the list catches up (it covers the rows)", rowLoads.length === 0 && model.loads === listLoads + 1, `${rowLoads} ${model.loads}`);
+// a row that was waiting alone is loaded when its change is saved
+edited.dirty = true;
+emit("int_workbench/values", { ids: [1], reload: false });
+await settle();
+ok("a row that waits is not loaded while the change is open", rowLoads.length === 0, `${rowLoads}`);
+edited.dirty = false;
+await settle();
+ok("and it is loaded when the change is saved", rowLoads.join() === "1", `${rowLoads}`);
+rowLoads.length = 0;
+
 // a row that cannot be read any more
 const loadsBefore = model.loads;
 globalThis.__rowLoadFails = true;

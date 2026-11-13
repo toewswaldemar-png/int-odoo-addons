@@ -32,7 +32,7 @@ export class ParameterListController extends ListController {
         this.bus = useService("bus_service");
         this.orm = useService("orm");
         this.notification = useService("notification");
-        this.reloadDebounced = useDebounced(() => this.model.load(), RELOAD_DEBOUNCE_MS);
+        this.reloadDebounced = useDebounced(() => this.reloadUnlessEdited(), RELOAD_DEBOUNCE_MS);
         this.refreshDebounced = useDebounced(() => this.refreshRows(), RELOAD_DEBOUNCE_MS);
         this.changedRows = new Set(); // the ids of the rows that the bus said changed and that are not loaded again yet
         this.devices = new Set(); // the controllers whose rows are on the screen: what is watched and listened to
@@ -92,13 +92,34 @@ export class ParameterListController extends ListController {
         this.refreshDebounced();
     }
 
+    /**
+     * The operator types a value into a row of the list: until it is saved, loading the row (or the list) again would take it away.
+     * Such rows wait; the refresh tries again (nothing is asked of the server while it waits).
+     */
+    isEdited(record) {
+        return Boolean(record.dirty);
+    }
+
+    reloadUnlessEdited() {
+        if (this.model.root.records.some((record) => this.isEdited(record))) {
+            this.reloadDebounced();
+            return undefined;
+        }
+        return this.model.load();
+    }
+
     /** Loads again the rows that changed and are on the screen; the others are read when they come on the screen. */
     async refreshRows() {
         const ids = new Set(this.changedRows);
         this.changedRows.clear();
         const shown = this.model.root.records.filter((record) => ids.has(record.resId));
+        const waiting = shown.filter((record) => this.isEdited(record));
+        if (waiting.length) {
+            waiting.forEach((record) => this.changedRows.add(record.resId));
+            this.refreshDebounced();
+        }
         try {
-            await Promise.all(shown.map((record) => record.load()));
+            await Promise.all(shown.filter((record) => !this.isEdited(record) && !waiting.includes(record)).map((record) => record.load()));
         } catch {
             await this.model.load(); // a row that cannot be read (removed meanwhile): the list is read afresh
         }

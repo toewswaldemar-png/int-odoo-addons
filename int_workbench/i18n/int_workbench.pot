@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 20:10+0000\n"
-"PO-Revision-Date: 2026-11-12 20:10+0000\n"
+"POT-Creation-Date: 2026-11-13 07:10+0000\n"
+"PO-Revision-Date: 2026-11-13 07:10+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -113,7 +113,6 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__analog
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__analog
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 msgid "Analog"
 msgstr ""
@@ -181,11 +180,6 @@ msgid "Can switch the line"
 msgstr ""
 
 #. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_clamp_view_form
-msgid "Cancel"
-msgstr ""
-
-#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__capability_ids
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__capability_ids
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
@@ -208,26 +202,14 @@ msgid "Checksum"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_toggle
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__set
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_clamp_view_form
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Clamp"
-msgstr ""
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_parameter.py:0
-msgid "Clamp %s"
 msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_value
 msgid "Clamp Value"
-msgstr ""
-
-#. module: int_workbench
-#: model:ir.model,name:int_workbench.model_int_workbench_parameter_clamp
-msgid "Clamp a process value of a controller"
 msgstr ""
 
 #. module: int_workbench
@@ -259,6 +241,11 @@ msgid "Clamp requests"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamp_input
+msgid "Clamp to"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamped
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
@@ -268,6 +255,14 @@ msgstr ""
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Clamped to"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__clamp_toggle
+msgid ""
+"Clamped, or asked to be. Switching it on clamps the row to the value it was "
+"clamped to last (to the value it has, if it never was), switching it off "
+"releases it."
 msgstr ""
 
 #. module: int_workbench
@@ -312,7 +307,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__device_id
@@ -354,7 +348,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_uid
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_uid
@@ -374,7 +367,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_date
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_date
@@ -412,7 +404,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_name
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__display_name
@@ -600,7 +591,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__id
@@ -635,6 +625,11 @@ msgid "Label"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__last_clamp_value
+msgid "Last Clamp Value"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__write_uid
@@ -642,7 +637,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_uid
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_uid
@@ -657,7 +651,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_date
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_date
@@ -757,6 +750,12 @@ msgid "Only a user of the group Workbench / Service may call this."
 msgstr ""
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "Only an operator may clamp rows."
+msgstr ""
+
+#. module: int_workbench
 #: model:res.groups,name:int_workbench.int_workbench_group_operator
 msgid "Operator"
 msgstr ""
@@ -787,7 +786,6 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__parameter_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__parameter_id
 msgid "Process value"
 msgstr ""
 
@@ -1153,8 +1151,21 @@ msgstr ""
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "The row %s cannot be clamped."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "The row %s is not a row code."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__was_clamped
+msgid ""
+"The row has been clamped at least once (then the last clamp value says to "
+"what)."
 msgstr ""
 
 #. module: int_workbench
@@ -1245,13 +1256,21 @@ msgid "The value the row is clamped to."
 msgstr ""
 
 #. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_command__value
-msgid "The value to clamp the row to (only for Clamp)."
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__clamp_input
+msgid ""
+"The value the row is clamped to; while it is not, the value it was clamped "
+"to last (the value it has, if it never was). Writing it clamps the row to "
+"the value."
 msgstr ""
 
 #. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter_clamp__value
-msgid "The value to clamp the row to. A digital row takes 0 or 1."
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__last_clamp_value
+msgid "The value the row was clamped to last."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_command__value
+msgid "The value to clamp the row to (only for Clamp)."
 msgstr ""
 
 #. module: int_workbench
@@ -1295,7 +1314,6 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__value
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__text
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_clamp__value
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Value"
 msgstr ""
@@ -1319,6 +1337,11 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__pending
 msgid "Waiting for the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__was_clamped
+msgid "Was Clamped"
 msgstr ""
 
 #. module: int_workbench
@@ -1392,3 +1415,5 @@ msgstr ""
 #: model:ir.model,name:int_workbench.model_ir_websocket
 msgid "websocket message handling"
 msgstr ""
+
+

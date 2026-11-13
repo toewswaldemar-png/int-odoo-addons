@@ -10,5 +10,4 @@ access_int_workbench_error_user,int.workbench.error.user,model_int_workbench_err
 access_int_workbench_project_user,int.workbench.project.user,model_int_workbench_project,int_workbench_group_user,1,0,0,0
 access_int_workbench_log_manager,int.workbench.log.manager,model_int_workbench_log,int_workbench_group_manager,1,0,0,0
 access_int_workbench_user_manager,int.workbench.user.manager,model_int_workbench_user,int_workbench_group_manager,1,0,0,0
-access_int_workbench_parameter_clamp_operator,int.workbench.parameter.clamp.operator,model_int_workbench_parameter_clamp,int_workbench_group_operator,1,1,1,1
 access_int_workbench_project_import_manager,int.workbench.project.import.manager,model_int_workbench_project_import,int_workbench_group_manager,1,1,1,1

@@ -206,18 +206,81 @@ class TestIntWorkbenchServiceData(TransactionCase):
 
     # === clamping from the list === #
 
-    def test_the_clamp_dialog_asks_for_a_value_and_makes_a_request(self):
-        self.env["int.workbench.parameter"].sudo()._sync(
-            self.device, {"values": {"entries": [{"code": "0016", "text": "0", "value": 0}]}, "clamps": {"rows": [{"code": "0016", "held": False, "analog": False, "state": {}}]}}
-        )
+    def clampable(self, *codes, held=()):
+        """Rows of the controller as the service reports them (value 1 for every row), and the rows as the operator sees them."""
+        Parameter = self.env["int.workbench.parameter"]
+        entries = [{"code": code, "text": "1", "value": 1} for code in codes]
+        clamps = [{"code": code, "held": code in held, "analog": False, "state": {"clamped": code in held, "value": 1}} for code in codes]
+        Parameter.sudo()._sync(self.device, {"values": {"entries": entries}, "clamps": {"rows": clamps}})
+        return Parameter.with_user(self.operator).search([("device_id", "=", self.device.id), ("code", "in", list(codes))], order="code")
+
+    def requests(self):
+        return self.env["int.workbench.command"].search([("device_id", "=", self.device.id)], order="id")
+
+    def test_a_value_written_to_the_row_makes_a_clamp_request(self):
+        row = self.clampable("0016")
+        row.write({"clamp_input": 1})
+        request = self.requests()
+        self.assertEqual((request.code, request.action, request.value, request.user_id), ("0016", "set", 1.0, self.operator))
+        self.assertFalse(row.clamped, "the row is clamped when the service has reported it, not before")
+
+    def test_the_switch_clamps_to_the_value_the_row_has_and_releases(self):
+        row = self.clampable("0016")
+        self.assertEqual((row.clamp_toggle, row.clamp_input), (False, 1.0), "a row that was never clamped shows the value it has")
+        row.write({"clamp_toggle": True})
+        self.assertEqual(self.requests().mapped(lambda r: (r.action, r.value)), [("set", 1.0)])
+        # the service reports the clamp, then the switch is switched off
+        row = self.clampable("0016", held=("0016",))
+        row.write({"clamp_toggle": False})
+        self.assertEqual(self.requests().mapped("action"), ["set", "release"])
+
+    def test_a_switch_that_is_in_the_state_asked_for_makes_no_request(self):
+        row = self.clampable("0016", "0017", held=("0017",))
+        rows = {r.code: r for r in row}
+        rows["0017"].write({"clamp_toggle": True})   # clamped already
+        rows["0016"].write({"clamp_toggle": False})  # released already
+        self.assertFalse(self.requests())
+
+    def test_the_switch_clamps_to_the_value_the_row_was_clamped_to_last(self):
+        Parameter = self.env["int.workbench.parameter"]
+
+        def report(held, process_value, clamp_value=0):
+            entries = [{"code": "0016", "text": str(process_value), "value": process_value}]
+            clamps = [{"code": "0016", "held": held, "analog": False, "state": {"clamped": held, "value": clamp_value}}]
+            Parameter.sudo()._sync(self.device, {"values": {"entries": entries}, "clamps": {"rows": clamps}})
+            return Parameter.with_user(self.operator).search([("device_id", "=", self.device.id), ("code", "=", "0016")])
+
+        row = report(False, 1)
+        self.assertEqual((row.clamp_toggle, row.clamp_input), (False, 1.0), "never clamped: the value the row has")
+        row = report(True, 0, clamp_value=0)  # clamped to 0 while the controller has 1 of its own
+        self.assertEqual((row.clamp_toggle, row.clamp_input), (True, 0.0))
+        row = report(False, 1)  # released: the controller goes on by itself and has 1 again
+        self.assertEqual((row.clamp_toggle, row.clamp_input, row.value), (False, 0.0, 1.0), "the list shows what the switch will clamp to")
+        row.write({"clamp_toggle": True})
+        self.assertEqual(self.requests().mapped(lambda r: (r.action, r.value)), [("set", 0.0)], "the last clamp value, not the value of now")
+
+    def test_the_list_shows_what_was_asked_for_until_the_service_has_reported(self):
+        row = self.clampable("0016", "0017", held=("0017",))
+        rows = {r.code: r for r in row}
+        rows["0016"].write({"clamp_input": 0})
+        rows["0017"].write({"clamp_toggle": False})
+        self.assertEqual((rows["0016"].clamp_toggle, rows["0016"].clamp_input), (True, 0.0), "asked to be clamped to 0")
+        self.assertEqual(rows["0017"].clamp_toggle, False, "asked to be released")
+        # the answer came and says it did not work out: the row shows what the controller has again
+        self.requests().write({"state": "failed"})
+        self.assertEqual((rows["0016"].clamp_toggle, rows["0017"].clamp_toggle), (False, True))
+
+    def test_several_rows_are_clamped_by_one_write(self):
+        rows = self.clampable("0016", "0017")
+        rows.write({"clamp_input": 0})
+        self.assertEqual(self.requests().mapped(lambda r: (r.code, r.action, r.value)), [("0016", "set", 0.0), ("0017", "set", 0.0)])
+
+    def test_a_row_the_controller_cannot_clamp_is_refused(self):
+        self.env["int.workbench.parameter"].sudo()._sync(self.device, {"values": {"entries": [{"code": "9000", "text": "7", "value": 7}]}})
         row = self.env["int.workbench.parameter"].with_user(self.operator).search([("device_id", "=", self.device.id)])
-        action = row.action_clamp()
-        self.assertEqual((action["res_model"], action["target"]), ("int.workbench.parameter.clamp", "new"))
-        wizard = self.env["int.workbench.parameter.clamp"].with_user(self.operator).browse(action["res_id"])
-        wizard.value = 1
-        wizard.action_clamp()
-        command = self.env["int.workbench.command"].search([("device_id", "=", self.device.id)])
-        self.assertEqual((command.code, command.action, command.value, command.user_id), ("0016", "set", 1.0, self.operator))
+        with self.assertRaises(UserError):
+            row.write({"clamp_input": 1})
+        self.assertFalse(self.requests())
 
     def test_release_asks_only_for_the_rows_that_are_clamped(self):
         Parameter = self.env["int.workbench.parameter"]
@@ -236,4 +299,7 @@ class TestIntWorkbenchServiceData(TransactionCase):
         self.env["int.workbench.parameter"].sudo()._sync(self.device, {"values": {"entries": [{"code": "0016", "text": "0", "value": 0}]}})
         row = self.env["int.workbench.parameter"].with_user(self.reader).search([("device_id", "=", self.device.id)])
         with self.assertRaises(AccessError):
-            row.action_clamp()
+            row.write({"clamp_input": 1})
+        with self.assertRaises(AccessError):
+            row.write({"clamp_toggle": True})
+        self.assertFalse(self.env["int.workbench.command"].search([("device_id", "=", self.device.id)]))

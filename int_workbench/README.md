@@ -21,6 +21,7 @@ Regler  <-COM/TCP->  Service Workbench (Go)  --JSON-2-->  Odoo  <-- Bus + ORM --
 
   Die Werte sind Systemparameter (`int_workbench.poll_fast_ms`, `poll_idle_ms`, `report_fast_ms`, `report_idle_ms`), begrenzt auf sinnvolle Grenzen. Eine dritte Stufe „Klemmseite schnell, sonst mittel“ gibt es nicht: außer der Klemmliste meldet keine Ansicht, dass jemand schaut (dafür wäre JS auf jeder Ansicht nötig).
 - **Klemmen sind Aufträge** (`int.workbench.command`: Regler, Zeile, Aktion, Wert, Odoo-Benutzer, Zustand). Der Dienst führt sie als der Odoo-Benutzer aus; Freigaben, Schreibsperre und Schreibprotokoll des Dienstes gelten wie für jede Klemmung. Aufträge gelten 15 s, werden bei verlorener Antwort erneut ausgegeben und nur einmal ausgeführt.
+- **Klemmen in der Liste** (Bediener): Die Liste ist editierbar. Der Schalter *Klemmen* klemmt eine Zeile auf den Wert, auf den sie zuletzt geklemmt war (`last_clamp_value`, vom Bericht gefüllt und beim Lösen behalten; ohne frühere Klemmung auf den aktuellen Wert) und löst sie wieder. In *Klemmen auf* tippt man einen Wert; bei gelösten Zeilen zeigt die Spalte gedämpft, worauf der Schalter klemmen würde. Ein geänderter Wert gilt mit `multi_edit` für alle markierten Zeilen. Beides schreibt kein Feld, sondern erzeugt Klemmaufträge (`write` des Modells); bis der Dienst gemeldet hat, zeigt die Liste den angeforderten Stand. Leser sehen nur *Geklemmt* und *Geklemmt auf*.
 
 ## Modelle
 
@@ -35,14 +36,13 @@ Regler  <-COM/TCP->  Service Workbench (Go)  --JSON-2-->  Odoo  <-- Bus + ORM --
 | `int.workbench.log` | Schreibprotokoll des Dienstes (die neuesten 1000 Einträge) | Knopf *Fetch log* |
 | `int.workbench.user` | Konten des Dienstes (ohne Passwörter) | Knopf *Fetch users* |
 | `int.workbench.project` | Stände der Projektbibliothek: Fahrzeug und Projekt (aus der ersten Herkunft), kurze Kennung, Zeilenzahl, ladbar oder Grund, Herkunft | Knöpfe *Fetch projects* und *Take over new folders* |
-| `int.workbench.parameter.clamp` | Dialog „Klemmen“ (Wert eingeben) | transient |
 | `int.workbench.project.import` | Dialog „Neue Ordner übernehmen“: fragt `GET /api/v1/projects/inventory`, schickt die neuen Ordner in Paketen zu 25 an `POST /api/v1/projects/import`, holt danach die Stände | transient |
 
 Nicht gebaut: ein Feld „nutzender Regler“ an den Ständen (die Schnittstelle des Dienstes sagt nicht, welcher Regler welchen Stand benutzt) und die Zuweisung von Ständen an Regler.
 
 ## Fähigkeiten steuern die Ansicht
 
-Der Regler trägt je Fähigkeit ein berechnetes Kennzeichen (`cap_clamps`, `cap_project_files` …); Ansichten benutzen es mit `invisible`. Heute hängen daran: die Klemmknöpfe der Liste (über `device_cap_clamps` an der Zeile) und die Knöpfe für Projekte am Regler-Formular. Ein Regler, dessen Dienst sich noch nicht angemeldet hat (älterer Dienst, keine Familie), behält das Klemmen; alles andere bleibt für ihn verborgen. Ein Klemmauftrag für einen Regler mit Familie, die nicht klemmen kann, wird abgelehnt.
+Der Regler trägt je Fähigkeit ein berechnetes Kennzeichen (`cap_clamps`, `cap_project_files` …); Ansichten benutzen es mit `invisible`. Heute hängen daran: der Schalter und das Wertfeld des Klemmens in der Liste (über `device_cap_clamps` an der Zeile) und die Knöpfe für Projekte am Regler-Formular. Ein Regler, dessen Dienst sich noch nicht angemeldet hat (älterer Dienst, keine Familie), behält das Klemmen; alles andere bleibt für ihn verborgen. Ein Klemmauftrag für einen Regler mit Familie, die nicht klemmen kann, wird abgelehnt.
 
 ## Die Aufrufe des Dienstes
 
@@ -69,7 +69,7 @@ Der Bus braucht den Websocket von Odoo (im Betrieb mit einem Prozess im Server, 
 
 ## Offen
 
-- Das Verhalten am echten Regler und im Browser (Aussehen der Liste mit Knöpfen und Searchpanel, Dialog, Benachrichtigung) ist nicht gesehen.
+- Das Verhalten am echten Regler und im Browser (Aussehen der Liste mit Schalter, Wertfeld und Searchpanel, Benachrichtigung) ist nicht gesehen.
 - Dritte Stufe des Taktes („sonst mittel“) und Zuweisung von Ständen an Regler (siehe oben).
 - Verknüpfung mit dem Reparaturauftrag (Fehler und Klemmungen als Datensätze), falls Odoo das Produktivsystem der Werkstatt wird.
 - Aufräumen alter Aufträge (Klemmprotokoll wächst) und alter Einträge des Schreibprotokolls.
@@ -79,7 +79,7 @@ Der Bus braucht den Websocket von Odoo (im Betrieb mit einem Prozess im Server, 
 
 | Prüfung | Aufruf | Stand |
 |---|---|---|
-| Modultests in Odoo (`tests/`, 101 Tests) | `TESTS_MODULE=int_workbench tools/check/tests.sh` | 12.11.2026: 0 Fehler (Wegwerf-Datenbank, Odoo 19.0-20260817) |
+| Modultests in Odoo (`tests/`, 106 Tests) | `TESTS_MODULE=int_workbench tools/check/tests.sh` | 12.11.2026: 0 Fehler (Wegwerf-Datenbank, Odoo 19.0-20260817) |
 | Listen-Controller mit echtem Owl in jsdom (24 Prüfungen) | `cd tools/int_workbench && npm ci && npm test` | 12.11.2026: alle bestanden; braucht den Quelltext von Odoo 19 (`docs/odoo`, `../odoo` oder `ODOO_SRC`) |
 | Go (`odoosync`, `drivers`) | `go test ./odoosync ./drivers/...` in `micserv/go/workbench` | siehe dort |
 

@@ -1,18 +1,21 @@
 from collections.abc import Collection
 
 from odoo import Command, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 from odoo.fields import Domain
+
+from .int_workbench_device import COMMAND_TTL
 
 # What of a reported row is kept, and how it is compared. ``time`` (when the service read the row) is left out on purpose: it changes
 # with every read, so a row would count as changed in every report.
-SYNCED_FIELDS = ("name", "pages", "status", "text", "value", "unit", "stale", "can_clamp", "analog", "clamped", "clamp_value")
+SYNCED_FIELDS = ("name", "pages", "status", "text", "value", "unit", "stale", "can_clamp", "analog", "clamped", "clamp_value", "last_clamp_value", "was_clamped")
 VALUE_DIGITS = 3
 # New rows are put in the order of the report, a controller after the other (the list is ordered by "sequence"; a user changes it by
 # dragging, see write): room for this many rows per controller.
 SEQUENCE_PER_DEVICE = 1000
+OPERATOR_GROUP = "int_workbench.int_workbench_group_operator"
 # Who may arrange the rows. It is the same order for everybody, so it is not left to every reader of the list.
-ARRANGE_GROUPS = ("int_workbench.int_workbench_group_operator", "int_workbench.int_workbench_group_manager")
+ARRANGE_GROUPS = (OPERATOR_GROUP, "int_workbench.int_workbench_group_manager")
 
 
 def _number(value):
@@ -40,6 +43,10 @@ class IntWorkbenchParameter(models.Model):
     analog = fields.Boolean(readonly=True)
     clamped = fields.Boolean(readonly=True, index=True)
     clamp_value = fields.Float(digits=(16, VALUE_DIGITS), help="The value the row is clamped to.", readonly=True)
+    # What the switch of the list clamps a row to the next time. The report fills it whenever the row is clamped; it stays when the clamp
+    # is released. A row that was never clamped has none, and the switch takes the value the row has.
+    last_clamp_value = fields.Float(digits=(16, VALUE_DIGITS), help="The value the row was clamped to last.", readonly=True)
+    was_clamped = fields.Boolean(help="The row has been clamped at least once (then the last clamp value says to what).", readonly=True)
     command_ids = fields.One2many("int.workbench.command", "parameter_id", string="Clamp requests")
     device_cap_clamps = fields.Boolean(related="device_id.cap_clamps", string="Controller can clamp")
     sequence = fields.Integer(help="The order of the rows in the list; changed by dragging (Operator, Manager).", index=True)
@@ -49,6 +56,23 @@ class IntWorkbenchParameter(models.Model):
     )
     is_favorite = fields.Boolean(
         compute="_compute_is_favorite", readonly=False, search="_search_is_favorite", compute_sudo=True, string="Favorite"
+    )
+    # What the operator does in the list. Both are not stored: they show what the row is clamped to, or what was asked for and is on its
+    # way to the controller, and writing them makes a clamp request (see write), as writing the star makes a mark.
+    clamp_toggle = fields.Boolean(
+        compute="_compute_clamp_request",
+        readonly=False,
+        string="Clamp",
+        help="Clamped, or asked to be. Switching it on clamps the row to the value it was clamped to last (to the value it has, if it "
+        "never was), switching it off releases it.",
+    )
+    clamp_input = fields.Float(
+        compute="_compute_clamp_request",
+        readonly=False,
+        digits=(16, VALUE_DIGITS),
+        string="Clamp to",
+        help="The value the row is clamped to; while it is not, the value it was clamped to last (the value it has, if it never was). "
+        "Writing it clamps the row to the value.",
     )
 
     _device_code_unique = models.Constraint("UNIQUE (device_id, code)", "A row exists once per controller.")
@@ -77,10 +101,62 @@ class IntWorkbenchParameter(models.Model):
         # sudo: int.workbench.parameter: the star is the user's own, a reader has no right to write the row
         self.sudo().favorite_user_ids = [command(self.env.uid)]
 
+    @api.depends("clamped", "clamp_value", "value", "last_clamp_value", "was_clamped", "command_ids.state", "command_ids.action", "command_ids.value")
+    def _compute_clamp_request(self):
+        on_their_way = self._clamp_requests_on_their_way()
+        for row in self:
+            request = on_their_way.get(row.id)
+            # what the switch would clamp the row to: the value it was clamped to last, or the value it has if it never was
+            next_value = row.last_clamp_value if row.was_clamped else row.value
+            if request is None:
+                row.clamp_toggle, row.clamp_input = row.clamped, (row.clamp_value if row.clamped else next_value)
+            elif request.action == "set":
+                row.clamp_toggle, row.clamp_input = True, request.value
+            else:
+                row.clamp_toggle, row.clamp_input = False, next_value
+
+    def _clamp_requests_on_their_way(self):
+        """The requests for these rows that the service has not answered yet, and that are still good: {row id: request}, the last one of
+        a row counts. The list shows them at once, so that the switch does not jump back until the service has reported."""
+        ids = [row_id for row_id in self.ids if isinstance(row_id, int)]
+        if not ids:
+            return {}
+        # sudo: int.workbench.command: whoever reads the row sees that a request for it is on its way, whoever made it
+        requests = self.env["int.workbench.command"].sudo().search_fetch(
+            [("parameter_id", "in", ids), ("state", "in", ("pending", "sent")), ("create_date", ">=", fields.Datetime.now() - COMMAND_TTL)],
+            ["parameter_id", "action", "value"],
+            order="id",
+        )
+        return {request.parameter_id.id: request for request in requests}
+
+    def _ask_for_clamps(self, switch, value):
+        """What the operator did in the list: a value clamps the rows to it, the switch clamps them to the value they have (on) or
+        releases them (off). Each row gets a request; the service carries it out and reports, and only then the row is clamped."""
+        if not self.env.user.has_group(OPERATOR_GROUP):
+            raise AccessError(self.env._("Only an operator may clamp rows."))
+        requests = []
+        for row in self:
+            if value is not None:
+                action, wanted = "set", value
+            elif switch and not row.clamp_toggle:
+                action, wanted = "set", row.clamp_input  # what the list shows next to the switch
+            elif switch is False and row.clamp_toggle:
+                action, wanted = "release", 0.0
+            else:
+                continue
+            if action == "set" and not row.can_clamp:
+                raise UserError(self.env._("The row %s cannot be clamped.", row.display_name))
+            requests.append({"device_id": row.device_id.id, "code": row.code, "action": action, "value": wanted})
+        if requests:
+            self.env["int.workbench.command"].create(requests)
+
     def write(self, vals):
-        if "is_favorite" in vals:
+        if "is_favorite" in vals or "clamp_toggle" in vals or "clamp_input" in vals:
             vals = dict(vals)
-            self._set_favorite(vals.pop("is_favorite"))
+            if "is_favorite" in vals:
+                self._set_favorite(vals.pop("is_favorite"))
+            if "clamp_toggle" in vals or "clamp_input" in vals:
+                self._ask_for_clamps(vals.pop("clamp_toggle", None), vals.pop("clamp_input", None))
             if not vals:
                 return True
         # dragging rows in the list writes the sequence and nothing else: that is allowed for those who arrange the rows, not more
@@ -125,7 +201,7 @@ class IntWorkbenchParameter(models.Model):
 
     @staticmethod
     def _differs(name, old, new):
-        if name in ("value", "clamp_value"):
+        if name in ("value", "clamp_value", "last_clamp_value"):
             return _number(old) != new
         return (old or "") != (new or "") if isinstance(new, str) else bool(old) != bool(new)
 
@@ -157,22 +233,12 @@ class IntWorkbenchParameter(models.Model):
                 "clamped": clamped,
                 "clamp_value": _number(state.get("value")) if clamped else 0.0,
             }
+            if clamped:
+                # kept when the clamp is released: the switch of the list clamps the row to it again
+                rows[entry["code"]].update(last_clamp_value=rows[entry["code"]]["clamp_value"], was_clamped=True)
         return rows
 
-    # === CLAMPING (the buttons of the list) === #
-
-    def action_clamp(self):
-        """Open the dialog that asks for the value to clamp the row to."""
-        self.ensure_one()
-        wizard = self.env["int.workbench.parameter.clamp"].create({"parameter_id": self.id})
-        return {
-            "type": "ir.actions.act_window",
-            "name": self.env._("Clamp %s", self.display_name),
-            "res_model": "int.workbench.parameter.clamp",
-            "res_id": wizard.id,
-            "view_mode": "form",
-            "target": "new",
-        }
+    # === RELEASING (the button of the list header; the switch and the value of a row are written, see write) === #
 
     def action_release(self):
         """Ask the service to release the clamp of these rows (the clamped ones among them)."""
