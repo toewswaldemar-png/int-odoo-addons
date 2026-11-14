@@ -28,6 +28,8 @@
                             groups="int_workbench.int_workbench_group_technician" invisible="not cap_can_control"/>
                     <button name="action_open_console" type="object" string="Console" icon="fa-terminal"
                             groups="int_workbench.int_workbench_group_technician" invisible="not cap_console"/>
+                    <button name="action_save_error_files" type="object" string="Save error memory" icon="fa-save"
+                            groups="int_workbench.int_workbench_group_technician" invisible="not cap_error_files"/>
                     <button name="action_reset" type="object" string="Restart" icon="fa-power-off"
                             groups="int_workbench.int_workbench_group_technician" invisible="not cap_console"
                             confirm="Restart the controller? The line is lost for a while."/>
@@ -63,6 +65,7 @@
                     <field name="cap_clock" invisible="1"/>
                     <field name="cap_console" invisible="1"/>
                     <field name="cap_can_control" invisible="1"/>
+                    <field name="cap_error_files" invisible="1"/>
                     <field name="cap_project_files" invisible="1"/>
                     <group string="State" invisible="not clock_local_time and not can_count">
                         <field name="clock_local_time" invisible="not clock_local_time"/>

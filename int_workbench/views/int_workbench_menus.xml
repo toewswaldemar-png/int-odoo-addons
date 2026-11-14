@@ -12,6 +12,10 @@
               action="int_workbench_error_status_action" sequence="24"/>
     <menuitem id="int_workbench_command_menu" name="Clamp log" parent="int_workbench_menu_root"
               action="int_workbench_command_action" sequence="30"/>
+    <menuitem id="int_workbench_fs2_file_menu" name="Error files" parent="int_workbench_menu_root"
+              action="int_workbench_fs2_file_action" sequence="26"/>
+    <menuitem id="int_workbench_fs2_record_menu" name="Error file records" parent="int_workbench_menu_root"
+              action="int_workbench_fs2_record_action" sequence="28"/>
     <menuitem id="int_workbench_console_menu" name="Console" parent="int_workbench_menu_root"
               action="int_workbench_console_action" sequence="32"/>
     <menuitem id="int_workbench_can_module_menu" name="CAN modules" parent="int_workbench_menu_root"

@@ -15,7 +15,7 @@ TECHNICIAN_GROUP = "int_workbench.int_workbench_group_technician"
 # The actions that an operator may ask for (clamping and clearing the error memory); every other action needs a technician.
 OPERATOR_ACTIONS = ("set", "release", "clear_errors")
 # The actions about the controller as a whole: they have a payload and no row.
-CONTROLLER_ACTIONS = ("clear_errors", "clock_set", "can_control", "reset", "console", "console_write")
+CONTROLLER_ACTIONS = ("clear_errors", "clock_set", "can_control", "reset", "console", "console_write", "fs2_save", "fs2_delete")
 # The capability that a family has to report for an action.
 ACTION_CAPABILITY = {
     "clear_errors": "error_memory",
@@ -24,10 +24,18 @@ ACTION_CAPABILITY = {
     "reset": "console",
     "console": "console",
     "console_write": "console",
+    "fs2_save": "error_files",
+    "fs2_delete": "error_files",
 }
 CAN_ACTIONS = ("stop", "start", "baptize")
 CLOCK_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
 CONSOLE_LIMIT = 120
+# What a name of an error file looks like, and how many a request may name.
+FILE_NAME_PATTERN = re.compile(r"[A-Za-z0-9._ -]{1,64}")
+FILE_NAMES_LIMIT = 100
+# The error file has fixed fields for them: the wagon number takes 12 characters, the train 4.
+WAGON_LIMIT = 12
+TRAIN_LIMIT = 4
 # What the output of a request may be (the service sends at most this much).
 OUTPUT_LIMIT = 200_000
 
@@ -58,6 +66,8 @@ class IntWorkbenchCommand(models.Model):
             ("reset", "Restart the controller"),
             ("console", "Console command"),
             ("console_write", "Console command that changes something"),
+            ("fs2_save", "Save the error memory as files"),
+            ("fs2_delete", "Delete error files"),
         ],
         required=True,
     )
@@ -96,6 +106,10 @@ class IntWorkbenchCommand(models.Model):
                 command.detail = payload.get("action", "")
             elif command.action in ("console", "console_write"):
                 command.detail = payload.get("command", "")
+            elif command.action == "fs2_save":
+                command.detail = " ".join(part for part in (payload.get("wagon"), payload.get("train")) if part)
+            elif command.action == "fs2_delete":
+                command.detail = ", ".join(payload.get("names") or [])
             else:
                 command.detail = ""
 
@@ -138,6 +152,19 @@ class IntWorkbenchCommand(models.Model):
             if not isinstance(text, str) or not text.strip() or len(text) > CONSOLE_LIMIT or any(ord(char) < 32 for char in text):
                 raise ValidationError(self.env._("The command must be one line of up to %s characters.", CONSOLE_LIMIT))
             return json.dumps({"command": text.strip()})
+        if action == "fs2_save":
+            wagon, train, complete = payload.get("wagon"), payload.get("train") or "", payload.get("complete")
+            for label, limit in ((wagon, WAGON_LIMIT), (train, TRAIN_LIMIT)):
+                if not isinstance(label, str) or len(label.strip()) > limit or any(ord(char) < 32 for char in label):
+                    raise ValidationError(self.env._("The wagon number takes up to %(wagon)s characters, the train up to %(train)s.", wagon=WAGON_LIMIT, train=TRAIN_LIMIT))
+            if not wagon.strip() or not isinstance(complete, bool):
+                raise ValidationError(self.env._("The error files need a wagon number and say whether they are complete."))
+            return json.dumps({"wagon": wagon.strip(), "train": train.strip(), "complete": complete})
+        if action == "fs2_delete":
+            names = payload.get("names")
+            if not isinstance(names, list) or not 0 < len(names) <= FILE_NAMES_LIMIT or not all(isinstance(name, str) and FILE_NAME_PATTERN.fullmatch(name) for name in names):
+                raise ValidationError(self.env._("Name the error files to delete (up to %s), by their file names.", FILE_NAMES_LIMIT))
+            return json.dumps({"names": names})
         return "{}"
 
     @api.constrains("code")

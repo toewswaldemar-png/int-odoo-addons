@@ -22,10 +22,14 @@ MAX_SNAPSHOT_BYTES = 2_000_000
 # What of a report is not kept in the Json of the controller: the process values and the clamps are the rows of int.workbench.parameter,
 # the active errors the rows of int.workbench.error, the history and the status records of the error memory the rows of
 # int.workbench.error.history and int.workbench.error.status (only its state stays in the Json), and the pages are not kept at all.
-ROW_PARTS = ("values", "clamps", "pages", "errors", "errors_memory", "can", "intermediate")
+ROW_PARTS = ("values", "clamps", "pages", "errors", "errors_memory", "can", "intermediate", "fs2_files", "fs2_records")
 # The same for the CAN modules and the intermediate values: the rows are in int.workbench.can.module and int.workbench.intermediate.
 CAN_STATE_KEYS = ("status", "count", "configured_count", "error", "stale", "time")
 INTERMEDIATE_STATE_KEYS = ("status", "read_at", "stale")
+# The saved error files are rows of int.workbench.fs2.file and int.workbench.fs2.record; the Json keeps only whether files may be written.
+FS2_STATE_KEYS = ("write_enabled",)
+# How many files Odoo asks the records of in one answer (they are many; the service sends them with its next report).
+FS2_FILES_PER_ANSWER = 3
 # What of the error memory stays in the Json of the controller: how it was read, not what it holds.
 MEMORY_STATE_KEYS = ("status", "reason", "error", "read_at", "stale", "connected", "clear_enabled", "history_count", "status_total", "active_count")
 # A clamp request that was not carried out this long after it was made is not carried out any more. The list waits longer than this
@@ -39,6 +43,8 @@ ACTION_TTL = {
     "reset": timedelta(seconds=180),
     "console": timedelta(seconds=120),
     "console_write": timedelta(seconds=180),
+    "fs2_save": timedelta(seconds=120),
+    "fs2_delete": timedelta(seconds=60),
 }
 # What of the output of a request is kept (the service sends at most this much).
 OUTPUT_LIMIT = 200_000
@@ -156,6 +162,7 @@ class IntWorkbenchDevice(models.Model):
     error_status_ids = fields.One2many("int.workbench.error.status", "device_id", string="Error status")
     can_module_ids = fields.One2many("int.workbench.can.module", "device_id", string="CAN modules")
     intermediate_ids = fields.One2many("int.workbench.intermediate", "device_id", string="Intermediate values")
+    fs2_file_ids = fields.One2many("int.workbench.fs2.file", "device_id", string="Error files")
     clock_local_time = fields.Char(compute="_compute_clock", string="Clock of the controller", help="Date and time the controller shows, as the service read them (no time zone).")
     clock_read_at = fields.Char(compute="_compute_clock", string="Clock read at")
     clock_write_enabled = fields.Boolean(compute="_compute_clock", string="The clock may be set")
@@ -339,7 +346,7 @@ class IntWorkbenchDevice(models.Model):
         previous_read_at = ((self.snapshot or {}).get("errors_memory") or {}).get("read_at")
         if isinstance(memory, dict):
             kept["errors_memory"] = {key: memory[key] for key in MEMORY_STATE_KEYS if key in memory}
-        for part, keys in (("can", CAN_STATE_KEYS), ("intermediate", INTERMEDIATE_STATE_KEYS)):
+        for part, keys in (("can", CAN_STATE_KEYS), ("intermediate", INTERMEDIATE_STATE_KEYS), ("fs2_files", FS2_STATE_KEYS)):
             if isinstance(snapshot.get(part), dict):
                 kept[part] = {key: snapshot[part][key] for key in keys if key in snapshot[part]}
         previous = self.snapshot or {}
@@ -356,6 +363,11 @@ class IntWorkbenchDevice(models.Model):
         if isinstance(intermediate, dict) and (intermediate.get("read_at") != (previous.get("intermediate") or {}).get("read_at") or not self.intermediate_ids):
             # sudo: int.workbench.intermediate: the rows are written by the report of the service
             self._sync_mirror("int.workbench.intermediate", snapshot)
+        # The list of the error files comes with every report, the records of the files that changed only when Odoo asked for them
+        if isinstance(snapshot.get("fs2_files"), dict):
+            self._sync_mirror("int.workbench.fs2.file", snapshot)
+        if isinstance(snapshot.get("fs2_records"), dict):
+            self._sync_mirror("int.workbench.fs2.record", snapshot)
         # The service reads the error memory now and then; the rows are brought up to date only for a new reading (or if there are none)
         if isinstance(memory, dict) and (memory.get("read_at") != previous_read_at or not self.error_status_ids):
             # sudo: int.workbench.error.history, int.workbench.error.status: the rows are written by the report of the service
@@ -469,6 +481,18 @@ class IntWorkbenchDevice(models.Model):
         ttl = ACTION_TTL.get(command.action, COMMAND_TTL)
         return min(int(ttl.total_seconds() * 1000), max(0, int((ttl - (now - command.create_date)).total_seconds() * 1000)))
 
+    def _service_want(self):
+        """Return what Odoo asks the service to put into its next report: the records of the error files whose records it has not
+        fetched yet, or fetched when the file was different (a few files at a time)."""
+        self.ensure_one()
+        # sudo: int.workbench.fs2.file: the answer to the service is made for the controller, whoever the service is
+        stale = self.env["int.workbench.fs2.file"].sudo().search([("device_id", "=", self.id)]).filtered(lambda file: file.loaded_signature != file._signature())
+        return {"fs2_records": stale.mapped("name")[:FS2_FILES_PER_ANSWER]} if stale else {}
+
+    def action_save_error_files(self):
+        """Open the dialog that saves the error memory of the controller as error files."""
+        return self._open_wizard("int.workbench.fs2.wizard", self.env._("Save the error memory"))
+
     def _service_answer(self):
         self.ensure_one()
         commands = self._service_take_commands()
@@ -477,6 +501,7 @@ class IntWorkbenchDevice(models.Model):
         mode = "fast" if watched else "idle"
         return {
             "commands": commands,
+            "want": self._service_want(),
             "watched": watched,
             "poll_ms": settings[f"poll_{mode}_ms"],
             "report_ms": settings[f"report_{mode}_ms"],

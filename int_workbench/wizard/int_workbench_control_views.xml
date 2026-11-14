@@ -63,4 +63,26 @@
             </form>
         </field>
     </record>
+
+    <record id="int_workbench_fs2_wizard_view_form" model="ir.ui.view">
+        <field name="name">int.workbench.fs2.wizard.form</field>
+        <field name="model">int.workbench.fs2.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="device_id" readonly="1"/>
+                    <field name="wagon"/>
+                    <field name="train"/>
+                    <field name="complete"/>
+                </group>
+                <div class="text-muted">
+                    The service reads the error memory of the controller and saves it as files in its project folder. They show in the list of error files.
+                </div>
+                <footer>
+                    <button name="action_save" type="object" string="Save" class="btn-primary" data-hotkey="q"/>
+                    <button special="cancel" string="Cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
 </odoo>

@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 13:31+0000\n"
-"PO-Revision-Date: 2026-11-14 13:31+0000\n"
+"POT-Creation-Date: 2026-11-14 14:48+0000\n"
+"PO-Revision-Date: 2026-11-14 14:48+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -20,6 +20,12 @@ msgstr ""
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 msgid "%(total)s folders, %(created)s new versions, %(failed)s turned away."
 msgstr "%(total)s Ordner, %(created)s neue Stände, %(failed)s abgewiesen."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_fs2_file.py:0
+msgid "%s file(s) are being moved to the folder of deleted files."
+msgstr "%s Datei(en) werden in den Ordner der gelöschten Dateien verschoben."
 
 #. module: int_workbench
 #. odoo-python
@@ -86,6 +92,11 @@ msgid "A family with this name exists already."
 msgstr "Eine Familie mit diesem Namen gibt es schon."
 
 #. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_fs2_file_device_name_unique
+msgid "A file exists once per controller."
+msgstr "Eine Datei gibt es je Regler nur einmal."
+
+#. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_can_module_device_number_unique
 msgid "A module exists once per controller."
 msgstr "Ein Modul gibt es je Regler nur einmal."
@@ -94,6 +105,11 @@ msgstr "Ein Modul gibt es je Regler nur einmal."
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_intermediate_device_sequence_unique
 msgid "A place exists once per controller."
 msgstr "Ein Platz gibt es je Regler nur einmal."
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_fs2_record_file_entry_unique
+msgid "A record exists once per file."
+msgstr "Einen Satz gibt es je Datei nur einmal."
 
 #. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_parameter_device_code_unique
@@ -305,6 +321,7 @@ msgstr "Kann die Leitung umschalten"
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_wizard_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_clock_wizard_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_console_wizard_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_wizard_view_form
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -374,6 +391,7 @@ msgid "Clamp request for a controller"
 msgstr "Klemmauftrag für einen Regler"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__command_ids
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__command_ids
 msgid "Clamp requests"
 msgstr "Klemmaufträge"
@@ -420,6 +438,11 @@ msgid ""
 msgstr ""
 "Klemmt und löst Zeilen eines Reglers. Jeder Auftrag bleibt mit dem Namen des"
 " Benutzers erhalten."
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__error_class
+msgid "Class"
+msgstr "Klasse"
 
 #. module: int_workbench
 #. odoo-javascript
@@ -469,6 +492,7 @@ msgstr "Zu"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__code
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__code
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__code
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__code
 msgid "Code"
 msgstr "Kürzel"
 
@@ -484,7 +508,9 @@ msgstr "Farbe"
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_error_history__event__coming
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_fs2_record__event__coming
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_search
 msgid "Coming"
 msgstr "Kommt"
 
@@ -498,7 +524,14 @@ msgstr "Befehl"
 msgid ""
 "Commands that only look (id, sr, db, dw, md ...) go the short way; every "
 "other command has to be marked."
-msgstr "Befehle, die nur ansehen (id, sr, db, dw, md ...), gehen den kurzen Weg; jeder andere Befehl muss gekennzeichnet werden."
+msgstr ""
+"Befehle, die nur ansehen (id, sr, db, dw, md ...), gehen den kurzen Weg; "
+"jeder andere Befehl muss gekennzeichnet werden."
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__complete
+msgid "Complete"
+msgstr "Vollständig"
 
 #. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_menu_configuration
@@ -541,6 +574,9 @@ msgstr "CAN-Bus steuern"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_id
@@ -552,6 +588,7 @@ msgstr "CAN-Bus steuern"
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
@@ -562,6 +599,11 @@ msgstr "Regler"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__controller_time
 msgid "Controller Time"
 msgstr "Reglerzeit"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__controller_type
+msgid "Controller Type"
+msgstr "Reglertyp"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_cap_clamps
@@ -594,6 +636,7 @@ msgstr "Regler"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__count
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__count
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__count
 msgid "Count"
 msgstr "Anzahl"
 
@@ -609,6 +652,9 @@ msgstr "Anzahl"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_uid
@@ -636,6 +682,9 @@ msgstr "Im Dienst erstellt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_date
@@ -658,6 +707,17 @@ msgstr ""
 "übernimmt neue Projektordner in seine Bibliothek."
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__date
+msgid "Date"
+msgstr "Datum"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__iso
+msgid "Date and time"
+msgstr "Datum und Uhrzeit"
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__controller_time
 msgid ""
 "Date and time of the clock of the controller, as it was set there (no time "
@@ -667,16 +727,35 @@ msgstr ""
 "Zeitzone), zum Beispiel 2026-11-14T09:57:18."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_record__iso
+msgid ""
+"Date and time of the record as the controller held them (no time zone), for "
+"example 2026-11-14T09:57:18."
+msgstr "Datum und Uhrzeit des Satzes, wie der Regler sie hielt (ohne Zeitzone), zum Beispiel 2026-11-14T09:57:18."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_clock_wizard__current
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__clock_local_time
 msgid ""
 "Date and time the controller shows, as the service read them (no time zone)."
-msgstr "Datum und Uhrzeit, die der Regler zeigt, wie der Dienst sie gelesen hat (ohne Zeitzone)."
+msgstr ""
+"Datum und Uhrzeit, die der Regler zeigt, wie der Dienst sie gelesen hat "
+"(ohne Zeitzone)."
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "Day"
 msgstr "Tag"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_list
+msgid "Delete"
+msgstr "Löschen"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__fs2_delete
+msgid "Delete error files"
+msgstr "Fehlerdateien löschen"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__name
@@ -712,6 +791,9 @@ msgstr "Darstellung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_name
@@ -765,6 +847,7 @@ msgstr "Einträge"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__entry
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__entry
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__entry_id
 msgid "Entry"
 msgstr "Eintrag"
@@ -783,12 +866,27 @@ msgstr "Eintrag im Schreibprotokoll des Dienstes"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__text
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__text
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__text
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__text
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__error
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_search
 msgid "Error"
 msgstr "Fehler"
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_fs2_record_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_record_menu
+msgid "Error file records"
+msgstr "Sätze der Fehlerdateien"
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_fs2_file_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__fs2_file_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_file_menu
+msgid "Error files"
+msgstr "Fehlerdateien"
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_error_history_action
@@ -820,6 +918,7 @@ msgstr "Fehler"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_search
 msgid "Errors only"
 msgstr "Nur Fehler"
 
@@ -830,6 +929,7 @@ msgstr "Fehlerdateien auswerten"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__event
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__event
 msgid "Event"
 msgstr "Ereignis"
 
@@ -909,6 +1009,13 @@ msgid "Fetch users"
 msgstr "Benutzer holen"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__file_id
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_search
+msgid "File"
+msgstr "Datei"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__file_count
 msgid "Files"
 msgstr "Dateien"
@@ -930,11 +1037,13 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__format
 msgid "Format"
-msgstr "Format"
+msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_error_history__event__going
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_fs2_record__event__going
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_search
 msgid "Going"
 msgstr "Geht"
 
@@ -966,7 +1075,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__hw
 msgid "Hardware"
-msgstr "Hardware"
+msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__has_value
@@ -1018,7 +1127,9 @@ msgstr "Wie das Lesen verlief: ok, oder was mit der Zeile nicht stimmt."
 msgid ""
 "How the value is shown: B bits, H the text of the answer, P process value, "
 "and so on."
-msgstr "Wie der Wert gezeigt wird: B Bits, H der Text der Antwort, P Prozesswert und so weiter."
+msgstr ""
+"Wie der Wert gezeigt wird: B Bits, H der Text der Antwort, P Prozesswert und"
+" so weiter."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__id
@@ -1032,6 +1143,9 @@ msgstr "Wie der Wert gezeigt wird: B Bits, H der Text der Antwort, P Prozesswert
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__id
@@ -1067,8 +1181,11 @@ msgid "Intermediate values"
 msgstr "Zwischenwerte"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__kind
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__kind
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "Kind"
 msgstr "Art"
@@ -1095,6 +1212,9 @@ msgstr "Letzter Klemmwert"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_uid
@@ -1117,6 +1237,9 @@ msgstr "Zuletzt aktualisiert von"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_date
@@ -1154,6 +1277,11 @@ msgid "Loadable"
 msgstr "Ladbar"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__loaded_signature
+msgid "Loaded Signature"
+msgstr "Stand der geholten Sätze"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__locked
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_user_view_search
 msgid "Locked"
@@ -1178,6 +1306,21 @@ msgid "Message"
 msgstr "Meldung"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__mode
+msgid "Mode"
+msgstr "Modus"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_list
+msgid "Move the selected files to the folder of deleted files"
+msgstr "Die ausgewählten Dateien in den Ordner der gelöschten Dateien verschieben"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_list
+msgid "Move the selected files to the folder of deleted files?"
+msgstr "Die ausgewählten Dateien in den Ordner der gelöschten Dateien verschieben?"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__name
@@ -1185,6 +1328,12 @@ msgstr "Meldung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__name
 msgid "Name"
 msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "Name the error files to delete (up to %s), by their file names."
+msgstr "Nenne die zu löschenden Fehlerdateien (bis zu %s) mit ihren Dateinamen."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__time
@@ -1283,6 +1432,12 @@ msgstr "Das darf nur ein Techniker anfordern."
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_fs2_file.py:0
+msgid "Only a technician may delete error files."
+msgstr "Nur ein Techniker darf Fehlerdateien löschen."
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid "Only a user of the group Workbench / Service may call this."
 msgstr "Das darf nur ein Benutzer der Gruppe Workbench / Dienst aufrufen."
@@ -1333,6 +1488,7 @@ msgstr "Ausgabe"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_list
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_list
 msgid "P"
 msgstr ""
 
@@ -1348,6 +1504,7 @@ msgstr "Steht an"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__priority
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__priority
 msgid "Priority"
 msgstr "Priorität"
 
@@ -1428,6 +1585,21 @@ msgid "Ready"
 msgstr "Bereit"
 
 #. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_fs2_record
+msgid "Record of a saved error file"
+msgstr "Satz einer gespeicherten Fehlerdatei"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__count
+msgid "Records"
+msgstr "Sätze"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__record_ids
+msgid "Records in the file"
+msgstr "Sätze in der Datei"
+
+#. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__release
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Release"
@@ -1462,9 +1634,11 @@ msgstr "Aufgeführt"
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 #: code:addons/int_workbench/models/int_workbench_error.py:0
+#: code:addons/int_workbench/models/int_workbench_fs2_file.py:0
 #: code:addons/int_workbench/models/int_workbench_parameter.py:0
 #: code:addons/int_workbench/wizard/int_workbench_can_wizard.py:0
 #: code:addons/int_workbench/wizard/int_workbench_clock_wizard.py:0
+#: code:addons/int_workbench/wizard/int_workbench_fs2_wizard.py:0
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_list
 msgid "Requested"
@@ -1474,11 +1648,6 @@ msgstr "Beauftragt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__user_id
 msgid "Requested by"
 msgstr "Beauftragt von"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__command_ids
-msgid "Requests"
-msgstr "Klemmaufträge"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
@@ -1527,6 +1696,42 @@ msgid "Row code"
 msgstr "Code"
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_wizard_view_form
+msgid "Save"
+msgstr "Speichern"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Save error memory"
+msgstr "Fehlerspeicher speichern"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "Save the error memory"
+msgstr "Fehlerspeicher speichern"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__fs2_save
+msgid "Save the error memory as files"
+msgstr "Fehlerspeicher als Dateien speichern"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_fs2_wizard
+msgid "Save the error memory of a controller as error files"
+msgstr "Den Fehlerspeicher eines Reglers als Fehlerdateien speichern"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_wizard__complete
+msgid "Save the history and the status records; without it only the history."
+msgstr "Historie und Statussätze speichern; ohne das nur die Historie."
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_fs2_file
+msgid "Saved error file of a controller"
+msgstr "Gespeicherte Fehlerdatei eines Reglers"
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__report_age
 msgid ""
 "Seconds since the last report, by the clock of the server, so that a page "
@@ -1545,6 +1750,12 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__seen_age
 msgid "Seen Age"
 msgstr "Alter der letzten Anfrage"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_fs2_file.py:0
+msgid "Select the files to delete."
+msgstr "Wähle die zu löschenden Dateien aus."
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_wizard_view_form
@@ -1629,7 +1840,9 @@ msgstr "Die Uhr des Reglers stellen?"
 msgid ""
 "Sets the clock, controls the CAN bus, restarts the controller and sends "
 "console commands. Every request is kept with the name of the user."
-msgstr "Stellt die Uhr, steuert den CAN-Bus, startet den Regler neu und sendet Konsolenbefehle. Jeder Auftrag wird mit dem Namen des Benutzers aufbewahrt."
+msgstr ""
+"Stellt die Uhr, steuert den CAN-Bus, startet den Regler neu und sendet "
+"Konsolenbefehle. Jeder Auftrag wird mit dem Namen des Benutzers aufbewahrt."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__size
@@ -1644,7 +1857,7 @@ msgstr "Bericht"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__sw
 msgid "Software"
-msgstr "Software"
+msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__watched
@@ -1702,7 +1915,9 @@ msgstr "CAN-Bus eines Reglers anhalten, starten oder taufen"
 msgid ""
 "Stopping the bus takes the modules off it until it is started again; "
 "baptizing gives every module its number."
-msgstr "Das Anhalten nimmt die Module vom Bus, bis er wieder gestartet wird; das Taufen gibt jedem Modul seine Nummer."
+msgstr ""
+"Das Anhalten nimmt die Module vom Bus, bis er wieder gestartet wird; das "
+"Taufen gibt jedem Modul seine Nummer."
 
 #. module: int_workbench
 #: model:int.workbench.capability,name:int_workbench.int_workbench_capability_line_switch
@@ -1736,7 +1951,7 @@ msgstr "Techniker"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__text
 msgid "Text"
-msgstr "Text"
+msgstr ""
 
 #. module: int_workbench
 #. odoo-python
@@ -1862,7 +2077,9 @@ msgstr ""
 msgid ""
 "The controller keeps its own clock. The service sets it to the time given "
 "here and reads it back to confirm."
-msgstr "Der Regler führt seine eigene Uhr. Der Dienst stellt sie auf die hier angegebene Zeit und liest sie zur Bestätigung zurück."
+msgstr ""
+"Der Regler führt seine eigene Uhr. Der Dienst stellt sie auf die hier "
+"angegebene Zeit und liest sie zur Bestätigung zurück."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__quit
@@ -1872,6 +2089,11 @@ msgstr ""
 "gesehen."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__date
+msgid "The date the error memory was read, as the file holds it."
+msgstr "Das Datum, an dem der Fehlerspeicher gelesen wurde, wie die Datei es hält."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__element
 msgid ""
 "The element of the error table of the controller, counted from 1 (the order "
@@ -1879,6 +2101,12 @@ msgid ""
 msgstr ""
 "Das Element der Fehlertabelle des Reglers, ab 1 gezählt (die Reihenfolge der"
 " Fehlerliste des Projekts)."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The error files need a wagon number and say whether they are complete."
+msgstr "Die Fehlerdateien brauchen eine Wagennummer und sagen, ob sie vollständig sind."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__present
@@ -1903,6 +2131,12 @@ msgstr "Der Fehlerspeicher ist gelöscht."
 #: code:addons/int_workbench/models/int_workbench_error.py:0
 msgid "The error memory of %s is being cleared."
 msgstr "Der Fehlerspeicher von %s wird gelöscht."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_fs2_wizard.py:0
+msgid "The error memory of %s is being saved."
+msgstr "Der Fehlerspeicher von %s wird gespeichert."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__newest
@@ -1977,6 +2211,7 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__priority
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_record__priority
 msgid ""
 "The letter of the evaluation view: A for an error that came, C for one that "
 "went."
@@ -1989,7 +2224,9 @@ msgstr ""
 msgid ""
 "The line goes to the monitor of the controller as it is typed. The answer "
 "comes with the request, which opens next."
-msgstr "Die Zeile geht so, wie sie getippt ist, an den Monitor des Reglers. Die Antwort kommt mit dem Auftrag, der als Nächstes aufgeht."
+msgstr ""
+"Die Zeile geht so, wie sie getippt ist, an den Monitor des Reglers. Die "
+"Antwort kommt mit dem Auftrag, der als Nächstes aufgeht."
 
 #. module: int_workbench
 #. odoo-python
@@ -2005,6 +2242,11 @@ msgstr ""
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project__rows
 msgid "The monitor entries of the project; 0 if it does not load."
 msgstr "Die Monitoreinträge des Projekts; 0, wenn es nicht lädt."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__name
+msgid "The name of the file in the project folder of the service."
+msgstr "Der Name der Datei im Projektordner des Dienstes."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_family__label
@@ -2027,6 +2269,11 @@ msgstr ""
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_log__entry_id
 msgid "The number of the entry in the log of the service."
 msgstr "Die Nummer des Eintrags im Protokoll des Dienstes."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_wizard__wagon
+msgid "The number the files are saved under (the original asks for it too)."
+msgstr "Die Nummer, unter der die Dateien gespeichert werden (das Original fragt sie auch ab)."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__sequence
@@ -2078,12 +2325,19 @@ msgstr "Der Platz in der Historie des Reglers, 1 ist der älteste."
 msgid ""
 "The place in the list of intermediate values that the service reads, counted"
 " from 1."
-msgstr "Der Platz in der Liste der Zwischenwerte, die der Dienst liest, ab 1 gezählt."
+msgstr ""
+"Der Platz in der Liste der Zwischenwerte, die der Dienst liest, ab 1 "
+"gezählt."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_can_module__number
 msgid "The place of the module in the list of the controller."
 msgstr "Der Platz des Moduls in der Liste des Reglers."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_record__entry
+msgid "The place of the record in the file, counted from 0."
+msgstr "Der Platz des Satzes in der Datei, ab 0 gezählt."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__value
@@ -2179,6 +2433,13 @@ msgid "The service of %s sent no JSON."
 msgstr "Der Dienst von %s hat kein JSON geschickt."
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_wizard_view_form
+msgid ""
+"The service reads the error memory of the controller and saves it as files "
+"in its project folder. They show in the list of error files."
+msgstr "Der Dienst liest den Fehlerspeicher des Reglers und speichert ihn als Dateien in seinem Projektordner. Sie erscheinen in der Liste der Fehlerdateien."
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid "The snapshot is too large."
@@ -2242,6 +2503,11 @@ msgid "The transports of the family %s must be a list of names."
 msgstr "Die Transporte der Familie %s müssen eine Liste von Namen sein."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__controller_type
+msgid "The type of the controller the file was read from."
+msgstr "Der Typ des Reglers, von dem die Datei gelesen wurde."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__service_user_id
 msgid ""
 "The user whose API key the service uses to report this controller and to "
@@ -2294,6 +2560,12 @@ msgstr "Der Wert, auf den die Zeile geklemmt wird (nur beim Klemmen)."
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The wagon number takes up to %(wagon)s characters, the train up to %(train)s."
+msgstr "Die Wagennummer nimmt bis zu %(wagon)s Zeichen, der Zug bis zu %(train)s."
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 msgid "There are no new folders."
 msgstr "Es gibt keine neuen Ordner."
@@ -2305,9 +2577,19 @@ msgid "There now"
 msgstr "Steht jetzt an"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__time
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__time
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_list
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_list
 msgid "Time"
 msgstr "Zeit"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__train
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__train
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__train
+msgid "Train"
+msgstr "Zug"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__transports
@@ -2376,6 +2658,19 @@ msgid "Version in the project library of the service"
 msgstr "Stand in der Projektbibliothek des Dienstes"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__wagon
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__wagon
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_search
+msgid "Wagon"
+msgstr "Wagen"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__wagon
+msgid "Wagon number"
+msgstr "Wagennummer"
+
+#. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__pending
 msgid "Waiting for the service"
 msgstr "Wartet auf den Dienst"
@@ -2400,7 +2695,9 @@ msgstr "Was der Regler geantwortet hat, so wie es kam."
 msgid ""
 "What the controller answered, for the requests that have an answer (the "
 "console, the CAN bus)."
-msgstr "Was der Regler geantwortet hat, für die Aufträge mit Antwort (die Konsole, der CAN-Bus)."
+msgstr ""
+"Was der Regler geantwortet hat, für die Aufträge mit Antwort (die Konsole, "
+"der CAN-Bus)."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__auto_text
@@ -2412,6 +2709,13 @@ msgstr ""
 " einige Familien melden ihn."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__loaded_signature
+msgid ""
+"What the file was like when its records were fetched. If it differs, the "
+"service is asked for them again."
+msgstr "Wie die Datei war, als ihre Sätze geholt wurden. Weicht sie ab, wird der Dienst erneut danach gefragt."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_command__detail
 msgid "What the request asks for, in a few words."
 msgstr "Worum der Auftrag bittet, in wenigen Worten."
@@ -2421,7 +2725,9 @@ msgstr "Worum der Auftrag bittet, in wenigen Worten."
 msgid ""
 "What the request carries to the service as a JSON object, for example the "
 "command of the console."
-msgstr "Was der Auftrag dem Dienst als JSON-Objekt mitbringt, zum Beispiel den Befehl der Konsole."
+msgstr ""
+"Was der Auftrag dem Dienst als JSON-Objekt mitbringt, zum Beispiel den "
+"Befehl der Konsole."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__snapshot
@@ -2472,6 +2778,7 @@ msgstr "Warum sich der Stand nicht laden lässt."
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_search
 msgid ""
 "Without the entries that mark a restart, an initialization or a clearing."
 msgstr ""
@@ -2495,6 +2802,12 @@ msgstr ""
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 msgid "brought in, does not load"
 msgstr "übernommen, lädt nicht"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__kind
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_record__kind
+msgid "history or status."
+msgstr "Historie oder Status."
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_console_wizard_view_form
