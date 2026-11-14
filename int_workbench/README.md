@@ -33,6 +33,8 @@ Regler  <-COM/TCP->  Service Workbench (Go)  --JSON-2-->  Odoo  <-- Bus + ORM --
 | `int.workbench.parameter` | Prozesswert (`p`, was der Regler benutzt), Automatikwert (`aw`, nur wo die Familie ihn hat) und Klemme einer Zeile; Stern je Benutzer; Reihenfolge und Marken (`tag_ids`, von Hand gesetzt, vom Bericht nicht berührt) für alle | Bericht (`service_sync`) |
 | `int.workbench.command` | Klemmauftrag und sein Ausgang (Klemmprotokoll) | Bediener, Ergebnis vom Dienst |
 | `int.workbench.error` | aktive Fehler (Fehlerwort, Bit, Text) | Bericht |
+| `int.workbench.error.history` | Fehlerspeicher des Reglers, Historie: Eintrag, Reglerzeit, Code, Text, Anzahl, kommt/geht, Rohbytes | Bericht (`errors_memory`), nur bei einer neuen Lesung des Dienstes |
+| `int.workbench.error.status` | Fehlerspeicher des Reglers, Statussätze: je Fehler der Fehlerliste ein Satz mit Anzahl, „steht an“, Rang (0 = zuletzt gekommen), `wprio`, `lmzus`, `quit`, Rohbytes | Bericht (`errors_memory`), nur bei einer neuen Lesung des Dienstes |
 | `int.workbench.log` | Schreibprotokoll des Dienstes (die neuesten 1000 Einträge) | Knopf *Fetch log* |
 | `int.workbench.user` | Konten des Dienstes (ohne Passwörter) | Knopf *Fetch users* |
 | `int.workbench.project` | Stände der Projektbibliothek: Fahrzeug und Projekt (aus der ersten Herkunft), kurze Kennung, Zeilenzahl, ladbar oder Grund, Herkunft | Knöpfe *Fetch projects* und *Take over new folders* |
@@ -65,7 +67,7 @@ Der Bus braucht den Websocket von Odoo (im Betrieb mit einem Prozess im Server, 
 - **Kapazität (gemessen am 9.11.2026, Wegwerf-Instanz, ein Prozess, simulierte Dienste mit dem echten Bericht):** Im Ruhetakt (2 s, Bericht alle 10 s) kosten 100 Dienste 51 Aufrufe pro Sekunde, 69 % eines Kerns und 50 kB/s Journal; im 30-s-Takt (Bericht 60 s) nur 2,5 Aufrufe pro Sekunde, 11,5 % und 8 kB/s. Ein Prozess trägt etwa 50 Aufrufe pro Sekunde gut. Für Hunderte Regler wäre ein Wecken (MQTT oder ein Aufruf von Odoo an den Dienst) der nächste Schritt.
 - Klick bis Bestätigung des Reglers (gemessen am 9.11.2026 mit der alten Seite, echter Regler 11HA35D): Median 388 ms. Die erste Reaktion nach dem Öffnen der Liste kann bis zu 2 s dauern (Ruhetakt). Mit den Knöpfen der Liste nicht neu gemessen.
 - Odoo fragt den Dienst nur auf Knopfdruck; Benutzer, Protokoll und Projekte sind Abbilder, keine Echtzeit. Das Token des Dienstes steht in Odoo im Klartext (Feld nur für Verwalter sichtbar).
-- Es gibt Klemmen und Lösen. Konsole, Prüfprogramm, Programmieren, Uhr und Fehlerspeicher löschen kann der Dienst; Odoo zeigt sie noch nicht (die Fähigkeiten dafür sind schon da).
+- Es gibt Klemmen und Lösen, den Fehlerspeicher löschen (Knopf in der Liste der Fehler) und den Fehlerspeicher lesen (Historie und Statussätze, nur Ansicht). Konsole, Prüfprogramm, Programmieren, Uhr, CAN, Zwischenwerte und die Auswertung gespeicherter Fehlerdaten kann der Dienst; Odoo zeigt sie noch nicht (die Fähigkeiten dafür sind schon da).
 
 ## Offen
 

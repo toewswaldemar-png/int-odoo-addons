@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 09:22+0000\n"
-"PO-Revision-Date: 2026-11-13 09:22+0000\n"
+"POT-Creation-Date: 2026-11-14 13:10+0000\n"
+"PO-Revision-Date: 2026-11-14 13:10+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -33,6 +33,25 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_parameter.py:0
 msgid "%s request(s) sent to the service. The result shows in the clamp log."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__lmzus
+msgid "2 for an error that is there."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__wprio
+msgid ""
+"2 for the error that is there and came last, 1 for every other one that is "
+"there."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__level
+msgid ""
+"5 for an error that is there (A), 1 for one that went (C), 0 for one that "
+"never came."
 msgstr ""
 
 #. module: int_workbench
@@ -107,6 +126,16 @@ msgid "An account exists once per service."
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_error_status_device_element_unique
+msgid "An element exists once per controller."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_error_history_device_entry_unique
+msgid "An entry exists once per controller."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_log_device_entry_unique
 msgid "An entry exists once per service."
 msgstr ""
@@ -146,6 +175,17 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_project_import
 msgid "Bring the new project folders of the service into its library"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__raw
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__raw
+msgid "Bytes"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_list
+msgid "Came last"
 msgstr ""
 
 #. module: int_workbench
@@ -288,8 +328,26 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__clear_errors
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_list
+msgid "Clear error memory"
+msgstr ""
+
+#. module: int_workbench
 #: model:int.workbench.capability,name:int_workbench.int_workbench_capability_error_memory
 msgid "Clear the error memory"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_list
+msgid "Clear the error memory of the controllers shown"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_list
+msgid "Clear the error memory of the controllers whose errors are shown?"
 msgstr ""
 
 #. module: int_workbench
@@ -305,6 +363,8 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__code
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__code
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__code
 msgid "Code"
 msgstr ""
 
@@ -316,6 +376,12 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__color
 msgid "Color"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_error_history__event__coming
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+msgid "Coming"
 msgstr ""
 
 #. module: int_workbench
@@ -336,16 +402,25 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__device_id
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
 msgid "Controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__controller_time
+msgid "Controller Time"
 msgstr ""
 
 #. module: int_workbench
@@ -372,10 +447,18 @@ msgid "Controllers"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__count
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__count
+msgid "Count"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_uid
@@ -396,6 +479,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_date
@@ -412,6 +497,13 @@ msgid ""
 "Creates and edits the controllers (name, id in the service, service user, "
 "service address), reads the accounts and the log of the service and brings "
 "new project folders into its library."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__controller_time
+msgid ""
+"Date and time of the clock of the controller, as it was set there (no time "
+"zone), for example 2026-11-14T09:57:18."
 msgstr ""
 
 #. module: int_workbench
@@ -445,6 +537,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_name
@@ -473,6 +567,11 @@ msgid "Done At"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__element
+msgid "Element"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_log__user
 msgid ""
 "Empty if nobody was signed in; in brackets for the shared token or the local"
@@ -485,8 +584,14 @@ msgid "Entries"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__entry
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__entry_id
 msgid "Entry"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_error_history
+msgid "Entry of the error history of a controller"
 msgstr ""
 
 #. module: int_workbench
@@ -496,8 +601,26 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__text
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__text
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__text
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
 msgid "Error"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_error_history_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_history_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_error_history_menu
+msgid "Error history"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_error_status_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_status_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_error_status_menu
+msgid "Error status"
 msgstr ""
 
 #. module: int_workbench
@@ -515,8 +638,18 @@ msgid "Errors"
 msgstr ""
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+msgid "Errors only"
+msgstr ""
+
+#. module: int_workbench
 #: model:int.workbench.capability,name:int_workbench.int_workbench_capability_error_files
 msgid "Evaluate error files"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__event
+msgid "Event"
 msgstr ""
 
 #. module: int_workbench
@@ -612,6 +745,12 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_error_history__event__going
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+msgid "Going"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_tone__good
 msgid "Good"
 msgstr ""
@@ -640,6 +779,11 @@ msgid "Has a console"
 msgstr ""
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
+msgid "Has come"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_intermediate
 msgid "Has intermediate values"
 msgstr ""
@@ -652,6 +796,16 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__count
+msgid "How often the error had come at that time."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__count
+msgid "How often the error has come since the error memory was cleared."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__status
 msgid "How the read went: ok, or what is wrong with the row."
 msgstr ""
@@ -661,6 +815,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__id
@@ -708,6 +864,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_uid
@@ -723,6 +881,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_date
@@ -741,6 +901,16 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__snapshot_at
 msgid "Last report"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__level
+msgid "Level"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__lmzus
+msgid "Lmzus"
 msgstr ""
 
 #. module: int_workbench
@@ -778,6 +948,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__name
 msgid "Name"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__newest
+msgid "Newest"
 msgstr ""
 
 #. module: int_workbench
@@ -862,6 +1037,12 @@ msgstr ""
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_error.py:0
+msgid "Only an operator may clear the error memory."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/models/int_workbench_parameter.py:0
 msgid "Open"
 msgstr ""
@@ -885,6 +1066,21 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__outcome
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "Outcome"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_list
+msgid "P"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__present
+msgid "Present"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__priority
+msgid "Priority"
 msgstr ""
 
 #. module: int_workbench
@@ -940,6 +1136,16 @@ msgid "Projects"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__quit
+msgid "Quit"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__rank
+msgid "Rank"
+msgstr ""
+
+#. module: int_workbench
 #: model:res.groups,comment:int_workbench.int_workbench_group_user
 msgid ""
 "Reads the controllers, their process values, errors, projects and the log of"
@@ -975,6 +1181,11 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__report_age
 msgid "Report Age"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__reported
+msgid "Reported"
 msgstr ""
 
 #. module: int_workbench
@@ -1118,6 +1329,11 @@ msgid "Status"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_error_status
+msgid "Status record of an error of a controller"
+msgstr ""
+
+#. module: int_workbench
 #: model:int.workbench.capability,name:int_workbench.int_workbench_capability_line_switch
 msgid "Switch the line"
 msgstr ""
@@ -1148,6 +1364,18 @@ msgid "The %s must be a list of capability names."
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__raw
+msgid ""
+"The 10 bytes of the record as the controller holds them, in hexadecimal."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__raw
+msgid ""
+"The 26 bytes of the entry as the controller holds them, in hexadecimal."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_user__disabled
 msgid "The account is locked in the service."
 msgstr ""
@@ -1160,9 +1388,22 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__code
+msgid ""
+"The code of the error; 9997, 9998 and 9999 mark a restart, an initialization"
+" and a clearing."
+msgstr ""
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "The controller %s cannot be clamped."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The controller %s cannot clear its error memory."
 msgstr ""
 
 #. module: int_workbench
@@ -1182,6 +1423,46 @@ msgstr ""
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid ""
 "The controller id %s may contain only letters, digits, minus and underscore."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__quit
+msgid "The controller's flag for an acknowledged error. Never seen set."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__element
+msgid ""
+"The element of the error table of the controller, counted from 1 (the order "
+"of the error list of the project)."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__present
+msgid "The error is there now."
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
+msgid ""
+"The error is there or has been there since the error memory was cleared."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid "The error memory is cleared."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_error.py:0
+msgid "The error memory of %s is being cleared."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__newest
+msgid "The error that is there now and came last."
 msgstr ""
 
 #. module: int_workbench
@@ -1244,6 +1525,21 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__priority
+msgid ""
+"The letter of the evaluation view: A for an error that came, C for one that "
+"went."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_error.py:0
+msgid ""
+"The list shows no errors, so there is no controller whose error memory it "
+"could clear."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project__rows
 msgid "The monitor entries of the project; 0 if it does not load."
 msgstr ""
@@ -1272,6 +1568,26 @@ msgstr ""
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__sequence
 msgid ""
 "The order of the rows in the list; changed by dragging (Operator, Manager)."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__reported
+msgid ""
+"The original lists the record in its evaluation: the error is there, or it "
+"has been there."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__rank
+msgid ""
+"The place in the controller's list: 0 is the error that came last, then the "
+"ones that came before, and the errors that never came follow in the order of"
+" the error list. -1 if the links of the records do not form one list."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__entry
+msgid "The place in the history of the controller, 1 is the oldest."
 msgstr ""
 
 #. module: int_workbench
@@ -1435,6 +1751,17 @@ msgid "There are no new folders."
 msgstr ""
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_list
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
+msgid "There now"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_list
+msgid "Time"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__transports
 msgid "Transports"
 msgstr ""
@@ -1548,10 +1875,21 @@ msgid "Why the version does not load."
 msgstr ""
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+msgid ""
+"Without the entries that mark a restart, an initialization or a clearing."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.module.category,name:int_workbench.module_category_int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_menu_root
 #: model:res.groups.privilege,name:int_workbench.privilege_int_workbench
 msgid "Workbench"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__wprio
+msgid "Wprio"
 msgstr ""
 
 #. module: int_workbench
@@ -1580,52 +1918,4 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model,name:int_workbench.model_ir_websocket
 msgid "websocket message handling"
-msgstr ""
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
-#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__clear_errors
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_list
-msgid "Clear error memory"
-msgstr ""
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_list
-msgid "Clear the error memory of the controllers shown"
-msgstr ""
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_list
-msgid "Clear the error memory of the controllers whose errors are shown?"
-msgstr ""
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_error.py:0
-msgid "Only an operator may clear the error memory."
-msgstr ""
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_error.py:0
-msgid "The error memory of %s is being cleared."
-msgstr ""
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
-msgid "The error memory is cleared."
-msgstr ""
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_command.py:0
-msgid "The controller %s cannot clear its error memory."
-msgstr ""
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_error.py:0
-msgid "The list shows no errors, so there is no controller whose error memory it could clear."
 msgstr ""

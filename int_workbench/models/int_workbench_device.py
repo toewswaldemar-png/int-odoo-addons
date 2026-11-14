@@ -14,8 +14,11 @@ MANAGER_GROUP = "int_workbench.int_workbench_group_manager"
 # What a service may report in one call. A snapshot of a controller with all pages is some 100 kB.
 MAX_SNAPSHOT_BYTES = 2_000_000
 # What of a report is not kept in the Json of the controller: the process values and the clamps are the rows of int.workbench.parameter,
-# the active errors the rows of int.workbench.error, and the pages are not kept at all.
-ROW_PARTS = ("values", "clamps", "pages", "errors")
+# the active errors the rows of int.workbench.error, the history and the status records of the error memory the rows of
+# int.workbench.error.history and int.workbench.error.status (only its state stays in the Json), and the pages are not kept at all.
+ROW_PARTS = ("values", "clamps", "pages", "errors", "errors_memory")
+# What of the error memory stays in the Json of the controller: how it was read, not what it holds.
+MEMORY_STATE_KEYS = ("status", "reason", "error", "read_at", "stale", "connected", "clear_enabled", "history_count", "status_total", "active_count")
 # A clamp request that was not carried out this long after it was made is not carried out any more. The list waits longer than this
 # (parameter_list.js), so it always gets an answer from Odoo, never a request that runs after the list has given up.
 COMMAND_TTL = timedelta(seconds=15)
@@ -129,6 +132,8 @@ class IntWorkbenchDevice(models.Model):
     # === RECORDS OF THE CONTROLLER === #
     command_ids = fields.One2many("int.workbench.command", "device_id", string="Clamp requests")
     error_ids = fields.One2many("int.workbench.error", "device_id", string="Errors")
+    error_history_ids = fields.One2many("int.workbench.error.history", "device_id", string="Error history")
+    error_status_ids = fields.One2many("int.workbench.error.status", "device_id", string="Error status")
 
     _name_unique = models.Constraint(
         "UNIQUE (name)",
@@ -287,11 +292,20 @@ class IntWorkbenchDevice(models.Model):
             raise ValidationError(self.env._("The snapshot is too large."))
         now = fields.Datetime.now()
         kept = {key: part for key, part in snapshot.items() if key not in ROW_PARTS}
+        memory = snapshot.get("errors_memory")
+        previous_read_at = ((self.snapshot or {}).get("errors_memory") or {}).get("read_at")
+        if isinstance(memory, dict):
+            kept["errors_memory"] = {key: memory[key] for key in MEMORY_STATE_KEYS if key in memory}
         self.write({"snapshot": kept, "snapshot_at": now, "seen_at": now})
         # sudo: int.workbench.parameter: the rows are written by the report of the service, which has no right on them
         changed, structure = self.env["int.workbench.parameter"].sudo()._sync(self, snapshot)
         # sudo: int.workbench.error: the rows are written by the report of the service, which has no right on them
         errors_changed = self.env["int.workbench.error"].sudo()._sync(self, snapshot)
+        # The service reads the error memory now and then; the rows are brought up to date only for a new reading (or if there are none)
+        if isinstance(memory, dict) and (memory.get("read_at") != previous_read_at or not self.error_status_ids):
+            # sudo: int.workbench.error.history, int.workbench.error.status: the rows are written by the report of the service
+            self.env["int.workbench.error.history"].sudo()._sync(self, snapshot)
+            self.env["int.workbench.error.status"].sudo()._sync(self, snapshot)
         # Telling the pages costs a NOTIFY after the commit (some 15 ms): only while somebody looks, and only if something changed.
         # The message names the rows that changed, so that a list loads these and not everything; if rows were created or removed,
         # or very many changed, it says that the list has to be loaded afresh.

@@ -6,6 +6,10 @@
               action="int_workbench_parameter_action" sequence="10"/>
     <menuitem id="int_workbench_error_menu" name="Errors" parent="int_workbench_menu_root"
               action="int_workbench_error_action" sequence="20"/>
+    <menuitem id="int_workbench_error_history_menu" name="Error history" parent="int_workbench_menu_root"
+              action="int_workbench_error_history_action" sequence="22"/>
+    <menuitem id="int_workbench_error_status_menu" name="Error status" parent="int_workbench_menu_root"
+              action="int_workbench_error_status_action" sequence="24"/>
     <menuitem id="int_workbench_command_menu" name="Clamp log" parent="int_workbench_menu_root"
               action="int_workbench_command_action" sequence="30"/>
     <menuitem id="int_workbench_project_menu" name="Projects" parent="int_workbench_menu_root"

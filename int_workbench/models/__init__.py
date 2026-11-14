@@ -5,6 +5,8 @@ from . import int_workbench_command
 from . import int_workbench_parameter_tag
 from . import int_workbench_parameter
 from . import int_workbench_error
+from . import int_workbench_error_history
+from . import int_workbench_error_status
 from . import int_workbench_log
 from . import int_workbench_user
 from . import int_workbench_project

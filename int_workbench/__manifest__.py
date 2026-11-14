@@ -22,6 +22,7 @@
         "views/int_workbench_parameter_views.xml",
         "views/int_workbench_command_views.xml",
         "views/int_workbench_error_views.xml",
+        "views/int_workbench_error_memory_views.xml",
         "views/int_workbench_log_views.xml",
         "views/int_workbench_user_views.xml",
         "views/int_workbench_project_views.xml",
