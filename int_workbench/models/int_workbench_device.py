@@ -13,6 +13,11 @@ from .service_utils import notification
 
 _logger = logging.getLogger(__name__)
 
+# A service that has not called Odoo for this long is silent (it calls every few seconds, also when nobody looks).
+SILENT_AFTER = timedelta(seconds=90)
+# At most this many new errors are named in one message.
+NEW_ERRORS_SHOWN = 5
+
 # What the service accepts as the id of a controller: letters, digits, minus and underscore.
 DEVICE_REF_PATTERN = re.compile(r"[A-Za-z0-9_-]+")
 SERVICE_GROUP = "int_workbench.int_workbench_group_service"
@@ -167,6 +172,12 @@ class IntWorkbenchDevice(models.Model):
     clock_read_at = fields.Char(compute="_compute_clock", string="Clock read at")
     clock_write_enabled = fields.Boolean(compute="_compute_clock", string="The clock may be set")
     can_count = fields.Char(compute="_compute_can_count", string="CAN modules (actual of configured)")
+    connection_state = fields.Selection(
+        [("connected", "Connected"), ("disconnected", "Disconnected"), ("silent", "Service silent"), ("unknown", "Unknown")],
+        compute="_compute_connection_state",
+        help="Connected: the service reports the controller on its line. Disconnected: the service is there but has no line to the "
+        "controller. Service silent: the service has not called Odoo for a while, so what is shown may be old.",
+    )
 
     _name_unique = models.Constraint(
         "UNIQUE (name)",
@@ -189,6 +200,23 @@ class IntWorkbenchDevice(models.Model):
             device.clock_local_time = str(clock.get("local_time") or "")
             device.clock_read_at = str(clock.get("read_at") or "") if clock.get("local_time") else ""
             device.clock_write_enabled = clock.get("write_enabled") is True
+
+    @staticmethod
+    def _connection_of(snapshot):
+        """Return what a report says of the line to the controller: connected, disconnected or unknown (no state in the report)."""
+        status = (snapshot or {}).get("status")
+        if not isinstance(status, dict) or not isinstance(status.get("connected"), bool):
+            return "unknown"
+        return "connected" if status["connected"] else "disconnected"
+
+    @api.depends("snapshot", "seen_at")
+    def _compute_connection_state(self):
+        now = fields.Datetime.now()
+        for device in self:
+            if device.seen_at and now - device.seen_at > SILENT_AFTER:
+                device.connection_state = "silent"
+            else:
+                device.connection_state = self._connection_of(device.snapshot)
 
     @api.depends("snapshot")
     def _compute_can_count(self):
@@ -341,6 +369,8 @@ class IntWorkbenchDevice(models.Model):
         if len(json.dumps(snapshot, separators=(",", ":"))) > MAX_SNAPSHOT_BYTES:
             raise ValidationError(self.env._("The snapshot is too large."))
         now = fields.Datetime.now()
+        had_report = bool(self.snapshot_at)
+        known_errors = {(error.word, error.bit) for error in self.error_ids}
         kept = {key: part for key, part in snapshot.items() if key not in ROW_PARTS}
         memory = snapshot.get("errors_memory")
         previous_read_at = ((self.snapshot or {}).get("errors_memory") or {}).get("read_at")
@@ -350,6 +380,8 @@ class IntWorkbenchDevice(models.Model):
             if isinstance(snapshot.get(part), dict):
                 kept[part] = {key: snapshot[part][key] for key in keys if key in snapshot[part]}
         previous = self.snapshot or {}
+        connection_before = self._connection_of(previous)
+        changed_models = []
         self.write({"snapshot": kept, "snapshot_at": now, "seen_at": now})
         # sudo: int.workbench.parameter: the rows are written by the report of the service, which has no right on them
         changed, structure = self.env["int.workbench.parameter"].sudo()._sync(self, snapshot)
@@ -359,20 +391,25 @@ class IntWorkbenchDevice(models.Model):
         can, intermediate = snapshot.get("can"), snapshot.get("intermediate")
         if isinstance(can, dict) and (can.get("time") != (previous.get("can") or {}).get("time") or not self.can_module_ids):
             # sudo: int.workbench.can.module: the rows are written by the report of the service
-            self._sync_mirror("int.workbench.can.module", snapshot)
+            if self._sync_mirror("int.workbench.can.module", snapshot):
+                changed_models.append("int.workbench.can.module")
         if isinstance(intermediate, dict) and (intermediate.get("read_at") != (previous.get("intermediate") or {}).get("read_at") or not self.intermediate_ids):
             # sudo: int.workbench.intermediate: the rows are written by the report of the service
-            self._sync_mirror("int.workbench.intermediate", snapshot)
+            if self._sync_mirror("int.workbench.intermediate", snapshot):
+                changed_models.append("int.workbench.intermediate")
         # The list of the error files comes with every report, the records of the files that changed only when Odoo asked for them
         if isinstance(snapshot.get("fs2_files"), dict):
-            self._sync_mirror("int.workbench.fs2.file", snapshot)
+            if self._sync_mirror("int.workbench.fs2.file", snapshot):
+                changed_models.append("int.workbench.fs2.file")
         if isinstance(snapshot.get("fs2_records"), dict):
-            self._sync_mirror("int.workbench.fs2.record", snapshot)
+            if self._sync_mirror("int.workbench.fs2.record", snapshot):
+                changed_models.append("int.workbench.fs2.record")
         # The service reads the error memory now and then; the rows are brought up to date only for a new reading (or if there are none)
         if isinstance(memory, dict) and (memory.get("read_at") != previous_read_at or not self.error_status_ids):
             # sudo: int.workbench.error.history, int.workbench.error.status: the rows are written by the report of the service
-            self._sync_mirror("int.workbench.error.history", snapshot)
-            self._sync_mirror("int.workbench.error.status", snapshot)
+            for model_name in ("int.workbench.error.history", "int.workbench.error.status"):
+                if self._sync_mirror(model_name, snapshot):
+                    changed_models.append(model_name)
         # Telling the pages costs a NOTIFY after the commit (some 15 ms): only while somebody looks, and only if something changed.
         # The message names the rows that changed, so that a list loads these and not everything; if rows were created or removed,
         # or very many changed, it says that the list has to be loaded afresh.
@@ -382,6 +419,19 @@ class IntWorkbenchDevice(models.Model):
         # the list of errors loads itself afresh (it is small and has no rows to keep in place)
         if errors_changed and self.watched:
             self._bus_send("int_workbench/errors", {})
+        if not self.watched:
+            return
+        # the other lists are told which of their models changed and load themselves afresh
+        if changed_models:
+            self._bus_send("int_workbench/changed", {"models": changed_models})
+        # an error that came since the last report is told to those who look (not at the first report: then everything is new)
+        if had_report:
+            new_errors = [error.text or f"{error.word}.{error.bit}" for error in self.error_ids if (error.word, error.bit) not in known_errors]
+            if new_errors:
+                self._bus_send("int_workbench/error_new", {"device": self.name, "errors": new_errors[:NEW_ERRORS_SHOWN], "more": max(0, len(new_errors) - NEW_ERRORS_SHOWN)})
+        connection_after = self._connection_of(kept)
+        if had_report and connection_after != connection_before:
+            self._bus_send("int_workbench/connection", {"device": self.name, "state": connection_after})
 
     def _sync_mirror(self, model_name, snapshot):
         """Bring the rows of one optional part of the report (CAN modules, error memory, ...) up to date. A part that cannot be stored
@@ -511,9 +561,14 @@ class IntWorkbenchDevice(models.Model):
         """Tell the lists that look at this controller how requests ended (a small message; the list does not poll for it)."""
         self.ensure_one()
         for command in commands:
-            self._bus_send(
-                "int_workbench/command", {"id": command.id, "action": command.action, "state": command.state, "message": command.message or ""}
-            )
+            payload = {"id": command.id, "action": command.action, "state": command.state, "message": command.message or ""}
+            self._bus_send("int_workbench/command", payload)
+            # the user who asked is told, wherever he is in Odoo: a notice for the end of a request (not for a clamp, the switch shows it),
+            # and a message for the page of the request itself, which loads the answer
+            user = command.user_id
+            user._bus_send("int_workbench/request", {"id": command.id, "state": command.state})
+            if command.action not in ("set", "release"):
+                user._bus_send("simple_notification", command._result_notice())
 
     # === ODOO ASKS THE SERVICE === #
 

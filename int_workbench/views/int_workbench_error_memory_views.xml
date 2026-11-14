@@ -7,7 +7,7 @@
         <field name="name">int.workbench.error.history.list</field>
         <field name="model">int.workbench.error.history</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0" decoration-danger="event == 'coming' and code &lt; 9990" decoration-muted="code &gt;= 9990">
+            <list js_class="int_workbench.live_list" create="0" edit="0" delete="0" decoration-danger="event == 'coming' and code &lt; 9990" decoration-muted="code &gt;= 9990">
                 <field name="device_id" optional="show"/>
                 <field name="entry" optional="hide"/>
                 <field name="controller_time" string="Time"/>
@@ -51,7 +51,7 @@
         <field name="name">int.workbench.error.status.list</field>
         <field name="model">int.workbench.error.status</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0" decoration-danger="present" decoration-muted="not reported">
+            <list js_class="int_workbench.live_list" create="0" edit="0" delete="0" decoration-danger="present" decoration-muted="not reported">
                 <field name="device_id" optional="show"/>
                 <field name="rank"/>
                 <field name="element" optional="show"/>

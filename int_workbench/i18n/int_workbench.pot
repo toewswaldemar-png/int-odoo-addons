@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 16:47+0000\n"
-"PO-Revision-Date: 2026-11-14 16:47+0000\n"
+"POT-Creation-Date: 2026-11-14 19:30+0000\n"
+"PO-Revision-Date: 2026-11-14 19:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -39,6 +39,46 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_parameter.py:0
 msgid "%s request(s) sent to the service. The result shows in the clamp log."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "%s: done."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "%s: the answer of the controller is in the request."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid "%s: the line to the controller is back."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid ""
+"%s: the service has lost the line to the controller. The values shown may be"
+" old."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid ""
+"%s: the service has no line to the controller. The values shown may be old."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid ""
+"%s: the service has not reported for a while. The values shown may be old."
 msgstr ""
 
 #. module: int_workbench
@@ -516,6 +556,24 @@ msgid "Configuration"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__connected
+msgid "Connected"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__connection_state
+msgid ""
+"Connected: the service reports the controller on its line. Disconnected: the"
+" service is there but has no line to the controller. Service silent: the "
+"service has not called Odoo for a while, so what is shown may be old."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__connection_state
+msgid "Connection State"
+msgstr ""
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 #: code:addons/int_workbench/wizard/int_workbench_console_wizard.py:0
@@ -543,6 +601,8 @@ msgid "Control the CAN bus"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_wizard__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__device_id
@@ -747,6 +807,11 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__disabled
 msgid "Disabled"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__disconnected
+msgid "Disconnected"
 msgstr ""
 
 #. module: int_workbench
@@ -1311,6 +1376,12 @@ msgid "Name the error files to delete (up to %s), by their file names."
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid "New error"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__time
 msgid "New time"
 msgstr ""
@@ -1779,6 +1850,11 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__seen_at
 msgid "Service last seen"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__silent
+msgid "Service silent"
 msgstr ""
 
 #. module: int_workbench
@@ -2539,6 +2615,11 @@ msgid "Unit"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__unknown
+msgid "Unknown"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__user
 #: model:res.groups,name:int_workbench.int_workbench_group_user
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
@@ -2702,6 +2783,12 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__wprio
 msgid "Wprio"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid "and %s more"
 msgstr ""
 
 #. module: int_workbench

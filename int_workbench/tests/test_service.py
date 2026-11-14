@@ -265,8 +265,7 @@ class TestIntWorkbenchService(TransactionCase):
         self.sync()
         with mock.patch.object(type(self.env["bus.bus"]), "_sendone") as sendone:
             self.sync(results=[{"id": command.id, "state": "done", "message": "confirmed by the controller"}])
-        self.assertEqual(sendone.call_count, 1)
-        target, kind, message = sendone.call_args.args
+        (target, kind, message), = [call.args for call in sendone.call_args_list if call.args[1] == "int_workbench/command"]
         self.assertEqual((target, kind), (self.device, "int_workbench/command"))
         self.assertEqual(message, {"id": command.id, "action": "set", "state": "done", "message": "confirmed by the controller"})
 
@@ -275,8 +274,8 @@ class TestIntWorkbenchService(TransactionCase):
         self.age(command, 30)
         with mock.patch.object(type(self.env["bus.bus"]), "_sendone") as sendone:
             self.sync()
-        self.assertEqual(sendone.call_count, 1)
-        self.assertEqual(sendone.call_args.args[2]["state"], "expired")
+        (call,) = [call for call in sendone.call_args_list if call.args[1] == "int_workbench/command"]
+        self.assertEqual(call.args[2]["state"], "expired")
 
     def test_the_pages_hear_that_the_errors_changed_and_only_then(self):
         self.device.with_user(self.reader).watch()
@@ -329,7 +328,8 @@ class TestIntWorkbenchService(TransactionCase):
         self.sync()
         with mock.patch.object(type(self.env["bus.bus"]), "_sendone") as sendone:
             self.sync(results=[{"id": command.id, "state": "failed", "message": "not released"}])
-        self.assertEqual(sendone.call_args.args[2], {"id": command.id, "action": "clear_errors", "state": "failed", "message": "not released"})
+        (call,) = [call for call in sendone.call_args_list if call.args[1] == "int_workbench/command"]
+        self.assertEqual(call.args[2], {"id": command.id, "action": "clear_errors", "state": "failed", "message": "not released"})
 
     def test_the_button_asks_for_the_controllers_whose_errors_are_shown(self):
         self.give_error_memory(self.device, self.other_device)

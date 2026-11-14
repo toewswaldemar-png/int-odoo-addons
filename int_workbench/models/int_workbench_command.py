@@ -94,6 +94,21 @@ class IntWorkbenchCommand(models.Model):
     sent_at = fields.Datetime(readonly=True)
     done_at = fields.Datetime(readonly=True)
 
+    def _result_notice(self):
+        """Return the notice (a message of the bus type simple_notification) that tells the user who asked how the request ended, in the
+        language of that user. Clamps are not told: the switch of the list shows them."""
+        self.ensure_one()
+        command = self.with_context(lang=self.user_id.lang or self.env.lang)
+        label = dict(command._fields["action"]._description_selection(command.env))[command.action]
+        device = command.device_id.name
+        if command.state == "done":
+            notice = {"type": "success", "message": command.env._("%s: done.", device)}
+            if command.action in ("console", "console_write"):
+                notice["message"] = command.env._("%s: the answer of the controller is in the request.", device)
+            return {**notice, "title": label}
+        text = command.message or dict(command._fields["state"]._description_selection(command.env))[command.state]
+        return {"type": "danger" if command.state == "failed" else "warning", "title": label, "message": f"{device}: {text}", "sticky": True}
+
     @api.depends("action", "payload", "value")
     def _compute_detail(self):
         for command in self:

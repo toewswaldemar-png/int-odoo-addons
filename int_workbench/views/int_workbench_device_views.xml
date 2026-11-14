@@ -6,6 +6,8 @@
         <field name="arch" type="xml">
             <list>
                 <field name="name"/>
+                <field name="connection_state" widget="badge" decoration-success="connection_state == 'connected'"
+                       decoration-warning="connection_state in ('disconnected', 'silent')"/>
                 <field name="device_ref"/>
                 <field name="family_id" optional="show"/>
                 <field name="service_user_id"/>
@@ -67,7 +69,9 @@
                     <field name="cap_can_control" invisible="1"/>
                     <field name="cap_error_files" invisible="1"/>
                     <field name="cap_project_files" invisible="1"/>
-                    <group string="State" invisible="not clock_local_time and not can_count">
+                    <group string="State">
+                        <field name="connection_state" widget="badge" decoration-success="connection_state == 'connected'"
+                               decoration-warning="connection_state in ('disconnected', 'silent')"/>
                         <field name="clock_local_time" invisible="not clock_local_time"/>
                         <field name="clock_read_at" invisible="not clock_local_time"/>
                         <field name="can_count" invisible="not can_count"/>

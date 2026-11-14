@@ -54,6 +54,10 @@ export class ParameterListController extends ListController {
         this.onValues = (message) => this.valuesChanged(message);
         this.onCommand = (payload) => this.commandSettled(payload);
         this.onErrors = () => this.reloadDebounced();
+        this.onChanged = (payload) => this.modelsChanged(payload);
+        this.onConnection = (payload) => this.connectionChanged(payload);
+        this.onNewErrors = (payload) => this.errorsCame(payload);
+        this.toldAbout = new Set(); // the controllers whose bad state this list has told already
         this.listeners = this.messages();
         this.onVisible = () => {
             if (!document.hidden) {
@@ -90,12 +94,46 @@ export class ParameterListController extends ListController {
      * those about its own rows: the ids of changed process values mean nothing to a list of errors.
      */
     messages() {
-        return { "int_workbench/values": this.onValues, "int_workbench/command": this.onCommand };
+        return { "int_workbench/values": this.onValues, "int_workbench/command": this.onCommand, ...this.commonMessages() };
     }
 
-    /** The requests whose end this list tells (the same message goes to every list that looks at the controller). */
+    /** What every list of the controllers tells besides its own rows: the line to a controller was lost or came back, a new error came. */
+    commonMessages() {
+        return { "int_workbench/connection": this.onConnection, "int_workbench/error_new": this.onNewErrors };
+    }
+
+    /** The requests whose end this list tells (the same message goes to every list that looks at the controller): the clamps. */
     handlesAction(action) {
-        return action !== "clear_errors";
+        return action === "set" || action === "release";
+    }
+
+    /** The bus says the line to a controller was lost or came back: {device, state}. */
+    connectionChanged({ device, state } = {}) {
+        if (state === "connected") {
+            this.notification.add(_t("%s: the line to the controller is back.", device), { title: _t("Controller"), type: "success" });
+        } else if (state === "disconnected") {
+            this.notification.add(_t("%s: the service has lost the line to the controller. The values shown may be old.", device), {
+                title: _t("Controller"),
+                type: "warning",
+                sticky: true,
+            });
+        }
+    }
+
+    /** The bus says errors came: {device, errors, more}. */
+    errorsCame({ device, errors = [], more = 0 } = {}) {
+        let message = errors.join(", ");
+        if (more) {
+            message += " " + _t("and %s more", more);
+        }
+        this.notification.add(`${device}: ${message}`, { title: _t("New error"), type: "danger", sticky: true });
+    }
+
+    /** The bus says which models changed in a report: {models}. Only the lists of those models load themselves afresh. */
+    modelsChanged({ models = [] } = {}) {
+        if (models.includes(this.props.resModel)) {
+            this.reloadDebounced();
+        }
     }
 
     /** The class of this list: the style sheet next to this file (parameter_list.scss) is for the rows of this list and no other. */
@@ -211,6 +249,37 @@ export class ParameterListController extends ListController {
         }
         if (added) {
             this.watch();
+            this.checkConnections();
+        }
+    }
+
+    /** A list that shows rows of a controller with no line, or whose service is silent, says so once: what it shows may be old. */
+    async checkConnections() {
+        const ids = [...this.devices].filter((id) => !this.toldAbout.has(id));
+        if (!ids.length) {
+            return;
+        }
+        let devices = [];
+        try {
+            devices = await this.orm.silent.read("int.workbench.device", ids, ["name", "connection_state"]);
+        } catch {
+            return; // a failed look is no error of the list
+        }
+        for (const device of devices) {
+            this.toldAbout.add(device.id);
+            if (device.connection_state === "silent") {
+                this.notification.add(_t("%s: the service has not reported for a while. The values shown may be old.", device.name), {
+                    title: _t("Controller"),
+                    type: "warning",
+                    sticky: true,
+                });
+            } else if (device.connection_state === "disconnected") {
+                this.notification.add(_t("%s: the service has no line to the controller. The values shown may be old.", device.name), {
+                    title: _t("Controller"),
+                    type: "warning",
+                    sticky: true,
+                });
+            }
         }
     }
 
@@ -231,11 +300,44 @@ export class ParameterListController extends ListController {
  */
 export class ErrorListController extends ParameterListController {
     messages() {
-        return { "int_workbench/errors": this.onErrors, "int_workbench/command": this.onCommand };
+        return { "int_workbench/errors": this.onErrors, "int_workbench/command": this.onCommand, ...this.commonMessages() };
     }
 
     handlesAction(action) {
         return action === "clear_errors";
+    }
+
+    /** The end of the request to clear is told by the notice of the server; the list only loads what the controller has now. */
+    commandSettled({ action } = {}) {
+        if (this.handlesAction(action)) {
+            this.reloadDebounced();
+        }
+    }
+
+    get styleClass() {
+        return ""; // the style sheet is for the process values
+    }
+}
+
+/**
+ * Every other list of the controllers (error history and status, error files and their records, CAN modules, intermediate values, the
+ * requests): it tells Odoo which controllers it shows, listens to their channels and, when the bus says that a report changed rows of its
+ * model, loads itself afresh. A request that ended (the requests list) loads it too.
+ */
+export class LiveListController extends ParameterListController {
+    messages() {
+        return { "int_workbench/changed": this.onChanged, "int_workbench/command": this.onCommand, ...this.commonMessages() };
+    }
+
+    handlesAction() {
+        return this.props.resModel === "int.workbench.command";
+    }
+
+    /** A request ended: the list of the requests shows it. */
+    commandSettled() {
+        if (this.handlesAction()) {
+            this.reloadDebounced();
+        }
     }
 
     get styleClass() {
@@ -244,7 +346,9 @@ export class ErrorListController extends ParameterListController {
 }
 
 export const parameterListView = { ...listView, Controller: ParameterListController };
+export const liveListView = { ...listView, Controller: LiveListController };
 export const errorListView = { ...listView, Controller: ErrorListController };
 
 registry.category("views").add("int_workbench.parameter_list", parameterListView);
 registry.category("views").add("int_workbench.error_list", errorListView);
+registry.category("views").add("int_workbench.live_list", liveListView);

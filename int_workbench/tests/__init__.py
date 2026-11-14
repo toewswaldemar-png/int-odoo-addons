@@ -3,6 +3,7 @@ from . import test_control
 from . import test_device
 from . import test_error_memory
 from . import test_family
+from . import test_feedback
 from . import test_fs2
 from . import test_parameter
 from . import test_service

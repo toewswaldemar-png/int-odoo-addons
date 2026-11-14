@@ -3,7 +3,7 @@ import re
 from odoo.tests.common import TransactionCase, tagged
 
 DEFINE_REGEX = re.compile(r"odoo\.define\(\s*'([^']+)'\s*,\s*\[([^\]]*)\]")
-MODULES = ("views/parameter_list",)
+MODULES = ("views/command_form", "views/parameter_list")
 
 
 @tagged("post_install", "-at_install")

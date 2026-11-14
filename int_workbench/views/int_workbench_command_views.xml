@@ -4,7 +4,7 @@
         <field name="name">int.workbench.command.list</field>
         <field name="model">int.workbench.command</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0" decoration-danger="state in ('failed', 'unconfirmed', 'unknown', 'expired')">
+            <list js_class="int_workbench.live_list" create="0" edit="0" delete="0" decoration-danger="state in ('failed', 'unconfirmed', 'unknown', 'expired')">
                 <field name="create_date" string="Requested"/>
                 <field name="device_id"/>
                 <field name="user_id"/>
@@ -23,7 +23,7 @@
         <field name="name">int.workbench.command.form</field>
         <field name="model">int.workbench.command</field>
         <field name="arch" type="xml">
-            <form create="0" edit="0" delete="0">
+            <form js_class="int_workbench.command_form" create="0" edit="0" delete="0">
                 <sheet>
                     <group>
                         <group>

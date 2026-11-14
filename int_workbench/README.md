@@ -67,6 +67,20 @@ Beide mit dem API-Schlüssel eines Benutzers der Gruppe `Workbench / Service`, n
 
 Der Bus braucht den Websocket von Odoo (im Betrieb mit einem Prozess im Server, mit mehreren über den Evented-Port).
 
+## Rückmeldungen in der Oberfläche
+
+Odoo sagt dem Benutzer, was geschieht, ohne dass er eine Liste neu laden muss. Alles läuft über den Bus (Nachrichten an den Partner des Benutzers beziehungsweise an die Seiten, die den Regler ansehen); die Seite fragt nie von sich aus nach.
+
+| Was | Wer erfährt es | Wie |
+|---|---|---|
+| Ausgang eines Auftrags (Uhr, CAN-Bus, Neustart, Konsole, Fehlerspeicher löschen, Dateien) | der Benutzer, der ihn gestellt hat, wo auch immer er in Odoo ist | Hinweis (`simple_notification`): Erfolg verschwindet von selbst, Warnung und Fehler bleiben stehen und tragen den Text des Dienstes. Klemmen und Lösen melden sich nicht, der Schalter zeigt es. |
+| Antwort einer Konsole | die offene Seite des Auftrags | `int_workbench/request`: das Formular lädt sich neu (nicht bei ungespeicherten Änderungen) |
+| Neue Daten (Fehler, CAN, Zwischenwerte, Dateien, Aufträge) | wer den Regler gerade ansieht | `int_workbench/changed` mit den geänderten Modellen: die Liste lädt sich neu |
+| Neuer Fehler | wer den Regler gerade ansieht | Hinweis mit den ersten fünf Fehlern und „und n weitere“; nicht beim ersten Bericht |
+| Verbindung zum Regler | wer den Regler gerade ansieht | Hinweis bei Verlust und bei Rückkehr; Feld *Verbindung* am Regler und in der Reglerliste (Verbunden, Getrennt, Dienst still nach 90 s ohne Bericht, Unbekannt) |
+
+Wer den Regler ansieht, steht im Feld `viewer_at` (die Listen melden sich über `watch()`); solange niemand schaut, schickt Odoo nichts und der Dienst bleibt im Ruhetakt.
+
 ## Grenzen
 
 - **Kapazität (gemessen am 9.11.2026, Wegwerf-Instanz, ein Prozess, simulierte Dienste mit dem echten Bericht):** Im Ruhetakt (2 s, Bericht alle 10 s) kosten 100 Dienste 51 Aufrufe pro Sekunde, 69 % eines Kerns und 50 kB/s Journal; im 30-s-Takt (Bericht 60 s) nur 2,5 Aufrufe pro Sekunde, 11,5 % und 8 kB/s. Ein Prozess trägt etwa 50 Aufrufe pro Sekunde gut. Für Hunderte Regler wäre ein Wecken (MQTT oder ein Aufruf von Odoo an den Dienst) der nächste Schritt.

@@ -7,7 +7,7 @@
         <field name="name">int.workbench.fs2.file.list</field>
         <field name="model">int.workbench.fs2.file</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0">
+            <list js_class="int_workbench.live_list" create="0" edit="0" delete="0">
                 <header>
                     <button name="action_delete" type="object" string="Delete" icon="fa-trash" display="always"
                             title="Move the selected files to the folder of deleted files"
@@ -55,7 +55,7 @@
         <field name="name">int.workbench.fs2.record.list</field>
         <field name="model">int.workbench.fs2.record</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0" decoration-danger="event == 'coming' and code &lt; 9990" decoration-muted="code &gt;= 9990">
+            <list js_class="int_workbench.live_list" create="0" edit="0" delete="0" decoration-danger="event == 'coming' and code &lt; 9990" decoration-muted="code &gt;= 9990">
                 <field name="file_id"/>
                 <field name="device_id" optional="hide"/>
                 <field name="iso" string="Time"/>

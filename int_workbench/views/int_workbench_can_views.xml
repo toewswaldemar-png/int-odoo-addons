@@ -6,7 +6,7 @@
         <field name="name">int.workbench.can.module.list</field>
         <field name="model">int.workbench.can.module</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0">
+            <list js_class="int_workbench.live_list" create="0" edit="0" delete="0">
                 <field name="device_id" optional="show"/>
                 <field name="number"/>
                 <field name="type_name"/>
@@ -46,7 +46,7 @@
         <field name="name">int.workbench.intermediate.list</field>
         <field name="model">int.workbench.intermediate</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0" decoration-muted="not answered">
+            <list js_class="int_workbench.live_list" create="0" edit="0" delete="0" decoration-muted="not answered">
                 <field name="device_id" optional="show"/>
                 <field name="sequence" optional="hide"/>
                 <field name="name"/>
