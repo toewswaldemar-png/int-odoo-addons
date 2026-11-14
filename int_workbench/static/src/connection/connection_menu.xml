@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="int_workbench.ConnectionMenu">
+        <t t-if="devices.length">
+            <Dropdown position="'bottom-end'" menuClass="'o_int_workbench_connection_menu'">
+                <button t-att-title="labels[worst]">
+                    <i class="fa fa-circle" t-attf-class="text-{{ color(worst) }}" role="img" aria-label="Controllers"/>
+                </button>
+                <t t-set-slot="content">
+                    <div t-foreach="devices" t-as="device" t-key="device.id" class="dropdown-item-text d-flex align-items-center gap-2">
+                        <i class="fa fa-circle" t-attf-class="text-{{ color(device.connection_state) }}" role="img"/>
+                        <span class="flex-grow-1" t-out="device.name"/>
+                        <small class="text-muted" t-out="labels[device.connection_state]"/>
+                    </div>
+                    <DropdownItem onSelected.bind="openControllers">Controllers</DropdownItem>
+                </t>
+            </Dropdown>
+        </t>
+    </t>
+
+</templates>

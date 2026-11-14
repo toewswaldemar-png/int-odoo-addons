@@ -4,7 +4,9 @@ import { useDebounced } from "@web/core/utils/timing";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { ListController } from "@web/views/list/list_controller";
+import { ListRenderer } from "@web/views/list/list_renderer";
 import { listView } from "@web/views/list/list_view";
+import { ConnectionBanner } from "../connection/connection_banner";
 
 /**
  * The first message of the bus refreshes the list at once; messages that come within this time after it (a clamp result next to a
@@ -39,6 +41,7 @@ const channelOf = (deviceId) => `int.workbench.device_${deviceId}`;
 export class ParameterListController extends ListController {
     setup() {
         super.setup(...arguments);
+        this.connections = useService("int_workbench_connection");
         this.bus = useService("bus_service");
         this.orm = useService("orm");
         this.notification = useService("notification");
@@ -57,7 +60,6 @@ export class ParameterListController extends ListController {
         this.onChanged = (payload) => this.modelsChanged(payload);
         this.onConnection = (payload) => this.connectionChanged(payload);
         this.onNewErrors = (payload) => this.errorsCame(payload);
-        this.toldAbout = new Set(); // the controllers whose bad state this list has told already
         this.listeners = this.messages();
         this.onVisible = () => {
             if (!document.hidden) {
@@ -109,6 +111,7 @@ export class ParameterListController extends ListController {
 
     /** The bus says the line to a controller was lost or came back: {device, state}. */
     connectionChanged({ device, state } = {}) {
+        this.connections.refresh();
         if (state === "connected") {
             this.notification.add(_t("%s: the line to the controller is back.", device), { title: _t("Controller"), type: "success" });
         } else if (state === "disconnected") {
@@ -249,37 +252,6 @@ export class ParameterListController extends ListController {
         }
         if (added) {
             this.watch();
-            this.checkConnections();
-        }
-    }
-
-    /** A list that shows rows of a controller with no line, or whose service is silent, says so once: what it shows may be old. */
-    async checkConnections() {
-        const ids = [...this.devices].filter((id) => !this.toldAbout.has(id));
-        if (!ids.length) {
-            return;
-        }
-        let devices = [];
-        try {
-            devices = await this.orm.silent.read("int.workbench.device", ids, ["name", "connection_state"]);
-        } catch {
-            return; // a failed look is no error of the list
-        }
-        for (const device of devices) {
-            this.toldAbout.add(device.id);
-            if (device.connection_state === "silent") {
-                this.notification.add(_t("%s: the service has not reported for a while. The values shown may be old.", device.name), {
-                    title: _t("Controller"),
-                    type: "warning",
-                    sticky: true,
-                });
-            } else if (device.connection_state === "disconnected") {
-                this.notification.add(_t("%s: the service has no line to the controller. The values shown may be old.", device.name), {
-                    title: _t("Controller"),
-                    type: "warning",
-                    sticky: true,
-                });
-            }
         }
     }
 
@@ -345,9 +317,15 @@ export class LiveListController extends ParameterListController {
     }
 }
 
-export const parameterListView = { ...listView, Controller: ParameterListController };
-export const liveListView = { ...listView, Controller: LiveListController };
-export const errorListView = { ...listView, Controller: ErrorListController };
+/** The renderer of Odoo with the strip above the table that says when the line to a controller of the rows is not good. */
+export class ParameterListRenderer extends ListRenderer {
+    static template = "int_workbench.ListRenderer";
+    static components = { ...ListRenderer.components, ConnectionBanner };
+}
+
+export const parameterListView = { ...listView, Controller: ParameterListController, Renderer: ParameterListRenderer };
+export const liveListView = { ...listView, Controller: LiveListController, Renderer: ParameterListRenderer };
+export const errorListView = { ...listView, Controller: ErrorListController, Renderer: ParameterListRenderer };
 
 registry.category("views").add("int_workbench.parameter_list", parameterListView);
 registry.category("views").add("int_workbench.error_list", errorListView);

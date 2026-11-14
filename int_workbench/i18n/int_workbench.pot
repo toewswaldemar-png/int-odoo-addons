@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 19:30+0000\n"
-"PO-Revision-Date: 2026-11-14 19:30+0000\n"
+"POT-Creation-Date: 2026-11-14 20:25+0000\n"
+"PO-Revision-Date: 2026-11-14 20:25+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -69,14 +69,14 @@ msgstr ""
 
 #. module: int_workbench
 #. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+#: code:addons/int_workbench/static/src/connection/connection_banner.js:0
 msgid ""
 "%s: the service has no line to the controller. The values shown may be old."
 msgstr ""
 
 #. module: int_workbench
 #. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+#: code:addons/int_workbench/static/src/connection/connection_banner.js:0
 msgid ""
 "%s: the service has not reported for a while. The values shown may be old."
 msgstr ""
@@ -556,6 +556,8 @@ msgid "Configuration"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_service.js:0
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__connected
 msgid "Connected"
 msgstr ""
@@ -664,6 +666,8 @@ msgid "Controller software"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_menu.xml:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_device_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__device_ids
 #: model:ir.ui.menu,name:int_workbench.int_workbench_device_menu
@@ -810,6 +814,8 @@ msgid "Disabled"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_service.js:0
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__disconnected
 msgid "Disconnected"
 msgstr ""
@@ -1853,6 +1859,8 @@ msgid "Service last seen"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_service.js:0
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__silent
 msgid "Service silent"
 msgstr ""
@@ -2615,6 +2623,8 @@ msgid "Unit"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_service.js:0
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__unknown
 msgid "Unknown"
 msgstr ""

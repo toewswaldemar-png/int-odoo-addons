@@ -3,7 +3,13 @@ import re
 from odoo.tests.common import TransactionCase, tagged
 
 DEFINE_REGEX = re.compile(r"odoo\.define\(\s*'([^']+)'\s*,\s*\[([^\]]*)\]")
-MODULES = ("views/command_form", "views/parameter_list")
+MODULES = (
+    "connection/connection_banner",
+    "connection/connection_menu",
+    "connection/connection_service",
+    "views/command_form",
+    "views/parameter_list",
+)
 
 
 @tagged("post_install", "-at_install")
@@ -42,7 +48,7 @@ class TestAssets(TransactionCase):
                 self.assertIn(dependency, self.modules, f"{name} imports {dependency}, which is not in the bundle")
 
     def test_there_is_nothing_but_the_list(self):
-        """The module adds no page and no field widget: the views are made of what Odoo has, and the list controller is the one exception."""
+        """The module adds no page and no field widget: the views are made of what Odoo has; it adds the list controller, the state of the connection (service, systray item, banner) and the form of a request."""
         ours = [name for name in self.modules if name.startswith("@int_workbench/")]
         self.assertEqual(ours, [f"@int_workbench/{name}" for name in MODULES])
 
@@ -55,3 +61,15 @@ class TestAssets(TransactionCase):
     def test_the_list_of_errors_takes_its_controller_from_the_same_script(self):
         """It is one script with two lists, not a second one: the module still adds no more than the list controller."""
         self.assertEqual(self.script.count("@int_workbench/views/parameter_list'"), 1)
+
+    def test_the_banner_template_extends_the_renderer_of_odoo_where_odoo_has_the_place(self):
+        """The template adds to the top of web.ListRenderer: if Odoo changes that place, the banner would be lost without an error."""
+        self.assertIn('t-name="int_workbench.ListRenderer"', self.script)
+        self.assertIn('t-inherit="web.ListRenderer"', self.script)
+        start = self.script.index('t-name="web.ListRenderer"')
+        core = self.script[start : self.script.index("t-name=", start + 1)]
+        self.assertIn("o_list_renderer", core)
+        self.assertIn("showNoContentHelper", core)
+        self.assertIn("int_workbench.ConnectionBanner", self.script)
+        self.assertIn("int_workbench.ConnectionMenu", self.script)
+        self.assertIn("int_workbench.connection_menu", self.script)

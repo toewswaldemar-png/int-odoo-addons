@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- The renderer of the list of Odoo with one addition: at the top of the table area the strip that says when the line to a controller
+         of the rows is not good. It goes inside the renderer, as the helper of an empty list does: a sibling of the renderer would stand
+         beside the search panel (the content of the page is a row there), not above the table. -->
+    <t t-name="int_workbench.ListRenderer" t-inherit="web.ListRenderer" t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('o_list_renderer')]/t[@t-if='showNoContentHelper']" position="before">
+            <ConnectionBanner list="props.list"/>
+        </xpath>
+    </t>
+
+</templates>

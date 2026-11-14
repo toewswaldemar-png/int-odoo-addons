@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="int_workbench.ConnectionBanner">
+        <div t-if="messages.length" class="o_int_workbench_connection_banner alert alert-warning mb-0 rounded-0 border-0 border-bottom" role="alert">
+            <div t-foreach="messages" t-as="message" t-key="message_index" t-out="message"/>
+        </div>
+    </t>
+
+</templates>

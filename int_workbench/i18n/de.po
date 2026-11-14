@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 19:31+0000\n"
-"PO-Revision-Date: 2026-11-14 19:31+0000\n"
+"POT-Creation-Date: 2026-11-14 20:26+0000\n"
+"PO-Revision-Date: 2026-11-14 20:26+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -69,18 +69,20 @@ msgstr "%s: Die Verbindung zum Regler ist wieder da."
 msgid ""
 "%s: the service has lost the line to the controller. The values shown may be"
 " old."
-msgstr "%s: Der Dienst hat die Verbindung zum Regler verloren. Die angezeigten Werte können veraltet sein."
+msgstr ""
+"%s: Der Dienst hat die Verbindung zum Regler verloren. Die angezeigten Werte"
+" können veraltet sein."
 
 #. module: int_workbench
 #. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+#: code:addons/int_workbench/static/src/connection/connection_banner.js:0
 msgid ""
 "%s: the service has no line to the controller. The values shown may be old."
 msgstr "%s: Der Dienst hat keine Verbindung zum Regler. Die angezeigten Werte können veraltet sein."
 
 #. module: int_workbench
 #. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+#: code:addons/int_workbench/static/src/connection/connection_banner.js:0
 msgid ""
 "%s: the service has not reported for a while. The values shown may be old."
 msgstr "%s: Der Dienst hat sich länger nicht gemeldet. Die angezeigten Werte können veraltet sein."
@@ -573,6 +575,8 @@ msgid "Configuration"
 msgstr "Konfiguration"
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_service.js:0
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__connected
 msgid "Connected"
 msgstr "Verbunden"
@@ -583,7 +587,11 @@ msgid ""
 "Connected: the service reports the controller on its line. Disconnected: the"
 " service is there but has no line to the controller. Service silent: the "
 "service has not called Odoo for a while, so what is shown may be old."
-msgstr "Verbunden: Der Dienst meldet den Regler an seiner Leitung. Getrennt: Der Dienst ist da, hat aber keine Verbindung zum Regler. Dienst still: Der Dienst hat sich länger nicht bei Odoo gemeldet, die Anzeige kann veraltet sein."
+msgstr ""
+"Verbunden: Der Dienst meldet den Regler an seiner Leitung. Getrennt: Der "
+"Dienst ist da, hat aber keine Verbindung zum Regler. Dienst still: Der "
+"Dienst hat sich länger nicht bei Odoo gemeldet, die Anzeige kann veraltet "
+"sein."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__connection_state
@@ -681,6 +689,8 @@ msgid "Controller software"
 msgstr "Software des Reglers"
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_menu.xml:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_device_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__device_ids
 #: model:ir.ui.menu,name:int_workbench.int_workbench_device_menu
@@ -836,6 +846,8 @@ msgid "Disabled"
 msgstr "Gesperrt"
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_service.js:0
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__disconnected
 msgid "Disconnected"
 msgstr "Getrennt"
@@ -1898,6 +1910,8 @@ msgid "Service last seen"
 msgstr "Dienst zuletzt gesehen"
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_service.js:0
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__silent
 msgid "Service silent"
 msgstr "Dienst still"
@@ -2733,6 +2747,8 @@ msgid "Unit"
 msgstr "Einheit"
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_service.js:0
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__connection_state__unknown
 msgid "Unknown"
 msgstr "Unbekannt"
