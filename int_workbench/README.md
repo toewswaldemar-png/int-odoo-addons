@@ -61,7 +61,7 @@ Beide mit dem API-Schlüssel eines Benutzers der Gruppe `Workbench / Service`, n
 ## Einrichten
 
 1. **Dienst-Benutzer** anlegen, nur mit der Gruppe `Workbench / Service`, und unter *Kontosicherheit > Neuer API-Schlüssel* einen Schlüssel erzeugen (höchstens 365 Tage; ein Schlüssel ist nur einmal lesbar).
-2. **Regler** anlegen (Menü *Workbench > Configuration > Controllers*): Name, Kennung im Dienst (Vorgabe `main`), Dienst-Benutzer. Für Benutzer, Protokoll und Projekte zusätzlich *Dienstadresse* (zum Beispiel `http://workbench:8080`) und *Dienst-Token*.
+2. **Regler** anlegen (Menü *Workbench > Controllers*): Name, Kennung im Dienst (Vorgabe `main`), Dienst-Benutzer. Für Benutzer, Protokoll und Projekte zusätzlich *Dienstadresse* (zum Beispiel `http://workbench:8080`) und *Dienst-Token*.
 3. **Bediener** bekommen `Workbench / Operator` (klemmen, lösen, Fehlerspeicher löschen), **Techniker** `Workbench / Technician` (zusätzlich Uhr stellen, CAN-Bus steuern, Neustart, Konsolenbefehle), **Verwalter** `Workbench / Manager` (Regler anlegen, Konten und Protokoll lesen, Projekte übernehmen), alle anderen `Workbench / User` (lesen). Die Aufträge der Techniker gehen als allgemeine Aufträge zum Dienst: nur die festen Aktionen, die der Dienst kennt, und nur mit dem Recht des Dienstes dafür (die Freigaben des Dienstes gelten also weiter).
 4. **Dienst** mit Odoo verbinden (der Schlüssel kommt aus einer Datei oder der Umgebungsvariable, nie auf die Kommandozeile); die Adresse und Parameter stehen in der Beschreibung des Dienstes.
 

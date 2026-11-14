@@ -86,3 +86,18 @@ class TestIntWorkbenchDevice(TransactionCase):
         self.assertIn(self.env.ref("int_workbench.int_workbench_group_user"), menu.group_ids)
         configuration = self.env.ref("int_workbench.int_workbench_menu_configuration")
         self.assertIn(self.env.ref("int_workbench.int_workbench_group_manager"), configuration.group_ids)
+
+    def test_the_menu_is_grouped_by_what_one_does(self):
+        ref = lambda name: self.env.ref(f"int_workbench.int_workbench_{name}")  # noqa: E731
+        root, memory, tools, configuration = ref("menu_root"), ref("error_memory_menu"), ref("tools_menu"), ref("menu_configuration")
+        for name in ("parameter_menu", "intermediate_menu", "error_memory_menu", "tools_menu", "device_menu", "project_menu", "menu_configuration"):
+            self.assertEqual(ref(name).parent_id, root, name)
+        for name in ("error_menu", "error_history_menu", "error_status_menu", "fs2_file_menu", "fs2_record_menu"):
+            self.assertEqual(ref(name).parent_id, memory, name)
+        for name in ("console_menu", "can_module_menu", "command_menu"):
+            self.assertEqual(ref(name).parent_id, tools, name)
+        for name in ("family_menu", "user_menu", "log_menu"):
+            self.assertEqual(ref(name).parent_id, configuration, name)
+        for menu in (memory, tools):
+            self.assertGreaterEqual(len(menu.child_id), 2, "a group menu has at least two entries")
+        self.assertFalse(self.env["ir.ui.menu"].search([("parent_id", "child_of", root.id), ("parent_id.parent_id.parent_id", "=", root.id)]), "no third level")

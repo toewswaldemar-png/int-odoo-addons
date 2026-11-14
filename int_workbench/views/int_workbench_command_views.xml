@@ -67,7 +67,7 @@
     </record>
 
     <record id="int_workbench_command_action" model="ir.actions.act_window">
-        <field name="name">Clamp log</field>
+        <field name="name">Requests</field>
         <field name="res_model">int.workbench.command</field>
         <field name="view_mode">list,form</field>
     </record>

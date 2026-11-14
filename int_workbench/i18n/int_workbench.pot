@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 14:49+0000\n"
-"PO-Revision-Date: 2026-11-14 14:49+0000\n"
+"POT-Creation-Date: 2026-11-14 16:47+0000\n"
+"PO-Revision-Date: 2026-11-14 16:47+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -364,12 +364,6 @@ msgid "Clamp and release values"
 msgstr ""
 
 #. module: int_workbench
-#: model:ir.actions.act_window,name:int_workbench.int_workbench_command_action
-#: model:ir.ui.menu,name:int_workbench.int_workbench_command_menu
-msgid "Clamp log"
-msgstr ""
-
-#. module: int_workbench
 #. odoo-javascript
 #: code:addons/int_workbench/static/src/views/parameter_list.js:0
 msgid "Clamp request"
@@ -687,6 +681,12 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_error_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_error_menu
+msgid "Current errors"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__date
 msgid "Date"
@@ -851,28 +851,29 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_fs2_record_action
-#: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_record_menu
 msgid "Error file records"
 msgstr ""
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_fs2_file_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__fs2_file_ids
-#: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_file_menu
 msgid "Error files"
 msgstr ""
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_error_history_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_history_ids
-#: model:ir.ui.menu,name:int_workbench.int_workbench_error_history_menu
 msgid "Error history"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_error_memory_menu
+msgid "Error memory"
 msgstr ""
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_error_status_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_status_ids
-#: model:ir.ui.menu,name:int_workbench.int_workbench_error_status_menu
 msgid "Error status"
 msgstr ""
 
@@ -883,9 +884,7 @@ msgid "Error word"
 msgstr ""
 
 #. module: int_workbench
-#: model:ir.actions.act_window,name:int_workbench.int_workbench_error_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_ids
-#: model:ir.ui.menu,name:int_workbench.int_workbench_error_menu
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Errors"
 msgstr ""
@@ -990,7 +989,13 @@ msgid "File"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_record_menu
+msgid "File records"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__file_count
+#: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_file_menu
 msgid "Files"
 msgstr ""
 
@@ -1065,6 +1070,11 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_intermediate
 msgid "Has intermediate values"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_error_history_menu
+msgid "History"
 msgstr ""
 
 #. module: int_workbench
@@ -1613,6 +1623,12 @@ msgid "Requested by"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_command_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_command_menu
+msgid "Requests"
+msgstr ""
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Restart"
 msgstr ""
@@ -1854,6 +1870,11 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_error_status
 msgid "Status record of an error of a controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_error_status_menu
+msgid "Status records"
 msgstr ""
 
 #. module: int_workbench
@@ -2457,7 +2478,9 @@ msgstr ""
 #. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
-msgid "The wagon number takes up to %(wagon)s characters, the train up to %(train)s."
+msgid ""
+"The wagon number takes up to %(wagon)s characters, the train up to "
+"%(train)s."
 msgstr ""
 
 #. module: int_workbench
@@ -2478,6 +2501,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_list
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_list
 msgid "Time"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_tools_menu
+msgid "Tools"
 msgstr ""
 
 #. module: int_workbench

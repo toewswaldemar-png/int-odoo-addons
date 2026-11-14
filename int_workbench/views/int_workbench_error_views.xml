@@ -37,7 +37,7 @@
     </record>
 
     <record id="int_workbench_error_action" model="ir.actions.act_window">
-        <field name="name">Errors</field>
+        <field name="name">Current errors</field>
         <field name="res_model">int.workbench.error</field>
         <field name="view_mode">list</field>
     </record>

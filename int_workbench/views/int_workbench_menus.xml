@@ -1,31 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- The menu is grouped by what one does, the way the original groups it (Anzeigen, Fehlerspeicher, Allgemein, Auswählen):
+         watch (process values, intermediate values), the error memory, tools, the controllers, projects, configuration. -->
     <menuitem id="int_workbench_menu_root" name="Workbench" sequence="35" groups="int_workbench_group_user"/>
 
     <menuitem id="int_workbench_parameter_menu" name="Process values" parent="int_workbench_menu_root"
               action="int_workbench_parameter_action" sequence="10"/>
-    <menuitem id="int_workbench_error_menu" name="Errors" parent="int_workbench_menu_root"
-              action="int_workbench_error_action" sequence="20"/>
-    <menuitem id="int_workbench_error_history_menu" name="Error history" parent="int_workbench_menu_root"
-              action="int_workbench_error_history_action" sequence="22"/>
-    <menuitem id="int_workbench_error_status_menu" name="Error status" parent="int_workbench_menu_root"
-              action="int_workbench_error_status_action" sequence="24"/>
-    <menuitem id="int_workbench_command_menu" name="Clamp log" parent="int_workbench_menu_root"
-              action="int_workbench_command_action" sequence="30"/>
-    <menuitem id="int_workbench_fs2_file_menu" name="Error files" parent="int_workbench_menu_root"
-              action="int_workbench_fs2_file_action" sequence="26"/>
-    <menuitem id="int_workbench_fs2_record_menu" name="Error file records" parent="int_workbench_menu_root"
-              action="int_workbench_fs2_record_action" sequence="28"/>
-    <menuitem id="int_workbench_console_menu" name="Console" parent="int_workbench_menu_root"
-              action="int_workbench_console_action" sequence="32"/>
-    <menuitem id="int_workbench_can_module_menu" name="CAN modules" parent="int_workbench_menu_root"
-              action="int_workbench_can_module_action" sequence="34"/>
     <menuitem id="int_workbench_intermediate_menu" name="Intermediate values" parent="int_workbench_menu_root"
-              action="int_workbench_intermediate_action" sequence="36"/>
-    <menuitem id="int_workbench_project_menu" name="Projects" parent="int_workbench_menu_root"
-              action="int_workbench_project_action" sequence="40"/>
+              action="int_workbench_intermediate_action" sequence="20"/>
+
+    <menuitem id="int_workbench_error_memory_menu" name="Error memory" parent="int_workbench_menu_root" sequence="30"/>
+    <menuitem id="int_workbench_error_menu" name="Current errors" parent="int_workbench_error_memory_menu"
+              action="int_workbench_error_action" sequence="10"/>
+    <menuitem id="int_workbench_error_history_menu" name="History" parent="int_workbench_error_memory_menu"
+              action="int_workbench_error_history_action" sequence="20"/>
+    <menuitem id="int_workbench_error_status_menu" name="Status records" parent="int_workbench_error_memory_menu"
+              action="int_workbench_error_status_action" sequence="30"/>
+    <menuitem id="int_workbench_fs2_file_menu" name="Files" parent="int_workbench_error_memory_menu"
+              action="int_workbench_fs2_file_action" sequence="40"/>
+    <menuitem id="int_workbench_fs2_record_menu" name="File records" parent="int_workbench_error_memory_menu"
+              action="int_workbench_fs2_record_action" sequence="50"/>
+
+    <menuitem id="int_workbench_tools_menu" name="Tools" parent="int_workbench_menu_root" sequence="40"/>
+    <menuitem id="int_workbench_console_menu" name="Console" parent="int_workbench_tools_menu"
+              action="int_workbench_console_action" sequence="10"/>
+    <menuitem id="int_workbench_can_module_menu" name="CAN modules" parent="int_workbench_tools_menu"
+              action="int_workbench_can_module_action" sequence="20"/>
+    <menuitem id="int_workbench_command_menu" name="Requests" parent="int_workbench_tools_menu"
+              action="int_workbench_command_action" sequence="90"/>
+
     <menuitem id="int_workbench_device_menu" name="Controllers" parent="int_workbench_menu_root"
               action="int_workbench_device_action" sequence="50"/>
+    <menuitem id="int_workbench_project_menu" name="Projects" parent="int_workbench_menu_root"
+              action="int_workbench_project_action" sequence="60"/>
 
     <menuitem id="int_workbench_menu_configuration" name="Configuration" parent="int_workbench_menu_root"
               sequence="90" groups="int_workbench_group_manager"/>

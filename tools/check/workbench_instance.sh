@@ -40,7 +40,7 @@ if [[ -z "$exists" ]]; then
     ssh "$HOST" "tail -60 $R/install.log"; exit 1; }
 else
   echo "== upgrade"
-  ssh "$HOST" "docker run --rm --network fmtest-net $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB -u $MODULE \
+  ssh "$HOST" "docker run --rm --network fmtest-net $MOUNTS $IMAGE odoo -c /etc/odoo/odoo.conf -d $DB -u $MODULE --i18n-overwrite \
     --stop-after-init --workers=0 --no-http --log-level=warn >$R/upgrade.log 2>&1" || {
     ssh "$HOST" "tail -60 $R/upgrade.log"; exit 1; }
 fi
