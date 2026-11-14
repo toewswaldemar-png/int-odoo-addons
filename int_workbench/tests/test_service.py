@@ -103,7 +103,7 @@ class TestIntWorkbenchService(TransactionCase):
         self.assertEqual(command.state, "pending")
         taken = self.sync()
         self.assertEqual([c["id"] for c in taken], [command.id])
-        self.assertEqual({k: v for k, v in taken[0].items() if k != "expires_in_ms"}, {"id": command.id, "code": "0016", "action": "set", "value": 1.0, "user": "regler_operator"})
+        self.assertEqual({k: v for k, v in taken[0].items() if k != "expires_in_ms"}, {"id": command.id, "code": "0016", "action": "set", "value": 1.0, "payload": {}, "user": "regler_operator"})
         self.assertTrue(13000 <= taken[0]["expires_in_ms"] <= 15000, "the service is told how long the request is valid")
         self.assertEqual(command.state, "sent")
         self.assertTrue(command.sent_at)

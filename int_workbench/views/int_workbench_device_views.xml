@@ -21,6 +21,16 @@
         <field name="arch" type="xml">
             <form>
                 <header>
+                    <!-- what a technician asks of the controller: the buttons that the family cannot serve are hidden by its capabilities -->
+                    <button name="action_set_clock" type="object" string="Set the clock" icon="fa-clock-o"
+                            groups="int_workbench.int_workbench_group_technician" invisible="not cap_clock"/>
+                    <button name="action_control_can" type="object" string="CAN bus" icon="fa-sitemap"
+                            groups="int_workbench.int_workbench_group_technician" invisible="not cap_can_control"/>
+                    <button name="action_open_console" type="object" string="Console" icon="fa-terminal"
+                            groups="int_workbench.int_workbench_group_technician" invisible="not cap_console"/>
+                    <button name="action_reset" type="object" string="Restart" icon="fa-power-off"
+                            groups="int_workbench.int_workbench_group_technician" invisible="not cap_console"
+                            confirm="Restart the controller? The line is lost for a while."/>
                     <!-- what Odoo asks of the service: the buttons that the service cannot serve are hidden by its capabilities -->
                     <button name="action_fetch_users" type="object" string="Fetch users"
                             groups="int_workbench.int_workbench_group_manager" invisible="not service_url"/>
@@ -50,10 +60,30 @@
                     </group>
                     <field name="active" invisible="1"/>
                     <field name="cap_clamps" invisible="1"/>
+                    <field name="cap_clock" invisible="1"/>
+                    <field name="cap_console" invisible="1"/>
+                    <field name="cap_can_control" invisible="1"/>
                     <field name="cap_project_files" invisible="1"/>
+                    <group string="State" invisible="not clock_local_time and not can_count">
+                        <field name="clock_local_time" invisible="not clock_local_time"/>
+                        <field name="clock_read_at" invisible="not clock_local_time"/>
+                        <field name="can_count" invisible="not can_count"/>
+                    </group>
                     <notebook>
                         <page string="Capabilities" name="capabilities">
                             <field name="capability_ids" widget="many2many_tags" readonly="1"/>
+                        </page>
+                        <page string="CAN modules" name="can_modules" invisible="not can_module_ids">
+                            <field name="can_module_ids" readonly="1">
+                                <list>
+                                    <field name="number"/>
+                                    <field name="type_name"/>
+                                    <field name="serial"/>
+                                    <field name="sw"/>
+                                    <field name="hw"/>
+                                    <field name="can_status"/>
+                                </list>
+                            </field>
                         </page>
                         <page string="Errors" name="errors">
                             <field name="error_ids" readonly="1">

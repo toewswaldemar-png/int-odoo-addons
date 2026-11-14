@@ -23,10 +23,12 @@
         "views/int_workbench_command_views.xml",
         "views/int_workbench_error_views.xml",
         "views/int_workbench_error_memory_views.xml",
+        "views/int_workbench_can_views.xml",
         "views/int_workbench_log_views.xml",
         "views/int_workbench_user_views.xml",
         "views/int_workbench_project_views.xml",
         "wizard/int_workbench_project_import_views.xml",
+        "wizard/int_workbench_control_views.xml",
         "views/int_workbench_menus.xml",
     ],
     "assets": {

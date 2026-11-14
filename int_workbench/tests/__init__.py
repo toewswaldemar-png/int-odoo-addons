@@ -1,4 +1,5 @@
 from . import test_assets
+from . import test_control
 from . import test_device
 from . import test_error_memory
 from . import test_family

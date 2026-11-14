@@ -1,6 +1,7 @@
 """Small helpers for the models that mirror what the service answers (users, log, projects)."""
 
 import json
+import re
 from datetime import datetime, timezone
 
 
@@ -15,6 +16,17 @@ def parse_time(text):
     if moment.tzinfo is not None:
         moment = moment.astimezone(timezone.utc).replace(tzinfo=None)
     return moment.replace(microsecond=0)
+
+
+CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def clean_text(value):
+    """Return a value of the service as text for the database: without the control characters that PostgreSQL refuses (NUL) and that
+    make no sense in a name (a line end stays)."""
+    if value is None:
+        return ""
+    return CONTROL_CHARACTERS.sub("", str(value))
 
 
 def as_text(value):
@@ -63,3 +75,8 @@ def _differs(old, new):
     if hasattr(old, "id"):
         return old.id != new
     return (old or False) != (new or False)
+
+
+def notification(title, message):
+    """Return the client action that shows a short message (and closes the dialog it comes from)."""
+    return {"type": "ir.actions.client", "tag": "display_notification", "params": {"title": title, "message": message, "type": "info", "sticky": False}}

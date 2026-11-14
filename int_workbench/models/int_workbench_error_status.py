@@ -1,6 +1,6 @@
 from odoo import fields, models
 
-from .service_utils import upsert
+from .service_utils import clean_text, upsert
 
 
 class IntWorkbenchErrorStatus(models.Model):
@@ -52,7 +52,7 @@ class IntWorkbenchErrorStatus(models.Model):
                 "device_id": device.id,
                 "rank": item["rank"] if isinstance(item.get("rank"), int) else -1,
                 "code": item["code"] if isinstance(item.get("code"), int) else 0,
-                "text": str(item.get("text") or ""),
+                "text": clean_text(item.get("text")),
                 "count": item["count"] if isinstance(item.get("count"), int) else 0,
                 "present": item.get("active") is True,
                 "newest": item.get("newest") is True,
@@ -61,7 +61,7 @@ class IntWorkbenchErrorStatus(models.Model):
                 "wprio": item["wprio"] if isinstance(item.get("wprio"), int) else 0,
                 "lmzus": item["lmzus"] if isinstance(item.get("lmzus"), int) else 0,
                 "quit": item.get("quit") is True,
-                "raw": str(item.get("raw") or ""),
+                "raw": clean_text(item.get("raw")),
             }
         records = self.search([("device_id", "=", device.id)])
         gone = records.filtered(lambda record: record.element not in wanted)

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The dialogs of the buttons on the controller: each makes a request that the service carries out and that stays in the log of the requests. -->
+
+    <record id="int_workbench_clock_wizard_view_form" model="ir.ui.view">
+        <field name="name">int.workbench.clock.wizard.form</field>
+        <field name="model">int.workbench.clock.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="device_id" readonly="1"/>
+                    <field name="current"/>
+                    <field name="time"/>
+                </group>
+                <div class="text-muted">
+                    The controller keeps its own clock. The service sets it to the time given here and reads it back to confirm.
+                </div>
+                <footer>
+                    <button name="action_set" type="object" string="Set the clock" class="btn-primary" data-hotkey="q"
+                            confirm="Set the clock of the controller?"/>
+                    <button special="cancel" string="Cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_workbench_can_wizard_view_form" model="ir.ui.view">
+        <field name="name">int.workbench.can.wizard.form</field>
+        <field name="model">int.workbench.can.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="device_id" readonly="1"/>
+                    <field name="action" widget="radio"/>
+                </group>
+                <footer>
+                    <button name="action_send" type="object" string="Send" class="btn-primary" data-hotkey="q"
+                            confirm="Do this with the CAN bus of the controller?"/>
+                    <button special="cancel" string="Cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_workbench_console_wizard_view_form" model="ir.ui.view">
+        <field name="name">int.workbench.console.wizard.form</field>
+        <field name="model">int.workbench.console.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="device_id" readonly="1"/>
+                    <field name="command" placeholder="id all"/>
+                    <field name="changes"/>
+                </group>
+                <div class="text-muted">
+                    The line goes to the monitor of the controller as it is typed. The answer comes with the request, which opens next.
+                </div>
+                <footer>
+                    <button name="action_send" type="object" string="Send" class="btn-primary" data-hotkey="q"
+                            confirm="Send this command to the controller?"/>
+                    <button special="cancel" string="Cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

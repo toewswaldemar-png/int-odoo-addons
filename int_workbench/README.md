@@ -31,7 +31,10 @@ Regler  <-COM/TCP->  Service Workbench (Go)  --JSON-2-->  Odoo  <-- Bus + ORM --
 | `int.workbench.family` | Familie: Name, Bezeichnung, Transporte, Fähigkeiten | `service_register` |
 | `int.workbench.capability` | Fähigkeit (`clamps`, `clock`, `console`, `can_control`, `flash`, `line_switch`, `error_memory`, `error_files`, `intermediate`, `project_files`; unbekannte kommen mit ihrem Kürzel als Namen dazu) | Daten des Moduls, `service_register` |
 | `int.workbench.parameter` | Prozesswert (`p`, was der Regler benutzt), Automatikwert (`aw`, nur wo die Familie ihn hat) und Klemme einer Zeile; Stern je Benutzer; Reihenfolge und Marken (`tag_ids`, von Hand gesetzt, vom Bericht nicht berührt) für alle | Bericht (`service_sync`) |
-| `int.workbench.command` | Klemmauftrag und sein Ausgang (Klemmprotokoll) | Bediener, Ergebnis vom Dienst |
+| `int.workbench.command` | Auftrag an den Regler und sein Ausgang: klemmen, lösen, Fehlerspeicher löschen, Uhr stellen, CAN-Bus steuern, Neustart, Konsolenbefehl; mit `payload` (was der Auftrag mitbringt) und `output` (Antwort des Reglers, zum Beispiel der Text eines Konsolenbefehls) | Bediener und Techniker, Ergebnis vom Dienst |
+| `int.workbench.can.module` | CAN-Module des Reglers (Nummer, Typ, Seriennummer, Software, Hardware, Status); die Zahl Ist/Soll steht am Regler | Bericht (`can`), nur bei einer neuen Lesung |
+| `int.workbench.intermediate` | Zwischenwerte (ZWANZ) des Reglers: Name, Adresse, Text, Wert, Einheit, beantwortet | Bericht (`intermediate`), nur bei einer neuen Lesung |
+| `int.workbench.clock.wizard`, `.can.wizard`, `.console.wizard` | Dialoge der Knöpfe am Regler (Uhr stellen, CAN-Bus, Konsole); jeder macht einen Auftrag | transient |
 | `int.workbench.error` | aktive Fehler (Fehlerwort, Bit, Text) | Bericht |
 | `int.workbench.error.history` | Fehlerspeicher des Reglers, Historie: Eintrag, Reglerzeit, Code, Text, Anzahl, kommt/geht, Rohbytes | Bericht (`errors_memory`), nur bei einer neuen Lesung des Dienstes |
 | `int.workbench.error.status` | Fehlerspeicher des Reglers, Statussätze: je Fehler der Fehlerliste ein Satz mit Anzahl, „steht an“, Rang (0 = zuletzt gekommen), `wprio`, `lmzus`, `quit`, Rohbytes | Bericht (`errors_memory`), nur bei einer neuen Lesung des Dienstes |
@@ -57,7 +60,7 @@ Beide mit dem API-Schlüssel eines Benutzers der Gruppe `Workbench / Service`, n
 
 1. **Dienst-Benutzer** anlegen, nur mit der Gruppe `Workbench / Service`, und unter *Kontosicherheit > Neuer API-Schlüssel* einen Schlüssel erzeugen (höchstens 365 Tage; ein Schlüssel ist nur einmal lesbar).
 2. **Regler** anlegen (Menü *Workbench > Configuration > Controllers*): Name, Kennung im Dienst (Vorgabe `main`), Dienst-Benutzer. Für Benutzer, Protokoll und Projekte zusätzlich *Dienstadresse* (zum Beispiel `http://workbench:8080`) und *Dienst-Token*.
-3. **Bediener** bekommen `Workbench / Operator` (klemmen und lösen), **Verwalter** `Workbench / Manager` (Regler anlegen, Konten und Protokoll lesen, Projekte übernehmen), alle anderen `Workbench / User` (lesen).
+3. **Bediener** bekommen `Workbench / Operator` (klemmen, lösen, Fehlerspeicher löschen), **Techniker** `Workbench / Technician` (zusätzlich Uhr stellen, CAN-Bus steuern, Neustart, Konsolenbefehle), **Verwalter** `Workbench / Manager` (Regler anlegen, Konten und Protokoll lesen, Projekte übernehmen), alle anderen `Workbench / User` (lesen). Die Aufträge der Techniker gehen als allgemeine Aufträge zum Dienst: nur die festen Aktionen, die der Dienst kennt, und nur mit dem Recht des Dienstes dafür (die Freigaben des Dienstes gelten also weiter).
 4. **Dienst** mit Odoo verbinden (der Schlüssel kommt aus einer Datei oder der Umgebungsvariable, nie auf die Kommandozeile); die Adresse und Parameter stehen in der Beschreibung des Dienstes.
 
 Der Bus braucht den Websocket von Odoo (im Betrieb mit einem Prozess im Server, mit mehreren über den Evented-Port).
@@ -67,7 +70,7 @@ Der Bus braucht den Websocket von Odoo (im Betrieb mit einem Prozess im Server, 
 - **Kapazität (gemessen am 9.11.2026, Wegwerf-Instanz, ein Prozess, simulierte Dienste mit dem echten Bericht):** Im Ruhetakt (2 s, Bericht alle 10 s) kosten 100 Dienste 51 Aufrufe pro Sekunde, 69 % eines Kerns und 50 kB/s Journal; im 30-s-Takt (Bericht 60 s) nur 2,5 Aufrufe pro Sekunde, 11,5 % und 8 kB/s. Ein Prozess trägt etwa 50 Aufrufe pro Sekunde gut. Für Hunderte Regler wäre ein Wecken (MQTT oder ein Aufruf von Odoo an den Dienst) der nächste Schritt.
 - Klick bis Bestätigung des Reglers (gemessen am 9.11.2026 mit der alten Seite, echter Regler 11HA35D): Median 388 ms. Die erste Reaktion nach dem Öffnen der Liste kann bis zu 2 s dauern (Ruhetakt). Mit den Knöpfen der Liste nicht neu gemessen.
 - Odoo fragt den Dienst nur auf Knopfdruck; Benutzer, Protokoll und Projekte sind Abbilder, keine Echtzeit. Das Token des Dienstes steht in Odoo im Klartext (Feld nur für Verwalter sichtbar).
-- Es gibt Klemmen und Lösen, den Fehlerspeicher löschen (Knopf in der Liste der Fehler) und den Fehlerspeicher lesen (Historie und Statussätze, nur Ansicht). Konsole, Prüfprogramm, Programmieren, Uhr, CAN, Zwischenwerte und die Auswertung gespeicherter Fehlerdaten kann der Dienst; Odoo zeigt sie noch nicht (die Fähigkeiten dafür sind schon da).
+- Es gibt Klemmen und Lösen, den Fehlerspeicher löschen (Knopf in der Liste der Fehler), den Fehlerspeicher lesen (Historie und Statussätze), die CAN-Module und die Zwischenwerte (nur Ansicht), und für Techniker die Uhr, den CAN-Bus, den Neustart und die Konsole (Knöpfe am Regler). Ein Auftrag gilt je nach Aktion länger als die 15 Sekunden eines Klemmens (Neustart 3 Minuten). Prüfprogramm, Leitung umschalten, Programmieren und die Auswertung gespeicherter Fehlerdaten kann der Dienst; Odoo zeigt sie noch nicht.
 
 ## Offen
 

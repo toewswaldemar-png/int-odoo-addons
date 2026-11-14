@@ -1,11 +1,17 @@
 import json
+import logging
 import re
 from datetime import timedelta
 
+import psycopg2
 import requests
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
+
+from .service_utils import notification
+
+_logger = logging.getLogger(__name__)
 
 # What the service accepts as the id of a controller: letters, digits, minus and underscore.
 DEVICE_REF_PATTERN = re.compile(r"[A-Za-z0-9_-]+")
@@ -16,12 +22,26 @@ MAX_SNAPSHOT_BYTES = 2_000_000
 # What of a report is not kept in the Json of the controller: the process values and the clamps are the rows of int.workbench.parameter,
 # the active errors the rows of int.workbench.error, the history and the status records of the error memory the rows of
 # int.workbench.error.history and int.workbench.error.status (only its state stays in the Json), and the pages are not kept at all.
-ROW_PARTS = ("values", "clamps", "pages", "errors", "errors_memory")
+ROW_PARTS = ("values", "clamps", "pages", "errors", "errors_memory", "can", "intermediate")
+# The same for the CAN modules and the intermediate values: the rows are in int.workbench.can.module and int.workbench.intermediate.
+CAN_STATE_KEYS = ("status", "count", "configured_count", "error", "stale", "time")
+INTERMEDIATE_STATE_KEYS = ("status", "read_at", "stale")
 # What of the error memory stays in the Json of the controller: how it was read, not what it holds.
 MEMORY_STATE_KEYS = ("status", "reason", "error", "read_at", "stale", "connected", "clear_enabled", "history_count", "status_total", "active_count")
 # A clamp request that was not carried out this long after it was made is not carried out any more. The list waits longer than this
 # (parameter_list.js), so it always gets an answer from Odoo, never a request that runs after the list has given up.
 COMMAND_TTL = timedelta(seconds=15)
+# A request that takes longer on the line than a clamp is valid for longer (the service waits for the controller: a restart takes
+# half a minute, a console command may run for a while).
+ACTION_TTL = {
+    "clock_set": timedelta(seconds=60),
+    "can_control": timedelta(seconds=120),
+    "reset": timedelta(seconds=180),
+    "console": timedelta(seconds=120),
+    "console_write": timedelta(seconds=180),
+}
+# What of the output of a request is kept (the service sends at most this much).
+OUTPUT_LIMIT = 200_000
 # A request that was handed out and has no result yet is handed out again after this long (the answer to the call may have been lost).
 # Clamping and releasing can be repeated; the service recognizes the id and does not do it twice.
 REDELIVER_AFTER = timedelta(seconds=3)
@@ -134,6 +154,12 @@ class IntWorkbenchDevice(models.Model):
     error_ids = fields.One2many("int.workbench.error", "device_id", string="Errors")
     error_history_ids = fields.One2many("int.workbench.error.history", "device_id", string="Error history")
     error_status_ids = fields.One2many("int.workbench.error.status", "device_id", string="Error status")
+    can_module_ids = fields.One2many("int.workbench.can.module", "device_id", string="CAN modules")
+    intermediate_ids = fields.One2many("int.workbench.intermediate", "device_id", string="Intermediate values")
+    clock_local_time = fields.Char(compute="_compute_clock", string="Clock of the controller", help="Date and time the controller shows, as the service read them (no time zone).")
+    clock_read_at = fields.Char(compute="_compute_clock", string="Clock read at")
+    clock_write_enabled = fields.Boolean(compute="_compute_clock", string="The clock may be set")
+    can_count = fields.Char(compute="_compute_can_count", string="CAN modules (actual of configured)")
 
     _name_unique = models.Constraint(
         "UNIQUE (name)",
@@ -147,6 +173,23 @@ class IntWorkbenchDevice(models.Model):
             device.report_age = (now - device.snapshot_at).total_seconds() if device.snapshot_at else -1.0
             device.seen_age = (now - device.seen_at).total_seconds() if device.seen_at else -1.0
             device.watched = bool(device.viewer_at and now - device.viewer_at <= WATCHED_FOR)
+
+    @api.depends("snapshot")
+    def _compute_clock(self):
+        for device in self:
+            clock = (device.snapshot or {}).get("clock")
+            clock = clock if isinstance(clock, dict) else {}
+            device.clock_local_time = str(clock.get("local_time") or "")
+            device.clock_read_at = str(clock.get("read_at") or "") if clock.get("local_time") else ""
+            device.clock_write_enabled = clock.get("write_enabled") is True
+
+    @api.depends("snapshot")
+    def _compute_can_count(self):
+        for device in self:
+            part = (device.snapshot or {}).get("can")
+            part = part if isinstance(part, dict) else {}
+            actual, configured = part.get("count"), part.get("configured_count")
+            device.can_count = f"{actual if actual is not None else '?'} / {configured if configured is not None else '?'}" if part else ""
 
     @api.depends("family_id", "capability_ids.code")
     def _compute_capabilities(self):
@@ -296,16 +339,28 @@ class IntWorkbenchDevice(models.Model):
         previous_read_at = ((self.snapshot or {}).get("errors_memory") or {}).get("read_at")
         if isinstance(memory, dict):
             kept["errors_memory"] = {key: memory[key] for key in MEMORY_STATE_KEYS if key in memory}
+        for part, keys in (("can", CAN_STATE_KEYS), ("intermediate", INTERMEDIATE_STATE_KEYS)):
+            if isinstance(snapshot.get(part), dict):
+                kept[part] = {key: snapshot[part][key] for key in keys if key in snapshot[part]}
+        previous = self.snapshot or {}
         self.write({"snapshot": kept, "snapshot_at": now, "seen_at": now})
         # sudo: int.workbench.parameter: the rows are written by the report of the service, which has no right on them
         changed, structure = self.env["int.workbench.parameter"].sudo()._sync(self, snapshot)
         # sudo: int.workbench.error: the rows are written by the report of the service, which has no right on them
         errors_changed = self.env["int.workbench.error"].sudo()._sync(self, snapshot)
+        # The CAN modules and the intermediate values are read by the service at its own pace: new rows only for a new reading
+        can, intermediate = snapshot.get("can"), snapshot.get("intermediate")
+        if isinstance(can, dict) and (can.get("time") != (previous.get("can") or {}).get("time") or not self.can_module_ids):
+            # sudo: int.workbench.can.module: the rows are written by the report of the service
+            self._sync_mirror("int.workbench.can.module", snapshot)
+        if isinstance(intermediate, dict) and (intermediate.get("read_at") != (previous.get("intermediate") or {}).get("read_at") or not self.intermediate_ids):
+            # sudo: int.workbench.intermediate: the rows are written by the report of the service
+            self._sync_mirror("int.workbench.intermediate", snapshot)
         # The service reads the error memory now and then; the rows are brought up to date only for a new reading (or if there are none)
         if isinstance(memory, dict) and (memory.get("read_at") != previous_read_at or not self.error_status_ids):
             # sudo: int.workbench.error.history, int.workbench.error.status: the rows are written by the report of the service
-            self.env["int.workbench.error.history"].sudo()._sync(self, snapshot)
-            self.env["int.workbench.error.status"].sudo()._sync(self, snapshot)
+            self._sync_mirror("int.workbench.error.history", snapshot)
+            self._sync_mirror("int.workbench.error.status", snapshot)
         # Telling the pages costs a NOTIFY after the commit (some 15 ms): only while somebody looks, and only if something changed.
         # The message names the rows that changed, so that a list loads these and not everything; if rows were created or removed,
         # or very many changed, it says that the list has to be loaded afresh.
@@ -315,6 +370,17 @@ class IntWorkbenchDevice(models.Model):
         # the list of errors loads itself afresh (it is small and has no rows to keep in place)
         if errors_changed and self.watched:
             self._bus_send("int_workbench/errors", {})
+
+    def _sync_mirror(self, model_name, snapshot):
+        """Bring the rows of one optional part of the report (CAN modules, error memory, ...) up to date. A part that cannot be stored
+        is logged and left out: the rest of the report, and the requests that go with the call, must not be lost for it."""
+        self.ensure_one()
+        try:
+            with self.env.cr.savepoint():
+                return self.env[model_name].sudo()._sync(self, snapshot)  # sudo: the rows are written by the report of the service
+        except (ValueError, TypeError, psycopg2.Error):
+            _logger.exception("The part of the report for %s of controller %s could not be stored.", model_name, self.name)
+            return False
 
     def _service_apply_results(self, results):
         self.ensure_one()
@@ -329,7 +395,12 @@ class IntWorkbenchDevice(models.Model):
             # only what was handed out, and only to this controller: nothing is overwritten that was settled already
             command = Command.search([("id", "=", result["id"]), ("device_id", "=", self.id), ("state", "=", "sent")])
             command.write(
-                {"state": result["state"], "message": str(result.get("message") or "")[:500], "done_at": now}
+                {
+                    "state": result["state"],
+                    "message": str(result.get("message") or "")[:500],
+                    "output": str(result.get("output") or "")[:OUTPUT_LIMIT] or False,
+                    "done_at": now,
+                }
             )
             self._service_notify(command)
 
@@ -344,9 +415,14 @@ class IntWorkbenchDevice(models.Model):
         # sudo: int.workbench.command: see _service_apply_results
         Command = self.env["int.workbench.command"].sudo()
         old = [("device_id", "=", self.id), ("create_date", "<", now - COMMAND_TTL)]
-        never = Command.search(old + [("state", "=", "pending")])
+        # the requests that take longer on the line are valid for longer: only those past their own time are settled
+
+        def late(command):
+            return now - command.create_date > ACTION_TTL.get(command.action, COMMAND_TTL)
+
+        never = Command.search(old + [("state", "=", "pending")]).filtered(late)
         never.write({"state": "expired", "message": self.env._("Nobody carried it out in time."), "done_at": now})
-        silent = Command.search(old + [("state", "=", "sent")])
+        silent = Command.search(old + [("state", "=", "sent")]).filtered(late)
         silent.write(
             {
                 "state": "unknown",
@@ -379,12 +455,19 @@ class IntWorkbenchDevice(models.Model):
                 "code": command.code,
                 "action": command.action,
                 "value": command.value,
+                "payload": command._payload_dict(),
                 "user": command.user_id.login,
                 # create_date has microseconds and now has none, so the age can come out a little negative: never more than the whole time
-                "expires_in_ms": min(int(COMMAND_TTL.total_seconds() * 1000), max(0, int((COMMAND_TTL - (now - command.create_date)).total_seconds() * 1000))),
+                "expires_in_ms": self._command_expires_in_ms(command, now),
             }
             for command in commands
         ]
+
+    @staticmethod
+    def _command_expires_in_ms(command, now):
+        """Return how long a request is still valid for the service when it is handed out."""
+        ttl = ACTION_TTL.get(command.action, COMMAND_TTL)
+        return min(int(ttl.total_seconds() * 1000), max(0, int((ttl - (now - command.create_date)).total_seconds() * 1000)))
 
     def _service_answer(self):
         self.ensure_one()
@@ -437,6 +520,36 @@ class IntWorkbenchDevice(models.Model):
             return response.json()
         except ValueError as error:
             raise UserError(self.env._("The service of %s sent no JSON.", self.name)) from error
+
+    def action_reset(self):
+        """Ask the service to restart the controller. The result shows in the log of the requests."""
+        self.ensure_one()
+        self.env["int.workbench.command"].create({"device_id": self.id, "action": "reset"})
+        return notification(self.env._("Requested"), self.env._("The controller %s is being restarted.", self.name))
+
+    def _open_wizard(self, model, name):
+        """Return the action that opens the dialog of a button for this controller."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": name,
+            "res_model": model,
+            "view_mode": "form",
+            "target": "new",
+            "context": {"default_device_id": self.id},
+        }
+
+    def action_set_clock(self):
+        """Open the dialog that sets the clock of the controller."""
+        return self._open_wizard("int.workbench.clock.wizard", self.env._("Set the clock"))
+
+    def action_control_can(self):
+        """Open the dialog that stops, starts or baptizes the CAN bus of the controller."""
+        return self._open_wizard("int.workbench.can.wizard", self.env._("CAN bus"))
+
+    def action_open_console(self):
+        """Open the dialog that sends a console command to the controller."""
+        return self._open_wizard("int.workbench.console.wizard", self.env._("Console"))
 
     def action_fetch_users(self):
         """Fetch the accounts of the service into the list of users."""

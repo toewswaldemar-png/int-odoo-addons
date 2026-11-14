@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The CAN modules and the intermediate values of the controllers: what the service reads from them, read only. -->
+
+    <record id="int_workbench_can_module_view_list" model="ir.ui.view">
+        <field name="name">int.workbench.can.module.list</field>
+        <field name="model">int.workbench.can.module</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="device_id" optional="show"/>
+                <field name="number"/>
+                <field name="type_name"/>
+                <field name="type_code" optional="hide"/>
+                <field name="serial"/>
+                <field name="mc_sw" optional="hide"/>
+                <field name="sw"/>
+                <field name="hw"/>
+                <field name="can_status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_workbench_can_module_view_search" model="ir.ui.view">
+        <field name="name">int.workbench.can.module.search</field>
+        <field name="model">int.workbench.can.module</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="type_name"/>
+                <field name="serial"/>
+                <field name="device_id"/>
+                <group>
+                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_type" string="Type" context="{'group_by': 'type_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_workbench_can_module_action" model="ir.actions.act_window">
+        <field name="name">CAN modules</field>
+        <field name="res_model">int.workbench.can.module</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <record id="int_workbench_intermediate_view_list" model="ir.ui.view">
+        <field name="name">int.workbench.intermediate.list</field>
+        <field name="model">int.workbench.intermediate</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" decoration-muted="not answered">
+                <field name="device_id" optional="show"/>
+                <field name="sequence" optional="hide"/>
+                <field name="name"/>
+                <field name="address" optional="show"/>
+                <field name="text"/>
+                <field name="value" optional="hide"/>
+                <field name="unit"/>
+                <field name="format" optional="hide"/>
+                <field name="raw" optional="hide"/>
+                <field name="answered" optional="hide"/>
+                <field name="locked" optional="hide"/>
+                <field name="error" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_workbench_intermediate_view_search" model="ir.ui.view">
+        <field name="name">int.workbench.intermediate.search</field>
+        <field name="model">int.workbench.intermediate</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="address"/>
+                <field name="device_id"/>
+                <filter name="unanswered" string="Not answered" domain="[('answered', '=', False)]"/>
+                <group>
+                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_workbench_intermediate_action" model="ir.actions.act_window">
+        <field name="name">Intermediate values</field>
+        <field name="res_model">int.workbench.intermediate</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

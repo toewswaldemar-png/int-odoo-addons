@@ -1,6 +1,6 @@
 from odoo import fields, models
 
-from .service_utils import upsert
+from .service_utils import clean_text, upsert
 
 
 class IntWorkbenchErrorHistory(models.Model):
@@ -37,12 +37,12 @@ class IntWorkbenchErrorHistory(models.Model):
             wanted[position] = {
                 "device_id": device.id,
                 "code": item["code"],
-                "text": str(item.get("text") or ""),
+                "text": clean_text(item.get("text")),
                 "count": item["count"] if isinstance(item.get("count"), int) else 0,
-                "controller_time": str(item.get("time") or ""),
+                "controller_time": clean_text(item.get("time")),
                 "event": "coming" if item.get("z") == "K" else "going",
-                "priority": str(item.get("p") or ""),
-                "raw": str(item.get("raw") or ""),
+                "priority": clean_text(item.get("p")),
+                "raw": clean_text(item.get("raw")),
             }
         records = self.search([("device_id", "=", device.id)])
         gone = records.filtered(lambda record: record.entry not in wanted)
