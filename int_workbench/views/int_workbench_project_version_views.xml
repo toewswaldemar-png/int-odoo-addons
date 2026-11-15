@@ -47,7 +47,8 @@
                 <field name="line_name" optional="show"/>
                 <field name="line_version" optional="show"/>
                 <field name="line_date" optional="hide"/>
-                <field name="line_document" optional="show"/>
+                <field name="line_number" optional="show"/>
+                <field name="line_document" optional="hide"/>
                 <field name="line_author" optional="hide"/>
                 <field name="size" optional="show"/>
                 <field name="software_id" optional="show"/>
@@ -76,6 +77,7 @@
                             <field name="line_version"/>
                             <field name="line_date"/>
                             <field name="line_document"/>
+                            <field name="line_number"/>
                             <field name="line_author"/>
                         </group>
                     </group>
@@ -138,6 +140,8 @@
                         <group string="The application the tables are made for">
                             <field name="expected_document"/>
                             <field name="expected_names"/>
+                            <field name="config_numbers"/>
+                            <field name="software_exact_ids" widget="many2many_tags" options="{'no_create': True}"/>
                             <field name="software_ids" widget="many2many_tags" options="{'no_create': True}"/>
                         </group>
                     </group>

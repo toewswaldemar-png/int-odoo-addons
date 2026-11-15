@@ -6,7 +6,7 @@ from odoo.exceptions import AccessError, UserError
 
 from . import project_check as check
 
-FROM_CONTENT = ("folder_id", "checksum", "size", "expected_document", "expected_names", "file_ids")
+FROM_CONTENT = ("folder_id", "checksum", "size", "expected_document", "expected_names", "config_numbers", "file_ids")
 MANAGER_GROUP = "int_workbench.int_workbench_group_manager"
 
 
@@ -40,6 +40,19 @@ class IntWorkbenchProjectVersion(models.Model):
         help="The six digits of the document number that the tables of the project carry. They are the same in the application the tables are made for.",
     )
     expected_names = fields.Char(string="Names in the tables", readonly=True, help="The names that the version lines of the tables carry.")
+    config_numbers = fields.Char(
+        string="Document numbers",
+        readonly=True,
+        help="The numbers of the documents of the project that its version lines carry (letter and four digits): E2 CAN, E3 confpdl, E4 diagnosis, "
+        "M2 signal addresses, M3 process values, M4 error table.",
+    )
+    software_exact_ids = fields.Many2many(
+        "int.workbench.software",
+        string="Software that fits",
+        compute="_compute_software_ids",
+        help="The programs of this project whose numbers (E2, E3, E4) are the ones of this version: the program was built with these tables and scripts. "
+        "Only what both sides say is compared.",
+    )
     software_ids = fields.Many2many("int.workbench.software", string="Matching software", compute="_compute_software_ids", help="The programs whose document number is the one of the tables.")
     device_ids = fields.One2many("int.workbench.device", "project_version_id", string="Controllers", readonly=True)
     origins = fields.Text(readonly=True, help="Where the version was brought in from, one in each line.")
@@ -66,7 +79,14 @@ class IntWorkbenchProjectVersion(models.Model):
     def _compute_software_ids(self):
         Software = self.env["int.workbench.software"]
         for version in self:
-            version.software_ids = Software.search([("document_number", "=", version.expected_document)]) if version.expected_document else Software
+            same = Software.search([("document_number", "=", version.expected_document)]) if version.expected_document else Software
+            version.software_ids = same
+            version.software_exact_ids = same.filtered(lambda software, version=version: version._software_level(software) == check.MATCH_EXACT)
+
+    def _software_level(self, software):
+        """How well a program fits this version: ``exact``, ``other_version``, ``same_project``, ``unrelated`` or ``unknown``."""
+        self.ensure_one()
+        return check.match_level(self.expected_document, self.config_numbers, software.document_number, (software.document_codes or "").split())
 
     @api.depends("folder_id", "checksum")
     def _compute_display_name(self):
@@ -124,6 +144,7 @@ class IntWorkbenchProjectVersion(models.Model):
                         "line_version": file.line_version,
                         "line_date": file.line_date,
                         "line_document": file.line_document,
+                        "line_number": file.line_letter + file.line_number if file.line_number else "",
                         "line_author": file.line_author,
                         "software_id": software.id or False,
                     },
@@ -136,6 +157,7 @@ class IntWorkbenchProjectVersion(models.Model):
                 "size": info.size,
                 "expected_document": info.expected_document,
                 "expected_names": info.expected_names,
+                "config_numbers": info.config_numbers,
                 "origins": origin or f"{vehicle}/{project}",
                 "file_ids": lines,
             }

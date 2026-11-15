@@ -14,6 +14,11 @@ TABLE = b"--------\r\n--BR186011 V01.1 20.03.2008 11:22 3EGM090644M2011 Grote   
 SCRIPT = b"CONFCAN\r\nBFGR001 V00.1 13.11.2007 15:10 3EGM090644M2001 Daisel                 #\r\n1\r\n03\r\n"
 
 
+FTAB = b"--------\r\n--BR186012 V01.0 14.03.2008 15:36 3EGM090644M4010 Grote               #\r\n1000  00  04  M1280  -- CAN Bus Fehler\r\n"
+CONFCAN = b"CONFCAN\r\nBFGR001 V00.1 13.11.2007 15:10 3EGM090644E2010 Daisel                 #\r\n1\r\n03\r\n"
+CONFDIA = b"CONFDIA\r\nBR186012 V00.1 14.03.2008 15:30 3EGM090644E4010 Grote                  #\r\n1\r\n04\r\n"
+
+
 def project_files(extra=None):
     """The files of a project folder: the settings, a table, a script, error data (not part of a version)."""
     files = {"DEF.BIN": b"settings", "Ftab.txt": TABLE, "CANPROP.LAD": SCRIPT, "020701.fs2": b"error data"}
@@ -51,6 +56,26 @@ class TestProjectCheck(TransactionCase):
         self.assertEqual((info["Ftab.txt"].line_name, info["Ftab.txt"].line_version, info["Ftab.txt"].line_document), ("BR186011", "01.1", "090644"))
         self.assertEqual(info["CANPROP.LAD"].line_author, "Daisel")
         self.assertEqual((version.expected_document, version.expected_names), ("090644", "BFGR001, BR186011"))
+
+    def test_the_numbers_of_the_documents_of_a_project_are_read(self):
+        version = check.build([("DEF.BIN", b"s"), ("Ftab.txt", FTAB), ("CANPROP.LAD", CONFCAN), ("DIAGCNF.LAD", CONFDIA)])
+        info = {info.name: info for info in version.files}
+        self.assertEqual((info["Ftab.txt"].line_letter, info["Ftab.txt"].line_number), ("M", "4010"))
+        self.assertEqual((info["DIAGCNF.LAD"].command, info["DIAGCNF.LAD"].line_number), ("confdia", "4010"))
+        self.assertEqual((version.expected_document, version.config_numbers), ("090644", "E2010 E4010 M4010"))
+
+    def test_how_well_a_program_fits_a_version_is_told_by_the_numbers_that_both_sides_carry(self):
+        numbers = "E2010 E4010 M4010"
+        level = check.match_level
+        self.assertEqual(level("090644", numbers, "090644", ["E2010", "E4010"]), "exact")
+        # the error table has the number of the diagnosis: M4010 of the project is E4010 of the program
+        self.assertEqual(level("090644", "M4010", "090644", ["E2010", "E4010"]), "exact", "E2 cannot be judged, E4 is")
+        self.assertEqual(level("090644", numbers, "090644", ["E2011", "E4010"]), "other_version")
+        self.assertEqual(level("090644", numbers, "090644", ["E2010", "E4011"]), "other_version")
+        self.assertEqual(level("090644", "M2010", "090644", ["E2010", "E4010"]), "same_project", "nothing to compare with")
+        self.assertEqual(level("090644", numbers, "090622", ["E2010"]), "unrelated")
+        self.assertEqual(level("090644", numbers, "", []), "unknown")
+        self.assertEqual(level("", "", "090644", ["E2010"]), "unknown")
 
     def test_what_is_no_project_is_refused_with_the_reason(self):
         cases = {
@@ -151,6 +176,30 @@ class TestIntWorkbenchProjectVersion(TransactionCase):
         self.assertIn("DEF.BIN", str(raised.exception))
         with self.assertRaises(UserError):
             self.bring_in(vehicle="", project="")
+
+    def test_the_programs_that_fit_a_version_are_told_by_the_numbers(self):
+        files = project_files({"CANPROP.LAD": CONFCAN, "DIAGCNF.LAD": CONFDIA, "Ftab.txt": FTAB})
+        version, _created = self.bring_in(files)
+        self.assertEqual(version.config_numbers, "E2010 E4010 M4010")
+        self.assertIn("E2010", version.file_ids.filtered(lambda file: file.name == "CANPROP.LAD").line_number)
+
+        def program(name, document_e2, document_e4, number="090644"):
+            lists = b"\x00" * 32 + f"3EGM{number}E{document_e2}".encode().ljust(72, b"\x00") + f"3EGM{number}E{document_e4}".encode() + b"\x00" * 8
+            record, _created = self.env["int.workbench.software"].with_user(self.technician)._from_file(
+                name, srec([(0x198000, application(document="", expected="")), (0x2B8000, lists)])
+            )
+            return record
+
+        fits = program("BR186012.dwn", "2010", "4010")
+        other_version = program("BR186013.dwn", "2011", "4010")
+        other_project = program("B1852001.dwn", "2010", "4010", number="090622")
+        self.assertEqual(fits.document_codes, "E2010 E4010")
+        self.assertEqual(version.software_exact_ids, fits)
+        self.assertEqual(version.software_ids, fits | other_version)
+        self.assertNotIn(other_project, version.software_ids)
+        self.assertEqual(
+            [version._software_level(software) for software in (fits, other_version, other_project)], ["exact", "other_version", "unrelated"]
+        )
 
     # === states and rights === #
 

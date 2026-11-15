@@ -65,6 +65,7 @@ class FileInfo:
     line_date: str = ""
     line_document: str = ""  # the six digits
     line_letter: str = ""
+    line_number: str = ""  # the four digits: the kind of the document (first digit) and its version (the last three)
     line_author: str = ""
     content: bytes = field(default=b"", repr=False)
 
@@ -76,6 +77,7 @@ class VersionInfo:
     size: int
     expected_document: str = ""
     expected_names: str = ""
+    config_numbers: str = ""  # the numbers of the documents of the project, like "E2010 E4010 M4010", sorted
 
 
 def is_excluded(name):
@@ -99,8 +101,8 @@ def parse_version_line(text):
     match = VERSION_LINE.search(text[:4000])
     if not match:
         return None
-    name, version, date, _time, document, letter, _number, author = match.groups()
-    return {"name": name, "version": version, "date": date, "document": document, "letter": letter, "author": author.strip()}
+    name, version, date, _time, document, letter, number, author = match.groups()
+    return {"name": name, "version": version, "date": date, "document": document, "letter": letter, "number": number, "author": author.strip()}
 
 
 def analyse(name, content):
@@ -128,6 +130,7 @@ def analyse(name, content):
     if line:
         info.line_name, info.line_version, info.line_date = line["name"], line["version"], line["date"]
         info.line_document, info.line_letter, info.line_author = line["document"], line["letter"], line["author"]
+        info.line_number = line["number"]
     return info
 
 
@@ -189,11 +192,47 @@ def build(files):
         raise VersionError("no_settings")
     infos.sort(key=lambda info: info.name.lower())
     version = VersionInfo(checksum=checksum([(info.name, info.sha256) for info in infos]), files=infos, size=total)
-    # the application that the tables are made for: the six digits that most of the version lines of the tables carry
-    lines = [info for info in infos if info.line_document and info.line_letter == "M"]
+    # the application that the project is made for: the six digits that most of the version lines (tables and scripts) carry, and the
+    # numbers of the documents of the project (E2 CAN, E3 confpdl, E4 diagnosis, M2 signal addresses, M3 process values, M4 error table)
+    lines = [info for info in infos if info.line_document]
     if lines:
         document, _count = Counter(info.line_document for info in lines).most_common(1)[0]
-        names = sorted({info.line_name for info in lines if info.line_document == document})
+        own = [info for info in lines if info.line_document == document]
         version.expected_document = document
-        version.expected_names = ", ".join(names)
+        version.expected_names = ", ".join(sorted({info.line_name for info in own}))
+        version.config_numbers = " ".join(sorted({info.line_letter + info.line_number for info in own}))
     return version
+
+
+# How well a program fits a project version, from the numbers (PROGRAMMIERDATEN.md, section 6.1).
+MATCH_EXACT = "exact"  # the numbers that the program carries are the ones of the project
+MATCH_OTHER_VERSION = "other_version"  # the same project, but a document has another version
+MATCH_SAME_PROJECT = "same_project"  # the same project; there is nothing to compare the numbers with
+MATCH_UNRELATED = "unrelated"  # another project
+MATCH_UNKNOWN = "unknown"  # the project or the program does not say which project it is
+
+
+def match_level(version_document, version_numbers, program_document, program_codes):
+    """How well a program (image) fits a project version.
+
+    ``version_document`` and ``program_document`` are the six digits; ``version_numbers`` is the text of ``VersionInfo.config_numbers``;
+    ``program_codes`` the list of the numbers ``E2nnn``, ``E3nnn``, ``E4nnn`` that the image carries. The error table has the number of
+    the diagnosis (``M4nnn`` of the project is ``E4nnn`` of the program), the other documents have their own.
+    """
+    if not version_document or not program_document:
+        return MATCH_UNKNOWN
+    if version_document != program_document:
+        return MATCH_UNRELATED
+    have = set((version_numbers or "").split())
+    judged = equal = 0
+    for code in program_codes or []:
+        kind, number = code[:2], code[2:]
+        known = {entry for entry in have if entry[:2] == kind or (kind == "E4" and entry[:2] == "M4")}
+        if not known:
+            continue
+        judged += 1
+        if code in have or (kind == "E4" and "M4" + number in have):
+            equal += 1
+    if not judged:
+        return MATCH_SAME_PROJECT
+    return MATCH_EXACT if equal == judged else MATCH_OTHER_VERSION

@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 14:14+0000\n"
-"PO-Revision-Date: 2026-11-15 14:14+0000\n"
+"POT-Creation-Date: 2026-11-15 14:37+0000\n"
+"PO-Revision-Date: 2026-11-15 14:37+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -1209,6 +1209,7 @@ msgid "Document number"
 msgstr "Dokumentnummer"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__config_numbers
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__document_codes
 msgid "Document numbers"
 msgstr "Dokumentnummern"
@@ -2029,6 +2030,11 @@ msgid "Number"
 msgstr "Zahl"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_number
+msgid "Number in version line"
+msgstr "Nummer in der Versionszeile"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_needaction_counter
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_needaction_counter
 msgid "Number of Actions"
@@ -2745,6 +2751,11 @@ msgid "Software"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__software_exact_ids
+msgid "Software that fits"
+msgstr "Passende Software (genau)"
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__watched
 msgid ""
 "Somebody looks at this controller now: the service asks and reports faster."
@@ -3204,6 +3215,14 @@ msgstr ""
 "Wurzelordners des Dienstes."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__line_number
+msgid ""
+"The four digits of the document number: the kind of the document (M2 signal "
+"addresses, M3 process values, M4 error table, E2 CAN, E3 confpdl, E4 "
+"diagnosis, with the letter) and its version (the last three digits)."
+msgstr "Der Buchstabe und die vier Ziffern der Dokumentnummer: die Art des Dokuments (M2 Signaladressen, M3 Prozesswerte, M4 Fehlertabelle, E2 CAN, E3 confpdl, E4 Diagnose) und seine Version (die letzten drei Ziffern)."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__device_ref
 msgid "The id of the controller in the configuration of the service."
 msgstr "Die Kennung des Reglers in der Einrichtung des Dienstes."
@@ -3349,7 +3368,18 @@ msgid ""
 "The numbers E2nnn, E3nnn and E4nnn that the image carries: the versions of "
 "the configuration documents it belongs to (E2 the CAN configuration, E3 "
 "confpdl, E4 the diagnosis and the error table with the same number)."
-msgstr "Die Nummern E2nnn, E3nnn und E4nnn, die das Abbild trägt: die Stände der Konfigurationsdokumente, zu denen es gehört (E2 die CAN-Konfiguration, E3 confpdl, E4 die Diagnose und die Fehlertabelle mit derselben Nummer)."
+msgstr ""
+"Die Nummern E2nnn, E3nnn und E4nnn, die das Abbild trägt: die Stände der "
+"Konfigurationsdokumente, zu denen es gehört (E2 die CAN-Konfiguration, E3 "
+"confpdl, E4 die Diagnose und die Fehlertabelle mit derselben Nummer)."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__config_numbers
+msgid ""
+"The numbers of the documents of the project that its version lines carry "
+"(letter and four digits): E2 CAN, E3 confpdl, E4 diagnosis, M2 signal "
+"addresses, M3 process values, M4 error table."
+msgstr "Die Nummern der Dokumente des Projekts, die seine Versionszeilen tragen (Buchstabe und vier Ziffern): E2 CAN, E3 confpdl, E4 Diagnose, M2 Signaladressen, M3 Prozesswerte, M4 Fehlertabelle."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__expected_os
@@ -3445,6 +3475,14 @@ msgstr "Der Programmtext hat keine Kopfzeile mit der Applikation."
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__software_id
 msgid "The program that this file is, if it is one."
 msgstr "Das Programm, das diese Datei ist, falls sie eins ist."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__software_exact_ids
+msgid ""
+"The programs of this project whose numbers (E2, E3, E4) are the ones of this"
+" version: the program was built with these tables and scripts. Only what "
+"both sides say is compared."
+msgstr "Die Programme dieses Projekts, deren Nummern (E2, E3, E4) die dieses Stands sind: Das Programm wurde mit diesen Tabellen und Skripten gebaut. Verglichen wird nur, was beide Seiten angeben."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software_upload__software_ids

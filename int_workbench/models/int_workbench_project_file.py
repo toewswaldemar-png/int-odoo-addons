@@ -31,6 +31,12 @@ class IntWorkbenchProjectFile(models.Model):
     line_name = fields.Char(string="Name in version line", readonly=True)
     line_version = fields.Char(string="Version in version line", readonly=True)
     line_date = fields.Char(string="Date in version line", readonly=True)
+    line_number = fields.Char(
+        string="Number in version line",
+        readonly=True,
+        help="The four digits of the document number: the kind of the document (M2 signal addresses, M3 process values, M4 error table, "
+        "E2 CAN, E3 confpdl, E4 diagnosis, with the letter) and its version (the last three digits).",
+    )
     line_document = fields.Char(string="Document number", readonly=True, help="The six digits of the document number in the version line (3EGM, six digits, a letter, four digits).")
     line_author = fields.Char(string="Author", readonly=True)
     software_id = fields.Many2one("int.workbench.software", string="Software", readonly=True, ondelete="set null", help="The program that this file is, if it is one.")
