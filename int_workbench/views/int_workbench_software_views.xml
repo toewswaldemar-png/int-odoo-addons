@@ -49,6 +49,7 @@
                 <field name="app_name" optional="show"/>
                 <field name="resource" optional="hide"/>
                 <field name="document" optional="show"/>
+                <field name="document_codes" optional="hide"/>
                 <field name="expected_os" optional="hide"/>
                 <field name="size" optional="hide"/>
                 <field name="short_id" optional="hide"/>
@@ -89,6 +90,7 @@
                             <field name="app_name" invisible="not app_name"/>
                             <field name="resource" invisible="not resource"/>
                             <field name="document" invisible="not document"/>
+                            <field name="document_codes" invisible="not document_codes"/>
                             <field name="expected_os" invisible="not expected_os"/>
                         </group>
                         <group string="The file">

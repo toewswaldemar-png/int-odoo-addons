@@ -9,7 +9,7 @@ from . import software_check as check
 
 # The fields that the content of the file decides: they never change after the file is read.
 FROM_CONTENT = (
-    "kind", "hardware", "app_name", "resource", "document", "os_version", "expected_os", "ranges", "size", "data_size", "sha256", "data",
+    "kind", "hardware", "app_name", "resource", "document", "document_codes", "os_version", "expected_os", "ranges", "size", "data_size", "sha256", "data",
 )  # fmt: skip
 MANAGER_GROUP = "int_workbench.int_workbench_group_manager"
 
@@ -57,6 +57,12 @@ class IntWorkbenchSoftware(models.Model):
     app_name = fields.Char(string="Application", readonly=True, index=True, help="The name in the header of the application.")
     resource = fields.Char(readonly=True, help="The resource of the application (the second name in its header).")
     document = fields.Char(readonly=True, index=True, help="The document number of the application (3EGM, six digits, E, four digits). The tables of a project carry the same six digits.")
+    document_codes = fields.Char(
+        string="Document numbers",
+        readonly=True,
+        help="The numbers E2nnn, E3nnn and E4nnn that the image carries: the versions of the configuration documents it belongs to "
+        "(E2 the CAN configuration, E3 confpdl, E4 the diagnosis and the error table with the same number).",
+    )
     document_number = fields.Char(
         compute="_compute_document_number",
         store=True,
@@ -118,6 +124,7 @@ class IntWorkbenchSoftware(models.Model):
             "app_name": result.app_name,
             "resource": result.resource,
             "document": result.document,
+            "document_codes": " ".join(result.document_codes),
             "os_version": result.os_version,
             "expected_os": result.expected_os,
             "ranges": "\n".join("0x%06X - 0x%06X" % (first, last) for first, last in result.ranges),

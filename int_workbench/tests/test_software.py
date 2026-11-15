@@ -63,6 +63,17 @@ class TestSoftwareCheck(TransactionCase):
         self.assertEqual((result.document, result.expected_os), ("3EGM090644E2002", "2.10"))
         self.assertEqual(result.warnings, [])
 
+    def test_the_document_numbers_are_found_where_they_sit_in_the_area_of_the_lists(self):
+        # many images carry them at 0x2B8000 and not at the start of the application: E2 is the CAN configuration, E4 the diagnosis
+        header = application(document="", expected="")
+        lists = b"\x00" * 32 + b"3EGM090644E2002".ljust(72, b"\x00") + b"3EGM090644E4002" + b"\x00" * 8
+        result = check.check_file("BR186002.dwn", srec([(0x198000, header), (0x2B8000, lists)]))
+        self.assertEqual((result.document, result.document_codes), ("3EGM090644E2002", ["E2002", "E4002"]))
+        # the one of the CAN configuration is the application's own, whatever comes first
+        reverse = b"\x00" * 8 + b"3EGM090644E4010".ljust(40, b"\x00") + b"3EGM090644E2010" + b"\x00" * 8
+        again = check.check_file("x.dwn", srec([(0x198000, header), (0x2B8000, reverse)]))
+        self.assertEqual((again.document, again.document_codes), ("3EGM090644E2010", ["E4010", "E2010"]))
+
     def test_operating_system_and_application_in_one_file_is_a_combined_image(self):
         result = check.check_file("x.m00", srec([(0, operating_system("3EGM 0098 80 E0211")), (0x198000, application("ALP45010", "ALP45010"))]))
         self.assertEqual((result.kind, result.hardware, result.os_version, result.app_name), ("combined", "ha3x", "2.11", "ALP45010"))

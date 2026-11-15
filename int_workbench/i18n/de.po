@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 13:47+0000\n"
-"PO-Revision-Date: 2026-11-15 13:47+0000\n"
+"POT-Creation-Date: 2026-11-15 14:14+0000\n"
+"PO-Revision-Date: 2026-11-15 14:14+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -37,7 +37,9 @@ msgstr "%(file)s: neuer Entwurf %(name)s"
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_project_version.py:0
 msgid "%(first)s and %(second)s differ only in upper and lower case."
-msgstr "%(first)s und %(second)s unterscheiden sich nur in Groß- und Kleinschreibung."
+msgstr ""
+"%(first)s und %(second)s unterscheiden sich nur in Groß- und "
+"Kleinschreibung."
 
 #. module: int_workbench
 #. odoo-python
@@ -482,7 +484,9 @@ msgstr "Hereinholen"
 msgid ""
 "Bring in one ZIP archive alone, or the files of one project. A version at a "
 "time."
-msgstr "Hole ein ZIP-Archiv allein herein oder die Dateien eines Projekts. Ein Stand nach dem anderen."
+msgstr ""
+"Hole ein ZIP-Archiv allein herein oder die Dateien eines Projekts. Ein Stand"
+" nach dem anderen."
 
 #. module: int_workbench
 #: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_project_version_action
@@ -490,7 +494,10 @@ msgid ""
 "Bring in the files of a project folder (or a ZIP archive of it). The version"
 " is named after a checksum of its files; a manager approves it, then it can "
 "be assigned to a controller."
-msgstr "Hole die Dateien eines Projektordners herein (oder ein ZIP-Archiv davon). Der Stand heißt nach einer Prüfsumme seiner Dateien; ein Verwalter gibt ihn frei, dann kann er einem Regler zugewiesen werden."
+msgstr ""
+"Hole die Dateien eines Projektordners herein (oder ein ZIP-Archiv davon). "
+"Der Stand heißt nach einer Prüfsumme seiner Dateien; ein Verwalter gibt ihn "
+"frei, dann kann er einem Regler zugewiesen werden."
 
 #. module: int_workbench
 #: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_software_action
@@ -1200,6 +1207,11 @@ msgstr "Dokumentnummer"
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "Document number"
 msgstr "Dokumentnummer"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__document_codes
+msgid "Document numbers"
+msgstr "Dokumentnummern"
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__done
@@ -2087,7 +2099,9 @@ msgstr ""
 #: code:addons/int_workbench/models/int_workbench_project_version.py:0
 msgid ""
 "Only a draft can be deleted. Retire a version that is not used any more."
-msgstr "Nur ein Entwurf kann gelöscht werden. Ziehe einen Stand zurück, der nicht mehr gebraucht wird."
+msgstr ""
+"Nur ein Entwurf kann gelöscht werden. Ziehe einen Stand zurück, der nicht "
+"mehr gebraucht wird."
 
 #. module: int_workbench
 #. odoo-python
@@ -2134,7 +2148,10 @@ msgstr ""
 msgid ""
 "Only an approved version can be assigned to a controller. A manager approves"
 " it; a retired version stays and can be approved again."
-msgstr "Nur ein freigegebener Stand kann einem Regler zugewiesen werden. Ein Verwalter gibt ihn frei; ein zurückgezogener Stand bleibt erhalten und kann wieder freigegeben werden."
+msgstr ""
+"Nur ein freigegebener Stand kann einem Regler zugewiesen werden. Ein "
+"Verwalter gibt ihn frei; ein zurückgezogener Stand bleibt erhalten und kann "
+"wieder freigegeben werden."
 
 #. module: int_workbench
 #. odoo-python
@@ -2484,7 +2501,9 @@ msgstr ""
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 msgid "Retire this version? It can no longer be assigned to a controller."
-msgstr "Diesen Stand zurückziehen? Er kann dann keinem Regler mehr zugewiesen werden."
+msgstr ""
+"Diesen Stand zurückziehen? Er kann dann keinem Regler mehr zugewiesen "
+"werden."
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_version__state__retired
@@ -2943,7 +2962,9 @@ msgstr "Der Befehl ändert oder löscht etwas"
 msgid ""
 "The command in the first line of a script: confcan, confdia, confpdl, "
 "confpro, clr ..."
-msgstr "Der Befehl in der ersten Zeile eines Skripts: confcan, confdia, confpdl, confpro, clr ..."
+msgstr ""
+"Der Befehl in der ersten Zeile eines Skripts: confcan, confdia, confpdl, "
+"confpro, clr ..."
 
 #. module: int_workbench
 #. odoo-python
@@ -3152,7 +3173,9 @@ msgstr "Die Dateien sind zusammen größer als %d MB."
 msgid ""
 "The files of the project folder, or one ZIP archive of the folder. Files "
 "that the original makes itself (error data, reports) are left out."
-msgstr "Die Dateien des Projektordners oder ein ZIP-Archiv des Ordners. Dateien, die das Original selbst erzeugt (Fehlerdaten, Berichte), bleiben weg."
+msgstr ""
+"Die Dateien des Projektordners oder ein ZIP-Archiv des Ordners. Dateien, die"
+" das Original selbst erzeugt (Fehlerdaten, Berichte), bleiben weg."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__vehicle
@@ -3282,7 +3305,9 @@ msgstr "Der Name des Projektordners, zum Beispiel Pro_2."
 msgid ""
 "The name of the version: the checksum of its files (the rule of the project "
 "library of the service)."
-msgstr "Der Name des Stands: die Prüfsumme seiner Dateien (die Regel der Projektbibliothek des Dienstes)."
+msgstr ""
+"Der Name des Stands: die Prüfsumme seiner Dateien (die Regel der "
+"Projektbibliothek des Dienstes)."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_family__label
@@ -3317,6 +3342,14 @@ msgid "The number the files are saved under (the original asks for it too)."
 msgstr ""
 "Die Nummer, unter der die Dateien gespeichert werden (das Original fragt sie"
 " auch ab)."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_software__document_codes
+msgid ""
+"The numbers E2nnn, E3nnn and E4nnn that the image carries: the versions of "
+"the configuration documents it belongs to (E2 the CAN configuration, E3 "
+"confpdl, E4 the diagnosis and the error table with the same number)."
+msgstr "Die Nummern E2nnn, E3nnn und E4nnn, die das Abbild trägt: die Stände der Konfigurationsdokumente, zu denen es gehört (E2 die CAN-Konfiguration, E3 confpdl, E4 die Diagnose und die Fehlertabelle mit derselben Nummer)."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__expected_os
@@ -3537,21 +3570,27 @@ msgstr ""
 msgid ""
 "The six digits of the document number in the version line (3EGM, six digits,"
 " a letter, four digits)."
-msgstr "Die sechs Ziffern der Dokumentnummer in der Versionszeile (3EGM, sechs Ziffern, ein Buchstabe, vier Ziffern)."
+msgstr ""
+"Die sechs Ziffern der Dokumentnummer in der Versionszeile (3EGM, sechs "
+"Ziffern, ein Buchstabe, vier Ziffern)."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__expected_document
 msgid ""
 "The six digits of the document number that the tables of the project carry. "
 "They are the same in the application the tables are made for."
-msgstr "Die sechs Ziffern der Dokumentnummer, die die Tabellen des Projekts tragen. Sie sind dieselben wie in der Applikation, für die die Tabellen gebaut sind."
+msgstr ""
+"Die sechs Ziffern der Dokumentnummer, die die Tabellen des Projekts tragen. "
+"Sie sind dieselben wie in der Applikation, für die die Tabellen gebaut sind."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__document_number
 msgid ""
 "The six digits of the document number: the link to the projects, whose "
 "tables carry the same digits."
-msgstr "Die sechs Ziffern der Dokumentnummer: die Verbindung zu den Projekten, deren Tabellen dieselben Ziffern tragen."
+msgstr ""
+"Die sechs Ziffern der Dokumentnummer: die Verbindung zu den Projekten, deren"
+" Tabellen dieselben Ziffern tragen."
 
 #. module: int_workbench
 #. odoo-python
@@ -3692,7 +3731,9 @@ msgstr "Die Version des Betriebssystems in der Datei (E0310 ist 3.10)."
 msgid ""
 "The version of the project that this controller is to have (the assignment)."
 " It is kept in the chatter of the version."
-msgstr "Der Stand des Projekts, den dieser Regler haben soll (die Zuweisung). Sie steht im Chatter des Stands."
+msgstr ""
+"Der Stand des Projekts, den dieser Regler haben soll (die Zuweisung). Sie "
+"steht im Chatter des Stands."
 
 #. module: int_workbench
 #. odoo-python
@@ -3726,7 +3767,9 @@ msgstr "Steht jetzt an"
 #: code:addons/int_workbench/wizard/int_workbench_project_upload.py:0
 msgid ""
 "This version is already there as %s. The folder was added to its origins."
-msgstr "Dieser Stand ist schon da als %s. Der Ordner wurde seiner Herkunft hinzugefügt."
+msgstr ""
+"Dieser Stand ist schon da als %s. Der Ordner wurde seiner Herkunft "
+"hinzugefügt."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__time
@@ -3742,7 +3785,11 @@ msgid ""
 "Told by the content: the settings file (DEF.BIN), a table, a script for the "
 "command line (confcan, confdia ...), a program (image or program text, then "
 "also a record of the software) or any other file of the project."
-msgstr "Erkennbar am Inhalt: die Einstellungsdatei (DEF.BIN), eine Tabelle, ein Skript für die Befehlszeile (confcan, confdia ...), ein Programm (Abbild oder Programmtext, dann auch ein Satz der Software) oder eine andere Datei des Projekts."
+msgstr ""
+"Erkennbar am Inhalt: die Einstellungsdatei (DEF.BIN), eine Tabelle, ein "
+"Skript für die Befehlszeile (confcan, confdia ...), ein Programm (Abbild "
+"oder Programmtext, dann auch ein Satz der Software) oder eine andere Datei "
+"des Projekts."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__kind
@@ -3935,7 +3982,9 @@ msgstr "Angesehen"
 msgid ""
 "What a version consists of cannot be changed. Bring the changed files in as "
 "a new version."
-msgstr "Woraus ein Stand besteht, lässt sich nicht ändern. Hole die geänderten Dateien als neuen Stand herein."
+msgstr ""
+"Woraus ein Stand besteht, lässt sich nicht ändern. Hole die geänderten "
+"Dateien als neuen Stand herein."
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form

@@ -69,6 +69,8 @@ class Checked:
     app_name: str = ""
     resource: str = ""
     document: str = ""  # 3EGM<6 digits>E<4 digits>: the document number of the application
+    document_number: str = ""  # the six digits of it
+    document_codes: list = field(default_factory=list)  # the E<d><nnn> numbers that the image carries: E2nnn (CAN), E3nnn, E4nnn (diagnosis)
     os_version: str = ""  # the operating system that is in the image: "3.10"
     expected_os: str = ""  # the one the application says it is made for (assumed, not proven): "2.10"
     created: str = ""  # of a program text
@@ -188,6 +190,8 @@ def _classify(result, merged):
         return
     if application:
         _read_application(result, application[1])
+    if result.kind in (KIND_APPLICATION, KIND_COMBINED):
+        _read_documents(result, merged)
     # the operating system says which version it is (E0310 is 3.10); a block of parameters carries the one it belongs to
     if has_os or result.kind == KIND_PARAMETER:
         for start, data in merged:
@@ -208,12 +212,28 @@ def _read_application(result, data):
         name_start = mark.end()
         result.app_name = _text(data[name_start : name_start + 32])
         result.resource = _text(data[name_start + 32 : name_start + 64])
-    document = APPLICATION_DOCUMENT.search(data)
-    if document:
-        result.document = "3EGM%sE%s" % (document.group(1).decode(), document.group(2).decode())
     expected = OS_EXPECTED.search(data)
     if expected:
         result.expected_os = "%s.%s" % (expected.group(1).decode(), expected.group(2).decode())
+
+
+def _read_documents(result, merged):
+    """The document numbers an application carries, wherever they sit (for many images in the area of the lists at 0x2B8000, not at the
+    start of the application). Measured: an image carries the numbers of the configuration documents it belongs to, E2nnn (the CAN
+    configuration, confcan), E3nnn (confpdl) and E4nnn (the diagnosis, confdia, the same number as the error table Ftab); see
+    micserv-7.1/PROGRAMMIERDATEN.md, section 7."""
+    pairs = []
+    for _start, data in merged:
+        for match in APPLICATION_DOCUMENT.finditer(data):
+            pair = (match.group(1).decode(), "E%s" % match.group(2).decode())
+            if pair not in pairs:
+                pairs.append(pair)
+    result.document_codes = [code for _number, code in pairs]
+    # the application's own number is the E2 one (the same as its CAN configuration), if there is one
+    chosen = next((pair for pair in pairs if pair[1].startswith("E2")), pairs[0] if pairs else None)
+    if chosen and not result.document:
+        result.document = "3EGM%s%s" % chosen
+        result.document_number = chosen[0]
 
 
 def _text(raw):
