@@ -14,4 +14,5 @@ from . import int_workbench_fs2_record
 from . import int_workbench_log
 from . import int_workbench_user
 from . import int_workbench_project
+from . import int_workbench_software
 from . import ir_websocket

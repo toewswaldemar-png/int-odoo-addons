@@ -44,6 +44,8 @@ Regler  <-COM/TCP->  Service Workbench (Go)  --JSON-2-->  Odoo  <-- Bus + ORM --
 | `int.workbench.user` | Konten des Dienstes (ohne Passwörter) | Knopf *Fetch users* |
 | `int.workbench.project` | Stände der Projektbibliothek: Fahrzeug und Projekt (aus der ersten Herkunft), kurze Kennung, Zeilenzahl, ladbar oder Grund, Herkunft | Knöpfe *Fetch projects* und *Take over new folders* |
 | `int.workbench.project.import` | Dialog „Neue Ordner übernehmen“: fragt `GET /api/v1/projects/inventory`, schickt die neuen Ordner in Paketen zu 25 an `POST /api/v1/projects/import`, holt danach die Stände | transient |
+| `int.workbench.software` | Programm der Regler: Abbild (S-Record) oder Programmtext, **gelesen nach dem Inhalt** (nicht nach Name oder Endung): Art (Betriebssystem, Applikation, beides, Urlader, Parameterblock, Applikationstext), Reglertyp (11HA3x, Familie B) aus der Lage im Speicher, Betriebssystemversion, Applikation mit Resource und Dokumentnummer, SHA-256 (ein Inhalt gibt es einmal, weitere Namen stehen unter „Namen der Datei“), Zustand Entwurf, Freigegeben, Zurückgezogen mit Chatter | Techniker und Verwalter bringen Entwürfe herein, nur ein Verwalter gibt frei und zieht zurück; der Inhalt ändert sich nie |
+| `int.workbench.software.upload` | Dialog „Programme hereinholen“: liest jede Datei, legt Entwürfe an und nennt je Datei, was daraus wurde (neu, schon da, kein Programm) | transient |
 
 Nicht gebaut: ein Feld „nutzender Regler“ an den Ständen (die Schnittstelle des Dienstes sagt nicht, welcher Regler welchen Stand benutzt) und die Zuweisung von Ständen an Regler.
 
@@ -66,6 +68,12 @@ Beide mit dem API-Schlüssel eines Benutzers der Gruppe `Workbench / Service`, n
 4. **Dienst** mit Odoo verbinden (der Schlüssel kommt aus einer Datei oder der Umgebungsvariable, nie auf die Kommandozeile); die Adresse und Parameter stehen in der Beschreibung des Dienstes.
 
 Der Bus braucht den Websocket von Odoo (im Betrieb mit einem Prozess im Server, mit mehreren über den Evented-Port).
+
+## Software (Programme der Regler)
+
+Gemessen am Bestand des Originals (`micserv-7.1/PROGRAMMIERDATEN.md` im Repository `micserv`): Namen und Endungen der Programmdateien sagen nichts (`.dwn`, `.m00`, `.kdr`, `.101` und andere; ein Name kommt mit verschiedenem Inhalt vor, eine Datei trägt eine andere Applikation als ihr Name), also liest `models/software_check.py` (reines Python, ohne ORM, einzeln prüfbar) **nur den Inhalt**: die Zeilenprüfsummen, die Speicherbereiche (ab `0x0` Betriebssystem, ab `0x198000` Applikation, beides ein Kombiabbild, `0x4D000` Familie B, `0xFF8000` Urlader, `0x3B385C` Parameterblock), den Kopf der Applikation (Name, Resource, Dokumentnummer, Betriebssystem, für das sie gebaut ist) und die Betriebssystemkennung. Ein Programmtext (`dl 1`, Kopfzeile `#PLC Applikation: …`) wird an seiner Kopfzeile erkannt. Am ganzen Bestand (108 Abbilder und 4 Programmtexte) liefert das dieselben Zahlen wie die Auswertung (22 Betriebssysteme, 51 Applikationen, 19 Kombiabbilder, 7 Familie B, 5 Urlader, 4 Parameterblöcke), mit `micserv-7.1/programmierdaten_auswertung/` nachzuprüfen. Die Tests im Modul benutzen selbst gebaute Abbilder und zwei kleine echte Dateien (`tests/data`).
+
+Ein Programm ist ein **Entwurf**, bis ein Verwalter es freigibt; nur Freigegebenes soll später geladen werden (Teil J in `PLAN.md`). Warnungen (Name weicht vom Inhalt ab, kein Endsatz, unbekannte Bereiche) verhindern nichts, sie stehen am Programm. Was in der Datei steht, ändert sich nicht; eine geänderte Datei ist ein neues Programm. Menü *Projects > Software*.
 
 ## Rückmeldungen in der Oberfläche
 

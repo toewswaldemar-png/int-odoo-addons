@@ -7,4 +7,5 @@ from . import test_feedback
 from . import test_fs2
 from . import test_parameter
 from . import test_service
+from . import test_software
 from . import test_service_data
