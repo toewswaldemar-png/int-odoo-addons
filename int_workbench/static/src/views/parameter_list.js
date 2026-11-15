@@ -113,10 +113,9 @@ export class ParameterListController extends ListController {
     connectionChanged({ device, state } = {}) {
         this.connections.refresh();
         if (state === "connected") {
-            this.notification.add(_t("%s: the line to the controller is back.", device), { title: _t("Controller"), type: "success" });
+            this.notification.add(_t("%s: the line to the controller is back.", device), { type: "success" });
         } else if (state === "disconnected") {
             this.notification.add(_t("%s: the service has lost the line to the controller. The values shown may be old.", device), {
-                title: _t("Controller"),
                 type: "warning",
                 sticky: true,
             });
@@ -125,11 +124,11 @@ export class ParameterListController extends ListController {
 
     /** The bus says errors came: {device, errors, more}. */
     errorsCame({ device, errors = [], more = 0 } = {}) {
-        let message = errors.join(", ");
+        let list = errors.join(", ");
         if (more) {
-            message += " " + _t("and %s more", more);
+            list += " " + _t("and %s more", more);
         }
-        this.notification.add(`${device}: ${message}`, { title: _t("New error"), type: "danger", sticky: true });
+        this.notification.add(_t("%s: new errors: %s", device, list), { type: "danger", sticky: true });
     }
 
     /** The bus says which models changed in a report: {models}. Only the lists of those models load themselves afresh. */

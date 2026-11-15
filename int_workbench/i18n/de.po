@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 20:26+0000\n"
-"PO-Revision-Date: 2026-11-14 20:26+0000\n"
+"POT-Creation-Date: 2026-11-14 20:37+0000\n"
+"PO-Revision-Date: 2026-11-14 20:37+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -52,6 +52,12 @@ msgid "%s: done."
 msgstr "%s: erledigt."
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid "%s: new errors: %s"
+msgstr "%s: neue Fehler: %s"
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "%s: the answer of the controller is in the request."
@@ -78,14 +84,18 @@ msgstr ""
 #: code:addons/int_workbench/static/src/connection/connection_banner.js:0
 msgid ""
 "%s: the service has no line to the controller. The values shown may be old."
-msgstr "%s: Der Dienst hat keine Verbindung zum Regler. Die angezeigten Werte können veraltet sein."
+msgstr ""
+"%s: Der Dienst hat keine Verbindung zum Regler. Die angezeigten Werte können"
+" veraltet sein."
 
 #. module: int_workbench
 #. odoo-javascript
 #: code:addons/int_workbench/static/src/connection/connection_banner.js:0
 msgid ""
 "%s: the service has not reported for a while. The values shown may be old."
-msgstr "%s: Der Dienst hat sich länger nicht gemeldet. Die angezeigten Werte können veraltet sein."
+msgstr ""
+"%s: Der Dienst hat sich länger nicht gemeldet. Die angezeigten Werte können "
+"veraltet sein."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__lmzus
@@ -626,8 +636,6 @@ msgid "Control the CAN bus"
 msgstr "CAN-Bus steuern"
 
 #. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_wizard__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__device_id
@@ -1426,12 +1434,6 @@ msgstr ""
 msgid "Name the error files to delete (up to %s), by their file names."
 msgstr ""
 "Nenne die zu löschenden Fehlerdateien (bis zu %s) mit ihren Dateinamen."
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
-msgid "New error"
-msgstr "Neuer Fehler"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__time

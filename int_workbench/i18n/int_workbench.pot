@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 20:25+0000\n"
-"PO-Revision-Date: 2026-11-14 20:25+0000\n"
+"POT-Creation-Date: 2026-11-14 20:36+0000\n"
+"PO-Revision-Date: 2026-11-14 20:36+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -45,6 +45,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "%s: done."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.js:0
+msgid "%s: new errors: %s"
 msgstr ""
 
 #. module: int_workbench
@@ -603,8 +609,6 @@ msgid "Control the CAN bus"
 msgstr ""
 
 #. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_wizard__device_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__device_id
@@ -1379,12 +1383,6 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "Name the error files to delete (up to %s), by their file names."
-msgstr ""
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.js:0
-msgid "New error"
 msgstr ""
 
 #. module: int_workbench
