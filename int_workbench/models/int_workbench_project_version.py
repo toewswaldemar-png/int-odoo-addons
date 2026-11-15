@@ -62,6 +62,16 @@ class IntWorkbenchProjectVersion(models.Model):
 
     _checksum_unique = models.Constraint("UNIQUE (checksum)", "A version exists once.")
 
+    def _service_description(self):
+        """What the service needs to fetch the version: the checksum, where it belongs and its files with their checksums."""
+        self.ensure_one()
+        return {
+            "checksum": self.checksum,
+            "vehicle": self.vehicle or "",
+            "project": self.project or "",
+            "files": [{"name": file.name, "sha256": file.sha256, "size": file.size} for file in self.file_ids],
+        }
+
     @api.depends("checksum")
     def _compute_short_id(self):
         for version in self:

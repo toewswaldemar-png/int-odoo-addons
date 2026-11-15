@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 14:36+0000\n"
-"PO-Revision-Date: 2026-11-15 14:36+0000\n"
+"POT-Creation-Date: 2026-11-15 14:57+0000\n"
+"PO-Revision-Date: 2026-11-15 14:57+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -380,6 +380,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 msgid "Archived"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__project_state__same
+msgid "As assigned"
 msgstr ""
 
 #. module: int_workbench
@@ -1083,6 +1088,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__detail
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__detail
 msgid "Detail"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__project_state__differs
+msgid "Differs from the assigned version"
 msgstr ""
 
 #. module: int_workbench
@@ -1960,6 +1970,11 @@ msgid "Note"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__project_state__none
+msgid "Nothing assigned"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__number
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__value
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_kind__number
@@ -2266,8 +2281,18 @@ msgid "Project files from the library"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__project_active_checksum
+msgid "Project in use"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_project_folder
 msgid "Project of a vehicle"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__project_state
+msgid "Project state"
 msgstr ""
 
 #. module: int_workbench
@@ -2842,6 +2867,13 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__project_active_checksum
+msgid ""
+"The checksum of the project that the service uses for this controller now "
+"(what it reports)."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__clock_write_enabled
 msgid "The clock may be set"
 msgstr ""
@@ -3413,6 +3445,11 @@ msgid "The service could turn the answer into a number."
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__project_state__unknown
+msgid "The service has not said"
+msgstr ""
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_import_view_form
 msgid ""
 "The service looks through its project folders and brings every folder that "
@@ -3605,6 +3642,18 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 msgid "There are no new folders."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "There is no approved program with the checksum %s."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "There is no file %(name)s in the version %(checksum)s."
 msgstr ""
 
 #. module: int_workbench
@@ -3928,6 +3977,13 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__origins
 msgid "Where the version was brought in from, one in each line."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__project_state
+msgid ""
+"Whether the project that the service uses is the version that is assigned. A"
+" service that is started strict refuses to clamp while they differ."
 msgstr ""
 
 #. module: int_workbench

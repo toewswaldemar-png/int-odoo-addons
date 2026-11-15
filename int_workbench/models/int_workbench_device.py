@@ -124,6 +124,23 @@ class IntWorkbenchDevice(models.Model):
     viewer_at = fields.Datetime(
         string="Last looked at", readonly=True, copy=False, help="The last time the list of process values said that somebody looks at this controller."
     )
+    project_active_checksum = fields.Char(
+        string="Project in use",
+        readonly=True,
+        copy=False,
+        help="The checksum of the project that the service uses for this controller now (what it reports).",
+    )
+    project_state = fields.Selection(
+        [
+            ("none", "Nothing assigned"),
+            ("unknown", "The service has not said"),
+            ("same", "As assigned"),
+            ("differs", "Differs from the assigned version"),
+        ],
+        compute="_compute_project_state",
+        string="Project state",
+        help="Whether the project that the service uses is the version that is assigned. A service that is started strict refuses to clamp while they differ.",
+    )
     project_version_id = fields.Many2one(
         "int.workbench.project.version",
         string="Project version",
@@ -295,6 +312,18 @@ class IntWorkbenchDevice(models.Model):
                     new.message_post(body=self.env._("Assigned to the controller %s.", device.name))
         return result
 
+    @api.depends("project_version_id", "project_version_id.checksum", "project_active_checksum")
+    def _compute_project_state(self):
+        for device in self:
+            if not device.project_version_id:
+                device.project_state = "none"
+            elif not device.project_active_checksum:
+                device.project_state = "unknown"
+            elif device.project_active_checksum == device.project_version_id.checksum:
+                device.project_state = "same"
+            else:
+                device.project_state = "differs"
+
     @api.constrains("project_version_id")
     def _check_project_version(self):
         for device in self:
@@ -367,6 +396,70 @@ class IntWorkbenchDevice(models.Model):
             device._service_store_snapshot(snapshot)
         device._service_expire_commands()
         return device._service_answer()
+
+    @api.model
+    def service_projects(self, device_ref, everything=False):
+        """Tell the service which project version its controller is to have, and where to get the files.
+
+        :param bool everything: also list the other versions that are approved (the service of a laptop keeps them all, to have them
+            at the vehicle without a network)
+        :return: ``{"wanted": version | None, "approved": [version]}`` where a version is ``{"checksum", "vehicle", "project",
+            "files": [{"name", "sha256", "size"}]}``. Only an approved or retired version is handed out, never a draft.
+        """
+        device = self._service_device(device_ref)
+        Version = self.env["int.workbench.project.version"]
+        # sudo: int.workbench.project.version: the service user has no right on the models, only on the calls of the service
+        wanted = device.project_version_id.sudo()
+        answer = {"wanted": wanted._service_description() if wanted and wanted.state != "draft" else None}
+        if everything:
+            answer["approved"] = [version._service_description() for version in Version.sudo().search([("state", "=", "approved")])]
+        return answer
+
+    @api.model
+    def service_project_file(self, device_ref, checksum, name):
+        """Give one file of a project version to the service: ``{"name", "sha256", "size", "data"}`` with the content as base64."""
+        self._service_device(device_ref)
+        # sudo: int.workbench.project.version: see service_projects
+        version = self.env["int.workbench.project.version"].sudo().search([("checksum", "=", checksum), ("state", "!=", "draft")], limit=1)
+        file = version.file_ids.filtered(lambda candidate: candidate.name == name)
+        if not file:
+            raise UserError(self.env._("There is no file %(name)s in the version %(checksum)s.", name=name, checksum=str(checksum)[:12]))
+        data = file.data or b""
+        return {"name": file.name, "sha256": file.sha256, "size": file.size, "data": data.decode() if isinstance(data, bytes) else data}
+
+    @api.model
+    def service_software(self, device_ref, sha256):
+        """Give one approved program to the service (to load it into the controller): ``{"name", "sha256", "size", "kind", "hardware",
+        "data"}`` with the content as base64. Only an approved program is handed out, never a draft or a retired one."""
+        self._service_device(device_ref)
+        # sudo: int.workbench.software: the service user has no right on the models, only on the calls of the service
+        software = self.env["int.workbench.software"].sudo().search([("sha256", "=", sha256), ("state", "=", "approved")], limit=1)
+        if not software:
+            raise UserError(self.env._("There is no approved program with the checksum %s.", str(sha256)[:12]))
+        data = software.data or b""
+        return {
+            "name": software.filename or software.name,
+            "sha256": software.sha256,
+            "size": software.size,
+            "kind": software.kind,
+            "hardware": software.hardware,
+            "data": data.decode() if isinstance(data, bytes) else data,
+        }
+
+    @api.model
+    def service_projects_report(self, device_ref, projects=None, active=None):
+        """Take what the service has in its project library and which project it uses for this controller now.
+
+        :param list projects: the versions of the library, the entries of ``GET /api/v1/projects`` of the service
+        :param str active: the checksum of the project in use ("" if it is none of the library)
+        """
+        device = self._service_device(device_ref)
+        if isinstance(projects, list):
+            self.env["int.workbench.project"]._store(device, projects)
+        active = active if isinstance(active, str) and len(active) <= 64 else ""
+        if active != (device.project_active_checksum or ""):
+            device.write({"project_active_checksum": active})
+        return {"ok": True}
 
     @api.model
     def _service_settings(self):

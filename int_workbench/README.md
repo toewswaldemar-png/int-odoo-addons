@@ -92,6 +92,19 @@ python tools/int_workbench/workbench_import.py --stock C:\INBETRIE --run --url h
 
 Der Trockenlauf am Bestand (15.11.2026): 179 Stände aus 223 Projektordnern (38,8 MB), 114 Programme aus 242 Dateien (189,5 MB: 22 Betriebssysteme, 51 Applikationen, 26 Kombiabbilder, 5 Urlader, 4 Parameterblöcke, 6 Programmtexte). Der Schlüssel ist ein API-Schlüssel eines Verwalters (Datei, nie auf der Kommandozeile); die Aufrufe sind `int.workbench.software/import_file` und `int.workbench.project.version/import_version` über JSON-2.
 
+## Abgleich mit dem Dienst (Projekte und Programme)
+
+Der Dienst (Go) hält seine **Projektbibliothek** im Takt mit Odoo; Odoo fragt den Dienst dafür nicht. Drei Aufrufe des Dienst-Benutzers (JSON-2, nur für die Regler dieses Benutzers):
+
+| Aufruf | Antwort |
+|---|---|
+| `int.workbench.device/service_projects` (`device_ref`, `everything`) | der Stand, den der Regler haben soll (`wanted`: Prüfsumme, Fahrzeug, Projekt, Dateien mit Name, SHA-256 und Größe; nie ein Entwurf), mit `everything` auch alle freigegebenen Stände (`approved`) |
+| `…/service_project_file` (`device_ref`, `checksum`, `name`) | eine Datei des Standes als Base64; der Dienst prüft die Prüfsumme der Datei und dann die des Standes |
+| `…/service_projects_report` (`device_ref`, `projects`, `active`) | der Dienst meldet, was seine Bibliothek hat (ladbar, Grund, Zeilen, Herkunft: das Abbild *Library of the service*) und welches Projekt er für den Regler benutzt (`active`) |
+| `…/service_software` (`device_ref`, `sha256`) | ein **freigegebenes** Programm als Base64 (nur auf Anfrage, wenn es geladen werden soll; nie Entwurf oder zurückgezogen) |
+
+Am Regler stehen **Projekt in Gebrauch** und der **Projektzustand**: *Nichts zugewiesen*, *Der Dienst hat es nicht gesagt*, *Wie zugewiesen*, *Weicht vom zugewiesenen Stand ab*. Ein Dienst, der mit `-projekt-streng` (oder `"projects": {"strict": true}` in der Datei von `-regler`) gestartet ist, lehnt Klemmaufträge ab, solange das Projekt des Reglers nicht der zugewiesene Stand ist; ohne den Schalter wird der Unterschied nur gemeldet.
+
 ## Rückmeldungen in der Oberfläche
 
 Odoo sagt dem Benutzer, was geschieht, ohne dass er eine Liste neu laden muss. Alles läuft über den Bus (Nachrichten an den Partner des Benutzers beziehungsweise an die Seiten, die den Regler ansehen); die Seite fragt nie von sich aus nach.

@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 14:37+0000\n"
-"PO-Revision-Date: 2026-11-15 14:37+0000\n"
+"POT-Creation-Date: 2026-11-15 14:58+0000\n"
+"PO-Revision-Date: 2026-11-15 14:58+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -401,6 +401,11 @@ msgstr "Freigegeben von"
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 msgid "Archived"
 msgstr "Archiviert"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__project_state__same
+msgid "As assigned"
+msgstr "Wie zugewiesen"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
@@ -1131,6 +1136,11 @@ msgstr "Bezeichnung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__detail
 msgid "Detail"
 msgstr "Einzelheiten"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__project_state__differs
+msgid "Differs from the assigned version"
+msgstr "Weicht vom zugewiesenen Stand ab"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__disabled
@@ -2023,6 +2033,11 @@ msgid "Note"
 msgstr "Notiz"
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__project_state__none
+msgid "Nothing assigned"
+msgstr "Nichts zugewiesen"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__number
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__value
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_kind__number
@@ -2339,9 +2354,19 @@ msgid "Project files from the library"
 msgstr "Projektdateien aus der Bibliothek"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__project_active_checksum
+msgid "Project in use"
+msgstr "Projekt in Gebrauch"
+
+#. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_project_folder
 msgid "Project of a vehicle"
 msgstr "Projekt eines Fahrzeugs"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__project_state
+msgid "Project state"
+msgstr "Projektzustand"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__project_version_id
@@ -2933,6 +2958,13 @@ msgstr ""
 "Bibliothek des Dienstes."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__project_active_checksum
+msgid ""
+"The checksum of the project that the service uses for this controller now "
+"(what it reports)."
+msgstr "Die Prüfsumme des Projekts, das der Dienst jetzt für diesen Regler benutzt (was er meldet)."
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__clock_write_enabled
 msgid "The clock may be set"
 msgstr "Die Uhr darf gestellt werden"
@@ -3220,7 +3252,10 @@ msgid ""
 "The four digits of the document number: the kind of the document (M2 signal "
 "addresses, M3 process values, M4 error table, E2 CAN, E3 confpdl, E4 "
 "diagnosis, with the letter) and its version (the last three digits)."
-msgstr "Der Buchstabe und die vier Ziffern der Dokumentnummer: die Art des Dokuments (M2 Signaladressen, M3 Prozesswerte, M4 Fehlertabelle, E2 CAN, E3 confpdl, E4 Diagnose) und seine Version (die letzten drei Ziffern)."
+msgstr ""
+"Der Buchstabe und die vier Ziffern der Dokumentnummer: die Art des Dokuments"
+" (M2 Signaladressen, M3 Prozesswerte, M4 Fehlertabelle, E2 CAN, E3 confpdl, "
+"E4 Diagnose) und seine Version (die letzten drei Ziffern)."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__device_ref
@@ -3379,7 +3414,10 @@ msgid ""
 "The numbers of the documents of the project that its version lines carry "
 "(letter and four digits): E2 CAN, E3 confpdl, E4 diagnosis, M2 signal "
 "addresses, M3 process values, M4 error table."
-msgstr "Die Nummern der Dokumente des Projekts, die seine Versionszeilen tragen (Buchstabe und vier Ziffern): E2 CAN, E3 confpdl, E4 Diagnose, M2 Signaladressen, M3 Prozesswerte, M4 Fehlertabelle."
+msgstr ""
+"Die Nummern der Dokumente des Projekts, die seine Versionszeilen tragen "
+"(Buchstabe und vier Ziffern): E2 CAN, E3 confpdl, E4 Diagnose, M2 "
+"Signaladressen, M3 Prozesswerte, M4 Fehlertabelle."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__expected_os
@@ -3482,7 +3520,10 @@ msgid ""
 "The programs of this project whose numbers (E2, E3, E4) are the ones of this"
 " version: the program was built with these tables and scripts. Only what "
 "both sides say is compared."
-msgstr "Die Programme dieses Projekts, deren Nummern (E2, E3, E4) die dieses Stands sind: Das Programm wurde mit diesen Tabellen und Skripten gebaut. Verglichen wird nur, was beide Seiten angeben."
+msgstr ""
+"Die Programme dieses Projekts, deren Nummern (E2, E3, E4) die dieses Stands "
+"sind: Das Programm wurde mit diesen Tabellen und Skripten gebaut. Verglichen"
+" wird nur, was beide Seiten angeben."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software_upload__software_ids
@@ -3561,6 +3602,11 @@ msgstr "Der Dienst kann den Stand laden."
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__has_value
 msgid "The service could turn the answer into a number."
 msgstr "Der Dienst konnte die Antwort in eine Zahl umwandeln."
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__project_state__unknown
+msgid "The service has not said"
+msgstr "Der Dienst hat es nicht gesagt"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_import_view_form
@@ -3787,6 +3833,18 @@ msgstr ""
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 msgid "There are no new folders."
 msgstr "Es gibt keine neuen Ordner."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "There is no approved program with the checksum %s."
+msgstr "Es gibt kein freigegebenes Programm mit der Prüfsumme %s."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "There is no file %(name)s in the version %(checksum)s."
+msgstr "Es gibt keine Datei %(name)s im Stand %(checksum)s."
 
 #. module: int_workbench
 #. odoo-python
@@ -4144,6 +4202,13 @@ msgstr ""
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__origins
 msgid "Where the version was brought in from, one in each line."
 msgstr "Woher der Stand hereingeholt wurde, eine Angabe je Zeile."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__project_state
+msgid ""
+"Whether the project that the service uses is the version that is assigned. A"
+" service that is started strict refuses to clamp while they differ."
+msgstr "Ob das Projekt, das der Dienst benutzt, der zugewiesene Stand ist. Ein streng gestarteter Dienst lehnt das Klemmen ab, solange sie sich unterscheiden."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__load_error

@@ -78,6 +78,9 @@
                     </group>
                     <group string="Project">
                         <field name="project_version_id" options="{'no_create': True}"/>
+                        <field name="project_state" widget="badge" decoration-success="project_state == 'same'"
+                               decoration-warning="project_state == 'differs'" decoration-muted="project_state in ('none', 'unknown')"/>
+                        <field name="project_active_checksum" invisible="not project_active_checksum"/>
                     </group>
                     <notebook>
                         <page string="Capabilities" name="capabilities">

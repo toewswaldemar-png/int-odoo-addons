@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 
 from odoo.exceptions import AccessError, UserError
@@ -6,44 +7,9 @@ from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
 
 from odoo.addons.int_workbench.models import software_check as check
+from odoo.addons.int_workbench.tests.images import APPLICATION_TEXT, application, golden, operating_system, srec
 
 DATA = os.path.join(os.path.dirname(__file__), "data")
-
-
-def srec(parts, end=True):
-    """The text of an S-Record file with the given ``[(address, bytes)]`` (S2 records of 32 bytes, an S0 header and an S8 end record)."""
-
-    def record(kind, address, data):
-        body = bytes([len(data) + 4]) + address.to_bytes(3, "big") + data
-        return ("S%s%s%02X" % (kind, body.hex().upper(), (sum(body) & 0xFF) ^ 0xFF)).encode()
-
-    lines = [record("0", 0, b"HDR")]
-    for address, data in parts:
-        for offset in range(0, len(data), 32):
-            lines.append(record("2", address + offset, data[offset : offset + 32]))
-    if end:
-        lines.append(record("8", 0, b""))
-    return b"\r\n".join(lines) + b"\r\n"
-
-
-def field(text, length=32):
-    return text.encode().ljust(length, b"\x00")
-
-
-def application(name="BR186002", resource="R090644", document="3EGM090644E2002", expected="3EGM009880E9210", other_order=False):
-    mark = b"\x05\x06\xfe\xff" if other_order else b"\x05\x06\xff\xfe"
-    prefix = b"\xb3\x8f\x00\xf0\x00\xf0" if other_order else b"\x00\x04\x8b\xd5\xb3\x8f\x01\x5a\x01\x5a"
-    return prefix + mark + field(name) + field(resource) + b"RES-GLOBAL".ljust(40, b"\x00") + document.encode() + b"\x00" + expected.encode() + b"\x00" * 20
-
-
-def operating_system(identity="3EGM 0098 80 E0310"):
-    return b"\x00\x40\x24\x1c" * 8 + identity.encode() + b"\x00" * 30
-
-
-APPLICATION_TEXT = (
-    b"\r\n\r\n#dl 1\r\n#PLC  Applikation: CANTAUFE, Resource: 64EX_A00, Byteanz. = 8\r\n"
-    b"Erstelldatum Resource (GMT+1) = 21.01.2003  15:34:37  \r\n> \r\n*1A44F0 75B3 8F00\r\n*1A44F8 0001 0002\r\n#PLC  Ende\r\n\r\n> \r\n"
-)
 
 
 class TestSoftwareCheck(TransactionCase):
@@ -87,6 +53,12 @@ class TestSoftwareCheck(TransactionCase):
         self.assertEqual((boot.kind, boot.hardware), ("bootloader", "ha3x"))
         parameters = check.check_file("hsi.dwn", srec([(0x3B385C, b"3EGM 0098 80 E0205\x00hsi_frm.c ver: 1.00")]))
         self.assertEqual((parameters.kind, parameters.os_version), ("parameter", "2.05"))
+
+    def test_the_file_of_the_common_examples_says_what_the_checker_says_today(self):
+        """The Go checker (micserv/go/workbench/softwarelib) reads the same examples and must say the same; the file stays in step."""
+        with open(os.path.join(DATA, "software_golden.json"), encoding="utf-8") as handle:
+            stored = json.load(handle)
+        self.assertEqual(stored, json.loads(json.dumps(golden(check))), "run tools/int_workbench/software_golden.py and copy the file to micserv")
 
     def test_a_real_block_of_parameters_and_a_real_bootstrap(self):
         with open(os.path.join(DATA, "hsiRNK0100.dwn"), "rb") as handle:

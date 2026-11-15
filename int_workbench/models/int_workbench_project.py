@@ -39,8 +39,12 @@ class IntWorkbenchProject(models.Model):
         A version that the service no longer lists is removed; the service does not delete versions, so this is only a repair.
         """
         answer = device._service_request("GET", "/api/v1/projects")
+        self._store(device, answer.get("projects"))
+
+    def _store(self, device, projects):
+        """Write the versions that the service has (the answer of ``GET /api/v1/projects``, or what it reports itself) into the records."""
         wanted = {}
-        for entry in answer.get("projects") or []:
+        for entry in projects or []:
             if not isinstance(entry, dict) or not isinstance(entry.get("id"), str):
                 continue
             origins = [origin for origin in entry.get("origins") or [] if isinstance(origin, dict) and isinstance(origin.get("path"), str)]
