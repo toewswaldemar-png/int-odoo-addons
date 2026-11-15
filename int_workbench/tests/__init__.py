@@ -6,6 +6,7 @@ from . import test_family
 from . import test_feedback
 from . import test_fs2
 from . import test_parameter
+from . import test_project_version
 from . import test_service
 from . import test_software
 from . import test_service_data

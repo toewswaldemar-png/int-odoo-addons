@@ -1,4 +1,6 @@
 import base64
+import binascii
+import re
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
@@ -55,6 +57,12 @@ class IntWorkbenchSoftware(models.Model):
     app_name = fields.Char(string="Application", readonly=True, index=True, help="The name in the header of the application.")
     resource = fields.Char(readonly=True, help="The resource of the application (the second name in its header).")
     document = fields.Char(readonly=True, index=True, help="The document number of the application (3EGM, six digits, E, four digits). The tables of a project carry the same six digits.")
+    document_number = fields.Char(
+        compute="_compute_document_number",
+        store=True,
+        index=True,
+        help="The six digits of the document number: the link to the projects, whose tables carry the same digits.",
+    )
     os_version = fields.Char(string="Operating system", readonly=True, help="The version of the operating system that is in the file (E0310 is 3.10).")
     expected_os = fields.Char(string="Made for", readonly=True, help="The operating system an application says it is made for (E9210 is 2.10). Assumed to mean that; not proven.")
     ranges = fields.Text(string="Memory ranges", readonly=True)
@@ -77,6 +85,12 @@ class IntWorkbenchSoftware(models.Model):
         for software in self:
             software.short_id = (software.sha256 or "")[:8]
 
+    @api.depends("document")
+    def _compute_document_number(self):
+        for software in self:
+            match = re.match(r"3EGM(\d{6})E", software.document or "")
+            software.document_number = match.group(1) if match else False
+
     # === FROM A FILE === #
 
     @api.model
@@ -86,6 +100,8 @@ class IntWorkbenchSoftware(models.Model):
         A file that is already there (same content under any name) is not a second record: the name it came with is added to the names
         of the record. A file that is no program file raises a UserError that says why.
         """
+        # whoever may not bring files in must not add to what is there either (the lookup below is sudo, for the whole stock)
+        self.check_access("create")
         try:
             result = check.check_file(filename, content)
         except check.ImageError as error:
@@ -114,6 +130,21 @@ class IntWorkbenchSoftware(models.Model):
             "data": base64.b64encode(content),
         }
         return self.create(values), True
+
+    @api.model
+    def import_file(self, filename, data):
+        """Bring a file in as a draft (for the tool that takes over the stock of the original); ``data`` is the content as base64.
+
+        Returns ``{"id", "created", "kind", "name"}``. A file that is no program raises a UserError that says why.
+        """
+        if not isinstance(filename, str) or not isinstance(data, str):
+            raise UserError(self.env._("A file needs a name and its content as base64."))
+        try:
+            content = base64.b64decode(data, validate=True)
+        except (binascii.Error, ValueError):
+            raise UserError(self.env._("The content of %s is not base64.", filename)) from None
+        software, created = self._from_file(filename, content)
+        return {"id": software.id, "created": created, "kind": software.kind, "name": software.name}
 
     def _add_source(self, filename):
         """Remember another name under which the same file was brought in."""

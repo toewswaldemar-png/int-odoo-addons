@@ -124,6 +124,14 @@ class IntWorkbenchDevice(models.Model):
     viewer_at = fields.Datetime(
         string="Last looked at", readonly=True, copy=False, help="The last time the list of process values said that somebody looks at this controller."
     )
+    project_version_id = fields.Many2one(
+        "int.workbench.project.version",
+        string="Project version",
+        domain="[('state', '=', 'approved')]",
+        ondelete="restrict",
+        copy=False,
+        help="The version of the project that this controller is to have (the assignment). It is kept in the chatter of the version.",
+    )
     report_age = fields.Float(
         compute="_compute_ages",
         help="Seconds since the last report, by the clock of the server, so that a page does not depend on the clock of its computer.",
@@ -273,7 +281,25 @@ class IntWorkbenchDevice(models.Model):
         return super().create([self._normalized(vals) for vals in vals_list])
 
     def write(self, vals):
-        return super().write(self._normalized(vals))
+        if "project_version_id" not in vals:
+            return super().write(self._normalized(vals))
+        before = {device: device.project_version_id for device in self}
+        result = super().write(self._normalized(vals))
+        for device, old in before.items():
+            new = device.project_version_id
+            if new != old:
+                # the assignment is kept where it is looked up: in the chatter of both versions
+                if old:
+                    old.message_post(body=self.env._("Taken away from the controller %s.", device.name))
+                if new:
+                    new.message_post(body=self.env._("Assigned to the controller %s.", device.name))
+        return result
+
+    @api.constrains("project_version_id")
+    def _check_project_version(self):
+        for device in self:
+            if device.project_version_id and device.project_version_id.state != "approved":
+                raise ValidationError(self.env._("%s cannot be assigned: only an approved version can.", device.project_version_id.display_name))
 
     @api.model
     def _normalized(self, vals):

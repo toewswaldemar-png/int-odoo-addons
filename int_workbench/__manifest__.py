@@ -29,6 +29,7 @@
         "views/int_workbench_user_views.xml",
         "views/int_workbench_project_views.xml",
         "views/int_workbench_software_views.xml",
+        "views/int_workbench_project_version_views.xml",
         "wizard/int_workbench_project_import_views.xml",
         "wizard/int_workbench_control_views.xml",
         "views/int_workbench_menus.xml",

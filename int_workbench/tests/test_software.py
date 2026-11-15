@@ -219,6 +219,20 @@ class TestIntWorkbenchSoftware(TransactionCase):
         with self.assertRaises(AccessError):
             self.bring_in("v310.dwn", srec([(0, operating_system())]), user=self.reader)
 
+    # === the public method for the tool === #
+
+    def test_the_tool_brings_a_file_in_with_the_content_as_base64(self):
+        answer = self.Software.with_user(self.manager).import_file("BR186002.dwn", base64.b64encode(self.image).decode())
+        self.assertEqual((answer["created"], answer["kind"], answer["name"]), (True, "application", "BR186002"))
+        again = self.Software.with_user(self.manager).import_file("other.m00", base64.b64encode(self.image).decode())
+        self.assertEqual((again["id"], again["created"]), (answer["id"], False))
+        with self.assertRaises(UserError):
+            self.Software.with_user(self.manager).import_file("x", "***")
+        with self.assertRaises(UserError):
+            self.Software.with_user(self.manager).import_file("x", base64.b64encode(b"just words").decode())
+        with self.assertRaises(AccessError):
+            self.Software.with_user(self.reader).import_file("BR186002.dwn", base64.b64encode(self.image).decode())
+
     # === the dialog === #
 
     def test_the_dialog_brings_files_in_and_names_what_it_did_to_each(self):

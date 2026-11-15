@@ -76,6 +76,9 @@
                         <field name="clock_read_at" invisible="not clock_local_time"/>
                         <field name="can_count" invisible="not can_count"/>
                     </group>
+                    <group string="Project">
+                        <field name="project_version_id" options="{'no_create': True}"/>
+                    </group>
                     <notebook>
                         <page string="Capabilities" name="capabilities">
                             <field name="capability_ids" widget="many2many_tags" readonly="1"/>

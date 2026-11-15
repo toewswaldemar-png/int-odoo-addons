@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 13:12+0000\n"
-"PO-Revision-Date: 2026-11-15 13:12+0000\n"
+"POT-Creation-Date: 2026-11-15 13:47+0000\n"
+"PO-Revision-Date: 2026-11-15 13:47+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -19,7 +19,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_software.py:0
 msgid "%(file)s: %(reason)s"
-msgstr "%(file)s: %(reason)s"
+msgstr ""
 
 #. module: int_workbench
 #. odoo-python
@@ -35,6 +35,18 @@ msgstr "%(file)s: neuer Entwurf %(name)s"
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "%(first)s and %(second)s differ only in upper and lower case."
+msgstr "%(first)s und %(second)s unterscheiden sich nur in Groß- und Kleinschreibung."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "%(name)s is larger than %(megabytes)d MB."
+msgstr "%(name)s ist größer als %(megabytes)d MB."
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 msgid "%(total)s folders, %(created)s new versions, %(failed)s turned away."
 msgstr "%(total)s Ordner, %(created)s neue Stände, %(failed)s abgewiesen."
@@ -44,13 +56,33 @@ msgstr "%(total)s Ordner, %(created)s neue Stände, %(failed)s abgewiesen."
 #: code:addons/int_workbench/models/int_workbench_software.py:0
 msgid ""
 "%s cannot be approved: it is not placed in the memory of a known controller."
-msgstr "%s kann nicht freigegeben werden: Es liegt nicht im Speicher eines bekannten Reglers."
+msgstr ""
+"%s kann nicht freigegeben werden: Es liegt nicht im Speicher eines bekannten"
+" Reglers."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s cannot be assigned: only an approved version can."
+msgstr "%s kann nicht zugewiesen werden: Nur ein freigegebener Stand kann es."
 
 #. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_fs2_file.py:0
 msgid "%s file(s) are being moved to the folder of deleted files."
 msgstr "%s Datei(en) werden in den Ordner der gelöschten Dateien verschoben."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "%s is assigned to a controller; assign another version first."
+msgstr "%s ist einem Regler zugewiesen; weise zuerst einen anderen Stand zu."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "%s is not a name of a file of a project."
+msgstr "%s ist kein Name einer Datei eines Projekts."
 
 #. module: int_workbench
 #. odoo-python
@@ -125,7 +157,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_software__hardware__ha3x
 msgid "11HA3x"
-msgstr "11HA3x"
+msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__lmzus
@@ -179,6 +211,12 @@ msgid "A file exists once per controller."
 msgstr "Eine Datei gibt es je Regler nur einmal."
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_software.py:0
+msgid "A file needs a name and its content as base64."
+msgstr "Eine Datei braucht einen Namen und ihren Inhalt als Base64."
+
+#. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_can_module_device_number_unique
 msgid "A module exists once per controller."
 msgstr "Ein Modul gibt es je Regler nur einmal."
@@ -192,6 +230,17 @@ msgstr "Ein Platz gibt es je Regler nur einmal."
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_software_sha256_unique
 msgid "A program exists once."
 msgstr "Ein Programm gibt es nur einmal."
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_project_folder_vehicle_name_unique
+msgid "A project exists once for a vehicle."
+msgstr "Ein Projekt gibt es nur einmal je Fahrzeug."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "A project needs a vehicle and a name."
+msgstr "Ein Projekt braucht ein Fahrzeug und einen Namen."
 
 #. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_fs2_record_file_entry_unique
@@ -214,6 +263,11 @@ msgid "A version exists once per service."
 msgstr "Einen Stand gibt es je Dienst nur einmal."
 
 #. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_project_version_checksum_unique
+msgid "A version exists once."
+msgstr "Einen Stand gibt es nur einmal."
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__name
 msgid "Account"
 msgstr "Konto"
@@ -230,6 +284,7 @@ msgid "Action"
 msgstr "Aktion"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_needaction
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_needaction
 msgid "Action Needed"
 msgstr "Aktion erforderlich"
@@ -303,27 +358,38 @@ msgid "Application"
 msgstr "Applikation"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__expected_document
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
+msgid "Application (document number)"
+msgstr "Applikation (Dokumentnummer)"
+
+#. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_software__kind__text
 msgid "Application text"
 msgstr "Applikationstext"
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Approve"
 msgstr "Freigeben"
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_version__state__approved
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_software__state__approved
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "Approved"
 msgstr "Freigegeben"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__approved_at
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__approved_at
 msgid "Approved at"
 msgstr "Freigegeben am"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__approved_by_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__approved_by_id
 msgid "Approved by"
 msgstr "Freigegeben von"
@@ -335,14 +401,36 @@ msgid "Archived"
 msgstr "Archiviert"
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
+msgid "Assigned to a controller"
+msgstr "Einem Regler zugewiesen"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "Assigned to the controller %s."
+msgstr "Dem Regler %s zugewiesen."
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_attachment_count
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_attachment_count
 msgid "Attachment Count"
 msgstr "Anzahl der Anhänge"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_author
+msgid "Author"
+msgstr "Autor"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__auto_text
 msgid "Automatic value"
 msgstr "Automatikwert"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_upload_view_form
+msgid "BR145/Br145020/BR145020"
+msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_tone__bad
@@ -371,17 +459,47 @@ msgid "Bootloader %s"
 msgstr "Urlader %s"
 
 #. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_project_upload
+msgid "Bring a project version in"
+msgstr "Einen Projektstand hereinholen"
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_project_upload_action
+msgid "Bring a version in"
+msgstr "Einen Stand hereinholen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_upload_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_list
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_upload_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_list
 msgid "Bring in"
 msgstr "Hereinholen"
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_upload.py:0
+msgid ""
+"Bring in one ZIP archive alone, or the files of one project. A version at a "
+"time."
+msgstr "Hole ein ZIP-Archiv allein herein oder die Dateien eines Projekts. Ein Stand nach dem anderen."
+
+#. module: int_workbench
+#: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_project_version_action
+msgid ""
+"Bring in the files of a project folder (or a ZIP archive of it). The version"
+" is named after a checksum of its files; a manager approves it, then it can "
+"be assigned to a controller."
+msgstr "Hole die Dateien eines Projektordners herein (oder ein ZIP-Archiv davon). Der Stand heißt nach einer Prüfsumme seiner Dateien; ein Verwalter gibt ihn frei, dann kann er einem Regler zugewiesen werden."
+
+#. module: int_workbench
 #: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_software_action
 msgid ""
 "Bring in the images and program texts of the controllers. They are read by "
 "their content, whatever they are called; a manager approves them."
-msgstr "Hole die Abbilder und Programmtexte der Regler herein. Sie werden nach ihrem Inhalt gelesen, egal wie sie heißen; ein Verwalter gibt sie frei."
+msgstr ""
+"Hole die Abbilder und Programmtexte der Regler herein. Sie werden nach ihrem"
+" Inhalt gelesen, egal wie sie heißen; ein Verwalter gibt sie frei."
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_software_upload_action
@@ -507,6 +625,8 @@ msgstr "Im Dienst geändert"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__checksum
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__sha256
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__checksum
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__sha256
 msgid "Checksum"
 msgstr "Prüfsumme"
@@ -516,6 +636,12 @@ msgstr "Prüfsumme"
 #: code:addons/int_workbench/wizard/int_workbench_software_upload.py:0
 msgid "Choose at least one file."
 msgstr "Wähle mindestens eine Datei."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_upload.py:0
+msgid "Choose the files of the project, or a ZIP archive of the folder."
+msgstr "Wähle die Dateien des Projekts oder ein ZIP-Archiv des Ordners."
 
 #. module: int_workbench
 #. odoo-python
@@ -643,6 +769,7 @@ msgstr "Uhr gelesen um"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_import_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_upload_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_upload_view_form
 msgid "Close"
 msgstr "Schließen"
@@ -681,6 +808,7 @@ msgstr "Kommt"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_console_wizard__command
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__command
 msgid "Command"
 msgstr "Befehl"
 
@@ -826,7 +954,9 @@ msgstr "Reglertyp"
 #: code:addons/int_workbench/static/src/connection/connection_menu.xml:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_device_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__device_ids
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__device_ids
 #: model:ir.ui.menu,name:int_workbench.int_workbench_device_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 msgid "Controllers"
 msgstr "Regler"
 
@@ -857,7 +987,11 @@ msgstr "Anzahl"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_uid
@@ -889,7 +1023,11 @@ msgstr "Im Dienst erstellt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_date
@@ -957,6 +1095,11 @@ msgstr ""
 "(ohne Zeitzone)."
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_date
+msgid "Date in version line"
+msgstr "Datum in der Versionszeile"
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "Day"
 msgstr "Tag"
@@ -1020,7 +1163,11 @@ msgstr "Darstellung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__display_name
@@ -1044,6 +1191,12 @@ msgid "Document"
 msgstr "Dokument"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__document_number
+msgid "Document Number"
+msgstr "Dokumentnummer"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_document
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "Document number"
 msgstr "Dokumentnummer"
@@ -1051,6 +1204,7 @@ msgstr "Dokumentnummer"
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__done
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_import__state__done
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_upload__state__done
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_software_upload__state__done
 msgid "Done"
 msgstr "Erledigt"
@@ -1061,10 +1215,18 @@ msgid "Done At"
 msgstr "Erledigt am"
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_version__state__draft
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_software__state__draft
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "Draft"
 msgstr "Entwurf"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "Each file needs a name and its content as base64."
+msgstr "Jede Datei braucht einen Namen und ihren Inhalt als Base64."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__element
@@ -1260,10 +1422,21 @@ msgstr "Benutzer holen"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__file_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__data
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__data
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_record_view_search
 msgid "File"
 msgstr "Datei"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__file_count
+msgid "File Count"
+msgstr "Anzahl der Dateien"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_project_file
+msgid "File of a project version"
+msgstr "Datei eines Projektstands"
 
 #. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_record_menu
@@ -1282,8 +1455,12 @@ msgstr "Dateiname"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__file_count
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__attachment_ids
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__file_ids
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__attachment_ids
 #: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_file_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_upload_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_upload_view_form
 msgid "Files"
 msgstr "Dateien"
@@ -1294,11 +1471,13 @@ msgid "Finished At"
 msgstr "Beendet am"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_follower_ids
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_follower_ids
 msgid "Followers"
 msgstr "Follower"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_partner_ids
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_partner_ids
 msgid "Followers (Partners)"
 msgstr "Follower (Partner)"
@@ -1356,6 +1535,7 @@ msgid "Hardware"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__has_message
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__has_message
 msgid "Has Message"
 msgstr "Hat Nachricht"
@@ -1439,7 +1619,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__id
@@ -1449,25 +1633,31 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__short_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__short_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__short_id
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 msgid "Id"
 msgstr "Kennung"
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__message_needaction
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__message_needaction
 msgid "If checked, new messages require your attention."
 msgstr "Wenn gesetzt, brauchen neue Nachrichten Ihre Aufmerksamkeit."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__message_has_error
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__message_has_error
 msgid "If checked, some messages have a delivery error."
-msgstr "Wenn gesetzt, ist bei einigen Nachrichten die Zustellung fehlgeschlagen."
+msgstr ""
+"Wenn gesetzt, ist bei einigen Nachrichten die Zustellung fehlgeschlagen."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software_upload__attachment_ids
 msgid ""
 "Images (S-Record, whatever the name and the extension) and program texts."
-msgstr "Abbilder (S-Record, egal welcher Name und welche Endung) und Programmtexte."
+msgstr ""
+"Abbilder (S-Record, egal welcher Name und welche Endung) und Programmtexte."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__input
@@ -1488,6 +1678,7 @@ msgid "Intermediate values"
 msgstr "Zwischenwerte"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_is_follower
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_is_follower
 msgid "Is Follower"
 msgstr "Ist Follower"
@@ -1497,6 +1688,7 @@ msgstr "Ist Follower"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__kind
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__kind
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
@@ -1534,7 +1726,11 @@ msgstr "Letzter Klemmwert"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_uid
@@ -1561,7 +1757,11 @@ msgstr "Zuletzt aktualisiert von"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_date
@@ -1659,6 +1859,11 @@ msgid "Manager"
 msgstr "Verwalter"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__software_ids
+msgid "Matching software"
+msgstr "Passende Software"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__ranges
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Memory ranges"
@@ -1670,11 +1875,13 @@ msgid "Message"
 msgstr "Meldung"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_has_error
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_has_error
 msgid "Message Delivery error"
 msgstr "Fehler bei der Nachrichtenzustellung"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_ids
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_ids
 msgid "Messages"
 msgstr "Nachrichten"
@@ -1702,10 +1909,16 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__name
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Name"
 msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_name
+msgid "Name in version line"
+msgstr "Name in der Versionszeile"
 
 #. module: int_workbench
 #. odoo-python
@@ -1715,10 +1928,21 @@ msgstr ""
 "Nenne die zu löschenden Fehlerdateien (bis zu %s) mit ihren Dateinamen."
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__expected_names
+msgid "Names in the tables"
+msgstr "Namen in den Tabellen"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__sources
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Names of the file"
 msgstr "Namen der Datei"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_upload.py:0
+msgid "New draft %(name)s with %(count)d files."
+msgstr "Neuer Entwurf %(name)s mit %(count)d Dateien."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__time
@@ -1740,6 +1964,11 @@ msgstr "Diesem Dienstbenutzer ist kein Regler mit der Kennung %s zugewiesen."
 #: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_software_action
 msgid "No program yet"
 msgstr "Noch kein Programm"
+
+#. module: int_workbench
+#: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_project_version_action
+msgid "No version yet"
+msgstr "Noch kein Stand"
 
 #. module: int_workbench
 #. odoo-python
@@ -1770,8 +1999,12 @@ msgstr "Nicht ladbar"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__note
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__note
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__note
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__note
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_folder_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Note"
 msgstr "Notiz"
@@ -1784,21 +2017,25 @@ msgid "Number"
 msgstr "Zahl"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_needaction_counter
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_needaction_counter
 msgid "Number of Actions"
 msgstr "Anzahl der Aktionen"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_has_error_counter
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__message_has_error_counter
 msgid "Number of errors"
 msgstr "Anzahl der Fehler"
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__message_needaction_counter
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__message_needaction_counter
 msgid "Number of messages requiring action"
 msgstr "Anzahl der Nachrichten, die eine Aktion erfordern"
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__message_has_error_counter
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "Anzahl der Nachrichten mit Zustellfehler"
@@ -1841,13 +2078,28 @@ msgstr "Eine Zeile des Monitors des Reglers, zum Beispiel id all oder sr."
 #: code:addons/int_workbench/models/int_workbench_software.py:0
 msgid ""
 "Only a draft can be deleted. Retire a program that is not used any more."
-msgstr "Nur ein Entwurf kann gelöscht werden. Ziehe ein Programm zurück, das nicht mehr gebraucht wird."
+msgstr ""
+"Nur ein Entwurf kann gelöscht werden. Ziehe ein Programm zurück, das nicht "
+"mehr gebraucht wird."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid ""
+"Only a draft can be deleted. Retire a version that is not used any more."
+msgstr "Nur ein Entwurf kann gelöscht werden. Ziehe einen Stand zurück, der nicht mehr gebraucht wird."
 
 #. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_software.py:0
 msgid "Only a manager approves or retires a program."
 msgstr "Nur ein Verwalter gibt ein Programm frei oder zieht es zurück."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "Only a manager approves or retires a version."
+msgstr "Nur ein Verwalter gibt einen Stand frei oder zieht ihn zurück."
 
 #. module: int_workbench
 #. odoo-python
@@ -1872,7 +2124,17 @@ msgstr "Das darf nur ein Benutzer der Gruppe Workbench / Dienst aufrufen."
 msgid ""
 "Only an approved program can be loaded into a controller. A manager approves"
 " it; a retired program stays and can be approved again."
-msgstr "Nur ein freigegebenes Programm kann in einen Regler geladen werden. Ein Verwalter gibt es frei; ein zurückgezogenes Programm bleibt erhalten und kann wieder freigegeben werden."
+msgstr ""
+"Nur ein freigegebenes Programm kann in einen Regler geladen werden. Ein "
+"Verwalter gibt es frei; ein zurückgezogenes Programm bleibt erhalten und "
+"kann wieder freigegeben werden."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__state
+msgid ""
+"Only an approved version can be assigned to a controller. A manager approves"
+" it; a retired version stays and can be approved again."
+msgstr "Nur ein freigegebener Stand kann einem Regler zugewiesen werden. Ein Verwalter gibt ihn frei; ein zurückgezogener Stand bleibt erhalten und kann wieder freigegeben werden."
 
 #. module: int_workbench
 #. odoo-python
@@ -1925,6 +2187,17 @@ msgid "Origin"
 msgstr "Herkunft"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__origins
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
+msgid "Origins"
+msgstr "Herkunft"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_file__kind__other
+msgid "Other"
+msgstr "Sonstige"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__outcome
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "Outcome"
@@ -1969,6 +2242,11 @@ msgid "Priority"
 msgstr "Priorität"
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_upload_view_form
+msgid "Pro_2"
+msgstr ""
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
@@ -2000,6 +2278,7 @@ msgstr "Prozesswerte"
 #. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_software.py:0
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_file__kind__program
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "Program"
 msgstr "Programm"
@@ -2021,6 +2300,13 @@ msgstr "Programme"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__project
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__project
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__project
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__folder_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__project
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 msgid "Project"
 msgstr "Projekt"
 
@@ -2030,9 +2316,21 @@ msgid "Project files from the library"
 msgstr "Projektdateien aus der Bibliothek"
 
 #. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_project_folder
+msgid "Project of a vehicle"
+msgstr "Projekt eines Fahrzeugs"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__project_version_id
+msgid "Project version"
+msgstr "Projektstand"
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_project_action
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_project_folder_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_project_folder_menu
 #: model:ir.ui.menu,name:int_workbench.int_workbench_project_menu
 msgid "Projects"
 msgstr "Projekte"
@@ -2141,7 +2439,7 @@ msgstr "Aufträge"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__resource
 msgid "Resource"
-msgstr "Resource"
+msgstr ""
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
@@ -2160,6 +2458,7 @@ msgstr "Den Regler neu starten? Die Leitung ist für eine Weile weg."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__result
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__result
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__result
 msgid "Result"
 msgstr "Ergebnis"
@@ -2170,6 +2469,7 @@ msgid "Result not reported"
 msgstr "Ergebnis nicht gemeldet"
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Retire"
 msgstr "Zurückziehen"
@@ -2177,10 +2477,19 @@ msgstr "Zurückziehen"
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Retire this program? It can no longer be assigned or loaded."
-msgstr "Dieses Programm zurückziehen? Es kann dann nicht mehr zugewiesen oder geladen werden."
+msgstr ""
+"Dieses Programm zurückziehen? Es kann dann nicht mehr zugewiesen oder "
+"geladen werden."
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
+msgid "Retire this version? It can no longer be assigned to a controller."
+msgstr "Diesen Stand zurückziehen? Er kann dann keinem Regler mehr zugewiesen werden."
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_version__state__retired
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_software__state__retired
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "Retired"
 msgstr "Zurückgezogen"
@@ -2209,7 +2518,8 @@ msgstr "Code"
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__sha256
 msgid "SHA-256 of the file. A program exists once, whatever it is called."
-msgstr "SHA-256 der Datei. Ein Programm gibt es nur einmal, egal wie es heißt."
+msgstr ""
+"SHA-256 der Datei. Ein Programm gibt es nur einmal, egal wie es heißt."
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_wizard_view_form
@@ -2246,6 +2556,11 @@ msgstr "Historie und Statussätze speichern; ohne das nur die Historie."
 #: model:ir.model,name:int_workbench.model_int_workbench_fs2_file
 msgid "Saved error file of a controller"
 msgstr "Gespeicherte Fehlerdatei eines Reglers"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_file__kind__script
+msgid "Script"
+msgstr "Skript"
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__report_age
@@ -2359,6 +2674,7 @@ msgid "Set the clock of the controller?"
 msgstr "Die Uhr des Reglers stellen?"
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Set to draft"
 msgstr "Auf Entwurf setzen"
@@ -2373,12 +2689,24 @@ msgstr ""
 "Konsolenbefehle. Jeder Auftrag wird mit dem Namen des Benutzers aufbewahrt."
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_file__kind__settings
+msgid "Settings"
+msgstr "Einstellungen"
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_upload_view_form
 msgid "Show the programs"
 msgstr "Programme zeigen"
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_upload_view_form
+msgid "Show the version"
+msgstr "Stand zeigen"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__size
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__size
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__size
 msgid "Size (bytes)"
 msgstr "Größe (Byte)"
 
@@ -2392,6 +2720,7 @@ msgstr "Bericht"
 #: code:addons/int_workbench/wizard/int_workbench_software_upload.py:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_software_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__sw
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__software_id
 #: model:ir.ui.menu,name:int_workbench.int_workbench_software_menu
 msgid "Software"
 msgstr ""
@@ -2422,9 +2751,12 @@ msgstr "Begonnen am"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__state
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__state
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__state
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__state
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__state
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__state
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "State"
 msgstr "Zustand"
@@ -2470,6 +2802,11 @@ msgid "Switch the line"
 msgstr "Leitung umschalten"
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_file__kind__table
+msgid "Table"
+msgstr "Tabelle"
+
+#. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_parameter_tag
 msgid "Tag of a process value"
 msgstr "Tag eines Prozesswerts"
@@ -2487,6 +2824,12 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_import_view_form
 msgid "Take over new folders"
 msgstr "Neue Ordner übernehmen"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "Taken away from the controller %s."
+msgstr "Dem Regler %s weggenommen."
 
 #. module: int_workbench
 #: model:res.groups,name:int_workbench.int_workbench_group_technician
@@ -2540,6 +2883,17 @@ msgid "The application header is missing: no name and no resource."
 msgstr "Der Kopf der Applikation fehlt: kein Name und keine Resource."
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
+msgid "The application the tables are made for"
+msgstr "Die Applikation, für die die Tabellen gebaut sind"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "The archive has %d files, too many for one project."
+msgstr "Das Archiv hat %d Dateien, zu viele für ein Projekt."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project__checksum
 msgid ""
 "The checksum of the definition files; it names the version in the library of"
@@ -2585,10 +2939,24 @@ msgid "The command changes or clears something"
 msgstr "Der Befehl ändert oder löscht etwas"
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__command
+msgid ""
+"The command in the first line of a script: confcan, confdia, confpdl, "
+"confpro, clr ..."
+msgstr "Der Befehl in der ersten Zeile eines Skripts: confcan, confdia, confpdl, confpro, clr ..."
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "The command must be one line of up to %s characters."
 msgstr "Der Befehl muss eine Zeile von höchstens %s Zeichen sein."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+#: code:addons/int_workbench/models/int_workbench_software.py:0
+msgid "The content of %s is not base64."
+msgstr "Der Inhalt von %s ist kein Base64."
 
 #. module: int_workbench
 #. odoo-python
@@ -2656,7 +3024,9 @@ msgstr ""
 msgid ""
 "The document number of the application (3EGM, six digits, E, four digits). "
 "The tables of a project carry the same six digits."
-msgstr "Die Dokumentnummer der Applikation (3EGM, sechs Ziffern, E, vier Ziffern). Die Tabellen eines Projekts tragen dieselben sechs Ziffern."
+msgstr ""
+"Die Dokumentnummer der Applikation (3EGM, sechs Ziffern, E, vier Ziffern). "
+"Die Tabellen eines Projekts tragen dieselben sechs Ziffern."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_status__element
@@ -2762,7 +3132,35 @@ msgstr "Die Datei ist größer als %d MB."
 #: code:addons/int_workbench/models/int_workbench_software.py:0
 msgid ""
 "The file is neither an S-Record image nor a program text of a controller."
-msgstr "Die Datei ist weder ein S-Record-Abbild noch ein Programmtext eines Reglers."
+msgstr ""
+"Die Datei ist weder ein S-Record-Abbild noch ein Programmtext eines Reglers."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "The file is not a ZIP archive."
+msgstr "Die Datei ist kein ZIP-Archiv."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "The files are more than %d MB together."
+msgstr "Die Dateien sind zusammen größer als %d MB."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_upload__attachment_ids
+msgid ""
+"The files of the project folder, or one ZIP archive of the folder. Files "
+"that the original makes itself (error data, reports) are left out."
+msgstr "Die Dateien des Projektordners oder ein ZIP-Archiv des Ordners. Dateien, die das Original selbst erzeugt (Fehlerdaten, Berichte), bleiben weg."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__vehicle
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_folder__vehicle
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_upload__vehicle
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__vehicle
+msgid "The folders above the project, for example BR145/Br145020/BR145020."
+msgstr "Die Ordner über dem Projekt, zum Beispiel BR145/Br145020/BR145020."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project__vehicle
@@ -2863,12 +3261,28 @@ msgstr "Der Name im Kopf der Applikation."
 msgid ""
 "The name of the file (%(file)s) differs from the application in it "
 "(%(app)s)."
-msgstr "Der Name der Datei (%(file)s) weicht von der Applikation darin (%(app)s) ab."
+msgstr ""
+"Der Name der Datei (%(file)s) weicht von der Applikation darin (%(app)s) ab."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__name
 msgid "The name of the file in the project folder of the service."
 msgstr "Der Name der Datei im Projektordner des Dienstes."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__project
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_folder__name
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_upload__project
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__project
+msgid "The name of the project folder, for example Pro_2."
+msgstr "Der Name des Projektordners, zum Beispiel Pro_2."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__checksum
+msgid ""
+"The name of the version: the checksum of its files (the rule of the project "
+"library of the service)."
+msgstr "Der Name des Stands: die Prüfsumme seiner Dateien (die Regel der Projektbibliothek des Dienstes)."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_family__label
@@ -2888,6 +3302,11 @@ msgstr ""
 "Der Name, den der Dienst für die Familie benutzt, zum Beispiel micserv."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__expected_names
+msgid "The names that the version lines of the tables carry."
+msgstr "Die Namen, die die Versionszeilen der Tabellen tragen."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_log__entry_id
 msgid "The number of the entry in the log of the service."
 msgstr "Die Nummer des Eintrags im Protokoll des Dienstes."
@@ -2904,7 +3323,9 @@ msgstr ""
 msgid ""
 "The operating system an application says it is made for (E9210 is 2.10). "
 "Assumed to mean that; not proven."
-msgstr "Das Betriebssystem, für das eine Applikation nach eigener Angabe gebaut ist (E9210 ist 2.10). Gedeutet, nicht belegt."
+msgstr ""
+"Das Betriebssystem, für das eine Applikation nach eigener Angabe gebaut ist "
+"(E9210 ist 2.10). Gedeutet, nicht belegt."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__sequence
@@ -2988,9 +3409,25 @@ msgid "The program text has no header line with the application."
 msgstr "Der Programmtext hat keine Kopfzeile mit der Applikation."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__software_id
+msgid "The program that this file is, if it is one."
+msgstr "Das Programm, das diese Datei ist, falls sie eins ist."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software_upload__software_ids
 msgid "The programs the files are (new or already there)."
 msgstr "Die Programme, die die Dateien sind (neu oder schon da)."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__software_ids
+msgid "The programs whose document number is the one of the tables."
+msgstr "Die Programme, deren Dokumentnummer die der Tabellen ist."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "The project has no settings file (DEF.BIN)."
+msgstr "Das Projekt hat keine Einstellungsdatei (DEF.BIN)."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__resource
@@ -3096,6 +3533,27 @@ msgstr ""
 "Fehlerdateien."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__line_document
+msgid ""
+"The six digits of the document number in the version line (3EGM, six digits,"
+" a letter, four digits)."
+msgstr "Die sechs Ziffern der Dokumentnummer in der Versionszeile (3EGM, sechs Ziffern, ein Buchstabe, vier Ziffern)."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__expected_document
+msgid ""
+"The six digits of the document number that the tables of the project carry. "
+"They are the same in the application the tables are made for."
+msgstr "Die sechs Ziffern der Dokumentnummer, die die Tabellen des Projekts tragen. Sie sind dieselben wie in der Applikation, für die die Tabellen gebaut sind."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_software__document_number
+msgid ""
+"The six digits of the document number: the link to the projects, whose "
+"tables carry the same digits."
+msgstr "Die sechs Ziffern der Dokumentnummer: die Verbindung zu den Projekten, deren Tabellen dieselben Ziffern tragen."
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid "The snapshot is too large."
@@ -3163,7 +3621,9 @@ msgstr "Die Transporte der Familie %s müssen eine Liste von Namen sein."
 msgid ""
 "The type of controller that the image is made for, told by where it sits in "
 "the memory."
-msgstr "Der Reglertyp, für den das Abbild gebaut ist, erkennbar an seiner Lage im Speicher."
+msgstr ""
+"Der Reglertyp, für den das Abbild gebaut ist, erkennbar an seiner Lage im "
+"Speicher."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__controller_type
@@ -3228,6 +3688,13 @@ msgid ""
 msgstr "Die Version des Betriebssystems in der Datei (E0310 ist 3.10)."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__project_version_id
+msgid ""
+"The version of the project that this controller is to have (the assignment)."
+" It is kept in the chatter of the version."
+msgstr "Der Stand des Projekts, den dieser Regler haben soll (die Zuweisung). Sie steht im Chatter des Stands."
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid ""
@@ -3243,10 +3710,23 @@ msgid "There are no new folders."
 msgstr "Es gibt keine neuen Ordner."
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "There is no file that belongs to a project."
+msgstr "Es gibt keine Datei, die zu einem Projekt gehört."
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_list
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
 msgid "There now"
 msgstr "Steht jetzt an"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_upload.py:0
+msgid ""
+"This version is already there as %s. The folder was added to its origins."
+msgstr "Dieser Stand ist schon da als %s. Der Ordner wurde seiner Herkunft hinzugefügt."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__time
@@ -3257,12 +3737,23 @@ msgid "Time"
 msgstr "Zeit"
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__kind
+msgid ""
+"Told by the content: the settings file (DEF.BIN), a table, a script for the "
+"command line (confcan, confdia ...), a program (image or program text, then "
+"also a record of the software) or any other file of the project."
+msgstr "Erkennbar am Inhalt: die Einstellungsdatei (DEF.BIN), eine Tabelle, ein Skript für die Befehlszeile (confcan, confdia ...), ein Programm (Abbild oder Programmtext, dann auch ein Satz der Software) oder eine andere Datei des Projekts."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__kind
 msgid ""
 "Told by where the file writes into the memory of the controller, not by its "
 "name or extension. An application text is sent as lines through the command "
 "line instead of as an image through the bootloader."
-msgstr "Erkennbar daran, wohin die Datei in den Speicher des Reglers schreibt, nicht an Name oder Endung. Ein Applikationstext wird als Zeilen über die Befehlszeile gesendet, nicht als Abbild über den Urlader."
+msgstr ""
+"Erkennbar daran, wohin die Datei in den Speicher des Reglers schreibt, nicht"
+" an Name oder Endung. Ein Applikationstext wird als Zeilen über die "
+"Befehlszeile gesendet, nicht als Abbild über den Urlader."
 
 #. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_tools_menu
@@ -3309,9 +3800,16 @@ msgid "Unknown"
 msgstr "Unbekannt"
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_project_upload__state__upload
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_software_upload__state__upload
 msgid "Upload"
 msgstr "Hochladen"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_upload.py:0
+msgid "Upload by %s"
+msgstr "Hochgeladen von %s"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__user
@@ -3342,6 +3840,12 @@ msgstr "Wert"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__vehicle
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__vehicle
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__vehicle
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__vehicle
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__vehicle
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_folder_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
 msgid "Vehicle"
 msgstr "Fahrzeug"
@@ -3352,9 +3856,45 @@ msgid "Vehicle or project"
 msgstr "Fahrzeug oder Projekt"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__version_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__version_id
+msgid "Version"
+msgstr "Stand"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__version_count
+msgid "Version Count"
+msgstr "Anzahl der Stände"
+
+#. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_project
 msgid "Version in the project library of the service"
 msgstr "Stand in der Projektbibliothek des Dienstes"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_version
+msgid "Version in version line"
+msgstr "Version in der Versionszeile"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_file_view_form
+msgid "Version line"
+msgstr "Versionszeile"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_project_version
+msgid "Version of a project"
+msgstr "Stand eines Projekts"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_folder.py:0
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_project_version_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__version_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_project_version_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_folder_view_form
+msgid "Versions"
+msgstr "Stände"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__wagon
@@ -3390,6 +3930,14 @@ msgid "Watched"
 msgstr "Angesehen"
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid ""
+"What a version consists of cannot be changed. Bring the changed files in as "
+"a new version."
+msgstr "Woraus ein Stand besteht, lässt sich nicht ändern. Hole die geänderten Dateien als neuen Stand herein."
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "What it is"
 msgstr "Was es ist"
@@ -3399,7 +3947,9 @@ msgstr "Was es ist"
 msgid ""
 "What reading the file found that deserves a look. A warning does not stop "
 "the loading; the dialog of the programming shows it."
-msgstr "Was beim Lesen der Datei aufgefallen ist. Eine Warnung verhindert das Laden nicht; der Dialog beim Programmieren zeigt sie."
+msgstr ""
+"Was beim Lesen der Datei aufgefallen ist. Eine Warnung verhindert das Laden "
+"nicht; der Dialog beim Programmieren zeigt sie."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__raw
@@ -3430,7 +3980,9 @@ msgstr ""
 msgid ""
 "What the file contains cannot be changed. Bring the changed file in as a new"
 " program."
-msgstr "Der Inhalt der Datei lässt sich nicht ändern. Hole die geänderte Datei als neues Programm herein."
+msgstr ""
+"Der Inhalt der Datei lässt sich nicht ändern. Hole die geänderte Datei als "
+"neues Programm herein."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__loaded_signature
@@ -3446,7 +3998,9 @@ msgstr ""
 msgid ""
 "What the program is called in lists. It comes from the content (the "
 "application or the version of the operating system)."
-msgstr "Wie das Programm in Listen heißt. Es kommt aus dem Inhalt (die Applikation oder die Version des Betriebssystems)."
+msgstr ""
+"Wie das Programm in Listen heißt. Es kommt aus dem Inhalt (die Applikation "
+"oder die Version des Betriebssystems)."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_command__detail
@@ -3500,6 +4054,11 @@ msgstr ""
 "Berichte und Klemmaufträge gehen den anderen Weg und brauchen keine Adresse."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__origins
+msgid "Where the version was brought in from, one in each line."
+msgstr "Woher der Stand hereingeholt wurde, eine Angabe je Zeile."
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__load_error
 msgid "Why not"
 msgstr "Warum nicht"
@@ -3546,6 +4105,12 @@ msgstr "und %s weitere"
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 msgid "brought in, does not load"
 msgstr "übernommen, lädt nicht"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_folder.py:0
+msgid "folder_id"
+msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__kind
