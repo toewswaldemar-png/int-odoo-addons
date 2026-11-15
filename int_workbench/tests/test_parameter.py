@@ -244,6 +244,10 @@ class TestIntWorkbenchParameter(TransactionCase):
         for part in ('name="clamp_toggle"', 'name="clamp_input"', 'widget="boolean_toggle"'):
             self.assertIn(part, operator_arch)
             self.assertNotIn(part, reader_arch)
+        # on a row the controller cannot clamp the cell stays empty: no switch that is only dimmed
+        self.assertRegex(operator_arch, r'name="clamp_toggle"[^>]*invisible="[^"]*can_clamp[^"]*"')
+        self.assertRegex(operator_arch, r'name="clamp_input"[^>]*invisible="[^"]*can_clamp[^"]*"')
+        self.assertNotRegex(operator_arch, r'name="clamp_toggle"[^>]*readonly=')
         # (the state field itself stays in both: the value is marked by it)
         self.assertIn('string="Clamp value"', reader_arch)
         self.assertNotIn('string="Clamp value"', operator_arch)

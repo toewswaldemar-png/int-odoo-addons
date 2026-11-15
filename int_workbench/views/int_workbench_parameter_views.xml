@@ -34,13 +34,15 @@
                 <field name="unit" optional="hide" width="70px"/>
                 <field name="value" optional="hide" width="90px" options="{'hide_trailing_zeros': true}"/>
                 <!-- the operator: the switch, then the value it clamps to (trailing zeros left out: 1, not 1,000). Only rows the controller
-                     can clamp, and only if its family can clamp at all -->
+                     can clamp, and only if its family can clamp at all: on the others the cell stays empty (as the switches of the accounts
+                     do), not a switch that is dimmed -->
                 <field name="clamp_toggle" widget="boolean_toggle" groups="int_workbench.int_workbench_group_operator" width="90px"
-                       readonly="not can_clamp or not device_cap_clamps"/>
+                       invisible="not can_clamp or not device_cap_clamps"/>
                 <field name="clamp_input" groups="int_workbench.int_workbench_group_operator" decoration-muted="not clamp_toggle" width="110px"
-                       options="{'hide_trailing_zeros': true}" readonly="not can_clamp or not device_cap_clamps" optional="show"/>
-                <!-- everybody else sees it as it is -->
-                <field name="clamped" string="Clamping" widget="boolean" groups="!int_workbench.int_workbench_group_operator" width="90px"/>
+                       options="{'hide_trailing_zeros': true}" invisible="not can_clamp or not device_cap_clamps" optional="show"/>
+                <!-- everybody else sees it as it is: a ticked box on a clamped row, nothing on the others -->
+                <field name="clamped" string="Clamping" widget="boolean" groups="!int_workbench.int_workbench_group_operator" width="90px"
+                       invisible="not clamped"/>
                 <field name="clamp_value" string="Clamp value" invisible="not clamped" groups="!int_workbench.int_workbench_group_operator"
                        width="110px" options="{'hide_trailing_zeros': true}" optional="show"/>
                 <!-- how the read went is a diagnosis for the administrator, not for the one who operates: hidden, the column picker brings it back -->
