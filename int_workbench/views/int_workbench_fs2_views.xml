@@ -37,7 +37,7 @@
                 <field name="train"/>
                 <field name="device_id"/>
                 <group>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                     <filter name="by_wagon" string="Wagon" context="{'group_by': 'wagon'}"/>
                     <filter name="by_kind" string="Kind" context="{'group_by': 'kind'}"/>
                 </group>

@@ -9,7 +9,7 @@ class IntWorkbenchCanWizard(models.TransientModel):
     _name = "int.workbench.can.wizard"
     _description = "Stop, start or baptize the CAN bus of a controller"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, ondelete="cascade")
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, ondelete="cascade")
     action = fields.Selection(
         [("stop", "Stop the bus"), ("start", "Start the bus"), ("baptize", "Baptize the modules")],
         required=True,

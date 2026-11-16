@@ -60,7 +60,7 @@
                 <filter name="not_loadable" string="Not loadable" domain="[('loadable', '=', False)]"/>
                 <group>
                     <filter name="by_vehicle" string="Vehicle" context="{'group_by': 'vehicle'}"/>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                 </group>
             </search>
         </field>

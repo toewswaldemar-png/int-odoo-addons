@@ -11,7 +11,7 @@ class IntWorkbenchFs2File(models.Model):
     _description = "Saved error file of a controller"
     _order = "device_id, name"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     name = fields.Char(string="File", required=True, readonly=True, help="The name of the file in the project folder of the service.")
     date = fields.Char(string="Date", readonly=True, help="The date the error memory was read, as the file holds it.")
     time = fields.Char(string="Time", readonly=True)

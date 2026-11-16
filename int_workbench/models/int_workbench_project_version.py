@@ -54,7 +54,7 @@ class IntWorkbenchProjectVersion(models.Model):
         "Only what both sides say is compared.",
     )
     software_ids = fields.Many2many("int.workbench.software", string="Matching software", compute="_compute_software_ids", help="The programs whose document number is the one of the tables.")
-    device_ids = fields.One2many("int.workbench.device", "project_version_id", string="Controllers", readonly=True)
+    device_ids = fields.One2many("int.workbench.device", "project_version_id", string="Devices", readonly=True)
     origins = fields.Text(readonly=True, help="Where the version was brought in from, one in each line.")
     approved_by_id = fields.Many2one("res.users", string="Approved by", readonly=True, copy=False)
     approved_at = fields.Datetime(string="Approved at", readonly=True, copy=False)

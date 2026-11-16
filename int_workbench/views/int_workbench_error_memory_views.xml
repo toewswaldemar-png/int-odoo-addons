@@ -34,7 +34,7 @@
                 <filter name="errors_only" string="Errors only" domain="[('code', '&lt;', 9990)]"
                         help="Without the entries that mark a restart, an initialization or a clearing."/>
                 <group>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                     <filter name="by_code" string="Error" context="{'group_by': 'code'}"/>
                 </group>
             </search>
@@ -80,7 +80,7 @@
                 <filter name="reported" string="Has come" domain="[('reported', '=', True)]"
                         help="The error is there or has been there since the error memory was cleared."/>
                 <group>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                 </group>
             </search>
         </field>

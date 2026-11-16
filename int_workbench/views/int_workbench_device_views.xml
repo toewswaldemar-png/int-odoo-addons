@@ -6,13 +6,19 @@
         <field name="arch" type="xml">
             <list>
                 <field name="name"/>
+                <field name="device_type_id"/>
+                <field name="serial"/>
+                <field name="controller_type_id"/>
+                <field name="controller_serial" optional="hide"/>
+                <field name="project_state" widget="badge" decoration-success="project_state == 'same'"
+                       decoration-warning="project_state == 'differs'" decoration-muted="project_state in ('none', 'unknown')"/>
                 <field name="connection_state" widget="badge" decoration-success="connection_state == 'connected'"
                        decoration-warning="connection_state in ('disconnected', 'silent')"/>
-                <field name="device_ref"/>
-                <field name="family_id" optional="show"/>
-                <field name="service_user_id"/>
-                <field name="seen_at"/>
-                <field name="snapshot_at"/>
+                <field name="device_ref" optional="hide"/>
+                <field name="family_id" optional="hide"/>
+                <field name="service_user_id" optional="hide"/>
+                <field name="seen_at" optional="hide"/>
+                <field name="snapshot_at" optional="hide"/>
             </list>
         </field>
     </record>
@@ -48,11 +54,21 @@
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                     <group>
-                        <group>
+                        <group string="Device">
                             <field name="name"/>
+                            <field name="device_type_id" options="{'no_create': True}"/>
+                            <field name="serial"/>
+                        </group>
+                        <group string="Controller">
+                            <field name="controller_type_id" options="{'no_create': True}"/>
+                            <field name="controller_serial"/>
+                            <field name="family_id"/>
+                        </group>
+                    </group>
+                    <group string="Service">
+                        <group>
                             <field name="device_ref"/>
                             <field name="service_user_id"/>
-                            <field name="family_id"/>
                         </group>
                         <group>
                             <field name="service_url"/>
@@ -121,11 +137,14 @@
         <field name="model">int.workbench.device</field>
         <field name="arch" type="xml">
             <search>
-                <field name="name"/>
-                <field name="device_ref"/>
+                <field name="name" string="Device" filter_domain="['|', '|', '|', ('name', 'ilike', self), ('serial', 'ilike', self), ('controller_serial', 'ilike', self), ('device_ref', 'ilike', self)]"/>
+                <field name="device_type_id"/>
+                <field name="controller_type_id"/>
                 <field name="family_id"/>
                 <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
                 <group>
+                    <filter name="by_device_type" string="Device type" context="{'group_by': 'device_type_id'}"/>
+                    <filter name="by_controller_type" string="Controller type" context="{'group_by': 'controller_type_id'}"/>
                     <filter name="by_family" string="Family" context="{'group_by': 'family_id'}"/>
                 </group>
             </search>
@@ -133,7 +152,7 @@
     </record>
 
     <record id="int_workbench_device_action" model="ir.actions.act_window">
-        <field name="name">Controllers</field>
+        <field name="name">Devices</field>
         <field name="res_model">int.workbench.device</field>
         <field name="view_mode">list,form</field>
     </record>

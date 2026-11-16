@@ -7,7 +7,7 @@ class IntWorkbenchIntermediateWizard(models.TransientModel):
     _description = "Write an intermediate value into a controller"
 
     intermediate_id = fields.Many2one("int.workbench.intermediate", string="Value", required=True, ondelete="cascade")
-    device_id = fields.Many2one(related="intermediate_id.device_id", string="Controller")
+    device_id = fields.Many2one(related="intermediate_id.device_id", string="Device")
     name = fields.Char(related="intermediate_id.name")
     address = fields.Char(related="intermediate_id.address")
     format = fields.Selection(related="intermediate_id.format")

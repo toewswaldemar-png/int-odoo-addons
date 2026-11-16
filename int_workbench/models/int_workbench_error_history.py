@@ -8,7 +8,7 @@ class IntWorkbenchErrorHistory(models.Model):
     _description = "Entry of the error history of a controller"
     _order = "device_id, entry desc"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     entry = fields.Integer(string="Entry", required=True, readonly=True, help="The place in the history of the controller, 1 is the oldest.")
     code = fields.Integer(readonly=True, index=True, help="The code of the error; 9997, 9998 and 9999 mark a restart, an initialization and a clearing.")
     text = fields.Char(string="Error", readonly=True)

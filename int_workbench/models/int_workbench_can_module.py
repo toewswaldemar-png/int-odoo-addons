@@ -8,7 +8,7 @@ class IntWorkbenchCanModule(models.Model):
     _description = "CAN module of a controller"
     _order = "device_id, number"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     number = fields.Integer(required=True, readonly=True, help="The place of the module in the list of the controller.")
     type_name = fields.Char(string="Type", readonly=True)
     type_code = fields.Integer(string="Type code", readonly=True)

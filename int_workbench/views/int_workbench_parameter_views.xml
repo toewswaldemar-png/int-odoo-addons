@@ -81,14 +81,14 @@
                 <filter name="analog" string="Analog" domain="[('analog', '=', True)]"/>
                 <filter name="problems" string="Problems" domain="[('status', '!=', 'ok')]"/>
                 <group>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                     <filter name="by_status" string="Status" context="{'group_by': 'status'}"/>
                     <filter name="by_tag" string="Tags" context="{'group_by': 'tag_ids'}"/>
                     <filter name="by_display" string="Display" context="{'group_by': 'display_kind'}"/>
                     <filter name="by_unit" string="Unit" context="{'group_by': 'unit'}"/>
                 </group>
                 <searchpanel>
-                    <field name="device_id" string="Controller" icon="fa-microchip"/>
+                    <field name="device_id" string="Device" icon="fa-microchip"/>
                 </searchpanel>
             </search>
         </field>

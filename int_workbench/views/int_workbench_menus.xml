@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- The menu is grouped by what one does, the way the original groups it (Anzeigen, Fehlerspeicher, Allgemein, Auswählen):
-         watch (process values, intermediate values), the error memory, tools, the controllers, projects, configuration. -->
+    <!-- The devices come first: a technician chooses the device, the controller inside it is a detail of it. The rest is grouped by what one
+         does, the way the original groups it (Anzeigen, Fehlerspeicher, Allgemein, Auswählen): watch (process values, intermediate values),
+         the error memory, tools, projects, configuration. -->
     <menuitem id="int_workbench_menu_root" name="Workbench" sequence="35" groups="int_workbench_group_user"/>
 
     <menuitem id="int_workbench_parameter_menu" name="Process values" parent="int_workbench_menu_root"
@@ -34,8 +35,8 @@
     <menuitem id="int_workbench_command_menu" name="Requests" parent="int_workbench_tools_menu"
               action="int_workbench_command_action" sequence="90"/>
 
-    <menuitem id="int_workbench_device_menu" name="Controllers" parent="int_workbench_menu_root"
-              action="int_workbench_device_action" sequence="50"/>
+    <menuitem id="int_workbench_device_menu" name="Devices" parent="int_workbench_menu_root"
+              action="int_workbench_device_action" sequence="5"/>
     <menuitem id="int_workbench_project_menu" name="Projects" parent="int_workbench_menu_root" sequence="60"/>
     <menuitem id="int_workbench_project_folder_menu" name="Projects" parent="int_workbench_project_menu"
               action="int_workbench_project_folder_action" sequence="10"/>
@@ -48,6 +49,8 @@
 
     <menuitem id="int_workbench_menu_configuration" name="Configuration" parent="int_workbench_menu_root"
               sequence="90" groups="int_workbench_group_manager"/>
+    <menuitem id="int_workbench_type_menu" name="Types" parent="int_workbench_menu_configuration"
+              action="int_workbench_type_action" sequence="10"/>
     <menuitem id="int_workbench_family_menu" name="Families" parent="int_workbench_menu_configuration"
               action="int_workbench_family_action" sequence="20"/>
     <menuitem id="int_workbench_user_menu" name="Users" parent="int_workbench_menu_configuration"

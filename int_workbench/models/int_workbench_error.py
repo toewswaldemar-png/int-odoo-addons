@@ -9,7 +9,7 @@ class IntWorkbenchError(models.Model):
     _description = "Active error of a controller"
     _order = "device_id, word, bit"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     word = fields.Char(string="Error word", required=True, readonly=True)
     bit = fields.Integer(required=True, readonly=True)
     text = fields.Char(string="Error", readonly=True)

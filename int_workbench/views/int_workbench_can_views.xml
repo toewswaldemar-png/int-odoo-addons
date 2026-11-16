@@ -29,7 +29,7 @@
                 <field name="serial"/>
                 <field name="device_id"/>
                 <group>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                     <filter name="by_type" string="Type" context="{'group_by': 'type_name'}"/>
                 </group>
             </search>
@@ -113,7 +113,7 @@
                 <field name="device_id"/>
                 <filter name="unanswered" string="Not answered" domain="[('answered', '=', False)]"/>
                 <group>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                 </group>
             </search>
         </field>
@@ -166,7 +166,7 @@
                 <filter name="byte" string="Bytes and bits" domain="[('is_byte', '=', True)]"/>
                 <filter name="word" string="Words" domain="[('is_byte', '=', False)]"/>
                 <group>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                 </group>
             </search>
         </field>

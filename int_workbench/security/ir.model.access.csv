@@ -1,6 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_int_workbench_capability_user,int.workbench.capability.user,model_int_workbench_capability,int_workbench_group_user,1,0,0,0
 access_int_workbench_family_user,int.workbench.family.user,model_int_workbench_family,int_workbench_group_user,1,0,0,0
+access_int_workbench_type_user,int.workbench.type.user,model_int_workbench_type,int_workbench_group_user,1,0,0,0
+access_int_workbench_type_manager,int.workbench.type.manager,model_int_workbench_type,int_workbench_group_manager,1,1,1,1
 access_int_workbench_device_user,int.workbench.device.user,model_int_workbench_device,int_workbench_group_user,1,0,0,0
 access_int_workbench_device_manager,int.workbench.device.manager,model_int_workbench_device,int_workbench_group_manager,1,1,1,1
 access_int_workbench_parameter_user,int.workbench.parameter.user,model_int_workbench_parameter,int_workbench_group_user,1,0,0,0

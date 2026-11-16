@@ -9,7 +9,7 @@ class IntWorkbenchProjectImport(models.TransientModel):
     _name = "int.workbench.project.import"
     _description = "Bring the new project folders of the service into its library"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, ondelete="cascade")
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, ondelete="cascade")
     state = fields.Selection([("draft", "Ready"), ("done", "Done")], default="draft", readonly=True)
     result = fields.Text(readonly=True)
 

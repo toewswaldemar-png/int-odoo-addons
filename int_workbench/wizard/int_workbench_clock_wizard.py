@@ -7,7 +7,7 @@ class IntWorkbenchClockWizard(models.TransientModel):
     _name = "int.workbench.clock.wizard"
     _description = "Set the clock of a controller"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, ondelete="cascade")
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, ondelete="cascade")
     time = fields.Datetime(string="New time", required=True, default=fields.Datetime.now, help="The time the controller is set to, in your time zone.")
     current = fields.Char(related="device_id.clock_local_time", string="The clock shows now")
 

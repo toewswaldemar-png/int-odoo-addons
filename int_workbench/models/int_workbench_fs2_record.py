@@ -9,7 +9,7 @@ class IntWorkbenchFs2Record(models.Model):
     _order = "file_id, entry"
 
     file_id = fields.Many2one("int.workbench.fs2.file", string="File", required=True, index=True, ondelete="cascade", readonly=True)
-    device_id = fields.Many2one(related="file_id.device_id", store=True, index=True, string="Controller")
+    device_id = fields.Many2one(related="file_id.device_id", store=True, index=True, string="Device")
     entry = fields.Integer(required=True, readonly=True, help="The place of the record in the file, counted from 0.")
     kind = fields.Char(readonly=True, help="history or status.")
     wagon = fields.Char(readonly=True)

@@ -82,7 +82,7 @@ SERVICE_TIMEOUT = 120
 class IntWorkbenchDevice(models.Model):
     _name = "int.workbench.device"
     _inherit = ["bus.listener.mixin"]
-    _description = "Controller reached through the service"
+    _description = "Device reached through the service"
     _order = "name, id"
 
     name = fields.Char(required=True, index=True)
@@ -102,6 +102,25 @@ class IntWorkbenchDevice(models.Model):
     )
     active = fields.Boolean(default=True)
     note = fields.Text()
+    # === TYPES AND SERIAL NUMBERS === #
+    device_type_id = fields.Many2one(
+        "int.workbench.type",
+        string="Device type",
+        domain="[('kind', '=', 'device')]",
+        ondelete="restrict",
+        index=True,
+        help="What this device is, for example AC3. The technician chooses the device; the controller inside it is a detail of it.",
+    )
+    serial = fields.Char(string="Serial number", copy=False, help="The serial number of the device. The type number is a field of the type.")
+    controller_type_id = fields.Many2one(
+        "int.workbench.type",
+        string="Controller type",
+        domain="[('kind', '=', 'controller')]",
+        ondelete="restrict",
+        index=True,
+        help="The control unit inside the device, for example 11HA35D. It stays when the controller is replaced by one of the same type.",
+    )
+    controller_serial = fields.Char(string="Controller serial number", copy=False, help="Replacing the controller changes this number, nothing else.")
     # === SERVICE ADDRESS === #
     service_url = fields.Char(
         string="Service address",
@@ -297,13 +316,26 @@ class IntWorkbenchDevice(models.Model):
             if device.service_url and not re.match(r"https?://[^\s/]+", device.service_url):
                 raise ValidationError(self.env._("The service address %s must start with http:// or https://.", device.service_url))
 
+    @api.constrains("device_type_id", "controller_type_id")
+    def _check_types(self):
+        for device in self:
+            if device.device_type_id and device.device_type_id.kind != "device":
+                raise ValidationError(self.env._("%s is a controller type, not a device type.", device.device_type_id.display_name))
+            if device.controller_type_id and device.controller_type_id.kind != "controller":
+                raise ValidationError(self.env._("%s is a device type, not a controller type.", device.controller_type_id.display_name))
+
     @api.model_create_multi
     def create(self, vals_list):
-        return super().create([self._normalized(vals) for vals in vals_list])
+        devices = super().create([self._normalized(vals) for vals in vals_list])
+        devices.filtered("device_type_id")._apply_default_project()
+        return devices
 
     def write(self, vals):
         if "project_version_id" not in vals:
-            return super().write(self._normalized(vals))
+            result = super().write(self._normalized(vals))
+            if "device_type_id" in vals:
+                self._apply_default_project()
+            return result
         before = {device: device.project_version_id for device in self}
         result = super().write(self._normalized(vals))
         for device, old in before.items():
@@ -314,7 +346,20 @@ class IntWorkbenchDevice(models.Model):
                     old.message_post(body=self.env._("Taken away from the controller %s.", device.name))
                 if new:
                     new.message_post(body=self.env._("Assigned to the controller %s.", device.name))
+        if "device_type_id" in vals:
+            self._apply_default_project()
         return result
+
+    def _apply_default_project(self):
+        """Give a device without a project version the default of its device type (an approved version), once.
+
+        The assignment stays a record of the device like any other (and goes to the chatter of the version); changing the default of
+        the type later does not touch the devices that have a version.
+        """
+        for device in self:
+            default = device.device_type_id.project_version_id
+            if default and default.state == "approved" and not device.project_version_id:
+                device.write({"project_version_id": default.id})
 
     @api.depends("project_version_id", "project_version_id.checksum", "project_active_checksum")
     def _compute_project_state(self):
@@ -341,6 +386,9 @@ class IntWorkbenchDevice(models.Model):
             vals["device_ref"] = vals["device_ref"].strip()
         if isinstance(vals.get("service_url"), str):
             vals["service_url"] = vals["service_url"].strip().rstrip("/")
+        for name in ("serial", "controller_serial"):
+            if name in vals:
+                vals[name] = (vals[name] or "").strip() or False
         return vals
 
     # === THE LIST: SOMEBODY LOOKS === #

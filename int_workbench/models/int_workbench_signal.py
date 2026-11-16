@@ -26,7 +26,7 @@ class IntWorkbenchSignal(models.Model):
     _description = "Variable of the project of a controller"
     _order = "device_id, sequence, id"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     sequence = fields.Integer(readonly=True, help="The place in the variable list of the project, counted from 1.")
     name = fields.Char(readonly=True, index=True, help="The signal name of the project, for example P1011.")
     operand = fields.Char(string="Address", readonly=True, help="Where the controller keeps it, for example M0448 or I0000.0.")

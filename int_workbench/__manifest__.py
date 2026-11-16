@@ -17,6 +17,7 @@
         "security/int_workbench_groups.xml",
         "security/ir.model.access.csv",
         "data/int_workbench_capability_data.xml",
+        "views/int_workbench_type_views.xml",
         "views/int_workbench_device_views.xml",
         "views/int_workbench_family_views.xml",
         "views/int_workbench_parameter_views.xml",

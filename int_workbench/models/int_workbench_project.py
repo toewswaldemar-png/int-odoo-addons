@@ -8,7 +8,7 @@ class IntWorkbenchProject(models.Model):
     _description = "Version in the project library of the service"
     _order = "vehicle, project, added_at desc"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     checksum = fields.Char(required=True, readonly=True, help="The checksum of the definition files; it names the version in the library of the service.")
     short_id = fields.Char(compute="_compute_short_id", string="Id")
     vehicle = fields.Char(readonly=True, index=True, help="The folders above the project, from the place the version was first brought in from.")

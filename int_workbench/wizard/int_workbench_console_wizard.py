@@ -7,7 +7,7 @@ class IntWorkbenchConsoleWizard(models.TransientModel):
     _name = "int.workbench.console.wizard"
     _description = "Send a console command to a controller"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, ondelete="cascade")
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, ondelete="cascade")
     command = fields.Char(required=True, size=CONSOLE_LIMIT, help="One line of the monitor of the controller, for example id all or sr.")
     changes = fields.Boolean(
         string="The command changes or clears something",

@@ -11,4 +11,5 @@ from . import test_project_version
 from . import test_service
 from . import test_service_projects
 from . import test_software
+from . import test_type
 from . import test_service_data

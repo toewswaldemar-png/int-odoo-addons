@@ -149,7 +149,7 @@
                         <page string="Files" name="files">
                             <field name="file_ids" readonly="1"/>
                         </page>
-                        <page string="Controllers" name="devices">
+                        <page string="Devices" name="devices">
                             <field name="device_ids" readonly="1">
                                 <list>
                                     <field name="name"/>

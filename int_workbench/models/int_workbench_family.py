@@ -25,7 +25,7 @@ class IntWorkbenchFamily(models.Model):
         readonly=True,
         help="Everything the family can do. A single controller can do less.",
     )
-    device_ids = fields.One2many("int.workbench.device", "family_id", string="Controllers")
+    device_ids = fields.One2many("int.workbench.device", "family_id", string="Devices")
 
     _name_unique = models.Constraint("UNIQUE (name)", "A family with this name exists already.")
 

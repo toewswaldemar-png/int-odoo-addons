@@ -8,7 +8,7 @@ class IntWorkbenchFs2Wizard(models.TransientModel):
     _name = "int.workbench.fs2.wizard"
     _description = "Save the error memory of a controller as error files"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, ondelete="cascade")
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, ondelete="cascade")
     wagon = fields.Char(string="Wagon number", required=True, default="000", size=WAGON_LIMIT, help="The number the files are saved under (the original asks for it too).")
     train = fields.Char(string="Train", size=TRAIN_LIMIT)
     complete = fields.Boolean(string="Complete", default=True, help="Save the history and the status records; without it only the history.")

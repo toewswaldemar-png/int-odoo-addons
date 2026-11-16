@@ -8,7 +8,7 @@ class IntWorkbenchUser(models.Model):
     _description = "Account of the service"
     _order = "device_id, name"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     name = fields.Char(string="Account", required=True, readonly=True)
     roles = fields.Char(readonly=True, help="The roles of the account in the service, for example read, clamp.")
     disabled = fields.Boolean(readonly=True, help="The account is locked in the service.")

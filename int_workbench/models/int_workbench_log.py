@@ -11,7 +11,7 @@ class IntWorkbenchLog(models.Model):
     _description = "Entry of the write log of the service"
     _order = "device_id, entry_id desc"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     entry_id = fields.Integer(string="Entry", required=True, readonly=True, help="The number of the entry in the log of the service.")
     started_at = fields.Datetime(readonly=True)
     finished_at = fields.Datetime(readonly=True)

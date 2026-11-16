@@ -29,7 +29,7 @@
                 <field name="text" string="Error" filter_domain="['|', ('text', 'ilike', self), ('word', 'ilike', self)]"/>
                 <field name="device_id"/>
                 <group>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                     <filter name="by_word" string="Error word" context="{'group_by': 'word'}"/>
                 </group>
             </search>

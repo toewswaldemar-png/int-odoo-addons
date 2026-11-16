@@ -59,7 +59,7 @@
                 <filter name="clamps" string="Clamps" domain="[('action', 'in', ('set', 'release'))]"/>
                 <filter name="controller" string="Controller" domain="[('action', 'not in', ('set', 'release'))]"/>
                 <group>
-                    <filter name="by_device" string="Controller" context="{'group_by': 'device_id'}"/>
+                    <filter name="by_device" string="Device" context="{'group_by': 'device_id'}"/>
                     <filter name="by_user" string="User" context="{'group_by': 'user_id'}"/>
                 </group>
             </search>

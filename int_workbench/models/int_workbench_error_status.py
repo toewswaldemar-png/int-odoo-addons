@@ -8,7 +8,7 @@ class IntWorkbenchErrorStatus(models.Model):
     _description = "Status record of an error of a controller"
     _order = "device_id, rank, element"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     element = fields.Integer(
         required=True,
         readonly=True,

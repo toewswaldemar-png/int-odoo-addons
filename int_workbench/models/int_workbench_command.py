@@ -50,7 +50,7 @@ class IntWorkbenchCommand(models.Model):
     _description = "Clamp request for a controller"
     _order = "id desc"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade")
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade")
     user_id = fields.Many2one("res.users", string="Requested by", required=True, readonly=True, index=True, ondelete="restrict")
     code = fields.Char(string="Row", required=True)
     parameter_id = fields.Many2one(

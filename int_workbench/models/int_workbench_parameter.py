@@ -40,7 +40,7 @@ class IntWorkbenchParameter(models.Model):
     _description = "Process value of a controller"
     _order = "sequence, device_id, code"
 
-    device_id = fields.Many2one("int.workbench.device", string="Controller", required=True, index=True, ondelete="cascade", readonly=True)
+    device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     code = fields.Char(string="Row code", required=True, readonly=True)
     name = fields.Char(string="Description", readonly=True, index="trigram")
     status = fields.Char(help="How the read went: ok, or what is wrong with the row.", readonly=True)
