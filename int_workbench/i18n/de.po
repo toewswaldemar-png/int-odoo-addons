@@ -6,14 +6,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 14:58+0000\n"
-"PO-Revision-Date: 2026-11-15 14:58+0000\n"
+"POT-Creation-Date: 2026-11-16 12:33+0000\n"
+"PO-Revision-Date: 2026-11-16 12:33+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_signal.py:0
+msgid "%(added)s added, %(skipped)s were there already."
+msgstr "%(added)s hinzugefügt, %(skipped)s waren schon da."
 
 #. module: int_workbench
 #. odoo-python
@@ -49,6 +55,12 @@ msgstr "%(name)s ist größer als %(megabytes)d MB."
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
+msgid "%(name)s of %(device)s is being written."
+msgstr "%(name)s von %(device)s wird geschrieben."
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 msgid "%(total)s folders, %(created)s new versions, %(failed)s turned away."
 msgstr "%(total)s Ordner, %(created)s neue Stände, %(failed)s abgewiesen."
@@ -70,9 +82,27 @@ msgstr "%s kann nicht zugewiesen werden: Nur ein freigegebener Stand kann es."
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_type.py:0
+msgid "%s cannot be the default: only an approved version can."
+msgstr "%s kann nicht die Vorgabe sein: Nur ein freigegebener Stand kann es."
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/models/int_workbench_fs2_file.py:0
 msgid "%s file(s) are being moved to the folder of deleted files."
 msgstr "%s Datei(en) werden in den Ordner der gelöschten Dateien verschoben."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s is a controller type, not a device type."
+msgstr "%s ist ein Reglertyp, kein Gerätetyp."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s is a device type, not a controller type."
+msgstr "%s ist ein Gerätetyp, kein Reglertyp."
 
 #. module: int_workbench
 #. odoo-python
@@ -88,6 +118,23 @@ msgstr "%s ist kein Name einer Datei eines Projekts."
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "%s is not an address of the controller."
+msgstr "%s ist keine Adresse des Reglers."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
+msgid ""
+"%s is not an address. It is the letters of the memory area, a number and for"
+" a bit a point and the bit number, for example M0448 or I0000.3."
+msgstr ""
+"%s ist keine Adresse. Sie besteht aus den Buchstaben des Speicherbereichs, "
+"einer Zahl und bei einem Bit aus Punkt und Bitnummer, zum Beispiel M0448 "
+"oder I0000.3."
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid ""
 "%s is not in the group Workbench / Service, so its API key cannot serve a "
@@ -95,6 +142,12 @@ msgid ""
 msgstr ""
 "%s gehört nicht zur Gruppe Workbench / Dienst, deshalb kann sein API-"
 "Schlüssel keinen Regler bedienen."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_type.py:0
+msgid "%s is used by devices as the other kind of type."
+msgstr "%s wird von Geräten als die andere Art von Typ verwendet."
 
 #. module: int_workbench
 #. odoo-python
@@ -115,6 +168,12 @@ msgstr "%s: erledigt."
 #: code:addons/int_workbench/static/src/views/parameter_list.js:0
 msgid "%s: new errors: %s"
 msgstr "%s: neue Fehler: %s"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_type.py:0
+msgid "%s: only a device type has a default project version."
+msgstr "%s: Nur ein Gerätetyp hat einen Vorgabe-Projektstand."
 
 #. module: int_workbench
 #. odoo-python
@@ -185,9 +244,28 @@ msgstr ""
 " der nie kam."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__is_byte
+msgid ""
+"A byte or a bit is read with DB and written with JB, a word with DW and JW."
+msgstr ""
+"Ein Byte oder Bit wird mit DB gelesen und mit JB geschrieben, ein Wort mit "
+"DW und JW."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__is_byte
+msgid "A byte or a bit is read with DB, a word with DW."
+msgstr "Ein Byte oder Bit wird mit DB gelesen, ein Wort mit DW."
+
+#. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_capability_code_unique
 msgid "A capability with this code exists already."
 msgstr "Eine Fähigkeit mit diesem Kürzel gibt es schon."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
+msgid "A controller can have up to %s intermediate values."
+msgstr "Ein Regler kann bis zu %s Zwischenwerte haben."
 
 #. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_device_name_unique
@@ -224,11 +302,6 @@ msgid "A module exists once per controller."
 msgstr "Ein Modul gibt es je Regler nur einmal."
 
 #. module: int_workbench
-#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_intermediate_device_sequence_unique
-msgid "A place exists once per controller."
-msgstr "Ein Platz gibt es je Regler nur einmal."
-
-#. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_software_sha256_unique
 msgid "A program exists once."
 msgstr "Ein Programm gibt es nur einmal."
@@ -258,6 +331,16 @@ msgstr "Eine Zeile gibt es je Regler nur einmal."
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_parameter_tag_name_unique
 msgid "A tag exists once."
 msgstr "Ein Tag gibt es nur einmal."
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_type_kind_name_unique
+msgid "A type with this name exists already."
+msgstr "Einen Typ mit diesem Namen gibt es schon."
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_type_kind_ident_unique
+msgid "A type with this type number exists already."
+msgstr "Einen Typ mit dieser Typnummer gibt es schon."
 
 #. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_project_device_checksum_unique
@@ -293,6 +376,7 @@ msgstr "Aktion erforderlich"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__active
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__active
 msgid "Active"
 msgstr "Aktiv"
 
@@ -302,12 +386,30 @@ msgid "Active error of a controller"
 msgstr "Aktiver Fehler eines Reglers"
 
 #. module: int_workbench
+#: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_intermediate_selection_action
+msgid ""
+"Add a line for a value of your own (a name and an address), or use \"Choose "
+"values\" in the list of the intermediate values to take them from the "
+"variable list of the project."
+msgstr ""
+"Fügen Sie eine Zeile für einen eigenen Wert hinzu (ein Name und eine "
+"Adresse), oder nehmen Sie die Werte mit „Werte wählen“ in der Liste der "
+"Zwischenwerte aus der Variablenliste des Projekts."
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_list
+msgid "Add to the intermediate values"
+msgstr "Zu den Zwischenwerten hinzufügen"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__added_at
 msgid "Added in the service"
 msgstr "Im Dienst hinzugefügt"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__address
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__address
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__operand
 msgid "Address"
 msgstr "Adresse"
 
@@ -399,6 +501,8 @@ msgstr "Freigegeben von"
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Archived"
 msgstr "Archiviert"
 
@@ -452,6 +556,11 @@ msgstr "Module taufen"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__bit
 msgid "Bit"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__b
+msgid "Bits"
 msgstr ""
 
 #. module: int_workbench
@@ -529,10 +638,21 @@ msgid "Bring the new project folders of the service into its library"
 msgstr "Neue Projektordner des Dienstes in seine Bibliothek übernehmen"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__is_byte
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__is_byte
+msgid "Byte or bit"
+msgstr "Byte oder Bit"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__raw
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__raw
 msgid "Bytes"
 msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+msgid "Bytes and bits"
+msgstr "Bytes und Bits"
 
 #. module: int_workbench
 #. odoo-python
@@ -611,10 +731,16 @@ msgid "Can switch the line"
 msgstr "Kann die Leitung umschalten"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_intermediate_write
+msgid "Can write intermediate values"
+msgstr "Kann Zwischenwerte schreiben"
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_wizard_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_clock_wizard_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_console_wizard_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_wizard_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -656,10 +782,30 @@ msgid "Choose the files of the project, or a ZIP archive of the folder."
 msgstr "Wähle die Dateien des Projekts oder ein ZIP-Archiv des Ordners."
 
 #. module: int_workbench
+#: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_intermediate_selection_action
+msgid "Choose the intermediate values to read"
+msgstr "Zwischenwerte zum Lesen wählen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Choose the values from the variable list of the project"
+msgstr "Die Werte aus der Variablenliste des Projekts wählen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Choose values"
+msgstr "Werte wählen"
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/wizard/int_workbench_can_wizard.py:0
 msgid "Choose what to do with the CAN bus."
 msgstr "Wähle, was mit dem CAN-Bus geschehen soll."
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__chosen
+msgid "Chosen"
+msgstr "Gewählt"
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__set
@@ -709,6 +855,18 @@ msgstr "Klemmwert"
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 msgid "Clamped"
 msgstr "Geklemmt"
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
+msgid "Clamped rows on %(device)s: %(count)s"
+msgstr "Geklemmte Zeilen auf %(device)s: %(count)s"
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
+msgid "Clamped rows: %(devices)s"
+msgstr "Geklemmte Zeilen: %(devices)s"
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__clamp_toggle
@@ -834,6 +992,12 @@ msgstr ""
 "jeder andere Befehl muss gekennzeichnet werden."
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.xml:0
+msgid "Compact rows"
+msgstr "Kompakte Zeilen"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__complete
 msgid "Complete"
 msgstr "Vollständig"
@@ -895,32 +1059,9 @@ msgid "Control the CAN bus"
 msgstr "CAN-Bus steuern"
 
 #. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_console_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__device_id
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_type__kind__controller
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Controller"
 msgstr "Regler"
 
@@ -946,9 +1087,9 @@ msgid "Controller id"
 msgstr "Reglerkennung"
 
 #. module: int_workbench
-#: model:ir.model,name:int_workbench.model_int_workbench_device
-msgid "Controller reached through the service"
-msgstr "Regler, der über den Dienst erreicht wird"
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__controller_serial
+msgid "Controller serial number"
+msgstr "Regler-Seriennummer"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__mc_sw
@@ -956,21 +1097,17 @@ msgid "Controller software"
 msgstr "Software des Reglers"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__controller_type_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__hardware
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "Controller type"
 msgstr "Reglertyp"
 
 #. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/connection/connection_menu.xml:0
-#: model:ir.actions.act_window,name:int_workbench.int_workbench_device_action
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__device_ids
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__device_ids
-#: model:ir.ui.menu,name:int_workbench.int_workbench_device_menu
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
-msgid "Controllers"
-msgstr "Regler"
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
+msgid "Controller types"
+msgstr "Reglertypen"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__count
@@ -978,6 +1115,17 @@ msgstr "Regler"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__count
 msgid "Count"
 msgstr "Anzahl"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__intermediate_version
+msgid ""
+"Counts the changes of the selection of intermediate values. The service says"
+" in every call which version it has, and Odoo hands it the rows when that is"
+" not this one."
+msgstr ""
+"Zählt die Änderungen der Auswahl der Zwischenwerte. Der Dienst nennt in "
+"jedem Aufruf seine Version, und Odoo gibt ihm die Zeilen, wenn es nicht "
+"diese ist."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__create_uid
@@ -995,6 +1143,7 @@ msgstr "Anzahl"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__create_uid
@@ -1004,8 +1153,10 @@ msgstr "Anzahl"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_uid
 msgid "Created by"
 msgstr "Erstellt von"
@@ -1031,6 +1182,7 @@ msgstr "Im Dienst erstellt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__create_date
@@ -1040,8 +1192,10 @@ msgstr "Im Dienst erstellt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_date
 msgid "Created on"
 msgstr "Erstellt am"
@@ -1058,10 +1212,12 @@ msgstr ""
 "übernimmt neue Projektordner in seine Bibliothek."
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_error_action
 #: model:ir.ui.menu,name:int_workbench.int_workbench_error_menu
 msgid "Current errors"
-msgstr "Aktuelle Fehler"
+msgstr "Fehler"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__data_size
@@ -1117,6 +1273,11 @@ msgid "Day"
 msgstr "Tag"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__project_version_id
+msgid "Default project version"
+msgstr "Vorgabe-Projektstand"
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_list
 msgid "Delete"
 msgstr "Löschen"
@@ -1136,6 +1297,84 @@ msgstr "Bezeichnung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__detail
 msgid "Detail"
 msgstr "Einzelheiten"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_console_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__device_id
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_type__kind__device
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+msgid "Device"
+msgstr "Gerät"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_device
+msgid "Device reached through the service"
+msgstr "Gerät, das über den Dienst erreicht wird"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__device_type_id
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
+msgid "Device type"
+msgstr "Gerätetyp"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
+msgid "Device types"
+msgstr "Gerätetypen"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__kind
+msgid ""
+"Device: what a technician tests (for example an air conditioner). "
+"Controller: the control unit inside it."
+msgstr "Gerät: Was ein Techniker prüft (zum Beispiel ein Klimagerät). Regler: Das Steuergerät darin."
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_menu.xml:0
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_device_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__device_ids
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__device_ids
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__device_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_device_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
+msgid "Devices"
+msgstr "Geräte"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__controller_device_ids
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
+msgid "Devices with this controller"
+msgstr "Geräte mit diesem Regler"
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__project_state__differs
@@ -1176,6 +1415,7 @@ msgstr "Darstellung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__display_name
@@ -1185,8 +1425,10 @@ msgstr "Darstellung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_ir_websocket__display_name
 msgid "Display Name"
@@ -1250,6 +1492,17 @@ msgstr "Entwurf"
 #: code:addons/int_workbench/models/int_workbench_project_version.py:0
 msgid "Each file needs a name and its content as base64."
 msgstr "Jede Datei braucht einen Namen und ihren Inhalt als Base64."
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
+msgid "Edit the value"
+msgstr "Wert bearbeiten"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__element
@@ -1335,6 +1588,7 @@ msgid "Error word"
 msgstr "Fehlerwort"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_count
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_ids
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Errors"
@@ -1385,8 +1639,10 @@ msgstr "Familien"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__family_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__family_id
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_family_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Family"
 msgstr "Familie"
 
@@ -1516,6 +1772,7 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__format
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__format
 msgid "Format"
 msgstr ""
 
@@ -1584,6 +1841,11 @@ msgid "Has intermediate values"
 msgstr "Hat Zwischenwerte"
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__h
+msgid "Hex"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_error_history_menu
 msgid "History"
 msgstr "Historie"
@@ -1596,6 +1858,22 @@ msgid ""
 msgstr ""
 "Wie eine Zeile mit 0 und 1 gezeigt wird: als Zahl oder in Worten, die sagen,"
 " was 0 und 1 für diese Zeile bedeuten. Nicht für analoge Zeilen."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__error_count
+msgid "How many errors are active now."
+msgstr "Wie viele Fehler jetzt aktiv sind."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__command_count
+msgid ""
+"How many requests (clamps, console, clock, ...) were made for this device."
+msgstr "Wie viele Aufträge (Klemmen, Konsole, Uhr, ...) für dieses Gerät gestellt wurden."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__parameter_count
+msgid "How many rows of process values the controller has."
+msgstr "Wie viele Zeilen mit Prozesswerten der Regler hat."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__count
@@ -1615,9 +1893,12 @@ msgstr "Wie das Lesen verlief: ok, oder was mit der Zeile nicht stimmt."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__format
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__format
 msgid ""
-"How the value is shown: B bits, H the text of the answer, P process value, "
-"and so on."
+"How the value is shown and typed: bits, a number, a percent value (tenths "
+"for the 11HA30, a hundredth of $1000 for other controllers) or hex. The "
+"original has the one choice for the whole screen; here every row has its "
+"own."
 msgstr ""
 "Wie der Wert gezeigt wird: B Bits, H der Text der Antwort, P Prozesswert und"
 " so weiter."
@@ -1638,6 +1919,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__id
@@ -1647,8 +1929,10 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__id
 #: model:ir.model.fields,field_description:int_workbench.field_ir_websocket__id
 msgid "ID"
@@ -1683,9 +1967,26 @@ msgstr ""
 "Abbilder (S-Record, egal welcher Name und welche Endung) und Programmtexte."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__text
+msgid ""
+"In the format of the row: bits (blanks and points may be typed), a number ($"
+" before hex digits), a percent value or hex digits. Nothing at all is a "
+"zero. What does not fit is cut to the low byte or word."
+msgstr ""
+"Im Format der Zeile: Bits (Leerzeichen und Punkte dürfen mit eingegeben "
+"werden), eine Zahl ($ vor Hexziffern), ein Prozentwert oder Hexziffern. "
+"Nichts einzugeben ergibt eine Null. Was nicht passt, wird auf das untere "
+"Byte oder Wort gekürzt."
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__input
 msgid "Input"
 msgstr "Eingabe"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__intermediate_version
+msgid "Intermediate Version"
+msgstr "Version der Zwischenwerte"
 
 #. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_intermediate
@@ -1693,6 +1994,8 @@ msgid "Intermediate value of a controller"
 msgstr "Zwischenwert eines Reglers"
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_signal.py:0
 #: model:int.workbench.capability,name:int_workbench.int_workbench_capability_intermediate
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_intermediate_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__intermediate_ids
@@ -1709,13 +2012,14 @@ msgstr "Ist Follower"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__kind
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__kind
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__kind
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Kind"
 msgstr "Art"
 
@@ -1745,6 +2049,7 @@ msgstr "Letzter Klemmwert"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__write_uid
@@ -1754,8 +2059,10 @@ msgstr "Letzter Klemmwert"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_uid
 msgid "Last Updated by"
 msgstr "Zuletzt aktualisiert von"
@@ -1776,6 +2083,7 @@ msgstr "Zuletzt aktualisiert von"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__write_date
@@ -1785,8 +2093,10 @@ msgstr "Zuletzt aktualisiert von"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_date
 msgid "Last Updated on"
 msgstr "Zuletzt aktualisiert am"
@@ -1931,9 +2241,12 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter_tag__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__name
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Name"
 msgstr ""
@@ -1942,6 +2255,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_name
 msgid "Name in version line"
 msgstr "Name in der Versionszeile"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+msgid "Name or address"
+msgstr "Name oder Adresse"
 
 #. module: int_workbench
 #. odoo-python
@@ -1973,6 +2291,11 @@ msgid "New time"
 msgstr "Neue Zeit"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__text
+msgid "New value"
+msgstr "Neuer Wert"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__newest
 msgid "Newest"
 msgstr "Zuletzt gekommen"
@@ -1987,6 +2310,12 @@ msgstr "Diesem Dienstbenutzer ist kein Regler mit der Kennung %s zugewiesen."
 #: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_software_action
 msgid "No program yet"
 msgstr "Noch kein Programm"
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
+msgid "No row is clamped"
+msgstr "Keine Zeile ist geklemmt"
 
 #. module: int_workbench
 #: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_project_version_action
@@ -2025,10 +2354,12 @@ msgstr "Nicht ladbar"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__note
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__note
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__note
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__note
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_folder_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
 msgid "Note"
 msgstr "Notiz"
 
@@ -2038,8 +2369,14 @@ msgid "Nothing assigned"
 msgstr "Nichts zugewiesen"
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__current
+msgid "Now"
+msgstr "Jetzt"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__number
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__value
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__z
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_parameter__display_kind__number
 msgid "Number"
 msgstr "Zahl"
@@ -2269,6 +2606,11 @@ msgid "Payload"
 msgstr "Nutzlast"
 
 #. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__p
+msgid "Percent"
+msgstr "Prozent"
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__present
 msgid "Present"
 msgstr "Steht an"
@@ -2308,8 +2650,12 @@ msgid "Process value of a controller"
 msgstr "Prozesswert eines Reglers"
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_parameter_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__parameter_count
 #: model:ir.ui.menu,name:int_workbench.int_workbench_parameter_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Process values"
 msgstr "Prozesswerte"
 
@@ -2435,6 +2781,8 @@ msgid "Release"
 msgstr "Lösen"
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.xml:0
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Release all"
 msgstr "Alle lösen"
@@ -2448,6 +2796,11 @@ msgstr "Alle Klemmungen der angezeigten Zeilen lösen"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__remote
 msgid "Remote"
 msgstr "Gegenstelle"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__controller_serial
+msgid "Replacing the controller changes this number, nothing else."
+msgstr "Ein Reglertausch ändert diese Nummer und sonst nichts."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__report_age
@@ -2468,6 +2821,7 @@ msgstr "Aufgeführt"
 #: code:addons/int_workbench/wizard/int_workbench_can_wizard.py:0
 #: code:addons/int_workbench/wizard/int_workbench_clock_wizard.py:0
 #: code:addons/int_workbench/wizard/int_workbench_fs2_wizard.py:0
+#: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_list
 msgid "Requested"
@@ -2479,10 +2833,14 @@ msgid "Requested by"
 msgstr "Beauftragt von"
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_command_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__command_count
 #: model:ir.ui.menu,name:int_workbench.int_workbench_command_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Requests"
-msgstr "Aufträge"
+msgstr "Klemmprotokoll"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__resource
@@ -2639,6 +2997,22 @@ msgid "Select the files to delete."
 msgstr "Wähle die zu löschenden Dateien aus."
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_signal.py:0
+msgid "Select the variables to add."
+msgstr "Wählen Sie die Variablen aus, die hinzugefügt werden sollen."
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_intermediate_selection_menu
+msgid "Selection"
+msgstr "Auswahl"
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_intermediate_selection_action
+msgid "Selection of the intermediate values"
+msgstr "Auswahl der Zwischenwerte"
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_wizard_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_console_wizard_view_form
 msgid "Send"
@@ -2663,16 +3037,19 @@ msgstr "Gesendet am"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_capability__sequence
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__sequence
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__sequence
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__sequence
 msgid "Sequence"
 msgstr "Reihenfolge"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__serial
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__serial
 msgid "Serial number"
 msgstr "Seriennummer"
 
 #. module: int_workbench
 #: model:res.groups,name:int_workbench.int_workbench_group_service
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Service"
 msgstr "Dienst"
 
@@ -2787,6 +3164,11 @@ msgid ""
 msgstr ""
 "Jemand sieht diesen Regler jetzt an: Der Dienst fragt und berichtet "
 "schneller."
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_selection
+msgid "Sort like the variable list"
+msgstr "Wie die Variablenliste sortieren"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__stale
@@ -2962,7 +3344,9 @@ msgstr ""
 msgid ""
 "The checksum of the project that the service uses for this controller now "
 "(what it reports)."
-msgstr "Die Prüfsumme des Projekts, das der Dienst jetzt für diesen Regler benutzt (was er meldet)."
+msgstr ""
+"Die Prüfsumme des Projekts, das der Dienst jetzt für diesen Regler benutzt "
+"(was er meldet)."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__clock_write_enabled
@@ -3023,6 +3407,13 @@ msgid "The content of %s is not base64."
 msgstr "Der Inhalt von %s ist kein Base64."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__controller_type_id
+msgid ""
+"The control unit inside the device, for example 11HA35D. It stays when the "
+"controller is replaced by one of the same type."
+msgstr "Das Steuergerät im Gerät, zum Beispiel 11HA35D. Es bleibt gleich, wenn der Regler durch einen vom gleichen Typ ersetzt wird."
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "The controller %s cannot be clamped."
@@ -3051,6 +3442,17 @@ msgstr "Der Regler %s ist archiviert."
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid "The controller %s is being restarted."
 msgstr "Der Regler %s wird neu gestartet."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
+msgid "The controller %s may not be written to in this way."
+msgstr "In den Regler %s darf auf diese Weise nicht geschrieben werden."
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_intermediate_device_name_format_unique
+msgid "The controller has this value in this format already."
+msgstr "Der Regler hat diesen Wert in diesem Format schon."
 
 #. module: int_workbench
 #. odoo-python
@@ -3161,6 +3563,13 @@ msgstr "Die Familie %s wurde weder gemeldet noch ist sie bekannt."
 #: code:addons/int_workbench/models/int_workbench_family.py:0
 msgid "The family %s is not a family name."
 msgstr "%s ist kein Familienname."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__family_id
+msgid ""
+"The family of controllers that serves this type. The families are reported "
+"by the services."
+msgstr "Die Reglerfamilie, die diesen Typ bedient. Die Familien melden die Dienste."
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
@@ -3334,6 +3743,12 @@ msgstr "Der Name im Kopf der Applikation."
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
+msgid "The name must be 1 to %s characters."
+msgstr "Der Name muss 1 bis %s Zeichen lang sein."
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/models/int_workbench_software.py:0
 msgid ""
 "The name of the file (%(file)s) differs from the application in it "
@@ -3353,6 +3768,18 @@ msgstr "Der Name der Datei im Projektordner des Dienstes."
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__project
 msgid "The name of the project folder, for example Pro_2."
 msgstr "Der Name des Projektordners, zum Beispiel Pro_2."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__name
+msgid ""
+"The name of the type, for example AC3 (device) or 11HA35D (controller)."
+msgstr "Der Name des Typs, zum Beispiel AC3 (Gerät) oder 11HA35D (Regler)."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The name of the value must be 1 to %s characters."
+msgstr "Der Name des Wertes muss 1 bis %s Zeichen lang sein."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__checksum
@@ -3391,6 +3818,14 @@ msgid "The number of the entry in the log of the service."
 msgstr "Die Nummer des Eintrags im Protokoll des Dienstes."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__ident
+msgid ""
+"The number of the type (article number with revision), for example "
+"3EGM064970R0001. It is the same for every piece of the type; the serial "
+"number is a field of the device."
+msgstr "Die Nummer des Typs (Artikelnummer mit Revision), zum Beispiel 3EGM064970R0001. Sie ist für jedes Stück des Typs gleich; die Seriennummer ist ein Feld des Geräts."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_wizard__wagon
 msgid "The number the files are saved under (the original asks for it too)."
 msgstr ""
@@ -3427,6 +3862,14 @@ msgid ""
 msgstr ""
 "Das Betriebssystem, für das eine Applikation nach eigener Angabe gebaut ist "
 "(E9210 ist 2.10). Gedeutet, nicht belegt."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__sequence
+msgid ""
+"The order in which the service reads the rows and in which they are shown."
+msgstr ""
+"Der Platz in der Liste der Zwischenwerte, die der Dienst liest, ab 1 "
+"gezählt."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__sequence
@@ -3474,13 +3917,9 @@ msgid "The place in the history of the controller, 1 is the oldest."
 msgstr "Der Platz in der Historie des Reglers, 1 ist der älteste."
 
 #. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__sequence
-msgid ""
-"The place in the list of intermediate values that the service reads, counted"
-" from 1."
-msgstr ""
-"Der Platz in der Liste der Zwischenwerte, die der Dienst liest, ab 1 "
-"gezählt."
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__sequence
+msgid "The place in the variable list of the project, counted from 1."
+msgstr "Der Platz in der Variablenliste des Projekts, ab 1 gezählt."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_can_module__number
@@ -3588,6 +4027,12 @@ msgstr ""
 "sie gemeldet hat. Der Dienst arbeitet mit dem Kürzel."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__serial
+msgid ""
+"The serial number of the device. The type number is a field of the type."
+msgstr "Die Seriennummer des Geräts. Die Typnummer ist ein Feld des Typs."
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid "The service address %s must start with http:// or https://."
@@ -3650,6 +4095,30 @@ msgstr ""
 "Fehlerdateien."
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
+msgid ""
+"The service turns the text into a number by the format of the row and writes it to the address (JB for a byte or a bit, JW for a word),\n"
+"                    then reads the address again. Nothing typed is a zero."
+msgstr ""
+"Der Dienst macht aus dem Text nach dem Format der Zeile eine Zahl und schreibt sie an die Adresse (JB für ein Byte oder Bit, JW für ein Wort),\n"
+"                    dann liest er die Adresse noch einmal. Nichts einzugeben ergibt eine Null."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__name
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__name
+msgid ""
+"The signal name of the project (P1011), or a name of your own for a row that"
+" is not in the variable list."
+msgstr ""
+"Der Signalname des Projekts (P1011) oder ein eigener Name für eine Zeile, "
+"die nicht in der Variablenliste steht."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__name
+msgid "The signal name of the project, for example P1011."
+msgstr "Der Signalname des Projekts, zum Beispiel P1011."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__line_document
 msgid ""
 "The six digits of the document number in the version line (3EGM, six digits,"
@@ -3710,6 +4179,12 @@ msgstr ""
 #. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The text must be one line of up to %s characters."
+msgstr "Der Text muss eine Zeile mit bis zu %s Zeichen sein."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "The time %s does not exist."
 msgstr "Die Zeit %s gibt es nicht."
 
@@ -3764,6 +4239,17 @@ msgstr ""
 "Dienst sein."
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__can_write_value
+msgid "The value may be written"
+msgstr "Der Wert darf geschrieben werden"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The value needs its kind (byte or word) and its format."
+msgstr "Der Wert braucht seine Art (Byte oder Wort) und sein Format."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__text
 msgid ""
 "The value the controller works with, as it shows it, for example 22.3°C. A "
@@ -3805,6 +4291,11 @@ msgid "The value to clamp the row to (only for Clamp)."
 msgstr "Der Wert, auf den die Zeile geklemmt wird (nur beim Klemmen)."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__chosen
+msgid "The variable is among the intermediate values of the controller."
+msgstr "Die Variable gehört zu den Zwischenwerten des Reglers."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__os_version
 msgid ""
 "The version of the operating system that is in the file (E0310 is 3.10)."
@@ -3818,6 +4309,14 @@ msgid ""
 msgstr ""
 "Der Stand des Projekts, den dieser Regler haben soll (die Zuweisung). Sie "
 "steht im Chatter des Stands."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__project_version_id
+msgid ""
+"The version that a device of this type gets when it is given the type and "
+"has no project version yet. Changing it later does not change the devices "
+"that have one."
+msgstr "Der Stand, den ein Gerät dieses Typs bekommt, wenn es den Typ erhält und noch keinen Projektstand hat. Eine spätere Änderung ändert keine Geräte, die schon einen haben."
 
 #. module: int_workbench
 #. odoo-python
@@ -3918,6 +4417,7 @@ msgstr "Transporte"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__type_name
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Type"
 msgstr "Typ"
 
@@ -3925,6 +4425,22 @@ msgstr "Typ"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__type_code
 msgid "Type code"
 msgstr "Typcode"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__ident
+msgid "Type number"
+msgstr "Typnummer"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_type
+msgid "Type of a device or of its controller"
+msgstr "Typ eines Geräts oder seines Reglers"
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_type_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_type_menu
+msgid "Types"
+msgstr "Typen"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__unit
@@ -3978,8 +4494,26 @@ msgstr "Nutzt Projektdateien"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__value
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__value
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__intermediate_id
 msgid "Value"
 msgstr "Wert"
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_intermediate_values_menu
+msgid "Values"
+msgstr "Werte"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_signal
+msgid "Variable of the project of a controller"
+msgstr "Variable des Projekts eines Reglers"
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_signal_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__signal_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_signal_menu
+msgid "Variables of the project"
+msgstr "Variablen des Projekts"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__vehicle
@@ -4180,6 +4714,13 @@ msgstr ""
 " seine Familie kann."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__device_type_id
+msgid ""
+"What this device is, for example AC3. The technician chooses the device; the"
+" controller inside it is a detail of it."
+msgstr "Was dieses Gerät ist, zum Beispiel AC3. Der Techniker wählt das Gerät; der Regler darin ist ein Teil davon."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_log__input
 msgid ""
 "What was asked for. The service keeps no password and no file content in it."
@@ -4199,6 +4740,21 @@ msgstr ""
 "Berichte und Klemmaufträge gehen den anderen Weg und brauchen keine Adresse."
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__operand
+msgid "Where the controller keeps it, for example M0448 or I0000.0."
+msgstr "Wo der Regler sie ablegt, zum Beispiel M0448 oder I0000.0."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__address
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__address
+msgid ""
+"Where the controller keeps the value, for example M0448 or I0000.0. For a "
+"row of your own the address is the point."
+msgstr ""
+"Wo der Regler den Wert ablegt, zum Beispiel M0448 oder I0000.0. Bei einer "
+"eigenen Zeile ist die Adresse die Hauptsache."
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__origins
 msgid "Where the version was brought in from, one in each line."
 msgstr "Woher der Stand hereingeholt wurde, eine Angabe je Zeile."
@@ -4208,7 +4764,10 @@ msgstr "Woher der Stand hereingeholt wurde, eine Angabe je Zeile."
 msgid ""
 "Whether the project that the service uses is the version that is assigned. A"
 " service that is started strict refuses to clamp while they differ."
-msgstr "Ob das Projekt, das der Dienst benutzt, der zugewiesene Stand ist. Ein streng gestarteter Dienst lehnt das Klemmen ab, solange sie sich unterscheiden."
+msgstr ""
+"Ob das Projekt, das der Dienst benutzt, der zugewiesene Stand ist. Ein "
+"streng gestarteter Dienst lehnt das Klemmen ab, solange sie sich "
+"unterscheiden."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__load_error
@@ -4235,6 +4794,11 @@ msgstr ""
 " kennzeichnen."
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+msgid "Words"
+msgstr "Wörter"
+
+#. module: int_workbench
 #: model:ir.module.category,name:int_workbench.module_category_int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_menu_root
 #: model:res.groups.privilege,name:int_workbench.privilege_int_workbench
@@ -4245,6 +4809,36 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__wprio
 msgid "Wprio"
 msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
+msgid "Write"
+msgstr "Schreiben"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Write a value into the controller"
+msgstr "Einen Wert in den Regler schreiben"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__intermediate_write
+msgid "Write an intermediate value"
+msgstr "Einen Zwischenwert schreiben"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_intermediate_wizard
+msgid "Write an intermediate value into a controller"
+msgstr "Einen Zwischenwert in einen Regler schreiben"
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_intermediate_write
+msgid "Write intermediate values"
+msgstr "Zwischenwerte schreiben"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
+msgid "Write this value into the controller?"
+msgstr "Diesen Wert in den Regler schreiben?"
 
 #. module: int_workbench
 #. odoo-javascript
@@ -4302,426 +4896,3 @@ msgstr "abgewiesen"
 #: model:ir.model,name:int_workbench.model_ir_websocket
 msgid "websocket message handling"
 msgstr "Websocket-Nachrichtbearbeitung"
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_signal.py:0
-msgid "%(added)s added, %(skipped)s were there already."
-msgstr "%(added)s hinzugefügt, %(skipped)s waren schon da."
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
-msgid "%(name)s of %(device)s is being written."
-msgstr "%(name)s von %(device)s wird geschrieben."
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_command.py:0
-msgid "%s is not an address of the controller."
-msgstr "%s ist keine Adresse des Reglers."
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
-msgid "%s is not an address. It is the letters of the memory area, a number and for a bit a point and the bit number, for example M0448 or I0000.3."
-msgstr "%s ist keine Adresse. Sie besteht aus den Buchstaben des Speicherbereichs, einer Zahl und bei einem Bit aus Punkt und Bitnummer, zum Beispiel M0448 oder I0000.3."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__is_byte
-msgid "A byte or a bit is read with DB and written with JB, a word with DW and JW."
-msgstr "Ein Byte oder Bit wird mit DB gelesen und mit JB geschrieben, ein Wort mit DW und JW."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__is_byte
-msgid "A byte or a bit is read with DB, a word with DW."
-msgstr "Ein Byte oder Bit wird mit DB gelesen, ein Wort mit DW."
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
-msgid "A controller can have up to %s intermediate values."
-msgstr "Ein Regler kann bis zu %s Zwischenwerte haben."
-
-#. module: int_workbench
-#: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_intermediate_selection_action
-msgid "Add a line for a value of your own (a name and an address), or use \"Choose values\" in the list of the intermediate values to take them from the variable list of the project."
-msgstr "Fügen Sie eine Zeile für einen eigenen Wert hinzu (ein Name und eine Adresse), oder nehmen Sie die Werte mit „Werte wählen“ in der Liste der Zwischenwerte aus der Variablenliste des Projekts."
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_list
-msgid "Add to the intermediate values"
-msgstr "Zu den Zwischenwerten hinzufügen"
-
-#. module: int_workbench
-#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__b
-msgid "Bits"
-msgstr "Bits"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__is_byte
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__is_byte
-msgid "Byte or bit"
-msgstr "Byte oder Bit"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
-msgid "Bytes and bits"
-msgstr "Bytes und Bits"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_intermediate_write
-msgid "Can write intermediate values"
-msgstr "Kann Zwischenwerte schreiben"
-
-#. module: int_workbench
-#: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_intermediate_selection_action
-msgid "Choose the intermediate values to read"
-msgstr "Zwischenwerte zum Lesen wählen"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
-msgid "Choose the values from the variable list of the project"
-msgstr "Die Werte aus der Variablenliste des Projekts wählen"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
-msgid "Choose values"
-msgstr "Werte wählen"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__chosen
-msgid "Chosen"
-msgstr "Gewählt"
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__intermediate_version
-msgid "Counts the changes of the selection of intermediate values. The service says in every call which version it has, and Odoo hands it the rows when that is not this one."
-msgstr "Zählt die Änderungen der Auswahl der Zwischenwerte. Der Dienst nennt in jedem Aufruf seine Version, und Odoo gibt ihm die Zeilen, wenn es nicht diese ist."
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
-msgid "Edit"
-msgstr "Bearbeiten"
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
-msgid "Edit the value"
-msgstr "Wert bearbeiten"
-
-#. module: int_workbench
-#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__h
-msgid "Hex"
-msgstr "Hex"
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__format
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__format
-msgid "How the value is shown and typed: bits, a number, a percent value (tenths for the 11HA30, a hundredth of $1000 for other controllers) or hex. The original has the one choice for the whole screen; here every row has its own."
-msgstr "Wie der Wert angezeigt und eingegeben wird: Bits, eine Zahl, ein Prozentwert (Zehntel beim 11HA30, ein Hundertstel von $1000 bei anderen Reglern) oder Hex. Das Original hat die eine Wahl für den ganzen Bildschirm; hier hat jede Zeile ihre eigene."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__text
-msgid "In the format of the row: bits (blanks and points may be typed), a number ($ before hex digits), a percent value or hex digits. Nothing at all is a zero. What does not fit is cut to the low byte or word."
-msgstr "Im Format der Zeile: Bits (Leerzeichen und Punkte dürfen mit eingegeben werden), eine Zahl ($ vor Hexziffern), ein Prozentwert oder Hexziffern. Nichts einzugeben ergibt eine Null. Was nicht passt, wird auf das untere Byte oder Wort gekürzt."
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__intermediate_version
-msgid "Intermediate Version"
-msgstr "Version der Zwischenwerte"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
-msgid "Name or address"
-msgstr "Name oder Adresse"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__text
-msgid "New value"
-msgstr "Neuer Wert"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__current
-msgid "Now"
-msgstr "Jetzt"
-
-#. module: int_workbench
-#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__p
-msgid "Percent"
-msgstr "Prozent"
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_signal.py:0
-msgid "Select the variables to add."
-msgstr "Wählen Sie die Variablen aus, die hinzugefügt werden sollen."
-
-#. module: int_workbench
-#: model:ir.ui.menu,name:int_workbench.int_workbench_intermediate_selection_menu
-msgid "Selection"
-msgstr "Auswahl"
-
-#. module: int_workbench
-#: model:ir.actions.act_window,name:int_workbench.int_workbench_intermediate_selection_action
-msgid "Selection of the intermediate values"
-msgstr "Auswahl der Zwischenwerte"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_selection
-msgid "Sort like the variable list"
-msgstr "Wie die Variablenliste sortieren"
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
-msgid "The controller %s may not be written to in this way."
-msgstr "In den Regler %s darf auf diese Weise nicht geschrieben werden."
-
-#. module: int_workbench
-#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_intermediate_device_name_format_unique
-msgid "The controller has this value in this format already."
-msgstr "Der Regler hat diesen Wert in diesem Format schon."
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
-msgid "The name must be 1 to %s characters."
-msgstr "Der Name muss 1 bis %s Zeichen lang sein."
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_command.py:0
-msgid "The name of the value must be 1 to %s characters."
-msgstr "Der Name des Wertes muss 1 bis %s Zeichen lang sein."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__sequence
-msgid "The order in which the service reads the rows and in which they are shown."
-msgstr "Die Reihenfolge, in der der Dienst die Zeilen liest und in der sie angezeigt werden."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__sequence
-msgid "The place in the variable list of the project, counted from 1."
-msgstr "Der Platz in der Variablenliste des Projekts, ab 1 gezählt."
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
-msgid ""
-"The service turns the text into a number by the format of the row and writes it to the address (JB for a byte or a bit, JW for a word),\n"
-"                    then reads the address again. Nothing typed is a zero."
-msgstr ""
-"Der Dienst macht aus dem Text nach dem Format der Zeile eine Zahl und schreibt sie an die Adresse (JB für ein Byte oder Bit, JW für ein Wort),\n"
-"                    dann liest er die Adresse noch einmal. Nichts einzugeben ergibt eine Null."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__name
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__name
-msgid "The signal name of the project (P1011), or a name of your own for a row that is not in the variable list."
-msgstr "Der Signalname des Projekts (P1011) oder ein eigener Name für eine Zeile, die nicht in der Variablenliste steht."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__name
-msgid "The signal name of the project, for example P1011."
-msgstr "Der Signalname des Projekts, zum Beispiel P1011."
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_command.py:0
-msgid "The text must be one line of up to %s characters."
-msgstr "Der Text muss eine Zeile mit bis zu %s Zeichen sein."
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__can_write_value
-msgid "The value may be written"
-msgstr "Der Wert darf geschrieben werden"
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_command.py:0
-msgid "The value needs its kind (byte or word) and its format."
-msgstr "Der Wert braucht seine Art (Byte oder Wort) und sein Format."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__chosen
-msgid "The variable is among the intermediate values of the controller."
-msgstr "Die Variable gehört zu den Zwischenwerten des Reglers."
-
-#. module: int_workbench
-#: model:ir.ui.menu,name:int_workbench.int_workbench_intermediate_values_menu
-msgid "Values"
-msgstr "Werte"
-
-#. module: int_workbench
-#: model:ir.model,name:int_workbench.model_int_workbench_signal
-msgid "Variable of the project of a controller"
-msgstr "Variable des Projekts eines Reglers"
-
-#. module: int_workbench
-#: model:ir.actions.act_window,name:int_workbench.int_workbench_signal_action
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__signal_ids
-#: model:ir.ui.menu,name:int_workbench.int_workbench_signal_menu
-msgid "Variables of the project"
-msgstr "Variablen des Projekts"
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__operand
-msgid "Where the controller keeps it, for example M0448 or I0000.0."
-msgstr "Wo der Regler sie ablegt, zum Beispiel M0448 oder I0000.0."
-
-#. module: int_workbench
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__address
-#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__address
-msgid "Where the controller keeps the value, for example M0448 or I0000.0. For a row of your own the address is the point."
-msgstr "Wo der Regler den Wert ablegt, zum Beispiel M0448 oder I0000.0. Bei einer eigenen Zeile ist die Adresse die Hauptsache."
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
-msgid "Words"
-msgstr "Wörter"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
-msgid "Write"
-msgstr "Schreiben"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
-msgid "Write a value into the controller"
-msgstr "Einen Wert in den Regler schreiben"
-
-#. module: int_workbench
-#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__intermediate_write
-msgid "Write an intermediate value"
-msgstr "Einen Zwischenwert schreiben"
-
-#. module: int_workbench
-#: model:ir.model,name:int_workbench.model_int_workbench_intermediate_wizard
-msgid "Write an intermediate value into a controller"
-msgstr "Einen Zwischenwert in einen Regler schreiben"
-
-#. module: int_workbench
-#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_intermediate_write
-msgid "Write intermediate values"
-msgstr "Zwischenwerte schreiben"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
-msgid "Write this value into the controller?"
-msgstr "Diesen Wert in den Regler schreiben?"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__address
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__operand
-msgid "Address"
-msgstr "Adresse"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__device_id
-msgid "Controller"
-msgstr "Regler"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__create_uid
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__create_uid
-msgid "Created by"
-msgstr "Erstellt von"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__create_date
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__create_date
-msgid "Created on"
-msgstr "Erstellt am"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__display_name
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__display_name
-msgid "Display Name"
-msgstr "Anzeigename"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__write_uid
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__write_uid
-msgid "Last Updated by"
-msgstr "Zuletzt aktualisiert von"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__write_date
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__write_date
-msgid "Last Updated on"
-msgstr "Zuletzt aktualisiert am"
-
-#. module: int_workbench
-#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__z
-msgid "Number"
-msgstr "Zahl"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__sequence
-msgid "Sequence"
-msgstr "Reihenfolge"
-
-#. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__intermediate_id
-msgid "Value"
-msgstr "Wert"
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/parameter_list.xml:0
-msgid "Compact rows"
-msgstr "Kompakte Zeilen"
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/clamp_banner.xml:0
-msgid "Clamped"
-msgstr "Geklemmt"
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
-msgid "Clamped rows on %(device)s: %(count)s"
-msgstr "Geklemmte Zeilen auf %(device)s: %(count)s"
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
-msgid "Clamped rows: %(devices)s"
-msgstr "Geklemmte Zeilen: %(devices)s"
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/clamp_banner.xml:0
-msgid "Release all"
-msgstr "Alle lösen"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
-msgid "Cancel"
-msgstr "Abbrechen"
-
-#. module: int_workbench
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
-msgid "Controller"
-msgstr "Regler"
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_signal.py:0
-msgid "Intermediate values"
-msgstr "Zwischenwerte"
-
-#. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
-msgid "No row is clamped"
-msgstr "Keine Zeile ist geklemmt"
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
-msgid "Requested"
-msgstr "Beauftragt"
-

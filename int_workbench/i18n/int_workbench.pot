@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 08:43+0000\n"
-"PO-Revision-Date: 2026-11-16 08:43+0000\n"
+"POT-Creation-Date: 2026-11-16 12:33+0000\n"
+"PO-Revision-Date: 2026-11-16 12:33+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -78,8 +78,26 @@ msgstr ""
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_type.py:0
+msgid "%s cannot be the default: only an approved version can."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/models/int_workbench_fs2_file.py:0
 msgid "%s file(s) are being moved to the folder of deleted files."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s is a controller type, not a device type."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s is a device type, not a controller type."
 msgstr ""
 
 #. module: int_workbench
@@ -118,6 +136,12 @@ msgstr ""
 
 #. module: int_workbench
 #. odoo-python
+#: code:addons/int_workbench/models/int_workbench_type.py:0
+msgid "%s is used by devices as the other kind of type."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
 #: code:addons/int_workbench/models/int_workbench_parameter.py:0
 msgid "%s request(s) sent to the service. The result shows in the clamp log."
 msgstr ""
@@ -132,6 +156,12 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/int_workbench/static/src/views/parameter_list.js:0
 msgid "%s: new errors: %s"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_type.py:0
+msgid "%s: only a device type has a default project version."
 msgstr ""
 
 #. module: int_workbench
@@ -278,6 +308,16 @@ msgid "A tag exists once."
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_type_kind_name_unique
+msgid "A type with this name exists already."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_type_kind_ident_unique
+msgid "A type with this type number exists already."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_project_device_checksum_unique
 msgid "A version exists once per service."
 msgstr ""
@@ -311,6 +351,7 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__active
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__active
 msgid "Active"
 msgstr ""
 
@@ -432,6 +473,8 @@ msgstr ""
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Archived"
 msgstr ""
 
@@ -970,35 +1013,9 @@ msgid "Control the CAN bus"
 msgstr ""
 
 #. module: int_workbench
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_console_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__device_id
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__device_id
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_type__kind__controller
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Controller"
 msgstr ""
 
@@ -1024,8 +1041,8 @@ msgid "Controller id"
 msgstr ""
 
 #. module: int_workbench
-#: model:ir.model,name:int_workbench.model_int_workbench_device
-msgid "Controller reached through the service"
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__controller_serial
+msgid "Controller serial number"
 msgstr ""
 
 #. module: int_workbench
@@ -1034,20 +1051,16 @@ msgid "Controller software"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__controller_type_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__hardware
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "Controller type"
 msgstr ""
 
 #. module: int_workbench
-#. odoo-javascript
-#: code:addons/int_workbench/static/src/connection/connection_menu.xml:0
-#: model:ir.actions.act_window,name:int_workbench.int_workbench_device_action
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__device_ids
-#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__device_ids
-#: model:ir.ui.menu,name:int_workbench.int_workbench_device_menu
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
-msgid "Controllers"
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
+msgid "Controller types"
 msgstr ""
 
 #. module: int_workbench
@@ -1094,6 +1107,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_uid
 msgid "Created by"
 msgstr ""
@@ -1132,6 +1146,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_date
 msgid "Created on"
 msgstr ""
@@ -1145,6 +1160,8 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_error_action
 #: model:ir.ui.menu,name:int_workbench.int_workbench_error_menu
 msgid "Current errors"
@@ -1198,6 +1215,11 @@ msgid "Day"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__project_version_id
+msgid "Default project version"
+msgstr ""
+
+#. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_list
 msgid "Delete"
 msgstr ""
@@ -1216,6 +1238,84 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__detail
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__detail
 msgid "Detail"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_clock_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_console_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_record__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_import__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__device_id
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_type__kind__device
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+msgid "Device"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_device
+msgid "Device reached through the service"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__device_type_id
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
+msgid "Device type"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
+msgid "Device types"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__kind
+msgid ""
+"Device: what a technician tests (for example an air conditioner). "
+"Controller: the control unit inside it."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/connection/connection_menu.xml:0
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_device_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_family__device_ids
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__device_ids
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__device_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_device_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
+msgid "Devices"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__controller_device_ids
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
+msgid "Devices with this controller"
 msgstr ""
 
 #. module: int_workbench
@@ -1270,6 +1370,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_ir_websocket__display_name
 msgid "Display Name"
@@ -1427,6 +1528,7 @@ msgid "Error word"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_count
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_ids
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Errors"
@@ -1477,8 +1579,10 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__family_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__family_id
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_family_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Family"
 msgstr ""
 
@@ -1690,6 +1794,22 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__error_count
+msgid "How many errors are active now."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__command_count
+msgid ""
+"How many requests (clamps, console, clock, ...) were made for this device."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__parameter_count
+msgid "How many rows of process values the controller has."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_error_history__count
 msgid "How often the error had come at that time."
 msgstr ""
@@ -1743,6 +1863,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__id
 #: model:ir.model.fields,field_description:int_workbench.field_ir_websocket__id
 msgid "ID"
@@ -1819,9 +1940,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__kind
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__kind
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__kind
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Kind"
 msgstr ""
 
@@ -1864,6 +1987,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_uid
 msgid "Last Updated by"
 msgstr ""
@@ -1897,6 +2021,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_date
 msgid "Last Updated on"
 msgstr ""
@@ -2044,6 +2169,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__name
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
 msgid "Name"
 msgstr ""
@@ -2150,10 +2276,12 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__note
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__note
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__note
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__note
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_folder_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
 msgid "Note"
 msgstr ""
 
@@ -2434,8 +2562,12 @@ msgid "Process value of a controller"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_parameter_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__parameter_count
 #: model:ir.ui.menu,name:int_workbench.int_workbench_parameter_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Process values"
 msgstr ""
 
@@ -2576,6 +2708,11 @@ msgid "Remote"
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__controller_serial
+msgid "Replacing the controller changes this number, nothing else."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__report_age
 msgid "Report Age"
 msgstr ""
@@ -2606,8 +2743,12 @@ msgid "Requested by"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_command_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__command_count
 #: model:ir.ui.menu,name:int_workbench.int_workbench_command_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Requests"
 msgstr ""
 
@@ -2804,11 +2945,13 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__serial
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__serial
 msgid "Serial number"
 msgstr ""
 
 #. module: int_workbench
 #: model:res.groups,name:int_workbench.int_workbench_group_service
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Service"
 msgstr ""
 
@@ -3152,6 +3295,13 @@ msgid "The content of %s is not base64."
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__controller_type_id
+msgid ""
+"The control unit inside the device, for example 11HA35D. It stays when the "
+"controller is replaced by one of the same type."
+msgstr ""
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "The controller %s cannot be clamped."
@@ -3286,6 +3436,13 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_family.py:0
 msgid "The family %s is not a family name."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__family_id
+msgid ""
+"The family of controllers that serves this type. The families are reported "
+"by the services."
 msgstr ""
 
 #. module: int_workbench
@@ -3467,6 +3624,12 @@ msgid "The name of the project folder, for example Pro_2."
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__name
+msgid ""
+"The name of the type, for example AC3 (device) or 11HA35D (controller)."
+msgstr ""
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid "The name of the value must be 1 to %s characters."
@@ -3502,6 +3665,14 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_log__entry_id
 msgid "The number of the entry in the log of the service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__ident
+msgid ""
+"The number of the type (article number with revision), for example "
+"3EGM064970R0001. It is the same for every piece of the type; the serial "
+"number is a field of the device."
 msgstr ""
 
 #. module: int_workbench
@@ -3677,6 +3848,12 @@ msgstr ""
 msgid ""
 "The row of the controller this request is about, if the service has reported"
 " it. The service works with the code."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__serial
+msgid ""
+"The serial number of the device. The type number is a field of the type."
 msgstr ""
 
 #. module: int_workbench
@@ -3924,6 +4101,14 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_type__project_version_id
+msgid ""
+"The version that a device of this type gets when it is given the type and "
+"has no project version yet. Changing it later does not change the devices "
+"that have one."
+msgstr ""
+
+#. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_command.py:0
 msgid ""
@@ -4012,12 +4197,29 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__type_name
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Type"
 msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__type_code
 msgid "Type code"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__ident
+msgid "Type number"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_type
+msgid "Type of a device or of its controller"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_type_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_type_menu
+msgid "Types"
 msgstr ""
 
 #. module: int_workbench
@@ -4272,6 +4474,13 @@ msgid ""
 msgstr ""
 
 #. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__device_type_id
+msgid ""
+"What this device is, for example AC3. The technician chooses the device; the"
+" controller inside it is a detail of it."
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_log__input
 msgid ""
 "What was asked for. The service keeps no password and no file content in it."
@@ -4435,4 +4644,3 @@ msgstr ""
 #: model:ir.model,name:int_workbench.model_ir_websocket
 msgid "websocket message handling"
 msgstr ""
-
