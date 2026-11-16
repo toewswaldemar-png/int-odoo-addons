@@ -46,6 +46,11 @@
         <field name="name">Intermediate values</field>
         <field name="sequence">90</field>
     </record>
+    <record id="int_workbench_capability_intermediate_write" model="int.workbench.capability">
+        <field name="code">intermediate_write</field>
+        <field name="name">Write intermediate values</field>
+        <field name="sequence">95</field>
+    </record>
     <record id="int_workbench_capability_project_files" model="int.workbench.capability">
         <field name="code">project_files</field>
         <field name="name">Project files from the library</field>

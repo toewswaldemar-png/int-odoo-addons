@@ -5,6 +5,7 @@ from . import test_error_memory
 from . import test_family
 from . import test_feedback
 from . import test_fs2
+from . import test_intermediate
 from . import test_parameter
 from . import test_project_version
 from . import test_service

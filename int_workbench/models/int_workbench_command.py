@@ -5,6 +5,8 @@ from datetime import datetime
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
+from .int_workbench_signal import NAME_MAX, valid_operand
+
 # The code of a row in the service: "0016", "4200", "9000".
 ROW_CODE_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,20}")
 # What the page may fill in; everything else (state, user, times) is set by the server.
@@ -15,7 +17,7 @@ TECHNICIAN_GROUP = "int_workbench.int_workbench_group_technician"
 # The actions that an operator may ask for (clamping and clearing the error memory); every other action needs a technician.
 OPERATOR_ACTIONS = ("set", "release", "clear_errors")
 # The actions about the controller as a whole: they have a payload and no row.
-CONTROLLER_ACTIONS = ("clear_errors", "clock_set", "can_control", "reset", "console", "console_write", "fs2_save", "fs2_delete")
+CONTROLLER_ACTIONS = ("clear_errors", "clock_set", "can_control", "reset", "console", "console_write", "fs2_save", "fs2_delete", "intermediate_write")
 # The capability that a family has to report for an action.
 ACTION_CAPABILITY = {
     "clear_errors": "error_memory",
@@ -26,8 +28,11 @@ ACTION_CAPABILITY = {
     "console_write": "console",
     "fs2_save": "error_files",
     "fs2_delete": "error_files",
+    "intermediate_write": "intermediate_write",
 }
 CAN_ACTIONS = ("stop", "start", "baptize")
+# What a write of an intermediate value may carry: the text that is typed, which the service turns into a number by the format.
+INTERMEDIATE_TEXT_LIMIT = 40
 CLOCK_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
 CONSOLE_LIMIT = 120
 # What a name of an error file looks like, and how many a request may name.
@@ -68,6 +73,7 @@ class IntWorkbenchCommand(models.Model):
             ("console_write", "Console command that changes something"),
             ("fs2_save", "Save the error memory as files"),
             ("fs2_delete", "Delete error files"),
+            ("intermediate_write", "Write an intermediate value"),
         ],
         required=True,
     )
@@ -125,6 +131,8 @@ class IntWorkbenchCommand(models.Model):
                 command.detail = " ".join(part for part in (payload.get("wagon"), payload.get("train")) if part)
             elif command.action == "fs2_delete":
                 command.detail = ", ".join(payload.get("names") or [])
+            elif command.action == "intermediate_write":
+                command.detail = f"{payload.get('name', '')} = {payload.get('text', '')}"
             else:
                 command.detail = ""
 
@@ -175,6 +183,18 @@ class IntWorkbenchCommand(models.Model):
             if not wagon.strip() or not isinstance(complete, bool):
                 raise ValidationError(self.env._("The error files need a wagon number and say whether they are complete."))
             return json.dumps({"wagon": wagon.strip(), "train": train.strip(), "complete": complete})
+        if action == "intermediate_write":
+            name, operand, byte, form, text = (payload.get(key) for key in ("name", "operand", "byte", "format", "text"))
+            if not isinstance(name, str) or not 0 < len(name) <= NAME_MAX or any(ord(char) < 32 for char in name):
+                raise ValidationError(self.env._("The name of the value must be 1 to %s characters.", NAME_MAX))
+            if not isinstance(operand, str) or not valid_operand(operand):
+                raise ValidationError(self.env._("%s is not an address of the controller.", operand))
+            if not isinstance(byte, bool) or form not in ("B", "Z", "P", "H"):
+                raise ValidationError(self.env._("The value needs its kind (byte or word) and its format."))
+            text = "" if text is None else text
+            if not isinstance(text, str) or len(text) > INTERMEDIATE_TEXT_LIMIT or any(ord(char) < 32 for char in text):
+                raise ValidationError(self.env._("The text must be one line of up to %s characters.", INTERMEDIATE_TEXT_LIMIT))
+            return json.dumps({"name": name, "operand": operand, "byte": byte, "format": form, "text": text})
         if action == "fs2_delete":
             names = payload.get("names")
             if not isinstance(names, list) or not 0 < len(names) <= FILE_NAMES_LIMIT or not all(isinstance(name, str) and FILE_NAME_PATTERN.fullmatch(name) for name in names):

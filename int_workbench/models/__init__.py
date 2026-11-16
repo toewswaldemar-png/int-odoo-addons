@@ -8,6 +8,7 @@ from . import int_workbench_error
 from . import int_workbench_error_history
 from . import int_workbench_error_status
 from . import int_workbench_can_module
+from . import int_workbench_signal
 from . import int_workbench_intermediate
 from . import int_workbench_fs2_file
 from . import int_workbench_fs2_record

@@ -6,8 +6,13 @@
 
     <menuitem id="int_workbench_parameter_menu" name="Process values" parent="int_workbench_menu_root"
               action="int_workbench_parameter_action" sequence="10"/>
-    <menuitem id="int_workbench_intermediate_menu" name="Intermediate values" parent="int_workbench_menu_root"
-              action="int_workbench_intermediate_action" sequence="20"/>
+    <menuitem id="int_workbench_intermediate_menu" name="Intermediate values" parent="int_workbench_menu_root" sequence="20"/>
+    <menuitem id="int_workbench_intermediate_values_menu" name="Values" parent="int_workbench_intermediate_menu"
+              action="int_workbench_intermediate_action" sequence="10"/>
+    <menuitem id="int_workbench_intermediate_selection_menu" name="Selection" parent="int_workbench_intermediate_menu"
+              action="int_workbench_intermediate_selection_action" sequence="20" groups="int_workbench_group_technician"/>
+    <menuitem id="int_workbench_signal_menu" name="Variables of the project" parent="int_workbench_intermediate_menu"
+              action="int_workbench_signal_action" sequence="30" groups="int_workbench_group_technician"/>
 
     <menuitem id="int_workbench_error_memory_menu" name="Error memory" parent="int_workbench_menu_root" sequence="30"/>
     <menuitem id="int_workbench_error_menu" name="Current errors" parent="int_workbench_error_memory_menu"

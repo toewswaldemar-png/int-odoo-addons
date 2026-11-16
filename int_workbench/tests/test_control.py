@@ -141,17 +141,23 @@ class TestIntWorkbenchControl(TransactionCase):
 
     # === the intermediate values === #
 
-    def test_the_intermediate_values_of_a_report_become_rows(self):
+    def test_the_intermediate_values_of_a_report_fill_the_rows_of_the_selection(self):
         items = [
             {"name": "Zuluft", "address": "I0004", "kind": "P", "format": "P", "raw": "0123", "text": "21,5", "value": 21.5, "unit": "°C", "answered": True},
             {"name": "Bits", "address": "I0000", "kind": "B", "format": "B", "raw": "", "text": "", "value": None, "unit": "", "answered": False, "error": "no answer"},
         ]
+        Row = self.env["int.workbench.intermediate"]
+        # the rows are the selection of Odoo; the service reports the readings of them
+        Row.create([{"device_id": self.device.id, "name": "Zuluft", "address": "I0004", "format": "P"}, {"device_id": self.device.id, "name": "Bits", "address": "I0000", "is_byte": True, "format": "B"}])
         self.report(snapshot={"intermediate": {"status": "ok", "items": items, "read_at": "2026-11-14T10:00:00+01:00", "stale": False}})
         rows = self.device.intermediate_ids.sorted("sequence")
-        self.assertEqual([(r.sequence, r.name, r.has_value, r.value, r.unit, r.answered, r.error) for r in rows], [(1, "Zuluft", True, 21.5, "°C", True, ""), (2, "Bits", False, 0.0, "", False, "no answer")])
+        self.assertEqual(
+            [(r.sequence, r.name, r.has_value, r.value, r.unit or "", r.answered, r.error or "") for r in rows],
+            [(1, "Zuluft", True, 21.5, "°C", True, ""), (2, "Bits", False, 0.0, "", False, "no answer")],
+        )
         self.assertEqual(self.device.snapshot["intermediate"], {"status": "ok", "read_at": "2026-11-14T10:00:00+01:00", "stale": False})
         self.report(snapshot={"intermediate": {"status": "ok", "items": items[:1], "read_at": "2026-11-14T10:00:05+01:00", "stale": False}})
-        self.assertEqual(self.device.intermediate_ids.mapped("name"), ["Zuluft"])
+        self.assertEqual(self.device.intermediate_ids.mapped("name"), ["Zuluft", "Bits"], "a report does not remove a row of the selection")
 
     def test_a_reader_looks_at_the_lists_but_changes_nothing(self):
         self.report(snapshot={"can": can_part([can_item(1)])})

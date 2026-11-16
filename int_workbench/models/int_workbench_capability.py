@@ -18,6 +18,7 @@ class IntWorkbenchCapability(models.Model):
         "error_memory",
         "error_files",
         "intermediate",
+        "intermediate_write",
         "project_files",
     )
 

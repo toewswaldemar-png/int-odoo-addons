@@ -185,6 +185,7 @@ class IntWorkbenchDevice(models.Model):
     cap_error_memory = fields.Boolean(compute="_compute_capabilities", string="Can clear the error memory")
     cap_error_files = fields.Boolean(compute="_compute_capabilities", string="Can evaluate error files")
     cap_intermediate = fields.Boolean(compute="_compute_capabilities", string="Has intermediate values")
+    cap_intermediate_write = fields.Boolean(compute="_compute_capabilities", string="Can write intermediate values")
     cap_project_files = fields.Boolean(compute="_compute_capabilities", string="Uses project files")
     # === RECORDS OF THE CONTROLLER === #
     command_ids = fields.One2many("int.workbench.command", "device_id", string="Clamp requests")
@@ -193,6 +194,8 @@ class IntWorkbenchDevice(models.Model):
     error_status_ids = fields.One2many("int.workbench.error.status", "device_id", string="Error status")
     can_module_ids = fields.One2many("int.workbench.can.module", "device_id", string="CAN modules")
     intermediate_ids = fields.One2many("int.workbench.intermediate", "device_id", string="Intermediate values")
+    signal_ids = fields.One2many("int.workbench.signal", "device_id", string="Variables of the project")
+    intermediate_version = fields.Integer(readonly=True, copy=False, default=0, help="Counts the changes of the selection of intermediate values. The service says in every call which version it has, and Odoo hands it the rows when that is not this one.")
     fs2_file_ids = fields.One2many("int.workbench.fs2.file", "device_id", string="Error files")
     clock_local_time = fields.Char(compute="_compute_clock", string="Clock of the controller", help="Date and time the controller shows, as the service read them (no time zone).")
     clock_read_at = fields.Char(compute="_compute_clock", string="Clock read at")
@@ -375,7 +378,7 @@ class IntWorkbenchDevice(models.Model):
         return device
 
     @api.model
-    def service_sync(self, device_ref, snapshot=None, results=None):
+    def service_sync(self, device_ref, snapshot=None, results=None, intermediate_version=None):
         """Take the one call of the service: the report, the results, and hand out the new clamp requests.
 
         :param str device_ref: the id of the controller in the service (field "Controller id")
@@ -383,6 +386,8 @@ class IntWorkbenchDevice(models.Model):
             says (``report_ms``), and with every result
         :param list|None results: how the requests fetched earlier ended: [{"id": 7, "state": "done" | "failed" | "unconfirmed" |
             "unknown" | "expired", "message": "..."}]
+        :param int|None intermediate_version: the version of the selection of intermediate values that the service has (-1: none). A
+            service that does not say gets no selection.
         :return: ``{"commands": [...], "watched": bool, "poll_ms": int, "report_ms": int}``. ``commands`` are the clamp requests to carry
             out: ``{"id", "code", "action": "set" | "release" | "clear_errors", "value", "user", "expires_in_ms"}`` (``clear_errors`` is about the
             controller, its ``code`` is "errors" and its ``value`` 0). A request is handed out again if no result
@@ -396,7 +401,20 @@ class IntWorkbenchDevice(models.Model):
         if snapshot is not None:
             device._service_store_snapshot(snapshot)
         device._service_expire_commands()
-        return device._service_answer()
+        return device._service_answer(intermediate_version)
+
+    @api.model
+    def service_signals_report(self, device_ref, signals=None):
+        """Take the variable list of the project of the controller (what the original shows on the left of "Zwischenw. auswählen").
+
+        :param list signals: ``[{"name": "P1011", "operand": "M0448", "byte": false}]`` in the order of the list of the project; the service
+            reports it when it is new or has changed
+        """
+        device = self._service_device(device_ref)
+        if isinstance(signals, list):
+            # sudo: int.workbench.signal: the service user has no right on the model, only on the calls of the service
+            self.env["int.workbench.signal"].sudo()._report(device, signals)
+        return {"ok": True}
 
     @api.model
     def service_projects(self, device_ref, everything=False):
@@ -670,19 +688,39 @@ class IntWorkbenchDevice(models.Model):
         """Open the dialog that saves the error memory of the controller as error files."""
         return self._open_wizard("int.workbench.fs2.wizard", self.env._("Save the error memory"))
 
-    def _service_answer(self):
+    def _service_answer(self, intermediate_version=None):
         self.ensure_one()
         commands = self._service_take_commands()
         settings = self._service_settings()
         watched = self.watched
         mode = "fast" if watched else "idle"
-        return {
+        answer = {
             "commands": commands,
             "want": self._service_want(),
             "watched": watched,
             "poll_ms": settings[f"poll_{mode}_ms"],
             "report_ms": settings[f"report_{mode}_ms"],
         }
+        # the selection of intermediate values goes only when the service does not have this version (it is not small)
+        if isinstance(intermediate_version, int) and not isinstance(intermediate_version, bool) and intermediate_version != self.intermediate_version:
+            answer["intermediate"] = self._service_selection()
+        return answer
+
+    def _service_selection(self):
+        """The selection of intermediate values as the service takes it: the version and the rows in the order they are read."""
+        self.ensure_one()
+        # sudo: int.workbench.intermediate: the service user has no right on the model, only on the calls of the service
+        rows = self.env["int.workbench.intermediate"].sudo().search([("device_id", "=", self.id)], order="sequence, id")
+        return {
+            "version": self.intermediate_version,
+            "rows": [{"name": row.name, "operand": row.address, "byte": row.is_byte, "format": row.format} for row in rows],
+        }
+
+    def _intermediate_changed(self):
+        """The selection of intermediate values of these controllers changed: the service gets the new one with its next call."""
+        for device in self:
+            # sudo: int.workbench.device: whoever may change the selection does not write the controller, only its version count
+            device.sudo().intermediate_version += 1
 
     def _service_notify(self, commands):
         """Tell the lists that look at this controller how requests ended (a small message; the list does not poll for it)."""
