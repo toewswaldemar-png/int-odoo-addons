@@ -34,6 +34,14 @@ class TestAssets(TransactionCase):
         # the rules start with the class of the list: nothing else in Odoo changes
         self.assertIn(".o_int_workbench_parameter_list .o_list_table .o_list_number", css)
 
+    def test_the_compact_rows_are_a_class_of_the_lists_of_the_module_only(self):
+        css = self.env["ir.qweb"]._get_asset_bundle("web.assets_backend", css=True, js=False).css().raw.decode()
+        self.assertIn(".o_int_workbench_compact .o_list_table .o_data_row > td", css)
+        self.assertNotIn("\n.o_data_row > td {\n  padding-top: 0.125rem", css, "the rule starts with the class, it is not for every list")
+
+    def test_the_selection_list_is_registered_as_a_view(self):
+        self.assertIn("int_workbench.selection_list", self.script)
+
     def test_the_modules_are_in_the_bundle(self):
         for name in MODULES:
             self.assertIn(f"@int_workbench/{name}", self.modules)

@@ -8,3 +8,15 @@
         text-align: left !important;
     }
 }
+
+// Compact rows: the entry "Compact rows" of the menu of the columns puts this class on the renderer of any list of the module. Odoo gives
+// the cells of a list .5rem above and below ($o-table-cell-padding-y-sm, applied by Bootstrap to .table-sm); here the data cells get a little
+// air, and, as Bootstrap's table puts the content of a cell at the top, they are centered (Bootstrap's own .align-middle) so that a switch or
+// a tag stands in line with the text beside it. The widgets themselves are as Odoo makes them.
+$int-workbench-compact-padding-y: 0.125rem;
+
+.o_int_workbench_compact .o_list_table .o_data_row > td {
+    padding-top: $int-workbench-compact-padding-y;
+    padding-bottom: $int-workbench-compact-padding-y;
+    vertical-align: middle;
+}

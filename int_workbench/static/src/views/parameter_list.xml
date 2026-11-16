@@ -4,7 +4,23 @@
     <!-- The renderer of the list of Odoo with one addition: at the top of the table area the strip that says when the line to a controller
          of the rows is not good. It goes inside the renderer, as the helper of an empty list does: a sibling of the renderer would stand
          beside the search panel (the content of the page is a row there), not above the table. -->
-    <t t-name="int_workbench.ListRenderer" t-inherit="web.ListRenderer" t-inherit-mode="primary">
+    <!-- The list of Odoo with the entry "Compact rows" in the menu of the columns (the sliders at the end of the header; Odoo shows the menu
+         when the list has optional columns), and the class that the style sheet uses for it on the root of the renderer. -->
+    <t t-name="int_workbench.CompactListRenderer" t-inherit="web.ListRenderer" t-inherit-mode="primary">
+        <xpath expr="//div[@class='o_list_renderer o_renderer table-responsive']" position="attributes">
+            <attribute name="t-att-class">compactClass</attribute>
+        </xpath>
+        <xpath expr="//div[@t-if='hasOptionalOpenFormViewColumn'][@role='separator']" position="before">
+            <div role="separator" class="dropdown-divider"/>
+            <DropdownItem closingMode="'none'" onSelected="() => this.toggleCompact()">
+                <CheckBox onChange="() => this.toggleCompact()" value="compactState.on" name="'int_workbench_compact_rows'">
+                    <span class="d-flex align-items-center"><span class="text-truncate">Compact rows</span></span>
+                </CheckBox>
+            </DropdownItem>
+        </xpath>
+    </t>
+
+    <t t-name="int_workbench.ListRenderer" t-inherit="int_workbench.CompactListRenderer" t-inherit-mode="primary">
         <xpath expr="//div[hasclass('o_list_renderer')]/t[@t-if='showNoContentHelper']" position="before">
             <ConnectionBanner list="props.list"/>
         </xpath>

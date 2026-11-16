@@ -1,4 +1,5 @@
-import { onMounted, onPatched, onWillDestroy } from "@odoo/owl";
+import { onMounted, onPatched, onWillDestroy, useState } from "@odoo/owl";
+import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { useDebounced } from "@web/core/utils/timing";
 import { _t } from "@web/core/l10n/translation";
@@ -316,11 +317,56 @@ export class LiveListController extends ParameterListController {
     }
 }
 
-/** The renderer of Odoo with the strip above the table that says when the line to a controller of the rows is not good. */
-export class ParameterListRenderer extends ListRenderer {
-    static template = "int_workbench.ListRenderer";
-    static components = { ...ListRenderer.components, ConnectionBanner };
+/** Where the browser keeps whether the rows of the lists of the module are close together (one choice for all of them). */
+export const COMPACT_KEY = "int_workbench.compact_rows";
+
+function readCompact() {
+    try {
+        return browser.localStorage.getItem(COMPACT_KEY) === "1";
+    } catch {
+        return false; // no storage (a private window, blocked site data): the lists are as Odoo makes them
+    }
 }
+
+function writeCompact(on) {
+    try {
+        browser.localStorage.setItem(COMPACT_KEY, on ? "1" : "0");
+    } catch {
+        // the choice holds until the page is left
+    }
+}
+
+/**
+ * The list of Odoo with one more entry in its menu of the columns (the sliders at the end of the header): "Compact rows". It makes the
+ * rows lower (static/src/views/parameter_list.scss); the choice is kept in the browser, like Odoo keeps the optional columns, and is the
+ * same for every list of the module.
+ */
+export class CompactListRenderer extends ListRenderer {
+    static template = "int_workbench.CompactListRenderer";
+
+    setup() {
+        super.setup(...arguments);
+        this.compactState = useState({ on: readCompact() });
+    }
+
+    get compactClass() {
+        return this.compactState.on ? "o_int_workbench_compact" : "";
+    }
+
+    toggleCompact() {
+        this.compactState.on = !this.compactState.on;
+        writeCompact(this.compactState.on);
+    }
+}
+
+/** The renderer of Odoo with the strip above the table that says when the line to a controller of the rows is not good. */
+export class ParameterListRenderer extends CompactListRenderer {
+    static template = "int_workbench.ListRenderer";
+    static components = { ...CompactListRenderer.components, ConnectionBanner };
+}
+
+/** The selection of the intermediate values is an ordinary list that is edited: no controller of its own, only the compact rows. */
+export const selectionListView = { ...listView, Renderer: CompactListRenderer };
 
 export const parameterListView = { ...listView, Controller: ParameterListController, Renderer: ParameterListRenderer };
 export const liveListView = { ...listView, Controller: LiveListController, Renderer: ParameterListRenderer };
@@ -329,3 +375,4 @@ export const errorListView = { ...listView, Controller: ErrorListController, Ren
 registry.category("views").add("int_workbench.parameter_list", parameterListView);
 registry.category("views").add("int_workbench.error_list", errorListView);
 registry.category("views").add("int_workbench.live_list", liveListView);
+registry.category("views").add("int_workbench.selection_list", selectionListView);

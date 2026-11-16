@@ -4666,3 +4666,10 @@ msgstr "Reihenfolge"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__intermediate_id
 msgid "Value"
 msgstr "Wert"
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/parameter_list.xml:0
+msgid "Compact rows"
+msgstr "Kompakte Zeilen"
+

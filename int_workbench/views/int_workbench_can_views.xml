@@ -85,7 +85,7 @@
         <field name="name">int.workbench.intermediate.selection</field>
         <field name="model">int.workbench.intermediate</field>
         <field name="arch" type="xml">
-            <list editable="bottom" decoration-muted="not answered">
+            <list editable="bottom" js_class="int_workbench.selection_list" decoration-muted="not answered">
                 <header>
                     <!-- what "Sort." of the original does, for the controllers of the rows that are selected -->
                     <button name="action_sort" type="object" string="Sort like the variable list" icon="fa-sort-amount-asc" display="selection"
