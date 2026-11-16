@@ -1,6 +1,8 @@
 from datetime import timedelta
 from unittest import mock
 
+import psycopg2.errors
+
 from odoo import fields
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
@@ -171,3 +173,11 @@ class TestIntWorkbenchControl(TransactionCase):
             answer = self.report(snapshot={"status": {"connected": True}, "can": can_part([can_item(1)])})
         self.assertEqual(self.device.snapshot["status"], {"connected": True}, "the rest of the report is kept")
         self.assertEqual([c["id"] for c in answer["commands"]], [command.id], "and the request still goes out")
+
+    def test_a_clash_with_another_transaction_is_left_to_the_server_to_run_again(self):
+        # Another transaction wrote the same rows (the page that tells "somebody looks"): the server runs the whole call again,
+        # which it cannot do if the part is only logged and the report goes on in an aborted transaction.
+        for error in (psycopg2.errors.SerializationFailure, psycopg2.errors.DeadlockDetected, psycopg2.errors.LockNotAvailable):
+            with self.subTest(error.__name__), mock.patch.object(type(self.env["int.workbench.can.module"]), "_sync", side_effect=error("clash")):
+                with self.assertRaises(error):
+                    self.report(snapshot={"status": {"connected": True}, "can": can_part([can_item(1)])})

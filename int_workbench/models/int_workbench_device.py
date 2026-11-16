@@ -8,6 +8,7 @@ import requests
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.service.model import PG_CONCURRENCY_EXCEPTIONS_TO_RETRY
 
 from .service_utils import notification
 
@@ -556,9 +557,16 @@ class IntWorkbenchDevice(models.Model):
         """Bring the rows of one optional part of the report (CAN modules, error memory, ...) up to date. A part that cannot be stored
         is logged and left out: the rest of the report, and the requests that go with the call, must not be lost for it."""
         self.ensure_one()
+        # What the report has changed so far (the snapshot of the controller) is written before the savepoint, not when it opens: a failure
+        # of that write is not the fault of this part and cannot be undone by the savepoint, it would leave the transaction aborted.
+        self.env.flush_all()
         try:
             with self.env.cr.savepoint():
                 return self.env[model_name].sudo()._sync(self, snapshot)  # sudo: the rows are written by the report of the service
+        except PG_CONCURRENCY_EXCEPTIONS_TO_RETRY:
+            # Another transaction changed the same rows (the page tells that somebody looks): the server runs the whole call again
+            # (odoo.service.model.retrying), which it cannot do if the error is only logged.
+            raise
         except (ValueError, TypeError, psycopg2.Error):
             _logger.exception("The part of the report for %s of controller %s could not be stored.", model_name, self.name)
             return False
