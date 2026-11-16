@@ -404,7 +404,7 @@ msgstr "Zu den Zwischenwerten hinzufügen"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__added_at
 msgid "Added in the service"
-msgstr "Im Dienst hinzugefügt"
+msgstr "Hinzugefügt"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__address
@@ -466,7 +466,7 @@ msgstr "Applikation"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__expected_document
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 msgid "Application (document number)"
-msgstr "Applikation (Dokumentnummer)"
+msgstr "Applikation"
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_software__kind__text
@@ -515,7 +515,7 @@ msgstr "Wie zugewiesen"
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 msgid "Assigned to a controller"
-msgstr "Einem Regler zugewiesen"
+msgstr "Zugewiesen"
 
 #. module: int_workbench
 #. odoo-python
@@ -642,7 +642,7 @@ msgstr "Neue Projektordner des Dienstes in seine Bibliothek übernehmen"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__is_byte
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__is_byte
 msgid "Byte or bit"
-msgstr "Byte oder Bit"
+msgstr "Byte/Bit"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_history__raw
@@ -688,7 +688,7 @@ msgstr "CAN-Status"
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_list
 msgid "Came last"
-msgstr "Zuletzt gekommen"
+msgstr "Zuletzt"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__can_clamp
@@ -760,7 +760,7 @@ msgstr "Fähigkeit eines Reglers"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__changed_at
 msgid "Changed in the service"
-msgstr "Im Dienst geändert"
+msgstr "Geändert"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__checksum
@@ -1085,17 +1085,17 @@ msgstr "Regler kann klemmen"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__device_ref
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__device_ref
 msgid "Controller id"
-msgstr "Reglerkennung"
+msgstr "Kennung"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__controller_serial
 msgid "Controller serial number"
-msgstr "Regler-Seriennummer"
+msgstr "Regler Ser.-Nr."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__mc_sw
 msgid "Controller software"
-msgstr "Software des Reglers"
+msgstr "Regler-SW"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__controller_type_id
@@ -1165,7 +1165,7 @@ msgstr "Erstellt von"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__created_at
 msgid "Created in the service"
-msgstr "Im Dienst erstellt"
+msgstr "Erstellt"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__create_date
@@ -1266,7 +1266,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_date
 msgid "Date in version line"
-msgstr "Datum in der Versionszeile"
+msgstr "Datum (Zeile)"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
@@ -1297,7 +1297,7 @@ msgstr "Bezeichnung"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__detail
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__detail
 msgid "Detail"
-msgstr "Einzelheiten"
+msgstr "Detail"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__device_id
@@ -1343,7 +1343,7 @@ msgstr "Gerät, das über den Dienst erreicht wird"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__device_type_id
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 msgid "Device type"
-msgstr "Gerätetyp"
+msgstr "Typ"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
@@ -1466,7 +1466,7 @@ msgstr "Dokumentnummer"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__config_numbers
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__document_codes
 msgid "Document numbers"
-msgstr "Dokumentnummern"
+msgstr "Dok.-Nr."
 
 #. module: int_workbench
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__state__done
@@ -1558,19 +1558,19 @@ msgstr "Fehler"
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_fs2_record_action
 msgid "Error file records"
-msgstr "Sätze der Fehlerdateien"
+msgstr "Dateisätze"
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_fs2_file_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__fs2_file_ids
 msgid "Error files"
-msgstr "Fehlerdateien"
+msgstr "Dateien"
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_error_history_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_history_ids
 msgid "Error history"
-msgstr "Fehlerhistorie"
+msgstr "Historie"
 
 #. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_error_memory_menu
@@ -1581,13 +1581,13 @@ msgstr "Fehlerspeicher"
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_error_status_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_status_ids
 msgid "Error status"
-msgstr "Fehlerstatus"
+msgstr "Status"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error__word
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_view_search
 msgid "Error word"
-msgstr "Fehlerwort"
+msgstr "Wort"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__error_count
@@ -1712,7 +1712,7 @@ msgstr "Datei"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__file_count
 msgid "File Count"
-msgstr "Anzahl der Dateien"
+msgstr "Dateien"
 
 #. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_project_file
@@ -1722,12 +1722,12 @@ msgstr "Datei eines Projektstands"
 #. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_record_menu
 msgid "File records"
-msgstr "Sätze der Dateien"
+msgstr "Dateisätze"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__size
 msgid "File size (bytes)"
-msgstr "Dateigröße (Byte)"
+msgstr "Größe"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__filename
@@ -2114,7 +2114,7 @@ msgstr "Zuletzt angesehen"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__snapshot_at
 msgid "Last report"
-msgstr "Letzter Bericht"
+msgstr "Bericht"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
@@ -2129,7 +2129,7 @@ msgstr "Stufe"
 #. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_project_library_menu
 msgid "Library of the service"
-msgstr "Bibliothek des Dienstes"
+msgstr "Bibliothek"
 
 #. module: int_workbench
 #. odoo-python
@@ -2264,7 +2264,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_name
 msgid "Name in version line"
-msgstr "Name in der Versionszeile"
+msgstr "Name (Zeile)"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
@@ -2281,7 +2281,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__expected_names
 msgid "Names in the tables"
-msgstr "Namen in den Tabellen"
+msgstr "Tabellennamen"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__sources
@@ -2308,7 +2308,7 @@ msgstr "Neuer Wert"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__newest
 msgid "Newest"
-msgstr "Zuletzt gekommen"
+msgstr "Zuletzt"
 
 #. module: int_workbench
 #. odoo-python
@@ -2394,7 +2394,7 @@ msgstr "Zahl"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_number
 msgid "Number in version line"
-msgstr "Nummer in der Versionszeile"
+msgstr "Nummer (Zeile)"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__message_needaction_counter
@@ -2722,7 +2722,7 @@ msgstr "Projekt eines Fahrzeugs"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__project_state
 msgid "Project state"
-msgstr "Projektzustand"
+msgstr "Projekt"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__project_version_id
@@ -2840,7 +2840,7 @@ msgstr "Beauftragt"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__user_id
 msgid "Requested by"
-msgstr "Beauftragt von"
+msgstr "Von"
 
 #. module: int_workbench
 #. odoo-python
@@ -3020,7 +3020,7 @@ msgstr "Auswahl"
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_intermediate_selection_action
 msgid "Selection of the intermediate values"
-msgstr "Auswahl der Zwischenwerte"
+msgstr "Auswahl"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_wizard_view_form
@@ -3060,7 +3060,7 @@ msgstr "Ser.-Nr."
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__serial
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__serial
 msgid "Serial number"
-msgstr "Seriennummer"
+msgstr "Ser.-Nr."
 
 #. module: int_workbench
 #: model:res.groups,name:int_workbench.int_workbench_group_service
@@ -3076,7 +3076,7 @@ msgstr "Dienstadresse"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__seen_at
 msgid "Service last seen"
-msgstr "Dienst zuletzt gesehen"
+msgstr "Zuletzt gesehen"
 
 #. module: int_workbench
 #. odoo-javascript
@@ -3093,7 +3093,7 @@ msgstr "Dienst-Token"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__service_user_id
 msgid "Service user"
-msgstr "Dienstbenutzer"
+msgstr "Benutzer"
 
 #. module: int_workbench
 #. odoo-python
@@ -3150,7 +3150,7 @@ msgstr "Stand zeigen"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__size
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__size
 msgid "Size (bytes)"
-msgstr "Größe (Byte)"
+msgstr "Größe"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__snapshot
@@ -3198,7 +3198,7 @@ msgstr "Bus starten"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__started_at
 msgid "Started At"
-msgstr "Begonnen am"
+msgstr "Beginn"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__state
@@ -4262,7 +4262,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__can_write_value
 msgid "The value may be written"
-msgstr "Der Wert darf geschrieben werden"
+msgstr "Schreibbar"
 
 #. module: int_workbench
 #. odoo-python
@@ -4379,7 +4379,7 @@ msgstr "Es gibt keine Datei, die zu einem Projekt gehört."
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_list
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
 msgid "There now"
-msgstr "Steht jetzt an"
+msgstr "Aktiv"
 
 #. module: int_workbench
 #. odoo-python
@@ -4544,7 +4544,7 @@ msgstr "Variable des Projekts eines Reglers"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__signal_ids
 #: model:ir.ui.menu,name:int_workbench.int_workbench_signal_menu
 msgid "Variables of the project"
-msgstr "Variablen des Projekts"
+msgstr "Variablen"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__vehicle
@@ -4572,7 +4572,7 @@ msgstr "Stand"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__version_count
 msgid "Version Count"
-msgstr "Anzahl der Stände"
+msgstr "Stände"
 
 #. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_project
@@ -4582,7 +4582,7 @@ msgstr "Stand in der Projektbibliothek des Dienstes"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__line_version
 msgid "Version in version line"
-msgstr "Version in der Versionszeile"
+msgstr "Version (Zeile)"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_file_view_form
