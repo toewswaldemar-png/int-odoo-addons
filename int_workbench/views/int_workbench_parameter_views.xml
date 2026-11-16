@@ -11,10 +11,11 @@
                  written by write(), which lets through only these and only for those who may. The list is edited in place: the switch
                  clamps a row to the value it has or releases it, the value is typed into the cell, and a value changed in one of several
                  ticked rows can be taken over for all of them (multi_edit, as Odoo asks). -->
-            <!-- the row says how it stands: a clamped row is yellow, a row that could not be read red, a value that is out of date grey -->
+            <!-- the row says how it stands: a row that could not be read is red, a value that is out of date grey; a clamped row is tinted and
+                 has a stripe at its left, which the renderer of the list sets (parameter_list.js), not a colour of the text -->
             <list js_class="int_workbench.parameter_list" create="0" edit="1" delete="0" editable="bottom" multi_edit="1"
                   default_order="sequence, device_id, code"
-                  decoration-warning="clamped" decoration-danger="status != 'ok'" decoration-muted="stale">
+                  decoration-danger="status != 'ok'" decoration-muted="stale">
                 <header>
                     <button name="action_release" type="object" string="Release" groups="int_workbench.int_workbench_group_operator"/>
                     <!-- always at the top, next to the title, for the clamps of all rows shown -->
@@ -55,6 +56,9 @@
                        groups="!int_workbench.int_workbench_group_operator"/>
                 <field name="display_kind" optional="hide" width="140px" groups="int_workbench.int_workbench_group_operator"/>
                 <field name="display_tone" column_invisible="1"/>
+                <!-- the renderer marks a clamped row (parameter_list.js) and the strip counts them: it needs the field in the list for everybody. The
+                     others have it as a visible column (above), so the hidden one is for the operator only: a field is in the list once -->
+                <field name="clamped" column_invisible="1" groups="int_workbench.int_workbench_group_operator"/>
                 <field name="can_clamp" column_invisible="1"/>
                 <field name="analog" column_invisible="1"/>
                 <field name="device_cap_clamps" column_invisible="1"/>

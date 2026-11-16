@@ -7,6 +7,7 @@ MODULES = (
     "connection/connection_banner",
     "connection/connection_menu",
     "connection/connection_service",
+    "views/clamp_banner",
     "views/command_form",
     "views/parameter_list",
 )
@@ -38,6 +39,14 @@ class TestAssets(TransactionCase):
         css = self.env["ir.qweb"]._get_asset_bundle("web.assets_backend", css=True, js=False).css().raw.decode()
         self.assertIn(".o_int_workbench_compact .o_list_table .o_data_row > td", css)
         self.assertNotIn("\n.o_data_row > td {\n  padding-top: 0.125rem", css, "the rule starts with the class, it is not for every list")
+
+    def test_a_clamped_row_and_the_strip_of_the_clamps_are_in_the_bundle(self):
+        css = self.env["ir.qweb"]._get_asset_bundle("web.assets_backend", css=True, js=False).css().raw.decode()
+        self.assertIn(".o_int_workbench_parameter_list .o_list_table .o_data_row.o_int_workbench_clamped > td:first-child", css)
+        self.assertIn("o_int_workbench_clamped", self.script)
+        self.assertIn("int_workbench.ClampBanner", self.script)
+        self.assertIn(".o_int_workbench_parameter_list .o_list_renderer .o_int_workbench_clamp_banner", css)
+        self.assertIn("position: sticky", css.split(".o_int_workbench_clamp_banner")[1][:200], "the strip stays at the top like the headings")
 
     def test_the_selection_list_is_registered_as_a_view(self):
         self.assertIn("int_workbench.selection_list", self.script)

@@ -23,6 +23,7 @@
     <t t-name="int_workbench.ListRenderer" t-inherit="int_workbench.CompactListRenderer" t-inherit-mode="primary">
         <xpath expr="//div[hasclass('o_list_renderer')]/t[@t-if='showNoContentHelper']" position="before">
             <ConnectionBanner list="props.list"/>
+            <ClampBanner list="props.list"/>
         </xpath>
     </t>
 

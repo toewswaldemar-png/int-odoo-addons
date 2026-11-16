@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="int_workbench.ClampBanner">
+        <div t-if="isParameterList" class="o_int_workbench_clamp_banner alert mb-0 rounded-0 border-0 border-bottom d-flex align-items-center"
+             t-att-class="total ? 'alert-warning' : 'alert-light text-muted'" role="status">
+            <i class="fa me-2" t-att-class="total ? 'fa-lock' : 'fa-unlock'" role="img"/>
+            <span t-att-class="{'fw-bold': total}" t-out="message"/>
+            <button t-if="total and state.canRelease" type="button" class="btn btn-sm btn-warning ms-auto" t-on-click="releaseAll">
+                <i class="fa fa-unlock me-1" role="img"/>Release all
+            </button>
+        </div>
+    </t>
+
+</templates>

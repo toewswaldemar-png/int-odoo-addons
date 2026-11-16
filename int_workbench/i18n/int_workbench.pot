@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 08:03+0000\n"
-"PO-Revision-Date: 2026-11-16 08:03+0000\n"
+"POT-Creation-Date: 2026-11-16 08:43+0000\n"
+"PO-Revision-Date: 2026-11-16 08:43+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -776,6 +776,18 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__clamped
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 msgid "Clamped"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
+msgid "Clamped rows on %(device)s: %(count)s"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
+msgid "Clamped rows: %(devices)s"
 msgstr ""
 
 #. module: int_workbench
@@ -2096,6 +2108,12 @@ msgid "No program yet"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
+msgid "No row is clamped"
+msgstr ""
+
+#. module: int_workbench
 #: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_project_version_action
 msgid "No version yet"
 msgstr ""
@@ -2541,6 +2559,8 @@ msgid "Release"
 msgstr ""
 
 #. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.xml:0
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Release all"
 msgstr ""

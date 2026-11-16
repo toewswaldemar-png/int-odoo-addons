@@ -20,3 +20,41 @@ $int-workbench-compact-padding-y: 0.125rem;
     padding-bottom: $int-workbench-compact-padding-y;
     vertical-align: middle;
 }
+
+// A clamped row: the row is tinted by Bootstrap's table-warning (set by the renderer, parameter_list.js); here the stripe at its left and
+// the bold code and name, which are seen at a glance when the tint is not (a ticked row has the colour of the ticked rows).
+.o_int_workbench_parameter_list .o_list_table .o_data_row.o_int_workbench_clamped {
+    > td:first-child {
+        border-left: 0.25rem solid $warning;
+    }
+
+    > .o_data_cell[name="code"],
+    > .o_data_cell[name="name"] {
+        font-weight: bold;
+    }
+}
+
+// The strip of the clamps (clamp_banner.js) is as high as a row, always there, and stays at the top while the rows scroll, as the headings
+// of the columns do (Odoo makes them position: sticky in the scroll area, which is the renderer). So that the two do not cover each other the
+// headings start below the strip: both take the height from one variable. The height is fixed, so that the button in the strip, which is there
+// only while something is clamped, does not make it higher. Odoo's own variable takes the padding of the alert away.
+.o_int_workbench_parameter_list .o_list_renderer {
+    --o-int-workbench-strip-height: 2rem;
+
+    &.o_int_workbench_compact {
+        --o-int-workbench-strip-height: 1.75rem;
+    }
+
+    .o_int_workbench_clamp_banner {
+        --alert-padding-y: 0;
+        --bs-btn-padding-y: 0;
+        position: sticky;
+        top: 0;
+        z-index: calc(var(--sticky-header-zindex) + 1);
+        height: var(--o-int-workbench-strip-height);
+    }
+
+    .o_list_table thead {
+        top: var(--o-int-workbench-strip-height);
+    }
+}

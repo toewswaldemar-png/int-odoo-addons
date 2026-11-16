@@ -4673,3 +4673,55 @@ msgstr "Wert"
 msgid "Compact rows"
 msgstr "Kompakte Zeilen"
 
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.xml:0
+msgid "Clamped"
+msgstr "Geklemmt"
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
+msgid "Clamped rows on %(device)s: %(count)s"
+msgstr "Geklemmte Zeilen auf %(device)s: %(count)s"
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
+msgid "Clamped rows: %(devices)s"
+msgstr "Geklemmte Zeilen: %(devices)s"
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.xml:0
+msgid "Release all"
+msgstr "Alle lösen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+msgid "Controller"
+msgstr "Regler"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_signal.py:0
+msgid "Intermediate values"
+msgstr "Zwischenwerte"
+
+#. module: int_workbench
+#. odoo-javascript
+#: code:addons/int_workbench/static/src/views/clamp_banner.js:0
+msgid "No row is clamped"
+msgstr "Keine Zeile ist geklemmt"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
+msgid "Requested"
+msgstr "Beauftragt"
+

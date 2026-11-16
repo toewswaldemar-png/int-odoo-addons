@@ -8,6 +8,7 @@ import { ListController } from "@web/views/list/list_controller";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { listView } from "@web/views/list/list_view";
 import { ConnectionBanner } from "../connection/connection_banner";
+import { ClampBanner } from "./clamp_banner";
 
 /**
  * The first message of the bus refreshes the list at once; messages that come within this time after it (a clamp result next to a
@@ -359,10 +360,20 @@ export class CompactListRenderer extends ListRenderer {
     }
 }
 
-/** The renderer of Odoo with the strip above the table that says when the line to a controller of the rows is not good. */
+/**
+ * The renderer of Odoo with two strips above the table: when the line to a controller of the rows is not good, and when rows are clamped.
+ * A clamped row is marked in the table as well: Bootstrap's table-warning (the class that Odoo puts on a ticked row as table-info) and a
+ * class of our own for the stripe at its left and the bold name (parameter_list.scss).
+ */
 export class ParameterListRenderer extends CompactListRenderer {
     static template = "int_workbench.ListRenderer";
-    static components = { ...CompactListRenderer.components, ConnectionBanner };
+    static components = { ...CompactListRenderer.components, ConnectionBanner, ClampBanner };
+
+    getRowClass(record) {
+        const classes = super.getRowClass(record);
+        // a ticked row keeps the colour of the ticked rows; the stripe and the bold text tell that it is clamped too
+        return record.data.clamped ? `${classes} o_int_workbench_clamped${record.selected ? "" : " table-warning"}` : classes;
+    }
 }
 
 /** The selection of the intermediate values is an ordinary list that is edited: no controller of its own, only the compact rows. */
