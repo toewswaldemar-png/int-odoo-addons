@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 12:33+0000\n"
-"PO-Revision-Date: 2026-11-16 12:33+0000\n"
+"POT-Creation-Date: 2026-11-16 13:01+0000\n"
+"PO-Revision-Date: 2026-11-16 13:01+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -382,6 +382,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__address
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__address
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__operand
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Address"
 msgstr ""
 
@@ -1263,7 +1264,6 @@ msgstr ""
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_type__kind__device
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
@@ -1873,6 +1873,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__short_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__short_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__short_id
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 msgid "Id"
 msgstr ""
@@ -2034,6 +2035,11 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__snapshot_at
 msgid "Last report"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Last seen"
 msgstr ""
 
 #. module: int_workbench
@@ -2841,7 +2847,7 @@ msgstr ""
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
-msgid "Save error memory"
+msgid "Save errors"
 msgstr ""
 
 #. module: int_workbench
@@ -2941,6 +2947,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__sequence
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__sequence
 msgid "Sequence"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Serial no."
 msgstr ""
 
 #. module: int_workbench
@@ -4162,6 +4173,11 @@ msgid "Time"
 msgstr ""
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Token"
+msgstr ""
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__kind
 msgid ""
 "Told by the content: the settings file (DEF.BIN), a table, a script for the "
@@ -4197,6 +4213,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__type_name
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Type"
 msgstr ""
@@ -4254,6 +4271,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__user
 #: model:res.groups,name:int_workbench.int_workbench_group_user
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "User"
 msgstr ""

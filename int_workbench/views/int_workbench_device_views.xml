@@ -36,7 +36,7 @@
                             groups="int_workbench.int_workbench_group_technician" invisible="not cap_can_control"/>
                     <button name="action_open_console" type="object" string="Console" icon="fa-terminal"
                             groups="int_workbench.int_workbench_group_technician" invisible="not cap_console"/>
-                    <button name="action_save_error_files" type="object" string="Save error memory" icon="fa-save"
+                    <button name="action_save_error_files" type="object" string="Save errors" icon="fa-save"
                             groups="int_workbench.int_workbench_group_technician" invisible="not cap_error_files"/>
                     <button name="action_reset" type="object" string="Restart" icon="fa-power-off"
                             groups="int_workbench.int_workbench_group_technician" invisible="not cap_console"
@@ -69,20 +69,20 @@
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="device_type_id" options="{'no_create': True}"/>
-                            <field name="serial"/>
-                            <field name="project_version_id" options="{'no_create': True}"/>
-                            <field name="project_state" widget="badge" decoration-success="project_state == 'same'"
+                            <field name="device_type_id" string="Type" options="{'no_create': True}"/>
+                            <field name="serial" string="Serial no."/>
+                            <field name="project_version_id" string="Project" options="{'no_create': True}"/>
+                            <field name="project_state" string="State" widget="badge" decoration-success="project_state == 'same'"
                                    decoration-warning="project_state == 'differs'" decoration-muted="project_state in ('none', 'unknown')"/>
                         </group>
                         <group>
-                            <field name="controller_type_id" options="{'no_create': True}"/>
-                            <field name="controller_serial"/>
+                            <field name="controller_type_id" string="Controller" options="{'no_create': True}"/>
+                            <field name="controller_serial" string="Serial no."/>
                             <field name="family_id"/>
                             <field name="connection_state" widget="badge" decoration-success="connection_state == 'connected'"
                                    decoration-warning="connection_state in ('disconnected', 'silent')"/>
                             <field name="clock_local_time" invisible="not clock_local_time"/>
-                            <field name="can_count" invisible="not can_count"/>
+                            <field name="can_count" string="CAN modules" invisible="not can_count"/>
                         </group>
                     </group>
                     <field name="active" invisible="1"/>
@@ -120,13 +120,13 @@
                         <page string="Service" name="service">
                             <group>
                                 <group>
-                                    <field name="device_ref"/>
-                                    <field name="service_user_id"/>
-                                    <field name="service_url"/>
-                                    <field name="service_token" password="True" groups="int_workbench.int_workbench_group_manager"/>
+                                    <field name="device_ref" string="Id"/>
+                                    <field name="service_user_id" string="User"/>
+                                    <field name="service_url" string="Address"/>
+                                    <field name="service_token" string="Token" password="True" groups="int_workbench.int_workbench_group_manager"/>
                                 </group>
                                 <group>
-                                    <field name="seen_at"/>
+                                    <field name="seen_at" string="Last seen"/>
                                     <field name="snapshot_at"/>
                                     <field name="viewer_at"/>
                                     <field name="clock_read_at" invisible="not clock_local_time"/>

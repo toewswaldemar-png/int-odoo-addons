@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 12:33+0000\n"
-"PO-Revision-Date: 2026-11-16 12:33+0000\n"
+"POT-Creation-Date: 2026-11-16 13:00+0000\n"
+"PO-Revision-Date: 2026-11-16 13:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -410,6 +410,7 @@ msgstr "Im Dienst hinzugefügt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__address
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__address
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__operand
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Address"
 msgstr "Adresse"
 
@@ -1321,7 +1322,6 @@ msgstr "Einzelheiten"
 #: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_type__kind__device
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
-#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_history_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_error_status_view_search
@@ -1355,7 +1355,9 @@ msgstr "Gerätetypen"
 msgid ""
 "Device: what a technician tests (for example an air conditioner). "
 "Controller: the control unit inside it."
-msgstr "Gerät: Was ein Techniker prüft (zum Beispiel ein Klimagerät). Regler: Das Steuergerät darin."
+msgstr ""
+"Gerät: Was ein Techniker prüft (zum Beispiel ein Klimagerät). Regler: Das "
+"Steuergerät darin."
 
 #. module: int_workbench
 #. odoo-javascript
@@ -1868,7 +1870,9 @@ msgstr "Wie viele Fehler jetzt aktiv sind."
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__command_count
 msgid ""
 "How many requests (clamps, console, clock, ...) were made for this device."
-msgstr "Wie viele Aufträge (Klemmen, Konsole, Uhr, ...) für dieses Gerät gestellt wurden."
+msgstr ""
+"Wie viele Aufträge (Klemmen, Konsole, Uhr, ...) für dieses Gerät gestellt "
+"wurden."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__parameter_count
@@ -1942,6 +1946,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project__short_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__short_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__short_id
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 msgid "Id"
 msgstr "Kennung"
@@ -2110,6 +2115,11 @@ msgstr "Zuletzt angesehen"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__snapshot_at
 msgid "Last report"
 msgstr "Letzter Bericht"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Last seen"
+msgstr "Zuletzt gesehen"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__level
@@ -2936,8 +2946,8 @@ msgstr "Speichern"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
-msgid "Save error memory"
-msgstr "Fehlerspeicher speichern"
+msgid "Save errors"
+msgstr "Fehler sichern"
 
 #. module: int_workbench
 #. odoo-python
@@ -3040,6 +3050,11 @@ msgstr "Gesendet am"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__sequence
 msgid "Sequence"
 msgstr "Reihenfolge"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Serial no."
+msgstr "Ser.-Nr."
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__serial
@@ -3411,7 +3426,9 @@ msgstr "Der Inhalt von %s ist kein Base64."
 msgid ""
 "The control unit inside the device, for example 11HA35D. It stays when the "
 "controller is replaced by one of the same type."
-msgstr "Das Steuergerät im Gerät, zum Beispiel 11HA35D. Es bleibt gleich, wenn der Regler durch einen vom gleichen Typ ersetzt wird."
+msgstr ""
+"Das Steuergerät im Gerät, zum Beispiel 11HA35D. Es bleibt gleich, wenn der "
+"Regler durch einen vom gleichen Typ ersetzt wird."
 
 #. module: int_workbench
 #. odoo-python
@@ -3569,7 +3586,8 @@ msgstr "%s ist kein Familienname."
 msgid ""
 "The family of controllers that serves this type. The families are reported "
 "by the services."
-msgstr "Die Reglerfamilie, die diesen Typ bedient. Die Familien melden die Dienste."
+msgstr ""
+"Die Reglerfamilie, die diesen Typ bedient. Die Familien melden die Dienste."
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
@@ -3823,7 +3841,10 @@ msgid ""
 "The number of the type (article number with revision), for example "
 "3EGM064970R0001. It is the same for every piece of the type; the serial "
 "number is a field of the device."
-msgstr "Die Nummer des Typs (Artikelnummer mit Revision), zum Beispiel 3EGM064970R0001. Sie ist für jedes Stück des Typs gleich; die Seriennummer ist ein Feld des Geräts."
+msgstr ""
+"Die Nummer des Typs (Artikelnummer mit Revision), zum Beispiel "
+"3EGM064970R0001. Sie ist für jedes Stück des Typs gleich; die Seriennummer "
+"ist ein Feld des Geräts."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_wizard__wagon
@@ -4316,7 +4337,10 @@ msgid ""
 "The version that a device of this type gets when it is given the type and "
 "has no project version yet. Changing it later does not change the devices "
 "that have one."
-msgstr "Der Stand, den ein Gerät dieses Typs bekommt, wenn es den Typ erhält und noch keinen Projektstand hat. Eine spätere Änderung ändert keine Geräte, die schon einen haben."
+msgstr ""
+"Der Stand, den ein Gerät dieses Typs bekommt, wenn es den Typ erhält und "
+"noch keinen Projektstand hat. Eine spätere Änderung ändert keine Geräte, die"
+" schon einen haben."
 
 #. module: int_workbench
 #. odoo-python
@@ -4375,6 +4399,11 @@ msgid "Time"
 msgstr "Zeit"
 
 #. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Token"
+msgstr "Token"
+
+#. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_file__kind
 msgid ""
 "Told by the content: the settings file (DEF.BIN), a table, a script for the "
@@ -4417,6 +4446,7 @@ msgstr "Transporte"
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__type_name
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Type"
 msgstr "Typ"
@@ -4474,6 +4504,7 @@ msgstr "Hochgeladen von %s"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_log__user
 #: model:res.groups,name:int_workbench.int_workbench_group_user
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "User"
 msgstr "Benutzer"
@@ -4718,7 +4749,9 @@ msgstr ""
 msgid ""
 "What this device is, for example AC3. The technician chooses the device; the"
 " controller inside it is a detail of it."
-msgstr "Was dieses Gerät ist, zum Beispiel AC3. Der Techniker wählt das Gerät; der Regler darin ist ein Teil davon."
+msgstr ""
+"Was dieses Gerät ist, zum Beispiel AC3. Der Techniker wählt das Gerät; der "
+"Regler darin ist ein Teil davon."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_log__input
