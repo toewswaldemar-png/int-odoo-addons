@@ -216,6 +216,9 @@ class IntWorkbenchDevice(models.Model):
     signal_ids = fields.One2many("int.workbench.signal", "device_id", string="Variables of the project")
     intermediate_version = fields.Integer(readonly=True, copy=False, default=0, help="Counts the changes of the selection of intermediate values. The service says in every call which version it has, and Odoo hands it the rows when that is not this one.")
     fs2_file_ids = fields.One2many("int.workbench.fs2.file", "device_id", string="Error files")
+    parameter_count = fields.Integer(compute="_compute_counts", string="Process values", help="How many rows of process values the controller has.")
+    error_count = fields.Integer(compute="_compute_counts", string="Errors", help="How many errors are active now.")
+    command_count = fields.Integer(compute="_compute_counts", string="Requests", help="How many requests (clamps, console, clock, ...) were made for this device.")
     clock_local_time = fields.Char(compute="_compute_clock", string="Clock of the controller", help="Date and time the controller shows, as the service read them (no time zone).")
     clock_read_at = fields.Char(compute="_compute_clock", string="Clock read at")
     clock_write_enabled = fields.Boolean(compute="_compute_clock", string="The clock may be set")
@@ -239,6 +242,15 @@ class IntWorkbenchDevice(models.Model):
             device.report_age = (now - device.snapshot_at).total_seconds() if device.snapshot_at else -1.0
             device.seen_age = (now - device.seen_at).total_seconds() if device.seen_at else -1.0
             device.watched = bool(device.viewer_at and now - device.viewer_at <= WATCHED_FOR)
+
+    @api.depends()
+    def _compute_counts(self):
+        """Count what the buttons of the form open: the rows are many and change with every report, so they are counted, not loaded."""
+        for field, model in (("parameter_count", "int.workbench.parameter"), ("error_count", "int.workbench.error"), ("command_count", "int.workbench.command")):
+            groups = self.env[model]._read_group([("device_id", "in", self.ids)], ["device_id"], ["__count"])
+            counts = {device.id: count for device, count in groups}
+            for device in self:
+                device[field] = counts.get(device.id, 0)
 
     @api.depends("snapshot")
     def _compute_clock(self):
@@ -831,6 +843,26 @@ class IntWorkbenchDevice(models.Model):
             "target": "new",
             "context": {"default_device_id": self.id},
         }
+
+    def _open_menu_list(self, xmlid, name):
+        """Return the list that the menu opens (with its live behaviour), for the rows of this device only."""
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id(xmlid)
+        action["name"] = f"{self.name}: {name}"
+        action["domain"] = [("device_id", "=", self.id)]
+        return action
+
+    def action_open_parameters(self):
+        """Open the process values and clamps of this device."""
+        return self._open_menu_list("int_workbench.int_workbench_parameter_action", self.env._("Process values"))
+
+    def action_open_errors(self):
+        """Open the active errors of this device."""
+        return self._open_menu_list("int_workbench.int_workbench_error_action", self.env._("Current errors"))
+
+    def action_open_commands(self):
+        """Open the log of the requests made for this device: who clamped, set the clock, sent a command, and how it ended."""
+        return self._open_menu_list("int_workbench.int_workbench_command_action", self.env._("Requests"))
 
     def action_set_clock(self):
         """Open the dialog that sets the clock of the controller."""

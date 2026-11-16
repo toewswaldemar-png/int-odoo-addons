@@ -52,6 +52,30 @@ class TestIntWorkbenchDevice(TransactionCase):
         with self.assertRaises(IntegrityError), mute_logger("odoo.sql_db"), self.cr.savepoint():
             self.Device.create({"name": "Bench", "service_user_id": self.service.id})
 
+    def test_the_buttons_open_the_lists_of_this_device_and_count_their_rows(self):
+        other = self.Device.create({"name": "Other bench", "device_ref": "other", "service_user_id": self.service.id})
+        for device, codes in ((self.device, ("0001", "0002", "0003")), (other, ("0001",))):
+            for code in codes:
+                self.env["int.workbench.parameter"].create({"device_id": device.id, "code": code})
+        self.env["int.workbench.error"].create({"device_id": self.device.id, "word": "F1", "bit": 3})
+        self.env["int.workbench.command"].create({"device_id": self.device.id, "user_id": self.user.id, "code": "0001", "action": "set", "value": 1})
+        device = self.device.with_user(self.user)
+        self.assertEqual((device.parameter_count, device.error_count, device.command_count), (3, 1, 1))
+        self.assertEqual((other.parameter_count, other.error_count, other.command_count), (1, 0, 0))
+        for method, model, view_type in (
+            ("action_open_parameters", "int.workbench.parameter", "list"),
+            ("action_open_errors", "int.workbench.error", "list"),
+            ("action_open_commands", "int.workbench.command", "list"),
+        ):
+            with self.subTest(method):
+                action = getattr(device, method)()
+                self.assertEqual((action["type"], action["res_model"]), ("ir.actions.act_window", model))
+                self.assertEqual(action["domain"], [("device_id", "=", self.device.id)])
+                self.assertTrue(action["name"].startswith("Bench: "))
+                self.assertIn(view_type, action["view_mode"])
+                rows = self.env[model].with_user(self.user).search(action["domain"])
+                self.assertTrue(rows and rows.device_id == self.device, "only the rows of this device")
+
     def test_a_user_reads_but_does_not_write(self):
         device = self.device.with_user(self.user)
         self.assertEqual(device.device_ref, "main")

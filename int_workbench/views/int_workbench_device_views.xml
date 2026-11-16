@@ -52,6 +52,18 @@
                             groups="int_workbench.int_workbench_group_manager" invisible="not service_url or not cap_project_files"/>
                 </header>
                 <sheet>
+                    <!-- the lists of this device: the lists of the menu (live, with their clamps) for the rows of this device only -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_parameters" type="object" class="oe_stat_button" icon="fa-sliders" invisible="not id">
+                            <field name="parameter_count" widget="statinfo" string="Process values"/>
+                        </button>
+                        <button name="action_open_errors" type="object" class="oe_stat_button" icon="fa-exclamation-triangle" invisible="not id">
+                            <field name="error_count" widget="statinfo" string="Errors"/>
+                        </button>
+                        <button name="action_open_commands" type="object" class="oe_stat_button" icon="fa-history" invisible="not id">
+                            <field name="command_count" widget="statinfo" string="Requests"/>
+                        </button>
+                    </div>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                     <group>
                         <group string="Device">
