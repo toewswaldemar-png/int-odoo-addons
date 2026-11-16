@@ -65,29 +65,24 @@
                         </button>
                     </div>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <!-- one block, two columns, no headings: what a technician needs at a glance. The settings of the service are on a page -->
                     <group>
-                        <group string="Device">
+                        <group>
                             <field name="name"/>
                             <field name="device_type_id" options="{'no_create': True}"/>
                             <field name="serial"/>
+                            <field name="project_version_id" options="{'no_create': True}"/>
+                            <field name="project_state" widget="badge" decoration-success="project_state == 'same'"
+                                   decoration-warning="project_state == 'differs'" decoration-muted="project_state in ('none', 'unknown')"/>
                         </group>
-                        <group string="Controller">
+                        <group>
                             <field name="controller_type_id" options="{'no_create': True}"/>
                             <field name="controller_serial"/>
                             <field name="family_id"/>
-                        </group>
-                    </group>
-                    <group string="Service">
-                        <group>
-                            <field name="device_ref"/>
-                            <field name="service_user_id"/>
-                        </group>
-                        <group>
-                            <field name="service_url"/>
-                            <field name="service_token" password="True" groups="int_workbench.int_workbench_group_manager"/>
-                            <field name="seen_at"/>
-                            <field name="snapshot_at"/>
-                            <field name="viewer_at"/>
+                            <field name="connection_state" widget="badge" decoration-success="connection_state == 'connected'"
+                                   decoration-warning="connection_state in ('disconnected', 'silent')"/>
+                            <field name="clock_local_time" invisible="not clock_local_time"/>
+                            <field name="can_count" invisible="not can_count"/>
                         </group>
                     </group>
                     <field name="active" invisible="1"/>
@@ -97,19 +92,6 @@
                     <field name="cap_can_control" invisible="1"/>
                     <field name="cap_error_files" invisible="1"/>
                     <field name="cap_project_files" invisible="1"/>
-                    <group string="State">
-                        <field name="connection_state" widget="badge" decoration-success="connection_state == 'connected'"
-                               decoration-warning="connection_state in ('disconnected', 'silent')"/>
-                        <field name="clock_local_time" invisible="not clock_local_time"/>
-                        <field name="clock_read_at" invisible="not clock_local_time"/>
-                        <field name="can_count" invisible="not can_count"/>
-                    </group>
-                    <group string="Project">
-                        <field name="project_version_id" options="{'no_create': True}"/>
-                        <field name="project_state" widget="badge" decoration-success="project_state == 'same'"
-                               decoration-warning="project_state == 'differs'" decoration-muted="project_state in ('none', 'unknown')"/>
-                        <field name="project_active_checksum" invisible="not project_active_checksum"/>
-                    </group>
                     <notebook>
                         <page string="Capabilities" name="capabilities">
                             <field name="capability_ids" widget="many2many_tags" readonly="1"/>
@@ -134,6 +116,23 @@
                                     <field name="text"/>
                                 </list>
                             </field>
+                        </page>
+                        <page string="Service" name="service">
+                            <group>
+                                <group>
+                                    <field name="device_ref"/>
+                                    <field name="service_user_id"/>
+                                    <field name="service_url"/>
+                                    <field name="service_token" password="True" groups="int_workbench.int_workbench_group_manager"/>
+                                </group>
+                                <group>
+                                    <field name="seen_at"/>
+                                    <field name="snapshot_at"/>
+                                    <field name="viewer_at"/>
+                                    <field name="clock_read_at" invisible="not clock_local_time"/>
+                                    <field name="project_active_checksum" invisible="not project_active_checksum"/>
+                                </group>
+                            </group>
                         </page>
                         <page string="Note" name="note">
                             <field name="note" placeholder="Note"/>
