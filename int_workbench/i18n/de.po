@@ -4302,3 +4302,367 @@ msgstr "abgewiesen"
 #: model:ir.model,name:int_workbench.model_ir_websocket
 msgid "websocket message handling"
 msgstr "Websocket-Nachrichtbearbeitung"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_signal.py:0
+msgid "%(added)s added, %(skipped)s were there already."
+msgstr "%(added)s hinzugefügt, %(skipped)s waren schon da."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
+msgid "%(name)s of %(device)s is being written."
+msgstr "%(name)s von %(device)s wird geschrieben."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "%s is not an address of the controller."
+msgstr "%s ist keine Adresse des Reglers."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
+msgid "%s is not an address. It is the letters of the memory area, a number and for a bit a point and the bit number, for example M0448 or I0000.3."
+msgstr "%s ist keine Adresse. Sie besteht aus den Buchstaben des Speicherbereichs, einer Zahl und bei einem Bit aus Punkt und Bitnummer, zum Beispiel M0448 oder I0000.3."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__is_byte
+msgid "A byte or a bit is read with DB and written with JB, a word with DW and JW."
+msgstr "Ein Byte oder Bit wird mit DB gelesen und mit JB geschrieben, ein Wort mit DW und JW."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__is_byte
+msgid "A byte or a bit is read with DB, a word with DW."
+msgstr "Ein Byte oder Bit wird mit DB gelesen, ein Wort mit DW."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
+msgid "A controller can have up to %s intermediate values."
+msgstr "Ein Regler kann bis zu %s Zwischenwerte haben."
+
+#. module: int_workbench
+#: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_intermediate_selection_action
+msgid "Add a line for a value of your own (a name and an address), or use \"Choose values\" in the list of the intermediate values to take them from the variable list of the project."
+msgstr "Fügen Sie eine Zeile für einen eigenen Wert hinzu (ein Name und eine Adresse), oder nehmen Sie die Werte mit „Werte wählen“ in der Liste der Zwischenwerte aus der Variablenliste des Projekts."
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_list
+msgid "Add to the intermediate values"
+msgstr "Zu den Zwischenwerten hinzufügen"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__b
+msgid "Bits"
+msgstr "Bits"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__is_byte
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__is_byte
+msgid "Byte or bit"
+msgstr "Byte oder Bit"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+msgid "Bytes and bits"
+msgstr "Bytes und Bits"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__cap_intermediate_write
+msgid "Can write intermediate values"
+msgstr "Kann Zwischenwerte schreiben"
+
+#. module: int_workbench
+#: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_intermediate_selection_action
+msgid "Choose the intermediate values to read"
+msgstr "Zwischenwerte zum Lesen wählen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Choose the values from the variable list of the project"
+msgstr "Die Werte aus der Variablenliste des Projekts wählen"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Choose values"
+msgstr "Werte wählen"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__chosen
+msgid "Chosen"
+msgstr "Gewählt"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__intermediate_version
+msgid "Counts the changes of the selection of intermediate values. The service says in every call which version it has, and Odoo hands it the rows when that is not this one."
+msgstr "Zählt die Änderungen der Auswahl der Zwischenwerte. Der Dienst nennt in jedem Aufruf seine Version, und Odoo gibt ihm die Zeilen, wenn es nicht diese ist."
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
+msgid "Edit the value"
+msgstr "Wert bearbeiten"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__h
+msgid "Hex"
+msgstr "Hex"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__format
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__format
+msgid "How the value is shown and typed: bits, a number, a percent value (tenths for the 11HA30, a hundredth of $1000 for other controllers) or hex. The original has the one choice for the whole screen; here every row has its own."
+msgstr "Wie der Wert angezeigt und eingegeben wird: Bits, eine Zahl, ein Prozentwert (Zehntel beim 11HA30, ein Hundertstel von $1000 bei anderen Reglern) oder Hex. Das Original hat die eine Wahl für den ganzen Bildschirm; hier hat jede Zeile ihre eigene."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__text
+msgid "In the format of the row: bits (blanks and points may be typed), a number ($ before hex digits), a percent value or hex digits. Nothing at all is a zero. What does not fit is cut to the low byte or word."
+msgstr "Im Format der Zeile: Bits (Leerzeichen und Punkte dürfen mit eingegeben werden), eine Zahl ($ vor Hexziffern), ein Prozentwert oder Hexziffern. Nichts einzugeben ergibt eine Null. Was nicht passt, wird auf das untere Byte oder Wort gekürzt."
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__intermediate_version
+msgid "Intermediate Version"
+msgstr "Version der Zwischenwerte"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+msgid "Name or address"
+msgstr "Name oder Adresse"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__text
+msgid "New value"
+msgstr "Neuer Wert"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__current
+msgid "Now"
+msgstr "Jetzt"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__p
+msgid "Percent"
+msgstr "Prozent"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_signal.py:0
+msgid "Select the variables to add."
+msgstr "Wählen Sie die Variablen aus, die hinzugefügt werden sollen."
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_intermediate_selection_menu
+msgid "Selection"
+msgstr "Auswahl"
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_intermediate_selection_action
+msgid "Selection of the intermediate values"
+msgstr "Auswahl der Zwischenwerte"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_selection
+msgid "Sort like the variable list"
+msgstr "Wie die Variablenliste sortieren"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
+msgid "The controller %s may not be written to in this way."
+msgstr "In den Regler %s darf auf diese Weise nicht geschrieben werden."
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_intermediate_device_name_format_unique
+msgid "The controller has this value in this format already."
+msgstr "Der Regler hat diesen Wert in diesem Format schon."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_intermediate.py:0
+msgid "The name must be 1 to %s characters."
+msgstr "Der Name muss 1 bis %s Zeichen lang sein."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The name of the value must be 1 to %s characters."
+msgstr "Der Name des Wertes muss 1 bis %s Zeichen lang sein."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__sequence
+msgid "The order in which the service reads the rows and in which they are shown."
+msgstr "Die Reihenfolge, in der der Dienst die Zeilen liest und in der sie angezeigt werden."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__sequence
+msgid "The place in the variable list of the project, counted from 1."
+msgstr "Der Platz in der Variablenliste des Projekts, ab 1 gezählt."
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
+msgid ""
+"The service turns the text into a number by the format of the row and writes it to the address (JB for a byte or a bit, JW for a word),\n"
+"                    then reads the address again. Nothing typed is a zero."
+msgstr ""
+"Der Dienst macht aus dem Text nach dem Format der Zeile eine Zahl und schreibt sie an die Adresse (JB für ein Byte oder Bit, JW für ein Wort),\n"
+"                    dann liest er die Adresse noch einmal. Nichts einzugeben ergibt eine Null."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__name
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__name
+msgid "The signal name of the project (P1011), or a name of your own for a row that is not in the variable list."
+msgstr "Der Signalname des Projekts (P1011) oder ein eigener Name für eine Zeile, die nicht in der Variablenliste steht."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__name
+msgid "The signal name of the project, for example P1011."
+msgstr "Der Signalname des Projekts, zum Beispiel P1011."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The text must be one line of up to %s characters."
+msgstr "Der Text muss eine Zeile mit bis zu %s Zeichen sein."
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__can_write_value
+msgid "The value may be written"
+msgstr "Der Wert darf geschrieben werden"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_command.py:0
+msgid "The value needs its kind (byte or word) and its format."
+msgstr "Der Wert braucht seine Art (Byte oder Wort) und sein Format."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__chosen
+msgid "The variable is among the intermediate values of the controller."
+msgstr "Die Variable gehört zu den Zwischenwerten des Reglers."
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_intermediate_values_menu
+msgid "Values"
+msgstr "Werte"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_signal
+msgid "Variable of the project of a controller"
+msgstr "Variable des Projekts eines Reglers"
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_signal_action
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__signal_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_signal_menu
+msgid "Variables of the project"
+msgstr "Variablen des Projekts"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_signal__operand
+msgid "Where the controller keeps it, for example M0448 or I0000.0."
+msgstr "Wo der Regler sie ablegt, zum Beispiel M0448 oder I0000.0."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate__address
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_intermediate_wizard__address
+msgid "Where the controller keeps the value, for example M0448 or I0000.0. For a row of your own the address is the point."
+msgstr "Wo der Regler den Wert ablegt, zum Beispiel M0448 oder I0000.0. Bei einer eigenen Zeile ist die Adresse die Hauptsache."
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+msgid "Words"
+msgstr "Wörter"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
+msgid "Write"
+msgstr "Schreiben"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Write a value into the controller"
+msgstr "Einen Wert in den Regler schreiben"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_command__action__intermediate_write
+msgid "Write an intermediate value"
+msgstr "Einen Zwischenwert schreiben"
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_intermediate_wizard
+msgid "Write an intermediate value into a controller"
+msgstr "Einen Zwischenwert in einen Regler schreiben"
+
+#. module: int_workbench
+#: model:int.workbench.capability,name:int_workbench.int_workbench_capability_intermediate_write
+msgid "Write intermediate values"
+msgstr "Zwischenwerte schreiben"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_wizard_view_form
+msgid "Write this value into the controller?"
+msgstr "Diesen Wert in den Regler schreiben?"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__address
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__operand
+msgid "Address"
+msgstr "Adresse"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__device_id
+msgid "Controller"
+msgstr "Regler"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__create_uid
+msgid "Created by"
+msgstr "Erstellt von"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__create_date
+msgid "Created on"
+msgstr "Erstellt am"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__display_name
+msgid "Display Name"
+msgstr "Anzeigename"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__write_uid
+msgid "Last Updated by"
+msgstr "Zuletzt aktualisiert von"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__write_date
+msgid "Last Updated on"
+msgstr "Zuletzt aktualisiert am"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_intermediate__format__z
+msgid "Number"
+msgstr "Zahl"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__sequence
+msgid "Sequence"
+msgstr "Reihenfolge"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__intermediate_id
+msgid "Value"
+msgstr "Wert"

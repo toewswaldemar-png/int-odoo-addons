@@ -1,8 +1,6 @@
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
-from ..models.int_workbench_intermediate import FORMATS
-
 
 class IntWorkbenchIntermediateWizard(models.TransientModel):
     _name = "int.workbench.intermediate.wizard"
@@ -12,7 +10,7 @@ class IntWorkbenchIntermediateWizard(models.TransientModel):
     device_id = fields.Many2one(related="intermediate_id.device_id", string="Controller")
     name = fields.Char(related="intermediate_id.name")
     address = fields.Char(related="intermediate_id.address")
-    format = fields.Selection(FORMATS, related="intermediate_id.format")
+    format = fields.Selection(related="intermediate_id.format")
     current = fields.Char(compute="_compute_current", string="Now")
     text = fields.Char(
         string="New value",
