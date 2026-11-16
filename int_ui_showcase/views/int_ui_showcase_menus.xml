@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="int_ui_showcase_ui_components_action" model="ir.actions.client">
+        <field name="name">UI Components</field>
+        <field name="tag">int_ui_showcase.ui_components</field>
+    </record>
+
+    <record id="int_ui_showcase_portal_action" model="ir.actions.act_url">
+        <field name="name">Portal Page</field>
+        <field name="url">/my/ui-showcase</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="int_ui_showcase_menu_root" name="UI Showcase" sequence="900"/>
+    <menuitem id="int_ui_showcase_menu_records" name="Records" parent="int_ui_showcase_menu_root" action="int_ui_showcase_action" sequence="10"/>
+    <menuitem id="int_ui_showcase_menu_components" name="UI Components" parent="int_ui_showcase_menu_root" action="int_ui_showcase_ui_components_action" sequence="20"/>
+    <menuitem id="int_ui_showcase_menu_portal" name="Portal Page" parent="int_ui_showcase_menu_root" action="int_ui_showcase_portal_action" sequence="30"/>
+    <menuitem id="int_ui_showcase_menu_config" name="Configuration" parent="int_ui_showcase_menu_root" sequence="90"/>
+    <menuitem id="int_ui_showcase_menu_category" name="Categories" parent="int_ui_showcase_menu_config" action="int_ui_showcase_category_action" sequence="10"/>
+    <menuitem id="int_ui_showcase_menu_stage" name="Stages" parent="int_ui_showcase_menu_config" action="int_ui_showcase_stage_action" sequence="15"/>
+    <menuitem id="int_ui_showcase_menu_settings" name="Settings" parent="int_ui_showcase_menu_config" action="int_ui_showcase_config_settings_action" sequence="90"/>
+    <menuitem id="int_ui_showcase_menu_tag" name="Tags" parent="int_ui_showcase_menu_config" action="int_ui_showcase_tag_action" sequence="20"/>
+
+</odoo>

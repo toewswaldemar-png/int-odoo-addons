@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_int_ui_showcase_user,int.ui.showcase user,model_int_ui_showcase,base.group_user,1,1,1,1
+access_int_ui_showcase_tag_user,int.ui.showcase.tag user,model_int_ui_showcase_tag,base.group_user,1,1,1,1
+access_int_ui_showcase_category_user,int.ui.showcase.category user,model_int_ui_showcase_category,base.group_user,1,1,1,1
+access_int_ui_showcase_line_user,int.ui.showcase.line user,model_int_ui_showcase_line,base.group_user,1,1,1,1
+access_int_ui_showcase_wizard_user,int.ui.showcase.wizard user,model_int_ui_showcase_wizard,base.group_user,1,1,1,1
+access_int_ui_showcase_stage_user,int.ui.showcase.stage user,model_int_ui_showcase_stage,base.group_user,1,1,1,1

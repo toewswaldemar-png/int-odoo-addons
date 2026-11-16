@@ -1,0 +1,704 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- === HELPERS === -->
+    <t t-name="int_ui_showcase.DemoPopover">
+        <div class="p-3" style="min-width: 12rem;">
+            <b>Popover</b>
+            <div t-out="props.text"/>
+        </div>
+    </t>
+
+    <t t-name="int_ui_showcase.DemoDialog">
+        <Dialog size="props.size or 'md'" title="'Custom dialog'">
+            <p>Dialog content. Size: <b t-out="props.size or 'md'"/>.</p>
+            <input type="text" class="form-control" placeholder="Input inside a dialog"/>
+            <t t-set-slot="footer">
+                <button class="btn btn-primary" t-on-click="props.close">Save</button>
+                <button class="btn btn-secondary" t-on-click="props.close">Discard</button>
+            </t>
+        </Dialog>
+    </t>
+
+    <!-- === BOOTSTRAP === -->
+    <t t-name="int_ui_showcase.BootstrapPage">
+        <div class="d-flex flex-column gap-4 p-3">
+
+            <section>
+                <h3>Typography</h3>
+                <h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3><h4>Heading 4</h4><h5>Heading 5</h5><h6>Heading 6</h6>
+                <p class="lead">Lead paragraph.</p>
+                <p>Normal text with <a href="#">a link</a>, <strong>strong</strong>, <em>emphasis</em>, <small>small</small>, <mark>mark</mark>, <del>deleted</del>, <code>code</code> and <kbd>Ctrl</kbd>+<kbd>K</kbd>.</p>
+                <blockquote class="blockquote"><p>A quotation.</p><footer class="blockquote-footer">Someone</footer></blockquote>
+            </section>
+
+            <section>
+                <h3>Colors</h3>
+                <div class="d-flex flex-wrap gap-2">
+                    <span t-foreach="variants" t-as="variant" t-key="variant" t-attf-class="p-3 rounded text-bg-{{ variant }}"><t t-out="variant"/></span>
+                </div>
+                <div class="d-flex flex-wrap gap-3 mt-2">
+                    <span t-foreach="variants" t-as="variant" t-key="variant" t-attf-class="text-{{ variant }}"><t t-out="variant"/></span>
+                </div>
+            </section>
+
+            <section>
+                <h3>Buttons</h3>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <button t-foreach="variants" t-as="variant" t-key="variant" t-attf-class="btn btn-{{ variant }}"><t t-out="variant"/></button>
+                    <button class="btn btn-link">Link</button>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <button t-foreach="variants" t-as="variant" t-key="variant" t-attf-class="btn btn-outline-{{ variant }}"><t t-out="variant"/></button>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                    <button class="btn btn-primary btn-sm">Small</button>
+                    <button class="btn btn-primary">Normal</button>
+                    <button class="btn btn-primary btn-lg">Large</button>
+                    <button class="btn btn-primary" disabled="disabled">Disabled</button>
+                    <button class="btn btn-primary active">Active</button>
+                    <button class="btn btn-primary"><i class="fa fa-star me-1"/>With icon</button>
+                </div>
+                <div class="btn-group" role="group" aria-label="Button group">
+                    <button class="btn btn-secondary">Left</button>
+                    <button class="btn btn-secondary">Middle</button>
+                    <button class="btn btn-secondary">Right</button>
+                </div>
+            </section>
+
+            <section>
+                <h3>Badges</h3>
+                <div class="d-flex flex-wrap gap-2">
+                    <span t-foreach="variants" t-as="variant" t-key="variant" t-attf-class="badge text-bg-{{ variant }}"><t t-out="variant"/></span>
+                    <span class="badge rounded-pill text-bg-primary">Pill</span>
+                </div>
+            </section>
+
+            <section>
+                <h3>Alerts</h3>
+                <div t-foreach="variants" t-as="variant" t-key="variant" t-attf-class="alert alert-{{ variant }} py-2" role="alert"><t t-out="variant"/> alert with <a href="#" class="alert-link">a link</a></div>
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    Dismissible alert
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"/>
+                </div>
+            </section>
+
+            <section>
+                <h3>Cards</h3>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">Header</div>
+                            <div class="card-body">
+                                <h5 class="card-title">Card title</h5>
+                                <p class="card-text">Some text.</p>
+                                <a href="#" class="btn btn-primary">Go</a>
+                            </div>
+                            <div class="card-footer text-muted">Footer</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-bg-primary">
+                            <div class="card-body">Colored card</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <ul class="list-group">
+                            <li class="list-group-item active">Active item</li>
+                            <li class="list-group-item">Item</li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">With badge <span class="badge text-bg-primary rounded-pill">3</span></li>
+                            <li class="list-group-item disabled">Disabled</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h3>Navigation</h3>
+                <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item"><a class="nav-link active" href="#">Active</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+                    <li class="nav-item"><a class="nav-link disabled" href="#">Disabled</a></li>
+                </ul>
+                <ul class="nav nav-pills mb-3">
+                    <li class="nav-item"><a class="nav-link active" href="#">Active</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+                </ul>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item"><a href="#">Library</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Data</li>
+                    </ol>
+                </nav>
+                <nav aria-label="pagination">
+                    <ul class="pagination">
+                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </section>
+
+            <section>
+                <h3>Accordion and collapse</h3>
+                <div class="accordion" id="int_ui_showcase_accordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#int_ui_showcase_collapse_1">First item</button>
+                        </h2>
+                        <div id="int_ui_showcase_collapse_1" class="accordion-collapse collapse show" data-bs-parent="#int_ui_showcase_accordion">
+                            <div class="accordion-body">Content of the first item.</div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#int_ui_showcase_collapse_2">Second item</button>
+                        </h2>
+                        <div id="int_ui_showcase_collapse_2" class="accordion-collapse collapse" data-bs-parent="#int_ui_showcase_accordion">
+                            <div class="accordion-body">Content of the second item.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h3>Progress and spinners</h3>
+                <div class="progress mb-2"><div class="progress-bar" style="width: 25%;">25 %</div></div>
+                <div class="progress mb-2"><div class="progress-bar bg-success progress-bar-striped" style="width: 50%;">50 %</div></div>
+                <div class="progress mb-3"><div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" style="width: 75%;">75 %</div></div>
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="spinner-border text-primary" role="status"/>
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status"/>
+                    <div class="spinner-grow text-success" role="status"/>
+                    <i class="fa fa-spinner fa-spin fs-3"/>
+                </div>
+            </section>
+
+            <section>
+                <h3>Tables</h3>
+                <table class="table table-striped table-hover table-sm">
+                    <thead><tr><th>#</th><th>Name</th><th class="text-end">Amount</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td>First</td><td class="text-end">10.00</td></tr>
+                        <tr class="table-success"><td>2</td><td>Second</td><td class="text-end">20.00</td></tr>
+                        <tr class="table-danger"><td>3</td><td>Third</td><td class="text-end">30.00</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section>
+                <h3>Form controls</h3>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="bs_text">Text</label>
+                        <input id="bs_text" type="text" class="form-control" placeholder="Text input"/>
+                        <div class="form-text">Help text below the input.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="bs_select">Select</label>
+                        <select id="bs_select" class="form-select"><option>One</option><option>Two</option></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="bs_invalid">Invalid</label>
+                        <input id="bs_invalid" type="text" class="form-control is-invalid" value="Wrong"/>
+                        <div class="invalid-feedback">Please correct this value.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="bs_textarea">Textarea</label>
+                        <textarea id="bs_textarea" class="form-control" rows="2"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="bs_range">Range</label>
+                        <input id="bs_range" type="range" class="form-range"/>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" value="10"/>
+                            <span class="input-group-text">.00</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check"><input id="bs_check" type="checkbox" class="form-check-input"/><label class="form-check-label" for="bs_check">Checkbox</label></div>
+                        <div class="form-check"><input id="bs_radio" type="radio" class="form-check-input" name="bs_radio"/><label class="form-check-label" for="bs_radio">Radio</label></div>
+                        <div class="form-check form-switch"><input id="bs_switch" type="checkbox" class="form-check-input"/><label class="form-check-label" for="bs_switch">Switch</label></div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h3>Tooltips, borders, shadows</h3>
+                <div class="d-flex flex-wrap gap-3">
+                    <button class="btn btn-secondary" data-tooltip="Odoo tooltip on top" data-tooltip-position="top">Top</button>
+                    <button class="btn btn-secondary" data-tooltip="Odoo tooltip on the right" data-tooltip-position="right">Right</button>
+                    <span class="p-3 border rounded">Border</span>
+                    <span class="p-3 shadow-sm rounded">Small shadow</span>
+                    <span class="p-3 shadow rounded">Shadow</span>
+                    <span class="p-3 shadow-lg rounded">Large shadow</span>
+                    <span class="p-3 bg-100 rounded">bg-100</span>
+                    <span class="p-3 bg-200 rounded">bg-200</span>
+                    <span class="p-3 bg-300 rounded">bg-300</span>
+                </div>
+            </section>
+        </div>
+    </t>
+
+    <!-- === ODOO STYLES === -->
+    <t t-name="int_ui_showcase.OdooPage">
+        <div class="d-flex flex-column gap-4 p-3">
+
+            <section>
+                <h3>Font Awesome icons</h3>
+                <div class="d-flex flex-wrap gap-3 fs-3">
+                    <i t-foreach="icons" t-as="icon" t-key="icon" t-attf-class="fa {{ icon }}" t-att-title="icon"/>
+                </div>
+                <h3 class="mt-3">Odoo icons</h3>
+                <div class="d-flex flex-wrap gap-3 fs-3">
+                    <i t-foreach="oiIcons" t-as="icon" t-key="icon" t-attf-class="oi {{ icon }}" t-att-title="icon"/>
+                </div>
+            </section>
+
+            <section>
+                <h3>Tag colors</h3>
+                <div class="d-flex flex-wrap gap-2">
+                    <span t-foreach="tagColors" t-as="color" t-key="color" t-attf-class="badge rounded-pill o_tag_color_{{ color }}">Color <t t-out="color"/></span>
+                </div>
+                <div class="mt-2"><TagsList tags="tags"/></div>
+                <div class="mt-2"><TagsList tags="tags" visibleItemsLimit="3"/></div>
+            </section>
+
+            <section>
+                <h3>Color list</h3>
+                <ColorList colors="colors" selectedColor="state.color" forceExpanded="true" onColorSelected="(color) => this.state.color = color"/>
+            </section>
+
+            <section>
+                <h3>Avatars</h3>
+                <div class="d-flex gap-3 align-items-center">
+                    <img class="o_avatar rounded" src="/web/static/img/odoo-icon-192x192.png" width="24" height="24" alt="Small avatar"/>
+                    <img class="o_avatar rounded" src="/web/static/img/odoo-icon-192x192.png" width="48" height="48" alt="Medium avatar"/>
+                    <img class="o_avatar rounded-circle" src="/web/static/img/odoo-icon-192x192.png" width="64" height="64" alt="Round avatar"/>
+                </div>
+            </section>
+
+            <section>
+                <h3>Notifications and effects</h3>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-secondary" t-on-click="() => this.notify('info')">Info</button>
+                    <button class="btn btn-secondary" t-on-click="() => this.notify('success')">Success</button>
+                    <button class="btn btn-secondary" t-on-click="() => this.notify('warning')">Warning</button>
+                    <button class="btn btn-secondary" t-on-click="() => this.notify('danger')">Danger</button>
+                    <button class="btn btn-secondary" t-on-click="() => this.showRainbow('fast')">Rainbow man</button>
+                </div>
+            </section>
+        </div>
+    </t>
+
+    <!-- === INPUTS === -->
+    <t t-name="int_ui_showcase.InputsPage">
+        <div class="d-flex flex-column gap-4 p-3">
+
+            <section>
+                <h3>CheckBox</h3>
+                <div class="d-flex gap-4">
+                    <CheckBox value="state.checked" onChange="(checked) => this.state.checked = checked">Checkbox</CheckBox>
+                    <CheckBox value="false" indeterminate="true">Indeterminate</CheckBox>
+                    <CheckBox value="true" disabled="true">Disabled</CheckBox>
+                </div>
+            </section>
+
+            <section>
+                <h3>Date and time</h3>
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <DateTimeInput type="'date'" value="state.date" onChange="(value) => this.onDateChange('date', value)"/>
+                    <DateTimeInput type="'datetime'" value="state.datetime" onChange="(value) => this.onDateChange('datetime', value)"/>
+                    <DateTimeInput type="'date'" range="true" value="state.range" onChange="(value) => this.onDateChange('range', value)"/>
+                    <TimePicker value="state.time" onChange.bind="onTimeChange"/>
+                </div>
+            </section>
+
+            <section>
+                <h3>Select menu</h3>
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <SelectMenu choices="choices" value="state.choice" onSelect="(value) => this.state.choice = value"/>
+                    <SelectMenu choices="choices" value="state.multiChoice" multiSelect="true" onSelect="(value) => this.state.multiChoice = value"/>
+                    <SelectMenu groups="groupedChoices" value="state.choice" onSelect="(value) => this.state.choice = value"/>
+                </div>
+            </section>
+
+            <section>
+                <h3>Autocomplete</h3>
+                <AutoComplete value="state.text" sources="sources" placeholder="'Type a fruit'"/>
+            </section>
+
+            <section>
+                <h3>Copy button, emoji picker, file input</h3>
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <span>Text to copy</span><CopyButton content="'Copied text'" successText="'Copied!'"/>
+                    <button t-ref="emojiButton" class="btn btn-secondary"><i class="fa fa-smile-o me-1"/>Emoji</button>
+                    <span class="fs-4" t-out="state.emoji"/>
+                    <FileInput onUpload.bind="onUpload" multiUpload="true">
+                        <t t-set-slot="default">Upload files</t>
+                    </FileInput>
+                    <button class="btn btn-secondary" t-on-click="showSignature">Signature dialog</button>
+                </div>
+            </section>
+
+            <section>
+                <h3>Dropzone and file viewer</h3>
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <div t-ref="dropTarget" class="border border-2 border-dashed rounded p-4 text-center" style="min-width: 16rem;">Drop area</div>
+                    <Dropzone t-if="state.showDropzone" ref="dropTarget" onDrop.bind="onDrop"/>
+                    <button class="btn btn-secondary" t-on-click="() => this.state.showDropzone = !this.state.showDropzone">Toggle dropzone</button>
+                    <button class="btn btn-secondary" t-on-click="openFileViewer">File viewer</button>
+                </div>
+            </section>
+
+            <section>
+                <h3>Code editor</h3>
+                <CodeEditor mode="'python'" value="state.code" maxLines="10" onChange="(value) => this.state.code = value"/>
+            </section>
+        </div>
+    </t>
+
+    <!-- === SELECTORS === -->
+    <t t-name="int_ui_showcase.SelectorsPage">
+        <div class="d-flex flex-column gap-4 p-3">
+
+            <section>
+                <h3>Model selector</h3>
+                <ModelSelector value="state.model" onModelSelected.bind="onModelSelected" models="['res.partner', 'res.users', 'int.ui.showcase']"/>
+                <div>Model: <b t-out="state.model"/></div>
+            </section>
+
+            <section>
+                <h3>Field selector</h3>
+                <ModelFieldSelector resModel="state.model" path="state.path" update.bind="onPathUpdate" followRelations="true" readonly="false"/>
+                <div>Path: <b t-out="state.path"/></div>
+            </section>
+
+            <section>
+                <h3>Domain selector</h3>
+                <DomainSelector resModel="state.model" domain="state.domain" update.bind="onDomainUpdate" isDebugMode="true" readonly="false"/>
+                <div class="mt-2 d-flex gap-2">
+                    <button class="btn btn-secondary" t-on-click="showDomainDialog">Domain dialog</button>
+                    <button class="btn btn-secondary" t-on-click="showExpressionDialog">Expression editor dialog</button>
+                </div>
+            </section>
+
+            <section>
+                <h3>Record selectors</h3>
+                <div class="d-flex flex-column gap-2">
+                    <RecordSelector resModel="resModel" resId="state.resId" update.bind="onRecordUpdate"/>
+                    <MultiRecordSelector resModel="resModel" resIds="state.resIds" update.bind="onRecordsUpdate"/>
+                </div>
+            </section>
+        </div>
+    </t>
+
+    <!-- === MENUS AND OVERLAYS === -->
+    <t t-name="int_ui_showcase.MenusPage">
+        <div class="d-flex flex-column gap-4 p-3">
+
+            <section>
+                <h3>Dropdown</h3>
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <Dropdown>
+                        <button class="btn btn-secondary">Simple</button>
+                        <t t-set-slot="content">
+                            <DropdownItem onSelected="() => this.select('First')">First</DropdownItem>
+                            <DropdownItem onSelected="() => this.select('Second')">Second</DropdownItem>
+                            <div role="separator" class="dropdown-divider"/>
+                            <DropdownItem onSelected="() => this.select('Third')">Third</DropdownItem>
+                        </t>
+                    </Dropdown>
+                    <Dropdown>
+                        <button class="btn btn-secondary">Nested</button>
+                        <t t-set-slot="content">
+                            <DropdownItem onSelected="() => this.select('Top')">Top item</DropdownItem>
+                            <Dropdown>
+                                <button class="dropdown-item">Submenu</button>
+                                <t t-set-slot="content">
+                                    <DropdownItem onSelected="() => this.select('Nested one')">Nested one</DropdownItem>
+                                    <DropdownItem onSelected="() => this.select('Nested two')">Nested two</DropdownItem>
+                                </t>
+                            </Dropdown>
+                        </t>
+                    </Dropdown>
+                    <Dropdown>
+                        <button class="btn btn-secondary">Checkbox and accordion</button>
+                        <t t-set-slot="content">
+                            <CheckboxItem checked="state.checked" onSelected="() => this.state.checked = !this.state.checked">Checkbox item</CheckboxItem>
+                            <AccordionItem description="'Accordion item'">
+                                <DropdownItem onSelected="() => this.select('Inside accordion')">Inside accordion</DropdownItem>
+                            </AccordionItem>
+                        </t>
+                    </Dropdown>
+                    <Dropdown items="[{label: 'Item one', onSelected: () => this.select('Item one')}, {label: 'Item two', onSelected: () => this.select('Item two')}]">
+                        <button class="btn btn-secondary">From items</button>
+                    </Dropdown>
+                    <Dropdown holdOnHover="true">
+                        <button class="btn btn-secondary">Opens on hover</button>
+                        <t t-set-slot="content">
+                            <DropdownItem onSelected="() => this.select('Hover item')">Hover item</DropdownItem>
+                        </t>
+                    </Dropdown>
+                    <span t-if="state.last">Selected: <b t-out="state.last"/></span>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <Dropdown t-foreach="positions" t-as="position" t-key="position" position="position">
+                        <button class="btn btn-outline-secondary btn-sm"><t t-out="position"/></button>
+                        <t t-set-slot="content">
+                            <DropdownItem onSelected="() => this.select(position)"><t t-out="position"/></DropdownItem>
+                        </t>
+                    </Dropdown>
+                </div>
+                <div class="mt-2">
+                    <DropdownGroup>
+                        <Dropdown>
+                            <button class="btn btn-secondary">Group A</button>
+                            <t t-set-slot="content"><DropdownItem>A item</DropdownItem></t>
+                        </Dropdown>
+                        <Dropdown>
+                            <button class="btn btn-secondary">Group B</button>
+                            <t t-set-slot="content"><DropdownItem>B item</DropdownItem></t>
+                        </Dropdown>
+                    </DropdownGroup>
+                </div>
+            </section>
+
+            <section>
+                <h3>Pager</h3>
+                <Pager offset="state.pager.offset" limit="state.pager.limit" total="42" onUpdate.bind="onPagerUpdate"/>
+            </section>
+
+            <section>
+                <h3>Notebook</h3>
+                <Notebook>
+                    <t t-set-slot="one" title="'One'" isVisible="true">Content of the first page.</t>
+                    <t t-set-slot="two" title="'Two'" isVisible="true">Content of the second page.</t>
+                    <t t-set-slot="three" title="'Three (hidden)'" isVisible="false">Hidden page.</t>
+                </Notebook>
+            </section>
+
+            <section>
+                <h3>Tooltip, popover, hotkey, command</h3>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <button class="btn btn-secondary" data-tooltip="A simple tooltip">Tooltip</button>
+                    <button class="btn btn-secondary" t-on-click="showPopover">Popover</button>
+                    <span>Press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> for the hotkey, or <kbd>Ctrl</kbd>+<kbd>K</kbd> and search for "Showcase".</span>
+                </div>
+            </section>
+
+            <section>
+                <h3>Action swiper (swipe on a touch screen)</h3>
+                <ActionSwiper onLeftSwipe="leftSwipe" onRightSwipe="rightSwipe">
+                    <div class="p-3 border rounded bg-view">Swipe this box to the left or to the right.</div>
+                </ActionSwiper>
+            </section>
+
+            <section>
+                <h3>Resizable panel</h3>
+                <div class="d-flex border" style="height: 8rem;">
+                    <ResizablePanel initialWidth="200" minWidth="100" class="'bg-100 p-2'" handleSide="'end'">
+                        <t t-set-slot="default">Drag the right edge.</t>
+                    </ResizablePanel>
+                    <div class="flex-grow-1 p-2">Main area</div>
+                </div>
+            </section>
+        </div>
+    </t>
+
+    <!-- === DIALOGS AND NOTIFICATIONS === -->
+    <t t-name="int_ui_showcase.DialogsPage">
+        <div class="d-flex flex-column gap-4 p-3">
+
+            <section>
+                <h3>Notifications</h3>
+                <div class="d-flex flex-wrap gap-2">
+                    <button t-foreach="notificationTypes" t-as="type" t-key="type" class="btn btn-secondary" t-on-click="() => this.notify(type)"><t t-out="type"/></button>
+                    <button class="btn btn-secondary" t-on-click="notifySticky">Sticky with button</button>
+                    <button class="btn btn-secondary" t-on-click="notifyHtml">Markup</button>
+                </div>
+            </section>
+
+            <section>
+                <h3>Dialogs</h3>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-secondary" t-on-click="showAlert">Alert</button>
+                    <button class="btn btn-secondary" t-on-click="showConfirmation">Confirmation</button>
+                    <button class="btn btn-secondary" t-on-click="showFormDialog">Form view dialog</button>
+                    <button class="btn btn-secondary" t-on-click="showSelectDialog">Select records dialog</button>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <button t-foreach="sizes" t-as="size" t-key="size" class="btn btn-outline-secondary" t-on-click="() => this.showCustom(size)">Custom <t t-out="size"/></button>
+                </div>
+            </section>
+
+            <section>
+                <h3>Effects</h3>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-secondary" t-on-click="() => this.showRainbow('fast')">Rainbow fast</button>
+                    <button class="btn btn-secondary" t-on-click="() => this.showRainbow('medium')">Rainbow medium</button>
+                    <button class="btn btn-secondary" t-on-click="() => this.showRainbow('slow')">Rainbow slow</button>
+                </div>
+            </section>
+        </div>
+    </t>
+
+    <!-- === NUMPAD === -->
+    <t t-name="int_ui_showcase.NumpadPage">
+        <div class="o_ui_showcase_numpad row g-4 p-3">
+            <div class="col-12 col-md-6 d-flex flex-column gap-3">
+                <div t-foreach="targets" t-as="target" t-key="target.id" role="button"
+                     t-att-data-target="target.id"
+                     t-attf-class="o_ui_numpad_row card p-3 {{ state.target === target.id ? 'o_ui_numpad_row_active border-primary border-2' : '' }}"
+                     t-on-click="() => this.setTarget(target.id)">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="fw-bold" t-out="target.label"/>
+                        <span t-if="state.shown[target.id]" class="o_ui_numpad_beamer badge text-bg-success">
+                            On the beamer: <t t-out="state.shown[target.id]"/>
+                        </span>
+                        <span t-else="" class="badge text-bg-light text-muted">Not shown</span>
+                    </div>
+                    <div class="o_ui_numpad_number display-4 fw-bold lh-1 my-2" t-att-class="state.typed[target.id] ? '' : 'text-muted'">
+                        <t t-out="state.typed[target.id] or '–'"/>
+                    </div>
+                    <div class="o_ui_numpad_title text-muted" style="min-height: 1.5rem;">
+                        <t t-if="title(target.id)" t-out="title(target.id)"/>
+                        <t t-elif="state.typed[target.id]">Unknown number</t>
+                        <t t-else="">Enter a number</t>
+                    </div>
+                </div>
+                <div t-if="locked" class="alert alert-info py-2 mb-0" role="alert">The keys are locked while the other number is typed.</div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="o_ui_numpad_show btn btn-primary btn-lg flex-grow-1" t-att-disabled="!number" t-on-click="onShow">
+                        <i class="fa fa-television me-2"/>Show on the beamer
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-lg" aria-label="Clear" t-att-disabled="!state.typed[editedTarget]" t-on-click="onClear">Clear</button>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="o_ui_numpad_keys d-grid gap-3 mx-auto" style="max-width: 22rem;">
+                    <button t-foreach="digits" t-as="digit" t-key="digit" type="button"
+                            class="o_ui_numpad_key btn" t-att-disabled="locked"
+                            t-on-click="() => this.onDigit(digit)" t-out="digit"/>
+                    <button type="button" class="o_ui_numpad_key o_ui_numpad_key_zero btn" t-att-disabled="locked" t-on-click="() => this.onDigit('0')">0</button>
+                    <button type="button" class="o_ui_numpad_key o_ui_numpad_key_back btn" aria-label="Backspace" t-on-click="onBackspace"><i class="fa fa-long-arrow-left"/></button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mx-auto mt-3" style="max-width: 22rem;">
+                    <button type="button" class="btn btn-link px-0" t-on-click="onReset">Reset everything</button>
+                    <span t-if="!hasTouch" class="form-text mt-0">Keys 0-9, Backspace and Enter work too.</span>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- === NUMPAD (NATIVE) === -->
+    <t t-name="int_ui_showcase.NativeNumpadPage" t-inherit="int_ui_showcase.NumpadPage" t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('o_ui_numpad_keys')]" position="replace">
+            <div class="o_ui_native_keys d-grid gap-3 mx-auto" style="max-width: 22rem;">
+                <button t-foreach="keys" t-as="key" t-key="key.value" type="button"
+                        t-attf-class="o_ui_native_key btn btn-secondary btn-lg fs-3 fw-bold {{ key.class or '' }}"
+                        t-att-aria-label="key.label" t-att-disabled="isDisabled(key)"
+                        t-on-click="() => this.onKey(key)">
+                    <i t-if="key.icon" t-att-class="'fa ' + key.icon"/>
+                    <t t-else="" t-out="key.value"/>
+                </button>
+            </div>
+        </xpath>
+    </t>
+
+    <!-- === DASHBOARD === -->
+    <t t-name="int_ui_showcase.IcecastPanel">
+        <div class="o_ui_icecast card h-100">
+            <div class="card-header d-flex align-items-center gap-2 flex-wrap">
+                <i class="fa fa-podcast"/>
+                <span class="fw-bold">Icecast</span>
+                <span t-if="state.data and state.data.demo" class="o_ui_icecast_demo badge text-bg-warning">Demo data</span>
+                <span t-elif="state.data" class="badge text-bg-success" t-out="state.data.server or 'Live'"/>
+                <span class="ms-auto text-muted small" t-if="state.data">Updated <t t-out="checkedAt"/></span>
+                <div class="form-check form-switch mb-0">
+                    <input class="o_ui_icecast_auto form-check-input" type="checkbox" id="o_ui_icecast_auto" t-model="state.auto"/>
+                    <label class="form-check-label" for="o_ui_icecast_auto">Auto</label>
+                </div>
+                <button type="button" class="o_ui_icecast_refresh btn btn-sm btn-outline-primary" t-att-disabled="state.loading" t-on-click="refresh">
+                    <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
+                </button>
+            </div>
+            <div class="card-body d-flex flex-column gap-3">
+                <div t-if="state.error" class="alert alert-danger py-2 mb-0" role="alert" t-out="state.error"/>
+                <t t-if="state.data">
+                    <div class="row g-3 text-center">
+                        <div class="col-4">
+                            <div class="o_ui_icecast_listeners display-5 fw-bold lh-1" t-out="state.data.listeners"/>
+                            <div class="text-muted small">Listeners</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="o_ui_icecast_sources display-5 fw-bold lh-1" t-out="state.data.mounts.length"/>
+                            <div class="text-muted small">Sources</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="display-5 fw-bold lh-1" t-out="state.data.peak"/>
+                            <div class="text-muted small">Peak</div>
+                        </div>
+                    </div>
+                    <svg t-if="sparkline" class="o_ui_icecast_spark w-100 text-primary" viewBox="0 0 100 30" preserveAspectRatio="none" style="height: 3rem;" aria-hidden="true">
+                        <polyline t-att-points="sparkline" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+                    </svg>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr><th>Mount</th><th>Now playing</th><th class="text-end">Listeners</th><th class="text-end">Bitrate</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="state.data.mounts" t-as="mount" t-key="mount.mount" class="o_ui_icecast_mount">
+                                    <td>
+                                        <code t-out="mount.mount"/>
+                                        <div class="text-muted small" t-out="mount.name"/>
+                                    </td>
+                                    <td class="o_ui_icecast_title" t-out="mount.title or '–'"/>
+                                    <td class="text-end"><span class="badge text-bg-primary" t-out="mount.listeners"/></td>
+                                    <td class="text-end text-muted"><t t-out="mount.bitrate"/> kbps</td>
+                                </tr>
+                                <tr t-if="!state.data.mounts.length">
+                                    <td colspan="4" class="text-center text-muted">No source connected.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+                <div t-elif="!state.error" class="text-center text-muted py-4">Loading…</div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="int_ui_showcase.DashboardPage">
+        <div class="o_ui_showcase_dashboard row g-3 p-3">
+            <div class="col-12 col-xl-7">
+                <div class="card h-100">
+                    <div class="card-header fw-bold"><i class="fa fa-television me-2"/>Hymn control</div>
+                    <NumpadPage/>
+                </div>
+            </div>
+            <div class="col-12 col-xl-5">
+                <IcecastPanel/>
+            </div>
+        </div>
+    </t>
+
+    <!-- === EMBEDDED VIEWS === -->
+    <t t-name="int_ui_showcase.ViewsPage">
+        <div class="d-flex flex-column gap-3 p-3">
+            <div class="btn-group" role="group">
+                <button t-foreach="viewTypes" t-as="type" t-key="type"
+                        t-attf-class="btn btn-outline-primary {{ state.type === type ? 'active' : '' }}"
+                        t-on-click="() => this.state.type = type"><t t-out="type"/></button>
+            </div>
+            <div class="border" style="height: 32rem; position: relative;">
+                <View t-key="state.type" t-props="viewProps"/>
+            </div>
+        </div>
+    </t>
+
+</templates>

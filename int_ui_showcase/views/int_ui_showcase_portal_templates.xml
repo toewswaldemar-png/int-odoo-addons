@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- === ENTRY ON /my === -->
+    <template id="portal_my_home_ui_showcase" name="UI Showcase" customize_show="True" inherit_id="portal.portal_my_home" priority="40">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_service_category_enable" t-value="True"/>
+        </xpath>
+        <div id="portal_service_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/web/static/img/odoo-icon-192x192.png'"/>
+                <t t-set="title">UI Showcase</t>
+                <t t-set="text">Portal building blocks and showcase records</t>
+                <t t-set="url" t-value="'/my/ui-showcase'"/>
+                <t t-set="placeholder_count" t-value="'showcase_count'"/>
+            </t>
+        </div>
+    </template>
+
+    <!-- === BREADCRUMB === -->
+    <template id="portal_breadcrumbs_ui_showcase" name="Portal Breadcrumbs: UI Showcase" inherit_id="portal.portal_breadcrumbs" priority="40">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'ui_showcase'" class="breadcrumb-item active">UI Showcase</li>
+        </xpath>
+    </template>
+
+    <!-- === PAGE === -->
+    <template id="portal_my_ui_showcase" name="My UI Showcase">
+        <t t-call="portal.portal_layout">
+            <t t-set="additional_title">UI Showcase</t>
+            <h3 class="mb-3">UI Showcase</h3>
+
+            <t t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="records" t-as="record">
+                        <td><span t-field="record.name"/></td>
+                        <td><span t-field="record.category_id"/></td>
+                        <td class="text-center"><span class="badge rounded-pill text-bg-info" t-field="record.state"/></td>
+                        <td class="text-end"><span t-field="record.amount_total"/></td>
+                    </tr>
+                </tbody>
+            </t>
+
+            <div t-if="not records" class="alert alert-warning mt-3" role="alert">There are no records.</div>
+
+            <h4 class="mt-5">Bootstrap elements</h4>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <a href="#" class="btn btn-primary">Primary</a>
+                <a href="#" class="btn btn-secondary">Secondary</a>
+                <a href="#" class="btn btn-outline-primary">Outline</a>
+                <a href="#" class="btn btn-link">Link</a>
+            </div>
+            <div class="alert alert-info" role="alert">An alert in the portal.</div>
+            <div class="card mb-3" style="max-width: 24rem;">
+                <div class="card-header">Card</div>
+                <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <p class="card-text">A card with some text.</p>
+                </div>
+            </div>
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item"><a class="nav-link active" href="#">Active</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+                <li class="nav-item"><a class="nav-link disabled" href="#">Disabled</a></li>
+            </ul>
+            <div class="list-group mb-3" style="max-width: 24rem;">
+                <a href="#" class="list-group-item list-group-item-action active">First item</a>
+                <a href="#" class="list-group-item list-group-item-action">Second item</a>
+                <a href="#" class="list-group-item list-group-item-action">Third item</a>
+            </div>
+            <div class="progress mb-3"><div class="progress-bar" style="width: 60%;">60 %</div></div>
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- === FORM === -->
+    <record id="int_ui_showcase_view_form" model="ir.ui.view">
+        <field name="name">int.ui.showcase.form</field>
+        <field name="model">int.ui.showcase</field>
+        <field name="arch" type="xml">
+            <form string="UI Showcase">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object" class="btn-primary" invisible="state != 'draft'" data-hotkey="c"/>
+                    <button name="action_done" string="Mark as Done" type="object" class="btn-primary" invisible="state != 'confirmed'"/>
+                    <button name="action_draft" string="Set to Draft" type="object" invisible="state not in ('confirmed', 'cancel')"/>
+                    <button name="action_cancel" string="Cancel" type="object" confirm="Cancel this record?" invisible="state in ('done', 'cancel')"/>
+                    <button name="action_notify" string="Notify" type="object" class="btn-secondary"/>
+                    <button name="action_rainbow" string="Rainbow Man" type="object" class="btn-secondary"/>
+                    <button name="%(int_ui_showcase_wizard_action)d" string="Open Dialog" type="action" class="btn-secondary"/>
+                    <widget name="attach_document" string="Attach Document" action="action_attach_document"/>
+                    <widget name="signature" string="Sign" full_name="partner_id"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done"/>
+                    <field name="stage_id" widget="rotting_statusbar_duration" options="{'clickable': '1', 'fold_field': 'fold'}"/>
+                </header>
+                <sheet>
+                    <field name="is_rotting" invisible="1"/>
+                    <field name="rotting_days" invisible="1"/>
+                    <field name="active" invisible="1"/>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <widget name="web_ribbon" title="Favorite" bg_color="text-bg-success" invisible="not is_favorite or not active"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" name="action_open_lines" type="object" icon="fa-list">
+                            <field name="line_count" widget="statinfo" string="Lines"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-money" disabled="1">
+                            <field name="amount_total" widget="statinfo" string="Total"/>
+                        </button>
+                    </div>
+                    <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'image_128'}"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <div class="d-flex">
+                                <field name="priority" widget="priority" class="me-3"/>
+                                <field name="name" placeholder="Name of the record"/>
+                            </div>
+                        </h1>
+                        <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}" placeholder="Tags"/>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        This form shows one field of every widget type. Change values, switch tabs and look at the chatter.
+                    </div>
+                    <notebook>
+
+                        <!-- === TEXT === -->
+                        <page string="Text" name="text">
+                            <group>
+                                <group string="Char widgets">
+                                    <field name="email" widget="email"/>
+                                    <field name="phone" widget="phone"/>
+                                    <field name="url" widget="url"/>
+                                    <field name="url" widget="CopyClipboardURL" string="Website (copy URL)"/>
+                                    <field name="copy_char" widget="CopyClipboardChar"/>
+                                    <field name="copy_button" widget="CopyClipboardButton"/>
+                                    <field name="secret" widget="password"/>
+                                    <field name="hex_color" widget="color"/>
+                                    <field name="emoji_char" widget="char_emojis"/>
+                                </group>
+                                <group string="Text widgets">
+                                    <field name="note" widget="text" placeholder="Plain text"/>
+                                    <field name="emoji_text" widget="text_emojis"/>
+                                    <field name="code" widget="ace" options="{'mode': 'python'}"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="HTML">
+                                    <field name="description" widget="html" placeholder="HTML editor" colspan="2"/>
+                                </group>
+                                <group string="HTML in an iframe">
+                                    <field name="iframe_html" widget="iframe_wrapper" colspan="2"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- === NUMBERS === -->
+                        <page string="Numbers" name="numbers">
+                            <group>
+                                <group string="Plain">
+                                    <field name="integer_value" widget="integer"/>
+                                    <field name="float_value" widget="float"/>
+                                    <field name="float_time" widget="float_time"/>
+                                    <field name="float_factor_value" widget="float_factor" options="{'factor': 60}"/>
+                                    <field name="float_toggle_value" widget="float_toggle" options="{'range': [0, 0.5, 1], 'force_button': true}"/>
+                                    <field name="percentage" widget="percentage"/>
+                                    <field name="company_id" groups="base.group_multi_company"/>
+                                    <field name="currency_id" groups="base.group_multi_currency"/>
+                                    <field name="amount" widget="monetary"/>
+                                </group>
+                                <group string="Graphical">
+                                    <field name="progress" widget="progressbar" options="{'editable': true, 'max_value': 100}"/>
+                                    <field name="progress" widget="percentpie" string="Progress (pie)"/>
+                                    <field name="satisfaction" widget="gauge" options="{'max_value': 100}"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- === DATES === -->
+                        <page string="Dates" name="dates">
+                            <group>
+                                <group>
+                                    <field name="date" widget="date"/>
+                                    <field name="deadline" widget="remaining_days"/>
+                                    <field name="date_start" widget="daterange" options="{'end_date_field': 'date_end'}" string="Period"/>
+                                    <field name="date_end" invisible="1"/>
+                                    <field name="scheduled_date" widget="datetime_scheduled_date"/>
+                                </group>
+                                <group>
+                                    <field name="tz" widget="timezone_mismatch" options="{'tz_offset_field': 'tz_offset'}"/>
+                                    <field name="tz_offset" invisible="1"/>
+                                    <field name="mon" invisible="1"/>
+                                    <field name="tue" invisible="1"/>
+                                    <field name="wed" invisible="1"/>
+                                    <field name="thu" invisible="1"/>
+                                    <field name="fri" invisible="1"/>
+                                    <field name="sat" invisible="1"/>
+                                    <field name="sun" invisible="1"/>
+                                    <div class="o_form_label">Working days</div>
+                                    <widget name="week_days"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- === CHOICES === -->
+                        <page string="Choices" name="choices">
+                            <group>
+                                <group string="Selection">
+                                    <field name="kind" widget="selection"/>
+                                    <field name="kind" widget="radio" string="Kind (radio)"/>
+                                    <field name="kind" widget="radio" options="{'horizontal': true}" string="Kind (radio, horizontal)"/>
+                                    <field name="kind" widget="selection_badge" string="Kind (badge)"/>
+                                    <field name="kind" widget="selection_badge_with_filter" options="{'allowed_selection_field': 'allowed_kinds'}" string="Kind (badge with filter)"/>
+                                    <field name="kind" widget="filterable_selection" options="{'whitelist_fname': 'allowed_kinds'}" string="Kind (filterable)"/>
+                                    <field name="allowed_kinds"/>
+                                    <field name="kind" widget="badge" string="Kind (read-only badge)" readonly="1" decoration-info="kind == 'a'" decoration-success="kind == 'b'" decoration-warning="kind == 'c'" decoration-danger="kind == 'd'"/>
+                                    <field name="state" widget="label_selection" readonly="1" options="{'classes': {'draft': 'info', 'confirmed': 'warning', 'done': 'success', 'cancel': 'danger'}}"/>
+                                    <field name="category_id" widget="selection_badge_icons" iconField="icon" defaultIcon="fa-tag" string="Category (badge with icons)"/>
+                                </group>
+                                <group string="State">
+                                    <field name="kanban_state" widget="state_selection"/>
+                                    <field name="priority" widget="priority"/>
+                                    <field name="color" widget="color_picker"/>
+                                    <field name="stage_id" widget="statusbar_duration" options="{'clickable': '1'}"/>
+                                    <field name="stage_id" widget="statusbar" options="{'clickable': '1', 'fold_field': 'fold'}" string="Stage (statusbar)"/>
+                                </group>
+                                <group string="Boolean">
+                                    <field name="flag"/>
+                                    <field name="flag" widget="boolean_toggle" string="Flag (toggle)"/>
+                                    <field name="is_favorite" widget="boolean_favorite"/>
+                                    <field name="is_pinned" widget="boolean_icon" options="{'icon': 'fa-thumb-tack'}"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- === RELATIONS === -->
+                        <page string="Relations" name="relations">
+                            <group>
+                                <group string="Many2one">
+                                    <field name="category_id" options="{'no_create': True}"/>
+                                    <field name="partner_id" options="{'no_open': True}" string="Partner (no open)"/>
+                                    <field name="partner_id" widget="many2one_avatar" string="Partner (avatar)"/>
+                                    <field name="partner_id" widget="many2one_barcode" string="Partner (barcode)"/>
+                                    <field name="user_id" widget="many2one_avatar_user"/>
+                                    <field name="stage_id" widget="badge" options="{'no_open': True}" string="Stage (badge)"/>
+                                    <field name="image_attachment_id" widget="attachment_image"/>
+                                    <field name="res_model"/>
+                                    <field name="res_id" widget="many2one_reference"/>
+                                    <field name="res_id" widget="many2one_reference_integer" string="Related Record (integer)"/>
+                                    <field name="reference"/>
+                                </group>
+                                <group string="Many2many">
+                                    <field name="user_ids" widget="many2many_avatar_user"/>
+                                    <field name="partner_ids" widget="many2many_tags_avatar"/>
+                                    <field name="partner_ids" widget="many2many_tags_email" string="Partners (email)"/>
+                                    <field name="tag_ids" widget="many2many_checkboxes" string="Tags (checkboxes)"/>
+                                    <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color', 'edit_tags': true}" string="Tags (colors editable)"/>
+                                </group>
+                            </group>
+                            <group string="Tags as a list (many2many)">
+                                <field name="tag_ids" widget="many2many" nolabel="1" colspan="2">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="color" widget="color_picker"/>
+                                    </list>
+                                </field>
+                            </group>
+                            <group string="Child records as kanban (one2many)">
+                                <field name="child_ids" nolabel="1" colspan="2" mode="kanban">
+                                    <kanban>
+                                        <templates>
+                                            <t t-name="card">
+                                                <field name="name" class="fw-bold"/>
+                                                <field name="state" widget="badge"/>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
+                            </group>
+                        </page>
+
+                        <!-- === LINES === -->
+                        <page string="Lines" name="lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="quantity"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="price_unit"/>
+                                    <field name="subtotal" sum="Total"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- === PROPERTIES === -->
+                        <page string="Properties" name="properties">
+                            <group>
+                                <field name="properties" columns="2" hide_label="1"/>
+                            </group>
+                        </page>
+
+                        <!-- === FILES === -->
+                        <page string="Files" name="files">
+                            <group>
+                                <group string="Binary">
+                                    <field name="attachment" widget="binary" filename="attachment_name"/>
+                                    <field name="attachment_name" invisible="1"/>
+                                    <field name="attachment_ids" widget="many2many_binary"/>
+                                    <field name="pdf_file" widget="pdf_viewer" filename="pdf_name"/>
+                                    <field name="pdf_name" invisible="1"/>
+                                </group>
+                                <group string="Images">
+                                    <field name="image_1920" widget="contact_image" options="{'preview_image': 'image_128'}"/>
+                                    <field name="image_url" widget="image_url" options="{'size': [0, 90]}"/>
+                                    <field name="signature" widget="signature"/>
+                                </group>
+                            </group>
+                            <group string="Google Slides">
+                                <field name="slide_url" widget="google_slide_viewer" colspan="2"/>
+                            </group>
+                        </page>
+
+                        <!-- === STRUCTURED DATA === -->
+                        <page string="Data" name="data">
+                            <group>
+                                <group string="JSON">
+                                    <field name="json_data" widget="json"/>
+                                    <field name="checkbox_data" widget="json_checkboxes" options="{'stacked': true}"/>
+                                    <field name="statistics_data" widget="contact_statistics"/>
+                                </group>
+                                <group string="Domain">
+                                    <field name="domain_model"/>
+                                    <field name="domain" widget="domain" options="{'model': 'domain_model'}"/>
+                                    <field name="field_path" widget="field_selector" options="{'model': 'domain_model'}"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Line graph">
+                                    <field name="graph_line_data" widget="dashboard_graph" graph_type="line" nolabel="1" colspan="2"/>
+                                </group>
+                                <group string="Bar graph">
+                                    <field name="graph_bar_data" widget="dashboard_graph" graph_type="bar" nolabel="1" colspan="2"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- === LAYOUT === -->
+                        <page string="Layout" name="layout">
+                            <group string="Groups and attributes" col="4">
+                                <field name="flag" string="Show the conditional fields"/>
+                                <field name="integer_value" help="This is a help tooltip."/>
+                                <field name="note" invisible="not flag" required="flag" placeholder="Visible and required when the flag is set" colspan="4"/>
+                                <field name="email" readonly="flag"/>
+                                <field name="phone" readonly="not flag"/>
+                                <label for="float_value" string="Row of fields"/>
+                                <div class="o_row">
+                                    <field name="float_value" nolabel="1"/>
+                                    <span>kg</span>
+                                    <field name="integer_value" nolabel="1"/>
+                                    <span>pieces</span>
+                                </div>
+                                <newline/>
+                                <separator string="Separator" colspan="4"/>
+                                <field name="name" colspan="4" class="text-primary fw-bold"/>
+                            </group>
+                            <group>
+                                <group string="Alerts">
+                                    <div class="alert alert-primary" role="alert">Primary</div>
+                                    <div class="alert alert-secondary" role="alert">Secondary</div>
+                                    <div class="alert alert-success" role="alert">Success</div>
+                                    <div class="alert alert-warning" role="alert">Warning</div>
+                                    <div class="alert alert-danger" role="alert">Danger</div>
+                                    <div class="alert alert-info" role="alert">Info</div>
+                                    <widget name="notification_alert"/>
+                                </group>
+                                <group string="Buttons, badges, icons">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button type="object" name="action_notify" class="btn btn-primary">Primary</button>
+                                        <button type="object" name="action_notify" class="btn btn-secondary">Secondary</button>
+                                        <button type="object" name="action_notify" class="btn btn-success">Success</button>
+                                        <button type="object" name="action_notify" class="btn btn-warning">Warning</button>
+                                        <button type="object" name="action_notify" class="btn btn-danger">Danger</button>
+                                        <button type="object" name="action_notify" class="btn btn-link">Link</button>
+                                        <button type="object" name="action_notify" class="btn btn-outline-primary">Outline</button>
+                                        <button type="object" name="action_notify" icon="fa-bell" string="With icon" class="btn btn-secondary"/>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="badge text-bg-primary">Primary</span>
+                                        <span class="badge text-bg-secondary">Secondary</span>
+                                        <span class="badge text-bg-success">Success</span>
+                                        <span class="badge text-bg-warning">Warning</span>
+                                        <span class="badge text-bg-danger">Danger</span>
+                                        <span class="badge text-bg-info">Info</span>
+                                        <span class="badge rounded-pill text-bg-light">Pill</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-3 fs-3">
+                                        <i class="fa fa-star text-warning" title="fa-star"/>
+                                        <i class="fa fa-heart text-danger" title="fa-heart"/>
+                                        <i class="fa fa-check-circle text-success" title="fa-check-circle"/>
+                                        <i class="fa fa-info-circle text-info" title="fa-info-circle"/>
+                                        <i class="fa fa-cog text-muted" title="fa-cog"/>
+                                        <i class="oi oi-arrow-right" title="oi-arrow-right"/>
+                                        <i class="oi oi-view-pivot" title="oi-view-pivot"/>
+                                    </div>
+                                    <widget name="documentation_link" path="/applications/general/developer_mode.html" label="Documentation link"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+</odoo>

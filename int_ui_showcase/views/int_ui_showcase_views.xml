@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- === DIALOG ACTION (used by the form button) === -->
+    <record id="int_ui_showcase_wizard_action" model="ir.actions.act_window">
+        <field name="name">Post a Message</field>
+        <field name="res_model">int.ui.showcase.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- === LIST === -->
+    <record id="int_ui_showcase_view_list" model="ir.ui.view">
+        <field name="name">int.ui.showcase.list</field>
+        <field name="model">int.ui.showcase</field>
+        <field name="arch" type="xml">
+            <list string="UI Showcase" multi_edit="1" sample="1" decoration-muted="state == 'cancel'" decoration-success="state == 'done'">
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm"/>
+                </header>
+                <field name="sequence" widget="handle"/>
+                <field name="priority" widget="priority" optional="show"/>
+                <field name="name"/>
+                <field name="category_id" optional="show"/>
+                <field name="stage_id" widget="badge_rotting" options="{'no_open': True}" optional="show"/>
+                <field name="is_rotting" column_invisible="True"/>
+                <field name="rotting_days" column_invisible="True"/>
+                <field name="partner_id" optional="hide"/>
+                <field name="user_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show"/>
+                <field name="kanban_state" widget="state_selection" optional="show"/>
+                <field name="deadline" widget="remaining_days" optional="show"/>
+                <field name="progress" widget="progressbar" optional="hide"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="amount_total" sum="Total" optional="show"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'confirmed'" decoration-success="state == 'done'" decoration-danger="state == 'cancel'"/>
+                <field name="activity_ids" widget="list_activity" optional="show"/>
+                <field name="activity_exception_decoration" widget="activity_exception"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- === KANBAN === -->
+    <record id="int_ui_showcase_view_kanban" model="ir.ui.view">
+        <field name="name">int.ui.showcase.kanban</field>
+        <field name="model">int.ui.showcase</field>
+        <field name="arch" type="xml">
+            <kanban highlight_color="color" default_group_by="state" sample="1" group_create="0">
+                <field name="state"/>
+                <field name="kanban_state"/>
+                <field name="stage_id"/>
+                <field name="currency_id"/>
+                <progressbar field="kanban_state" colors='{"done": "success", "blocked": "danger", "normal": "200"}'/>
+                <templates>
+                    <t t-name="menu">
+                        <a role="menuitem" type="open" class="dropdown-item">Open</a>
+                        <a role="menuitem" type="object" name="action_notify" class="dropdown-item">Notify</a>
+                        <div role="separator" class="dropdown-divider"></div>
+                        <field name="color" widget="kanban_color_picker"/>
+                    </t>
+                    <t t-name="card">
+                        <main>
+                            <div class="d-flex">
+                                <field name="priority" widget="priority" class="me-2"/>
+                                <field name="name" class="fw-bold fs-5"/>
+                            </div>
+                            <field name="category_id" class="text-muted"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                            <field name="deadline" widget="remaining_days"/>
+                            <field name="progress" widget="progressbar"/>
+                            <field name="amount_total" widget="monetary"/>
+                            <footer class="pt-1">
+                                <div class="d-flex align-items-center gap-1">
+                                    <field name="activity_ids" widget="kanban_activity"/>
+                                    <field name="kanban_state" widget="state_selection"/>
+                                </div>
+                                <div class="ms-auto d-flex">
+                                    <field name="is_rotting" invisible="1"/>
+                                    <field name="rotting_days" class="d-flex" widget="rotting"/>
+                                    <field name="user_id" widget="many2one_avatar_user" class="ms-2"/>
+                                </div>
+                            </footer>
+                        </main>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- === PIVOT / GRAPH === -->
+    <record id="int_ui_showcase_view_pivot" model="ir.ui.view">
+        <field name="name">int.ui.showcase.pivot</field>
+        <field name="model">int.ui.showcase</field>
+        <field name="arch" type="xml">
+            <pivot string="UI Showcase" sample="1">
+                <field name="category_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="amount_total" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="int_ui_showcase_view_graph" model="ir.ui.view">
+        <field name="name">int.ui.showcase.graph</field>
+        <field name="model">int.ui.showcase</field>
+        <field name="arch" type="xml">
+            <graph string="UI Showcase" sample="1">
+                <field name="category_id"/>
+                <field name="amount_total" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- === CALENDAR / ACTIVITY === -->
+    <record id="int_ui_showcase_view_calendar" model="ir.ui.view">
+        <field name="name">int.ui.showcase.calendar</field>
+        <field name="model">int.ui.showcase</field>
+        <field name="arch" type="xml">
+            <calendar string="UI Showcase" date_start="date_start" date_stop="date_end" color="category_id" mode="month" quick_create="0">
+                <field name="user_id" avatar_field="avatar_128"/>
+                <field name="category_id" filters="1"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="int_ui_showcase_view_activity" model="ir.ui.view">
+        <field name="name">int.ui.showcase.activity</field>
+        <field name="model">int.ui.showcase</field>
+        <field name="arch" type="xml">
+            <activity string="UI Showcase">
+                <templates>
+                    <div t-name="activity-box" class="justify-content-between gap-2">
+                        <field name="name" display="full" class="o_text_block"/>
+                        <field name="user_id" widget="many2one_avatar_user"/>
+                    </div>
+                </templates>
+            </activity>
+        </field>
+    </record>
+
+    <!-- === SEARCH === -->
+    <record id="int_ui_showcase_view_search" model="ir.ui.view">
+        <field name="name">int.ui.showcase.search</field>
+        <field name="model">int.ui.showcase</field>
+        <field name="arch" type="xml">
+            <search string="UI Showcase">
+                <field name="name" string="Name or tag" filter_domain="['|', ('name', 'ilike', self), ('tag_ids', 'ilike', self)]"/>
+                <field name="category_id"/>
+                <field name="partner_id"/>
+                <field name="user_id"/>
+                <field name="tag_ids"/>
+                <field name="stage_id"/>
+                <searchpanel>
+                    <field name="state" icon="fa-flag" enable_counters="1"/>
+                    <field name="category_id" icon="fa-folder" select="multi" enable_counters="1"/>
+                </searchpanel>
+                <filter name="my" string="My Records" domain="[('user_id', '=', uid)]"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="open" string="Open" domain="[('state', 'in', ('draft', 'confirmed'))]"/>
+                <separator/>
+                <filter name="favorite" string="Favorites" domain="[('is_favorite', '=', True)]"/>
+                <filter name="urgent" string="Urgent" domain="[('priority', '=', '3')]"/>
+                <separator/>
+                <filter name="deadline_late" string="Late" domain="[('deadline', '&lt;', context_today().strftime('%Y-%m-%d')), ('state', 'in', ('draft', 'confirmed'))]"/>
+                <filter name="date" string="Date" date="date"/>
+                <separator/>
+                <filter name="rotting" string="Rotting" domain="[('is_rotting', '=', True)]"/>
+                <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_stage" string="Stage" context="{'group_by': 'stage_id'}"/>
+                    <filter name="group_category" string="Category" context="{'group_by': 'category_id'}"/>
+                    <filter name="group_user" string="Responsible" context="{'group_by': 'user_id'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="int_ui_showcase_action" model="ir.actions.act_window">
+        <field name="name">Records</field>
+        <field name="res_model">int.ui.showcase</field>
+        <field name="view_mode">kanban,list,form,pivot,graph,calendar,activity</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first record</p>
+            <p>Every view type of Odoo is available here for testing.</p>
+        </field>
+    </record>
+
+    <!-- === STAGES === -->
+    <record id="int_ui_showcase_stage_view_list" model="ir.ui.view">
+        <field name="name">int.ui.showcase.stage.list</field>
+        <field name="model">int.ui.showcase.stage</field>
+        <field name="arch" type="xml">
+            <list string="Stages" editable="bottom" default_order="sequence">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="rotting_threshold_days"/>
+                <field name="fold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_ui_showcase_stage_action" model="ir.actions.act_window">
+        <field name="name">Stages</field>
+        <field name="res_model">int.ui.showcase.stage</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- === TAGS / CATEGORIES / LINES === -->
+    <record id="int_ui_showcase_tag_view_list" model="ir.ui.view">
+        <field name="name">int.ui.showcase.tag.list</field>
+        <field name="model">int.ui.showcase.tag</field>
+        <field name="arch" type="xml">
+            <list string="Tags" editable="bottom">
+                <field name="name"/>
+                <field name="color" widget="color_picker"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_ui_showcase_tag_action" model="ir.actions.act_window">
+        <field name="name">Tags</field>
+        <field name="res_model">int.ui.showcase.tag</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <record id="int_ui_showcase_category_view_form" model="ir.ui.view">
+        <field name="name">int.ui.showcase.category.form</field>
+        <field name="model">int.ui.showcase.category</field>
+        <field name="arch" type="xml">
+            <form string="Category">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="sequence"/>
+                        <field name="icon"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_ui_showcase_category_view_list" model="ir.ui.view">
+        <field name="name">int.ui.showcase.category.list</field>
+        <field name="model">int.ui.showcase.category</field>
+        <field name="arch" type="xml">
+            <list string="Categories" default_order="sequence">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_ui_showcase_category_action" model="ir.actions.act_window">
+        <field name="name">Categories</field>
+        <field name="res_model">int.ui.showcase.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="int_ui_showcase_line_view_list" model="ir.ui.view">
+        <field name="name">int.ui.showcase.line.list</field>
+        <field name="model">int.ui.showcase.line</field>
+        <field name="arch" type="xml">
+            <list string="Lines" editable="bottom">
+                <field name="showcase_id"/>
+                <field name="name"/>
+                <field name="quantity"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="price_unit"/>
+                <field name="subtotal" sum="Total"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- === DIALOG === -->
+    <record id="int_ui_showcase_wizard_view_form" model="ir.ui.view">
+        <field name="name">int.ui.showcase.wizard.form</field>
+        <field name="model">int.ui.showcase.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Post a Message">
+                <group>
+                    <field name="showcase_id" invisible="context.get('active_id')"/>
+                    <field name="message"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" string="Post" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

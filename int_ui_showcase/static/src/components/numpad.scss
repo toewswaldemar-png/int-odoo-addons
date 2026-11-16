@@ -1,0 +1,68 @@
+.o_ui_showcase_numpad {
+    .o_ui_numpad_row {
+        cursor: pointer;
+        user-select: none;
+        touch-action: manipulation;
+    }
+
+    .o_ui_numpad_keys {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .o_ui_numpad_key {
+        aspect-ratio: 1;
+        font-size: 2rem;
+        font-weight: 600;
+        background: var(--bs-body-bg, #fff);
+        border: 2px solid var(--bs-border-color, #ced4da);
+        color: var(--bs-body-color, #212529);
+        user-select: none;
+        touch-action: manipulation;
+        transition: transform 0.05s ease-out, background-color 0.05s ease-out;
+
+        &:hover:not(:disabled) {
+            background: var(--bs-secondary-bg, #e9ecef);
+        }
+
+        &:active:not(:disabled) {
+            transform: scale(0.94);
+            background: var(--bs-primary, #714b67);
+            border-color: var(--bs-primary, #714b67);
+            color: #fff;
+        }
+
+        &:disabled {
+            opacity: 0.25;
+            background: var(--bs-secondary-bg, #e9ecef);
+            cursor: not-allowed;
+        }
+    }
+
+    .o_ui_numpad_key_zero {
+        grid-column: span 2;
+        aspect-ratio: auto;
+    }
+
+    .o_ui_numpad_key_back {
+        font-size: 1.75rem;
+    }
+}
+
+.o_ui_native_keys {
+    grid-template-columns: repeat(3, 1fr);
+
+    .o_ui_native_key {
+        aspect-ratio: 1;
+        touch-action: manipulation;
+        user-select: none;
+
+        &:disabled {
+            opacity: 0.25;
+        }
+    }
+
+    .o_ui_native_key_wide {
+        grid-column: span 2;
+        aspect-ratio: auto;
+    }
+}

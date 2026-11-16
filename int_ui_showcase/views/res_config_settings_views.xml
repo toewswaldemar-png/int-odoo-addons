@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.int.ui.showcase</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="UI Showcase" string="UI Showcase" name="int_ui_showcase">
+                    <block title="Settings with a checkbox" name="int_ui_showcase_checkbox_block">
+                        <setting string="Boolean setting" help="A checkbox. Fields that depend on it appear below.">
+                            <field name="int_ui_showcase_flag"/>
+                            <div class="content-group" invisible="not int_ui_showcase_flag">
+                                <div class="mt8">
+                                    <field name="int_ui_showcase_text" placeholder="Text of the setting"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Company dependent" company_dependent="1" help="A setting marked as company dependent shows the company icon.">
+                            <field name="int_ui_showcase_mode"/>
+                        </setting>
+                    </block>
+                    <block title="Settings with fields" name="int_ui_showcase_field_block">
+                        <setting string="Number" help="A number inside the text of the setting.">
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">Keep records for</span>
+                                <field name="int_ui_showcase_integer" class="text-center" style="width: 5ch;"/>
+                                <span class="ms-2">days</span>
+                            </div>
+                        </setting>
+                        <setting string="URL with copy button" help="A widget on a setting field.">
+                            <field name="int_ui_showcase_url" widget="CopyClipboardURL"/>
+                        </setting>
+                        <setting string="Setting with a button and a link" help="Buttons and links below the title.">
+                            <div class="mt8">
+                                <button name="%(int_ui_showcase_action)d" icon="oi-arrow-right" type="action" string="Open the records" class="btn-link"/>
+                            </div>
+                            <div>
+                                <a href="https://www.odoo.com/documentation/19.0/" target="_blank"><i class="fa fa-fw fa-arrow-right"/>Documentation</a>
+                            </div>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="int_ui_showcase_config_settings_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'int_ui_showcase', 'bin_size': False}</field>
+    </record>
+
+</odoo>

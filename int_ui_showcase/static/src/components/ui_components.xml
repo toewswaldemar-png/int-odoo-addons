@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="int_ui_showcase.UiComponents">
+        <div class="o_action o_ui_showcase_components overflow-auto">
+            <Notebook className="'p-3'">
+                <t t-set-slot="bootstrap" title="'Bootstrap'" name="'bootstrap'" isVisible="true"><BootstrapPage/></t>
+                <t t-set-slot="odoo" title="'Odoo styles'" name="'odoo'" isVisible="true"><OdooPage/></t>
+                <t t-set-slot="inputs" title="'Inputs'" name="'inputs'" isVisible="true"><InputsPage/></t>
+                <t t-set-slot="selectors" title="'Selectors'" name="'selectors'" isVisible="true"><SelectorsPage/></t>
+                <t t-set-slot="menus" title="'Menus and overlays'" name="'menus'" isVisible="true"><MenusPage/></t>
+                <t t-set-slot="dialogs" title="'Dialogs'" name="'dialogs'" isVisible="true"><DialogsPage/></t>
+                <t t-set-slot="numpad" title="'Numpad'" name="'numpad'" isVisible="true"><NumpadPage/></t>
+                <t t-set-slot="numpad_native" title="'Numpad (native)'" name="'numpad_native'" isVisible="true"><NativeNumpadPage/></t>
+                <t t-set-slot="dashboard" title="'Dashboard'" name="'dashboard'" isVisible="true"><DashboardPage/></t>
+                <t t-set-slot="views" title="'Embedded views'" name="'views'" isVisible="true"><ViewsPage/></t>
+            </Notebook>
+        </div>
+    </t>
+
+</templates>

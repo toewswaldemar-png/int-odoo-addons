@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- === TAGS === -->
+    <record id="tag_red" model="int.ui.showcase.tag">
+        <field name="name">Red</field>
+        <field name="color">1</field>
+    </record>
+    <record id="tag_orange" model="int.ui.showcase.tag">
+        <field name="name">Orange</field>
+        <field name="color">2</field>
+    </record>
+    <record id="tag_green" model="int.ui.showcase.tag">
+        <field name="name">Green</field>
+        <field name="color">10</field>
+    </record>
+    <record id="tag_violet" model="int.ui.showcase.tag">
+        <field name="name">Violet</field>
+        <field name="color">11</field>
+    </record>
+
+    <!-- === STAGES === -->
+    <record id="stage_new" model="int.ui.showcase.stage">
+        <field name="name">New</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="stage_qualified" model="int.ui.showcase.stage">
+        <field name="name">Qualified</field>
+        <field name="sequence">20</field>
+        <field name="rotting_threshold_days">5</field>
+    </record>
+    <record id="stage_proposal" model="int.ui.showcase.stage">
+        <field name="name">Proposal</field>
+        <field name="sequence">30</field>
+        <field name="rotting_threshold_days">10</field>
+    </record>
+    <record id="stage_won" model="int.ui.showcase.stage">
+        <field name="name">Won</field>
+        <field name="sequence">40</field>
+        <field name="fold" eval="True"/>
+    </record>
+
+    <!-- === COVER IMAGE === -->
+    <record id="attachment_cover" model="ir.attachment">
+        <field name="name">cover.png</field>
+        <field name="mimetype">image/png</field>
+        <field name="datas" type="base64" file="web/static/img/odoo-icon-192x192.png"/>
+    </record>
+
+    <!-- === CATEGORIES (with property definitions) === -->
+    <record id="category_hardware" model="int.ui.showcase.category">
+        <field name="name">Hardware</field>
+        <field name="sequence">10</field>
+        <field name="icon">fa-server</field>
+        <field name="showcase_properties_definition" eval="[
+            {'name': 'serial', 'type': 'char', 'string': 'Serial number'},
+            {'name': 'weight', 'type': 'float', 'string': 'Weight (kg)'},
+            {'name': 'tested', 'type': 'boolean', 'string': 'Tested'},
+        ]"/>
+    </record>
+    <record id="category_software" model="int.ui.showcase.category">
+        <field name="name">Software</field>
+        <field name="sequence">20</field>
+        <field name="icon">fa-desktop</field>
+        <field name="showcase_properties_definition" eval="[
+            {'name': 'version', 'type': 'char', 'string': 'Version'},
+            {'name': 'seats', 'type': 'integer', 'string': 'Seats'},
+        ]"/>
+    </record>
+    <record id="category_service" model="int.ui.showcase.category">
+        <field name="name">Service</field>
+        <field name="sequence">30</field>
+        <field name="icon">fa-wrench</field>
+    </record>
+
+    <!-- === RECORDS === -->
+    <record id="showcase_1" model="int.ui.showcase">
+        <field name="name">Rack server</field>
+        <field name="category_id" ref="category_hardware"/>
+        <field name="stage_id" ref="stage_qualified"/>
+        <field name="image_1920" type="base64" file="web/static/img/odoo-icon-192x192.png"/>
+        <field name="image_attachment_id" ref="attachment_cover"/>
+        <field name="pdf_file" type="base64" file="int_ui_showcase/data/sample.pdf"/>
+        <field name="pdf_name">sample.pdf</field>
+        <field name="is_pinned" eval="True"/>
+        <field name="state">confirmed</field>
+        <field name="priority">3</field>
+        <field name="kanban_state">blocked</field>
+        <field name="kind">a</field>
+        <field name="progress">20</field>
+        <field name="tag_ids" eval="[(6, 0, [ref('tag_red'), ref('tag_violet')])]"/>
+        <field name="deadline" eval="(DateTime.today() + relativedelta(days=-2)).strftime('%Y-%m-%d')"/>
+        <field name="date_start" eval="(DateTime.now() + relativedelta(days=1)).strftime('%Y-%m-%d 09:00:00')"/>
+        <field name="date_end" eval="(DateTime.now() + relativedelta(days=1)).strftime('%Y-%m-%d 11:00:00')"/>
+        <field name="properties" eval="{'serial': 'SRV-0001', 'weight': 18.5, 'tested': True}"/>
+        <field name="line_ids" eval="[
+            (0, 0, {'name': 'Chassis', 'quantity': 1, 'price_unit': 1200}),
+            (0, 0, {'name': 'Memory module', 'quantity': 4, 'price_unit': 85}),
+        ]"/>
+    </record>
+    <record id="showcase_2" model="int.ui.showcase">
+        <field name="name">Office suite</field>
+        <field name="category_id" ref="category_software"/>
+        <field name="stage_id" ref="stage_new"/>
+        <field name="parent_id" ref="showcase_1"/>
+        <field name="state">draft</field>
+        <field name="priority">1</field>
+        <field name="kind">b</field>
+        <field name="progress">65</field>
+        <field name="tag_ids" eval="[(6, 0, [ref('tag_green')])]"/>
+        <field name="deadline" eval="(DateTime.today() + relativedelta(days=7)).strftime('%Y-%m-%d')"/>
+        <field name="date_start" eval="(DateTime.now() + relativedelta(days=3)).strftime('%Y-%m-%d 14:00:00')"/>
+        <field name="date_end" eval="(DateTime.now() + relativedelta(days=3)).strftime('%Y-%m-%d 15:30:00')"/>
+        <field name="properties" eval="{'version': '2.1', 'seats': 25}"/>
+        <field name="line_ids" eval="[
+            (0, 0, {'name': 'License', 'quantity': 25, 'price_unit': 40}),
+        ]"/>
+    </record>
+    <record id="showcase_3" model="int.ui.showcase">
+        <field name="name">Onsite support</field>
+        <field name="category_id" ref="category_service"/>
+        <field name="stage_id" ref="stage_won"/>
+        <field name="parent_id" ref="showcase_1"/>
+        <field name="state">done</field>
+        <field name="priority">2</field>
+        <field name="kanban_state">done</field>
+        <field name="kind">c</field>
+        <field name="progress">100</field>
+        <field name="is_favorite" eval="True"/>
+        <field name="tag_ids" eval="[(6, 0, [ref('tag_orange'), ref('tag_green')])]"/>
+        <field name="date_start" eval="(DateTime.now() + relativedelta(days=-4)).strftime('%Y-%m-%d 10:00:00')"/>
+        <field name="date_end" eval="(DateTime.now() + relativedelta(days=-4)).strftime('%Y-%m-%d 12:00:00')"/>
+        <field name="line_ids" eval="[
+            (0, 0, {'name': 'Travel', 'quantity': 1, 'price_unit': 60}),
+            (0, 0, {'name': 'Hours', 'quantity': 3.5, 'price_unit': 90}),
+        ]"/>
+    </record>
+    <record id="showcase_4" model="int.ui.showcase">
+        <field name="name">Network switch</field>
+        <field name="category_id" ref="category_hardware"/>
+        <field name="stage_id" ref="stage_proposal"/>
+        <field name="state">cancel</field>
+        <field name="kind">d</field>
+        <field name="progress">0</field>
+        <field name="tag_ids" eval="[(6, 0, [ref('tag_red')])]"/>
+        <field name="date_start" eval="(DateTime.now() + relativedelta(days=6)).strftime('%Y-%m-%d 08:00:00')"/>
+        <field name="date_end" eval="(DateTime.now() + relativedelta(days=6)).strftime('%Y-%m-%d 09:00:00')"/>
+        <field name="properties" eval="{'serial': 'SW-0042', 'weight': 3.2, 'tested': False}"/>
+        <field name="line_ids" eval="[
+            (0, 0, {'name': '24 port switch', 'quantity': 2, 'price_unit': 310}),
+        ]"/>
+    </record>
+    <record id="showcase_5" model="int.ui.showcase">
+        <field name="name">Backup subscription</field>
+        <field name="category_id" ref="category_software"/>
+        <field name="stage_id" ref="stage_new"/>
+        <field name="state">confirmed</field>
+        <field name="kanban_state">done</field>
+        <field name="kind">a</field>
+        <field name="progress">80</field>
+        <field name="tag_ids" eval="[(6, 0, [ref('tag_violet'), ref('tag_green')])]"/>
+        <field name="deadline" eval="(DateTime.today() + relativedelta(days=30)).strftime('%Y-%m-%d')"/>
+        <field name="properties" eval="{'version': '5.0', 'seats': 3}"/>
+        <field name="line_ids" eval="[
+            (0, 0, {'name': 'Yearly plan', 'quantity': 3, 'price_unit': 120}),
+        ]"/>
+    </record>
+
+    <!-- === SERVER ACTION (Action menu) === -->
+    <record id="server_action_mark_flag" model="ir.actions.server">
+        <field name="name">Set the flag</field>
+        <field name="model_id" ref="model_int_ui_showcase"/>
+        <field name="binding_model_id" ref="model_int_ui_showcase"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">records.write({'flag': True})</field>
+    </record>
+
+    <!-- === MAIL TEMPLATE (composer) === -->
+    <record id="mail_template_showcase" model="mail.template">
+        <field name="name">UI Showcase: Summary</field>
+        <field name="model_id" ref="model_int_ui_showcase"/>
+        <field name="subject">Summary of {{ object.name }}</field>
+        <field name="body_html" type="html">
+<div>
+    <p>Hello,</p>
+    <p>the record <strong t-out="object.name or ''"/> is in the status <t t-out="object.state or ''"/>.</p>
+</div>
+        </field>
+    </record>
+
+</odoo>
