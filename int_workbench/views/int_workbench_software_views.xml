@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- The programs of the controllers (images and program texts), read by their content. A manager approves them; only an approved
-         program can be loaded. -->
+    <!-- The programs of the controllers (images and program texts), read by their content. An old one is archived and cannot be loaded. -->
 
     <!-- The dialog that brings files in -->
     <record id="int_workbench_software_upload_view_form" model="ir.ui.view">
@@ -18,7 +17,7 @@
                     <field name="software_ids" invisible="1"/>
                 </group>
                 <footer>
-                    <button name="action_upload" type="object" string="Bring in" class="btn-primary" invisible="state != 'upload'" data-hotkey="q"/>
+                    <button name="action_upload" type="object" string="Import" class="btn-primary" invisible="state != 'upload'" data-hotkey="q"/>
                     <button name="action_show" type="object" string="Show the programs" class="btn-primary" invisible="state != 'done'" data-hotkey="q"/>
                     <button string="Close" special="cancel" data-hotkey="x"/>
                 </footer>
@@ -27,7 +26,7 @@
     </record>
 
     <record id="int_workbench_software_upload_action" model="ir.actions.act_window">
-        <field name="name">Bring programs in</field>
+        <field name="name">Import programs</field>
         <field name="res_model">int.workbench.software.upload</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
@@ -37,9 +36,9 @@
         <field name="name">int.workbench.software.list</field>
         <field name="model">int.workbench.software</field>
         <field name="arch" type="xml">
-            <list decoration-muted="state == 'retired'" decoration-warning="warnings">
+            <list decoration-warning="warnings">
                 <header>
-                    <button name="%(int_workbench_software_upload_action)d" type="action" string="Bring in" display="always"
+                    <button name="%(int_workbench_software_upload_action)d" type="action" string="Import" display="always"
                             groups="int_workbench.int_workbench_group_technician,int_workbench.int_workbench_group_manager"/>
                 </header>
                 <field name="name"/>
@@ -54,8 +53,6 @@
                 <field name="size" optional="hide"/>
                 <field name="short_id" optional="hide"/>
                 <field name="warnings" column_invisible="1"/>
-                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-info="state == 'draft'"
-                       decoration-muted="state == 'retired'"/>
             </list>
         </field>
     </record>
@@ -65,22 +62,12 @@
         <field name="model">int.workbench.software</field>
         <field name="arch" type="xml">
             <form>
-                <header>
-                    <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="state == 'approved'"
-                            groups="int_workbench.int_workbench_group_manager"/>
-                    <button name="action_retire" type="object" string="Retire" invisible="state != 'approved'"
-                            groups="int_workbench.int_workbench_group_manager"
-                            confirm="Retire this program? It can no longer be assigned or loaded."/>
-                    <button name="action_draft" type="object" string="Set to draft" invisible="state != 'approved'"
-                            groups="int_workbench.int_workbench_group_manager"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,approved"/>
-                </header>
                 <sheet>
                     <div class="alert alert-warning" role="alert" invisible="not warnings">
                         <field name="warnings" readonly="1" nolabel="1"/>
                     </div>
                     <div class="oe_title">
-                        <h1><field name="name" readonly="state != 'draft'" placeholder="Name"/></h1>
+                        <h1><field name="name" placeholder="Name"/></h1>
                     </div>
                     <group>
                         <group string="What it is">
@@ -99,8 +86,6 @@
                             <field name="size"/>
                             <field name="data_size"/>
                             <field name="sha256"/>
-                            <field name="approved_by_id" invisible="state != 'approved'"/>
-                            <field name="approved_at" invisible="state != 'approved'"/>
                         </group>
                     </group>
                     <notebook>
@@ -128,15 +113,11 @@
                 <field name="name" string="Program" filter_domain="['|', '|', '|', ('name', 'ilike', self), ('app_name', 'ilike', self), ('document', 'ilike', self), ('sources', 'ilike', self)]"/>
                 <field name="document"/>
                 <field name="os_version"/>
-                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
-                <filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
-                <filter name="retired" string="Retired" domain="[('state', '=', 'retired')]"/>
-                <separator/>
+                <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
                 <filter name="with_warnings" string="With warnings" domain="[('warnings', '!=', False)]"/>
                 <group>
                     <filter name="group_by_kind" string="Kind" context="{'group_by': 'kind'}"/>
                     <filter name="group_by_hardware" string="Controller type" context="{'group_by': 'hardware'}"/>
-                    <filter name="group_by_state" string="State" context="{'group_by': 'state'}"/>
                     <filter name="group_by_document" string="Document number" context="{'group_by': 'document'}"/>
                 </group>
             </search>
@@ -150,7 +131,7 @@
         <field name="context">{'search_default_group_by_kind': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No program yet</p>
-            <p>Bring in the images and program texts of the controllers. They are read by their content, whatever they are called; a manager approves them.</p>
+            <p>Bring in the images and program texts of the controllers. They are read by their content, whatever they are called.</p>
         </field>
     </record>
 

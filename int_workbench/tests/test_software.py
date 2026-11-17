@@ -101,7 +101,7 @@ class TestSoftwareCheck(TransactionCase):
 
 @tagged("post_install", "-at_install")
 class TestIntWorkbenchSoftware(TransactionCase):
-    """The programs in Odoo: one record for each content, approved by a manager, never changed."""
+    """The programs in Odoo: one record for each content, never changed, archived when old."""
 
     @classmethod
     def setUpClass(cls):
@@ -117,12 +117,12 @@ class TestIntWorkbenchSoftware(TransactionCase):
 
     # === from a file === #
 
-    def test_a_file_becomes_a_draft_that_says_what_it_is(self):
+    def test_a_file_becomes_a_program_that_says_what_it_is(self):
         software, created = self.bring_in()
         self.assertTrue(created)
         self.assertEqual(
-            (software.state, software.kind, software.hardware, software.name, software.os_version, software.document, software.expected_os),
-            ("draft", "application", "ha3x", "BR186002", "", "3EGM090644E2002", "2.10"),
+            (software.kind, software.hardware, software.name, software.os_version, software.document, software.expected_os),
+            ("application", "ha3x", "BR186002", "", "3EGM090644E2002", "2.10"),
         )
         self.assertEqual(software.sources, "BR186002.dwn")
         self.assertEqual(base64.b64decode(software.data), self.image)
@@ -151,33 +151,23 @@ class TestIntWorkbenchSoftware(TransactionCase):
         self.assertIn("B1852010.dwn", software.warnings)
         self.assertIn("B1852006", software.warnings)
 
-    # === states and rights === #
+    # === archive and rights === #
 
-    def test_a_manager_approves_and_a_technician_does_not(self):
+    def test_a_technician_archives_a_program_and_a_reader_does_not(self):
         software, _created = self.bring_in()
         with self.assertRaises(AccessError):
-            software.with_user(self.technician).action_approve()
-        with self.assertRaises(AccessError):
-            software.with_user(self.technician).write({"state": "approved"})
-        software.with_user(self.manager).action_approve()
-        self.assertEqual((software.state, software.approved_by_id), ("approved", self.manager))
-        self.assertTrue(software.approved_at)
+            software.with_user(self.reader).write({"active": False})
+        software.with_user(self.technician).write({"active": False})
+        self.assertFalse(software.active)
+        self.assertFalse(self.env["int.workbench.software"].search([("id", "=", software.id)]), "an archived program is not found any more")
+        again, created = self.bring_in()
+        self.assertEqual((again, created, software.active), (software, False, True), "the same file again: the archived program is wanted again")
 
-    def test_a_program_is_retired_and_approved_again_and_set_back_to_draft(self):
-        software, _created = self.bring_in()
-        manager = software.with_user(self.manager)
-        manager.action_approve()
-        manager.action_retire()
-        self.assertEqual(software.state, "retired")
-        manager.action_approve()
-        manager.action_draft()
-        self.assertEqual((software.state, software.approved_by_id.id, software.approved_at), ("draft", False, False))
-
-    def test_a_program_in_no_known_memory_is_not_approved(self):
+    def test_a_program_in_no_known_memory_cannot_be_loaded(self):
         software, _created = self.bring_in("x.dwn", srec([(0x500000, b"\x01" * 16)]))
         self.assertEqual(software.kind, "unknown")
         with self.assertRaises(UserError):
-            software.with_user(self.manager).action_approve()
+            software._check_loadable()
 
     def test_what_the_file_contains_cannot_be_changed(self):
         software, _created = self.bring_in()
@@ -185,12 +175,8 @@ class TestIntWorkbenchSoftware(TransactionCase):
             with self.assertRaises(UserError, msg=str(values)):
                 software.with_user(self.manager).write(values)
 
-    def test_only_a_draft_is_deleted(self):
+    def test_a_manager_deletes_and_a_technician_does_not(self):
         software, _created = self.bring_in()
-        approved, _created = self.bring_in("v310.dwn", srec([(0, operating_system())]))
-        approved.with_user(self.manager).action_approve()
-        with self.assertRaises(UserError):
-            approved.with_user(self.manager).unlink()
         with self.assertRaises(AccessError):
             software.with_user(self.technician).unlink()
         software.with_user(self.manager).unlink()

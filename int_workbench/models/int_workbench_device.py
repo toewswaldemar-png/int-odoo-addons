@@ -164,10 +164,19 @@ class IntWorkbenchDevice(models.Model):
     project_version_id = fields.Many2one(
         "int.workbench.project.version",
         string="Project version",
-        domain="[('state', '=', 'approved')]",
         ondelete="restrict",
         copy=False,
         help="The version of the project that this controller is to have (the assignment). It is kept in the chatter of the version.",
+    )
+    project_version_count = fields.Integer(
+        compute="_compute_project_version_count",
+        string="Versions of the project",
+        help="How many versions the project of this controller has (all versions while it has none).",
+    )
+    project_software_count = fields.Integer(
+        compute="_compute_project_software_count",
+        string="Software that fits the project",
+        help="How many programs have the document number that the tables of the assigned version carry.",
     )
     report_age = fields.Float(
         compute="_compute_ages",
@@ -363,15 +372,27 @@ class IntWorkbenchDevice(models.Model):
         return result
 
     def _apply_default_project(self):
-        """Give a device without a project version the default of its device type (an approved version), once.
+        """Give a device without a project version the default of its device type, once.
 
         The assignment stays a record of the device like any other (and goes to the chatter of the version); changing the default of
         the type later does not touch the devices that have a version.
         """
         for device in self:
             default = device.device_type_id.project_version_id
-            if default and default.state == "approved" and not device.project_version_id:
+            if default and not device.project_version_id:
                 device.write({"project_version_id": default.id})
+
+    @api.depends("project_version_id")
+    def _compute_project_version_count(self):
+        Version = self.env["int.workbench.project.version"]
+        for device in self:
+            version = device.project_version_id
+            device.project_version_count = Version.search_count([("project", "=", version.project)] if version else [])
+
+    @api.depends("project_version_id")
+    def _compute_project_software_count(self):
+        for device in self:
+            device.project_software_count = len(device.project_version_id.software_ids)
 
     @api.depends("project_version_id", "project_version_id.checksum", "project_active_checksum")
     def _compute_project_state(self):
@@ -384,12 +405,6 @@ class IntWorkbenchDevice(models.Model):
                 device.project_state = "same"
             else:
                 device.project_state = "differs"
-
-    @api.constrains("project_version_id")
-    def _check_project_version(self):
-        for device in self:
-            if device.project_version_id and device.project_version_id.state != "approved":
-                raise ValidationError(self.env._("%s cannot be assigned: only an approved version can.", device.project_version_id.display_name))
 
     @api.model
     def _normalized(self, vals):
@@ -480,18 +495,18 @@ class IntWorkbenchDevice(models.Model):
     def service_projects(self, device_ref, everything=False):
         """Tell the service which project version its controller is to have, and where to get the files.
 
-        :param bool everything: also list the other versions that are approved (the service of a laptop keeps them all, to have them
+        :param bool everything: also list the other versions that are in use (the service of a laptop keeps them all, to have them
             at the vehicle without a network)
         :return: ``{"wanted": version | None, "approved": [version]}`` where a version is ``{"checksum", "vehicle", "project",
-            "files": [{"name", "sha256", "size"}]}``. Only an approved or retired version is handed out, never a draft.
+            "files": [{"name", "sha256", "size"}]}``. The key ``approved`` is the one the service knows; it lists the versions that are not archived.
         """
         device = self._service_device(device_ref)
         Version = self.env["int.workbench.project.version"]
         # sudo: int.workbench.project.version: the service user has no right on the models, only on the calls of the service
         wanted = device.project_version_id.sudo()
-        answer = {"wanted": wanted._service_description() if wanted and wanted.state != "draft" else None}
+        answer = {"wanted": wanted._service_description() if wanted else None}
         if everything:
-            answer["approved"] = [version._service_description() for version in Version.sudo().search([("state", "=", "approved")])]
+            answer["approved"] = [version._service_description() for version in Version.sudo().search([])]
         return answer
 
     @api.model
@@ -499,7 +514,7 @@ class IntWorkbenchDevice(models.Model):
         """Give one file of a project version to the service: ``{"name", "sha256", "size", "data"}`` with the content as base64."""
         self._service_device(device_ref)
         # sudo: int.workbench.project.version: see service_projects
-        version = self.env["int.workbench.project.version"].sudo().search([("checksum", "=", checksum), ("state", "!=", "draft")], limit=1)
+        version = self.env["int.workbench.project.version"].sudo().search([("checksum", "=", checksum)], limit=1)
         file = version.file_ids.filtered(lambda candidate: candidate.name == name)
         if not file:
             raise UserError(self.env._("There is no file %(name)s in the version %(checksum)s.", name=name, checksum=str(checksum)[:12]))
@@ -508,13 +523,15 @@ class IntWorkbenchDevice(models.Model):
 
     @api.model
     def service_software(self, device_ref, sha256):
-        """Give one approved program to the service (to load it into the controller): ``{"name", "sha256", "size", "kind", "hardware",
-        "data"}`` with the content as base64. Only an approved program is handed out, never a draft or a retired one."""
+        """Give one program to the service (to load it into the controller): ``{"name", "sha256", "size", "kind", "hardware",
+        "data"}`` with the content as base64. An archived program is not handed out, and neither is one that is not placed in the memory of
+        a known controller."""
         self._service_device(device_ref)
         # sudo: int.workbench.software: the service user has no right on the models, only on the calls of the service
-        software = self.env["int.workbench.software"].sudo().search([("sha256", "=", sha256), ("state", "=", "approved")], limit=1)
+        software = self.env["int.workbench.software"].sudo().search([("sha256", "=", sha256)], limit=1)
         if not software:
-            raise UserError(self.env._("There is no approved program with the checksum %s.", str(sha256)[:12]))
+            raise UserError(self.env._("There is no program with the checksum %s.", str(sha256)[:12]))
+        software._check_loadable()
         data = software.data or b""
         return {
             "name": software.filename or software.name,
@@ -863,6 +880,41 @@ class IntWorkbenchDevice(models.Model):
     def action_open_commands(self):
         """Open the log of the requests made for this device: who clamped, set the clock, sent a command, and how it ended."""
         return self._open_menu_list("int_workbench.int_workbench_command_action", self.env._("Requests"))
+
+    def action_open_service(self):
+        """Open the settings of the service of this controller (its id, user, address, token, and when it was last seen) in a dialog."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Service"),
+            "res_model": "int.workbench.device",
+            "res_id": self.id,
+            "views": [(self.env.ref("int_workbench.int_workbench_device_view_form_service").id, "form")],
+            "target": "new",
+        }
+
+    def action_open_project(self):
+        """Open the list of the versions of the project that this controller has (all versions while it has none), to bring one in."""
+        self.ensure_one()
+        version = self.project_version_id
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Projects"),
+            "res_model": "int.workbench.project.version",
+            "view_mode": "list,form",
+            "domain": [("project", "=", version.project)] if version else [],
+        }
+
+    def action_open_software(self):
+        """Open the programs that fit the project of this controller (the document number of its tables is the one of the program)."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Software"),
+            "res_model": "int.workbench.software",
+            "view_mode": "list,form",
+            "domain": [("id", "in", self.project_version_id.software_ids.ids)],
+        }
 
     def action_set_clock(self):
         """Open the dialog that sets the clock of the controller."""

@@ -8,10 +8,9 @@ from odoo.addons.int_workbench.models import project_check as check
 
 class IntWorkbenchProjectUpload(models.TransientModel):
     _name = "int.workbench.project.upload"
-    _description = "Bring a project version in"
+    _description = "Import a project version"
 
-    vehicle = fields.Char(required=True, help="The folders above the project, for example BR145/Br145020/BR145020.")
-    project = fields.Char(required=True, help="The name of the project folder, for example Pro_2.")
+    project = fields.Char(string="Project", required=True, help="What the versions of one project have in common, for example TRAXX3002/Pro_1.")
     attachment_ids = fields.Many2many(
         "ir.attachment", string="Files", help="The files of the project folder, or one ZIP archive of the folder. Files that the original makes itself (error data, reports) are left out."
     )
@@ -20,7 +19,7 @@ class IntWorkbenchProjectUpload(models.TransientModel):
     result = fields.Text(readonly=True)
 
     def action_upload(self):
-        """Make a draft of the version that the files are (or find the one that is already there)."""
+        """Make the version that the files are (or find the one that is already there)."""
         self.ensure_one()
         if not self.attachment_ids:
             raise UserError(self.env._("Choose the files of the project, or a ZIP archive of the folder."))
@@ -36,11 +35,11 @@ class IntWorkbenchProjectUpload(models.TransientModel):
         except check.VersionError as error:
             raise UserError(self.env["int.workbench.project.version"]._error_text(error)) from error
         Version = self.env["int.workbench.project.version"]
-        version, created = Version._from_files(self.vehicle, self.project, files, origin=self.env._("Upload by %s", self.env.user.name))
+        version, created = Version._from_files(self.project, files, origin=self.env._("Upload by %s", self.env.user.name))
         # the uploads are only what the user brought in: the content now lives in the version
         self.attachment_ids.unlink()
         if created:
-            result = self.env._("New draft %(name)s with %(count)d files.", name=version.display_name, count=version.file_count)
+            result = self.env._("New project version %(name)s with %(count)d files.", name=version.display_name, count=version.file_count)
         else:
             result = self.env._("This version is already there as %s. The folder was added to its origins.", version.display_name)
         self.write({"state": "done", "version_id": version.id, "result": result})

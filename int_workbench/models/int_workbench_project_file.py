@@ -40,5 +40,4 @@ class IntWorkbenchProjectFile(models.Model):
     line_document = fields.Char(string="Document number", readonly=True, help="The six digits of the document number in the version line (3EGM, six digits, a letter, four digits).")
     line_author = fields.Char(string="Author", readonly=True)
     software_id = fields.Many2one("int.workbench.software", string="Software", readonly=True, ondelete="set null", help="The program that this file is, if it is one.")
-    vehicle = fields.Char(related="version_id.folder_id.vehicle", string="Vehicle")
-    project = fields.Char(related="version_id.folder_id.name", string="Project")
+    project = fields.Char(related="version_id.project", string="Project")

@@ -8,7 +8,7 @@
         "operators clamp and release values (every request is a record that the service carries out and that stays in the clamp "
         "log), and shows the accounts, the write log and the project library of the service."
     ),
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.2",
     "category": "Productivity",
     "author": "Waldemar Toews",
     "license": "LGPL-3",

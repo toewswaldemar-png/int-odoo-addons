@@ -23,10 +23,10 @@ class TestIntWorkbenchServiceProjects(TransactionCase):
         cls.device = Device.create({"name": "Bench", "device_ref": "main", "service_user_id": cls.service.id})
         cls.other = Device.create({"name": "Other", "device_ref": "other", "service_user_id": cls.other_service.id})
         Version = cls.env["int.workbench.project.version"]
-        cls.version, _created = Version._from_files("BR186/Br186012", "Pro_2", project_files())
-        cls.second, _created = Version._from_files("BR186/Br186012", "Pro_3", project_files({"Ftab.txt": b"changed"}))
-        cls.draft, _created = Version._from_files("BR186/Br186012", "Pro_4", project_files({"Ftab.txt": b"a draft"}))
-        (cls.version | cls.second).with_user(cls.manager).action_approve()
+        cls.version, _created = Version._from_files("BR186/Br186012/Pro_2", project_files())
+        cls.second, _created = Version._from_files("BR186/Br186012/Pro_3", project_files({"Ftab.txt": b"changed"}))
+        cls.archived, _created = Version._from_files("BR186/Br186012/Pro_4", project_files({"Ftab.txt": b"an old one"}))
+        cls.archived.write({"active": False})
 
     def call(self, method, *args, user=None, **kwargs):
         return getattr(self.env["int.workbench.device"].with_user(user or self.service), method)(*args, **kwargs)
@@ -39,12 +39,12 @@ class TestIntWorkbenchServiceProjects(TransactionCase):
     def test_the_assigned_version_is_handed_out_with_its_files_and_their_checksums(self):
         self.device.with_user(self.manager).write({"project_version_id": self.version.id})
         wanted = self.call("service_projects", "main")["wanted"]
-        self.assertEqual((wanted["checksum"], wanted["vehicle"], wanted["project"]), (self.version.checksum, "BR186/Br186012", "Pro_2"))
+        self.assertEqual((wanted["checksum"], wanted["vehicle"], wanted["project"]), (self.version.checksum, "", "BR186/Br186012/Pro_2"))
         names = {item["name"]: item for item in wanted["files"]}
         self.assertEqual(sorted(names), ["CANPROP.LAD", "DEF.BIN", "Ftab.txt"])
         self.assertEqual(names["DEF.BIN"], {"name": "DEF.BIN", "sha256": hashlib.sha256(b"settings").hexdigest(), "size": 8})
 
-    def test_every_approved_version_is_listed_on_request_and_no_draft(self):
+    def test_every_version_that_is_not_archived_is_listed_on_request(self):
         approved = self.call("service_projects", "main", everything=True)["approved"]
         self.assertEqual({item["checksum"] for item in approved}, {self.version.checksum, self.second.checksum})
         self.assertNotIn("approved", self.call("service_projects", "main"))
@@ -63,9 +63,9 @@ class TestIntWorkbenchServiceProjects(TransactionCase):
         self.assertEqual(hashlib.sha256(content).hexdigest(), answer["sha256"])
         self.assertEqual((answer["name"], answer["size"]), ("Ftab.txt", len(content)))
 
-    def test_a_draft_and_a_file_that_is_not_there_are_not_handed_out(self):
+    def test_an_archived_version_and_a_file_that_is_not_there_are_not_handed_out(self):
         with self.assertRaises(UserError):
-            self.call("service_project_file", "main", self.draft.checksum, "Ftab.txt")
+            self.call("service_project_file", "main", self.archived.checksum, "Ftab.txt")
         with self.assertRaises(UserError):
             self.call("service_project_file", "main", self.version.checksum, "nothing.txt")
 
@@ -101,19 +101,19 @@ class TestIntWorkbenchServiceProjects(TransactionCase):
 
     # === the programs === #
 
-    def test_an_approved_program_is_handed_out_with_its_content_and_nothing_else(self):
+    def test_a_program_is_handed_out_with_its_content_and_nothing_else(self):
         Software = self.env["int.workbench.software"]
         image = srec([(0, operating_system())])
         software, _created = Software._from_file("v310.dwn", image)
-        with self.assertRaises(UserError):
-            self.call("service_software", "main", software.sha256)  # a draft
-        software.with_user(self.manager).action_approve()
         answer = self.call("service_software", "main", software.sha256)
         self.assertEqual((answer["kind"], answer["hardware"], answer["size"], answer["name"]), ("os", "ha3x", len(image), "v310.dwn"))
         self.assertEqual(base64.b64decode(answer["data"]), image)
-        software.with_user(self.manager).action_retire()
+        software.with_user(self.manager).write({"active": False})
         with self.assertRaises(UserError):
-            self.call("service_software", "main", software.sha256)
+            self.call("service_software", "main", software.sha256)  # archived
+        nowhere, _created = Software._from_file("x.dwn", srec([(0x500000, b"\x01" * 16)]))
+        with self.assertRaises(UserError):
+            self.call("service_software", "main", nowhere.sha256)  # in no known memory
         with self.assertRaises(UserError):
             self.call("service_software", "main", "0" * 64)
         with self.assertRaises(AccessError):

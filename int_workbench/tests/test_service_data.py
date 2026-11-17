@@ -157,14 +157,14 @@ class TestIntWorkbenchServiceData(TransactionCase):
 
     # === projects === #
 
-    def test_the_versions_of_the_library_are_listed_with_vehicle_and_project(self):
+    def test_the_versions_of_the_library_are_listed_with_the_name_of_their_place(self):
         broken = {**PROJECT, "id": "b" * 64, "loadable": False, "load_error": "no KS.BIN", "rows": 0, "origins": []}
         with mock.patch(REQUEST, return_value=answer({"projects": [PROJECT, broken], "root_set": True, "loader_version": "1"})):
             self.as_manager().action_fetch_projects()
         versions = {p.checksum: p for p in self.env["int.workbench.project"].search([("device_id", "=", self.device.id)])}
         good = versions["a" * 64]
-        self.assertEqual((good.vehicle, good.project, good.short_id, good.rows, good.loadable), ("BR 187/11HA35D", "Pro_1", "aaaaaaaa", 120, True))
-        self.assertEqual(good.display_name, "Pro_1 aaaaaaaa")
+        self.assertEqual((good.project, good.short_id, good.rows, good.loadable), ("BR 187/11HA35D/Pro_1", "aaaaaaaa", 120, True))
+        self.assertEqual(good.display_name, "BR 187/11HA35D/Pro_1 aaaaaaaa")
         self.assertEqual((versions["b" * 64].loadable, versions["b" * 64].load_error), (False, "no KS.BIN"))
 
     def test_new_folders_are_taken_over_in_packages(self):
@@ -186,7 +186,7 @@ class TestIntWorkbenchServiceData(TransactionCase):
         self.assertEqual(wizard.state, "done")
         self.assertIn("30 folders, 29 new versions, 1 turned away", wizard.result)
         self.assertIn("V/P3: turned away", wizard.result)
-        self.assertIn("V/P4: brought in, does not load", wizard.result)
+        self.assertIn("V/P4: imported, does not load", wizard.result)
         self.assertEqual(self.env["int.workbench.project"].search_count([("device_id", "=", self.device.id)]), 1, "the library is fetched afresh")
 
     def test_without_new_folders_the_dialog_says_so(self):

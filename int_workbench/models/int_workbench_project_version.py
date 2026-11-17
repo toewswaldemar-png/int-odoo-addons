@@ -2,34 +2,29 @@ import base64
 import binascii
 
 from odoo import api, fields, models
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import UserError
 
 from . import project_check as check
 
-FROM_CONTENT = ("folder_id", "checksum", "size", "expected_document", "expected_names", "config_numbers", "file_ids")
-MANAGER_GROUP = "int_workbench.int_workbench_group_manager"
+FROM_CONTENT = ("checksum", "size", "expected_document", "expected_names", "config_numbers", "file_ids")
 
 
 class IntWorkbenchProjectVersion(models.Model):
     _name = "int.workbench.project.version"
     _description = "Version of a project"
     _inherit = ["mail.thread"]
-    _order = "folder_id, create_date desc, id desc"
+    _order = "project, create_date desc, id desc"
 
-    folder_id = fields.Many2one("int.workbench.project.folder", string="Project", required=True, index=True, ondelete="restrict", readonly=True)
-    vehicle = fields.Char(related="folder_id.vehicle", store=True, index=True)
-    project = fields.Char(related="folder_id.name", store=True, index=True)
-    checksum = fields.Char(required=True, readonly=True, index=True, copy=False, help="The name of the version: the checksum of its files (the rule of the project library of the service).")
-    short_id = fields.Char(string="Id", compute="_compute_short_id")
-    state = fields.Selection(
-        [("draft", "Draft"), ("approved", "Approved"), ("retired", "Retired")],
-        default="draft",
+    project = fields.Char(
+        string="Project",
         required=True,
         index=True,
         tracking=True,
-        copy=False,
-        help="Only an approved version can be assigned to a controller. A manager approves it; a retired version stays and can be approved again.",
+        help="What the versions of one project have in common, for example TRAXX3002/Pro_1. The versions of the same name are shown together.",
     )
+    checksum = fields.Char(required=True, readonly=True, index=True, copy=False, help="The name of the version: the checksum of its files (the rule of the project library of the service).")
+    short_id = fields.Char(string="Id", compute="_compute_short_id")
+    active = fields.Boolean(default=True, help="An archived version is not offered any more; a controller that has it keeps it.")
     file_ids = fields.One2many("int.workbench.project.file", "version_id", string="Files", readonly=True)
     file_count = fields.Integer(compute="_compute_file_count")
     size = fields.Integer(string="Size (bytes)", readonly=True)
@@ -56,8 +51,6 @@ class IntWorkbenchProjectVersion(models.Model):
     software_ids = fields.Many2many("int.workbench.software", string="Matching software", compute="_compute_software_ids", help="The programs whose document number is the one of the tables.")
     device_ids = fields.One2many("int.workbench.device", "project_version_id", string="Devices", readonly=True)
     origins = fields.Text(readonly=True, help="Where the version was brought in from, one in each line.")
-    approved_by_id = fields.Many2one("res.users", string="Approved by", readonly=True, copy=False)
-    approved_at = fields.Datetime(string="Approved at", readonly=True, copy=False)
     note = fields.Text()
 
     _checksum_unique = models.Constraint("UNIQUE (checksum)", "A version exists once.")
@@ -67,7 +60,7 @@ class IntWorkbenchProjectVersion(models.Model):
         self.ensure_one()
         return {
             "checksum": self.checksum,
-            "vehicle": self.vehicle or "",
+            "vehicle": "",  # the service still knows the field; the name of the project holds what it said
             "project": self.project or "",
             "files": [{"name": file.name, "sha256": file.sha256, "size": file.size} for file in self.file_ids],
         }
@@ -98,37 +91,36 @@ class IntWorkbenchProjectVersion(models.Model):
         self.ensure_one()
         return check.match_level(self.expected_document, self.config_numbers, software.document_number, (software.document_codes or "").split())
 
-    @api.depends("folder_id", "checksum")
+    @api.depends("project", "checksum")
     def _compute_display_name(self):
         for version in self:
-            version.display_name = f"{version.folder_id.display_name or ''} {version.short_id or ''}".strip()
+            version.display_name = f"{version.project or ''} {version.short_id or ''}".strip()
 
     # === FROM FILES === #
 
     @api.model
-    def _from_files(self, vehicle, project, files, origin=""):
-        """Make a draft of the version that the files of a project folder are and return ``(record, created)``.
+    def _from_files(self, project, files, origin=""):
+        """Make the version that the files of a project folder are and return ``(record, created)``.
 
-        ``files`` is ``[(name, bytes)]``. A version that is already there (same files, wherever they came from) is not made again: the origin
+        ``project`` is the name of the project the version belongs to. ``files`` is ``[(name, bytes)]``. A version that is already there (same files, wherever they came from) is not made again: the origin
         is added to it. The programs among the files (images, program texts) also become records of the software.
         """
         # whoever may not bring files in must not add to what is there either (the lookups below are sudo, for the whole stock)
         self.check_access("create")
-        vehicle, project = (vehicle or "").strip().strip("/"), (project or "").strip()
-        if not vehicle or not project:
-            raise UserError(self.env._("A project needs a vehicle and a name."))
+        project = (project or "").strip().strip("/")
+        if not project:
+            raise UserError(self.env._("A project needs a name."))
         try:
             info = check.build(files)
         except check.VersionError as error:
             raise UserError(self._error_text(error)) from error
         # sudo: int.workbench.project.version: the lookup is for the whole stock, whoever may bring files in
-        existing = self.sudo().search([("checksum", "=", info.checksum)], limit=1)
+        existing = self.sudo().with_context(active_test=False).search([("checksum", "=", info.checksum)], limit=1)
         if existing:
-            existing._add_origin(origin or f"{vehicle}/{project}")
+            existing._add_origin(origin or project)
+            if not existing.active:  # the same files again: the old version is wanted again
+                existing.active = True
             return existing, False
-        Folder = self.env["int.workbench.project.folder"]
-        # sudo: int.workbench.project.folder: the lookup of the folder for the whole stock
-        folder = Folder.sudo().search([("vehicle", "=", vehicle), ("name", "=", project)], limit=1) or Folder.create({"vehicle": vehicle, "name": project})
         Software = self.env["int.workbench.software"]
         lines = []
         for file in info.files:
@@ -162,13 +154,13 @@ class IntWorkbenchProjectVersion(models.Model):
             )
         version = self.create(
             {
-                "folder_id": folder.id,
+                "project": project,
                 "checksum": info.checksum,
                 "size": info.size,
                 "expected_document": info.expected_document,
                 "expected_names": info.expected_names,
                 "config_numbers": info.config_numbers,
-                "origins": origin or f"{vehicle}/{project}",
+                "origins": origin or project,
                 "file_ids": lines,
             }
         )
@@ -181,12 +173,13 @@ class IntWorkbenchProjectVersion(models.Model):
             if origin and origin not in places:
                 # sudo: int.workbench.project.version: the places are kept for everybody who brings the same files in again
                 version.sudo().origins = "\n".join([*places, origin])
+                version.sudo().message_post(body=self.env._("Also imported from: %s", origin), message_type="notification")
 
     @api.model
-    def import_version(self, vehicle, project, files, origin=""):
-        """Bring the files of a project folder in as a draft (for the tool that takes over the stock of the original).
+    def import_version(self, project, files, origin="", vehicle=""):
+        """Bring the files of a project folder in (for the tool that takes over the stock of the original).
 
-        ``files`` is a list of ``{"name", "data"}`` with the content as base64. Returns ``{"id", "checksum", "created"}``.
+        ``vehicle`` is only taken for the callers that still give it: it goes in front of the name (``vehicle/project``). ``files`` is a list of ``{"name", "data"}`` with the content as base64. Returns ``{"id", "checksum", "created"}``.
         """
         decoded = []
         for item in files or []:
@@ -196,7 +189,9 @@ class IntWorkbenchProjectVersion(models.Model):
                 decoded.append((item["name"], base64.b64decode(item["data"], validate=True)))
             except (binascii.Error, ValueError):
                 raise UserError(self.env._("The content of %s is not base64.", item["name"])) from None
-        version, created = self._from_files(vehicle, project, decoded, origin if isinstance(origin, str) else "")
+        vehicle = vehicle.strip().strip("/") if isinstance(vehicle, str) else ""
+        name = f"{vehicle}/{project}" if vehicle and isinstance(project, str) and project else project
+        version, created = self._from_files(name, decoded, origin if isinstance(origin, str) else "")
         return {"id": version.id, "checksum": version.checksum, "created": created}
 
     @api.model
@@ -222,42 +217,14 @@ class IntWorkbenchProjectVersion(models.Model):
                 return self.env._("The archive has %d files, too many for one project.", values["count"])
         return error.code
 
-    # === STATES === #
-
-    def _check_manager(self):
-        if not self.env.su and not self.env.user.has_group(MANAGER_GROUP):
-            raise AccessError(self.env._("Only a manager approves or retires a version."))
-
-    def action_approve(self):
-        """Release the version for assignment to controllers (a manager)."""
-        self._check_manager()
-        for version in self:
-            if version.state != "approved":
-                version.write({"state": "approved", "approved_by_id": self.env.user.id, "approved_at": fields.Datetime.now()})
-
-    def action_retire(self):
-        """Take the version out of use: it can no longer be assigned (a manager). A controller that has it keeps it until another is assigned."""
-        self._check_manager()
-        self.write({"state": "retired"})
-
-    def action_draft(self):
-        """Set a version back to draft (a manager); a version that a controller has cannot go back."""
-        self._check_manager()
-        for version in self:
-            if version.device_ids:
-                raise UserError(self.env._("%s is assigned to a controller; assign another version first.", version.display_name))
-        self.write({"state": "draft", "approved_by_id": False, "approved_at": False})
-
     # === ORM === #
 
     def write(self, vals):
         if any(name in vals for name in FROM_CONTENT) and not self.env.context.get("version_internal"):
             raise UserError(self.env._("What a version consists of cannot be changed. Bring the changed files in as a new version."))
-        if {"state", "approved_by_id", "approved_at"} & set(vals) and not self.env.su and not self.env.user.has_group(MANAGER_GROUP):
-            raise AccessError(self.env._("Only a manager approves or retires a version."))
         return super().write(vals)
 
     @api.ondelete(at_uninstall=False)
-    def _unlink_only_drafts(self):
-        if any(version.state != "draft" for version in self):
-            raise UserError(self.env._("Only a draft can be deleted. Retire a version that is not used any more."))
+    def _unlink_only_unassigned(self):
+        if any(version.device_ids for version in self):
+            raise UserError(self.env._("A controller has this version. Archive it instead."))

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="int_workbench.ServiceCogItem">
+        <DropdownItem class="'o_menu_item'" onSelected.bind="openService">
+            <i class="fa fa-fw fa-plug me-1"/>Service
+        </DropdownItem>
+    </t>
+
+</templates>

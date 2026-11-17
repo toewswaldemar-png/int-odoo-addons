@@ -6,7 +6,7 @@ from odoo.exceptions import UserError
 
 class IntWorkbenchSoftwareUpload(models.TransientModel):
     _name = "int.workbench.software.upload"
-    _description = "Bring programs of the controllers in"
+    _description = "Import programs of the controllers"
 
     attachment_ids = fields.Many2many("ir.attachment", string="Files", help="Images (S-Record, whatever the name and the extension) and program texts.")
     state = fields.Selection([("upload", "Upload"), ("done", "Done")], default="upload")
@@ -14,7 +14,7 @@ class IntWorkbenchSoftwareUpload(models.TransientModel):
     result = fields.Text(readonly=True)
 
     def action_upload(self):
-        """Read every file and make a draft of each program that is not there yet. Files that are not programs are named, not hidden."""
+        """Read every file and make a record of each program that is not there yet. Files that are not programs are named, not hidden."""
         self.ensure_one()
         if not self.attachment_ids:
             raise UserError(self.env._("Choose at least one file."))
@@ -28,7 +28,7 @@ class IntWorkbenchSoftwareUpload(models.TransientModel):
                 continue
             found |= record
             if created:
-                lines.append("+ " + self.env._("%(file)s: new draft %(name)s", file=attachment.name, name=record.name))
+                lines.append("+ " + self.env._("%(file)s: new program %(name)s", file=attachment.name, name=record.name))
             else:
                 lines.append("= " + self.env._("%(file)s: is already there as %(name)s", file=attachment.name, name=record.name))
         # the uploads are only what the user brought in: they are not kept as files of their own

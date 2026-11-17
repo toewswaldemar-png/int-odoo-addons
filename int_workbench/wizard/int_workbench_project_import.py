@@ -7,7 +7,7 @@ IMPORT_PACKAGE = 25
 
 class IntWorkbenchProjectImport(models.TransientModel):
     _name = "int.workbench.project.import"
-    _description = "Bring the new project folders of the service into its library"
+    _description = "Import the new project folders of the service into its library"
 
     device_id = fields.Many2one("int.workbench.device", string="Device", required=True, ondelete="cascade")
     state = fields.Selection([("draft", "Ready"), ("done", "Done")], default="draft", readonly=True)
@@ -18,7 +18,7 @@ class IntWorkbenchProjectImport(models.TransientModel):
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",
-            "name": self.env._("Take over new folders"),
+            "name": self.env._("Import new folders"),
             "res_model": self._name,
             "res_id": self.id,
             "view_mode": "form",
@@ -55,7 +55,7 @@ class IntWorkbenchProjectImport(models.TransientModel):
                 if item.get("ok"):
                     created += bool(item.get("created"))
                     if not item.get("loadable"):
-                        lines.append(f"{item.get('path')}: {self.env._('brought in, does not load')}: {item.get('error') or ''}")
+                        lines.append(f"{item.get('path')}: {self.env._('imported, does not load')}: {item.get('error') or ''}")
                 else:
                     failed += 1
                     lines.append(f"{item.get('path')}: {self.env._('turned away')}: {item.get('error') or ''}")

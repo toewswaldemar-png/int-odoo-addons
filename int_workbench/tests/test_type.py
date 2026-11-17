@@ -20,9 +20,7 @@ class TestIntWorkbenchType(TransactionCase):
         cls.manager = new_test_user(cls.env, login="wb_type_mgr", groups="base.group_user,int_workbench.int_workbench_group_manager")
         cls.ac3 = cls.Type.create({"name": "AC3", "ident": "3EGM064970R0001", "kind": "device"})
         cls.controller = cls.Type.create({"name": "11HA35D", "ident": "3EGM009885R0001", "kind": "controller"})
-        folder = cls.env["int.workbench.project.folder"].create({"name": "Pro_1", "vehicle": "TRAXX3002"})
-        cls.approved = cls.env["int.workbench.project.version"].create({"folder_id": folder.id, "checksum": "type-test-approved", "state": "approved"})
-        cls.draft = cls.env["int.workbench.project.version"].create({"folder_id": folder.id, "checksum": "type-test-draft", "state": "draft"})
+        cls.version = cls.env["int.workbench.project.version"].create({"project": "TRAXX3002/Pro_1", "checksum": "type-test-version"})
 
     def device(self, name="AC3 bench", **vals):
         return self.Device.create({"name": name, "service_user_id": self.service.id, **vals})
@@ -53,12 +51,10 @@ class TestIntWorkbenchType(TransactionCase):
         self.assertEqual(self.Type.name_search("3EGM009885")[0][0], self.controller.id)
         self.assertEqual(self.Type.name_search("AC3")[0][0], self.ac3.id)
 
-    def test_only_a_device_type_has_a_default_project_and_only_an_approved_one(self):
-        self.ac3.write({"project_version_id": self.approved.id})
+    def test_only_a_device_type_has_a_default_project(self):
+        self.ac3.write({"project_version_id": self.version.id})
         with self.assertRaises(ValidationError), self.cr.savepoint():
-            self.ac3.write({"project_version_id": self.draft.id})
-        with self.assertRaises(ValidationError), self.cr.savepoint():
-            self.controller.write({"project_version_id": self.approved.id})
+            self.controller.write({"project_version_id": self.version.id})
 
     def test_a_type_that_devices_use_keeps_its_kind(self):
         self.device(device_type_id=self.ac3.id, controller_type_id=self.controller.id)
@@ -112,20 +108,20 @@ class TestIntWorkbenchType(TransactionCase):
     # === the default project === #
 
     def test_a_device_gets_the_default_project_of_its_type_once(self):
-        self.ac3.write({"project_version_id": self.approved.id})
+        self.ac3.write({"project_version_id": self.version.id})
         device = self.device(device_type_id=self.ac3.id)
-        self.assertEqual(device.project_version_id, self.approved)
-        self.assertIn("Assigned to the controller AC3 bench", self.approved.message_ids[0].body)
+        self.assertEqual(device.project_version_id, self.version)
+        self.assertIn("Assigned to the controller AC3 bench", self.version.message_ids[0].body)
 
     def test_a_device_with_a_project_keeps_it_and_a_later_default_changes_nothing(self):
         other = self.env["int.workbench.project.version"].create(
-            {"folder_id": self.approved.folder_id.id, "checksum": "type-test-other", "state": "approved"}
+            {"project": self.version.project, "checksum": "type-test-other"}
         )
         own = self.device("Own", project_version_id=other.id, device_type_id=self.ac3.id)
         self.assertEqual(own.project_version_id, other, "a project that is assigned is a deviation and stays")
         free = self.device("Free", device_type_id=self.ac3.id)
         self.assertFalse(free.project_version_id, "the type has no default yet")
-        self.ac3.write({"project_version_id": self.approved.id})
+        self.ac3.write({"project_version_id": self.version.id})
         self.assertFalse(free.project_version_id, "changing the default does not touch the devices")
         free.write({"device_type_id": self.ac3.id})
-        self.assertEqual(free.project_version_id, self.approved, "a device that is given the type gets it")
+        self.assertEqual(free.project_version_id, self.version, "a device that is given the type gets it")

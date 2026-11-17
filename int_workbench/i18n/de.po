@@ -307,17 +307,6 @@ msgid "A program exists once."
 msgstr "Ein Programm gibt es nur einmal."
 
 #. module: int_workbench
-#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_project_folder_vehicle_name_unique
-msgid "A project exists once for a vehicle."
-msgstr "Ein Projekt gibt es nur einmal je Fahrzeug."
-
-#. module: int_workbench
-#. odoo-python
-#: code:addons/int_workbench/models/int_workbench_project_version.py:0
-msgid "A project needs a vehicle and a name."
-msgstr "Ein Projekt braucht ein Fahrzeug und einen Namen."
-
-#. module: int_workbench
 #: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_fs2_record_file_entry_unique
 msgid "A record exists once per file."
 msgstr "Einen Satz gibt es je Datei nur einmal."
@@ -411,6 +400,7 @@ msgstr "Hinzugefügt"
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__address
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__operand
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form_service
 msgid "Address"
 msgstr "Adresse"
 
@@ -577,21 +567,21 @@ msgstr "Urlader %s"
 
 #. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_project_upload
-msgid "Bring a project version in"
-msgstr "Einen Projektstand hereinholen"
+msgid "Import a project version"
+msgstr "Einen Projektstand importieren"
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_project_upload_action
-msgid "Bring a version in"
-msgstr "Einen Stand hereinholen"
+msgid "Import a version"
+msgstr "Einen Stand importieren"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_upload_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_list
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_upload_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_list
-msgid "Bring in"
-msgstr "Hereinholen"
+msgid "Import"
+msgstr "Importieren"
 
 #. module: int_workbench
 #. odoo-python
@@ -600,43 +590,43 @@ msgid ""
 "Bring in one ZIP archive alone, or the files of one project. A version at a "
 "time."
 msgstr ""
-"Hole ein ZIP-Archiv allein herein oder die Dateien eines Projekts. Ein Stand"
+"Importiere ein ZIP-Archiv allein oder die Dateien eines Projekts. Ein Stand"
 " nach dem anderen."
 
 #. module: int_workbench
 #: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_project_version_action
 msgid ""
 "Bring in the files of a project folder (or a ZIP archive of it). The version"
-" is named after a checksum of its files; a manager approves it, then it can "
-"be assigned to a controller."
+" is named after a checksum of its files and can be assigned to a controller "
+"at once."
 msgstr ""
-"Hole die Dateien eines Projektordners herein (oder ein ZIP-Archiv davon). "
-"Der Stand heißt nach einer Prüfsumme seiner Dateien; ein Verwalter gibt ihn "
-"frei, dann kann er einem Regler zugewiesen werden."
+"Importiere die Dateien eines Projektordners (oder ein ZIP-Archiv davon). "
+"Der Stand heißt nach einer Prüfsumme seiner Dateien und kann sofort einem "
+"Regler zugewiesen werden."
 
 #. module: int_workbench
 #: model_terms:ir.actions.act_window,help:int_workbench.int_workbench_software_action
 msgid ""
 "Bring in the images and program texts of the controllers. They are read by "
-"their content, whatever they are called; a manager approves them."
+"their content, whatever they are called."
 msgstr ""
-"Hole die Abbilder und Programmtexte der Regler herein. Sie werden nach ihrem"
-" Inhalt gelesen, egal wie sie heißen; ein Verwalter gibt sie frei."
+"Importiere die Abbilder und Programmtexte der Regler. Sie werden nach ihrem"
+" Inhalt gelesen, egal wie sie heißen."
 
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_software_upload_action
-msgid "Bring programs in"
-msgstr "Programme hereinholen"
+msgid "Import programs"
+msgstr "Programme importieren"
 
 #. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_software_upload
-msgid "Bring programs of the controllers in"
-msgstr "Programme der Regler hereinholen"
+msgid "Import programs of the controllers"
+msgstr "Programme der Regler importieren"
 
 #. module: int_workbench
 #: model:ir.model,name:int_workbench.model_int_workbench_project_import
-msgid "Bring the new project folders of the service into its library"
-msgstr "Neue Projektordner des Dienstes in seine Bibliothek übernehmen"
+msgid "Import the new project folders of the service into its library"
+msgstr "Die neuen Projektordner des Dienstes in seine Bibliothek importieren"
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__is_byte
@@ -1616,7 +1606,7 @@ msgstr "Ereignis"
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_software__sources
 msgid "Every name under which the file was brought in, one in each line."
-msgstr "Jeder Name, unter dem die Datei hereingeholt wurde, einer je Zeile."
+msgstr "Jeder Name, unter dem die Datei importiert wurde, einer je Zeile."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_family__capability_ids
@@ -1947,6 +1937,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__short_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__short_id
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form_service
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 msgid "Id"
 msgstr "Kennung"
@@ -2118,6 +2109,7 @@ msgstr "Bericht"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form_service
 msgid "Last seen"
 msgstr "Zuletzt gesehen"
 
@@ -2735,7 +2727,10 @@ msgstr "Projektstand"
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_project_action
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_project_folder_action
 #: model:ir.ui.menu,name:int_workbench.int_workbench_project_folder_menu
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_project_version_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_project_version_menu
 #: model:ir.ui.menu,name:int_workbench.int_workbench_project_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Projects"
 msgstr "Projekte"
 
@@ -3063,8 +3058,12 @@ msgid "Serial number"
 msgstr "Ser.-Nr."
 
 #. module: int_workbench
+#. odoo-javascript
+#. odoo-python
 #: model:res.groups,name:int_workbench.int_workbench_group_service
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+#: code:addons/int_workbench/static/src/cog/service_cog_item.xml:0
 msgid "Service"
 msgstr "Dienst"
 
@@ -3274,8 +3273,8 @@ msgstr ""
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_import_view_form
-msgid "Take over new folders"
-msgstr "Neue Ordner übernehmen"
+msgid "Import new folders"
+msgstr "Neue Ordner importieren"
 
 #. module: int_workbench
 #. odoo-python
@@ -4400,6 +4399,7 @@ msgstr "Zeit"
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form_service
 msgid "Token"
 msgstr "Token"
 
@@ -4505,6 +4505,7 @@ msgstr "Hochgeladen von %s"
 #: model:res.groups,name:int_workbench.int_workbench_group_user
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form_service
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
 msgid "User"
 msgstr "Benutzer"
@@ -4597,9 +4598,7 @@ msgstr "Stand eines Projekts"
 #. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_project_folder.py:0
-#: model:ir.actions.act_window,name:int_workbench.int_workbench_project_version_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_folder__version_ids
-#: model:ir.ui.menu,name:int_workbench.int_workbench_project_version_menu
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_folder_view_form
 msgid "Versions"
 msgstr "Stände"
@@ -4644,8 +4643,8 @@ msgid ""
 "What a version consists of cannot be changed. Bring the changed files in as "
 "a new version."
 msgstr ""
-"Woraus ein Stand besteht, lässt sich nicht ändern. Hole die geänderten "
-"Dateien als neuen Stand herein."
+"Woraus ein Stand besteht, lässt sich nicht ändern. Importiere die geänderten "
+"Dateien als neuen Stand."
 
 #. module: int_workbench
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
@@ -4691,8 +4690,8 @@ msgid ""
 "What the file contains cannot be changed. Bring the changed file in as a new"
 " program."
 msgstr ""
-"Der Inhalt der Datei lässt sich nicht ändern. Hole die geänderte Datei als "
-"neues Programm herein."
+"Der Inhalt der Datei lässt sich nicht ändern. Importiere die geänderte Datei als "
+"neues Programm."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_fs2_file__loaded_signature
@@ -4790,7 +4789,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__origins
 msgid "Where the version was brought in from, one in each line."
-msgstr "Woher der Stand hereingeholt wurde, eine Angabe je Zeile."
+msgstr "Woher der Stand importiert wurde, eine Angabe je Zeile."
 
 #. module: int_workbench
 #: model:ir.model.fields,help:int_workbench.field_int_workbench_device__project_state
@@ -4882,8 +4881,8 @@ msgstr "und %s weitere"
 #. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/wizard/int_workbench_project_import.py:0
-msgid "brought in, does not load"
-msgstr "übernommen, lädt nicht"
+msgid "imported, does not load"
+msgstr "importiert, lädt nicht"
 
 #. module: int_workbench
 #. odoo-python
@@ -4929,3 +4928,75 @@ msgstr "abgewiesen"
 #: model:ir.model,name:int_workbench.model_ir_websocket
 msgid "websocket message handling"
 msgstr "Websocket-Nachrichtbearbeitung"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "A project needs a name."
+msgstr "Ein Projekt braucht einen Namen."
+
+#. module: int_workbench
+#: model:ir.ui.menu,name:int_workbench.int_workbench_project_menu
+msgid "Projects and software"
+msgstr "Projekte und Software"
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__project
+msgid "What the versions of one project have in common, for example TRAXX3002/Pro_1. The versions of the same name are shown together."
+msgstr "Was die Stände eines Projekts gemeinsam haben, zum Beispiel TRAXX3002/Pro_1. Stände mit gleichem Namen werden zusammen gezeigt."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_upload__project
+msgid "What the versions of one project have in common, for example TRAXX3002/Pro_1."
+msgstr "Was die Stände eines Projekts gemeinsam haben, zum Beispiel TRAXX3002/Pro_1."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project__project
+msgid "The place the version was first brought in from, below the root folder of the service."
+msgstr "Der Ort, von dem der Stand zuerst importiert wurde, unterhalb des Wurzelordners des Dienstes."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "A controller has this version. Archive it instead."
+msgstr "Ein Regler hat diesen Stand. Archiviere ihn stattdessen."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_project_upload.py:0
+msgid "New project version %(name)s with %(count)d files."
+msgstr "Neuer Projektstand %(name)s mit %(count)d Dateien."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/wizard/int_workbench_software_upload.py:0
+msgid "%(file)s: new program %(name)s"
+msgstr "%(file)s: neues Programm %(name)s"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_software.py:0
+msgid "%s cannot be loaded: it is not placed in the memory of a known controller."
+msgstr "%s kann nicht geladen werden: Es liegt nicht im Speicher eines bekannten Reglers."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "There is no program with the checksum %s."
+msgstr "Es gibt kein Programm mit der Prüfsumme %s."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_project_version__active
+msgid "An archived version is not offered any more; a controller that has it keeps it."
+msgstr "Ein archivierter Stand wird nicht mehr angeboten; ein Regler, der ihn hat, behält ihn."
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_software__active
+msgid "An archived program is not offered any more and cannot be loaded."
+msgstr "Ein archiviertes Programm wird nicht mehr angeboten und lässt sich nicht laden."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_project_version.py:0
+msgid "Also imported from: %s"
+msgstr "Auch importiert von: %s"

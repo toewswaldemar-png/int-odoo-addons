@@ -6,13 +6,12 @@ from .service_utils import as_text, parse_time, upsert
 class IntWorkbenchProject(models.Model):
     _name = "int.workbench.project"
     _description = "Version in the project library of the service"
-    _order = "vehicle, project, added_at desc"
+    _order = "project, added_at desc"
 
     device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     checksum = fields.Char(required=True, readonly=True, help="The checksum of the definition files; it names the version in the library of the service.")
     short_id = fields.Char(compute="_compute_short_id", string="Id")
-    vehicle = fields.Char(readonly=True, index=True, help="The folders above the project, from the place the version was first brought in from.")
-    project = fields.Char(readonly=True, index=True)
+    project = fields.Char(string="Project", readonly=True, index=True, help="The place the version was first brought in from, below the root folder of the service.")
     added_at = fields.Datetime(string="Added in the service", readonly=True)
     size = fields.Integer(string="Size (bytes)", readonly=True)
     file_count = fields.Integer(string="Files", readonly=True)
@@ -48,10 +47,9 @@ class IntWorkbenchProject(models.Model):
             if not isinstance(entry, dict) or not isinstance(entry.get("id"), str):
                 continue
             origins = [origin for origin in entry.get("origins") or [] if isinstance(origin, dict) and isinstance(origin.get("path"), str)]
-            vehicle, _slash, project = (origins[0]["path"].rpartition("/") if origins else ("", "", ""))
+            project = origins[0]["path"] if origins else ""
             wanted[entry["id"]] = {
                 "device_id": device.id,
-                "vehicle": vehicle,
                 "project": project,
                 "added_at": parse_time(entry.get("added_at")),
                 "size": entry.get("size") if isinstance(entry.get("size"), int) else 0,

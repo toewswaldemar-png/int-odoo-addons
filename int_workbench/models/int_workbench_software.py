@@ -3,7 +3,7 @@ import binascii
 import re
 
 from odoo import api, fields, models
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import UserError
 
 from . import software_check as check
 
@@ -11,7 +11,6 @@ from . import software_check as check
 FROM_CONTENT = (
     "kind", "hardware", "app_name", "resource", "document", "document_codes", "os_version", "expected_os", "ranges", "size", "data_size", "sha256", "data",
 )  # fmt: skip
-MANAGER_GROUP = "int_workbench.int_workbench_group_manager"
 
 
 class IntWorkbenchSoftware(models.Model):
@@ -45,15 +44,7 @@ class IntWorkbenchSoftware(models.Model):
         index=True,
         help="The type of controller that the image is made for, told by where it sits in the memory.",
     )
-    state = fields.Selection(
-        [("draft", "Draft"), ("approved", "Approved"), ("retired", "Retired")],
-        default="draft",
-        required=True,
-        index=True,
-        tracking=True,
-        copy=False,
-        help="Only an approved program can be loaded into a controller. A manager approves it; a retired program stays and can be approved again.",
-    )
+    active = fields.Boolean(default=True, help="An archived program is not offered any more and cannot be loaded.")
     app_name = fields.Char(string="Application", readonly=True, index=True, help="The name in the header of the application.")
     resource = fields.Char(readonly=True, help="The resource of the application (the second name in its header).")
     document = fields.Char(readonly=True, index=True, help="The document number of the application (3EGM, six digits, E, four digits). The tables of a project carry the same six digits.")
@@ -80,8 +71,6 @@ class IntWorkbenchSoftware(models.Model):
     sources = fields.Text(string="Names of the file", readonly=True, help="Every name under which the file was brought in, one in each line.")
     data = fields.Binary(string="File", attachment=True, prefetch=False, readonly=True)
     filename = fields.Char(readonly=True)
-    approved_by_id = fields.Many2one("res.users", string="Approved by", readonly=True, copy=False)
-    approved_at = fields.Datetime(string="Approved at", readonly=True, copy=False)
     note = fields.Text()
 
     _sha256_unique = models.Constraint("UNIQUE (sha256)", "A program exists once.")
@@ -113,9 +102,11 @@ class IntWorkbenchSoftware(models.Model):
         except check.ImageError as error:
             raise UserError(self.env._("%(file)s: %(reason)s", file=filename, reason=self._error_text(error))) from error
         # sudo: int.workbench.software: the lookup is for the whole stock, whoever may upload
-        existing = self.sudo().search([("sha256", "=", result.sha256)], limit=1)
+        existing = self.sudo().with_context(active_test=False).search([("sha256", "=", result.sha256)], limit=1)
         if existing:
             existing._add_source(filename)
+            if not existing.active:  # the same file again: the old program is wanted again
+                existing.active = True
             return existing, False
         values = {
             "name": self._name_of(filename, result),
@@ -140,7 +131,7 @@ class IntWorkbenchSoftware(models.Model):
 
     @api.model
     def import_file(self, filename, data):
-        """Bring a file in as a draft (for the tool that takes over the stock of the original); ``data`` is the content as base64.
+        """Bring a file in (for the tool that takes over the stock of the original); ``data`` is the content as base64.
 
         Returns ``{"id", "created", "kind", "name"}``. A file that is no program raises a UserError that says why.
         """
@@ -222,41 +213,15 @@ class IntWorkbenchSoftware(models.Model):
                 return self.env._("The command `dl 1` is missing before the data.")
         return code
 
-    # === STATES === #
-
-    def _check_manager(self):
-        if not self.env.su and not self.env.user.has_group(MANAGER_GROUP):
-            raise AccessError(self.env._("Only a manager approves or retires a program."))
-
-    def action_approve(self):
-        """Release the program for loading (a manager)."""
-        self._check_manager()
+    def _check_loadable(self):
+        """Raise if a program cannot be loaded into a controller: it is not placed in the memory of a known controller."""
         for software in self:
             if software.kind == check.KIND_UNKNOWN or software.hardware == check.HARDWARE_UNKNOWN and software.kind != check.KIND_TEXT:
-                raise UserError(self.env._("%s cannot be approved: it is not placed in the memory of a known controller.", software.name))
-            if software.state != "approved":
-                software.write({"state": "approved", "approved_by_id": self.env.user.id, "approved_at": fields.Datetime.now()})
-
-    def action_retire(self):
-        """Take the program out of use: it can no longer be assigned or loaded (a manager)."""
-        self._check_manager()
-        self.write({"state": "retired"})
-
-    def action_draft(self):
-        """Set a program back to draft (a manager)."""
-        self._check_manager()
-        self.write({"state": "draft", "approved_by_id": False, "approved_at": False})
+                raise UserError(self.env._("%s cannot be loaded: it is not placed in the memory of a known controller.", software.name))
 
     # === ORM === #
 
     def write(self, vals):
         if any(field in vals for field in FROM_CONTENT) and not self.env.context.get("software_internal"):
             raise UserError(self.env._("What the file contains cannot be changed. Bring the changed file in as a new program."))
-        if {"state", "approved_by_id", "approved_at"} & set(vals) and not self.env.su and not self.env.user.has_group(MANAGER_GROUP):
-            raise AccessError(self.env._("Only a manager approves or retires a program."))
         return super().write(vals)
-
-    @api.ondelete(at_uninstall=False)
-    def _unlink_only_drafts(self):
-        if any(software.state != "draft" for software in self):
-            raise UserError(self.env._("Only a draft can be deleted. Retire a program that is not used any more."))

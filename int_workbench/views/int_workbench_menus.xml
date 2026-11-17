@@ -37,15 +37,11 @@
 
     <menuitem id="int_workbench_device_menu" name="Devices" parent="int_workbench_menu_root"
               action="int_workbench_device_action" sequence="5"/>
-    <menuitem id="int_workbench_project_menu" name="Projects" parent="int_workbench_menu_root" sequence="60"/>
-    <menuitem id="int_workbench_project_folder_menu" name="Projects" parent="int_workbench_project_menu"
-              action="int_workbench_project_folder_action" sequence="10"/>
-    <menuitem id="int_workbench_project_version_menu" name="Versions" parent="int_workbench_project_menu"
-              action="int_workbench_project_version_action" sequence="20"/>
+    <menuitem id="int_workbench_project_menu" name="Projects and software" parent="int_workbench_menu_root" sequence="60"/>
+    <menuitem id="int_workbench_project_version_menu" name="Projects" parent="int_workbench_project_menu"
+              action="int_workbench_project_version_action" sequence="10"/>
     <menuitem id="int_workbench_software_menu" name="Software" parent="int_workbench_project_menu"
               action="int_workbench_software_action" sequence="30"/>
-    <menuitem id="int_workbench_project_library_menu" name="Library of the service" parent="int_workbench_project_menu"
-              action="int_workbench_project_action" sequence="40"/>
 
     <menuitem id="int_workbench_menu_configuration" name="Configuration" parent="int_workbench_menu_root"
               sequence="90" groups="int_workbench_group_manager"/>

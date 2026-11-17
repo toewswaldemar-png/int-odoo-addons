@@ -32,7 +32,6 @@ class IntWorkbenchType(models.Model):
     project_version_id = fields.Many2one(
         "int.workbench.project.version",
         string="Default project version",
-        domain="[('state', '=', 'approved')]",
         ondelete="restrict",
         copy=False,
         help="The version that a device of this type gets when it is given the type and has no project version yet. "
@@ -73,8 +72,6 @@ class IntWorkbenchType(models.Model):
                 continue
             if record.kind != "device":
                 raise ValidationError(self.env._("%s: only a device type has a default project version.", record.display_name))
-            if record.project_version_id.state != "approved":
-                raise ValidationError(self.env._("%s cannot be the default: only an approved version can.", record.project_version_id.display_name))
 
     @api.constrains("kind")
     def _check_kind_in_use(self):

@@ -4,6 +4,7 @@ from odoo.tests.common import TransactionCase, tagged
 
 DEFINE_REGEX = re.compile(r"odoo\.define\(\s*'([^']+)'\s*,\s*\[([^\]]*)\]")
 MODULES = (
+    "cog/service_cog_item",
     "connection/connection_banner",
     "connection/connection_menu",
     "connection/connection_service",
@@ -65,7 +66,7 @@ class TestAssets(TransactionCase):
                 self.assertIn(dependency, self.modules, f"{name} imports {dependency}, which is not in the bundle")
 
     def test_there_is_nothing_but_the_list(self):
-        """The module adds no page and no field widget: the views are made of what Odoo has; it adds the list controller, the state of the connection (service, systray item, banner) and the form of a request."""
+        """The module adds no page and no field widget: the views are made of what Odoo has; it adds the list controller, the state of the connection (service, systray item, banner), the form of a request and the entry \"Service\" of the gear menu of a device."""
         ours = [name for name in self.modules if name.startswith("@int_workbench/")]
         self.assertEqual(ours, [f"@int_workbench/{name}" for name in MODULES])
 

@@ -3,7 +3,7 @@ import io
 import zipfile
 from unittest import mock
 
-from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
 
@@ -117,7 +117,7 @@ class TestProjectCheck(TransactionCase):
 
 @tagged("post_install", "-at_install")
 class TestIntWorkbenchProjectVersion(TransactionCase):
-    """The project management in Odoo: a version is a draft until a manager approves it, never changes, and is assigned to controllers."""
+    """The project management in Odoo: a version never changes, is assigned to controllers at once and is archived when it is old."""
 
     @classmethod
     def setUpClass(cls):
@@ -130,15 +130,15 @@ class TestIntWorkbenchProjectVersion(TransactionCase):
         service = new_test_user(cls.env, login="wb_pv_svc", groups="int_workbench.int_workbench_group_service")
         cls.device = cls.env["int.workbench.device"].create({"name": "Bench", "device_ref": "main", "service_user_id": service.id})
 
-    def bring_in(self, files=None, vehicle="BR186/Br186012", project="Pro_2", user=None, origin=""):
-        return self.Version.with_user(user or self.technician)._from_files(vehicle, project, files or project_files(), origin)
+    def bring_in(self, files=None, project="BR186/Br186012/Pro_2", user=None, origin=""):
+        return self.Version.with_user(user or self.technician)._from_files(project, files or project_files(), origin)
 
     # === from files === #
 
-    def test_the_files_of_a_folder_become_a_draft_with_the_files_and_the_expected_application(self):
+    def test_the_files_of_a_folder_become_a_version_with_the_files_and_the_expected_application(self):
         version, created = self.bring_in()
         self.assertTrue(created)
-        self.assertEqual((version.state, version.vehicle, version.project, version.file_count), ("draft", "BR186/Br186012", "Pro_2", 3))
+        self.assertEqual((version.active, version.project, version.file_count), (True, "BR186/Br186012/Pro_2", 3))
         self.assertEqual((version.expected_document, version.expected_names), ("090644", "BFGR001, BR186011"))
         self.assertEqual(version.checksum, check.build(project_files()).checksum)
         files = {file.name: file for file in version.file_ids}
@@ -149,17 +149,18 @@ class TestIntWorkbenchProjectVersion(TransactionCase):
 
     def test_the_same_files_from_another_folder_are_the_same_version(self):
         first, _created = self.bring_in(origin="A/Pro_1")
-        again, created = self.bring_in(vehicle="BR186/Copy", project="Pro_9", origin="B/Pro_9")
+        again, created = self.bring_in(project="BR186/Copy/Pro_9", origin="B/Pro_9")
         self.assertEqual((again, created), (first, False))
         self.assertEqual(first.origins.splitlines(), ["A/Pro_1", "B/Pro_9"])
-        self.assertFalse(self.env["int.workbench.project.folder"].search([("name", "=", "Pro_9")]), "no project for a version that was there already")
+        self.assertIn("Also imported from: B/Pro_9", first.message_ids[0].body, "the chatter tells where it came from again")
+        self.assertEqual(again.project, "BR186/Br186012/Pro_2", "the version keeps the name it was first brought in with")
 
     def test_a_changed_file_is_a_new_version_of_the_same_project(self):
         first, _created = self.bring_in()
         second, created = self.bring_in(project_files({"Ftab.txt": TABLE + b"0002 01  I0000.1  -- Other\r\n"}))
         self.assertTrue(created)
-        self.assertEqual(first.folder_id, second.folder_id)
-        self.assertEqual(first.folder_id.version_count, 2)
+        self.assertEqual(first.project, second.project)
+        self.assertEqual(self.Version.search_count([("project", "=", first.project)]), 2)
 
     def test_a_program_in_the_folder_is_also_a_record_of_the_software(self):
         version, _created = self.bring_in(project_files({"BR186002.dwn": self.image}))
@@ -175,7 +176,7 @@ class TestIntWorkbenchProjectVersion(TransactionCase):
             self.bring_in([("Ftab.txt", TABLE)])
         self.assertIn("DEF.BIN", str(raised.exception))
         with self.assertRaises(UserError):
-            self.bring_in(vehicle="", project="")
+            self.bring_in(project="")
 
     def test_the_programs_that_fit_a_version_are_told_by_the_numbers(self):
         files = project_files({"CANPROP.LAD": CONFCAN, "DIAGCNF.LAD": CONFDIA, "Ftab.txt": FTAB})
@@ -201,16 +202,17 @@ class TestIntWorkbenchProjectVersion(TransactionCase):
             [version._software_level(software) for software in (fits, other_version, other_project)], ["exact", "other_version", "unrelated"]
         )
 
-    # === states and rights === #
+    # === archive and rights === #
 
-    def test_a_manager_approves_and_a_technician_does_not(self):
+    def test_a_technician_archives_a_version_and_a_reader_does_not(self):
         version, _created = self.bring_in()
         with self.assertRaises(AccessError):
-            version.with_user(self.technician).action_approve()
-        with self.assertRaises(AccessError):
-            version.with_user(self.technician).write({"state": "approved"})
-        version.with_user(self.manager).action_approve()
-        self.assertEqual((version.state, version.approved_by_id), ("approved", self.manager))
+            version.with_user(self.reader).write({"active": False})
+        version.with_user(self.technician).write({"active": False})
+        self.assertFalse(version.active)
+        self.assertFalse(self.Version.search([("id", "=", version.id)]), "an archived version is not found any more")
+        again, created = self.bring_in()
+        self.assertEqual((again, created, version.active), (version, False, True), "the same files again: the archived version is wanted again")
 
     def test_what_a_version_consists_of_cannot_be_changed(self):
         version, _created = self.bring_in()
@@ -218,14 +220,14 @@ class TestIntWorkbenchProjectVersion(TransactionCase):
             with self.assertRaises(UserError, msg=str(values)):
                 version.with_user(self.manager).write(values)
 
-    def test_only_a_draft_is_deleted(self):
-        draft, _created = self.bring_in()
-        approved, _created = self.bring_in(project_files({"Ftab.txt": TABLE + b"x"}))
-        approved.with_user(self.manager).action_approve()
+    def test_a_version_that_a_controller_has_is_not_deleted(self):
+        free, _created = self.bring_in()
+        used, _created = self.bring_in(project_files({"Ftab.txt": TABLE + b"x"}))
+        self.device.with_user(self.manager).write({"project_version_id": used.id})
         with self.assertRaises(UserError):
-            approved.with_user(self.manager).unlink()
-        draft.with_user(self.manager).unlink()
-        self.assertFalse(draft.exists())
+            used.with_user(self.manager).unlink()
+        free.with_user(self.manager).unlink()
+        self.assertFalse(free.exists())
 
     def test_a_reader_sees_the_versions_and_brings_nothing_in(self):
         version, _created = self.bring_in()
@@ -235,43 +237,50 @@ class TestIntWorkbenchProjectVersion(TransactionCase):
 
     # === the assignment === #
 
-    def test_only_an_approved_version_is_assigned_and_the_chatter_keeps_it(self):
+    def test_a_version_is_assigned_at_once_and_the_chatter_keeps_it(self):
         version, _created = self.bring_in()
-        with self.assertRaises(ValidationError):
-            self.device.with_user(self.manager).write({"project_version_id": version.id})
-        version.with_user(self.manager).action_approve()
         self.device.with_user(self.manager).write({"project_version_id": version.id})
         self.assertEqual(version.device_ids, self.device)
         self.assertIn("Assigned to the controller Bench", version.message_ids[0].body)
         other, _created = self.bring_in(project_files({"Ftab.txt": TABLE + b"y"}))
-        other.with_user(self.manager).action_approve()
         self.device.with_user(self.manager).write({"project_version_id": other.id})
         self.assertIn("Taken away from the controller Bench", version.message_ids[0].body)
         self.assertEqual(other.device_ids, self.device)
 
-    def test_a_version_that_a_controller_has_does_not_go_back_to_draft(self):
-        version, _created = self.bring_in()
-        version.with_user(self.manager).action_approve()
-        self.device.with_user(self.manager).write({"project_version_id": version.id})
-        with self.assertRaises(UserError):
-            version.with_user(self.manager).action_draft()
-        self.device.with_user(self.manager).write({"project_version_id": False})
-        version.with_user(self.manager).action_draft()
-        self.assertEqual(version.state, "draft")
+    def test_the_device_opens_its_project_and_the_software_that_fits(self):
+        version, _created = self.bring_in(project_files({"BR186002.dwn": self.image}))
+        device = self.device.with_user(self.manager)
+        self.assertEqual((device.project_version_count, device.project_software_count), (1, 0), "no project: all versions")
+        device.write({"project_version_id": version.id})
+        self.assertEqual((device.project_version_count, device.project_software_count), (1, 1))
+        opened = device.action_open_project()
+        self.assertEqual((opened["res_model"], self.Version.search(opened["domain"])), ("int.workbench.project.version", version))
+        other, _created = self.bring_in(project_files({"Ftab.txt": TABLE + b"z"}), project="Other/Pro_5")
+        self.assertEqual(self.Version.search(device.action_open_project()["domain"]), version, "only the versions of its own project")
+        programs = device.action_open_software()
+        self.assertEqual(self.env["int.workbench.software"].search(programs["domain"]), version.software_ids)
+        device.write({"project_version_id": False})
+        self.assertEqual(self.Version.search(device.action_open_project()["domain"]), version | other, "without a project: all versions, to import one")
+
+    def test_the_gear_menu_opens_the_settings_of_the_service(self):
+        opened = self.device.with_user(self.manager).action_open_service()
+        self.assertEqual((opened["res_model"], opened["res_id"], opened["target"]), ("int.workbench.device", self.device.id, "new"))
+        self.assertEqual(opened["views"][0][1], "form")
 
     # === the public method for the tool, and the dialog === #
 
     def test_the_tool_brings_a_version_in_with_the_content_as_base64(self):
         files = [{"name": name, "data": base64.b64encode(content).decode()} for name, content in project_files()]
-        answer = self.Version.with_user(self.manager).import_version("BR186/Br186012", "Pro_2", files, "stock/Pro_2")
+        answer = self.Version.with_user(self.manager).import_version("Pro_2", files, "stock/Pro_2", vehicle="BR186/Br186012")
         self.assertTrue(answer["created"])
+        self.assertEqual(self.Version.browse(answer["id"]).project, "BR186/Br186012/Pro_2", "the vehicle that a caller still gives goes in front of the name")
         self.assertEqual(answer["checksum"], check.build(project_files()).checksum)
-        again = self.Version.with_user(self.manager).import_version("X", "Y", files, "stock/Other")
+        again = self.Version.with_user(self.manager).import_version("Y", files, "stock/Other")
         self.assertEqual((again["id"], again["created"]), (answer["id"], False))
         with self.assertRaises(UserError):
-            self.Version.with_user(self.manager).import_version("X", "Y", [{"name": "DEF.BIN", "data": "***"}])
+            self.Version.with_user(self.manager).import_version("Y", [{"name": "DEF.BIN", "data": "***"}])
         with self.assertRaises(UserError):
-            self.Version.with_user(self.manager).import_version("X", "Y", [{"name": "DEF.BIN"}])
+            self.Version.with_user(self.manager).import_version("Y", [{"name": "DEF.BIN"}])
 
     def test_the_dialog_brings_the_files_or_a_zip_archive_in(self):
         Attachment = self.env["ir.attachment"].with_user(self.technician)
@@ -284,21 +293,21 @@ class TestIntWorkbenchProjectVersion(TransactionCase):
             for name, content in project_files():
                 handle.writestr("Pro_2/" + name, content)
         wizard = self.env["int.workbench.project.upload"].with_user(self.technician).create(
-            {"vehicle": "BR186/Br186012", "project": "Pro_2", "attachment_ids": [(6, 0, [attach("Pro_2.zip", buffer.getvalue()).id])]}
+            {"project": "BR186/Br186012/Pro_2", "attachment_ids": [(6, 0, [attach("Pro_2.zip", buffer.getvalue()).id])]}
         )
         wizard.action_upload()
         self.assertEqual(wizard.state, "done")
         self.assertEqual(wizard.version_id.checksum, check.build(project_files()).checksum)
-        self.assertIn("New draft", wizard.result)
+        self.assertIn("New project version", wizard.result)
         # the same again with loose files: the version is there already
         loose = self.env["int.workbench.project.upload"].with_user(self.technician).create(
-            {"vehicle": "Other", "project": "Pro_7", "attachment_ids": [(6, 0, [attach(name, content).id for name, content in project_files()])]}
+            {"project": "Other/Pro_7", "attachment_ids": [(6, 0, [attach(name, content).id for name, content in project_files()])]}
         )
         loose.action_upload()
         self.assertEqual(loose.version_id, wizard.version_id)
         self.assertIn("already there", loose.result)
         two = self.env["int.workbench.project.upload"].with_user(self.technician).create(
-            {"vehicle": "A", "project": "B", "attachment_ids": [(6, 0, [attach("a.zip", b"x").id, attach("DEF.BIN", b"y").id])]}
+            {"project": "B", "attachment_ids": [(6, 0, [attach("a.zip", b"x").id, attach("DEF.BIN", b"y").id])]}
         )
         with self.assertRaises(UserError):
             two.action_upload()

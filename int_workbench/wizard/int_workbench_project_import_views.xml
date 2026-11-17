@@ -14,7 +14,7 @@
                 </div>
                 <field name="result" invisible="state == 'draft'"/>
                 <footer>
-                    <button name="action_import" type="object" string="Take over new folders" class="btn-primary" data-hotkey="q" invisible="state == 'done'"/>
+                    <button name="action_import" type="object" string="Import new folders" class="btn-primary" data-hotkey="q" invisible="state == 'done'"/>
                     <button special="cancel" string="Close" data-hotkey="x"/>
                 </footer>
             </form>

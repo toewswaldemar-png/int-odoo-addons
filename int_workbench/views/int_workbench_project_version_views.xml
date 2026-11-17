@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- The project management: the projects of the vehicles, their versions (the files of a project folder, named after a checksum) and
-         the files. A version is a draft until a manager approves it; only an approved version can be assigned to a controller. -->
+    <!-- The project management: the versions of the projects (the files of a project folder, named after a checksum) and their files.
+         A version can be assigned to a controller as soon as it is brought in; an old one is archived. -->
 
     <!-- The dialog that brings a version in -->
     <record id="int_workbench_project_upload_view_form" model="ir.ui.view">
@@ -11,8 +11,7 @@
             <form>
                 <field name="state" invisible="1"/>
                 <group invisible="state != 'upload'">
-                    <field name="vehicle" placeholder="BR145/Br145020/BR145020"/>
-                    <field name="project" placeholder="Pro_2"/>
+                    <field name="project" placeholder="TRAXX3002/Pro_1"/>
                     <field name="attachment_ids" widget="many2many_binary" string="Files"/>
                 </group>
                 <group invisible="state != 'done'">
@@ -20,7 +19,7 @@
                     <field name="version_id" invisible="1"/>
                 </group>
                 <footer>
-                    <button name="action_upload" type="object" string="Bring in" class="btn-primary" invisible="state != 'upload'" data-hotkey="q"/>
+                    <button name="action_upload" type="object" string="Import" class="btn-primary" invisible="state != 'upload'" data-hotkey="q"/>
                     <button name="action_show" type="object" string="Show the version" class="btn-primary" invisible="state != 'done'" data-hotkey="q"/>
                     <button string="Close" special="cancel" data-hotkey="x"/>
                 </footer>
@@ -29,7 +28,7 @@
     </record>
 
     <record id="int_workbench_project_upload_action" model="ir.actions.act_window">
-        <field name="name">Bring a version in</field>
+        <field name="name">Import a version</field>
         <field name="res_model">int.workbench.project.upload</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
@@ -91,12 +90,11 @@
         <field name="name">int.workbench.project.version.list</field>
         <field name="model">int.workbench.project.version</field>
         <field name="arch" type="xml">
-            <list decoration-muted="state == 'retired'">
+            <list>
                 <header>
-                    <button name="%(int_workbench_project_upload_action)d" type="action" string="Bring in" display="always"
+                    <button name="%(int_workbench_project_upload_action)d" type="action" string="Import" display="always"
                             groups="int_workbench.int_workbench_group_technician,int_workbench.int_workbench_group_manager"/>
                 </header>
-                <field name="vehicle"/>
                 <field name="project"/>
                 <field name="short_id"/>
                 <field name="file_count" optional="show"/>
@@ -104,8 +102,6 @@
                 <field name="expected_names" optional="hide"/>
                 <field name="size" optional="hide"/>
                 <field name="create_date" optional="show"/>
-                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-info="state == 'draft'"
-                       decoration-muted="state == 'retired'"/>
             </list>
         </field>
     </record>
@@ -115,50 +111,17 @@
         <field name="model">int.workbench.project.version</field>
         <field name="arch" type="xml">
             <form create="0">
-                <header>
-                    <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="state == 'approved'"
-                            groups="int_workbench.int_workbench_group_manager"/>
-                    <button name="action_retire" type="object" string="Retire" invisible="state != 'approved'"
-                            groups="int_workbench.int_workbench_group_manager"
-                            confirm="Retire this version? It can no longer be assigned to a controller."/>
-                    <button name="action_draft" type="object" string="Set to draft" invisible="state != 'approved'"
-                            groups="int_workbench.int_workbench_group_manager"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,approved"/>
-                </header>
                 <sheet>
-                    <div class="oe_title">
-                        <h1><field name="display_name"/></h1>
-                    </div>
                     <group>
-                        <group>
-                            <field name="folder_id"/>
-                            <field name="checksum"/>
-                            <field name="size"/>
-                            <field name="approved_by_id" invisible="state != 'approved'"/>
-                            <field name="approved_at" invisible="state != 'approved'"/>
-                        </group>
-                        <group string="The application the tables are made for">
-                            <field name="expected_document"/>
-                            <field name="expected_names"/>
-                            <field name="config_numbers"/>
-                            <field name="software_exact_ids" widget="many2many_tags" options="{'no_create': True}"/>
-                            <field name="software_ids" widget="many2many_tags" options="{'no_create': True}"/>
-                        </group>
+                        <field name="project"/>
+                        <field name="checksum"/>
+                        <field name="size"/>
+                        <field name="expected_document"/>
+                        <field name="software_ids" widget="many2many_tags" options="{'no_create': True}"/>
                     </group>
                     <notebook>
                         <page string="Files" name="files">
                             <field name="file_ids" readonly="1"/>
-                        </page>
-                        <page string="Devices" name="devices">
-                            <field name="device_ids" readonly="1">
-                                <list>
-                                    <field name="name"/>
-                                    <field name="device_ref"/>
-                                </list>
-                            </field>
-                        </page>
-                        <page string="Origins" name="origins">
-                            <field name="origins" readonly="1"/>
                         </page>
                         <page string="Note" name="note">
                             <field name="note"/>
@@ -175,19 +138,13 @@
         <field name="model">int.workbench.project.version</field>
         <field name="arch" type="xml">
             <search>
-                <field name="vehicle"/>
                 <field name="project"/>
                 <field name="checksum" string="Id"/>
                 <field name="expected_document"/>
-                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
-                <filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
-                <filter name="retired" string="Retired" domain="[('state', '=', 'retired')]"/>
-                <separator/>
+                <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
                 <filter name="assigned" string="Assigned to a controller" domain="[('device_ids', '!=', False)]"/>
                 <group>
-                    <filter name="group_by_vehicle" string="Vehicle" context="{'group_by': 'vehicle'}"/>
-                    <filter name="group_by_project" string="Project" context="{'group_by': 'folder_id'}"/>
-                    <filter name="group_by_state" string="State" context="{'group_by': 'state'}"/>
+                    <filter name="group_by_project" string="Name" context="{'group_by': 'project'}"/>
                     <filter name="group_by_document" string="Application (document number)" context="{'group_by': 'expected_document'}"/>
                 </group>
             </search>
@@ -195,78 +152,13 @@
     </record>
 
     <record id="int_workbench_project_version_action" model="ir.actions.act_window">
-        <field name="name">Versions</field>
+        <field name="name">Projects</field>
         <field name="res_model">int.workbench.project.version</field>
         <field name="view_mode">list,form</field>
-        <field name="context">{'search_default_group_by_vehicle': 1}</field>
+        <field name="context">{'search_default_group_by_project': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No version yet</p>
-            <p>Bring in the files of a project folder (or a ZIP archive of it). The version is named after a checksum of its files; a manager approves it, then it can be assigned to a controller.</p>
+            <p>Bring in the files of a project folder (or a ZIP archive of it). The version is named after a checksum of its files and can be assigned to a controller at once.</p>
         </field>
-    </record>
-
-    <!-- The projects of the vehicles -->
-    <record id="int_workbench_project_folder_view_list" model="ir.ui.view">
-        <field name="name">int.workbench.project.folder.list</field>
-        <field name="model">int.workbench.project.folder</field>
-        <field name="arch" type="xml">
-            <list>
-                <field name="vehicle"/>
-                <field name="name"/>
-                <field name="version_count"/>
-            </list>
-        </field>
-    </record>
-
-    <record id="int_workbench_project_folder_view_form" model="ir.ui.view">
-        <field name="name">int.workbench.project.folder.form</field>
-        <field name="model">int.workbench.project.folder</field>
-        <field name="arch" type="xml">
-            <form>
-                <sheet>
-                    <group>
-                        <field name="vehicle"/>
-                        <field name="name"/>
-                    </group>
-                    <notebook>
-                        <page string="Versions" name="versions">
-                            <field name="version_ids" readonly="1">
-                                <list decoration-muted="state == 'retired'">
-                                    <field name="short_id"/>
-                                    <field name="file_count"/>
-                                    <field name="expected_document"/>
-                                    <field name="create_date"/>
-                                    <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-info="state == 'draft'"
-                                           decoration-muted="state == 'retired'"/>
-                                </list>
-                            </field>
-                        </page>
-                        <page string="Note" name="note">
-                            <field name="note"/>
-                        </page>
-                    </notebook>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-    <record id="int_workbench_project_folder_view_search" model="ir.ui.view">
-        <field name="name">int.workbench.project.folder.search</field>
-        <field name="model">int.workbench.project.folder</field>
-        <field name="arch" type="xml">
-            <search>
-                <field name="vehicle"/>
-                <field name="name"/>
-                <group>
-                    <filter name="group_by_vehicle" string="Vehicle" context="{'group_by': 'vehicle'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
-
-    <record id="int_workbench_project_folder_action" model="ir.actions.act_window">
-        <field name="name">Projects</field>
-        <field name="res_model">int.workbench.project.folder</field>
-        <field name="view_mode">list,form</field>
     </record>
 </odoo>

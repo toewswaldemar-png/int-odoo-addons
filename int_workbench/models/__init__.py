@@ -17,7 +17,6 @@ from . import int_workbench_log
 from . import int_workbench_user
 from . import int_workbench_project
 from . import int_workbench_software
-from . import int_workbench_project_folder
 from . import int_workbench_project_version
 from . import int_workbench_project_file
 from . import ir_websocket
