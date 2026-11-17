@@ -42,6 +42,15 @@ class TestIntWorkbenchIntermediate(TransactionCase):
     def item(name="P1011", address="M0448", fmt="Z", text="2", raw="0002", value=2, answered=True):
         return {"name": name, "address": address, "format": fmt, "text": text, "raw": raw, "value": value, "unit": "", "answered": answered}
 
+    # === the button of the device === #
+
+    def test_the_button_of_the_device_counts_and_opens_its_values(self):
+        self.add("P1011")
+        self.add("P1000", "M0534", True, "H")
+        self.assertEqual(self.device.intermediate_count, 2)
+        opened = self.device.action_open_intermediate()
+        self.assertEqual((opened["res_model"], opened["domain"]), ("int.workbench.intermediate", [("device_id", "=", self.device.id)]))
+
     # === the own name === #
 
     def test_an_own_name_is_only_shown_and_does_not_make_a_new_selection(self):

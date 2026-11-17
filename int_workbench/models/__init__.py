@@ -19,3 +19,4 @@ from . import int_workbench_software
 from . import int_workbench_project_version
 from . import int_workbench_project_file
 from . import ir_websocket
+from . import res_users

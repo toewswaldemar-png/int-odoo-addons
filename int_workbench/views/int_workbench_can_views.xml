@@ -52,36 +52,6 @@
         <field name="view_mode">list</field>
     </record>
 
-    <record id="int_workbench_intermediate_view_list" model="ir.ui.view">
-        <field name="name">int.workbench.intermediate.list</field>
-        <field name="model">int.workbench.intermediate</field>
-        <field name="arch" type="xml">
-            <list js_class="int_workbench.live_list" create="0" edit="0" delete="0" decoration-muted="not answered">
-                <header>
-                    <button name="%(int_workbench.int_workbench_signal_action)d" type="action" string="Choose values" icon="fa-list-ul" display="always"
-                            title="Choose the values from the variable list of the project"
-                            groups="int_workbench.int_workbench_group_technician"/>
-                </header>
-                <field name="device_id" optional="show"/>
-                <field name="sequence" column_invisible="True"/>
-                <field name="label" optional="show"/>
-                <field name="name"/>
-                <field name="address" optional="show"/>
-                <field name="format" optional="show"/>
-                <field name="text"/>
-                <field name="value" optional="hide"/>
-                <field name="unit"/>
-                <field name="raw" optional="hide"/>
-                <field name="answered" optional="hide"/>
-                <field name="locked" optional="hide"/>
-                <field name="error" optional="show"/>
-                <field name="can_write_value" column_invisible="True"/>
-                <button name="action_edit_value" type="object" string="Edit" icon="fa-pencil" title="Write a value into the controller"
-                        invisible="not can_write_value" groups="int_workbench.int_workbench_group_technician"/>
-            </list>
-        </field>
-    </record>
-
     <record id="int_workbench_intermediate_view_selection" model="ir.ui.view">
         <field name="name">int.workbench.intermediate.selection</field>
         <field name="model">int.workbench.intermediate</field>
@@ -101,6 +71,50 @@
                 <field name="format"/>
                 <field name="text" readonly="1"/>
                 <field name="error" readonly="1" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_workbench_intermediate_selection_action" model="ir.actions.act_window">
+        <field name="name">Selection of the intermediate values</field>
+        <field name="res_model">int.workbench.intermediate</field>
+        <field name="view_mode">list</field>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('int_workbench_intermediate_view_selection')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Choose the intermediate values to read</p>
+            <p>Add a line for a value of your own (a name and an address), or use "Choose values" in the list of the intermediate values to take them from the variable list of the project.</p>
+        </field>
+    </record>
+
+    <record id="int_workbench_intermediate_view_list" model="ir.ui.view">
+        <field name="name">int.workbench.intermediate.list</field>
+        <field name="model">int.workbench.intermediate</field>
+        <field name="arch" type="xml">
+            <list js_class="int_workbench.live_list" create="0" edit="0" delete="0" decoration-muted="not answered">
+                <header>
+                    <button name="%(int_workbench.int_workbench_signal_action)d" type="action" string="Choose values" icon="fa-list-ul" display="always"
+                            title="Choose the values from the variable list of the project"
+                            groups="int_workbench.int_workbench_group_technician"/>
+                    <button name="%(int_workbench.int_workbench_intermediate_selection_action)d" type="action" string="Edit selection" icon="fa-pencil" display="always"
+                            title="Change the names, the addresses and the order of the chosen values, or add one of your own"
+                            groups="int_workbench.int_workbench_group_technician"/>
+                </header>
+                <field name="device_id" optional="show"/>
+                <field name="sequence" column_invisible="True"/>
+                <field name="label" optional="show"/>
+                <field name="name"/>
+                <field name="address" optional="show"/>
+                <field name="format" optional="show"/>
+                <field name="text"/>
+                <field name="value" optional="hide"/>
+                <field name="unit"/>
+                <field name="raw" optional="hide"/>
+                <field name="answered" optional="hide"/>
+                <field name="locked" optional="hide"/>
+                <field name="error" optional="show"/>
+                <field name="can_write_value" column_invisible="True"/>
+                <button name="action_edit_value" type="object" string="Edit" icon="fa-pencil" title="Write a value into the controller"
+                        invisible="not can_write_value" groups="int_workbench.int_workbench_group_technician"/>
             </list>
         </field>
     </record>
@@ -126,17 +140,6 @@
         <field name="res_model">int.workbench.intermediate</field>
         <field name="view_mode">list</field>
         <field name="view_id" ref="int_workbench_intermediate_view_list"/>
-    </record>
-
-    <record id="int_workbench_intermediate_selection_action" model="ir.actions.act_window">
-        <field name="name">Selection of the intermediate values</field>
-        <field name="res_model">int.workbench.intermediate</field>
-        <field name="view_mode">list</field>
-        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('int_workbench_intermediate_view_selection')})]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Choose the intermediate values to read</p>
-            <p>Add a line for a value of your own (a name and an address), or use "Choose values" in the list of the intermediate values to take them from the variable list of the project.</p>
-        </field>
     </record>
 
     <record id="int_workbench_signal_view_list" model="ir.ui.view">

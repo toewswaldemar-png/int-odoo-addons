@@ -121,6 +121,20 @@
         <field name="context">{'active_test': False}</field>
     </record>
 
+    <!-- What the menu opens: the process values of the device the user looked at last, or of all devices while there is none -->
+    <record id="int_workbench_parameter_last_server_action" model="ir.actions.server">
+        <field name="name">Process values</field>
+        <field name="model_id" ref="model_int_workbench_parameter"/>
+        <!-- without groups Odoo asks for the right to write the process values, which only the service has; the users of the module may open the list -->
+        <field name="group_ids" eval="[(4, ref('int_workbench_group_user'))]"/>
+        <field name="state">code</field>
+        <field name="code">device = env.user.sudo().int_workbench_device_id.exists()
+if device:
+    action = device.action_open_parameters()
+else:
+    action = env["ir.actions.actions"]._for_xml_id("int_workbench.int_workbench_parameter_action")</field>
+    </record>
+
     <record id="int_workbench_parameter_action" model="ir.actions.act_window">
         <field name="name">Process values</field>
         <field name="res_model">int.workbench.parameter</field>

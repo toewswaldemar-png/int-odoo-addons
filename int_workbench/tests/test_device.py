@@ -1,6 +1,6 @@
 from psycopg2 import IntegrityError
 
-from odoo.exceptions import AccessError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import Form, TransactionCase, tagged
 from odoo.tests.common import new_test_user
 from odoo.tools import mute_logger
@@ -33,6 +33,71 @@ class TestIntWorkbenchDevice(TransactionCase):
         for bad in ("", "a b", "a/b", "ä", "../x"):
             with self.subTest(bad), self.assertRaises(ValidationError), self.cr.savepoint():
                 self.Device.create({"name": f"badid {bad}", "device_ref": bad, "service_user_id": self.service.id})
+
+    # === the line and the connection === #
+
+    def test_the_line_is_checked_and_named_in_one_word(self):
+        device = self.Device.create({"name": "Line", "service_user_id": self.service.id, "line_kind": "tcp", "line_address": " 192.100.0.50:100 "})
+        self.assertEqual((device.line_address, device.line), ("192.100.0.50:100", "tcp:192.100.0.50:100"))
+        device.write({"line_kind": "com", "line_address": "com3"})
+        self.assertEqual(device.line, "COM3")
+        for kind, address in (("com", "LPT1"), ("tcp", "nohost"), ("tcp", "host:99999"), ("tcp", "host:0"), ("com", "")):
+            with self.subTest(address), self.assertRaises(ValidationError), self.cr.savepoint():
+                device.write({"line_kind": kind, "line_address": address})
+
+    def test_a_device_without_a_line_cannot_be_connected(self):
+        with self.assertRaises(ValidationError):
+            self.Device.create({"name": "No line", "service_user_id": self.service.id, "line_enabled": True})
+
+    def test_an_operator_connects_and_disconnects_and_takes_the_line_from_another_device(self):
+        operator = new_test_user(self.env, login="wb_connect_op", groups="base.group_user,int_workbench.int_workbench_group_operator")
+        line = {"line_kind": "tcp", "line_address": "192.100.0.50:100"}
+        first = self.Device.create({"name": "First", "service_user_id": self.service.id, **line})
+        second = self.Device.create({"name": "Second", "device_ref": "second", "service_user_id": self.service.id, **line})
+        first.with_user(operator).action_connect()
+        self.assertTrue(first.line_enabled)
+        # the line serves one controller: connecting the second lets go of the first
+        second.with_user(operator).action_connect()
+        self.assertEqual((first.line_enabled, second.line_enabled), (False, True))
+        second.with_user(operator).action_disconnect()
+        self.assertFalse(second.line_enabled)
+        # not an operator: no connection, and nothing to connect without a line
+        for user in (self.user, self.outsider):
+            with self.subTest(user.login), self.assertRaises(AccessError):
+                first.with_user(user).action_connect()
+        with self.assertRaises(UserError):
+            self.device.with_user(operator).action_connect()
+
+    def test_the_database_keeps_one_connection_per_line(self):
+        line = {"line_kind": "com", "line_address": "COM1", "line_enabled": True}
+        self.Device.create({"name": "A", "service_user_id": self.service.id, **line})
+        with self.assertRaises(IntegrityError), mute_logger("odoo.sql_db"), self.cr.savepoint():
+            self.Device.create({"name": "B", "device_ref": "b", "service_user_id": self.service.id, **line})
+        # a device that is not connected, or another line, is free
+        self.Device.create({"name": "C", "device_ref": "c", "service_user_id": self.service.id, **dict(line, line_enabled=False)})
+        self.Device.create({"name": "D", "device_ref": "d", "service_user_id": self.service.id, **dict(line, line_address="COM2")})
+
+    def test_a_technician_sets_the_line_and_the_speed_but_not_the_rest(self):
+        technician = new_test_user(self.env, login="wb_line_tech", groups="base.group_user,int_workbench.int_workbench_group_technician")
+        self.device.with_user(technician).write({"line_kind": "tcp", "line_address": "10.0.0.5:100", "baud": "38400"})
+        self.assertEqual((self.device.line, self.device.baud), ("tcp:10.0.0.5:100", "38400"))
+        for vals in ({"name": "Other"}, {"line_enabled": True}, {"service_url": "http://x"}):
+            with self.subTest(vals), self.assertRaises(AccessError):
+                self.device.with_user(technician).write(vals)
+        # an operator does not set the line
+        operator = new_test_user(self.env, login="wb_line_op", groups="base.group_user,int_workbench.int_workbench_group_operator")
+        with self.assertRaises(AccessError):
+            self.device.with_user(operator).write({"baud": "9600"})
+
+    def test_the_service_gets_its_devices_with_line_and_wish(self):
+        other_service = new_test_user(self.env, login="regler_service2", groups="int_workbench.int_workbench_group_service")
+        self.Device.create({"name": "Not mine", "device_ref": "other", "service_user_id": other_service.id})
+        self.device.write({"line_kind": "tcp", "line_address": "192.100.0.50:100", "baud": "38400", "line_enabled": True})
+        rows = self.Device.with_user(self.service).service_devices()
+        self.assertEqual(rows, [{"device_ref": "main", "name": "Bench", "line": "tcp:192.100.0.50:100", "baud": 38400, "connect": True}])
+        for user in (self.user, self.manager):
+            with self.subTest(user.login), self.assertRaises(AccessError):
+                self.Device.with_user(user).service_devices()
 
     def test_the_controller_id_loses_spaces(self):
         device = self.Device.create({"name": "Spaces", "device_ref": " main ", "service_user_id": self.service.id})
@@ -67,6 +132,25 @@ class TestIntWorkbenchDevice(TransactionCase):
             form.device_type = "3EGM000000R0002"
             form.device_kind = "air_conditioner"
             self.assertEqual(form.device_type, "3EGM000000R0002", "what was typed stays")
+
+    def test_the_menu_of_the_process_values_opens_the_device_that_was_opened_last(self):
+        menu = self.env.ref("int_workbench.int_workbench_parameter_last_server_action")
+        reader = new_test_user(self.env, login="wb_last_device", groups="base.group_user,int_workbench.int_workbench_group_user")
+        other = self.Device.create({"name": "Other", "service_user_id": self.service.id})
+        # no device opened yet: the list of all devices
+        action = menu.with_user(reader).run()
+        self.assertFalse(action.get("domain"))
+        # the list of a device, opened from its form, is remembered for this user and for nobody else
+        self.device.with_user(reader).action_open_parameters()
+        self.assertEqual(reader.sudo().int_workbench_device_id, self.device)
+        self.assertFalse(self.env.user.int_workbench_device_id)
+        action = menu.with_user(reader).run()
+        self.assertEqual(action["domain"], [("device_id", "=", self.device.id)])
+        other.with_user(reader).action_open_commands()
+        self.assertEqual(menu.with_user(reader).run()["domain"], [("device_id", "=", other.id)])
+        # a device that is gone is forgotten
+        other.unlink()
+        self.assertFalse(menu.with_user(reader).run().get("domain"))
 
     def test_a_change_is_checked_too(self):
         with self.assertRaises(ValidationError):
@@ -143,13 +227,12 @@ class TestIntWorkbenchDevice(TransactionCase):
 
     def test_the_menu_is_grouped_by_what_one_does(self):
         ref = lambda name: self.env.ref(f"int_workbench.int_workbench_{name}")  # noqa: E731
-        root, memory, intermediate, configuration = ref("menu_root"), ref("error_memory_menu"), ref("intermediate_menu"), ref("menu_configuration")
-        for name in ("parameter_menu", "intermediate_menu", "error_memory_menu", "device_menu", "menu_configuration"):
+        root, memory, configuration = ref("menu_root"), ref("error_memory_menu"), ref("menu_configuration")
+        for name in ("parameter_menu", "error_memory_menu", "device_menu", "menu_configuration"):
             self.assertEqual(ref(name).parent_id, root, name)
         for name in ("error_menu", "error_history_menu", "error_status_menu", "fs2_file_menu", "fs2_record_menu"):
             self.assertEqual(ref(name).parent_id, memory, name)
         for name in ("parameter_config_menu", "user_menu", "log_menu"):
             self.assertEqual(ref(name).parent_id, configuration, name)
-        for menu in (memory, intermediate):
-            self.assertGreaterEqual(len(menu.child_id), 2, "a group menu has at least two entries")
+        self.assertGreaterEqual(len(memory.child_id), 2, "a group menu has at least two entries")
         self.assertFalse(self.env["ir.ui.menu"].search([("parent_id", "child_of", root.id), ("parent_id.parent_id.parent_id", "=", root.id)]), "no third level")

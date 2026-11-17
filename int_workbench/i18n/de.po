@@ -2000,6 +2000,7 @@ msgstr "Zwischenwert eines Reglers"
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_intermediate_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__intermediate_ids
 #: model:ir.ui.menu,name:int_workbench.int_workbench_intermediate_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Intermediate values"
 msgstr "Zwischenwerte"
 
@@ -5042,3 +5043,126 @@ msgstr "Löse zuerst die Klemmung von %s: Eine geklemmte Zeile lässt sich nicht
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__source_name
 msgid "Description of the project"
 msgstr "Beschreibung aus dem Projekt"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Edit selection"
+msgstr "Auswahl bearbeiten"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_intermediate_view_list
+msgid "Change the names, the addresses and the order of the chosen values, or add one of your own"
+msgstr "Namen, Adressen und Reihenfolge der gewählten Werte ändern oder einen eigenen hinzufügen"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__line_kind__tcp
+msgid "Network (TCP)"
+msgstr "Netzwerk (TCP)"
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__line_kind__com
+msgid "COM port"
+msgstr "COM-Anschluss"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__line_kind
+msgid "Line type"
+msgstr "Leitungsart"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__line_address
+msgid "Line address"
+msgstr "Leitungsadresse"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__line
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form_service
+msgid "Line"
+msgstr "Leitung"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__baud
+msgid "Baud rate"
+msgstr "Baudrate"
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__line_enabled
+msgid "Connection wanted"
+msgstr "Verbindung gewünscht"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_list
+msgid "Connect"
+msgstr "Verbinden"
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Disconnect"
+msgstr "Trennen"
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "Another device is connected on this line already. Disconnect it first."
+msgstr "Auf dieser Leitung ist schon ein anderes Gerät verbunden. Zuerst trennen."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s has no line to connect to. Set the line type and the address in the dialog of the service."
+msgstr "%s hat keine Leitung zum Verbinden. Leitungsart und Adresse im Dialog „Dienst“ eintragen."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "The line needs a type and an address."
+msgstr "Die Leitung braucht eine Art und eine Adresse."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s is not a COM port. Write COM1, or /dev/ttyS0 on Linux."
+msgstr "%s ist kein COM-Anschluss. COM1 schreiben, unter Linux /dev/ttyS0."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s is not a network address. Write host:port, for example 192.100.0.50:100."
+msgstr "%s ist keine Netzwerkadresse. host:port schreiben, zum Beispiel 192.100.0.50:100."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "Only an operator may connect a controller."
+msgstr "Nur ein Bediener darf einen Regler verbinden."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "Only an operator may disconnect a controller."
+msgstr "Nur ein Bediener darf einen Regler trennen."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s has no line yet. A technician sets it in the dialog of the service."
+msgstr "%s hat noch keine Leitung. Ein Techniker trägt sie im Dialog „Dienst“ ein."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s is connected."
+msgstr "%s ist verbunden."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s is disconnected from the line."
+msgstr "%s wurde von der Leitung getrennt."
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+msgid "%s is disconnected."
+msgstr "%s ist getrennt."

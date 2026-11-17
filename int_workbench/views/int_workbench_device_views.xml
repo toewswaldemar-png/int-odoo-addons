@@ -15,6 +15,8 @@
                        decoration-warning="project_state == 'differs'" decoration-muted="project_state in ('none', 'unknown')"/>
                 <field name="connection_state" widget="badge" decoration-success="connection_state == 'connected'"
                        decoration-warning="connection_state in ('disconnected', 'silent')"/>
+                <field name="line" optional="hide"/>
+                <field name="line_enabled" widget="boolean" string="Connect" optional="hide"/>
                 <field name="device_ref" optional="hide"/>
                 <field name="family" optional="hide"/>
                 <field name="service_user_id" optional="hide"/>
@@ -30,6 +32,11 @@
         <field name="arch" type="xml">
             <form>
                 <header>
+                    <!-- the operator connects the controller he wants to work with; the service keeps the connection -->
+                    <button name="action_connect" type="object" string="Connect" icon="fa-link" class="btn-primary"
+                            groups="int_workbench.int_workbench_group_operator" invisible="not id or line_enabled"/>
+                    <button name="action_disconnect" type="object" string="Disconnect" icon="fa-unlink"
+                            groups="int_workbench.int_workbench_group_operator" invisible="not id or not line_enabled"/>
                     <!-- what a technician asks of the controller: the buttons that the family cannot serve are hidden by its capabilities -->
                     <button name="action_set_clock" type="object" string="Set the clock" icon="fa-clock-o"
                             groups="int_workbench.int_workbench_group_technician" invisible="not cap_clock"/>
@@ -57,6 +64,9 @@
                     <div class="oe_button_box" name="button_box">
                         <button name="action_open_parameters" type="object" class="oe_stat_button" icon="fa-sliders" invisible="not id">
                             <field name="parameter_count" widget="statinfo" string="Process values"/>
+                        </button>
+                        <button name="action_open_intermediate" type="object" class="oe_stat_button" icon="fa-list-ul" invisible="not id or not cap_intermediate">
+                            <field name="intermediate_count" widget="statinfo" string="Intermediate values"/>
                         </button>
                         <button name="action_open_errors" type="object" class="oe_stat_button" icon="fa-exclamation-triangle" invisible="not id">
                             <field name="error_count" widget="statinfo" string="Errors"/>
@@ -98,6 +108,9 @@
                     <field name="cap_can_control" invisible="1"/>
                     <field name="cap_error_files" invisible="1"/>
                     <field name="cap_project_files" invisible="1"/>
+                    <field name="cap_intermediate" invisible="1"/>
+                    <field name="line" invisible="1"/>
+                    <field name="line_enabled" invisible="1"/>
                     <!-- the settings of the service are in the dialog of the gear menu; a new device needs them to be created -->
                     <group invisible="id">
                         <field name="device_ref" string="Id"/>
@@ -141,6 +154,17 @@
                         <field name="service_user_id" string="User"/>
                         <field name="service_url" string="Address"/>
                         <field name="service_token" string="Token" password="True" groups="int_workbench.int_workbench_group_manager"/>
+                    </group>
+                    <!-- the line: a technician sets it, the operator connects (button of the device) -->
+                    <group string="Line">
+                        <field name="line_kind" groups="int_workbench.int_workbench_group_technician"/>
+                        <field name="line_kind" readonly="1" groups="!int_workbench.int_workbench_group_technician"/>
+                        <field name="line_address" placeholder="192.100.0.50:100" invisible="line_kind != 'tcp'" groups="int_workbench.int_workbench_group_technician"/>
+                        <field name="line_address" placeholder="COM1" invisible="line_kind != 'com'" groups="int_workbench.int_workbench_group_technician"/>
+                        <field name="line_address" readonly="1" groups="!int_workbench.int_workbench_group_technician"/>
+                        <field name="baud" groups="int_workbench.int_workbench_group_technician"/>
+                        <field name="baud" readonly="1" groups="!int_workbench.int_workbench_group_technician"/>
+                        <field name="line_enabled" readonly="1"/>
                     </group>
                     <group>
                         <field name="seen_at" string="Last seen"/>

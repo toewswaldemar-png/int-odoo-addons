@@ -22,6 +22,13 @@ NEW_ERRORS_SHOWN = 5
 # What the service accepts as the id of a controller: letters, digits, minus and underscore.
 DEVICE_REF_PATTERN = re.compile(r"[A-Za-z0-9_-]+")
 SERVICE_GROUP = "int_workbench.int_workbench_group_service"
+OPERATOR_GROUP = "int_workbench.int_workbench_group_operator"
+TECHNICIAN_GROUP = "int_workbench.int_workbench_group_technician"
+# The line of a controller: a network address of a serial server, or a serial port of the machine the service runs on.
+LINE_TCP_PATTERN = re.compile(r"([A-Za-z0-9._-]+):([0-9]{1,5})")
+LINE_COM_PATTERN = re.compile(r"COM[0-9]{1,3}|/dev/[A-Za-z0-9._/-]+", re.IGNORECASE)
+# What a technician writes in the dialog of the service, and nothing more: where the controller is and how fast the line is.
+LINE_FIELDS = {"line_kind", "line_address", "baud"}
 MANAGER_GROUP = "int_workbench.int_workbench_group_manager"
 # What a service may report in one call. A snapshot of a controller with all pages is some 100 kB.
 MAX_SNAPSHOT_BYTES = 2_000_000
@@ -129,6 +136,33 @@ class IntWorkbenchDevice(models.Model):
         copy=False,
         help="The token with which Odoo signs in to the service when it asks for users, log and projects.",
     )
+    # === LINE === #
+    line_kind = fields.Selection(
+        [("tcp", "Network (TCP)"), ("com", "COM port")],
+        string="Line type",
+        help="How the service reaches the controller: through a serial server in the network, or through a serial port of its own machine.",
+    )
+    line_address = fields.Char(
+        string="Line address",
+        help="Network: host:port of the serial server, for example 192.100.0.50:100. COM port: COM1 (Windows) or /dev/ttyS0 (Linux).",
+    )
+    line = fields.Char(
+        compute="_compute_line",
+        store=True,
+        index=True,
+        string="Line",
+        help="The line in one word, so that two devices on the same line are recognized: tcp:192.100.0.50:100 or COM1.",
+    )
+    baud = fields.Selection(
+        [("9600", "9600"), ("19200", "19200"), ("38400", "38400"), ("57600", "57600"), ("115200", "115200")],
+        string="Baud rate",
+        help="The speed of the line. Empty: the speed that the project of the controller tells.",
+    )
+    line_enabled = fields.Boolean(
+        string="Connection wanted",
+        copy=False,
+        help="The service keeps the connection to the controller while this is set. At most one device of a line has it.",
+    )
     # === REPORT === #
     snapshot = fields.Json(
         readonly=True,
@@ -221,6 +255,7 @@ class IntWorkbenchDevice(models.Model):
     fs2_file_ids = fields.One2many("int.workbench.fs2.file", "device_id", string="Error files")
     parameter_count = fields.Integer(compute="_compute_counts", string="Process values", help="How many rows of process values the controller has.")
     error_count = fields.Integer(compute="_compute_counts", string="Errors", help="How many errors are active now.")
+    intermediate_count = fields.Integer(compute="_compute_counts", string="Intermediate values", help="How many intermediate values are chosen for the controller.")
     command_count = fields.Integer(compute="_compute_counts", string="Requests", help="How many requests (clamps, console, clock, ...) were made for this device.")
     clock_local_time = fields.Char(compute="_compute_clock", string="Clock of the controller", help="Date and time the controller shows, as the service read them (no time zone).")
     clock_read_at = fields.Char(compute="_compute_clock", string="Clock read at")
@@ -232,6 +267,10 @@ class IntWorkbenchDevice(models.Model):
         "controller. Service silent: the service has not called Odoo for a while, so what is shown may be old.",
     )
 
+    _one_connection_per_line = models.UniqueIndex(
+        "(line) WHERE line_enabled AND active",
+        "Another device is connected on this line already. Disconnect it first.",
+    )
     _name_unique = models.Constraint(
         "UNIQUE (name)",
         "A controller with this name exists already.",
@@ -248,7 +287,12 @@ class IntWorkbenchDevice(models.Model):
     @api.depends()
     def _compute_counts(self):
         """Count what the buttons of the form open: the rows are many and change with every report, so they are counted, not loaded."""
-        for field, model in (("parameter_count", "int.workbench.parameter"), ("error_count", "int.workbench.error"), ("command_count", "int.workbench.command")):
+        for field, model in (
+            ("parameter_count", "int.workbench.parameter"),
+            ("intermediate_count", "int.workbench.intermediate"),
+            ("error_count", "int.workbench.error"),
+            ("command_count", "int.workbench.command"),
+        ):
             groups = self.env[model]._read_group([("device_id", "in", self.ids)], ["device_id"], ["__count"])
             counts = {device.id: count for device, count in groups}
             for device in self:
@@ -322,6 +366,34 @@ class IntWorkbenchDevice(models.Model):
             if device.service_url and not re.match(r"https?://[^\s/]+", device.service_url):
                 raise ValidationError(self.env._("The service address %s must start with http:// or https://.", device.service_url))
 
+    @api.depends("line_kind", "line_address")
+    def _compute_line(self):
+        for device in self:
+            address = (device.line_address or "").strip()
+            if not device.line_kind or not address:
+                device.line = False
+            elif device.line_kind == "com":
+                device.line = address.upper() if address.upper().startswith("COM") else address
+            else:
+                device.line = f"tcp:{address.lower()}"
+
+    @api.constrains("line_kind", "line_address", "line_enabled")
+    def _check_line(self):
+        for device in self:
+            if device.line_enabled and not device.line:
+                raise ValidationError(self.env._("%s has no line to connect to. Set the line type and the address in the dialog of the service.", device.name))
+            if not device.line_address and not device.line_kind:
+                continue
+            if bool(device.line_address) != bool(device.line_kind):
+                raise ValidationError(self.env._("The line needs a type and an address."))
+            if device.line_kind == "com":
+                if not LINE_COM_PATTERN.fullmatch(device.line_address.strip()):
+                    raise ValidationError(self.env._("%s is not a COM port. Write COM1, or /dev/ttyS0 on Linux.", device.line_address))
+            else:
+                match = LINE_TCP_PATTERN.fullmatch(device.line_address.strip())
+                if not match or not 0 < int(match.group(2)) < 65536:
+                    raise ValidationError(self.env._("%s is not a network address. Write host:port, for example 192.100.0.50:100.", device.line_address))
+
     @api.onchange("device_kind")
     def _onchange_device_kind(self):
         """A new device of a kind gets the type number of the last device of that kind: the number is the same for every piece of a type."""
@@ -334,6 +406,10 @@ class IntWorkbenchDevice(models.Model):
         return super().create([self._normalized(vals) for vals in vals_list])
 
     def write(self, vals):
+        # the line and its speed are set by those who connect the controllers, not only by those who manage the devices
+        if vals and set(vals) <= LINE_FIELDS and self.env.user.has_group(TECHNICIAN_GROUP):
+            # sudo: int.workbench.device: a technician writes where the controller is and how fast the line is, and nothing more
+            return super(IntWorkbenchDevice, self.sudo()).write(self._normalized(vals))
         if "project_version_id" not in vals:
             return super().write(self._normalized(vals))
         before = {device: device.project_version_id for device in self}
@@ -381,10 +457,59 @@ class IntWorkbenchDevice(models.Model):
             vals["device_ref"] = vals["device_ref"].strip()
         if isinstance(vals.get("service_url"), str):
             vals["service_url"] = vals["service_url"].strip().rstrip("/")
+        if isinstance(vals.get("line_address"), str):
+            vals["line_address"] = vals["line_address"].strip() or False
         for name in ("serial", "controller_serial", "device_type", "controller_type"):
             if name in vals:
                 vals[name] = (vals[name] or "").strip() or False
         return vals
+
+    # === THE CONNECTION: THE OPERATOR WANTS IT, THE SERVICE KEEPS IT === #
+
+    def action_connect(self):
+        """Ask the service to connect to this controller. A line serves one controller: the one that was connected on it is disconnected."""
+        self.ensure_one()
+        if not self.env.user.has_group(OPERATOR_GROUP):
+            raise AccessError(self.env._("Only an operator may connect a controller."))
+        # sudo: int.workbench.device: an operator wants the connection, but does not edit the device
+        device = self.sudo()
+        if not device.line:
+            raise UserError(self.env._("%s has no line yet. A technician sets it in the dialog of the service.", device.name))
+        others = device.search([("line", "=", device.line), ("line_enabled", "=", True), ("id", "!=", device.id)])
+        others.write({"line_enabled": False})
+        device.write({"line_enabled": True})
+        message = self.env._("%s is connected.", device.name)
+        if others:
+            message += " " + self.env._("%s is disconnected from the line.", ", ".join(others.mapped("name")))
+        return notification(self.env._("Requested"), message)
+
+    def action_disconnect(self):
+        """Ask the service to let go of this controller and of its line."""
+        self.ensure_one()
+        if not self.env.user.has_group(OPERATOR_GROUP):
+            raise AccessError(self.env._("Only an operator may disconnect a controller."))
+        # sudo: int.workbench.device: see action_connect
+        self.sudo().write({"line_enabled": False})
+        return notification(self.env._("Requested"), self.env._("%s is disconnected.", self.name))
+
+    @api.model
+    def service_devices(self):
+        """The controllers of the calling service user with their line, as the service takes them to connect: what to serve and how."""
+        user = self.env.user
+        if not user.has_group(SERVICE_GROUP):
+            raise AccessError(self.env._("Only a user of the group Workbench / Service may call this."))
+        # sudo: int.workbench.device: the service user has no right on the model, only on the calls of the service
+        devices = self.sudo().search([("service_user_id", "=", user.id)])
+        return [
+            {
+                "device_ref": device.device_ref,
+                "name": device.name,
+                "line": device.line or "",
+                "baud": int(device.baud) if device.baud else 0,
+                "connect": bool(device.line_enabled and device.line),
+            }
+            for device in devices
+        ]
 
     # === THE LIST: SOMEBODY LOOKS === #
 
@@ -832,6 +957,10 @@ class IntWorkbenchDevice(models.Model):
     def _open_menu_list(self, xmlid, name):
         """Return the list that the menu opens (with its live behaviour), for the rows of this device only."""
         self.ensure_one()
+        # sudo: res.users: a user may not write his own record beyond a few fields, and this one is his own memory
+        user = self.env.user.sudo()
+        if user.int_workbench_device_id != self:
+            user.int_workbench_device_id = self
         action = self.env["ir.actions.actions"]._for_xml_id(xmlid)
         action["name"] = f"{self.name}: {name}"
         action["domain"] = [("device_id", "=", self.id)]
@@ -840,6 +969,10 @@ class IntWorkbenchDevice(models.Model):
     def action_open_parameters(self):
         """Open the process values and clamps of this device."""
         return self._open_menu_list("int_workbench.int_workbench_parameter_action", self.env._("Process values"))
+
+    def action_open_intermediate(self):
+        """Open the intermediate values of this device: the values read from the controller beyond the process values."""
+        return self._open_menu_list("int_workbench.int_workbench_intermediate_action", self.env._("Intermediate values"))
 
     def action_open_errors(self):
         """Open the active errors of this device."""
