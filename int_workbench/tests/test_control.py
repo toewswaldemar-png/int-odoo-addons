@@ -119,10 +119,9 @@ class TestIntWorkbenchControl(TransactionCase):
 
     # === the clock and the CAN modules in the report === #
 
-    def test_the_clock_and_the_can_count_show_on_the_controller(self):
+    def test_the_clock_shows_on_the_controller(self):
         self.report(snapshot={"clock": {"available": True, "write_enabled": True, "connected": True, "local_time": "2026-11-14T09:30:00", "read_at": "2026-11-14T09:30:01Z"}, "can": can_part([can_item(1)])})
         self.assertEqual((self.device.clock_local_time, self.device.clock_write_enabled), ("2026-11-14T09:30:00", True))
-        self.assertEqual(self.device.can_count, "1 / 3")
 
     def test_the_can_modules_of_a_report_become_rows(self):
         self.report(snapshot={"can": can_part([can_item(1), can_item(2, "11WR15", "B0002")])})

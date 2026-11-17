@@ -20,6 +20,10 @@ class IntWorkbenchIntermediate(models.Model):
     # The rows of the selection (what the original keeps in "Zwischenw. auswählen") with the reading that the service reports for them.
     device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade")
     sequence = fields.Integer(help="The order in which the service reads the rows and in which they are shown.")
+    label = fields.Char(
+        string="Own name",
+        help="What you call the value in the lists, for example Zulufttemperatur. The service reads the signal name and the address; this name is only shown.",
+    )
     name = fields.Char(required=True, help="The signal name of the project (P1011), or a name of your own for a row that is not in the variable list.")
     address = fields.Char(required=True, help="Where the controller keeps the value, for example M0448 or I0000.0. For a row of your own the address is the point.")
     is_byte = fields.Boolean(string="Byte or bit", help="A byte or a bit is read with DB and written with JB, a word with DW and JW.")

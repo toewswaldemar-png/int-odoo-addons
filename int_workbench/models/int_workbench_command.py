@@ -226,7 +226,7 @@ class IntWorkbenchCommand(models.Model):
         Parameter = self.env["int.workbench.parameter"].sudo()
         for vals in cleaned:
             if vals.get("device_id") and vals.get("code") and vals.get("action") not in CONTROLLER_ACTIONS:
-                vals["parameter_id"] = Parameter.search([("device_id", "=", vals["device_id"]), ("code", "=", vals["code"])], limit=1).id
+                vals["parameter_id"] = Parameter.with_context(active_test=False).search([("device_id", "=", vals["device_id"]), ("code", "=", vals["code"])], limit=1).id
         commands = super().create(cleaned)
         for command in commands:
             if not command.device_id.active:
@@ -237,6 +237,6 @@ class IntWorkbenchCommand(models.Model):
             if command.action in ACTION_CAPABILITY:
                 if not device["cap_" + ACTION_CAPABILITY[command.action]]:
                     raise UserError(self.env._("The controller %s cannot do this.", device.name))
-            elif device.family_id and not device.cap_clamps:
+            elif device.family and not device.cap_clamps:
                 raise UserError(self.env._("The controller %s cannot be clamped.", device.name))
         return commands

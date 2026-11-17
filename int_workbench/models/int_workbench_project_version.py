@@ -91,10 +91,10 @@ class IntWorkbenchProjectVersion(models.Model):
         self.ensure_one()
         return check.match_level(self.expected_document, self.config_numbers, software.document_number, (software.document_codes or "").split())
 
-    @api.depends("project", "checksum")
+    @api.depends("project")
     def _compute_display_name(self):
         for version in self:
-            version.display_name = f"{version.project or ''} {version.short_id or ''}".strip()
+            version.display_name = version.project or ""
 
     # === FROM FILES === #
 

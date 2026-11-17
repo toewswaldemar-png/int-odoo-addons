@@ -1,6 +1,5 @@
 from . import int_workbench_capability
 from . import int_workbench_family
-from . import int_workbench_type
 from . import int_workbench_device
 from . import int_workbench_command
 from . import int_workbench_parameter_tag

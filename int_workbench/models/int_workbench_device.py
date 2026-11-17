@@ -103,20 +103,16 @@ class IntWorkbenchDevice(models.Model):
     active = fields.Boolean(default=True)
     note = fields.Text()
     # === TYPES AND SERIAL NUMBERS === #
-    device_type_id = fields.Many2one(
-        "int.workbench.type",
-        string="Device type",
-        domain="[('kind', '=', 'device')]",
-        ondelete="restrict",
+    device_kind = fields.Selection(
+        [("air_conditioner", "Air conditioner"), ("panel", "Device panel")],
+        string="Type",
         index=True,
-        help="What this device is, for example AC3. The technician chooses the device; the controller inside it is a detail of it.",
+        help="What kind of device this is.",
     )
-    serial = fields.Char(string="Serial number", copy=False, help="The serial number of the device. The type number is a field of the type.")
-    controller_type_id = fields.Many2one(
-        "int.workbench.type",
+    device_type = fields.Char(string="Ident no.", index=True, help="The type number of the device, for example 3EGM064970R0001. It is the same for every piece of the type.")
+    serial = fields.Char(string="Serial number", copy=False, help="The serial number of the device.")
+    controller_type = fields.Char(
         string="Controller type",
-        domain="[('kind', '=', 'controller')]",
-        ondelete="restrict",
         index=True,
         help="The control unit inside the device, for example 11HA35D. It stays when the controller is replaced by one of the same type.",
     )
@@ -176,7 +172,7 @@ class IntWorkbenchDevice(models.Model):
     project_software_count = fields.Integer(
         compute="_compute_project_software_count",
         string="Software that fits the project",
-        help="How many programs have the document number that the tables of the assigned version carry.",
+        help="How many programs have the document number that the tables of the assigned version carry (all programs while it has none).",
     )
     report_age = fields.Float(
         compute="_compute_ages",
@@ -185,14 +181,12 @@ class IntWorkbenchDevice(models.Model):
     seen_age = fields.Float(compute="_compute_ages", help="Seconds since the service last asked, -1 if it never did.")
     watched = fields.Boolean(compute="_compute_ages", help="Somebody looks at this controller now: the service asks and reports faster.")
     # === FAMILY AND CAPABILITIES === #
-    family_id = fields.Many2one(
-        "int.workbench.family",
-        string="Family",
+    family = fields.Char(
+        string="Original",
         readonly=True,
         copy=False,
-        ondelete="restrict",
         index=True,
-        help="The kind of controller. The service tells it when it signs on.",
+        help="The original program this controller is served like, for example Micserv. The service tells it when it signs on.",
     )
     capability_ids = fields.Many2many(
         "int.workbench.capability",
@@ -231,7 +225,6 @@ class IntWorkbenchDevice(models.Model):
     clock_local_time = fields.Char(compute="_compute_clock", string="Clock of the controller", help="Date and time the controller shows, as the service read them (no time zone).")
     clock_read_at = fields.Char(compute="_compute_clock", string="Clock read at")
     clock_write_enabled = fields.Boolean(compute="_compute_clock", string="The clock may be set")
-    can_count = fields.Char(compute="_compute_can_count", string="CAN modules (actual of configured)")
     connection_state = fields.Selection(
         [("connected", "Connected"), ("disconnected", "Disconnected"), ("silent", "Service silent"), ("unknown", "Unknown")],
         compute="_compute_connection_state",
@@ -287,15 +280,7 @@ class IntWorkbenchDevice(models.Model):
             else:
                 device.connection_state = self._connection_of(device.snapshot)
 
-    @api.depends("snapshot")
-    def _compute_can_count(self):
-        for device in self:
-            part = (device.snapshot or {}).get("can")
-            part = part if isinstance(part, dict) else {}
-            actual, configured = part.get("count"), part.get("configured_count")
-            device.can_count = f"{actual if actual is not None else '?'} / {configured if configured is not None else '?'}" if part else ""
-
-    @api.depends("family_id", "capability_ids.code")
+    @api.depends("family", "capability_ids.code")
     def _compute_capabilities(self):
         """Set one flag per capability, for the views to show or hide what a controller cannot do.
 
@@ -306,7 +291,7 @@ class IntWorkbenchDevice(models.Model):
             codes = set(device.capability_ids.mapped("code"))
             for code in self.env["int.workbench.capability"].CODES:
                 device[f"cap_{code}"] = code in codes
-            if not device.family_id:
+            if not device.family:
                 device.cap_clamps = True
 
     @api.constrains("device_ref")
@@ -337,26 +322,20 @@ class IntWorkbenchDevice(models.Model):
             if device.service_url and not re.match(r"https?://[^\s/]+", device.service_url):
                 raise ValidationError(self.env._("The service address %s must start with http:// or https://.", device.service_url))
 
-    @api.constrains("device_type_id", "controller_type_id")
-    def _check_types(self):
-        for device in self:
-            if device.device_type_id and device.device_type_id.kind != "device":
-                raise ValidationError(self.env._("%s is a controller type, not a device type.", device.device_type_id.display_name))
-            if device.controller_type_id and device.controller_type_id.kind != "controller":
-                raise ValidationError(self.env._("%s is a device type, not a controller type.", device.controller_type_id.display_name))
+    @api.onchange("device_kind")
+    def _onchange_device_kind(self):
+        """A new device of a kind gets the type number of the last device of that kind: the number is the same for every piece of a type."""
+        if self.device_kind and not self.device_type:
+            last = self.search([("device_kind", "=", self.device_kind), ("device_type", "!=", False)], order="id desc", limit=1)
+            self.device_type = last.device_type
 
     @api.model_create_multi
     def create(self, vals_list):
-        devices = super().create([self._normalized(vals) for vals in vals_list])
-        devices.filtered("device_type_id")._apply_default_project()
-        return devices
+        return super().create([self._normalized(vals) for vals in vals_list])
 
     def write(self, vals):
         if "project_version_id" not in vals:
-            result = super().write(self._normalized(vals))
-            if "device_type_id" in vals:
-                self._apply_default_project()
-            return result
+            return super().write(self._normalized(vals))
         before = {device: device.project_version_id for device in self}
         result = super().write(self._normalized(vals))
         for device, old in before.items():
@@ -367,20 +346,7 @@ class IntWorkbenchDevice(models.Model):
                     old.message_post(body=self.env._("Taken away from the controller %s.", device.name))
                 if new:
                     new.message_post(body=self.env._("Assigned to the controller %s.", device.name))
-        if "device_type_id" in vals:
-            self._apply_default_project()
         return result
-
-    def _apply_default_project(self):
-        """Give a device without a project version the default of its device type, once.
-
-        The assignment stays a record of the device like any other (and goes to the chatter of the version); changing the default of
-        the type later does not touch the devices that have a version.
-        """
-        for device in self:
-            default = device.device_type_id.project_version_id
-            if default and not device.project_version_id:
-                device.write({"project_version_id": default.id})
 
     @api.depends("project_version_id")
     def _compute_project_version_count(self):
@@ -391,8 +357,10 @@ class IntWorkbenchDevice(models.Model):
 
     @api.depends("project_version_id")
     def _compute_project_software_count(self):
+        Software = self.env["int.workbench.software"]
         for device in self:
-            device.project_software_count = len(device.project_version_id.software_ids)
+            version = device.project_version_id
+            device.project_software_count = len(version.software_ids) if version else Software.search_count([])
 
     @api.depends("project_version_id", "project_version_id.checksum", "project_active_checksum")
     def _compute_project_state(self):
@@ -413,7 +381,7 @@ class IntWorkbenchDevice(models.Model):
             vals["device_ref"] = vals["device_ref"].strip()
         if isinstance(vals.get("service_url"), str):
             vals["service_url"] = vals["service_url"].strip().rstrip("/")
-        for name in ("serial", "controller_serial"):
+        for name in ("serial", "controller_serial", "device_type", "controller_type"):
             if name in vals:
                 vals[name] = (vals[name] or "").strip() or False
         return vals
@@ -906,14 +874,16 @@ class IntWorkbenchDevice(models.Model):
         }
 
     def action_open_software(self):
-        """Open the programs that fit the project of this controller (the document number of its tables is the one of the program)."""
+        """Open the programs that fit the project of this controller (the document number of its tables is the one of the program),
+        all programs while it has no project, to import one."""
         self.ensure_one()
+        version = self.project_version_id
         return {
             "type": "ir.actions.act_window",
             "name": self.env._("Software"),
             "res_model": "int.workbench.software",
             "view_mode": "list,form",
-            "domain": [("id", "in", self.project_version_id.software_ids.ids)],
+            "domain": [("id", "in", version.software_ids.ids)] if version else [],
         }
 
     def action_set_clock(self):

@@ -1,6 +1,6 @@
 from unittest import mock
 
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, ValidationError
 from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
 from odoo.tools import mute_logger
@@ -331,6 +331,41 @@ class TestIntWorkbenchParameter(TransactionCase):
         self.assertEqual(sorted(found.mapped("code")), ["0001", "0002"])
         groups = self.Parameter.read_group([("device_id", "=", self.device.id)], ["tag_ids"], ["tag_ids"])
         self.assertEqual({(g["tag_ids"] or ("", ""))[1]: g["tag_ids_count"] for g in groups}, {"Heating": 2, "": 1})
+
+    def test_an_operator_gives_a_row_a_name_and_archives_rows(self):
+        operator = new_test_user(self.env, login="regler_operator_names", groups="base.group_user,int_workbench.int_workbench_group_operator")
+        self.sync([entry("0001"), entry("0002")])
+        first, second = self.Parameter.with_user(operator).search([("device_id", "=", self.device.id)], order="code")
+        first.write({"label": "Zulufttemperatur"})
+        self.assertEqual((first.label, first.source_name, first.name, first.display_name), ("Zulufttemperatur", "Row 0001", "Zulufttemperatur", "0001 Zulufttemperatur"))
+        first.write({"label": False})
+        self.assertEqual(first.name, "Row 0001", "without an own name the description of the project is shown")
+        first.write({"label": "Zulufttemperatur"})
+        second.action_archive()
+        # a report with other values, and one that renames the row in the project: the own name stays, the archived row is not made again
+        self.assertFalse(self.sync([entry("0001", "1", 1, name="Other text"), entry("0002", "1", 1)]) - first - second.with_context(active_test=False))
+        self.assertFalse(self.structure([entry("0001", name="Other text"), entry("0002")]))
+        rows = {row.code: row for row in self.Parameter.with_context(active_test=False).search([("device_id", "=", self.device.id)])}
+        self.assertEqual(
+            (rows["0001"].label, rows["0001"].name, rows["0001"].source_name, rows["0002"].active, len(rows)), ("Zulufttemperatur", "Zulufttemperatur", "Other text", False, 2)
+        )
+        # an archived row is not counted for the button of the device
+        self.device.invalidate_recordset(["parameter_count"])
+        self.assertEqual(self.device.parameter_count, 1)
+
+    def test_a_clamped_row_is_not_archived(self):
+        self.sync([entry("0001")], clamps=[clamp_row("0001", True, 1)])
+        row = self.Parameter.search([("device_id", "=", self.device.id)])
+        self.assertTrue(row.clamped)
+        with self.assertRaises(ValidationError):
+            row.action_archive()
+
+    def test_a_reader_cannot_name_or_archive_rows(self):
+        self.sync([entry("0001")])
+        row = self.Parameter.with_user(self.reader).search([("device_id", "=", self.device.id)])
+        for vals in ({"label": "x"}, {"active": False}):
+            with self.subTest(vals=vals), self.assertRaises(AccessError):
+                row.write(vals)
 
     def test_a_reader_cannot_tag_rows_and_a_tag_exists_once(self):
         self.sync([entry("0001")])

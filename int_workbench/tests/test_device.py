@@ -1,7 +1,7 @@
 from psycopg2 import IntegrityError
 
 from odoo.exceptions import AccessError, ValidationError
-from odoo.tests import TransactionCase, tagged
+from odoo.tests import Form, TransactionCase, tagged
 from odoo.tests.common import new_test_user
 from odoo.tools import mute_logger
 
@@ -37,6 +37,36 @@ class TestIntWorkbenchDevice(TransactionCase):
     def test_the_controller_id_loses_spaces(self):
         device = self.Device.create({"name": "Spaces", "device_ref": " main ", "service_user_id": self.service.id})
         self.assertEqual(device.device_ref, "main")
+
+    def test_a_device_has_a_type_a_controller_and_serial_numbers_as_text(self):
+        device = self.Device.create(
+            {
+                "name": "Typed",
+                "service_user_id": self.service.id,
+                "device_kind": "air_conditioner",
+                "device_type": " 3EGM064970R0001 ",
+                "serial": " 4711 ",
+                "controller_type": "11HA35D",
+                "controller_serial": "9885-17",
+            }
+        )
+        self.assertEqual((device.device_kind, device.device_type, device.serial), ("air_conditioner", "3EGM064970R0001", "4711"))
+        self.assertEqual((device.controller_type, device.controller_serial), ("11HA35D", "9885-17"))
+        plain = self.Device.create({"name": "Plain", "service_user_id": self.service.id})
+        self.assertFalse(plain.device_kind or plain.device_type or plain.controller_type or plain.serial)
+
+    def test_a_new_device_gets_the_type_number_of_the_last_device_of_its_kind(self):
+        self.device.write({"device_kind": "air_conditioner", "device_type": "3EGM064970R0001"})
+        with Form(self.Device) as form:
+            form.name = "Next"
+            form.service_user_id = self.service
+            form.device_kind = "panel"
+            self.assertFalse(form.device_type, "no device of this kind yet")
+            form.device_kind = "air_conditioner"
+            self.assertEqual(form.device_type, "3EGM064970R0001")
+            form.device_type = "3EGM000000R0002"
+            form.device_kind = "air_conditioner"
+            self.assertEqual(form.device_type, "3EGM000000R0002", "what was typed stays")
 
     def test_a_change_is_checked_too(self):
         with self.assertRaises(ValidationError):
@@ -113,15 +143,13 @@ class TestIntWorkbenchDevice(TransactionCase):
 
     def test_the_menu_is_grouped_by_what_one_does(self):
         ref = lambda name: self.env.ref(f"int_workbench.int_workbench_{name}")  # noqa: E731
-        root, memory, tools, configuration = ref("menu_root"), ref("error_memory_menu"), ref("tools_menu"), ref("menu_configuration")
-        for name in ("parameter_menu", "intermediate_menu", "error_memory_menu", "tools_menu", "device_menu", "project_menu", "menu_configuration"):
+        root, memory, intermediate, configuration = ref("menu_root"), ref("error_memory_menu"), ref("intermediate_menu"), ref("menu_configuration")
+        for name in ("parameter_menu", "intermediate_menu", "error_memory_menu", "device_menu", "menu_configuration"):
             self.assertEqual(ref(name).parent_id, root, name)
         for name in ("error_menu", "error_history_menu", "error_status_menu", "fs2_file_menu", "fs2_record_menu"):
             self.assertEqual(ref(name).parent_id, memory, name)
-        for name in ("console_menu", "can_module_menu", "command_menu"):
-            self.assertEqual(ref(name).parent_id, tools, name)
-        for name in ("family_menu", "user_menu", "log_menu"):
+        for name in ("parameter_config_menu", "user_menu", "log_menu"):
             self.assertEqual(ref(name).parent_id, configuration, name)
-        for menu in (memory, tools):
+        for menu in (memory, intermediate):
             self.assertGreaterEqual(len(menu.child_id), 2, "a group menu has at least two entries")
         self.assertFalse(self.env["ir.ui.menu"].search([("parent_id", "child_of", root.id), ("parent_id.parent_id.parent_id", "=", root.id)]), "no third level")

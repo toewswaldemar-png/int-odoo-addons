@@ -341,6 +341,9 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__active
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__active
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__active
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__active
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__active
 msgid "Active"
 msgstr ""
 
@@ -466,6 +469,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 msgid "Archived"
 msgstr ""
 
@@ -2566,6 +2570,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__parameter_count
 #: model:ir.ui.menu,name:int_workbench.int_workbench_parameter_menu
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_parameter_config_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_parameter_config_menu
 msgid "Process values"
 msgstr ""
 
@@ -4214,6 +4220,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__type_name
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_can_module_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__device_kind
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 msgid "Type"
 msgstr ""
@@ -4732,4 +4740,38 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_project_version.py:0
 msgid "Also imported from: %s"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__device_type
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_search
+msgid "Ident no."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__device_kind__air_conditioner
+msgid "Air conditioner"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields.selection,name:int_workbench.selection__int_workbench_device__device_kind__panel
+msgid "Device panel"
+msgstr ""
+
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__label
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__label
+msgid "Own name"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "Release the clamp of %s first: a clamped row cannot be archived."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__source_name
+msgid "Description of the project"
 msgstr ""

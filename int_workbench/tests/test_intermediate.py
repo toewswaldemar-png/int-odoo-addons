@@ -42,6 +42,16 @@ class TestIntWorkbenchIntermediate(TransactionCase):
     def item(name="P1011", address="M0448", fmt="Z", text="2", raw="0002", value=2, answered=True):
         return {"name": name, "address": address, "format": fmt, "text": text, "raw": raw, "value": value, "unit": "", "answered": answered}
 
+    # === the own name === #
+
+    def test_an_own_name_is_only_shown_and_does_not_make_a_new_selection(self):
+        row = self.add("P1011")
+        version = self.device.intermediate_version
+        row.write({"label": "Zulufttemperatur"})
+        self.assertEqual(self.device.intermediate_version, version, "the service reads the signal and the address, not the name")
+        self.report([self.item("P1011")])
+        self.assertEqual((row.label, row.name), ("Zulufttemperatur", "P1011"), "a report of the readings keeps it")
+
     # === the selection and its version === #
 
     def test_a_new_row_goes_to_the_end_and_counts_as_a_new_selection(self):

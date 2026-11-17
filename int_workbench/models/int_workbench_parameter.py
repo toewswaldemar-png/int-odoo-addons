@@ -2,14 +2,14 @@ from collections.abc import Collection
 from math import floor
 
 from odoo import Command, api, fields, models
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.fields import Domain
 
 from .int_workbench_device import COMMAND_TTL
 
 # What of a reported row is kept, and how it is compared. ``time`` (when the service read the row) is left out on purpose: it changes
 # with every read, so a row would count as changed in every report.
-SYNCED_FIELDS = ("name", "status", "text", "value", "unit", "stale", "can_clamp", "analog", "clamped", "clamp_value", "last_clamp_value", "was_clamped", "clamp_step", "auto_text")
+SYNCED_FIELDS = ("source_name", "status", "text", "value", "unit", "stale", "can_clamp", "analog", "clamped", "clamp_value", "last_clamp_value", "was_clamped", "clamp_step", "auto_text")
 VALUE_DIGITS = 3
 # How a digital row (0 or 1) is shown: what 1 and what 0 mean differs from row to row ("Heating chain OK": 1 is OK; "Fault CAN": 1 is a fault).
 DISPLAY_WORDS = ("ok", "on", "open", "fault")
@@ -42,7 +42,16 @@ class IntWorkbenchParameter(models.Model):
 
     device_id = fields.Many2one("int.workbench.device", string="Device", required=True, index=True, ondelete="cascade", readonly=True)
     code = fields.Char(string="Row code", required=True, readonly=True)
-    name = fields.Char(string="Description", readonly=True, index="trigram")
+    source_name = fields.Char(string="Description of the project", readonly=True, help="The description of the row in the project, as the service reports it.")
+    label = fields.Char(string="Own name", help="What you call the row instead of the description of the project. The report of the service keeps it.")
+    name = fields.Char(
+        string="Description",
+        compute="_compute_name",
+        store=True,
+        index="trigram",
+        help="What the row is called: the name you gave it, or else the description of the project.",
+    )
+    active = fields.Boolean(default=True, help="An archived row is not shown. The report of the service keeps it archived.")
     status = fields.Char(help="How the read went: ok, or what is wrong with the row.", readonly=True)
     text = fields.Char(
         string="Process text", help="The value the controller works with, as it shows it, for example 22.3°C. A clamped row shows the clamp.", readonly=True
@@ -218,12 +227,23 @@ class IntWorkbenchParameter(models.Model):
             # sudo: int.workbench.parameter: the order is the same for everybody, so it is written for them
             return super(IntWorkbenchParameter, self.sudo()).write(vals)
         # tagging rows and setting how they are shown write those and nothing else: that is for operators
-        if vals and set(vals) <= {"tag_ids", "display_kind"} and self.env.user.has_group(OPERATOR_GROUP):
+        if vals and set(vals) <= {"tag_ids", "display_kind", "label", "active"} and self.env.user.has_group(OPERATOR_GROUP):
             # sudo: int.workbench.parameter: both are the same for everybody, so they are written for them
             result = super(IntWorkbenchParameter, self.sudo()).write(vals)
             self.invalidate_recordset(["text_shown", "display_tone"])
             return result
         return super().write(vals)
+
+    @api.constrains("active")
+    def _check_archived_not_clamped(self):
+        for row in self:
+            if not row.active and row.clamped:
+                raise ValidationError(self.env._("Release the clamp of %s first: a clamped row cannot be archived.", row.display_name))
+
+    @api.depends("label", "source_name")
+    def _compute_name(self):
+        for row in self:
+            row.name = row.label or row.source_name or ""
 
     @api.depends("code", "name")
     def _compute_display_name(self):
@@ -241,7 +261,7 @@ class IntWorkbenchParameter(models.Model):
         a report never touches them.
         """
         wanted = self._rows_from_report(snapshot)
-        known = {row.code: row for row in self.search_fetch([("device_id", "=", device.id)], ["code", *SYNCED_FIELDS])}
+        known = {row.code: row for row in self.with_context(active_test=False).search_fetch([("device_id", "=", device.id)], ["code", *SYNCED_FIELDS])}
         changed = self.browse()
         create = []
         for position, (code, vals) in enumerate(wanted.items()):
@@ -285,7 +305,7 @@ class IntWorkbenchParameter(models.Model):
             automatic = entry.get("aw") if isinstance(entry.get("aw"), dict) else None
             clamped = bool(clamp_row and (clamp_row.get("held") or state.get("clamped")))
             rows[entry["code"]] = {
-                "name": str(entry.get("name") or ""),
+                "source_name": str(entry.get("name") or ""),
                 "status": str(entry.get("status") or ""),
                 "text": str(process.get("text") or ""),
                 "value": _number(process.get("value")),

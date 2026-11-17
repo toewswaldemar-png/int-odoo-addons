@@ -27,28 +27,12 @@
     <menuitem id="int_workbench_fs2_record_menu" name="File records" parent="int_workbench_error_memory_menu"
               action="int_workbench_fs2_record_action" sequence="50"/>
 
-    <menuitem id="int_workbench_tools_menu" name="Tools" parent="int_workbench_menu_root" sequence="40"/>
-    <menuitem id="int_workbench_console_menu" name="Console" parent="int_workbench_tools_menu"
-              action="int_workbench_console_action" sequence="10"/>
-    <menuitem id="int_workbench_can_module_menu" name="CAN modules" parent="int_workbench_tools_menu"
-              action="int_workbench_can_module_action" sequence="20"/>
-    <menuitem id="int_workbench_command_menu" name="Requests" parent="int_workbench_tools_menu"
-              action="int_workbench_command_action" sequence="90"/>
-
     <menuitem id="int_workbench_device_menu" name="Devices" parent="int_workbench_menu_root"
               action="int_workbench_device_action" sequence="5"/>
-    <menuitem id="int_workbench_project_menu" name="Projects and software" parent="int_workbench_menu_root" sequence="60"/>
-    <menuitem id="int_workbench_project_version_menu" name="Projects" parent="int_workbench_project_menu"
-              action="int_workbench_project_version_action" sequence="10"/>
-    <menuitem id="int_workbench_software_menu" name="Software" parent="int_workbench_project_menu"
-              action="int_workbench_software_action" sequence="30"/>
-
     <menuitem id="int_workbench_menu_configuration" name="Configuration" parent="int_workbench_menu_root"
               sequence="90" groups="int_workbench_group_manager"/>
-    <menuitem id="int_workbench_type_menu" name="Types" parent="int_workbench_menu_configuration"
-              action="int_workbench_type_action" sequence="10"/>
-    <menuitem id="int_workbench_family_menu" name="Families" parent="int_workbench_menu_configuration"
-              action="int_workbench_family_action" sequence="20"/>
+    <menuitem id="int_workbench_parameter_config_menu" name="Process values" parent="int_workbench_menu_configuration"
+              action="int_workbench_parameter_config_action" sequence="10"/>
     <menuitem id="int_workbench_user_menu" name="Users" parent="int_workbench_menu_configuration"
               action="int_workbench_user_action" sequence="30"/>
     <menuitem id="int_workbench_log_menu" name="Log" parent="int_workbench_menu_configuration"

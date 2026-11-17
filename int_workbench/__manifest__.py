@@ -8,7 +8,7 @@
         "operators clamp and release values (every request is a record that the service carries out and that stays in the clamp "
         "log), and shows the accounts, the write log and the project library of the service."
     ),
-    "version": "19.0.1.0.2",
+    "version": "19.0.1.0.5",
     "category": "Productivity",
     "author": "Waldemar Toews",
     "license": "LGPL-3",
@@ -17,9 +17,7 @@
         "security/int_workbench_groups.xml",
         "security/ir.model.access.csv",
         "data/int_workbench_capability_data.xml",
-        "views/int_workbench_type_views.xml",
         "views/int_workbench_device_views.xml",
-        "views/int_workbench_family_views.xml",
         "views/int_workbench_parameter_views.xml",
         "views/int_workbench_command_views.xml",
         "views/int_workbench_error_views.xml",

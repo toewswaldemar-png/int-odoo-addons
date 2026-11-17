@@ -64,6 +64,7 @@
                 </header>
                 <field name="device_id" optional="show"/>
                 <field name="sequence" column_invisible="True"/>
+                <field name="label" optional="show"/>
                 <field name="name"/>
                 <field name="address" optional="show"/>
                 <field name="format" optional="show"/>
@@ -93,6 +94,7 @@
                 </header>
                 <field name="sequence" widget="handle"/>
                 <field name="device_id" options="{'no_create': True, 'no_open': True}"/>
+                <field name="label"/>
                 <field name="name"/>
                 <field name="address"/>
                 <field name="is_byte"/>

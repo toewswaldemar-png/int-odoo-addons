@@ -250,7 +250,7 @@ class TestIntWorkbenchProjectVersion(TransactionCase):
     def test_the_device_opens_its_project_and_the_software_that_fits(self):
         version, _created = self.bring_in(project_files({"BR186002.dwn": self.image}))
         device = self.device.with_user(self.manager)
-        self.assertEqual((device.project_version_count, device.project_software_count), (1, 0), "no project: all versions")
+        self.assertEqual((device.project_version_count, device.project_software_count), (1, 1), "no project: all versions and all programs")
         device.write({"project_version_id": version.id})
         self.assertEqual((device.project_version_count, device.project_software_count), (1, 1))
         opened = device.action_open_project()
