@@ -90,6 +90,7 @@
                 </group>
                 <searchpanel>
                     <field name="device_id" string="Device" icon="fa-microchip"/>
+                    <field name="tag_ids" string="Tags" select="multi" icon="fa-tag" enable_counters="1"/>
                 </searchpanel>
             </search>
         </field>
