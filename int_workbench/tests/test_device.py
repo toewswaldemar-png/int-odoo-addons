@@ -133,24 +133,14 @@ class TestIntWorkbenchDevice(TransactionCase):
             form.device_kind = "air_conditioner"
             self.assertEqual(form.device_type, "3EGM000000R0002", "what was typed stays")
 
-    def test_the_menu_of_the_process_values_opens_the_device_that_was_opened_last(self):
-        menu = self.env.ref("int_workbench.int_workbench_parameter_last_server_action")
-        reader = new_test_user(self.env, login="wb_last_device", groups="base.group_user,int_workbench.int_workbench_group_user")
+    def test_the_buttons_of_the_device_open_its_lists_for_its_rows_only(self):
         other = self.Device.create({"name": "Other", "service_user_id": self.service.id})
-        # no device opened yet: the list of all devices
-        action = menu.with_user(reader).run()
-        self.assertFalse(action.get("domain"))
-        # the list of a device, opened from its form, is remembered for this user and for nobody else
-        self.device.with_user(reader).action_open_parameters()
-        self.assertEqual(reader.sudo().int_workbench_device_id, self.device)
-        self.assertFalse(self.env.user.int_workbench_device_id)
-        action = menu.with_user(reader).run()
-        self.assertEqual(action["domain"], [("device_id", "=", self.device.id)])
-        other.with_user(reader).action_open_commands()
-        self.assertEqual(menu.with_user(reader).run()["domain"], [("device_id", "=", other.id)])
-        # a device that is gone is forgotten
-        other.unlink()
-        self.assertFalse(menu.with_user(reader).run().get("domain"))
+        for method in ("action_open_parameters", "action_open_favorites", "action_open_errors"):
+            action = getattr(self.device, method)()
+            self.assertEqual(action["domain"], [("device_id", "=", self.device.id)], method)
+        self.assertNotEqual(other.action_open_parameters()["domain"], self.device.action_open_parameters()["domain"])
+        # the star button opens the list of the process values with the filter of the stars
+        self.assertEqual(self.device.action_open_favorites()["context"].get("search_default_favorites"), 1)
 
     def test_a_change_is_checked_too(self):
         with self.assertRaises(ValidationError):
@@ -227,12 +217,12 @@ class TestIntWorkbenchDevice(TransactionCase):
 
     def test_the_menu_is_grouped_by_what_one_does(self):
         ref = lambda name: self.env.ref(f"int_workbench.int_workbench_{name}")  # noqa: E731
-        root, memory, configuration = ref("menu_root"), ref("error_memory_menu"), ref("menu_configuration")
-        for name in ("parameter_menu", "error_memory_menu", "device_menu", "menu_configuration"):
+        root, configuration = ref("menu_root"), ref("menu_configuration")
+        # the lists of a device (process values, errors, history, log, project) are opened from the device, so the menu has the devices
+        # and the configuration; the error memory and the process values are not menus of their own
+        for name in ("device_menu", "menu_configuration"):
             self.assertEqual(ref(name).parent_id, root, name)
-        for name in ("error_menu", "error_history_menu", "error_status_menu", "fs2_file_menu", "fs2_record_menu"):
-            self.assertEqual(ref(name).parent_id, memory, name)
-        for name in ("parameter_config_menu", "user_menu", "log_menu"):
+        for name in ("parameter_config_menu", "combo_template_menu", "error_status_menu", "fs2_file_menu", "user_menu", "log_menu"):
             self.assertEqual(ref(name).parent_id, configuration, name)
-        self.assertGreaterEqual(len(memory.child_id), 2, "a group menu has at least two entries")
+        self.assertGreaterEqual(len(configuration.child_id), 2, "a group menu has at least two entries")
         self.assertFalse(self.env["ir.ui.menu"].search([("parent_id", "child_of", root.id), ("parent_id.parent_id.parent_id", "=", root.id)]), "no third level")

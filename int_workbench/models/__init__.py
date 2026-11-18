@@ -4,6 +4,9 @@ from . import int_workbench_device
 from . import int_workbench_command
 from . import int_workbench_parameter_tag
 from . import int_workbench_parameter
+from . import int_workbench_combo_template
+from . import int_workbench_combo_template_level
+from . import int_workbench_combo_template_step
 from . import int_workbench_error
 from . import int_workbench_error_history
 from . import int_workbench_error_status
@@ -19,4 +22,3 @@ from . import int_workbench_software
 from . import int_workbench_project_version
 from . import int_workbench_project_file
 from . import ir_websocket
-from . import res_users

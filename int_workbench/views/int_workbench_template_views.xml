@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The combinations of a device: one row that sets several rows of the device at once. The device gets it as a row in the list of its
+         process values; the levels and the rows they clamp are those of the combination (nothing is copied to the device). A copy of a
+         combination (Duplicate) is for another device, which is chosen in the copy. -->
+    <record id="int_workbench_combo_template_view_list" model="ir.ui.view">
+        <field name="name">int.workbench.combo.template.list</field>
+        <field name="model">int.workbench.combo.template</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="device_id"/>
+                <field name="code"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="int_workbench_combo_template_view_form" model="ir.ui.view">
+        <field name="name">int.workbench.combo.template.form</field>
+        <field name="model">int.workbench.combo.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="device_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="code" placeholder="K001"/>
+                            <field name="name" placeholder="Zuluftventilator"/>
+                        </group>
+                        <group>
+                            <field name="release_all"/>
+                        </group>
+                    </group>
+                    <!-- one row per level: choosing a level in the list of the process values clamps the rows of the level and releases the rows
+                         of the other levels. The rows are chosen from the rows of the device, so save the combination (device and code) first. -->
+                    <notebook>
+                        <page string="Levels" name="levels">
+                            <field name="level_ids" nolabel="1" readonly="not id">
+                                <list>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                </list>
+                                <form>
+                                    <field name="device_id" invisible="1"/>
+                                    <group>
+                                        <field name="name" placeholder="Stage 1 (40 %)"/>
+                                    </group>
+                                    <field name="step_ids" nolabel="1">
+                                        <list editable="bottom">
+                                            <field name="sequence" widget="handle"/>
+                                            <field name="parameter_id" options="{'no_create': True, 'no_open': True}"
+                                                   domain="[('device_id', '=', parent.device_id), ('is_combo', '=', False), ('can_clamp', '=', True)]"/>
+                                            <field name="code" readonly="parameter_id"/>
+                                            <field name="value"/>
+                                        </list>
+                                    </field>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="int_workbench_combo_template_action" model="ir.actions.act_window">
+        <field name="name">Combinations</field>
+        <field name="res_model">int.workbench.combo.template</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

@@ -115,6 +115,27 @@ class IntWorkbenchParameter(models.Model):
         "Writing it clamps the row to the value.",
     )
 
+    # A combination is a row that the service does not report: it is made in Odoo (Combinations) and sets several rows
+    # of the device at once. The levels and the rows they clamp are those of the template; the rows are looked up on the device by their code,
+    # so nothing of the template is copied to the device. The report leaves the row alone (see _sync).
+    is_combo = fields.Boolean(string="Combination", index=True, readonly=True, help="The row sets several rows of the device at once; it is not reported by the service.")
+    template_id = fields.Many2one(
+        "int.workbench.combo.template",
+        string="Combination",
+        index=True,
+        readonly=True,
+        ondelete="cascade",
+        help="The combination that this row is. Its levels are changed there.",
+    )
+    combo_level_id = fields.Many2one(
+        "int.workbench.combo.template.level",
+        compute="_compute_combo_level",
+        readonly=False,
+        string="Level",
+        help="The level of the combination that the device is clamped to now. Choosing one clamps the rows of that level and releases the "
+        "rows of the other levels (or every clamp of the device, if the combination says so).",
+    )
+
     _device_code_unique = models.Constraint("UNIQUE (device_id, code)", "A row exists once per controller.")
 
     @api.depends_context("uid")
@@ -144,10 +165,12 @@ class IntWorkbenchParameter(models.Model):
     # Not depending on display_kind on purpose: a field that others depend on makes the list ask the server (onchange) when it is
     # edited, and that asks for the right to write the model, which an operator has only through write() below. write() clears
     # what was computed instead.
-    @api.depends("text", "value", "analog")
+    @api.depends("text", "value", "analog", "is_combo", "template_id.level_ids.name", "template_id.level_ids.step_ids.value", "template_id.level_ids.step_ids.code")
     def _compute_text_shown(self):
         for row in self:
-            if row.display_kind not in DISPLAY_WORDS or row.analog:
+            if row.is_combo:
+                row.text_shown, row.display_tone = row._active_combo_level().name or "-", False
+            elif row.display_kind not in DISPLAY_WORDS or row.analog:
                 row.text_shown, row.display_tone = row.text, False
             else:
                 row.text_shown, row.display_tone = self._digital_words(row.display_kind, bool(row.value))
@@ -163,10 +186,15 @@ class IntWorkbenchParameter(models.Model):
             return (_("Open"), False) if on else (_("Closed"), False)
         return (_("On"), False) if on else (_("Off"), False)
 
-    @api.depends("clamped", "clamp_value", "value", "last_clamp_value", "was_clamped", "clamp_step", "command_ids.state", "command_ids.action", "command_ids.value")
+    @api.depends("clamped", "clamp_value", "value", "last_clamp_value", "was_clamped", "clamp_step", "command_ids.state", "command_ids.action", "command_ids.value",
+                 "is_combo", "template_id.level_ids.name", "template_id.level_ids.step_ids.value", "template_id.level_ids.step_ids.code")
     def _compute_clamp_request(self):
         on_their_way = self._clamp_requests_on_their_way()
         for row in self:
+            if row.is_combo:
+                # the switch of a combination is on while one of its levels is clamped; it has no value of its own
+                row.clamp_toggle, row.clamp_input = bool(row._active_combo_level().step_ids), 0.0
+                continue
             request = on_their_way.get(row.id)
             # what the switch would clamp the row to: the value it was clamped to last, or the value it has if it never was (in the
             # steps the controller takes: it refuses 21.7 degrees)
@@ -198,7 +226,14 @@ class IntWorkbenchParameter(models.Model):
         if not self.env.user.has_group(OPERATOR_GROUP):
             raise AccessError(self.env._("Only an operator may clamp rows."))
         requests = []
-        for row in self:
+        combos = self.filtered("is_combo")
+        for combo in combos:
+            # the switch of a combination: on clamps its first level, off releases the rows of all its levels (it has no value of its own)
+            if switch is True and not combo._active_combo_level().step_ids:
+                requests += combo._combo_requests(combo.template_id.level_ids.sorted("sequence").filtered("step_ids")[:1])
+            elif switch is False and combo._active_combo_level().step_ids:
+                requests += combo._combo_requests(self.env["int.workbench.combo.template.level"])
+        for row in self - combos:
             if value is not None:
                 action, wanted = "set", value
             elif switch and not row.clamp_toggle:
@@ -213,7 +248,95 @@ class IntWorkbenchParameter(models.Model):
         if requests:
             self.env["int.workbench.command"].create(requests)
 
+    # ---- combinations: one row that sets several rows of the device at once ----
+
+    def _combo_rows(self):
+        """{code: row} of the rows of this device that the levels of the combination clamp. A row that the device does not have is left out."""
+        self.ensure_one()
+        codes = self.template_id.level_ids.step_ids.mapped("code")
+        if not codes:
+            return {}
+        rows = self.env["int.workbench.parameter"].search([("device_id", "=", self.device_id.id), ("is_combo", "=", False), ("code", "in", codes)])
+        return {row.code: row for row in rows}
+
+    def _effective_states(self, rows):
+        """{row: (clamped, value)} for these rows as the device stands: a request that the service has not answered yet counts as done, as
+        it does for the switch of a row (the list does not jump back until the service has reported)."""
+        on_their_way = rows._clamp_requests_on_their_way()
+        states = {}
+        for row in rows:
+            request = on_their_way.get(row.id)
+            if request is None:
+                states[row] = (row.clamped, row.clamp_value)
+            else:
+                states[row] = (True, request.value) if request.action == "set" else (False, 0.0)
+        return states
+
+    def _active_combo_level(self):
+        """The level of this combination that the device is clamped to: all rows of the level (that the device has) are clamped to its values,
+        and none of the other rows of the combination is clamped. A level without rows is "off": it is the state while none is clamped."""
+        self.ensure_one()
+        by_code = self._combo_rows()
+        states = self._effective_states(self.env["int.workbench.parameter"].concat(*by_code.values()))
+        levels = self.template_id.level_ids.sorted("sequence")
+        for level in levels.filtered("step_ids"):
+            wanted = {by_code[step.code]: step.value for step in level.step_ids if step.code in by_code}
+            if wanted and all(states[row][0] and _number(states[row][1]) == _number(value) for row, value in wanted.items()) and not any(
+                states[row][0] for row in states if row not in wanted
+            ):
+                return level
+        if not any(clamped for clamped, _value in states.values()):
+            return levels.filtered(lambda level: not level.step_ids)[:1]
+        return self.env["int.workbench.combo.template.level"]
+
+    @api.depends("is_combo", "template_id.level_ids.name", "template_id.level_ids.step_ids.value", "template_id.level_ids.step_ids.code")
+    def _compute_combo_level(self):
+        for row in self:
+            row.combo_level_id = row._active_combo_level() if row.is_combo else False
+
+    def _combo_requests(self, level):
+        """The requests that bring the device to this level: the clamped rows that the level does not set are released, then its rows are
+        clamped to its values. Released are the rows that other levels of the combination have, or (setting of the combination) every clamped
+        row of the device. No level: the rows of all levels are released."""
+        self.ensure_one()
+        by_code = self._combo_rows()
+        Parameter = self.env["int.workbench.parameter"]
+        wanted = [(by_code[step.code], step.value) for step in level.step_ids.sorted("sequence") if step.code in by_code]
+        level_rows = Parameter.concat(*[row for row, _value in wanted])
+        if self.template_id.release_all and wanted:
+            candidates = Parameter.search([("device_id", "=", self.device_id.id), ("is_combo", "=", False)])
+        else:
+            candidates = Parameter.concat(*by_code.values())
+        states = self._effective_states(candidates)
+        requests = [
+            {"device_id": row.device_id.id, "code": row.code, "action": "release", "value": 0.0}
+            for row in candidates
+            if states[row][0] and row not in level_rows
+        ]
+        requests += [{"device_id": row.device_id.id, "code": row.code, "action": "set", "value": value} for row, value in wanted]
+        return requests
+
+    def _ask_for_combo_level(self, level_id):
+        """What the operator did in the cell of the level: the device is brought to that level (or released, if the cell was emptied)."""
+        if not self.env.user.has_group(OPERATOR_GROUP):
+            raise AccessError(self.env._("Only an operator may clamp rows."))
+        level = self.env["int.workbench.combo.template.level"].browse(level_id or [])
+        requests = []
+        for combo in self:
+            if not combo.is_combo:
+                raise UserError(self.env._("The row %s is not a combination.", combo.display_name))
+            if level and level.template_id != combo.template_id:
+                raise UserError(self.env._("This level belongs to another combination."))
+            requests += combo._combo_requests(level)
+        if requests:
+            self.env["int.workbench.command"].create(requests)
+
     def write(self, vals):
+        if "combo_level_id" in vals:
+            vals = dict(vals)
+            self._ask_for_combo_level(vals.pop("combo_level_id"))
+            if not vals:
+                return True
         if "is_favorite" in vals or "clamp_toggle" in vals or "clamp_input" in vals:
             vals = dict(vals)
             if "is_favorite" in vals:
@@ -261,7 +384,11 @@ class IntWorkbenchParameter(models.Model):
         a report never touches them.
         """
         wanted = self._rows_from_report(snapshot)
-        known = {row.code: row for row in self.with_context(active_test=False).search_fetch([("device_id", "=", device.id)], ["code", *SYNCED_FIELDS])}
+        # the combinations are not in the report: they are left alone, they are neither compared nor removed
+        known = {
+            row.code: row
+            for row in self.with_context(active_test=False).search_fetch([("device_id", "=", device.id), ("is_combo", "=", False)], ["code", *SYNCED_FIELDS])
+        }
         changed = self.browse()
         create = []
         for position, (code, vals) in enumerate(wanted.items()):

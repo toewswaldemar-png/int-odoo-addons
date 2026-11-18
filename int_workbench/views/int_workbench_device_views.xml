@@ -65,21 +65,15 @@
                         <button name="action_open_parameters" type="object" class="oe_stat_button" icon="fa-sliders" invisible="not id">
                             <field name="parameter_count" widget="statinfo" string="Process values"/>
                         </button>
+                        <!-- the rows that the user has marked with a star: the list of the process values with the filter of the stars -->
+                        <button name="action_open_favorites" type="object" class="oe_stat_button" icon="fa-star" invisible="not id">
+                            <field name="favorite_count" widget="statinfo" string="Starred"/>
+                        </button>
                         <button name="action_open_intermediate" type="object" class="oe_stat_button" icon="fa-list-ul" invisible="not id or not cap_intermediate">
                             <field name="intermediate_count" widget="statinfo" string="Intermediate values"/>
                         </button>
                         <button name="action_open_errors" type="object" class="oe_stat_button" icon="fa-exclamation-triangle" invisible="not id">
                             <field name="error_count" widget="statinfo" string="Errors"/>
-                        </button>
-                        <button name="action_open_commands" type="object" class="oe_stat_button" icon="fa-history" invisible="not id">
-                            <field name="command_count" widget="statinfo" string="Requests"/>
-                        </button>
-                        <!-- what the device has: its project (the assigned version) and the programs that fit it -->
-                        <button name="action_open_project" type="object" class="oe_stat_button" icon="fa-folder-open" invisible="not id">
-                            <field name="project_version_count" widget="statinfo" string="Projects"/>
-                        </button>
-                        <button name="action_open_software" type="object" class="oe_stat_button" icon="fa-microchip" invisible="not id">
-                            <field name="project_software_count" widget="statinfo" string="Software"/>
                         </button>
                     </div>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
@@ -130,6 +124,58 @@
                                     <field name="can_status"/>
                                 </list>
                             </field>
+                        </page>
+                        <!-- what the controller keeps and what was done to it: read here, nothing is changed in these lists -->
+                        <page string="Error memory" name="error_memory">
+                            <separator string="History"/>
+                            <field name="error_history_ids" nolabel="1" readonly="1">
+                                <list decoration-danger="event == 'coming' and code &lt; 9990" decoration-muted="event == 'going'">
+                                    <field name="entry"/>
+                                    <field name="controller_time"/>
+                                    <field name="event"/>
+                                    <field name="code"/>
+                                    <field name="text"/>
+                                    <field name="count"/>
+                                </list>
+                            </field>
+                            <separator string="Saved error files"/>
+                            <field name="fs2_file_ids" nolabel="1" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="date"/>
+                                    <field name="time"/>
+                                    <field name="wagon"/>
+                                    <field name="train"/>
+                                    <field name="count"/>
+                                    <field name="kind"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Log" name="log">
+                            <field name="command_ids" nolabel="1" readonly="1">
+                                <list decoration-danger="state in ('failed', 'unconfirmed', 'unknown', 'expired')">
+                                    <field name="create_date" string="Requested"/>
+                                    <field name="user_id"/>
+                                    <field name="code"/>
+                                    <field name="action"/>
+                                    <field name="detail"/>
+                                    <field name="state"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                        <!-- the project library is worked on in its own lists (bring a version in, approve a program): the buttons open them -->
+                        <page string="Project" name="project" invisible="not cap_project_files">
+                            <group>
+                                <group>
+                                    <field name="project_version_count" string="Versions of the project"/>
+                                    <field name="project_software_count" string="Software that fits"/>
+                                </group>
+                            </group>
+                            <div class="d-flex gap-2">
+                                <button name="action_open_project" type="object" string="Project versions" icon="fa-folder-open"/>
+                                <button name="action_open_software" type="object" string="Software" icon="fa-microchip"/>
+                            </div>
                         </page>
                         <page string="Note" name="note">
                             <field name="note" placeholder="Note"/>

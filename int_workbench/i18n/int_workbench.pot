@@ -470,6 +470,8 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_type_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_search
 msgid "Archived"
 msgstr ""
 
@@ -1104,6 +1106,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__create_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__create_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__create_uid
 msgid "Created by"
 msgstr ""
 
@@ -1143,6 +1148,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__create_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__create_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__create_date
 msgid "Created on"
 msgstr ""
 
@@ -1267,6 +1275,8 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_view_search
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_signal_view_search
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__device_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__device_id
 msgid "Device"
 msgstr ""
 
@@ -1367,6 +1377,10 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__display_name
 #: model:ir.model.fields,field_description:int_workbench.field_ir_websocket__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__display_name
+#: model:ir.model.fields,field_description:int_workbench.field_res_users__display_name
 msgid "Display Name"
 msgstr ""
 
@@ -1495,6 +1509,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_fs2_file_action
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__fs2_file_ids
+#: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_file_menu
 msgid "Error files"
 msgstr ""
 
@@ -1506,6 +1521,7 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_error_memory_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Error memory"
 msgstr ""
 
@@ -1671,7 +1687,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_upload__attachment_ids
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__file_ids
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__attachment_ids
-#: model:ir.ui.menu,name:int_workbench.int_workbench_fs2_file_menu
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_upload_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_upload_view_form
@@ -1777,6 +1792,7 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.ui.menu,name:int_workbench.int_workbench_error_history_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "History"
 msgstr ""
 
@@ -1860,6 +1876,10 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__id
 #: model:ir.model.fields,field_description:int_workbench.field_ir_websocket__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__id
+#: model:ir.model.fields,field_description:int_workbench.field_res_users__id
 msgid "ID"
 msgstr ""
 
@@ -1922,6 +1942,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__intermediate_ids
 #: model:ir.ui.menu,name:int_workbench.int_workbench_intermediate_menu
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__intermediate_count
 msgid "Intermediate values"
 msgstr ""
 
@@ -1986,6 +2008,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__write_uid
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__write_uid
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__write_uid
 msgid "Last Updated by"
 msgstr ""
 
@@ -2020,6 +2045,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software_upload__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__write_date
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_user__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__write_date
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__write_date
 msgid "Last Updated on"
 msgstr ""
 
@@ -2041,6 +2069,9 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_error_status__level
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__level_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__combo_level_id
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_parameter_view_list
 msgid "Level"
 msgstr ""
 
@@ -2106,6 +2137,7 @@ msgstr ""
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_log_action
 #: model:ir.ui.menu,name:int_workbench.int_workbench_log_menu
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Log"
 msgstr ""
 
@@ -2174,6 +2206,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_software__name
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_type__name
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_software_view_form
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__name
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__name
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_project_version_view_search
 msgid "Name"
 msgstr ""
 
@@ -2349,6 +2384,7 @@ msgstr ""
 #. module: int_workbench
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_parameter.py:0
+#: code:addons/int_workbench/models/int_workbench_combo_template.py:0
 msgid "Off"
 msgstr ""
 
@@ -2556,6 +2592,7 @@ msgstr ""
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__parameter_id
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__text_shown
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__parameter_id
 msgid "Process value"
 msgstr ""
 
@@ -2573,6 +2610,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model:ir.actions.act_window,name:int_workbench.int_workbench_parameter_config_action
 #: model:ir.ui.menu,name:int_workbench.int_workbench_parameter_config_menu
+#: model:ir.actions.server,name:int_workbench.int_workbench_parameter_last_server_action
 msgid "Process values"
 msgstr ""
 
@@ -2678,6 +2716,7 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_fs2_file__count
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_fs2_file_view_form
 msgid "Records"
 msgstr ""
 
@@ -2742,6 +2781,7 @@ msgstr ""
 #: code:addons/int_workbench/wizard/int_workbench_intermediate_wizard.py:0
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_command_view_list
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Requested"
 msgstr ""
 
@@ -2834,6 +2874,8 @@ msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__code
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__code
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__code
 msgid "Row code"
 msgstr ""
 
@@ -2948,6 +2990,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__sequence
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__sequence
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_signal__sequence
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__sequence
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__sequence
 msgid "Sequence"
 msgstr ""
 
@@ -3066,11 +3110,14 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_can_module__sw
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_file__software_id
 #: model:ir.ui.menu,name:int_workbench.int_workbench_software_menu
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Software"
 msgstr ""
 
 #. module: int_workbench
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_project_version__software_exact_ids
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 msgid "Software that fits"
 msgstr ""
 
@@ -4283,6 +4330,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form_service
 #: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_log_view_search
+#: model:ir.model,name:int_workbench.model_res_users
 msgid "User"
 msgstr ""
 
@@ -4303,6 +4351,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_command__value
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate__value
 #: model:ir.model.fields,field_description:int_workbench.field_int_workbench_intermediate_wizard__intermediate_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_step__value
 msgid "Value"
 msgstr ""
 
@@ -4898,4 +4947,178 @@ msgstr ""
 #. odoo-python
 #: code:addons/int_workbench/models/int_workbench_device.py:0
 msgid "%s is disconnected."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_combo_template_step_level_code_unique
+msgid "A level clamps a row once."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_combo_template_step__parameter_id
+msgid "Choose the row from the rows of the device. Only its code is kept."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_combo_template__release_all
+msgid "Choosing a level first releases every clamp of the device, and then clamps only the rows of the level. Off: only the rows that other levels of the combination have are released, and clamps of other rows stay."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__template_id
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__is_combo
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_parameter__template_id
+msgid "Combination"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_combo_template
+msgid "Combination of a device"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.actions.act_window,name:int_workbench.int_workbench_combo_template_action
+#: model:ir.ui.menu,name:int_workbench.int_workbench_combo_template_menu
+msgid "Combinations"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_device__favorite_count
+msgid "How many process values of the device you have marked with a star."
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_combo_template_view_form
+msgid "K001"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_combo_template_level
+msgid "Level of a combination of a device"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__level_ids
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_combo_template_view_form
+msgid "Levels"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__release_all
+msgid "Release all other clamps"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model,name:int_workbench.model_int_workbench_combo_template_step
+msgid "Row of a level of a combination of a device"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template_level__step_ids
+msgid "Rows"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_combo_template__row_ids
+msgid "Rows of the device"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_combo_template_view_form
+msgid "Stage 1 (40 %)"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Starred"
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_device.py:0
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__favorite_count
+msgid "Starred values"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_combo_template__code
+msgid "The code of the combination in the list of the process values of the device, for example K001."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__template_id
+msgid "The combination that this row is. Its levels are changed there."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.constraint,message:int_workbench.constraint_int_workbench_combo_template_device_code_unique
+msgid "The device has a combination with this code already."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__combo_level_id
+msgid "The level of the combination that the device is clamped to now. Choosing one clamps the rows of that level and releases the rows of the other levels (or every clamp of the device, if the combination says so)."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "The row %s is not a combination."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_parameter__is_combo
+msgid "The row sets several rows of the device at once; it is not reported by the service."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_combo_template_step__value
+msgid "The value the row is clamped to when the level is chosen."
+msgstr ""
+
+#. module: int_workbench
+#. odoo-python
+#: code:addons/int_workbench/models/int_workbench_parameter.py:0
+msgid "This level belongs to another combination."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_combo_template__name
+msgid "What the list calls the combination, for example Zuluftventilator."
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,help:int_workbench.field_int_workbench_combo_template_level__name
+msgid "What the list shows when the level is clamped, for example Stage 2 (60 %)."
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_combo_template_view_form
+msgid "Zuluftventilator"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "11HA35D"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "3EGM064970R0001"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Project versions"
+msgstr ""
+
+#. module: int_workbench
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Saved error files"
+msgstr ""
+
+#. module: int_workbench
+#: model:ir.model.fields,field_description:int_workbench.field_int_workbench_device__project_version_count
+#: model_terms:ir.ui.view,arch_db:int_workbench.int_workbench_device_view_form
+msgid "Versions of the project"
 msgstr ""

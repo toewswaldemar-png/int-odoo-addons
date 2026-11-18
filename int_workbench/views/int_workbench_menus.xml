@@ -1,24 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- The devices come first: a technician chooses the device, the controller inside it is a detail of it. The rest is grouped by what one
-         does, the way the original groups it (Anzeigen, Fehlerspeicher, Allgemein, Auswählen): watch (process values, intermediate values),
-         the error memory, tools, projects, configuration. -->
+    <!-- A technician chooses the device, and what belongs to it is opened from its form: the process values, the favorites, the errors (buttons)
+         and the error history, the saved error files, the log and the project (pages). So the menu has the devices and the configuration. -->
     <menuitem id="int_workbench_menu_root" name="Workbench" sequence="35" groups="int_workbench_group_user"/>
 
-    <menuitem id="int_workbench_parameter_menu" name="Process values" parent="int_workbench_menu_root"
-              action="int_workbench_parameter_last_server_action" sequence="10"/>
-
-    <menuitem id="int_workbench_error_memory_menu" name="Error memory" parent="int_workbench_menu_root" sequence="30"/>
-    <menuitem id="int_workbench_error_menu" name="Current errors" parent="int_workbench_error_memory_menu"
-              action="int_workbench_error_action" sequence="10"/>
-    <menuitem id="int_workbench_error_history_menu" name="History" parent="int_workbench_error_memory_menu"
-              action="int_workbench_error_history_action" sequence="20"/>
-    <menuitem id="int_workbench_error_status_menu" name="Status records" parent="int_workbench_error_memory_menu"
-              action="int_workbench_error_status_action" sequence="30"/>
-    <menuitem id="int_workbench_fs2_file_menu" name="Files" parent="int_workbench_error_memory_menu"
-              action="int_workbench_fs2_file_action" sequence="40"/>
-    <menuitem id="int_workbench_fs2_record_menu" name="File records" parent="int_workbench_error_memory_menu"
-              action="int_workbench_fs2_record_action" sequence="50"/>
 
     <menuitem id="int_workbench_device_menu" name="Devices" parent="int_workbench_menu_root"
               action="int_workbench_device_action" sequence="5"/>
@@ -26,6 +11,12 @@
               sequence="90" groups="int_workbench_group_manager"/>
     <menuitem id="int_workbench_parameter_config_menu" name="Process values" parent="int_workbench_menu_configuration"
               action="int_workbench_parameter_config_action" sequence="10"/>
+    <menuitem id="int_workbench_combo_template_menu" name="Combinations" parent="int_workbench_menu_configuration"
+              action="int_workbench_combo_template_action" sequence="18"/>
+    <menuitem id="int_workbench_error_status_menu" name="Status records" parent="int_workbench_menu_configuration"
+              action="int_workbench_error_status_action" sequence="30"/>
+    <menuitem id="int_workbench_fs2_file_menu" name="Error files" parent="int_workbench_menu_configuration"
+              action="int_workbench_fs2_file_action" sequence="40"/>
     <menuitem id="int_workbench_user_menu" name="Users" parent="int_workbench_menu_configuration"
               action="int_workbench_user_action" sequence="30"/>
     <menuitem id="int_workbench_log_menu" name="Log" parent="int_workbench_menu_configuration"

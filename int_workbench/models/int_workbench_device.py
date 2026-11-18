@@ -9,6 +9,7 @@ import requests
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.service.model import PG_CONCURRENCY_EXCEPTIONS_TO_RETRY
+from odoo.tools.safe_eval import safe_eval
 
 from .service_utils import notification
 
@@ -253,6 +254,12 @@ class IntWorkbenchDevice(models.Model):
     signal_ids = fields.One2many("int.workbench.signal", "device_id", string="Variables of the project")
     intermediate_version = fields.Integer(readonly=True, copy=False, default=0, help="Counts the changes of the selection of intermediate values. The service says in every call which version it has, and Odoo hands it the rows when that is not this one.")
     fs2_file_ids = fields.One2many("int.workbench.fs2.file", "device_id", string="Error files")
+    # The rows that the user has marked with a star are behind a button of the form: the list of the process values with the filter of the stars.
+    favorite_count = fields.Integer(
+        compute="_compute_favorite_count",
+        string="Starred values",
+        help="How many process values of the device you have marked with a star.",
+    )
     parameter_count = fields.Integer(compute="_compute_counts", string="Process values", help="How many rows of process values the controller has.")
     error_count = fields.Integer(compute="_compute_counts", string="Errors", help="How many errors are active now.")
     intermediate_count = fields.Integer(compute="_compute_counts", string="Intermediate values", help="How many intermediate values are chosen for the controller.")
@@ -297,6 +304,13 @@ class IntWorkbenchDevice(models.Model):
             counts = {device.id: count for device, count in groups}
             for device in self:
                 device[field] = counts.get(device.id, 0)
+
+    @api.depends_context("uid")
+    def _compute_favorite_count(self):
+        groups = self.env["int.workbench.parameter"]._read_group([("device_id", "in", self.ids), ("is_favorite", "=", True)], ["device_id"], ["__count"])
+        counts = {device.id: count for device, count in groups}
+        for device in self:
+            device.favorite_count = counts.get(device.id, 0)
 
     @api.depends("snapshot")
     def _compute_clock(self):
@@ -955,12 +969,8 @@ class IntWorkbenchDevice(models.Model):
         }
 
     def _open_menu_list(self, xmlid, name):
-        """Return the list that the menu opens (with its live behaviour), for the rows of this device only."""
+        """Return the list that a button of the device opens (with its live behaviour), for the rows of this device only."""
         self.ensure_one()
-        # sudo: res.users: a user may not write his own record beyond a few fields, and this one is his own memory
-        user = self.env.user.sudo()
-        if user.int_workbench_device_id != self:
-            user.int_workbench_device_id = self
         action = self.env["ir.actions.actions"]._for_xml_id(xmlid)
         action["name"] = f"{self.name}: {name}"
         action["domain"] = [("device_id", "=", self.id)]
@@ -969,6 +979,12 @@ class IntWorkbenchDevice(models.Model):
     def action_open_parameters(self):
         """Open the process values and clamps of this device."""
         return self._open_menu_list("int_workbench.int_workbench_parameter_action", self.env._("Process values"))
+
+    def action_open_favorites(self):
+        """Open the process values of this device with the filter of the stars: the rows that the user watches."""
+        action = self._open_menu_list("int_workbench.int_workbench_parameter_action", self.env._("Starred values"))
+        action["context"] = {**safe_eval(action.get("context") or "{}"), "search_default_favorites": 1}
+        return action
 
     def action_open_intermediate(self):
         """Open the intermediate values of this device: the values read from the controller beyond the process values."""
